@@ -6,9 +6,9 @@ Use this page to find exact popup setting keys quickly. For UI behavior, storage
 
 ## Counts
 
-- Total setting keys: 327
-- Categories: 54
-- Types: boolean=170, text=98, select=10, number=49
+- Total setting keys: 333
+- Categories: 55
+- Types: boolean=171, text=103, select=10, number=49
 
 ## Focused Validation Note
 
@@ -160,20 +160,20 @@ Category key: `configure_llm_api`. Settings: 36.
 | `aiAutoTranslateTimeout` | number | Maximum time in milliseconds to wait for each AI translation request. Defaults to 10000. |
 | `aiProvider` | select | Choose which LLM provider powers the chat bot and automation features. |
 | `bedrockAccessKey` | text | AWS access key used when authenticating to Bedrock. |
-| `bedrockmodel` | text | Bedrock model identifier to request (for example anthropic.claude-v2). |
+| `bedrockmodel` | text | Bedrock model identifier to request (for example anthropic.claude-sonnet-5). |
 | `bedrockRegion` | text | AWS region where your Bedrock deployment runs, such as us-east-1. |
 | `bedrockSecretKey` | text | AWS secret key paired with the Bedrock access key. |
 | `chatgptApiKey` | text | OpenAI API key used when the ChatGPT provider is selected. |
-| `chatgptmodel` | text | Model slug to request from OpenAI (for example gpt-4o-mini). |
+| `chatgptmodel` | text | Model slug to request from OpenAI (for example gpt-5.4-mini). |
 | `customAIApiKey` | text | API key for your custom OpenAI-compatible endpoint (optional). |
 | `customAIEndpoint` | text | Base URL for the custom OpenAI-compatible API to call. |
 | `customAIModel` | text | Model identifier exposed by the custom OpenAI-compatible service. |
 | `deepseekApiKey` | text | DeepSeek API key used when that provider is active. |
-| `deepseekmodel` | text | DeepSeek model name to request (e.g., deepseek-chat). |
+| `deepseekmodel` | text | DeepSeek model name to request (e.g., deepseek-v4-flash). |
 | `geminiApiKey` | text | Google AI Studio API key required for Gemini access. |
 | `geminimodel` | text | Gemini model identifier to call (for example gemini-2.5-flash). |
 | `groqApiKey` | text | Groq API key used when leveraging Groq-hosted models. |
-| `groqmodel` | text | Model slug provided by Groq (for example llama-3.1-8b-instant). |
+| `groqmodel` | text | Model slug provided by Groq (for example openai/gpt-oss-120b). |
 | `hostedLLMEndpoint` | text | Optional endpoint override for the SSN Hosted Trial LLM. |
 | `hostedLLMModel` | text | Optional model override for the SSN Hosted Trial LLM. |
 | `hostedLLMToken` | text | Optional token override for the SSN Hosted Trial LLM. |
@@ -184,7 +184,7 @@ Category key: `configure_llm_api`. Settings: 36.
 | `ollamaKeepAlive` | number | Time to keep the model in memory; -1 unlimited. In minutes |
 | `ollamamodel` | text | Ollama model tag to load (for example gemma3:1b). |
 | `openrouterApiKey` | text | OpenRouter API key for routing hosted model calls. |
-| `openroutermodel` | text | Model identifier from the OpenRouter catalog (e.g., openai/gpt-4o). |
+| `openroutermodel` | text | Model identifier from the OpenRouter catalog (e.g., openai/gpt-5.4-mini). |
 | `xaiApiKey` | text | xAI (Grok) API key for authenticated requests. |
 | `xaimodel` | text | Model slug to call via the xAI API. |
 
@@ -194,6 +194,7 @@ Category key: `chat_bot`. Settings: 16.
 
 | Key | Type | Short Description |
 | --- | --- | --- |
+| `aiChatbotEnabled` | boolean | Enable the LLM AI Bot responder. |
 | `allowLLMSummary` | boolean | Include chat summaries with past context |
 | `alwaysRespondLLM` | boolean | By default the bot is told not if it doesn't see value in doing so. You can disable that instruction here though |
 | `bottriggerwords` | text | Leave empty to trigger always. The bot may however still choose to not respond on its own though. |
@@ -205,7 +206,6 @@ Category key: `chat_bot`. Settings: 16.
 | `modLLMonly` | boolean | The bot will only ever respond to mods |
 | `nollmcontext` | boolean | Include message history as context for the bot. Will slow things down.. |
 | `noollamabotname` | boolean | When enabled, do not include the bot's name when responding. |
-| `ollama` | boolean | Enable the LLM AI Bot responder. |
 | `ollamabotname` | text | Display name the Ollama bot uses when replying. |
 | `ollamaoverlayonly` | boolean | Do not relay bot messages |
 | `ollamaprompt` | text | System prompt prepended to every Ollama bot response. Supports prompt variables. |
@@ -274,6 +274,19 @@ Category key: `must_enable_the_trigger_to_use`. Settings: 5.
 | `ticker` | boolean | Enable to Select the ticker source file |
 | `waitlistmode` | boolean | Enable the waitlist/queue overlay and listen for the join command. |
 | `wordcloud` | boolean | Enable the word cloud overlay trigger. |
+
+## Chat control commands
+
+Category key: `chat_control_commands`. Settings: 6.
+
+| Key | Type | Short Description |
+| --- | --- | --- |
+| `waitlistcontrolcommands` | boolean | Enable mod/host/admin chat commands for waitlist controls. |
+| `waitlistcommandhighlight` | text | Chat command to highlight the top or numbered waitlist entry. |
+| `waitlistcommandremove` | text | Chat command to remove the top or numbered waitlist entry. |
+| `waitlistcommandreset` | text | Chat command to reset the waitlist. |
+| `waitlistcommandselect` | text | Chat command to select one or more names. |
+| `waitlistcommandstop` | text | Chat command to stop new waitlist entries. |
 
 ## Other customization options
 
@@ -380,9 +393,9 @@ Category key: `miscellaneous_options_for_sites`. Settings: 11.
 
 | Key | Type | Short Description |
 | --- | --- | --- |
-| `autoLiveYoutube` | boolean | Instead of Top Chat, auto-select Live Chat; Youtube Live chat pop out. |
 | `collecttwitchpoints` | boolean | If enabled, it will work even if the extension itself is set to inactive |
 | `detweet` | boolean | If enabled, it will work even if the extension itself is set to inactive |
+| `disableAutoLiveYoutube` | boolean | Disable automatic Live Chat selection in the YouTube popout; Live Chat is selected by default. |
 | `disableYoutubeAutoScroll` | boolean | Turn off the YouTube Popout chat auto-scroll keeper. |
 | `flipYoutube` | boolean | Flip Youtube watch page layout |
 | `hidePaidPromotion` | boolean | Hide |
@@ -394,7 +407,7 @@ Category key: `miscellaneous_options_for_sites`. Settings: 11.
 
 ## Custom Injection
 
-Category key: `custom_injection`. Settings: 25.
+Category key: `custom_injection`. Settings: 26.
 
 | Key | Type | Short Description |
 | --- | --- | --- |
@@ -403,7 +416,8 @@ Category key: `custom_injection`. Settings: 25.
 | `blockpremiumshorts` | boolean | Block donations/memberships from Youtube Shorts. Requires &shorts added to the Youtube chat pop out also. |
 | `bttv` | boolean | Enable BTTV emotes - YT/TW channels + globals |
 | `capturejoinedevent` | boolean | Capture 'joined' stream events from supported sources |
-| `capturelikeevent` | boolean | Allow 'liked' stream events in TikTok (high volume) |
+| `capturelikeevent` | boolean | Include individual `liked`/legacy `like` events from supported platforms in the main chat/events pipeline; Reactions receives them independently unless globally filtered |
+| `captureliketotals` | boolean | Send absolute platform like totals to the dock feed and custom consumers |
 | `delaykick` | boolean | Delay capturing messages from Kick to give time for messages to be deleted if needed; 3 extra seconds of delay |
 | `delaytwitch` | boolean | Delay capturing messages from Twitch to give time for messages to be deleted if needed; 3 extra seconds of delay |
 | `delayyoutube` | boolean | Delay capturing messages from Youtube to give time for messages to be deleted if needed; 3 extra seconds of delay |
@@ -426,7 +440,7 @@ Category key: `custom_injection`. Settings: 25.
 
 ## Printer Control
 
-Category key: `printer_control`. Settings: 21.
+Category key: `printer_control`. Settings: 23.
 
 | Key | Type | Short Description |
 | --- | --- | --- |
@@ -437,10 +451,19 @@ Category key: `printer_control`. Settings: 21.
 | `post` | boolean | Forward all captured events to the custom POST endpoint below. |
 | `postalldiscord` | boolean | Forward all captured messages to the Discord webhook URL. |
 | `postallserverdiscord` | text | Discord webhook URL that receives every captured message. |
+| `postallserverdiscordsimple` | boolean | Post all-message Discord webhooks without embeds, timestamps, or platform thumbnails. |
 | `postdiscord` | boolean | Forward only donation events to the Discord webhook URL. |
 | `postserver` | text | Custom HTTP endpoint or identifier to receive forwarded events. |
 | `postserverdiscord` | text | Discord webhook URL that receives donation events. |
 | `printerName` | text | Local printer name to use when printing chat from the dock. |
+| `printerPaperWidth` | number | Thermal printer paper width in millimetres. |
+| `printerLabelHeight` | number | Fixed thermal label length in millimetres; zero uses content-sized receipt paper. |
+| `printerMarginLeft` | number | Extra left safe margin for thermal printing in millimetres. |
+| `printerMarginRight` | number | Extra right safe margin for thermal printing in millimetres. |
+| `printerMarginTop` | number | Extra top safe margin for thermal printing in millimetres. |
+| `printerMarginBottom` | number | Extra bottom safe margin for thermal printing in millimetres. |
+| `printerFeed` | number | Extra paper feed after each thermal print in millimetres. |
+| `printerMarginMode` | select | Use the printer driver's printable area or the full configured paper width. |
 | `s10` | boolean | Enable the Stage TEN Chat API relay. |
 | `s10apikey` | text | Stage TEN API key used when the relay is enabled. |
 | `s10relay` | boolean | Relay messages from other sites to Stage TEN |
@@ -649,10 +672,11 @@ Category key: `assign_roles_classes_to_certain_users`. Settings: 9.
 
 ## YouTube API
 
-Category key: `youtube_api`. Settings: 1.
+Category key: `youtube_api`. Settings: 2.
 
 | Key | Type | Short Description |
 | --- | --- | --- |
+| `captureyoutubelikes` | boolean | Legacy compatibility alias for `captureliketotals`. |
 | `youtubeapikey` | text | YouTube Data API key used for overlays that query YouTube. |
 
 ## Opened in new tab
@@ -669,7 +693,7 @@ Category key: `opened_in_new_tab`. Settings: 5.
 
 ## Opened in new window
 
-Category key: `opened_in_new_window`. Settings: 4.
+Category key: `opened_in_new_window`. Settings: 6.
 
 | Key | Type | Short Description |
 | --- | --- | --- |

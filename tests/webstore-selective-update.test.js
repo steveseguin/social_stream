@@ -2,6 +2,7 @@ const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
+const crypto = require("node:crypto");
 
 const root = path.resolve(__dirname, "..");
 const read = (relativePath) => fs.readFileSync(path.join(root, relativePath), "utf8");
@@ -16,7 +17,21 @@ const settingsDefinitions = read("shared/config/settingsDefinitions.js");
 const settingsKeyIndex = read("docs/agents/13-reference/settings-key-index.md");
 const manifest = JSON.parse(read("manifest.json"));
 
-assert.equal(manifest.version, "3.50.7");
+const inventory = JSON.parse(read("WEBSTORE_PACKAGE_FILES.json"));
+assert.equal(manifest.version, inventory.version, "manifest and upload inventory versions must agree");
+assert.match(inventory.upstream_beta_commit, /^[a-f0-9]{40}$/, "pin the complete upstream beta revision");
+const parity = JSON.parse(read("WEBSTORE_PARITY.json"));
+assert.equal(parity.upstream_beta_commit, inventory.upstream_beta_commit);
+assert.equal(parity.version, inventory.version);
+assert.equal(inventory.file_count, inventory.files.length);
+assert.deepEqual(parity.files.map(entry => entry.path), inventory.files);
+for (const entry of parity.files) {
+  const actual = crypto.createHash("sha256").update(fs.readFileSync(path.join(root, entry.path))).digest("hex");
+  assert.equal(actual, entry.sha256, `unreviewed packaged change: ${entry.path}`);
+  assert.ok(["exact-beta", "store-adapted", "legacy-store"].includes(entry.disposition));
+  if (entry.disposition === "exact-beta") assert.equal(entry.sha256, entry.beta_sha256);
+  else assert.ok(entry.reasons && entry.reasons.length, `missing difference explanation: ${entry.path}`);
+}
 assert.deepEqual(manifest.permissions, [
   "notifications",
   "storage",

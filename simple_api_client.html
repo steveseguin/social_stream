@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Simple API Client. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+<script src="js/local-server-url.js"></script>
     <title>Simple API Client</title>
     <style>
         body { font-family: Arial, sans-serif; padding: 20px; }
@@ -35,7 +40,7 @@
                 return;
             }
             
-            socket = new WebSocket('wss://io.socialstream.ninja:443');
+            socket = new WebSocket(SocialStreamLocalServer.getRelayUrl(new URLSearchParams(location.search), 'server', 'wss://io.socialstream.ninja:443'));
             
             socket.onopen = function() {
                 socket.send(JSON.stringify({

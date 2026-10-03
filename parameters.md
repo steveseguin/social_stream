@@ -1,6 +1,6 @@
 # All URL Parameters for Social Stream Ninja
 
-This completes the comprehensive list of URL parameters available for your live streaming chat overlay system. Each parameter can be added to the URL using standard query string format:
+This is a comprehensive list of the URL parameters available for your live streaming chat overlay system. Each parameter can be added to the URL using standard query string format:
 
 ```
 ?parameter1=value&parameter2=value
@@ -34,6 +34,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `hidemenu` or `nomenu` | boolean or "2" | Hides the menu bar. Value of "2" keeps scroll lock functionality |
 | `css` | URL or CSS string | Applies custom CSS styling via URL or direct CSS |
 | `cssb64` or `b64css` or `base64css` or `cssbase64` | base64 string | Applies custom CSS styling via base64 encoded string |
+| `js` or `base64js` or `b64js` or `jsbase64` or `jsb64` | URL or base64 string | Loads external JavaScript (limited to trusted hosting contexts) |
 | `label` | string | Assigns a label to this instance |
 
 ### Visual Style Parameters
@@ -47,13 +48,17 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `blur` or `blurred` | number | Applies blur effect to messages (value in pixels) |
 | `noblur` | boolean | Disables blur rendering (including hidden-source blur and timed-out blur) |
 | `compact` or `overlaymode` | boolean | Enables compact mode with less spacing |
+| `inline` | boolean | In the standard row layout, keeps normal spacing while allowing the message to start beside the username and wrap naturally below. Specialized layouts such as `compact`, `horizontal`, `twolines`, `split`, `largeavatar`, and `bubble` take precedence |
 | `padding` | number | Sets padding between messages in pixels |
+| `sidepadding` | number (0–99) | Adds padding to the left and right edges of dock chat; defaults to 8 pixels when enabled without a value. Off by default |
 | `largeavatar` | boolean | Shows larger user avatars on the left side |
 | `emoji` or `emojis` | number | Sets emoji size scaling (percentage, default: 140) |
 | `nooutline` | boolean | Removes text outline effects |
 | `font` | string | Sets custom font family |
 | `googlefont` | string | Loads and uses a Google Font |
-| `color` or `colorednames` | boolean | Uses platform accent colors for usernames |
+| `color` or `colorednames` | boolean | Displays username colors supplied by the source |
+| `randomcolor` | boolean | Preserves supplied username colors and deterministically generates a color when one is missing |
+| `randomcolorall` | boolean | Deterministically generates every username color, overriding supplied colors |
 | `fontcolor` | hex color | Overrides the body text color |
 | `namecolor` | hex color | Overrides the username text color |
 | `fontweight` | number or keyword | Sets font weight for message text |
@@ -68,8 +73,9 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `memberhighlightcolor` | hex/color | Custom member row highlight color; 6-digit colors are shown with stronger shading automatically |
 | `firsttimehighlightcolor` | hex/color | Custom first-time chatter row highlight color; 6-digit colors are shown with stronger shading automatically |
 | `questionhighlightcolor` | hex/color | Custom question row highlight color; 6-digit colors are shown with stronger shading automatically |
+| `trivialhighlightcolor` | hex/color | Custom trivial event background color, including host mentions, in row and bubble layouts. Requires `trivialevents`; leave empty to retain the supplied event colors |
 | `hideshadow` | boolean | Removes alternating card drop shadows |
-| `largecontent` | boolean | Enlarges embedded content or image cards |
+| `largecontent` | boolean or 1-5 | Enlarges content images, GIFs and videos. An optional multiplier scales the 240px size from 1x to 5x, capped to the message width; the bare flag keeps the existing 240px size. Regular emotes are unchanged |
 | `donationright` | number | Sets donation amount margin-right in pixels |
 | `bubbleopacity` | 0.0-1.0 | Sets message bubble background opacity |
 | `namebubblecolor` | hex/color | Background color for the rounded name bubble |
@@ -125,9 +131,11 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `trimname` | number | Trims usernames longer than specified characters |
 | `hidenames` | boolean | Hides usernames completely |
 | `firstnamesonly` or `firstname` or `firstnames` | boolean | Shows only first names of users |
+| `youtubechannelname` or `youtubechanneltitle` | boolean | Featured Chat only: resolves YouTube WebSocket author channel IDs to channel titles before showing featured messages |
 | `hidesource` | boolean | Hides the source platform icons (YouTube, Twitch, etc.) |
 | `noavatar` or `noavatars` | boolean | Hides user avatars |
 | `nobadges` or `hidebadges` | boolean | Hides user badges |
+| `stripmemberships` | boolean | Hides membership labels (off by default). Works independently in dock.html and featured.html; keeps badge icons and chat messages. In the dock, member filtering, highlighting, and forwarded membership data are preserved. |
 | `limitbadges` | number | Limits number of badges shown per message |
 | `notime` or `notimestamp` or `nodate` | boolean | Hides timestamp |
 | `24hr` | boolean | Displays timestamps using 24-hour format |
@@ -138,10 +146,12 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `hidenumbers` | boolean | Hides messages that contain only digits |
 | `showsourcename` | boolean | Displays the originating platform label on each card |
 | `showviewercount` | boolean | Shows the current viewer count indicator |
+| `reserveviewercountspace` | boolean | Reserves vertical space so the viewer count bar does not cover chat messages |
 | `nocolon` | boolean | Removes the colon between username and message body |
 | `namefilter` | boolean | Applies filters to usernames instead of message text |
 | `stripreplyto` | boolean | Removes “replying to” prefaces from imported messages |
 | `normalize` | boolean | Normalizes characters (e.g., removes diacritics) for comparisons |
+| `staticemotes` or `noanimatedemotes` or `freezeemotes` | boolean | Shows supported animated emotes (7TV, BTTV, FFZ, Twitch, Kick, cheermotes, Discord) as a still image instead |
 
 ### Filtering Parameters
 
@@ -151,8 +161,13 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `hideshortmessages` | number | Hides messages shorter than specified length |
 | `noemojisonly` | boolean | Filters out messages containing only emojis |
 | `stripemoji` | boolean | Removes all emojis from messages |
+| `stripnameemoji` | boolean | Removes all emojis from usernames |
 | `striphtml` or `strip` | boolean | Removes HTML formatting from messages |
 | `striplinks` | boolean | Removes links from messages |
+| `allowbotlinks` | boolean | With `striplinks`, keeps links visible for bot messages |
+| `allowhostlinks` | boolean | With `striplinks`, keeps links visible for host messages |
+| `allowmodlinks` | boolean | With `striplinks`, keeps links visible for mod messages |
+| `allowviplinks` | boolean | With `striplinks`, keeps links visible for VIP messages |
 | `activelinks` | boolean | Makes URLs clickable |
 | `shortlink` | boolean | Shortens displayed links |
 | `onlytwitch` | boolean | Shows only Twitch messages |
@@ -188,7 +203,9 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `autopindonations` | boolean | Auto-pins donation cards as they arrive |
 | `autopinquestions` or `autopinquestion` | boolean | Auto-pins cards marked as questions |
 | `autoqueuedonations` or `autoqueuedonation` | boolean | Auto-queues donation cards |
+| `autoqueuememberships` | boolean | Auto-queues YouTube membership alerts: new memberships, renewals, milestones, gift purchases, and gift recipients |
 | `autoqueuequestions` or `autoqueuequestion` | boolean | Auto-queues question cards |
+| `trackquestions` | boolean | Adds a pending-question filter and Answered/Dismiss controls to the host dock. Tracks visible question marks and identified questions. Keeps the latest 100 during normal vertical chat pruning; local to this dock and resets on reload. |
 | `skipdonations` | boolean | Prevents donation cards from being auto-featured |
 | `selfqueue` | comma-separated strings | Viewer commands that add themselves to the queue (e.g., `!queue`) |
 | `deleteonlylast` | boolean | Only removes the most recent card when clearing messages |
@@ -247,6 +264,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `nobeephost` | boolean | Disables notification sound for host messages |
 | `nobeepevent` | boolean | Disables notification sound for events |
 | `nobeepmod` | boolean | Disables notification sound for moderator messages |
+| `beeponlymod` | boolean | Enables notification sounds only for moderator messages |
 | `showvipbadge` | boolean | Shows special badge for VIP users |
 | `autofeaturevip` | boolean | Auto-features messages from VIP users |
 | `autofeaturepriv` | boolean | Auto-features messages from privileged users |
@@ -256,10 +274,14 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | Parameter | Values | Description |
 |-----------|---------|-------------|
 | `beep` | boolean | Enables sound notification for new messages |
+| `beeponlymod` | boolean | Enables sound notifications only for moderator messages |
 | `beepvolume` | 0-100 | Sets volume for notification sound (percentage) |
+| `loudbeep` | boolean | Uses a louder built-in dock beep preset. Custom beep URLs take priority; still requires beeps to be enabled. |
 | `custombeep` | URL | Custom sound file URL for notifications |
 | `beepwords` | boolean | Replaces asterisks with "beep" in messages |
 | `quietcommands` | boolean | Disables the TTS beep when command shortcuts trigger |
+
+In Dock settings → Message Mechanics, enable **Louder built-in beep** and use **Preview louder beep** to try it at your Beep volume. Reopen the updated dock link (or update and refresh the OBS browser source) to apply it. The preset is compressed and peak-limited ahead of time; it does not amplify custom sounds or change the 0–100% volume range.
 
 ### OBS Integration Parameters
 
@@ -380,6 +402,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `includeprivate` | boolean | Includes private messages |
 | `password` | string | Sets password for connection |
 | `localserver` | boolean | Uses local WebSocket server |
+| `localserverport` | integer (1024-65535) | Overrides the local WebSocket server port (default: 3000) |
 
 ### Debug & Development Parameters
 
@@ -390,6 +413,15 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `filtertid` | comma-separated numbers | Filter by thread IDs |
 | `branded` | boolean | Shows channel icon |
 
+## Viewer Count & Chat Activity Title (`hype.html`)
+
+Set **Custom title** under **Viewer Count & Chat Activity Overlay → Enable and customize**, then copy the updated overlay link into OBS.
+
+| Parameter | Values | Description |
+|-----------|--------|-------------|
+| `title` | string | Overrides the title with plain text, e.g. `&title=Watching%20now`. Missing, empty, or whitespace-only values keep the default title for the selected viewer/chatter mode |
+| `hidetitle` | boolean | Hides the title, including a custom title. Minimal and Dock Style also hide the title |
+
 ## Tip Jar & Goal Meter Parameters (`tipjar.html`)
 
 | Parameter | Values | Description |
@@ -397,6 +429,11 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `style` | `jar`, `meter`, `bar`, `compact`, `vertical`, `minimal`, `text` | Selects the tip jar display style. `bar` is the fluid goal bar; `compact`/`vertical` are simple square-edged bars for corners; `text` is a one-line readout |
 | `goal` | number | Sets the target amount for the bar or jar |
 | `title` | string | Sets the visible goal title (e.g. `Star Goal`, `SuperChat Goal`) |
+| `goalmetric` | `value`, `count` | Uses donation value by default. `count` adds one per qualifying donation event regardless of its monetary value and takes priority over Hype scoring |
+| `countdonations` | boolean | Alias for `goalmetric=count` |
+| `tipjarevent` or `tipjarevents` | comma-separated event names | Counts only matching paid event types, such as `superchat`, `supersticker`, or `superchat,supersticker` |
+| `countlabel` | string | Overrides the plural unit label used by count goals, such as `Super Chats` |
+| `countsingular` | string | Optional singular label used for one counted event, such as `Super Chat` |
 | `tipjartype` | `usd`, `stars`, `bits`, `coins`, `diamonds`, `kicks`, `jewels`, `tokens`, `hearts`, `gold` | Counts only that donation unit/type. When set, the jar uses the raw unit count instead of converting to USD |
 | `tipjarunit` or `donationtype` | same as `tipjartype` | Alias for `tipjartype` |
 | `tipjarunitlabel` | string | Overrides the displayed unit label for a filtered unit bar |
@@ -406,6 +443,8 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `controls` | boolean | Shows reset/history/export controls |
 | `sound` | boolean | Plays a sound on accepted donations |
 | `hype` | boolean | Enables hype cup scoring mode |
+| `notips`, `nosubs`, `noresubs`, `nogifts` | boolean | Excludes that contribution class from Hype scoring |
+| `excludegiftpurchase` | boolean | Excludes YouTube gifted-membership purchase events from the Tip Jar, including Hype scoring |
 | `levelsize` or `increment` | number | Turns the goal into repeating bands/levels of this size (e.g. `1000` stars or `50` dollars). The bar fills, celebrates, and rolls into the next level instead of stopping |
 | `rollinggoal` or `cumulativegoal` | boolean or number | Keeps the displayed amount cumulative and advances the target to the next goal step after each completion. Example: `goal=50&rollinggoal` displays `$60 / $100` after a $60 total |
 | `goalstep` or `goalincrement` | number | Optional step size for `rollinggoal`; defaults to `goal` |
@@ -429,6 +468,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `onlydonors` | boolean | Only includes users with donation payloads |
 | `donationpriority` | boolean | Groups/sorts donors first, then members, then participants |
 | `showamounts` | boolean | Shows donation totals next to donors |
+| `triggermode` | `auto`, `manual`, `background` | Starts on visibility, by button using page-local collection, or by button using app-background collection |
 
 ## Other options for other overlays.
 

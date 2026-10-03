@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="../../js/local-server-url.js"></script>
-<script src="../../shared/utils/chatHtml.js"></script>
-
+    <meta charset="UTF-8">
+    <meta name="description" content="Featured Message - Particle Effects: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
+    <meta name="robots" content="noindex">
 <script src="../../libs/objects.js"></script>
+<script src="../../shared/utils/chatHtml.js"></script>
 <script src="../../shared/utils/chatBadges.js"></script>
 <link rel="stylesheet" href="../../shared/utils/chatBadges.css">
-
+<script src="../../js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Featured Message - Particle Effects</title>
@@ -57,7 +58,7 @@
         }
 
         /* Style-specific entrance animations */
-        
+
         /* Fireflies - Glow fade in */
         @keyframes fireflyGlow {
             0% {
@@ -76,11 +77,11 @@
                 filter: brightness(1) blur(0);
             }
         }
-        
+
         .style-fireflies .message-container.show {
             animation: fireflyGlow 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-        
+
         /* Snow - Drift down */
         @keyframes snowDrift {
             0% {
@@ -96,11 +97,11 @@
                 transform: translateY(0) translateX(0) rotate(0);
             }
         }
-        
+
         .style-snow .message-container.show {
             animation: snowDrift 0.8s ease-out;
         }
-        
+
         /* Matrix - Digital construction */
         @keyframes matrixConstruct {
             0% {
@@ -129,12 +130,12 @@
                 filter: brightness(1) contrast(1) hue-rotate(360deg);
             }
         }
-        
+
         .style-matrix .message-container.show {
             animation: matrixConstruct 0.8s ease-out;
             transform-origin: top;
         }
-        
+
         /* Bubbles - Float up */
         @keyframes bubbleFloat {
             0% {
@@ -153,11 +154,11 @@
                 filter: blur(0);
             }
         }
-        
+
         .style-bubbles .message-container.show {
             animation: bubbleFloat 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-        
+
         /* Stars - Twinkle in */
         @keyframes starTwinkle {
             0% {
@@ -186,13 +187,13 @@
                 filter: brightness(1);
             }
         }
-        
+
         .style-stars .message-container.show {
             animation: starTwinkle 0.8s ease-out;
         }
-        
+
         /* Exit animations */
-        
+
         /* Fireflies - Fade to darkness */
         @keyframes fireflyFade {
             0% {
@@ -206,11 +207,11 @@
                 filter: brightness(0) blur(20px);
             }
         }
-        
+
         .style-fireflies .message-container.hide {
             animation: fireflyFade 0.8s ease-in forwards;
         }
-        
+
         /* Snow - Melt away */
         @keyframes snowMelt {
             0% {
@@ -228,11 +229,11 @@
                 filter: blur(10px);
             }
         }
-        
+
         .style-snow .message-container.hide {
             animation: snowMelt 0.6s ease-in forwards;
         }
-        
+
         /* Matrix - Digital deconstruction */
         @keyframes matrixDeconstruct {
             0% {
@@ -246,12 +247,12 @@
                 filter: brightness(0) blur(10px) hue-rotate(180deg);
             }
         }
-        
+
         .style-matrix .message-container.hide {
             animation: matrixDeconstruct 0.5s ease-in forwards;
             transform-origin: bottom;
         }
-        
+
         /* Bubbles - Pop */
         @keyframes bubblePop {
             0% {
@@ -269,11 +270,11 @@
                 filter: brightness(2) blur(20px);
             }
         }
-        
+
         .style-bubbles .message-container.hide {
             animation: bubblePop 0.4s ease-out forwards;
         }
-        
+
         /* Stars - Fade to stardust */
         @keyframes starDust {
             0% {
@@ -287,7 +288,7 @@
                 filter: brightness(0) blur(20px);
             }
         }
-        
+
         .style-stars .message-container.hide {
             animation: starDust 0.8s ease-in forwards;
         }
@@ -413,7 +414,7 @@
             word-wrap: break-word;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
-        
+
         /* Inline images/SVGs in chat messages */
         .text img,
         .text svg {
@@ -426,7 +427,7 @@
             margin: 0 2px;
             display: inline-block;
         }
-        
+
         /* Emote-specific sizing */
         .text img.emote,
         .text svg.emote,
@@ -452,21 +453,31 @@
         /* Style-specific text colors */
         .style-fireflies .username { color: #ffdb58; }
         .style-fireflies .text { color: #ffeaa7; }
-        
+
         .style-snow .username { color: #2980b9; }
         .style-snow .text { color: #34495e; }
-        
+
         .style-matrix .username { 
             color: #00ff00; 
             text-transform: uppercase;
             letter-spacing: 2px;
         }
-        
+
         .style-bubbles .username { color: #ffffff; }
         .style-bubbles .text { color: #e0f2ff; }
-        
+
         .style-stars .username { color: #ffd700; }
         .style-stars .text { color: #e0e0ff; }
+        .content-image {
+            display: block;
+            max-width: 100%;
+            max-height: 200px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            margin-top: 12px;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -666,7 +677,7 @@
         function createIframe() {
             if (SocialStreamLocalServer.connectLocalRelay(urlParams, roomID, processMessage, true)) return;
             const iframe = document.createElement('iframe');
-            iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+            iframe.src = `https://vdo.socialstream.ninja/?ln&password=${encodeURIComponent(password)}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
             iframe.style.cssText = 'width:0;height:0;position:fixed;left:-100px;top:-100px;';
             iframe.id = 'vdoninja';
             iframe.allow = 'microphone';
@@ -711,7 +722,7 @@
                 if (data.value) {
                     try {
                         const parsed = JSON.parse(data.value);
-                        if (parsed && "chatmessage" in parsed) {
+                        if (parsed && ("chatmessage" in parsed || "contentimg" in parsed)) {
                             showMessage(parsed);
                         }
                     } catch (e) {
@@ -722,13 +733,13 @@
                 }
             }
             // Direct message format
-            else if (data && "chatmessage" in data) {
+            else if (data && ("chatmessage" in data || "contentimg" in data)) {
                 showMessage(data);
             }
         }
 
         function showMessage(content) {
-            if (!content.chatmessage && !content.chatname) return;
+            if (!content.chatmessage && !content.chatname && !content.contentimg) return;
 
             hideMessage(() => {
                 const container = document.createElement('div');
@@ -785,6 +796,7 @@
                 if (content.chatmessage) {
                     const text = document.createElement('div');
                     text.className = 'text';
+                    // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
                     if (content.textonly === true) text.textContent = content.chatmessage;
                     else text.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(content.chatmessage) : fallbackEscapeHtml(content.chatmessage));
                     contentDiv.appendChild(text);
@@ -796,6 +808,15 @@
                     info.className = 'donation-info';
                     info.textContent = content.hasDonation || content.membership;
                     contentDiv.appendChild(info);
+                }
+
+                if (content.contentimg) {
+                    const img = document.createElement('img');
+                    img.className = 'content-image';
+                    img.src = content.contentimg;
+                    img.alt = (content.meta && content.meta.gifLabel) || 'Content image';
+                    img.onerror = function () { this.style.display = 'none'; };
+                    contentDiv.appendChild(img);
                 }
 
                 message.appendChild(contentDiv);

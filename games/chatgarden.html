@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Chat Garden: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Garden - Social Stream Ninja</title>
-    <link rel="icon" href="../favicon.ico" />
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
     <link rel="preload" href="../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin>
     <style>
         /* Hide scrollbars */
@@ -24,7 +28,7 @@
             font-style: normal;
             font-display: swap;
         }
-        
+
         body {
             margin: 0;
             padding: 0;
@@ -33,21 +37,21 @@
             font-family: 'Arial', 'NotoColorEmoji', sans-serif;
             color: white;
         }
-        
+
         body.chroma {
             background: #00ff00;
         }
-        
+
         body.darkmode {
             background: linear-gradient(to bottom, #2c3e50 0%, #34495e 30%, #1a252f 100%);
         }
-        
+
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
+
         #garden-ground {
             position: absolute;
             bottom: 0;
@@ -56,7 +60,7 @@
             background: linear-gradient(to bottom, #8FBC8F 0%, #228B22 100%);
             border-top: 3px solid #654321;
         }
-        
+
         .plant {
             position: absolute;
             bottom: 0;
@@ -64,31 +68,31 @@
             cursor: pointer;
             transition: transform 0.3s ease;
         }
-        
+
         .plant:hover {
             transform: scale(1.1);
         }
-        
+
         .plant-flower {
             font-size: 48px;
             animation: flower-bloom 1.5s ease-out forwards;
         }
-        
+
         .plant-tree {
             font-size: 64px;
             animation: tree-grow 2.5s ease-out forwards;
         }
-        
+
         .plant-bush {
             font-size: 36px;
             animation: bush-spread 2s ease-out forwards;
         }
-        
+
         .plant-grass {
             font-size: 24px;
             animation: grass-wave 3s ease-in-out infinite;
         }
-        
+
         @keyframes plant-grow {
             0% {
                 transform: scale(0) translateY(50px);
@@ -99,13 +103,13 @@
                 opacity: 1;
             }
         }
-        
+
         @keyframes flower-bloom {
             0% { transform: scale(0) rotate(0deg); }
             50% { transform: scale(1.2) rotate(180deg); }
             100% { transform: scale(1) rotate(360deg); }
         }
-        
+
         @keyframes tree-grow {
             0% { 
                 transform: scale(0.1) translateY(100px);
@@ -116,17 +120,17 @@
                 filter: blur(0px);
             }
         }
-        
+
         @keyframes bush-spread {
             0% { transform: scaleX(0.1) scaleY(0.5); }
             100% { transform: scaleX(1) scaleY(1); }
         }
-        
+
         @keyframes grass-wave {
             0%, 100% { transform: rotate(-2deg); }
             50% { transform: rotate(2deg); }
         }
-        
+
         .plant-label {
             position: absolute;
             bottom: -30px;
@@ -142,11 +146,11 @@
             opacity: 0;
             transition: opacity 0.3s ease;
         }
-        
+
         .plant:hover .plant-label {
             opacity: 1;
         }
-        
+
         .sparkle {
             position: absolute;
             font-size: 20px;
@@ -155,7 +159,7 @@
             pointer-events: none;
             z-index: 100;
         }
-        
+
         @keyframes sparkle-float {
             0% {
                 opacity: 1;
@@ -166,7 +170,7 @@
                 transform: translateY(-100px) rotate(360deg);
             }
         }
-        
+
         .butterfly {
             position: absolute;
             font-size: 32px;
@@ -174,7 +178,7 @@
             z-index: 50;
             pointer-events: none;
         }
-        
+
         @keyframes butterfly-flight {
             0% {
                 left: -100px;
@@ -202,7 +206,7 @@
                 transform: rotate(0deg);
             }
         }
-        
+
         #garden-stats {
             position: absolute;
             top: 20px;
@@ -214,12 +218,12 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
         }
-        
+
         .stat-line {
             margin: 5px 0;
             font-size: 16px;
         }
-        
+
         #growth-meter {
             position: absolute;
             top: 20px;
@@ -232,7 +236,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
         }
-        
+
         .growth-bar {
             width: 100%;
             height: 15px;
@@ -241,7 +245,7 @@
             margin: 8px 0;
             overflow: hidden;
         }
-        
+
         .growth-fill {
             height: 100%;
             background: linear-gradient(90deg, #90EE90, #228B22);
@@ -249,7 +253,7 @@
             transition: width 0.5s ease;
             width: 0%;
         }
-        
+
         #weather-system {
             position: absolute;
             top: 0;
@@ -259,7 +263,7 @@
             pointer-events: none;
             z-index: 20;
         }
-        
+
         .rain-drop {
             position: absolute;
             width: 2px;
@@ -267,7 +271,7 @@
             background: linear-gradient(to bottom, transparent, #87CEEB);
             animation: rain-fall 1s linear infinite;
         }
-        
+
         @keyframes rain-fall {
             0% {
                 top: -20px;
@@ -278,7 +282,7 @@
                 opacity: 0;
             }
         }
-        
+
         .sun-ray {
             position: absolute;
             top: 10%;
@@ -287,7 +291,7 @@
             color: #FFD700;
             animation: sun-shine 3s ease-in-out infinite;
         }
-        
+
         @keyframes sun-shine {
             0%, 100% { 
                 transform: scale(1) rotate(0deg);
@@ -298,7 +302,7 @@
                 text-shadow: 0 0 40px #FFD700;
             }
         }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -311,12 +315,12 @@
             font-size: 16px;
             z-index: 100;
         }
-        
+
         #instructions strong {
             color: #90EE90;
             font-size: 18px;
         }
-        
+
         .seasonal-effect {
             position: absolute;
             top: 0;
@@ -328,12 +332,12 @@
             opacity: 0;
             transition: opacity 1s ease;
         }
-        
+
         .spring-petals {
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="%23FFC0CB"/></svg>') repeat;
             animation: petals-drift 10s linear infinite;
         }
-        
+
         @keyframes petals-drift {
             0% { background-position: 0 -100%; }
             100% { background-position: 0 100%; }
@@ -382,6 +386,7 @@
     <script>
         // URL parameters
         const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
         const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
         const password = urlParams.get('password') || 'false';
 
@@ -453,11 +458,11 @@
                     foundPlants.push(word);
                 }
                 // Plant variations
-                else if (word.includes('flower') && !foundPlants.includes('flower')) foundPlants.push('flower');
-                else if (word.includes('tree') && !foundPlants.includes('tree')) foundPlants.push('tree');
-                else if (word.includes('rose') && !foundPlants.includes('rose')) foundPlants.push('rose');
-                else if (word.includes('grass') && !foundPlants.includes('grass')) foundPlants.push('grass');
-                else if (word.includes('plant')) foundPlants.push('flower'); // Generic plant becomes flower
+                else if (/^flowers?$/.test(word) && !foundPlants.includes('flower')) foundPlants.push('flower');
+                else if (/^trees?$/.test(word) && !foundPlants.includes('tree')) foundPlants.push('tree');
+                else if (/^roses?$/.test(word) && !foundPlants.includes('rose')) foundPlants.push('rose');
+                else if (/^grass(es)?$/.test(word) && !foundPlants.includes('grass')) foundPlants.push('grass');
+                else if (/^plants?$/.test(word)) foundPlants.push('flower'); // Generic plant becomes flower
             });
             
             return foundPlants;
@@ -543,7 +548,6 @@
                     const sparkle = document.createElement('div');
                     sparkle.className = 'sparkle';
                     sparkle.textContent = '✨';
-                    sparkle.style.left = plantElement.style.left;
                     sparkle.style.bottom = (parseInt(plantElement.style.bottom) + 30) + '%';
                     sparkle.style.left = (parseFloat(plantElement.style.left) + (Math.random() * 10 - 5)) + '%';
                     
@@ -619,6 +623,8 @@
 
         // Update display
         function updateDisplay() {
+            updateGardenMetrics();
+            
             document.getElementById('plant-count').textContent = gameState.totalPlants;
             document.getElementById('flower-count').textContent = gameState.flowerCount;
             document.getElementById('tree-count').textContent = gameState.treeCount;
@@ -628,8 +634,6 @@
             // Update progress bars
             document.getElementById('biodiversity-fill').style.width = gameState.biodiversity + '%';
             document.getElementById('growth-fill').style.width = Math.min(gameState.growthRate, 100) + '%';
-            
-            updateGardenMetrics();
         }
 
         function stripHtml(html) {
@@ -659,6 +663,9 @@
             
             if (foundPlants.length === 0) return;
 
+            if (gameState.gardeners.size >= 500) {
+                gameState.gardeners = new Set(Array.from(gameState.gardeners).slice(-250));
+            }
             gameState.gardeners.add(username);
             gameState.lastPlantTime = Date.now();
             
@@ -675,30 +682,32 @@
         }
 
         // Setup iframe communication
-        const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.position = "fixed";
-        iframe.style.left = "-100px";
-        iframe.style.top = "-100px";
-        iframe.id = "frame1";
-        document.body.appendChild(iframe);
-        
-        // Listen for messages
-        window.addEventListener("message", function(e) {
-            if (e.source !== iframe.contentWindow) return;
+        if (!urlParams.has('demo') && !chatRelay.enabled) {
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
             
-            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
-                if ("overlayNinja" in e.data.dataReceived) {
-                    processData(e.data.dataReceived.overlayNinja);
+            // Listen for messages
+            window.addEventListener("message", function(e) {
+                if (e.source !== iframe.contentWindow) return;
+                
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
                 }
-            }
-        });
-        
+            });
+        }
+
         // Handle WebSocket connection
-        if (urlParams.has('server')) {
-            const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
+        if (!urlParams.has('demo') && chatRelay.enabled) {
+            const serverUrl = chatRelay.url;
             let socketserver = null;
             let reconnectTimeout = null;
 
@@ -708,8 +717,7 @@
                 socketserver.onopen = function() {
                     socketserver.send(JSON.stringify({
                         join: sessionId.split(",")[0],
-                        out: 2,
-                        in: 1
+                        out: chatRelay.out, in: chatRelay.in
                     }));
                 };
 

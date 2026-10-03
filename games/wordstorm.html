@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Word Storm: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Word Storm - Social Stream Ninja</title>
@@ -24,21 +28,21 @@
             font-family: 'Arial', sans-serif;
             color: white;
         }
-        
+
         body.chroma {
             background: #00ff00;
         }
-        
+
         body.darkmode {
             background: #000000;
         }
-        
+
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
+
         #word-cloud {
             position: absolute;
             top: 50%;
@@ -48,7 +52,7 @@
             height: 70%;
             perspective: 1000px;
         }
-        
+
         .word-bubble {
             position: absolute;
             padding: 8px 16px;
@@ -62,30 +66,30 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
             backdrop-filter: blur(5px);
         }
-        
+
         .word-bubble:hover {
             transform: scale(1.1);
             z-index: 10;
         }
-        
+
         .word-size-1 { font-size: 16px; }
         .word-size-2 { font-size: 20px; }
         .word-size-3 { font-size: 24px; }
         .word-size-4 { font-size: 32px; }
         .word-size-5 { font-size: 40px; }
         .word-size-6 { font-size: 48px; }
-        
+
         @keyframes float {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
             25% { transform: translateY(-10px) rotate(1deg); }
             50% { transform: translateY(-5px) rotate(-1deg); }
             75% { transform: translateY(-15px) rotate(1deg); }
         }
-        
+
         .word-new {
             animation: word-spawn 0.8s ease-out;
         }
-        
+
         @keyframes word-spawn {
             0% {
                 opacity: 0;
@@ -100,17 +104,17 @@
                 transform: scale(1) rotate(0deg);
             }
         }
-        
+
         .word-popular {
             animation: word-pulse 2s ease-in-out infinite;
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
         }
-        
+
         @keyframes word-pulse {
             0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
             50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.9); }
         }
-        
+
         #stats {
             position: absolute;
             top: 20px;
@@ -122,12 +126,12 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
         }
-        
+
         .stat-line {
             margin: 5px 0;
             font-size: 16px;
         }
-        
+
         #trending {
             position: absolute;
             top: 20px;
@@ -140,7 +144,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
         }
-        
+
         .trending-word {
             display: flex;
             justify-content: space-between;
@@ -151,13 +155,13 @@
             border-radius: 15px;
             font-size: 14px;
         }
-        
+
         .trending-rank {
             font-weight: bold;
             color: #ffd700;
             margin-right: 10px;
         }
-        
+
         #word-storm-center {
             position: absolute;
             top: 50%;
@@ -171,7 +175,7 @@
             pointer-events: none;
             animation: storm-pulse 3s ease-in-out infinite;
         }
-        
+
         @keyframes storm-pulse {
             0%, 100% { 
                 transform: translate(-50%, -50%) scale(1);
@@ -182,7 +186,7 @@
                 text-shadow: 0 0 50px rgba(255, 215, 0, 1);
             }
         }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -195,12 +199,12 @@
             font-size: 16px;
             z-index: 100;
         }
-        
+
         #instructions strong {
             color: #ffd700;
             font-size: 18px;
         }
-        
+
         .connection-line {
             position: absolute;
             height: 2px;
@@ -209,13 +213,13 @@
             z-index: 5;
             pointer-events: none;
         }
-        
+
         @keyframes connection-fade {
             0% { opacity: 0; }
             50% { opacity: 1; }
             100% { opacity: 0; }
         }
-        
+
         .word-combo {
             position: absolute;
             top: 50%;
@@ -229,7 +233,7 @@
             pointer-events: none;
             animation: combo-explosion 2s ease-out forwards;
         }
-        
+
         @keyframes combo-explosion {
             0% { 
                 opacity: 0; 
@@ -280,6 +284,7 @@
     <script>
         // URL parameters
         const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
         const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
         const password = urlParams.get('password') || 'false';
 
@@ -294,7 +299,6 @@
         let gameState = {
             words: new Map(),
             activeWords: [],
-            totalWords: 0,
             popularWords: 0,
             comboCount: 0,
             stormLevel: 0,
@@ -317,7 +321,7 @@
             'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
             'will', 'would', 'could', 'should', 'may', 'might', 'can', 'shall', 'must',
             'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
-            'my', 'your', 'his', 'her', 'its', 'our', 'their', 'this', 'that', 'these', 'those'
+            'my', 'your', 'his', 'its', 'our', 'their', 'this', 'that', 'these', 'those'
         ]);
 
         function stripHtml(html) {
@@ -380,17 +384,19 @@
                 wordToRemove = gameState.activeWords[0];
             }
             
-            // Remove the word
+            // Remove the word from tracking immediately so repeat calls pick another word
             if (wordToRemove) {
+                gameState.activeWords = gameState.activeWords.filter(w => w !== wordToRemove);
                 const bubble = document.getElementById(`word-${wordToRemove}`);
                 if (bubble) {
                     bubble.style.animation = 'word-spawn 0.3s ease-in reverse';
                     setTimeout(() => {
                         bubble.remove();
                         gameState.words.delete(wordToRemove);
-                        gameState.activeWords = gameState.activeWords.filter(w => w !== wordToRemove);
                         updateDisplay();
                     }, 300);
+                } else {
+                    gameState.words.delete(wordToRemove);
                 }
             }
         }
@@ -432,9 +438,9 @@
                 }, 800);
             }
             
-            // Update appearance based on frequency
+            // Update appearance based on frequency (preserve spawn animation class)
             bubble.style.background = getWordColor(frequency);
-            bubble.className = `word-bubble ${getWordSize(frequency)}`;
+            bubble.className = `word-bubble ${getWordSize(frequency)}` + (bubble.classList.contains('word-new') ? ' word-new' : '');
             
             if (frequency >= 5) {
                 bubble.classList.add('word-popular');
@@ -652,38 +658,38 @@
                 if (currentCount === 0) {
                     checkCombos(word);
                 }
-                
-                gameState.totalWords++;
             });
 
             updateDisplay();
         }
 
         // Setup iframe communication
-        const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.position = "fixed";
-        iframe.style.left = "-100px";
-        iframe.style.top = "-100px";
-        iframe.id = "frame1";
-        document.body.appendChild(iframe);
-        
-        // Listen for messages
-        window.addEventListener("message", function(e) {
-            if (e.source !== iframe.contentWindow) return;
+        if (!urlParams.has('demo') && !chatRelay.enabled) {
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
             
-            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
-                if ("overlayNinja" in e.data.dataReceived) {
-                    processData(e.data.dataReceived.overlayNinja);
+            // Listen for messages
+            window.addEventListener("message", function(e) {
+                if (e.source !== iframe.contentWindow) return;
+                
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
                 }
-            }
-        });
-        
+            });
+        }
+
         // Handle WebSocket connection
-        if (urlParams.has('server')) {
-            const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
+        if (!urlParams.has('demo') && chatRelay.enabled) {
+            const serverUrl = chatRelay.url;
             let socketserver = null;
             let reconnectTimeout = null;
 
@@ -693,8 +699,7 @@
                 socketserver.onopen = function() {
                     socketserver.send(JSON.stringify({
                         join: sessionId.split(",")[0],
-                        out: 2,
-                        in: 1
+                        out: chatRelay.out, in: chatRelay.in
                     }));
                 };
 

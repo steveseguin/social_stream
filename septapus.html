@@ -16,7 +16,7 @@
 	<link href="https://fonts.googleapis.com/css2?family=Changa+One:ital@0;1&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css2?family=Changa+One:ital@0;1&family=Imprima&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
     <style>
-	
+
 	yt-live-chat-renderer {
 		height: 100%;
 		display: block;
@@ -352,8 +352,8 @@
 		padding: 2px 4px;
 		border-radius: 3px;
 	}
-	
-	
+
+
 	</style>
 </head>
 <yt-live-chat-renderer>
@@ -489,7 +489,7 @@
 		if (urlParams.has("session")) {
 		  roomID = urlParams.get("session");
 		}
-		var password = "false";
+		var password = urlParams.get("password") || urlParams.get("pass") || urlParams.get("pw") || "false";
 		var featuredMode = false;
 
 		const chatList = document.querySelector('yt-live-chat-item-list-renderer');
@@ -665,9 +665,9 @@
 		document.addEventListener('DOMContentLoaded', () => {
 		  var iframe = document.createElement("iframe");
 		  if (featuredMode) {
-			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${encodeURIComponent(password)}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
 		  } else {
-			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
+			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+encodeURIComponent(password)+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
 		  }
 		  
 		  iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";

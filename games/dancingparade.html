@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Dancing Parade: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dancing Parade - Social Stream Ninja</title>
@@ -23,7 +27,7 @@
             overflow: hidden;
             font-family: 'Arial', sans-serif;
         }
-        
+
         #parade-container {
             position: fixed;
             bottom: 0;
@@ -32,7 +36,7 @@
             height: 200px;
             background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
         }
-        
+
         #parade-track {
             position: absolute;
             bottom: 20px;
@@ -46,7 +50,7 @@
                 rgba(255,255,255,0.1) 55%,
                 transparent 100%);
         }
-        
+
         .dancer {
             position: absolute;
             bottom: 30px;
@@ -55,23 +59,23 @@
             animation: walk 1s ease-in-out infinite;
             filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
         }
-        
+
         @keyframes walk {
             0%, 100% { transform: translateY(0) rotate(-5deg); }
             50% { transform: translateY(-10px) rotate(5deg); }
         }
-        
+
         .dancing {
             animation: dance 0.5s ease-in-out infinite;
         }
-        
+
         @keyframes dance {
             0%, 100% { transform: translateY(0) rotate(-15deg) scale(1); }
             25% { transform: translateY(-20px) rotate(15deg) scale(1.1); }
             50% { transform: translateY(0) rotate(-15deg) scale(1); }
             75% { transform: translateY(-20px) rotate(15deg) scale(1.1); }
         }
-        
+
         .username-label {
             position: absolute;
             bottom: -25px;
@@ -87,7 +91,7 @@
             border: 1px solid rgba(255,255,255,0.3);
             text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
-        
+
         .sparkle {
             position: absolute;
             color: #FFD700;
@@ -95,7 +99,7 @@
             animation: sparkle 1s ease-out forwards;
             pointer-events: none;
         }
-        
+
         @keyframes sparkle {
             0% { 
                 transform: translateY(0) scale(0);
@@ -106,7 +110,7 @@
                 opacity: 0;
             }
         }
-        
+
         #music-note-display {
             position: absolute;
             top: 10px;
@@ -114,12 +118,12 @@
             font-size: 24px;
             animation: musicPulse 1s ease-in-out infinite;
         }
-        
+
         @keyframes musicPulse {
             0%, 100% { transform: scale(1); opacity: 0.7; }
             50% { transform: scale(1.2); opacity: 1; }
         }
-        
+
         #parade-info {
             position: absolute;
             top: 10px;
@@ -131,7 +135,7 @@
             font-size: 16px;
             backdrop-filter: blur(10px);
         }
-        
+
         .confetti {
             position: absolute;
             width: 10px;
@@ -140,7 +144,7 @@
             top: -10px;
             animation: confettiFall 3s linear infinite;
         }
-        
+
         @keyframes confettiFall {
             0% { 
                 transform: translateY(0) rotate(0deg);
@@ -151,7 +155,7 @@
                 opacity: 0;
             }
         }
-        
+
         .rainbow-trail {
             position: absolute;
             height: 3px;
@@ -167,7 +171,7 @@
             pointer-events: none;
             opacity: 0.8;
         }
-        
+
         #conga-line-bonus {
             position: absolute;
             top: 50%;
@@ -180,13 +184,13 @@
             display: none;
             animation: bonusFlash 2s ease-out forwards;
         }
-        
+
         @keyframes bonusFlash {
             0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
             50% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
             100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
         }
-        
+
         .dance-battle-zone {
             position: absolute;
             bottom: 0;
@@ -200,7 +204,7 @@
 <body>
     <div id="parade-container">
         <div id="parade-track"></div>
-        <div id="dance-battle-zone"></div>
+        <div id="dance-battle-zone" class="dance-battle-zone"></div>
         
         <div id="parade-info">
             <div>🎉 Dancing Parade</div>
@@ -215,6 +219,7 @@
     <script>
     // Game state
     const dancers = new Map();
+    const MAX_DANCERS = 30;
     const availableCharacters = ['🕺', '💃', '🦜', '🦄', '🐸', '🤖', '👻', '🦋', '🐙', '🦊'];
     const danceEmotes = ['🎵', '🎶', '🎤', '🎸', '🥁', '🎹', '🎺', '🎷'];
     let congaLineActive = false;
@@ -222,6 +227,7 @@
     
     // URL parameters
     const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
     const sessionId = urlParams.get('session') || 'test';
     const password = urlParams.get('password') || 'false';
     
@@ -323,17 +329,23 @@
         }
     }
     
-    function addDancer(username) {
-        if (dancers.has(username)) {
+    function addDancer(username, playerKey = username) {
+        if (dancers.has(playerKey)) {
             // Make existing dancer dance
-            dancers.get(username).dance();
+            dancers.get(playerKey).dance();
             return;
+        }
+        
+        if (dancers.size >= MAX_DANCERS) {
+            const oldestUsername = dancers.keys().next().value;
+            dancers.get(oldestUsername).remove();
+            dancers.delete(oldestUsername);
         }
         
         // Pick random character
         const character = availableCharacters[Math.floor(Math.random() * availableCharacters.length)];
         const dancer = new Dancer(username, character);
-        dancers.set(username, dancer);
+        dancers.set(playerKey, dancer);
         
         // Create join effect
         createConfetti();
@@ -344,8 +356,8 @@
         sendResponse(`${character} ${username} joined the parade!`);
     }
     
-    function makeDance(username) {
-        const dancer = dancers.get(username);
+    function makeDance(username, playerKey = username) {
+        const dancer = dancers.get(playerKey);
         if (dancer) {
             dancer.dance();
             
@@ -410,7 +422,7 @@
         
         if (nearbyDancers.length > 0) {
             // Start dance battle
-            const battleZone = document.querySelector('.dance-battle-zone');
+            const battleZone = document.getElementById('dance-battle-zone');
             battleZone.style.left = dancer.position + 'px';
             battleZone.style.display = 'block';
             
@@ -438,6 +450,7 @@
     }
     
     function sendResponse(message) {
+        if (urlParams.has('demo')) return;
         const response = {
             chatname: 'ParadeBot',
             chatmessage: message,
@@ -456,12 +469,12 @@
     }
     
     function stripHtml(html) {
-        const tmp = document.createElement('div');
-        tmp.innerHTML = html;
-        return tmp.textContent || tmp.innerText || '';
+        return new DOMParser().parseFromString(String(html), 'text/html').body.textContent || '';
     }
 
     function processData(data) {
+        if (!data || typeof data !== 'object') return;
+
         if (data.content) {
             data = data.content;
         }
@@ -474,17 +487,18 @@
             rawMessage = stripHtml(rawMessage);
         }
         const message = rawMessage.trim().toLowerCase();
-        const username = stripHtml(data.chatname);
+        const username = String(data.chatname);
+        const playerKey = JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]);
 
         if (message === '!join') {
-            addDancer(username);
+            addDancer(username, playerKey);
         } else if (message === '!dance') {
-            makeDance(username);
+            makeDance(username, playerKey);
         } else if (message === '!leave') {
-            const dancer = dancers.get(username);
+            const dancer = dancers.get(playerKey);
             if (dancer) {
                 dancer.remove();
-                dancers.delete(username);
+                dancers.delete(playerKey);
                 sendResponse(`${username} left the parade 👋`);
             }
         }
@@ -511,29 +525,31 @@
     update();
     
     // Setup iframe communication
-    const iframe = document.createElement("iframe");
-    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
-    iframe.style.width = "0px";
-    iframe.style.height = "0px";
-    iframe.style.position = "fixed";
-    iframe.style.left = "-100px";
-    iframe.style.top = "-100px";
-    iframe.id = "frame1";
-    document.body.appendChild(iframe);
-    
-    window.addEventListener("message", function(e) {
-        if (e.source !== iframe.contentWindow) return;
+    if (!urlParams.has('demo') && !chatRelay.enabled) {
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
         
-        if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
-            if ("overlayNinja" in e.data.dataReceived) {
-                processData(e.data.dataReceived.overlayNinja);
+        window.addEventListener("message", function(e) {
+            if (e.source !== iframe.contentWindow) return;
+            
+            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
             }
-        }
-    });
-    
+        });
+    }
+
     // Handle WebSocket if server parameter provided
-    if (urlParams.has('server')) {
-        const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
+    if (!urlParams.has('demo') && chatRelay.enabled) {
+        const serverUrl = chatRelay.url;
         let socketserver = null;
         let reconnectTimeout = null;
 
@@ -543,8 +559,7 @@
             socketserver.onopen = function() {
                 socketserver.send(JSON.stringify({
                     join: sessionId.split(",")[0],
-                    out: 2,
-                    in: 1
+                    out: chatRelay.out, in: chatRelay.in
                 }));
             };
 

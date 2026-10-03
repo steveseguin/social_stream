@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Emoji Rain: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emoji Rain - Social Stream Ninja</title>
@@ -22,7 +26,7 @@
             unicode-range: U+1F1E6-1F1FF;
             src: url(../thirdparty/NotoColorEmoji.ttf);
         }
-        
+
         body {
             margin: 0;
             padding: 0;
@@ -31,21 +35,21 @@
             font-family: 'NotoColorEmojiLimited', 'Arial', sans-serif;
             color: white;
         }
-        
+
         body.chroma {
             background: #00ff00;
         }
-        
+
         body.darkmode {
             background: #000000;
         }
-        
+
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
+
         .emoji-drop {
             position: absolute;
             font-size: 48px;
@@ -55,7 +59,7 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
             animation: fall linear forwards;
         }
-        
+
         @keyframes fall {
             0% {
                 transform: translateY(-100px) rotate(0deg);
@@ -66,7 +70,7 @@
                 opacity: 0.3;
             }
         }
-        
+
         .emoji-burst {
             position: absolute;
             font-size: 80px;
@@ -75,7 +79,7 @@
             z-index: 20;
             animation: burst 2s ease-out forwards;
         }
-        
+
         @keyframes burst {
             0% {
                 transform: scale(0) rotate(0deg);
@@ -90,7 +94,7 @@
                 opacity: 0;
             }
         }
-        
+
         #stats {
             position: absolute;
             top: 20px;
@@ -102,12 +106,12 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
         }
-        
+
         .stat-line {
             margin: 5px 0;
             font-size: 16px;
         }
-        
+
         #emoji-counter {
             position: absolute;
             top: 20px;
@@ -120,7 +124,7 @@
             text-align: center;
             z-index: 100;
         }
-        
+
         #rain-intensity {
             position: absolute;
             bottom: 20px;
@@ -134,7 +138,7 @@
             text-align: center;
             z-index: 100;
         }
-        
+
         .intensity-bar {
             width: 200px;
             height: 10px;
@@ -143,7 +147,7 @@
             margin: 10px 0;
             overflow: hidden;
         }
-        
+
         .intensity-fill {
             height: 100%;
             background: linear-gradient(90deg, #00ff88, #ffaa00, #ff0066);
@@ -151,7 +155,7 @@
             transition: width 0.5s ease;
             width: 0%;
         }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -164,12 +168,12 @@
             font-size: 16px;
             z-index: 100;
         }
-        
+
         #instructions strong {
             color: #ffaa00;
             font-size: 18px;
         }
-        
+
         .combo-indicator {
             position: absolute;
             top: 50%;
@@ -183,7 +187,7 @@
             pointer-events: none;
             animation: combo-pop 1s ease-out forwards;
         }
-        
+
         @keyframes combo-pop {
             0% { 
                 opacity: 0; 
@@ -234,6 +238,7 @@
     <script>
         // URL parameters
         const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
         const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
         const password = urlParams.get('password') || 'false';
 
@@ -393,19 +398,17 @@
             let text = data.chatmessage;
             
             // If textonly is not set, we need to extract text from HTML
+            // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
             if (!data.textonly) {
-                const tmp = document.createElement('div');
-                tmp.innerHTML = data.chatmessage;
-                text = tmp.textContent || tmp.innerText || '';
+                text = new DOMParser().parseFromString(String(data.chatmessage), 'text/html').body.textContent || '';
             }
             
             const emojis = extractEmojis(text);
             if (emojis.length === 0) return;
 
-            // Track emoji activity
-            gameState.emojiTimestamps.push(Date.now());
-            
             emojis.forEach((emoji, index) => {
+                // Track emoji activity per emoji dropped
+                gameState.emojiTimestamps.push(Date.now());
                 gameState.totalDrops++;
                 gameState.recentEmojis.push(emoji);
                 
@@ -441,30 +444,32 @@
         }
 
         // Setup iframe communication
-        const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.position = "fixed";
-        iframe.style.left = "-100px";
-        iframe.style.top = "-100px";
-        iframe.id = "frame1";
-        document.body.appendChild(iframe);
-        
-        // Listen for messages
-        window.addEventListener("message", function(e) {
-            if (e.source !== iframe.contentWindow) return;
+        if (!urlParams.has('demo') && !chatRelay.enabled) {
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
             
-            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
-                if ("overlayNinja" in e.data.dataReceived) {
-                    processData(e.data.dataReceived.overlayNinja);
+            // Listen for messages
+            window.addEventListener("message", function(e) {
+                if (e.source !== iframe.contentWindow) return;
+                
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
                 }
-            }
-        });
-        
+            });
+        }
+
         // Handle WebSocket connection
-        if (urlParams.has('server')) {
-            const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
+        if (!urlParams.has('demo') && chatRelay.enabled) {
+            const serverUrl = chatRelay.url;
             let socketserver = null;
             let reconnectTimeout = null;
 
@@ -474,8 +479,7 @@
                 socketserver.onopen = function() {
                     socketserver.send(JSON.stringify({
                         join: sessionId.split(",")[0],
-                        out: 2,
-                        in: 1
+                        out: chatRelay.out, in: chatRelay.in
                     }));
                 };
 
@@ -507,7 +511,7 @@
         if (urlParams.has('demo')) {
             const demoEmojis = ['😀', '😍', '🤔', '😂', '👍', '❤️', '🔥', '💯', '🎉', '⚡', '🌟', '💫'];
             
-            setInterval(() => {
+            function demoDrop() {
                 const emoji = demoEmojis[Math.floor(Math.random() * demoEmojis.length)];
                 const shouldCombo = Math.random() < 0.3; // 30% chance for combo
                 
@@ -515,7 +519,10 @@
                     chatname: 'DemoUser',
                     chatmessage: shouldCombo && gameState.lastComboEmoji ? gameState.lastComboEmoji : emoji
                 });
-            }, 500 + Math.random() * 1000);
+                
+                setTimeout(demoDrop, 500 + Math.random() * 1000);
+            }
+            setTimeout(demoDrop, 500 + Math.random() * 1000);
         }
         
         // Update emoji rate periodically

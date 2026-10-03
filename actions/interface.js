@@ -18,6 +18,7 @@ async function startFlowSystem() {
             fetchWithTimeout: window.fetchWithTimeout || null,
             sanitizeRelay: window.sanitizeRelay || null,
             checkExactDuplicateAlreadyRelayed: window.checkExactDuplicateAlreadyRelayed || null,
+			printThermal: window.printThermal || window.ninjafy?.printThermal?.bind(window.ninjafy) || null,
             // Check for handleSpotifyAction dynamically at call time (not construction time)
             // so it works even if background.js finishes loading after this EventFlowSystem is created
             sendMessageToBackground: async (msg) => {

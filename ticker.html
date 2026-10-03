@@ -1,13 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="News Ticker. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+<script src="shared/overlay-control-transport.js"></script>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="icon" href="./favicon.ico" />
     <title>News Ticker</title>
     <style>
-	
-	
+
+
 		:root {
 			--font-color: #FFF;
 			--font-family: Arial, sans-serif, Roboto;
@@ -18,7 +23,7 @@
 			--item-gap: 50px;
 			--item-whitespace: nowrap;
 		}
-		
+
         body {
             margin: 0;
             padding: 0;
@@ -77,7 +82,7 @@
 		.ticker-separator.show {
 			opacity: 1;
 		}
-		
+
 		/* Modern Style - Enhanced with better gradients */
 		body.modern .ticker-container {
 			--background-color: #1a1a1a;
@@ -206,7 +211,7 @@
 			font-weight: 700;
 			letter-spacing: 1px;
 		}
-		
+
     </style>
 </head>
 <body>
@@ -232,6 +237,44 @@
 	})(window);
 
 	var urlParams = new URLSearchParams(window.location.search);
+	var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+	// Transport migration guard: only pages with full server parity may skip the legacy bridge.
+	var TRANSPORT_CAPABILITIES = {
+		serverFeed: false,
+		serverTargeted: false,
+		upstreamCommands: false,
+		customChannel: true,
+		legacyBridgeRequired: true,
+		legacyBridgeReason: "Ticker updates are still sent with sendTickerP2P on a custom channel."
+	};
+	function versionAtLeast(value, minimum) {
+		var a = String(value || "").split(".");
+		var b = String(minimum || "").split(".");
+		var len = Math.max(a.length, b.length);
+		for (var i = 0; i < len; i++) {
+			var av = parseInt(a[i], 10) || 0;
+			var bv = parseInt(b[i], 10) || 0;
+			if (av > bv) return true;
+			if (av < bv) return false;
+		}
+		return true;
+	}
+	// Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+	function hasExclusiveServerTransport(caps) {
+		var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+		return (params.server === true && urlParams.has("server")) ||
+			(params.server2 !== false && urlParams.has("server2")) ||
+			(params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+	}
+	function useServerOnlyTransport() {
+		var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+		return hasExclusiveServerTransport(caps) &&
+			versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+			caps.serverFeed === true &&
+			caps.legacyBridgeRequired !== true &&
+			caps.upstreamCommands !== true &&
+			caps.customChannel !== true;
+	}
 	var iframe = null;
 	var roomID = "test";
 	var darkmode = null;
@@ -350,7 +393,7 @@
 	
 	var conCon = 1;
 	var socketserver = false;
-	var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+	var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja";
 
 	function setupSocket(){
 		socketserver.onclose = function (){
@@ -500,7 +543,11 @@
 		tickerElement.style.transform = "";
 	}
 
-	function processInput(data){
+    var tickerStateTracker = SSNOverlayControl.createStateTracker();
+	SSNOverlayControl.connect(urlParams, roomID, "ticker", processInput);
+function processInput(data){
+    if (!SSNOverlayControl.accept(data, "ticker")) return;
+    if (data.ssnState) { var transition = tickerStateTracker(data.ssnState); if (!transition.accept || !transition.changed) return; }
 		console.log(data);
 		if (!("ticker" in data)){return;}
 		var entries = normalizeTickerEntries(data.ticker);
@@ -627,30 +674,33 @@
 		}, delay);
 	}
 
-	iframe = document.createElement("iframe");
-	iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&solo&view="+roomID+"&novideo&noaudio&label=ticker&cleanoutput&room="+roomID; // view only connection (data two way of course)
-	iframe.style.width = "0px";
-	iframe.style.height = "0px";
-	iframe.style.position = "fixed";
-	iframe.style.left = "-100px";
-	iframe.style.top = "-100px";
-	iframe.id = "frame1"
-	document.body.appendChild(iframe);
+	if (!useServerOnlyTransport()) {
+		iframe = document.createElement("iframe");
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+encodeURIComponent(password)+"&solo&view="+roomID+"&novideo&noaudio&label=ticker&cleanoutput&room="+roomID; // view only connection (data two way of course)
+		iframe.style.width = "0px";
+		iframe.style.height = "0px";
+		iframe.style.position = "fixed";
+		iframe.style.left = "-100px";
+		iframe.style.top = "-100px";
+		iframe.id = "frame1"
+		document.body.appendChild(iframe);
 
-	var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
-	var eventer = window[eventMethod];
-	var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+		var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+		var eventer = window[eventMethod];
+		var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
 
-	eventer(messageEvent, function (e) {
-		if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
-		if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object"){ // raw data
-			if ("overlayNinja" in e.data.dataReceived){
-				processInput(e.data.dataReceived.overlayNinja);
+		eventer(messageEvent, function (e) {
+			if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
+			if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object"){ // raw data
+				if ("overlayNinja" in e.data.dataReceived){
+					processInput(e.data.dataReceived.overlayNinja);
+				}
 			}
-		}
-	});
+		});
+	}
 	
 
+	{}
 	
 
 

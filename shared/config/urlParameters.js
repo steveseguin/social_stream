@@ -111,6 +111,7 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "values": "base64 string",
             "description": "Applies custom CSS styling via base64 encoded string"
           },
+          
           {
             "key": "label",
             "displayName": "label",
@@ -194,6 +195,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Enables compact mode with less spacing"
           },
           {
+            "key": "inline",
+            "displayName": "inline",
+            "aliases": [
+              "inline"
+            ],
+            "values": "boolean",
+            "description": "In the standard row layout, keeps normal spacing while allowing the message to start beside the username and wrap naturally below. Specialized layouts such as compact, horizontal, twolines, split, largeavatar, and bubble take precedence"
+          },
+          {
             "key": "padding",
             "displayName": "padding",
             "aliases": [
@@ -201,6 +211,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "number",
             "description": "Sets padding between messages in pixels"
+          },
+          {
+            "key": "sidepadding",
+            "displayName": "sidepadding",
+            "aliases": [
+              "sidepadding"
+            ],
+            "values": "number (0–99)",
+            "description": "Adds padding to the left and right edges of dock chat; defaults to 8 pixels when enabled without a value. Off by default"
           },
           {
             "key": "largeavatar",
@@ -256,7 +275,25 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
               "colorednames"
             ],
             "values": "boolean",
-            "description": "Uses platform accent colors for usernames"
+            "description": "Displays username colors supplied by the source"
+          },
+          {
+            "key": "randomcolor",
+            "displayName": "randomcolor",
+            "aliases": [
+              "randomcolor"
+            ],
+            "values": "boolean",
+            "description": "Preserves supplied username colors and deterministically generates a color when one is missing"
+          },
+          {
+            "key": "randomcolorall",
+            "displayName": "randomcolorall",
+            "aliases": [
+              "randomcolorall"
+            ],
+            "values": "boolean",
+            "description": "Deterministically generates every username color, overriding supplied colors"
           },
           {
             "key": "fontcolor",
@@ -387,6 +424,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Custom question row highlight color; 6-digit colors are shown with stronger shading automatically"
           },
           {
+            "key": "trivialhighlightcolor",
+            "displayName": "trivialhighlightcolor",
+            "aliases": [
+              "trivialhighlightcolor"
+            ],
+            "values": "hex/color",
+            "description": "Custom trivial event background color, including host mentions, in row and bubble layouts. Requires trivialevents; leave empty to retain the supplied event colors"
+          },
+          {
             "key": "hideshadow",
             "displayName": "hideshadow",
             "aliases": [
@@ -401,8 +447,8 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "aliases": [
               "largecontent"
             ],
-            "values": "boolean",
-            "description": "Enlarges embedded content or image cards"
+            "values": "boolean or 1-5",
+            "description": "Enlarges content images, GIFs and videos. An optional multiplier scales the 240px size from 1x to 5x, capped to the message width; the bare flag keeps the existing 240px size. Regular emotes are unchanged"
           },
           {
             "key": "donationright",
@@ -827,6 +873,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Hides user badges"
           },
           {
+            "key": "stripmemberships",
+            "displayName": "stripmemberships",
+            "aliases": [
+              "stripmemberships"
+            ],
+            "values": "boolean",
+            "description": "Hides membership labels (off by default). Works independently in dock.html and featured.html; keeps badge icons and chat messages. In the dock, member filtering, highlighting, and forwarded membership data are preserved."
+          },
+          {
             "key": "limitbadges",
             "displayName": "limitbadges",
             "aliases": [
@@ -919,6 +974,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Shows the current viewer count indicator"
           },
           {
+            "key": "reserveviewercountspace",
+            "displayName": "reserveviewercountspace",
+            "aliases": [
+              "reserveviewercountspace"
+            ],
+            "values": "boolean",
+            "description": "Reserves vertical space so the viewer count bar does not cover chat messages"
+          },
+          {
             "key": "nocolon",
             "displayName": "nocolon",
             "aliases": [
@@ -953,6 +1017,17 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Normalizes characters (e.g., removes diacritics) for comparisons"
+          },
+          {
+            "key": "staticemotes",
+            "displayName": "staticemotes or noanimatedemotes or freezeemotes",
+            "aliases": [
+              "staticemotes",
+              "noanimatedemotes",
+              "freezeemotes"
+            ],
+            "values": "boolean",
+            "description": "Shows supported animated emotes (7TV, BTTV, FFZ, Twitch, Kick, cheermotes, Discord) as a still image instead"
           }
         ]
       },
@@ -998,6 +1073,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Removes all emojis from messages"
           },
           {
+            "key": "stripnameemoji",
+            "displayName": "stripnameemoji",
+            "aliases": [
+              "stripnameemoji"
+            ],
+            "values": "boolean",
+            "description": "Removes all emojis from usernames"
+          },
+          {
             "key": "striphtml",
             "displayName": "striphtml or strip",
             "aliases": [
@@ -1015,6 +1099,42 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Removes links from messages"
+          },
+          {
+            "key": "allowbotlinks",
+            "displayName": "allowbotlinks",
+            "aliases": [
+              "allowbotlinks"
+            ],
+            "values": "boolean",
+            "description": "With striplinks, keeps links visible for bot messages"
+          },
+          {
+            "key": "allowhostlinks",
+            "displayName": "allowhostlinks",
+            "aliases": [
+              "allowhostlinks"
+            ],
+            "values": "boolean",
+            "description": "With striplinks, keeps links visible for host messages"
+          },
+          {
+            "key": "allowmodlinks",
+            "displayName": "allowmodlinks",
+            "aliases": [
+              "allowmodlinks"
+            ],
+            "values": "boolean",
+            "description": "With striplinks, keeps links visible for mod messages"
+          },
+          {
+            "key": "allowviplinks",
+            "displayName": "allowviplinks",
+            "aliases": [
+              "allowviplinks"
+            ],
+            "values": "boolean",
+            "description": "With striplinks, keeps links visible for VIP messages"
           },
           {
             "key": "activelinks",
@@ -1299,6 +1419,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Auto-queues donation cards"
           },
           {
+            "key": "autoqueuememberships",
+            "displayName": "autoqueuememberships",
+            "aliases": [
+              "autoqueuememberships"
+            ],
+            "values": "boolean",
+            "description": "Auto-queues YouTube membership alerts: new memberships, renewals, milestones, gift purchases, and gift recipients"
+          },
+          {
             "key": "autoqueuequestions",
             "displayName": "autoqueuequestions or autoqueuequestion",
             "aliases": [
@@ -1307,6 +1436,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Auto-queues question cards"
+          },
+          {
+            "key": "trackquestions",
+            "displayName": "trackquestions",
+            "aliases": [
+              "trackquestions"
+            ],
+            "values": "boolean",
+            "description": "Adds a pending-question filter and Answered/Dismiss controls to the host dock. Tracks visible question marks and identified questions. Keeps the latest 100 during normal vertical chat pruning; local to this dock and resets on reload."
           },
           {
             "key": "skipdonations",
@@ -1720,6 +1858,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Disables notification sound for moderator messages"
           },
           {
+            "key": "beeponlymod",
+            "displayName": "beeponlymod",
+            "aliases": [
+              "beeponlymod"
+            ],
+            "values": "boolean",
+            "description": "Enables notification sounds only for moderator messages"
+          },
+          {
             "key": "showvipbadge",
             "displayName": "showvipbadge",
             "aliases": [
@@ -1751,7 +1898,7 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
       {
         "title": "Notification & Sound Parameters",
         "slug": "notification-sound-parameters",
-        "description": "",
+        "description": "In Dock settings → Message Mechanics, enable **Louder built-in beep** and use **Preview louder beep** to try it at your Beep volume. Reopen the updated dock link (or update and refresh the OBS browser source) to apply it. The preset is compressed and peak-limited ahead of time; it does not amplify custom sounds or change the 0–100% volume range.",
         "items": [
           {
             "key": "beep",
@@ -1763,6 +1910,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Enables sound notification for new messages"
           },
           {
+            "key": "beeponlymod",
+            "displayName": "beeponlymod",
+            "aliases": [
+              "beeponlymod"
+            ],
+            "values": "boolean",
+            "description": "Enables sound notifications only for moderator messages"
+          },
+          {
             "key": "beepvolume",
             "displayName": "beepvolume",
             "aliases": [
@@ -1770,6 +1926,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "0-100",
             "description": "Sets volume for notification sound (percentage)"
+          },
+          {
+            "key": "loudbeep",
+            "displayName": "loudbeep",
+            "aliases": [
+              "loudbeep"
+            ],
+            "values": "boolean",
+            "description": "Uses a louder built-in dock beep preset. Custom beep URLs take priority; still requires beeps to be enabled."
           },
           {
             "key": "custombeep",
@@ -2474,6 +2639,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Uses local WebSocket server"
+          },
+          {
+            "key": "localserverport",
+            "displayName": "localserverport",
+            "aliases": [
+              "localserverport"
+            ],
+            "values": "integer (1024-65535)",
+            "description": "Overrides the local WebSocket server port (default: 3000)"
           }
         ]
       },
@@ -2517,6 +2691,419 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Shows channel icon"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Viewer Count & Chat Activity Title (`hype.html`)",
+    "slug": "viewer-count-chat-activity-title-hype-html",
+    "description": "Set **Custom title** under **Viewer Count & Chat Activity Overlay → Enable and customize**, then copy the updated overlay link into OBS.",
+    "sections": [
+      {
+        "title": "General Parameters",
+        "slug": "general-parameters",
+        "description": "",
+        "items": [
+          {
+            "key": "title",
+            "displayName": "title",
+            "aliases": [
+              "title"
+            ],
+            "values": "string",
+            "description": "Overrides the title with plain text, e.g. &title=Watching%20now. Missing, empty, or whitespace-only values keep the default title for the selected viewer/chatter mode"
+          },
+          {
+            "key": "hidetitle",
+            "displayName": "hidetitle",
+            "aliases": [
+              "hidetitle"
+            ],
+            "values": "boolean",
+            "description": "Hides the title, including a custom title. Minimal and Dock Style also hide the title"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Tip Jar & Goal Meter Parameters (`tipjar.html`)",
+    "slug": "tip-jar-goal-meter-parameters-tipjar-html",
+    "description": "",
+    "sections": [
+      {
+        "title": "General Parameters",
+        "slug": "general-parameters",
+        "description": "",
+        "items": [
+          {
+            "key": "style",
+            "displayName": "style",
+            "aliases": [
+              "style"
+            ],
+            "values": "jar, meter, bar, compact, vertical, minimal, text",
+            "description": "Selects the tip jar display style. bar is the fluid goal bar; compact/vertical are simple square-edged bars for corners; text is a one-line readout"
+          },
+          {
+            "key": "goal",
+            "displayName": "goal",
+            "aliases": [
+              "goal"
+            ],
+            "values": "number",
+            "description": "Sets the target amount for the bar or jar"
+          },
+          {
+            "key": "title",
+            "displayName": "title",
+            "aliases": [
+              "title"
+            ],
+            "values": "string",
+            "description": "Sets the visible goal title (e.g. Star Goal, SuperChat Goal)"
+          },
+          {
+            "key": "goalmetric",
+            "displayName": "goalmetric",
+            "aliases": [
+              "goalmetric"
+            ],
+            "values": "value, count",
+            "description": "Uses donation value by default. count adds one per qualifying donation event regardless of its monetary value and takes priority over Hype scoring"
+          },
+          {
+            "key": "countdonations",
+            "displayName": "countdonations",
+            "aliases": [
+              "countdonations"
+            ],
+            "values": "boolean",
+            "description": "Alias for goalmetric=count"
+          },
+          {
+            "key": "tipjarevent",
+            "displayName": "tipjarevent or tipjarevents",
+            "aliases": [
+              "tipjarevent",
+              "tipjarevents"
+            ],
+            "values": "comma-separated event names",
+            "description": "Counts only matching paid event types, such as superchat, supersticker, or superchat,supersticker"
+          },
+          {
+            "key": "countlabel",
+            "displayName": "countlabel",
+            "aliases": [
+              "countlabel"
+            ],
+            "values": "string",
+            "description": "Overrides the plural unit label used by count goals, such as Super Chats"
+          },
+          {
+            "key": "countsingular",
+            "displayName": "countsingular",
+            "aliases": [
+              "countsingular"
+            ],
+            "values": "string",
+            "description": "Optional singular label used for one counted event, such as Super Chat"
+          },
+          {
+            "key": "tipjartype",
+            "displayName": "tipjartype",
+            "aliases": [
+              "tipjartype"
+            ],
+            "values": "usd, stars, bits, coins, diamonds, kicks, jewels, tokens, hearts, gold",
+            "description": "Counts only that donation unit/type. When set, the jar uses the raw unit count instead of converting to USD"
+          },
+          {
+            "key": "tipjarunit",
+            "displayName": "tipjarunit or donationtype",
+            "aliases": [
+              "tipjarunit",
+              "donationtype"
+            ],
+            "values": "same as tipjartype",
+            "description": "Alias for tipjartype"
+          },
+          {
+            "key": "tipjarunitlabel",
+            "displayName": "tipjarunitlabel",
+            "aliases": [
+              "tipjarunitlabel"
+            ],
+            "values": "string",
+            "description": "Overrides the displayed unit label for a filtered unit bar"
+          },
+          {
+            "key": "tipjarsource",
+            "displayName": "tipjarsource",
+            "aliases": [
+              "tipjarsource"
+            ],
+            "values": "source type such as facebook, youtube, twitch, kick, tiktok, stripe, kofi, bmac, fourthwall",
+            "description": "Counts only donations from that source while preserving the normal USD conversion unless tipjartype is also set"
+          },
+          {
+            "key": "donationsource",
+            "displayName": "donationsource",
+            "aliases": [
+              "donationsource"
+            ],
+            "values": "same as tipjarsource",
+            "description": "Alias for tipjarsource"
+          },
+          {
+            "key": "persistent",
+            "displayName": "persistent",
+            "aliases": [
+              "persistent"
+            ],
+            "values": "boolean",
+            "description": "Keeps the current amount between sessions. Filtered bars use separate saved totals"
+          },
+          {
+            "key": "controls",
+            "displayName": "controls",
+            "aliases": [
+              "controls"
+            ],
+            "values": "boolean",
+            "description": "Shows reset/history/export controls"
+          },
+          {
+            "key": "sound",
+            "displayName": "sound",
+            "aliases": [
+              "sound"
+            ],
+            "values": "boolean",
+            "description": "Plays a sound on accepted donations"
+          },
+          {
+            "key": "hype",
+            "displayName": "hype",
+            "aliases": [
+              "hype"
+            ],
+            "values": "boolean",
+            "description": "Enables hype cup scoring mode"
+          },
+          {
+            "key": "notips",
+            "displayName": "notips, nosubs, noresubs, nogifts",
+            "aliases": [
+              "notips",
+              "nosubs",
+              "noresubs",
+              "nogifts"
+            ],
+            "values": "boolean",
+            "description": "Excludes that contribution class from Hype scoring"
+          },
+          {
+            "key": "excludegiftpurchase",
+            "displayName": "excludegiftpurchase",
+            "aliases": [
+              "excludegiftpurchase"
+            ],
+            "values": "boolean",
+            "description": "Excludes YouTube gifted-membership purchase events from the Tip Jar, including Hype scoring"
+          },
+          {
+            "key": "levelsize",
+            "displayName": "levelsize or increment",
+            "aliases": [
+              "levelsize",
+              "increment"
+            ],
+            "values": "number",
+            "description": "Turns the goal into repeating bands/levels of this size (e.g. 1000 stars or 50 dollars). The bar fills, celebrates, and rolls into the next level instead of stopping"
+          },
+          {
+            "key": "rollinggoal",
+            "displayName": "rollinggoal or cumulativegoal",
+            "aliases": [
+              "rollinggoal",
+              "cumulativegoal"
+            ],
+            "values": "boolean or number",
+            "description": "Keeps the displayed amount cumulative and advances the target to the next goal step after each completion. Example: goal=50&rollinggoal displays $60 / $100 after a $60 total"
+          },
+          {
+            "key": "goalstep",
+            "displayName": "goalstep or goalincrement",
+            "aliases": [
+              "goalstep",
+              "goalincrement"
+            ],
+            "values": "number",
+            "description": "Optional step size for rollinggoal; defaults to goal"
+          },
+          {
+            "key": "fillstart",
+            "displayName": "fillstart or barcolorstart",
+            "aliases": [
+              "fillstart",
+              "barcolorstart"
+            ],
+            "values": "CSS color",
+            "description": "Fill color when empty/low (default #2196F3 blue). Applies to bar/compact/vertical, and recolors the meter fill"
+          },
+          {
+            "key": "fillend",
+            "displayName": "fillend or barcolorend",
+            "aliases": [
+              "fillend",
+              "barcolorend"
+            ],
+            "values": "CSS color",
+            "description": "Fill color when full (default #f44336 red). Applies to bar/compact/vertical, and recolors the meter fill"
+          },
+          {
+            "key": "fillmode",
+            "displayName": "fillmode",
+            "aliases": [
+              "fillmode"
+            ],
+            "values": "progress, gradient, solid",
+            "description": "bar fill behavior. progress (default) shifts the whole bar from start→end color as it fills; gradient reveals a fixed start→end gradient; solid uses only the start color"
+          },
+          {
+            "key": "barheight",
+            "displayName": "barheight",
+            "aliases": [
+              "barheight"
+            ],
+            "values": "number",
+            "description": "Track height (px) for bar/compact/vertical styles"
+          },
+          {
+            "key": "bartextsize",
+            "displayName": "bartextsize or barfontsize",
+            "aliases": [
+              "bartextsize",
+              "barfontsize"
+            ],
+            "values": "number",
+            "description": "Text size in px for the centered bar style amount text"
+          },
+          {
+            "key": "barradius",
+            "displayName": "barradius",
+            "aliases": [
+              "barradius"
+            ],
+            "values": "number or CSS length",
+            "description": "Corner radius for bar tracks. Use 0 for square corner-overlay edges"
+          },
+          {
+            "key": "noliquid",
+            "displayName": "noliquid",
+            "aliases": [
+              "noliquid"
+            ],
+            "values": "boolean",
+            "description": "Disables the flowing-liquid animation on the bar style"
+          },
+          {
+            "key": "theme",
+            "displayName": "theme",
+            "aliases": [
+              "theme"
+            ],
+            "values": "default, neon, gold",
+            "description": "Visual theme for the meter/bar"
+          },
+          {
+            "key": "celebration",
+            "displayName": "celebration",
+            "aliases": [
+              "celebration"
+            ],
+            "values": "hearts, confetti, fireworks, none",
+            "description": "Effect played on milestones/level-ups"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Credits Roll Parameters (`credits.html`)",
+    "slug": "credits-roll-parameters-credits-html",
+    "description": "",
+    "sections": [
+      {
+        "title": "General Parameters",
+        "slug": "general-parameters",
+        "description": "",
+        "items": [
+          {
+            "key": "loop",
+            "displayName": "loop",
+            "aliases": [
+              "loop"
+            ],
+            "values": "boolean",
+            "description": "Restarts the credits animation when it reaches the end"
+          },
+          {
+            "key": "persistcredits",
+            "displayName": "persistcredits",
+            "aliases": [
+              "persistcredits"
+            ],
+            "values": "boolean",
+            "description": "Saves the collected credits list in the overlay's local storage so refreshes/source toggles keep the current stream's supporters until reset"
+          },
+          {
+            "key": "onlysupporters",
+            "displayName": "onlysupporters",
+            "aliases": [
+              "onlysupporters"
+            ],
+            "values": "boolean",
+            "description": "Only includes donors and members/subscribers; excludes regular chat-only participants"
+          },
+          {
+            "key": "onlydonors",
+            "displayName": "onlydonors",
+            "aliases": [
+              "onlydonors"
+            ],
+            "values": "boolean",
+            "description": "Only includes users with donation payloads"
+          },
+          {
+            "key": "donationpriority",
+            "displayName": "donationpriority",
+            "aliases": [
+              "donationpriority"
+            ],
+            "values": "boolean",
+            "description": "Groups/sorts donors first, then members, then participants"
+          },
+          {
+            "key": "showamounts",
+            "displayName": "showamounts",
+            "aliases": [
+              "showamounts"
+            ],
+            "values": "boolean",
+            "description": "Shows donation totals next to donors"
+          },
+          {
+            "key": "triggermode",
+            "displayName": "triggermode",
+            "aliases": [
+              "triggermode"
+            ],
+            "values": "auto, manual, background",
+            "description": "Starts on visibility, by button using page-local collection, or by button using app-background collection"
           }
         ]
       }

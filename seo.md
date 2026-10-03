@@ -232,7 +232,7 @@ The Social Stream Ninja extension's menu offers a wide range of settings and tog
     - **Default name font color:**  Set the default font color for usernames.
     - **Name background color:** Set the background color for usernames.
     - **Font Family:** Choose a font family.
-    - **a specify a Google Font name:** Load a Google Font for the overlay.
+    - **Specify a Google Font name:** Load a Google Font for the overlay.
     - **Fade in/out instead:**  Enable fade-in/out animation for message transitions.
 
 - **Emotes wall:**
@@ -243,7 +243,7 @@ The Social Stream Ninja extension's menu offers a wide range of settings and tog
     - **Make all emojis half the size:**  Reduce the size of emotes.
     - **Make all emojis twice the size:**  Increase the size of emotes.
     - **Only show emojis from members:**  Filter for member emotes only.
-    - **Exclude message @replies emojies:**  Prevent emotes in replies from being displayed.
+    - **Exclude emojis in message @replies:**  Prevent emotes in replies from being displayed.
     - **Emotes float up, rather than bounce around:**  Change the animation to a floating effect.
     - **Emotes to filter out:**  Specify a list of emotes to block.
 
@@ -258,7 +258,7 @@ The Social Stream Ninja extension's menu offers a wide range of settings and tog
     - **Do not show the sub-title:**  Hide the hype meter sub-title.
     - **Light mode — Black text, white outline:**  Enable light mode for the hype meter.
     - **Font Family:**  Choose a font family.
-    - **a specify a Google Font name:**  Load a Google Font.
+    - **Specify a Google Font name:**  Load a Google Font.
 
 - **Wait List/Winner Draw:**
     - **Enable the waitlist/draw page and customize the !trigger:** Start tracking users who enter the waitlist using the !trigger command.
@@ -267,7 +267,7 @@ The Social Stream Ninja extension's menu offers a wide range of settings and tog
     - **Align overlay to the center/middle:** Center the waitlist.
     - **Disable text outlining:** Remove text outlines.
     - **Drop confetti when a name is selected:**  Enable confetti animation on winner selection.
-    - **Play a sound when there a name selected:**  Enable a sound when a winner is selected.
+    - **Play a sound when a name is selected:**  Enable a sound when a winner is selected.
     - **URL for custom sound audio file:** Specify a URL for a custom sound effect.
     - **Magnify the view (larger font/images):**  Increase the size of the waitlist.
     - **Make the font, icons, and menu smaller:**  Decrease the size of the waitlist.
@@ -278,7 +278,7 @@ The Social Stream Ninja extension's menu offers a wide range of settings and tog
     - **List re-randomizes on every update:**  Enable random shuffling of the waitlist on updates.
     - **Use a custom message/title:**  Set a custom message or title for the waitlist.
     - **Font Family:**  Choose a font family.
-    - **a specify a Google Font name:** Load a Google Font.
+    - **Specify a Google Font name:** Load a Google Font.
 
 - **Graphical Poll:**
     - **Enable Poll:** Start a new poll.
@@ -289,8 +289,8 @@ The Social Stream Ninja extension's menu offers a wide range of settings and tog
     - **Start Poll:**  Begin the poll.
     - **End Poll:**  Terminate the poll.
 
-- **Battle Royal:**
-	- **Host Starts:**  Enable the Battle Royal mode.
+- **Battle Royale:**
+	- **Host Starts:**  Enable the Battle Royale mode.
 	- **Start the game:**  Start a new game.
 	- **Disable computer players:**  Prevent computer players from participating.
 	- **Increase lobby wait time to 30s:**  Extend the lobby waiting time to 30 seconds.
@@ -299,13 +299,13 @@ The Social Stream Ninja extension's menu offers a wide range of settings and tog
 	- **Enable:** Activate the ticker banner.
 	- **Select the ticker source file:**  Choose a text file to provide content for the ticker.
 	- **Font Family:** Choose a font family.
-	- **a specify a Google Font name:** Load a Google Font.
+	- **Specify a Google Font name:** Load a Google Font.
 
 - **Customizable ticker banner bar:**
     - **Enable the ticker:** Activate the ticker banner.
     - **Choose location:**  Select the file that contains the ticker text.
     - **Font Family:** Choose a font family.
-    - **a specify a Google Font name:** Load a Google Font.
+    - **Specify a Google Font name:** Load a Google Font.
 
 - **Local chat bot (LLM):**
     - **Enable the censor bot. * (non-blocking by default)**: Enable the censor bot to moderate chat messages (non-blocking by default).
@@ -368,8 +368,6 @@ Social Stream Ninja supports capturing live chat from a wide range of platforms:
 - **Wix.com**
 - **Clouthub**
 - **Rumble.com**
-- **Trovo.live**
-- **Dlive.tv**
 - **Picarto.tv**
 - **Odysee.com**
 - **Minnit.chat**
@@ -401,7 +399,7 @@ Social Stream Ninja supports capturing live chat from a wide range of platforms:
 - **Threads.net**
 - **Floatplane.com**
 - **OpenAI chatGPT**
-- **Estream**
+- **Estrim**
 - **Livestorm.io**
 - **Boltplus.tv**
 - **Cozy.tv**
@@ -433,7 +431,7 @@ For assistance, feedback, and feature requests, join the Social Stream Ninja Dis
 
 ### Standalone Desktop App
 
-There's an upcoming standalone version of Social Stream Ninja that installs as an app, providing more control and avoiding some browser-related issues. 
+There's also a standalone version of Social Stream Ninja that installs as an app, providing more control and avoiding some browser-related issues. 
 
 ###  License
 

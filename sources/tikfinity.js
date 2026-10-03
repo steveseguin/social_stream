@@ -522,6 +522,13 @@
 			if (shouldSkipEvent(data.event)) {
 				return;
 			}
+			// Streakable gifts send a progress event and a completion event, even for one gift.
+			// Forward the final total once; payloads without completion flags keep their legacy path.
+			var isStreakable = parseInt(payload.giftType, 10) === 1
+				|| normalizeBooleanFlag(payload.streakable) || normalizeBooleanFlag(payload.isStreakable);
+			if (isStreakable && payload.repeatEnd !== undefined && !normalizeBooleanFlag(payload.repeatEnd)) {
+				return;
+			}
 			var repeatCount = parseInt(payload.repeatCount, 10) || 1;
 			var diamondCount = parseInt(payload.diamondCount, 10) || 0;
 			data.chatmessage = escapeHtml((payload.giftName || "Gift") + (repeatCount > 1 ? " x" + repeatCount : ""));

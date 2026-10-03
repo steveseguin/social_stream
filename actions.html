@@ -1,8 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Actions Overlay. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+<script src="shared/overlay-control-transport.js"></script>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
     <title>Actions Overlay - Social Stream Ninja</title>
     <script src="thirdparty/obs-websocket.min.js"></script>
     <script type="text/javascript" src="tts.js"></script>
@@ -32,7 +39,7 @@
             align-items: center;
             z-index: 9999;
         }
-		
+
 		#status-message {
 			color: rgba(204, 204, 204, 0.5); /* Make semi-transparent */
 			font-size: 18px;
@@ -126,7 +133,7 @@
 			max-height: 95%;
 			border: none;
 		}
-		
+
 		/* Modal styles */
 		.modal {
 			display: none;
@@ -140,7 +147,7 @@
 			justify-content: center;
 			align-items: center;
 		}
-		
+
 		.modal-content {
 			background-color: #fefefe;
 			padding: 30px;
@@ -151,13 +158,13 @@
 			text-align: center;
 			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 		}
-		
+
 		.modal-content h2 {
 			margin-top: 0;
 			margin-bottom: 20px;
 			color: #333;
 		}
-		
+
 		.modal-content input[type="text"] {
 			width: 100%;
 			padding: 10px;
@@ -167,7 +174,7 @@
 			font-size: 16px;
 			box-sizing: border-box;
 		}
-		
+
 		.modal-content button {
 			background-color: #4CAF50;
 			color: white;
@@ -179,19 +186,19 @@
 			font-size: 16px;
 			transition: background-color 0.3s;
 		}
-		
+
 		.modal-content button:hover {
 			background-color: #45a049;
 		}
-		
+
 		.modal-content button.cancel {
 			background-color: #f44336;
 		}
-		
+
 		.modal-content button.cancel:hover {
 			background-color: #da190b;
 		}
-		
+
 		.modal-content p {
 			color: #666;
 			margin: 10px 0;
@@ -352,6 +359,59 @@
         })(window);
 
         var urlParams = new URLSearchParams(window.location.search);
+
+        function resolveLocalMediaUrl(assetId) {
+            if (!assetId || !['127.0.0.1', 'localhost'].includes(window.location.hostname)) return '';
+            try {
+                return new URL('media/' + encodeURIComponent(assetId), new URL('.', window.location.href)).href;
+            } catch (error) {
+                console.error('[Local Media] Failed to resolve asset URL:', error);
+                return '';
+            }
+        }
+
+        function showLocalMediaDiagnostic(assetName) {
+            statusMessage.textContent = `Local media${assetName ? ` "${assetName}"` : ''} requires the Local Flow Actions URL from the Social Stream desktop app.`;
+            statusMessage.style.display = 'block';
+        }
+        var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+        // Transport migration guard: only pages with full server parity may skip the legacy bridge.
+        var TRANSPORT_CAPABILITIES = {
+            serverFeed: false,
+            serverTargeted: true,
+            upstreamCommands: false,
+            customChannel: true,
+            legacyBridgeRequired: true,
+            legacyBridgeReason: "Flow Actions supports relay channel 6; retain the bridge for older hosts and mixed displays."
+        };
+        function versionAtLeast(value, minimum) {
+            var a = String(value || "").split(".");
+            var b = String(minimum || "").split(".");
+            var len = Math.max(a.length, b.length);
+            for (var i = 0; i < len; i++) {
+                var av = parseInt(a[i], 10) || 0;
+                var bv = parseInt(b[i], 10) || 0;
+                if (av > bv) return true;
+                if (av < bv) return false;
+            }
+            return true;
+        }
+        // Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+        function hasExclusiveServerTransport(caps) {
+            var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+            return (params.server === true && urlParams.has("server")) ||
+                (params.server2 !== false && urlParams.has("server2")) ||
+                (params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+        }
+        function useServerOnlyTransport() {
+            var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+            return hasExclusiveServerTransport(caps) &&
+                versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+                caps.serverFeed === true &&
+                caps.legacyBridgeRequired !== true &&
+                caps.upstreamCommands !== true &&
+                caps.customChannel !== true;
+        }
         var iframe = null;
         var connectedPeers = {};
         var roomID = "test";
@@ -468,14 +528,16 @@
             // Supports all variables from messageData: {username}, {message}, {source}, {donation},
             // {event}, {membership}, {hasDonation}, {subtitle}, {meta}, etc.
             var text = config.text || '';
-            text = text.replace(/\{(\w+)\}/gi, function(match, key) {
-                var val = messageData[key.toLowerCase()];
-                if (val === undefined || val === null) return '';
-                if (typeof val === 'object') {
-                    try { return JSON.stringify(val); } catch (e) { return ''; }
-                }
-                return String(val);
-            });
+            if (!config.textProcessed) {
+                text = text.replace(/\{(\w+)\}/gi, function(match, key) {
+                    var val = messageData[key.toLowerCase()];
+                    if (val === undefined || val === null) return '';
+                    if (typeof val === 'object') {
+                        try { return JSON.stringify(val); } catch (e) { return ''; }
+                    }
+                    return String(val);
+                });
+            }
 
             if (!text) {
                 console.warn('[showOverlayText] No text to display');
@@ -681,6 +743,15 @@
             if (eventPayload.savedReplayPath !== undefined) {
                 meta.savedReplayPath = eventPayload.savedReplayPath;
             }
+            if (eventPayload.inputName !== undefined) {
+                meta.inputName = eventPayload.inputName;
+            }
+            if (eventPayload.inputUuid !== undefined) {
+                meta.inputUuid = eventPayload.inputUuid;
+            }
+            if (eventPayload.mediaAction !== undefined) {
+                meta.mediaAction = eventPayload.mediaAction;
+            }
             if (extraMeta) {
                 Object.keys(extraMeta).forEach(function(key) {
                     if (extraMeta[key] !== undefined) {
@@ -695,7 +766,9 @@
                 meta.outputState || '',
                 meta.outputActive === undefined ? '' : String(meta.outputActive),
                 meta.sceneName || '',
-                meta.savedReplayPath || ''
+                meta.savedReplayPath || '',
+                meta.inputUuid || meta.inputName || '',
+                meta.mediaAction || ''
             ].join('|');
             if (eventKey === lastObsEventKey && now - lastObsEventAt < 2000) {
                 return;
@@ -747,6 +820,9 @@
             });
             client.on('ReplayBufferSaved', function(eventPayload) {
                 emitObsEvent('replay_buffer_saved', 'ReplayBufferSaved', eventPayload);
+            });
+            client.on('MediaInputPlaybackEnded', function(eventPayload) {
+                emitObsEvent('media_ended', 'MediaInputPlaybackEnded', eventPayload);
             });
         }
 
@@ -1222,26 +1298,31 @@
                 }
             }
 
+            // Load JavaScript if provided
+            {}
             
-            // Setup WebSocket if server parameter is provided
-            if (urlParams.has("server") || urlParams.has("server2")) {
-                serverURL = urlParams.get("server") || urlParams.get("server2") || serverURL;
+            // Actions use their own channel, independently of the chat-forwarding
+            // switches. Generated relay URLs also support API-only and command-only input.
+            if (urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3") || urlParams.has("localserver")) {
+                serverURL = urlParams.get("server") || urlParams.get("server2") || urlParams.get("server3") ||
+                    (urlParams.has("server") ? SocialStreamLocalServer.getRelayUrl(urlParams, "server", "wss://io.socialstream.ninja/api") : serverURL);
                 socketserver = new WebSocket(serverURL);
                 setupSocket();
             }
             
-            // Create iframe for receiving WebRTC data channel messages
-            iframe = document.createElement("iframe");
-            iframe.connectedPeers = connectedPeers;
-            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password +
-                "&solo&view=" + roomID + "&novideo&noaudio&label=actions&cleanoutput&room=" + roomID;
-            iframe.style.width = "0px";
-            iframe.style.height = "0px";
-            iframe.style.position = "fixed";
-            iframe.style.left = "-100px";
-            iframe.style.top = "-100px";
-            iframe.id = "frame1";
-            document.body.appendChild(iframe);
+            if (!useServerOnlyTransport()) {
+                iframe = document.createElement("iframe");
+                iframe.connectedPeers = connectedPeers;
+                iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) +
+                    "&solo&view=" + roomID + "&novideo&noaudio&label=actions&cleanoutput&room=" + roomID;
+                iframe.style.width = "0px";
+                iframe.style.height = "0px";
+                iframe.style.position = "fixed";
+                iframe.style.left = "-100px";
+                iframe.style.top = "-100px";
+                iframe.id = "frame1";
+                document.body.appendChild(iframe);
+            }
             
             console.log("Actions page initialized with session ID:", roomID);
 
@@ -1255,7 +1336,7 @@
         // WebSocket connection setup
         var conCon = 1;
         var socketserver = false;
-        var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/extension";
+        var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/extension";
 
         function setupSocket() {
             socketserver.onclose = function() {
@@ -1275,6 +1356,7 @@
                     try {
                         var data = JSON.parse(event.data);
                         processInput(data);
+                        SSNOverlayControl.acknowledge(socketserver, data, "actions");
                         if (data.get) {
                             var ret = {};
                             ret.callback = {};
@@ -1290,6 +1372,7 @@
         }
 
 		function processInput(data) {
+            if (!SSNOverlayControl.accept(data, "actions")) return;
 			if (data.actionType) {
 				// Handle direct action object
 				handleAction(data);
@@ -1316,7 +1399,11 @@
 
             switch (payload.actionType) {
                 case 'play_media':
-                    if (payload.url) {
+                    {
+                        const mediaUrl = payload.sourceType === 'local'
+                            ? resolveLocalMediaUrl(payload.localAssetId)
+                            : payload.url;
+                    if (mediaUrl) {
                         const opts = {
                             width: payload.width,
                             height: payload.height,
@@ -1327,10 +1414,13 @@
                             useLayer: payload.useLayer,
                             clearFirst: payload.clearFirst
                         };
-                        playMediaFullscreen(payload.url, payload.mediaType || 'iframe', payload.duration ?? defaultDuration, opts);
+						playMediaFullscreen(mediaUrl, payload.mediaType || 'iframe', payload.duration ?? defaultDuration, opts);
+					} else if (payload.sourceType === 'local') {
+						showLocalMediaDiagnostic(payload.localAssetName);
                     } else {
                         console.warn("Play media action received without a URL.");
                     }
+					}
                     break;
                     
                 case 'obs_scene_change':
@@ -1350,11 +1440,18 @@
                     break;
                     
                 case 'play_audio':
-                    if (payload.audioUrl) {
-                        playAudio(payload.audioUrl, payload.volume);
+					{
+						const audioUrl = payload.sourceType === 'local'
+							? resolveLocalMediaUrl(payload.localAssetId)
+							: payload.audioUrl;
+                    if (audioUrl) {
+						playAudio(audioUrl, payload.volume);
+					} else if (payload.sourceType === 'local') {
+						showLocalMediaDiagnostic(payload.localAssetName);
                     } else {
                         console.warn("Play audio action received without an audio URL.");
                     }
+					}
                     break;
                     
                 // OBS Browser Source API Actions
@@ -1439,7 +1536,128 @@
                         console.warn("[OBS] Source name not provided");
                     }
                     break;
-                
+
+				case 'obsSetText':
+					if (payload.sourceName) {
+						const client = await ensureObsWebSocket();
+						if (!client) {
+							logObsWebSocketUnavailable('Set Text Source');
+							break;
+						}
+
+						try {
+							const inputRef = await resolveObsInputReference(client, payload.sourceName);
+							const inputTarget = inputRef && inputRef.inputUuid
+								? { inputUuid: inputRef.inputUuid }
+								: { inputName: payload.sourceName };
+
+							await client.call('SetInputSettings', Object.assign({}, inputTarget, {
+								inputSettings: { text: payload.text === undefined || payload.text === null ? '' : String(payload.text) },
+								overlay: true
+							}));
+							console.log(`[OBS WebSocket] Text source '${payload.sourceName}' updated`);
+						} catch (err) {
+							console.error(`[OBS WebSocket] Error updating text source '${payload.sourceName}':`, err);
+						}
+					} else {
+						console.warn('[OBS] Text source name not provided');
+					}
+					break;
+
+				case 'obsMediaControl':
+					if (payload.sourceName) {
+						const client = await ensureObsWebSocket();
+						if (!client) {
+							logObsWebSocketUnavailable('Control Media Source');
+							break;
+						}
+
+						const mediaActions = {
+							play: 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_PLAY',
+							pause: 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_PAUSE',
+							stop: 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_STOP',
+							restart: 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_RESTART',
+							next: 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_NEXT',
+							previous: 'OBS_WEBSOCKET_MEDIA_INPUT_ACTION_PREVIOUS'
+						};
+						const operation = String(payload.operation || 'restart').toLowerCase();
+						const mediaAction = mediaActions[operation];
+						if (!mediaAction) {
+							console.warn(`[OBS] Unsupported media action '${payload.operation}'`);
+							break;
+						}
+
+						try {
+							const inputRef = await resolveObsInputReference(client, payload.sourceName);
+							const inputTarget = inputRef && inputRef.inputUuid
+								? { inputUuid: inputRef.inputUuid }
+								: { inputName: payload.sourceName };
+
+							await client.call('TriggerMediaInputAction', Object.assign({}, inputTarget, { mediaAction: mediaAction }));
+							console.log(`[OBS WebSocket] Media source '${payload.sourceName}' action: ${operation}`);
+						} catch (err) {
+							console.error(`[OBS WebSocket] Error controlling media source '${payload.sourceName}':`, err);
+						}
+					} else {
+						console.warn('[OBS] Media source name not provided');
+					}
+					break;
+
+				case 'obsSetVolume':
+					if (payload.sourceName) {
+						const client = await ensureObsWebSocket();
+						if (!client) {
+							logObsWebSocketUnavailable('Set Source Volume');
+							break;
+						}
+
+						let volumeDb = Number(payload.volumeDb);
+						if (!Number.isFinite(volumeDb)) {
+							console.warn('[OBS] Source volume must be a number in dB');
+							break;
+						}
+						volumeDb = Math.max(-100, Math.min(26, volumeDb));
+
+						try {
+							const inputRef = await resolveObsInputReference(client, payload.sourceName);
+							const inputTarget = inputRef && inputRef.inputUuid
+								? { inputUuid: inputRef.inputUuid }
+								: { inputName: payload.sourceName };
+
+							await client.call('SetInputVolume', Object.assign({}, inputTarget, { inputVolumeDb: volumeDb }));
+							console.log(`[OBS WebSocket] Source '${payload.sourceName}' volume set to ${volumeDb} dB`);
+						} catch (err) {
+							console.error(`[OBS WebSocket] Error setting source volume '${payload.sourceName}':`, err);
+						}
+					} else {
+						console.warn('[OBS] Audio source name not provided');
+					}
+					break;
+
+				case 'obsRefreshBrowser':
+					if (payload.sourceName) {
+						const client = await ensureObsWebSocket();
+						if (!client) {
+							logObsWebSocketUnavailable('Refresh Browser Source');
+							break;
+						}
+
+						try {
+							const inputRef = await resolveObsInputReference(client, payload.sourceName);
+							const inputTarget = inputRef && inputRef.inputUuid
+								? { inputUuid: inputRef.inputUuid }
+								: { inputName: payload.sourceName };
+
+							await client.call('PressInputPropertiesButton', Object.assign({}, inputTarget, { propertyName: 'refreshnocache' }));
+							console.log(`[OBS WebSocket] Browser source '${payload.sourceName}' refreshed`);
+						} catch (err) {
+							console.error(`[OBS WebSocket] Error refreshing browser source '${payload.sourceName}':`, err);
+						}
+					} else {
+						console.warn('[OBS] Browser source name not provided');
+					}
+					break;
+
                 case 'obsSetSourceFilter':
                     if (payload.sourceName && payload.filterName) {
                         const client = await ensureObsWebSocket();
@@ -1639,7 +1857,36 @@
                     }
                     break;
                     
-                case 'obsReplayBuffer':
+				case 'obsReplayBufferControl':
+					{
+						const replayBufferRequests = {
+							start: 'StartReplayBuffer',
+							stop: 'StopReplayBuffer',
+							toggle: 'ToggleReplayBuffer'
+						};
+						const operation = String(payload.operation || 'start').toLowerCase();
+						const requestName = replayBufferRequests[operation];
+						if (!requestName) {
+							console.warn(`[OBS] Unsupported replay buffer action '${payload.operation}'`);
+							break;
+						}
+
+						const client = await ensureObsWebSocket();
+						if (!client) {
+							logObsWebSocketUnavailable('Control Replay Buffer');
+							break;
+						}
+
+						try {
+							await client.call(requestName);
+							console.log(`[OBS WebSocket] Replay buffer ${operation} command sent`);
+						} catch (err) {
+							console.error(`[OBS WebSocket] Error controlling replay buffer (${operation}):`, err);
+						}
+					}
+					break;
+
+				case 'obsReplayBuffer':
                     {
                         let handled = false;
                         const client = await ensureObsWebSocket();
@@ -1679,7 +1926,7 @@
                         if (payload.allow === false || payload.allow === 'false' || payload.allow === 'off' || payload.allow === 0 || payload.allow === '0') {
                             allowForce = false;
                         }
-                        TTS.speak(payload.text, allowForce);
+                        TTS.speak(payload.text, allowForce, { voice: payload.voice });
                         console.log("[TTS] Speaking:", payload.text, "(force:", allowForce + ")");
                     } else if (!payload.text) {
                         console.warn("[TTS] No text provided for TTS action");
@@ -1792,6 +2039,14 @@
 					mediaElement.style.maxWidth = '95%';
 					mediaElement.style.maxHeight = '95%';
 					mediaElement.style.objectFit = 'contain';
+				} else if (mediaType === 'video') {
+					mediaElement = document.createElement('video');
+					mediaElement.src = url;
+					mediaElement.autoplay = true;
+					mediaElement.playsInline = true;
+					mediaElement.style.maxWidth = '95%';
+					mediaElement.style.maxHeight = '95%';
+					mediaElement.style.objectFit = 'contain';
 				} else {
 					mediaElement = document.createElement('iframe');
 					mediaElement.src = url;
@@ -1838,7 +2093,15 @@
 				mediaElement.style.objectFit = 'contain';
 				mediaElement.style.maxWidth = '100%'; // override global css
 				mediaElement.style.maxHeight = '100%';
-			} else { // Default to iframe for videos/embeds
+			} else if (mediaType === 'video') {
+				mediaElement = document.createElement('video');
+				mediaElement.src = url;
+				mediaElement.autoplay = true;
+				mediaElement.playsInline = true;
+				mediaElement.style.width = '100%';
+				mediaElement.style.height = '100%';
+				mediaElement.style.objectFit = 'contain';
+			} else { // Default to iframe for embeds
 				mediaElement = document.createElement('iframe');
 				mediaElement.src = url;
 				mediaElement.setAttribute('allow', 'autoplay; fullscreen');

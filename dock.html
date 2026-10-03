@@ -1,8 +1,10 @@
 <html lang="en">
 	<head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta name="description" content="Dashboard. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
   <script type="text/javascript" src="./js/local-server-url.js"></script>
 		<meta name="viewport" content="width=device-width,initial-scale=1" />
-		<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+
 		<meta content="utf-8" http-equiv="encoding" />
 		<title>Social Stream - Dashboard</title>
 		<meta name="title" content="Social Stream - Dashboard" />
@@ -10,12 +12,11 @@
 		<link href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
 		<meta name="robots" content="noindex">
 		<script type="text/javascript" src="currency.js"></script>
-		<script type="text/javascript" src="./thirdparty/xss.min.js"></script>
 		<script type="text/javascript" src="./libs/objects.js"></script>
-<script src="./shared/utils/chatHtml.js"></script>
 <script src="./shared/utils/chatBadges.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
 <link rel="stylesheet" href="./shared/utils/chatBadges.css">
-
+		<script src="./shared/utils/contentImage.js"></script>
 
 		<style>
 			:root {
@@ -28,6 +29,7 @@
 				--font-color-name: var(--author-color, #ddd);
 				--background-color: #36393f;
 				--topbar-background: #0009;
+				--viewer-count-reserved-space: 0px;
 				--locked-chatbar: 0px;
 				--menu-background-color: #2f3136;
 				--menu-border-color: 0 0 5px #000;
@@ -69,7 +71,7 @@
 				--member-bgcolor-odd: #65fdff33;
 				--member-bgcolor-bubble: #0f1620d1;
 				--member-bgcolor-bubble-odd: #060c16d1;
-				
+
 				--firstime-bgcolor: #976b6b4f;
 
 				--special-bgcolor: #0f2bfd33;
@@ -85,12 +87,12 @@
 
 				--scrollbar-visible: inherit;
 				--padding-rows: 3px;
-				
+
 				--text-stroke-width: 0px;
 				--text-stroke-color: #000;
 				--text-shadow: -2px -2px #000000, -2px -1px #000000, -2px 0px #000000, -2px 1px #000000, -2px 2px #000000, -1px -2px #000000, -1px -1px #000000, -1px 0px #000000, -1px 1px #000000, -1px 2px #000000, 0px -2px #000000, 0px -1px #000000, 0px 0px #000000, 0px 1px #000000, 0px 2px #000000, 1px -2px #000000, 1px -1px #000000, 1px 0px #000000, 1px 1px #000000, 1px 2px #000000, 2px -2px #000000, 2px -1px #000000, 2px 0px #000000, 2px 1px #000000, 2px 2px #000000;
 				--text-glow: 0 0 #0000;
-				
+
 			}
 			.closeBtn {
 				position: absolute;
@@ -113,7 +115,7 @@
 			.closeBtn:active {
 				background-color: #7a7a7a;
 			}
-			
+
 			#TipRightClick {
 				text-shadow: 0 0 black;
 				cursor: help;
@@ -125,7 +127,7 @@
 				top: 7px;
 				position: relative;
 			}
-			
+
 			.volume-container {
 				  position: relative;
 				  display: inline-block;
@@ -144,7 +146,7 @@
 			.volume-container:hover .volume-slider {
 			  display: block;
 			}
-			
+
 			.blurred {
 				filter: blur(var(--blur-amount));
 			}
@@ -220,7 +222,7 @@
 					opacity: 0;
 				}
 			}
-			
+
 			.modal {
 				display: none; /* Hidden by default */
 				position: fixed; /* Stay in place */
@@ -255,7 +257,7 @@
 				cursor: pointer;
 			}
 
-			
+
 			#obsControlModal {
 			  position: fixed;
 			  z-index: 1000;
@@ -307,7 +309,7 @@
 			  cursor: pointer;
 			  transition: background-color 0.3s;
 			}
-			
+
 			.horizontal .bubble {
 				vertical-align: top;
 			}
@@ -340,7 +342,7 @@
 			#obsControlModal .close-btn:hover {
 			  background-color: #c9302c;
 			}
-			
+
 			.viewerIcons {
 				background-position: left;
 				background-repeat: no-repeat;
@@ -365,7 +367,7 @@
 			  .modal .modal-content {
 				padding: 20px;
 			  }
-			  
+
 			 .modal  button {
 				padding: 8px 12px;
 				font-size: 14px;
@@ -391,6 +393,12 @@
 				transform-origin: 0 0;
 				width: 100%;
 				margin-bottom: calc((46px  + var(--locked-chatbar)) / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
+			}
+
+			#output.sidepadding {
+				box-sizing: border-box;
+				padding-left: var(--side-padding);
+				padding-right: var(--side-padding);
 			}
 
 			.horizontal-ticker-root {
@@ -436,17 +444,17 @@
 				animation: none !important;
 			}
 
-			
+
 			@media only screen and (min-width: 700.001px) { 
 				#output  {
 					margin-bottom: calc(46px / var(--scale-output));
 				}
 			}
-			
+
 			.event-pill {
 				padding-right: 5px;
 			}
-			
+
 			.hl-profile-pic {
 				border: var(--profile-pic-border);
 				min-width: 24px;
@@ -487,12 +495,19 @@
 				max-height: var(--content-images) !important;
 				height: var(--content-images) !important;
 			}
-			
 
+
+			.largeContent .hl-imgContent {
+				max-width: 100%;
+				min-width: 0;
+			}
 			.largeContent .hl-imgContent img, .largeContent .hl-imgContent video {
-				max-width: 160px !important;
+				width: var(--large-content-size, 240px);
+				max-width: calc(100% - 4px) !important;
 				margin: 0 2px;
-				max-height: 80px !important;
+				height: auto !important;
+				max-height: var(--large-content-size, 240px) !important;
+				object-fit: contain;
 			}
 			.largeContent .hl-content {
 				margin: 4px 1px;
@@ -614,19 +629,28 @@
 				unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 			}
 
+			.hl-content .reply-context,
+			.hl-content .reply-context * {
+				color: var(--reply-color, #a8b3cf) !important;
+			}
+			.hl-content .reply-label,
+			.hl-content .reply-label * {
+				color: var(--reply-label-color, #fff) !important;
+			}
+
 			body {
 				font-family: "NotoColorEmojiLimited", var(--font-family);
 				color: var(--font-color);
 				margin: 0 0;
 				background-color: var(--background-color);
-				
+
 				text-shadow: var(--text-shadow), var(--text-glow);
 				-webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
 				text-stroke: var(--text-stroke-width) var(--text-stroke-color);
 				overflow-x: hidden;
 				scrollbar-color: #666 #201c29;
 			}
-			
+
 			input[type="checkbox"] {
 				padding: 0;
 				margin: 0 5px 0 0;
@@ -694,22 +718,22 @@
 				display: flex;
 				margin-top: 4px;
 			}
-			
+
 			.notcompactmode .twoLines .hl-firstline {
 				margin-top: 10px;
 				margin-bottom: 2px;
 			}
-			
+
 			.twoLines .compactmode  {
 				align-items: flex-start;
 				flex-direction: column;
 			}
-			
+
 			#context-menu {
 			  transform-origin: bottom left;
 			  transform: scale(var(--menu-scale, 1));
 			}
-			
+
 			.allowfat .hl-message{
 				max-width: 400px;
 				word-break: keep-all;
@@ -718,7 +742,7 @@
 				overflow:visible;
 				white-space: normal;
 			}
-				
+
 
 			.twoLines.alignright .hl-firstline {
 				display: flex;
@@ -726,7 +750,7 @@
 				margin-left: auto;
 				flex-direction: row;
 			}
-			
+
 			.twoLines.alignright .hl-firstline {
 				justify-content: flex-end;
 			}
@@ -761,7 +785,7 @@
 				font-weight: var(--message-font-weight);
 				font-size: var(--comment-font-size);
 			}
-			
+
 			.hl-name {
 				 overflow-wrap: normal;
 			}
@@ -775,7 +799,7 @@
 				max-width: 24px;
 				max-height: 24px;
 			}
-			
+
 			.hl-message img+img, .hl-message img+svg, .hl-message svg+img, .hl-message svg+svg {
 				margin: auto 0px;
 			}
@@ -783,7 +807,7 @@
 			.hl-message .hl-content img, .hl-message .hl-content video {
 				max-width: 38px;
 			}
-			
+
 			.hl-message img.chat-line__message--emote-gigantified,
 			.hl-message svg.chat-line__message--emote-gigantified {
 				position: relative;
@@ -808,13 +832,13 @@
 			.notcompactmode .hl-content svg {
 				max-width: 80px;
 			}
-			
+
 			.notcompactmode .hl-message img.chat-line__message--emote-gigantified,
 			.notcompactmode .hl-message svg.chat-line__message--emote-gigantified {
 				height: 56px;
 				max-height: 56px;
 			}
-			
+
 			.notcompactmode .hl-content img.chat-line__message--emote-gigantified,
 			.notcompactmode .hl-content svg.chat-line__message--emote-gigantified {
 				max-width: 112px;
@@ -856,11 +880,11 @@
 			.highlight {
 				background-color: yellow !important;
 			}
-			
+
 			svg.regular-emote, img.regular-emote {
 				margin: auto 0;
 			}
-			
+
 			.marked-host {
 				border-left: 3px solid #ff4444 !important;
 			}
@@ -909,7 +933,7 @@
 				object-fit: contain;
 				vertical-align: bottom;
 			}
-			
+
 			#sceneButtons button.active {
 				border:3px solid blue;
 			}
@@ -959,6 +983,25 @@
 			.icon.hl-source-type {
 				vertical-align: middle;
 			}
+			.channel-source-icon.large-channel-icon {
+				max-width: 48px !important;
+				max-height: 36px !important;
+			}
+			.hl-leftside .channel-source-icon.large-channel-icon.avatar-badge {
+				width: 44% !important;
+				height: 44% !important;
+				max-width: 33px !important;
+				max-height: 33px !important;
+			}
+			.channel-source-name {
+				font-size: 11px;
+				display: inline-block;
+				margin: auto 2px auto 5px;
+				white-space: nowrap;
+				vertical-align: middle;
+				color: inherit;
+				opacity: 0.85;
+			}
 			.hl-righttopline .hl-badge {
 				max-height: 16px;
 				vertical-align: middle;
@@ -984,35 +1027,35 @@
 				display: inline-flex;
 				width: -webkit-fill-available;
 			}
-			
+
 			.largeavatar.horizontal .bubble.hl-rightside .hl-message {
 				display: block;
 			}
-			
+
 			.hl-rightside .hl-message .donationAmount {
 				margin: auto;
 			}
-			
+
 			.alignright .hl-rightside.bubble .hl-message, .alignright .hl-rightside.bubble .hl-righttopline{
 				margin-left: auto;
 			}
-			
+
 			.alignright .hl-rightside.bubble .hl-righttopline .time-arrived{
 				margin: 9.5px 2px auto 1px;
 			}
-			
+
 			.alignright .highlight-chat.larger-emojis.compactmode .hl-message.bubble .hl-content {
 				    margin: auto;
 			}
-			
+
 			.hl-rightside.bubble .hl-message {
 				margin: 4px 7px 7px 7px;
 			}
-			
+
 			.bubble span.hl-content:empty {
 				display:none;
 			}
-			
+
 			.hl-message.bubble span.hl-donation {
 				margin: auto 0
 			}
@@ -1042,7 +1085,7 @@
 			body.namebubble.twoLines.alignright .hl-firstline .hl-name {
 				margin: auto 0 auto 6px;
 			}
-			
+
 
 			.bot > .hl-message {
 				padding: 5px 0 5px 5px;
@@ -1076,15 +1119,37 @@
 				padding-bottom: var(--padding-rows) !important;
 				contain: paint;
 			}
-			
-			
+
+			.highlight-chat.deleted-message .hl-message {
+				opacity: 0.6;
+			}
+
+			.deleted-message-label {
+				display: inline-block;
+				align-self: center;
+				flex-shrink: 0;
+				margin: 0 0.4em;
+				padding: 0.1em 0.35em;
+				border: 1px solid currentColor;
+				border-radius: 3px;
+				font-size: 0.75em;
+				font-weight: bold;
+				line-height: 1.2;
+				white-space: nowrap;
+			}
+
+			#output.alignbottom > .highlight-chat {
+				flex-shrink: 0;
+			}
+
+
 			.highlight-chat.expand {
 				animation: expand 2s;
 				overflow: visible;
 				word-break: break-all;
 				line-break: anywhere;
 			}
-			
+
 			@keyframes slideLeft { 
 				from {
 					transform: translateX(150%);
@@ -1093,17 +1158,17 @@
 					transform: translateX(0px);
 				}
 			}
-			
+
 			.horizontal .highlight-chat {
 				vertical-align:top;
 				animation: expand 4s, slideLeft 1s ease-in-out forwards;
 				vertical-align: bottom;
 			}
-			
+
 			.horizontal .highlight-chat.fadein {
 				animation: expand 4s, slideLeft 1s ease-in-out forwards, fadein 2s;
 			}
-			
+
 			.horizontal .highlight-chat.fadeout {
 				animation:  expand 4s, slideLeft 1s ease-in-out forwards, fadeout 2s;
 			}
@@ -1121,7 +1186,7 @@
 				padding-top: 3px;
 				background-color: #0000;
 			}
-			
+
 			.horizontal:not(.alignbottom) .highlight-chat.compactmode {
 				vertical-align: top;
 				display:inline-flex;
@@ -1130,12 +1195,12 @@
 			.horizontal .compactmode.time-arrived {
 				margin: auto 0;
 			}
-			
+
 			.horizontal .compactmode.source-name {
 				margin: auto 0;
 				margin-left: 4px;
 			}
-			
+
 
 			.horizontal .highlight-chat.larger-emojis:not(.compactmode) {
 				line-height: 30px; 
@@ -1185,11 +1250,14 @@
 				max-height: 24px;
 				vertical-align: top;
 			}
-			
+
 			.hl-badge.svg {
 				object-fit: contain;
 				display: inline-block;
 				width: auto;
+				vertical-align: middle;
+			}
+			.highlight-chat.compactmode.larger-emojis .hl-message > .hl-badges > .hl-badge.svg {
 				vertical-align: middle;
 			}
 
@@ -1201,7 +1269,7 @@
 			.notcompactmode .larger-emojis > .time-arrived {
 				margin: 12px 2px auto 1px;
 			}
-			
+
 			.notcompactmode .larger-emojis > .source-name {
 				margin: 12px 2px auto 1px;
 			}
@@ -1209,11 +1277,11 @@
 			.notcompactmode .larger-emojis .icon {
 				margin: 5px 2px auto 1px;
 			} 
-			
+
 			.notcompactmode .larger-emojis > img.icon {
 				margin: 3px 2px auto 1px;
 			} 
-			
+
 			.notcompactmode .larger-emojis .leftside.larger-emojis .icon{
 				margin: 0px 2px auto 1px;
 				vertical-align: top;
@@ -1280,19 +1348,19 @@
 			.notcompactmode div:not(.expand) > .time-arrived {
 				margin: 9.5px 2px auto 1px;
 			}
-			
+
 			.notcompactmode div:not(.expand) > .source-name {
 				margin: 9.5px 2px auto 1px;
 			}
-			
+
 			.notcompactmode .hl-righttopline > div.time-arrived {
 				margin: auto 2px auto 1px;
 			}
-			
+
 			.notcompactmode .hl-righttopline > div.source-name {
 				margin: auto 2px auto 1px;
 			}
-			
+
 			.hl-name:first-child {
 				margin-left: 0;
 			}
@@ -1352,6 +1420,28 @@
 					min-width: unset;
 				}
 			}
+
+			body.vanilla.notcompactmode.inlinechat .highlight-chat {
+				display: block;
+			}
+
+			body.vanilla.notcompactmode.inlinechat .highlight-chat > .queueid {
+				display: inline-block;
+			}
+
+			body.vanilla.notcompactmode.inlinechat .highlight-chat > .hl-name {
+				min-width: unset;
+			}
+
+			body.vanilla.notcompactmode.inlinechat .highlight-chat > .hl-message:not(.bubble) {
+				display: inline;
+				padding-left: 0;
+			}
+
+			body.vanilla.notcompactmode.inlinechat.alignright .highlight-chat {
+				text-align: right;
+			}
+
 			@media only screen and (max-width: 360px) {
 				.OBS .time-arrived {
 					display: none !important;
@@ -1420,11 +1510,11 @@
 			.member {
 				background-color: var(--member-bgcolor);
 			}
-			
+
 			.odd.member:not(.expand) {
 				background-color: var(--member-bgcolor-odd);
 			}
-			
+
 			.highlight-chat.member {
 				background-color: var(--member-bgcolor);
 			}
@@ -1440,11 +1530,11 @@
 			.dono-highlight {
 				background-color: var(--donation-bgcolor);
 			}
-			
+
 			.odd.dono-highlight:not(.expand) {
 				background-color: var(--donation-bgcolor-odd);
 			}
-			
+
 			.bubble.dono-highlight {
 				background-color: var(--donation-bgcolor-bubble);
 				box-shadow: inset 0 0 2px #ffff00a1;
@@ -1511,7 +1601,7 @@
 				margin: auto 0;
 				margin: auto min(2%, 31px) auto auto
 			}
-			
+
 			.horizontal .donationAmount {
 				vertical-align: middle;
 				margin: auto 0;
@@ -1650,7 +1740,7 @@
 			.popInModal > .imgButton {
 				margin-top: 2px;
 			}
-			
+
 			@media only screen and (min-width: 700.001px) { 
 				#chatInput_parent {
 					top: unset;
@@ -1660,7 +1750,7 @@
 					max-width: 700px;
 				}
 			}
-			
+
 			@media only screen and (max-width: 700px) {
 				#chatInput_parent {
 					position: fixed;
@@ -1671,12 +1761,12 @@
 					border-radius: 0;
 					margin:5px 0px;
 				}
-				
+
 				#chatInputCloseButton {
 					display:none!important;
 				}
 			}
-			
+
 			.modalTextInput {
 				height: 20px;
 				font-size: 18px;
@@ -1689,7 +1779,17 @@
 				opacity: 1; /* Firefox */
 			}
 
-			.hl-badge.textbadge {
+			.hl-badge.textbadge,
+			.hl-firstline .hl-name .hl-badge.textbadge {
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				vertical-align: middle;
+				line-height: 1;
+				white-space: nowrap;
+				overflow-wrap: normal;
+				max-width: none;
+				flex-shrink: 0;
 				border-radius: 6px;
 				padding: 0 5px;
 				font-size: 50%;
@@ -1727,7 +1827,7 @@
 			#chatInput:focus {
 				width: 250px;
 			}
-			
+
 			#chatInput_parent:not(.compactchat) {
 				margin: 2.5px max( calc((100% - 700px) / 2 - 20px) , 0px);
 			}
@@ -2077,6 +2177,11 @@
 				margin: 4px 2px auto 1px;
 				border-radius: 50%;
 			}
+			body.square-source-icons .hl-source-type[data-icon-name] {
+				border-radius: 0;
+				clip-path: inset(14.65%);
+				transform: scale(1.4142);
+			}
 			.twoLines .icon {
 				margin: 2px 2px auto 1px;
 			}
@@ -2103,7 +2208,7 @@
 
 			#pinned {
 				position: sticky;
-				top: 0 !important;
+				top: var(--viewer-count-reserved-space) !important;
 				background-color: var(--pinned-bg) !important;
 				left: 0;
 				width: 100%;
@@ -2131,7 +2236,7 @@
 				position: absolute;
 				right: 0px;
 				overflow-y: auto;
-				max-height: 100%;
+				max-height: calc(100% - var(--viewer-count-reserved-space));
 				overflow-x: hidden;
 			}
 
@@ -2181,9 +2286,9 @@
 				contain: paint;
 				backface-visibility: hidden;
 			}
-			
 
-			
+
+
 			@keyframes fadein {
 				0% {
 					opacity: 0;
@@ -2456,23 +2561,37 @@
 			.alignright .compactmode {
 				margin-left: auto;
 			}
-			
+
 			.horizontal .hl-message {
 				min-height: 24px;
 			}
-			
+
+			body:not(.twoLines) .horizontal .highlight-chat,
+			body:not(.twoLines) .horizontal .hl-message,
+			body:not(.twoLines) .horizontal .hl-imgContent {
+				display: inline-flex;
+				align-items: center;
+				flex-wrap: nowrap;
+			}
+
+			body:not(.twoLines) .horizontal:not(.largeContent) .hl-imgContent img,
+			body:not(.twoLines) .horizontal:not(.largeContent) .hl-imgContent video {
+				height: 24px !important;
+				max-height: 24px !important;
+			}
+
 			.alignright .horizontal .hl-donation {
 				padding-right: 11px;
 			}
-			
+
 			.alignright .horizontal {
 				direction: ltr; 
 			}
-			
+
 			.horizontal .hl-leftside:empty{
 				 display: none;
 			}
-			
+
 			.horizontal .hl-content {
 				align-content: center;
 			}
@@ -2484,11 +2603,11 @@
 				margin-left: auto;
 				display: flex;
 			}
-			
+
 			.alignright .horizontal .compactmode div.hl-message {
 				display: inline-block
 			}
-			
+
 			.alignright .compactmode .bubble.hl-message {
 				flex-direction: row;
 				overflow:hidden;
@@ -2496,37 +2615,37 @@
 				margin-left: auto;
 				display: flex;
 			}
-			
+
 			.alignright .hl-message.hl-content.bubble {
 				margin-left: auto;
 				display: flex;
 			}
-			
+
 			.alignright .compactmode.horizontal .hl-message {
 				display: inline-block;
 			}
-			
+
 			.alignright .hl-message .time-arrived {
 				margin:auto 4px;
 			}
-			
+
 			.alignright .highlight-chat .hl-firstline {
 				overflow:hidden;
 				text-overflow: ellipsis;
 				margin-left: auto;
 			}
-			
+
 			#currentScene {
 				background-color:#0000;
 				border:3px solid white;
 				padding:2px 5px;
 				cursor: pointer;
 			}
-			
+
 			#currentScene:empty {
 				display: none;
 			}
-			
+
 		.emote-container {
 		  display: inline-grid;
 		  grid-template-columns: 1fr;
@@ -2578,7 +2697,12 @@
 		#topbar:empty {
 			display:none;
 		}
-		
+		#topbarSpacer {
+			height: var(--viewer-count-reserved-space);
+			width: 100%;
+			pointer-events: none;
+		}
+
 		.output-container {
 			mask-image: linear-gradient(to top,
 				black 80%,
@@ -2590,13 +2714,13 @@
 			);
 			display: block;
 			width: 100vw;
-			height: 100vh;
+			height: calc(100vh - var(--viewer-count-reserved-space));
 			overflow-x: hidden;
 			overflow-y: hidden !important;
 			margin-bottom: 0;
 		}
 		.electronDraggable .output-container {
-			height: calc(100vh); 
+			height: calc(100vh - var(--viewer-count-reserved-space)); 
 			scrollbar-width: none; /* Firefox */
 			-ms-overflow-style: none; /* IE and Edge */
 		}
@@ -2606,7 +2730,7 @@
 		.OBS .output-container {
 			overflow: hidden;
 		}
-		
+
 		.output-container #output:not(.alignbottom) {
 			height: 100%; /* This might not be wortwhile */
 		}
@@ -2617,7 +2741,7 @@
 		.OBS .output-container #output::-webkit-scrollbar {
 			 display: none; /* Chrome, Safari, Opera */
 		}
-		
+
 		.context-menu__submenu {
 			display: none;
 			position: absolute;
@@ -2669,9 +2793,11 @@
 		}
 
 		</style>
-	</head>
+	<link rel="stylesheet" href="dock-questions.css">
+</head>
 	<body id="main" class="vanilla notcompactmode">
 		<div id="topbar"></div>
+		<div id="topbarSpacer" aria-hidden="true"></div>
 		<div id="pinned" class="output"></div>
 		<div id="output" class="output"></div>
 		<div id="backToLive" onclick="returnToLive();" style="display:none; position:fixed; bottom:40px; left:50%; transform:translateX(-50%); z-index:9999; background:rgba(0,120,255,0.9); color:#fff; padding:6px 16px; border-radius:20px; cursor:pointer; font-size:14px; font-family:sans-serif; box-shadow:0 2px 8px rgba(0,0,0,0.3); white-space:nowrap;">Back to live (<span id="missedCount">0</span> new)</div>
@@ -2913,7 +3039,8 @@
 		<div id="chatInput_parent" class="popInModal hidden">
 			<input id="chatInput" class="modalTextInput" type="text" placeholder="Send message...">
 			<button id="chatInputButton" class="imgButton imgSmallButton" style="background-image: url(./icons/send_confirm.png)" title="💬 Send this message"></button>
-			<button id="chatClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png)" title="🗑️ Clear all messages"></button>
+			<button id="chatClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png)" title="🗑️ Clear dock messages; &amp;sync also clears synced docks"></button>
+			<button id="chatHistoryClearButton" class="imgButton imgSmallButton" title="Permanently delete saved message history">🗄️</button>
 
 			<button id="getChatSources" class="imgButton imgSmallButton" title="Change destination to send messages to. Default is all.">🌐</button>
 
@@ -3272,6 +3399,124 @@
 			var tainted = false;
 
 			var urlParams = new URLSearchParams(window.location.search);
+			var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+			var LEGACY_PAGE_WEBHOOK_MAX_VERSION = "3.21.10";
+			function isRawDonationWebhook(data) {
+				return !!(data && typeof data === "object" && (
+					"stripe" in data ||
+					"kofi" in data ||
+					"bmac" in data ||
+					"fourthwall" in data
+				));
+			}
+			function shouldDeferRawDonationWebhook(data) {
+				var urlVersion = urlParams.get("v");
+				return isRawDonationWebhook(data) &&
+					!!socketserver &&
+					!!urlVersion &&
+					compareVersions(urlVersion, LEGACY_PAGE_WEBHOOK_MAX_VERSION) > 0;
+			}
+			function normalizeWebhookDeliveryId(value) {
+				if (value === undefined || value === null || value === "") {
+					return "";
+				}
+				return String(value).trim();
+			}
+			function getRawDonationWebhookIdentity(data) {
+				if (!isRawDonationWebhook(data)) {
+					return null;
+				}
+				if ("stripe" in data) {
+					var stripePayload = data.stripe || {};
+					return {
+						provider: "stripe",
+						webhookId: normalizeWebhookDeliveryId(stripePayload.id || (stripePayload.data && stripePayload.data.object && stripePayload.data.object.id))
+					};
+				}
+				if ("kofi" in data) {
+					var kofiWrapper = data.kofi || {};
+					var kofiPayload = null;
+					try {
+						kofiPayload = JSON.parse(decodeURIComponent(kofiWrapper.data || "").replace(/\+/g, " "));
+					} catch (e) {}
+					return {
+						provider: "kofi",
+						webhookId: normalizeWebhookDeliveryId(kofiPayload && kofiPayload.message_id)
+					};
+				}
+				if ("bmac" in data) {
+					var bmacPayload = data.bmac || {};
+					return {
+						provider: "bmac",
+						webhookId: normalizeWebhookDeliveryId(bmacPayload.event_id || bmacPayload.id || (bmacPayload.data && (bmacPayload.data.id || bmacPayload.data.transaction_id || bmacPayload.data.support_id)))
+					};
+				}
+				var fourthwallPayload = data.fourthwall || {};
+				return {
+					provider: "fourthwall",
+					webhookId: normalizeWebhookDeliveryId(fourthwallPayload.id || (fourthwallPayload.data && fourthwallPayload.data.id))
+				};
+			}
+			function getNormalizedDonationWebhookIdentity(data) {
+				var providers = { stripe: true, kofi: true, bmac: true, fourthwall: true };
+				if (!data || !providers[data.type]) {
+					return null;
+				}
+				return {
+					provider: data.type,
+					webhookId: normalizeWebhookDeliveryId(data.meta && data.meta.webhookId)
+				};
+			}
+			function getWebhookDeliveryKey(provider, idType, idValue) {
+				return String(provider || "webhook") + ":" + idType + ":" + String(idValue);
+			}
+			function setRawWebhookMeta(message, webhookId) {
+				webhookId = normalizeWebhookDeliveryId(webhookId);
+				if (message && webhookId) {
+					message.meta = Object.assign({}, message.meta || {}, { webhookId: webhookId });
+				}
+				return message;
+			}
+			// Transport migration guard: only pages with full server parity may skip the legacy bridge.
+			var TRANSPORT_CAPABILITIES = {
+				serverFeed: true,
+				serverTargeted: false,
+				upstreamCommands: true,
+				customChannel: false,
+				legacyBridgeRequired: true,
+				legacyBridgeReason: "Dock upstream commands still require the SocialStream bridge in server2-only mode."
+			};
+			function versionAtLeast(value, minimum) {
+				var a = String(value || "").split(".");
+				var b = String(minimum || "").split(".");
+				var len = Math.max(a.length, b.length);
+				for (var i = 0; i < len; i++) {
+					var av = parseInt(a[i], 10) || 0;
+					var bv = parseInt(b[i], 10) || 0;
+					if (av > bv) return true;
+					if (av < bv) return false;
+				}
+				return true;
+			}
+			function usesLegacyExtensionTransport() {
+				return !versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION);
+			}
+			// Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+			function hasExclusiveServerTransport(caps) {
+				var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+				return (params.server === true && urlParams.has("server")) ||
+					(params.server2 !== false && urlParams.has("server2")) ||
+					(params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+			}
+			function useServerOnlyTransport() {
+				var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+				return hasExclusiveServerTransport(caps) &&
+					!usesLegacyExtensionTransport() &&
+					caps.serverFeed === true &&
+					caps.legacyBridgeRequired !== true &&
+					caps.upstreamCommands !== true &&
+					caps.customChannel !== true;
+			}
 			var cohostOverlayTarget = urlParams.get("aioverlay") || urlParams.get("overlaylabel") || urlParams.get("cohostOverlayLabel") || "cohost-overlay";
 			var cohostLLMPending = {};
 			var cohostLLMRequestCounter = 0;
@@ -3289,8 +3534,18 @@
 			var messageTimeout = 0;
 			var filtering = "";
 			var filterAddNameAndTime = false;
+			var applyCustomActions = false;
 			var showsource = true;
 			var compactmode = false;
+			// Specialized layouts own their row structure; inline flow only applies to the standard layout.
+			var inlinechat = urlParams.has("inline") &&
+				!urlParams.has("compact") &&
+				!urlParams.has("overlaymode") &&
+				!urlParams.has("horizontal") &&
+				!urlParams.has("twolines") &&
+				!urlParams.has("split") &&
+				!urlParams.has("largeavatar") &&
+				!urlParams.has("bubble");
 			var darkmode = null;
 			var scale = 1;
 			var forceAutoscroll = false;
@@ -3311,12 +3566,18 @@
 			var reachedOldest = false;
 			var oldestLoadedTimestamp = null;
 			var oldestLoadedDbId = null;
+			var historyVisibleRowsLoaded = 0;
+			var historyPageCount = 0;
+			var historyVisibleLoadTarget = 10;
+			var historyMaxPageCount = 5;
+			var historySuppressScrollUntil = 0;
 			var missedLiveCount = 0;
 			var historyMissedLiveBuffer = [];
 			var historyFlushTimer = null;
 			var waitingForRecentHistory = false;
 			var historyReturnSyncPending = false;
 			var historyReturnSyncTimedOut = false;
+			var historyViewCleared = false;
 			var prependMode = false;
 			var body = document.body;
 			var html = document.documentElement;
@@ -3421,6 +3682,7 @@
 			}
 			var showbadges = true;
 			var colorized = false;
+			var nameColorMode = "none";
 			var horizontal = false;
 			var horizontalReverse = false;
 			var horizontalTickerState = null;
@@ -3442,6 +3704,15 @@
 			var fontColorParam = normalizeColor(urlParams.get("fontcolor"));
 			if (hasValue(fontColorParam)) {
 				document.documentElement.style.setProperty("--font-color", fontColorParam);
+			}
+
+			var replyColorEnabled = urlParams.has("replycolor");
+			if (replyColorEnabled) {
+				document.documentElement.style.setProperty("--reply-color", normalizeColor(urlParams.get("replycolor")) || "#a8b3cf");
+			}
+			var replyLabelColorEnabled = urlParams.has("replylabelcolor");
+			if (replyLabelColorEnabled) {
+				document.documentElement.style.setProperty("--reply-label-color", normalizeColor(urlParams.get("replylabelcolor")) || "#ffffff");
 			}
 
 			var nameColorParam = normalizeColor(urlParams.get("namecolor"));
@@ -3545,8 +3816,13 @@
 					};
 					  
 					document.addEventListener('DOMContentLoaded', () => {
-						let ninjafy = window.ninjafy || window.electronApi;
-						ninjafy.onCloseFileStream(writerCloseHandler);
+						let fileStreamBridge = window.ninjafy;
+						if (!fileStreamBridge || typeof fileStreamBridge.onCloseFileStream !== 'function') {
+							fileStreamBridge = window.electronApi;
+						}
+						if (fileStreamBridge && typeof fileStreamBridge.onCloseFileStream === 'function') {
+							fileStreamBridge.onCloseFileStream(writerCloseHandler);
+						}
 					});
 				}
 			} catch (e) {
@@ -3642,11 +3918,20 @@
 			if (urlParams.get("blockedwords")) {
 				blockedWords = urlParams.get("blockedwords").toLowerCase().split(",").map(w => w.trim()).filter(w => w);
 			}
+			var exactBlockedMessages = [];
+			if (urlParams.get("exactblockedmessages")) {
+				exactBlockedMessages = urlParams.get("exactblockedmessages").toLowerCase().split(",").map(function (message) {
+					return message.trim();
+				}).filter(function (message) {
+					return message;
+				});
+			}
 
 			var trivialevents = false;
 			if (urlParams.has("trivialevents")) {
 				trivialevents = true;
 			}
+			var trivialHighlightColor = normalizeColor(urlParams.get("trivialhighlightcolor"));
 
 			var filterNamesNotMessages = false;
 			if (urlParams.has("namefilter")) {
@@ -3658,6 +3943,8 @@
 			if (urlParams.has("deleteonlylast")) {
 				deleteOnlyLast = true;
 			}
+			var showDeleted = urlParams.has("showdeleted");
+			var deletedDockMessages = new WeakSet();
 			
 
 			var thisLabel = false;
@@ -3698,6 +3985,44 @@
 			if (urlParams.has("autoqueuedonations") || urlParams.has("autoqueuedonation")) {
 				autoQueueDonations = true;
 			}
+			var autoQueueSuperChats = false;
+			if (urlParams.has("autoqueuesuperchats") || urlParams.has("autoqueuesuperchat")) {
+				autoQueueSuperChats = true;
+			}
+			var autoQueueMemberships = urlParams.has("autoqueuememberships");
+
+			function shouldAutoQueueMessage(data) {
+				if (!data || typeof data !== "object") {
+					return false;
+				}
+				if (autoQueueMemberships && (data.type === "youtube" || data.type === "youtubeshorts") &&
+					["sponsorship", "resub", "membermilestone", "membershiprenewal", "giftpurchase", "giftredemption"].includes(String(data.event || "").toLowerCase())) {
+					return true;
+				}
+				if (autoQueueSuperChats) {
+					return String(data.event || "").toLowerCase() === "superchat";
+				}
+				return autoQueueDonations && !!(data.hasDonation || data.donation);
+			}
+
+			function isQueueRequested(data) {
+				return data.queueme ||
+					(selfQueue && data.chatmessage && selfQueue.some(item => data.chatmessage.split(" ").includes(item))) ||
+					(autoQueueQuestions && data.question) || shouldAutoQueueMessage(data);
+			}
+
+			function queueMessageIfRequested(node, data) {
+				if (!node || node.classList.contains("queued") || node.classList.contains("deleted-message")) {
+					return;
+				}
+				if (isQueueRequested(data)) {
+					selectedQueue.push(node);
+					node.children[0].dataset.qid = selectedQueue.length;
+					node.classList.add("queued");
+					applyHiddenState(node);
+					updateQueueButton();
+				}
+			}
 			if (urlParams.has("viewonly")) {
 				blockMessageSelecting = true;
 			}
@@ -3730,6 +4055,39 @@
 				stripLinks = true;
 			}
 
+			var allowBotLinks = false;
+			if (urlParams.has("allowbotlinks")) {
+				allowBotLinks = true;
+			}
+
+			var allowHostLinks = false;
+			if (urlParams.has("allowhostlinks")) {
+				allowHostLinks = true;
+			}
+
+			var allowModLinks = false;
+			if (urlParams.has("allowmodlinks")) {
+				allowModLinks = true;
+			}
+
+			var allowVipLinks = false;
+			if (urlParams.has("allowviplinks")) {
+				allowVipLinks = true;
+			}
+
+			function shouldStripLinksForMessage(data) {
+				if (!stripLinks) {
+					return false;
+				}
+				if (!data) {
+					return true;
+				}
+				if ((allowBotLinks && data.bot) || (allowHostLinks && data.host) || (allowModLinks && data.mod) || (allowVipLinks && data.vip)) {
+					return false;
+				}
+				return true;
+			}
+
 			var activeLinks = false;
 			if (urlParams.has("activelinks")) {
 				activeLinks = true;
@@ -3749,6 +4107,11 @@
 			var stripEmojis = false;
 			if (urlParams.has("stripemoji")) {
 				stripEmojis = true;
+			}
+
+			var stripNameEmojis = false;
+			if (urlParams.has("stripnameemoji")) {
+				stripNameEmojis = true;
 			}
 
 			var disolveEvents = false;
@@ -3872,6 +4235,11 @@
 			if (urlParams.has("showviewercount")) {
 				showviewercount = true;
 			}
+			var reserveviewercountspace = showviewercount && urlParams.has("reserveviewercountspace");
+			var showlikecount = false;
+			if (urlParams.has("showlikecount")) {
+				showlikecount = true;
+			}
 			var viewerCountRequestTtl = 70 * 60 * 1000;
 			var viewerCountRequestRefresh = 60 * 60 * 1000;
 			var showbitrate = false;
@@ -3927,7 +4295,11 @@
 			if (urlParams.has("hidesource")) {
 				showsource = false;
 			}
-			
+
+			if (urlParams.has("squaresource")) {
+				document.body.classList.add("square-source-icons");
+			}
+
 			var showSourceName = false;
 			if (urlParams.has("showsourcename")) {
 				showSourceName = true;
@@ -4380,6 +4752,10 @@
 				return scrollHeight < scrollTop + clientHeight + threshold;
 			}
 
+			function shouldEnterHistoryBrowsing(forceEnter, scrollDirection, scrollTop, hasMessages) {
+				return scrollTop < 50 && (forceEnter || (scrollDirection < 0 && !!hasMessages));
+			}
+
 			if (urlParams.has("autoscroll") && !manualScrollMode) {
 				forceAutoscroll = false;
 				jumptoBottom();
@@ -4568,6 +4944,8 @@
 
 			if (urlParams.get("custombeep")) {
 				updateAudioSource(urlParams.get("custombeep"));
+			} else if (urlParams.has("loudbeep")) {
+				updateAudioSource("./audio/tone-loud.wav");
 			}
 
 			if (urlParams.has("beepvolume")) {
@@ -4578,8 +4956,9 @@
 				}
 			}
 
+			var beepOnlyMod = urlParams.has("beeponlymod");
 			var beep = false;
-			if (urlParams.has("beep")) {
+			if (urlParams.has("beep") || beepOnlyMod) {
 				// removes HTML from messages, donations, and names.
 				beep = true;
 				let ele = getById("notify");
@@ -4592,6 +4971,10 @@
 			var beepFirstTime = false;
 			if (urlParams.has("beepfirsttime")) {
 				beepFirstTime = true;
+			}
+
+			function shouldDockBeep(data, isMod) {
+				return !!((beep || (beepFirstTime && data.firsttime)) && (!beepOnlyMod || isMod));
 			}
 			
 			var nobeepbot = false;
@@ -4809,9 +5192,9 @@
 				return null;
 			}
 			
-			function toUSD(value) {
+			function toUSD(value, source) {
 				 // Use the new convertToUSD function
-				 return convertToUSD(value);
+				 return convertToUSD(value, source || '');
 			}
 			
 			const tiers = processTierParam(urlParams);
@@ -4828,23 +5211,32 @@
 			if (urlParams.has("hidebadges") || urlParams.has("nobadges")) {
 				showbadges = false;
 			}
+			var stripMemberships = urlParams.has("stripmemberships");
 
 			var doNotAutoshowFiltered = false;
 			if (urlParams.has("excludefiltered")) {
 				doNotAutoshowFiltered = true;
 			}
 
-			if (urlParams.has("colorednames") || urlParams.has("color")) {
-				colorized = true;
+			if (urlParams.has("randomcolorall")) {
+				nameColorMode = "all";
+			} else if (urlParams.has("randomcolor")) {
+				nameColorMode = "missing";
+			} else if (urlParams.has("colorednames") || urlParams.has("color")) {
+				nameColorMode = "supplied";
 			}
+			colorized = nameColorMode !== "none";
 
 			if (urlParams.has("largecontent")) {
+				var largeContentScale = parseFloat(urlParams.get("largecontent"));
+				largeContentScale = Number.isFinite(largeContentScale) ? Math.max(1, Math.min(5, largeContentScale)) : 1;
+				getById("output").style.setProperty("--large-content-size", (240 * largeContentScale) + "px");
 				getById("output").classList.add("largeContent");
 			}
 
 			var custombot = false;
-			if (urlParams.has("myname") || urlParams.has("botnames") ||  urlParams.has("botlist")) {
-				custombot = urlParams.get("myname") || urlParams.get("botlist") || false;
+			if (urlParams.has("myname") || urlParams.has("botnames") || urlParams.has("botlist")) {
+				custombot = urlParams.get("myname") || urlParams.get("botlist") || urlParams.get("botnames") || false;
 				if (custombot) {
 					custombot = decodeURIComponent(custombot);
 					custombot = custombot.toLowerCase().replace(/[^a-z0-9,_]+/gi, "");
@@ -4909,6 +5301,10 @@
 			if (urlParams.has("autoyoutubememberchat")) {
 				autoyoutubememberchat = true;
 			}
+
+			if (!autoshow && (autoshowdonos || autoshowmembers || autoshowcontentimages)) {
+				autoShow(); // the donation/member/content-image filters imply auto-feature
+			}
 			
 			var giveVIPBadge = false;
 			if (urlParams.has("showvipbadge")) {
@@ -4931,6 +5327,74 @@
 			
 			var conCon = 1;
 			var socketserver = false;
+			var remoteControlDockResultCache = new Map();
+			var remoteControlDockActions = {
+				nextInQueue: true,
+				clearOverlay: true,
+				nextPinned: true,
+				getQueueSize: true
+			};
+
+			function isVersionedRemoteControlRequest(data) {
+				if (!data || typeof data !== "object") return false;
+				var version = Number(data.protocolVersion !== undefined ? data.protocolVersion : data.protocol);
+				return isFinite(version) && version >= 2;
+			}
+
+			function pruneRemoteControlDockResults(now) {
+				remoteControlDockResultCache.forEach(function (entry, key) {
+					if (!entry || now - entry.createdAt > 15000) {
+						remoteControlDockResultCache.delete(key);
+					}
+				});
+			}
+
+			function makeRemoteControlDockResult(data, rawResult) {
+				if (rawResult && typeof rawResult === "object" && !Array.isArray(rawResult) && typeof rawResult.ok === "boolean") {
+					return rawResult;
+				}
+				if (rawResult === false || rawResult === null || rawResult === undefined) {
+					return {
+						ok: false,
+						status: "failed",
+						request: data.get || null,
+						error: {
+							code: "TARGET_UNAVAILABLE",
+							message: "The default Dock could not complete the command."
+						}
+					};
+				}
+				return {
+					ok: true,
+					status: "completed",
+					request: data.get || null,
+					payload: typeof rawResult === "object" ? rawResult : { value: rawResult }
+				};
+			}
+
+			function executeRemoteControlDockRequest(data) {
+				if (!isVersionedRemoteControlRequest(data)) {
+					return { skip: false, result: processInput(data) };
+				}
+				if (!data.action || !remoteControlDockActions[data.action]) {
+					return { skip: true, result: null };
+				}
+				if (thisLabel) {
+					return { skip: true, result: null };
+				}
+				var key = data.get ? String(data.get) : "";
+				var now = Date.now();
+				pruneRemoteControlDockResults(now);
+				if (key && remoteControlDockResultCache.has(key)) {
+					return { skip: false, result: remoteControlDockResultCache.get(key).result };
+				}
+				var result = makeRemoteControlDockResult(data, processInput(data));
+				if (key) {
+					remoteControlDockResultCache.set(key, { createdAt: now, result: result });
+				}
+				return { skip: false, result: result };
+			}
+
 			var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/api";
 			var reconnectionTimeout = null;
 			function setupSocket() {
@@ -4977,7 +5441,11 @@
 						} catch (e) {
 							return;
 						}
-						resp = processInput(data);
+						var remoteExecution = executeRemoteControlDockRequest(data);
+						if (remoteExecution.skip) {
+							return;
+						}
+						resp = remoteExecution.result;
 						//console.log(resp);
 						if (resp !== null) {
 							if (data.get) {
@@ -5079,7 +5547,9 @@
 					if (event.data && server2) {
 						try {
 							var data = JSON.parse(event.data);
-							processInput(data);
+							if (!isDuplicateTransportDelivery(data, "server")) {
+								processInput(data);
+							}
 						} catch (e) {
 							console.error(e);
 						}
@@ -5113,6 +5583,8 @@
 			if (urlParams.has("branded")) {
 				customSource = true;
 			}
+			var largeChannelIcon = urlParams.has("largechannelicon");
+			var showChannelName = urlParams.has("showchannelname");
 			
 			if (urlParams.has("chroma")) {
 				var chroma = urlParams.get("chroma") || "0F0";
@@ -5126,8 +5598,20 @@
 				document.documentElement.style.setProperty("--list-or-horizontal", "flex");
 			}
 
+			if (inlinechat) {
+				document.body.classList.add("inlinechat");
+			}
+
 			if (urlParams.has("padding")) {
 				document.documentElement.style.setProperty("--padding-rows", (parseInt(urlParams.get("padding") || 5)) + "px");
+			}
+			if (urlParams.has("sidepadding")) {
+				var sidePadding = parseInt(urlParams.get("sidepadding"), 10);
+				if (!isFinite(sidePadding)) {
+					sidePadding = 8;
+				}
+				document.documentElement.style.setProperty("--side-padding", Math.max(0, Math.min(99, sidePadding)) + "px");
+				getById("output").classList.add("sidepadding");
 			}
 			
 			var NormalizeText = false;
@@ -5470,6 +5954,10 @@
 				filterEmojiOnly = true;
 			}
 
+			var makeEmoteStatic = null;
+			if (urlParams.has("staticemotes") || urlParams.has("noanimatedemotes") || urlParams.has("freezeemotes")) {
+				makeEmoteStatic = createStaticEmoteProcessor();
+			}
 			var syncDocks = false;
 			if (urlParams.has("sync") || urlParams.has("synced")) {
 				syncDocks = true;
@@ -5673,7 +6161,7 @@
 				'new_follower','follow','followed',
 				'new_subscriber','subscription_gift','resub','sponsorship','giftpurchase','giftredemption','membermilestone',
 				'subscription','subgift','membership','new_member','new_membership','newmember','upgraded_membership','membership_upgrade','membership_milestone','member_milestone','gift_membership','membership_gift','community_gift',
-				'donation','supersticker','thankyou','jeweldonation','tip','support',
+				'donation','superchat','supersticker','thankyou','jeweldonation','tip','support',
 				'cheer','bits',
 				'raid','host','hosting'
 			]);
@@ -5699,7 +6187,7 @@
 			}
 			
 			if (alignbottom || fadetop) {
-				const ro = new MutationObserver(mutations => {
+				const scrollOutputToBottom = () => {
 					if (reversed && !forceAutoscroll) {
 					} else {
 						var delta = 0;
@@ -5710,8 +6198,18 @@
 							jumptoBottom2()
 						}
 					}
-				});
+				};
+				const ro = new MutationObserver(scrollOutputToBottom);
 				ro.observe(getById("output"), { childList: true, attributes: false, subtree: false });
+				mainOutputWindow.addEventListener("load", function(event) {
+					if (event.target.tagName !== "IMG") return;
+					// Image loads do not add DOM children. Wait for attachment load handlers to reveal them.
+					requestAnimationFrame(function() {
+						if (!historyBrowsing && !historyReturnSyncPending) {
+							scrollOutputToBottom();
+						}
+					});
+				}, true);
 			} else {
 				const ro = new ResizeObserver(entries => {
 					if (reversed && !forceAutoscroll) {
@@ -5739,16 +6237,20 @@
 					var distanceFromBottom = historyScrollContainer.scrollHeight - (historyScrollContainer.scrollTop + historyScrollContainer.clientHeight);
 					return distanceFromBottom <= historyLiveEdgeThreshold;
 				};
-				var historyTopIntent = function(forceEnter) {
+				var historyLastScrollTop = historyScrollContainer ? historyScrollContainer.scrollTop : 0;
+				var historyTopIntent = function(forceEnter, scrollDirection) {
 					if (!historyScrollContainer) {
 						return;
 					}
 					if (historyBrowsing) {
-						if (isNearHistoryLiveEdge()) {
+						if (isLoadingHistory || Date.now() < historySuppressScrollUntil) {
+							return;
+						}
+						if (scrollDirection > 0 && isNearHistoryLiveEdge()) {
 							returnToLive();
 							return;
 						}
-						if (historyScrollContainer.scrollTop < 100 && !isLoadingHistory && !reachedOldest) {
+						if (scrollDirection < 0 && historyScrollContainer.scrollTop < 100 && !reachedOldest) {
 							loadOlderMessages();
 						}
 						return;
@@ -5756,17 +6258,19 @@
 					if (reversed) {
 						return;
 					}
-					if (!horizontal && historyScrollContainer.scrollTop < 50 && (forceEnter || mainOutputWindow.firstElementChild)) {
+					if (!horizontal && shouldEnterHistoryBrowsing(forceEnter, scrollDirection, historyScrollContainer.scrollTop, mainOutputWindow.firstElementChild)) {
 						enterHistoryMode();
 					}
 				};
 				var onHistoryScroll = function() {
-					historyTopIntent(false);
+					var currentScrollTop = historyScrollContainer.scrollTop;
+					var scrollDirection = currentScrollTop > historyLastScrollTop ? 1 : (currentScrollTop < historyLastScrollTop ? -1 : 0);
+					historyLastScrollTop = currentScrollTop;
+					historyTopIntent(false, scrollDirection);
 				};
 				var onHistoryWheel = function(event) {
-					if (event.deltaY < 0) {
-						historyTopIntent(true);
-					}
+					var scrollDirection = event.deltaY > 0 ? 1 : (event.deltaY < 0 ? -1 : 0);
+					historyTopIntent(scrollDirection < 0, scrollDirection);
 				};
 				historyScrollContainer.addEventListener("scroll", onHistoryScroll);
 				historyScrollContainer.addEventListener("wheel", onHistoryWheel, { passive: true });
@@ -6051,6 +6555,41 @@
 				node.classList.remove("hidden");
 			}
 
+			function isDockMessageVisible(node) {
+				if (!node || node.classList.contains("hidden")) {
+					return false;
+				}
+				var style = window.getComputedStyle(node);
+				return style.visibility !== "hidden" && style.display !== "none";
+			}
+
+			function selectDockNodesForPruning(nodes, limit, fromBottom) {
+				var visibleNodes = [];
+				var hiddenNodes = [];
+				Array.prototype.forEach.call(nodes, function(node) {
+                    if (node.classList.contains("ssn-question-pending")) return;
+					if (isDockMessageVisible(node)) {
+						visibleNodes.push(node);
+					} else {
+						hiddenNodes.push(node);
+					}
+				});
+
+				var nodesToRemove = [];
+				[hiddenNodes, visibleNodes].forEach(function(group) {
+					var excess = group.length - limit;
+					if (excess <= 0) {
+						return;
+					}
+					if (fromBottom) {
+						nodesToRemove = nodesToRemove.concat(group.slice(group.length - excess));
+					} else {
+						nodesToRemove = nodesToRemove.concat(group.slice(0, excess));
+					}
+				});
+				return nodesToRemove;
+			}
+
 			var hashCode = s =>
 				s.split("").reduce((a, b) => {
 					a = (a << 5) - a + b.charCodeAt(0);
@@ -6125,7 +6664,7 @@
 				setTimeout(function(){ // timeout to avoid middle+click causing override.
 					let pass = "";
 					if (urlParams.has("password")) {
-						pass = "&password="+password;
+						pass = "&password="+encodeURIComponent(password);
 					}
 
 					const uniqueName = "popup_" + Date.now();
@@ -6402,6 +6941,26 @@
 			
 			var topBarElement = getById("topbar");
 
+			if (reserveviewercountspace && topBarElement) {
+				var viewerBarSpaceUpdatePending = false;
+				var updateViewerBarReservedSpace = function() {
+					viewerBarSpaceUpdatePending = false;
+					var height = topBarElement.children.length ? Math.ceil(topBarElement.getBoundingClientRect().height) : 0;
+					document.documentElement.style.setProperty("--viewer-count-reserved-space", height + "px");
+				};
+				var scheduleViewerBarSpaceUpdate = function() {
+					if (viewerBarSpaceUpdatePending) {
+						return;
+					}
+					viewerBarSpaceUpdatePending = true;
+					requestAnimationFrame(updateViewerBarReservedSpace);
+				};
+				var viewerBarSpaceObserver = new MutationObserver(scheduleViewerBarSpaceUpdate);
+				viewerBarSpaceObserver.observe(topBarElement, { childList: true, subtree: true, characterData: true });
+				window.addEventListener("resize", scheduleViewerBarSpaceUpdate);
+				scheduleViewerBarSpaceUpdate();
+			}
+
 			function formatVideoBitrate(bitrateKbps){
 				var bitrate = parseFloat(bitrateKbps);
 				if (isNaN(bitrate) || bitrate <= 0) {
@@ -6462,6 +7021,27 @@
 					}
 					if (data.type && data.event == "follower_update"){
 						followers[data.type] = parseInt(data.meta) || 0;
+						return true;
+					} else if (data.type && data.event == "likes_update"){
+						if (!showlikecount) return true;
+						let likeCount = parseInt(data.meta, 10);
+						if (isNaN(likeCount) || likeCount < 0) return true;
+						let likeType = String(data.type).toLowerCase();
+						if (likeType == "youtubeshorts") likeType = "youtube";
+						let ele = topBarElement.querySelector(dataAttributeSelector("data-like-count", likeType));
+						if (!ele){
+							ele = document.createElement("div");
+							ele.dataset.likeCount = likeType;
+							ele.classList.add("viewerIcons");
+							ele.title = (likeType == "youtube" ? "YouTube video" : likeType == "tiktok" ? "TikTok LIVE" : likeType) + " likes";
+							ele.style.backgroundImage = "url(./sources/images/"+likeType+".png)";
+							topBarElement.prepend(ele);
+						}
+						ele.innerText = "♥ " + likeCount;
+						clearTimeout(ele.timeout);
+						ele.timeout = setTimeout(function(ele){
+							if (ele) ele.remove();
+						}, 130000, ele);
 						return true;
 					} else if (data.type && data.event == "viewer_update"){
 						viewers[data.type] = parseInt(data.meta) || 0;
@@ -6592,38 +7172,113 @@
 				}
 				return out;
 			}
+
+			function getDockNameColor(data) {
+				if (!data || !data.chatname || !colorized) {
+					return "";
+				}
+
+				var suppliedColor = data.nameColor || "";
+				if (nameColorMode === "all" || (nameColorMode === "missing" && !suppliedColor)) {
+					var identity = data.userid || data.username || data.chatname;
+					return getColorFromString(String(identity).toLowerCase());
+				}
+
+				return suppliedColor;
+			}
 			
+			function markDeletedMessage(node) {
+				node.classList.add("deleted-message");
+				node.classList.remove("queued");
+				var queueBadge = node.querySelector(".queueid");
+				if (queueBadge) delete queueBadge.dataset.qid;
+				if (node.rawContents) deletedDockMessages.add(node.rawContents);
+				if (!node.querySelector(".deleted-message-label")) {
+					var label = document.createElement("span");
+					label.className = "deleted-message-label";
+					label.textContent = "Deleted";
+					var message = node.querySelector(".hl-message");
+					if (message) message.parentNode.insertBefore(label, message);
+					else node.appendChild(label);
+				}
+			}
+
 			function deleteMessages(data, deleteOnlyLast=false) {
 				let selector = "";
-				if (data.delete.id) {
+				let matchField = "";
+				const nativeId = data.delete.meta && data.delete.meta.messageId;
+				if (data.delete.meta && data.delete.meta.messageId) {
+					const sourceSelector = data.delete.type ? dataAttributeSelector("data-source-type", data.delete.type) : "";
+					selector = ".highlight-chat" + sourceSelector;
+				} else if (data.delete.id) {
+					matchField = "id";
 					selector = dataAttributeSelector("data-mid", data.delete.id);
+					if (data.delete.type) selector += dataAttributeSelector("data-source-type", data.delete.type);
+				} else if (data.delete.userid && data.delete.type) {
+					matchField = "userid";
+					selector = dataAttributeSelector("data-userid", data.delete.userid) + dataAttributeSelector("data-source-type", data.delete.type);
+				} else if (data.delete.type === "twitch" && data.delete.meta && data.delete.meta.pluralmind && data.delete.username) {
+					matchField = "username";
+					selector = dataAttributeSelector("data-username", data.delete.username) + dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.chatname && data.delete.type) {
+					matchField = "chatname";
 					selector = dataAttributeSelector("data-chatname", data.delete.chatname) + dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.type) {
 					selector = dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.chatname) {
+					matchField = "chatname";
 					selector = dataAttributeSelector("data-chatname", data.delete.chatname);
 				}
 
-				if (deleteOnlyLast || data.delete.onlyLast) {
-					const elements = Array.from(document.querySelectorAll(selector));
-					if (elements.length) {
-						const newest = elements.reduce((a, b) => 
-							Number(a.dataset.mid) > Number(b.dataset.mid) ? a : b
-						);
-						newest.remove();
+				// Include queued rows already detached from the visible chat.
+				const nodes = new Set(Array.from(document.querySelectorAll(selector)));
+				selectedQueue.concat(autoShowQueue).forEach(node => {
+					if (node.matches(selector)) nodes.add(node);
+				});
+				let matches = Array.from(nodes).filter(node => !nativeId ||
+					String(getNativeSourceControlMessageId(node.rawContents || {})) === String(nativeId)
+				).map(node => ({ node, id: node.dataset.mid, type: node.dataset.sourceType }));
+				const pending = historyMissedLiveBuffer.concat(queue.map(item => item.contents), messageBuffer.map(item => item.contents));
+				pending.forEach(message => {
+					if (data.delete.type && String(message.type) !== String(data.delete.type)) return;
+					if (nativeId) {
+						if (String(getNativeSourceControlMessageId(message)) !== String(nativeId)) return;
+					} else if (matchField) {
+						const value = matchField === "id" ? (message.mid || message.id) : message[matchField];
+						if (String(value) !== String(data.delete[matchField])) return;
 					}
-				} else {
-					document.querySelectorAll(selector).forEach(ele => ele.remove());
+					matches.push({ message, id: message.mid || message.id, type: message.type });
+				});
+				// Native-message deletions already identify their target; onlyLast applies to the other selectors.
+				if (!nativeId && (deleteOnlyLast || data.delete.onlyLast) && matches.length) {
+					const newest = matches.reduce((a, b) => Number(a.id) > Number(b.id) ? a : b);
+					matches = matches.filter(item => item === newest || (newest.id &&
+						String(item.id) === String(newest.id) && item.type === newest.type));
 				}
+				const deletedNodes = new Set(matches.filter(item => item.node).map(item => item.node));
+				const deletedPending = new Set(matches.filter(item => item.message).map(item => item.message));
+				if (showDeleted) {
+					deletedPending.forEach(message => deletedDockMessages.add(message));
+				} else {
+					historyMissedLiveBuffer = historyMissedLiveBuffer.filter(message => !deletedPending.has(message));
+					queue = queue.filter(item => !deletedPending.has(item.contents));
+					messageBuffer = messageBuffer.filter(item => !deletedPending.has(item.contents));
+				}
+				const previousQueueLength = selectedQueue.length;
+				selectedQueue = selectedQueue.filter(node => !deletedNodes.has(node));
+				autoShowQueue = autoShowQueue.filter(node => !deletedNodes.has(node));
+				deletedNodes.forEach(node => showDeleted ? markDeletedMessage(node) : node.remove());
+				if (selectedQueue.length !== previousQueueLength) updateQueueButton(true);
 			}
 			
 			function getUserHistory(element) {
 				var chatName = element.dataset.chatname;
+				var userId = element.dataset.userid || "";
+				var username = element.dataset.username || "";
 				var type = element.dataset.sourceType;
 
 				if (chatName && type) {
-					send2Extension({ action: "getUserHistory", value: { chatname: chatName, type: type } });
+					send2Extension({ action: "getUserHistory", value: { chatname: chatName, userid: userId, username: username, type: type } });
 				}
 			}
 			
@@ -6639,24 +7294,45 @@
 				if (!messageData || typeof messageData !== "object") {
 					return;
 				}
-				historyMissedLiveBuffer.push(Object.assign({}, messageData));
+				var bufferedMessage = Object.assign({}, messageData);
+				if (showDeleted && deletedDockMessages.has(messageData)) deletedDockMessages.add(bufferedMessage);
+				historyMissedLiveBuffer.push(bufferedMessage);
 				if (historyMissedLiveBuffer.length > 500) {
-					historyMissedLiveBuffer.shift();
+					var discardIndex = historyMissedLiveBuffer.findIndex(function(message) {
+						return !isQueueRequested(message);
+					});
+					// Retain pending queue entries even when they alone exceed the history limit.
+					if (discardIndex !== -1) {
+						historyMissedLiveBuffer.splice(discardIndex, 1);
+					}
 				}
 			}
 
 			function flushMissedLiveBuffer() {
-				if (historyBrowsing || historyReturnSyncPending || !historyMissedLiveBuffer.length) {
+				if (historyBrowsing || historyReturnSyncPending) {
 					return;
 				}
 				var buffered = historyMissedLiveBuffer.slice();
 				historyMissedLiveBuffer = [];
-				buffered.forEach(function(msg) {
-					var displayId = (msg && msg.mid) ? msg.mid : msg.id;
-					if (!displayId || !document.querySelector(dataAttributeSelector("data-mid", displayId))) {
-						processData({ contents: msg }, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true });
-					}
-				});
+				// Finish queueing the entire catch-up batch before any rows can be pruned.
+				historyReturnSyncPending = true;
+				try {
+					buffered.forEach(function(msg) {
+						var displayId = (msg && msg.mid) ? msg.mid : msg.id;
+						var node = displayId ? document.querySelector(dataAttributeSelector("data-mid", displayId)) : null;
+						if (!node) {
+							node = processData({ contents: msg }, { reloaded: true, suppressLiveSideEffects: true, skipHistoryDeferral: true });
+						}
+						// These arrived live while browsing history, even if recentHistory already rendered them.
+						if (node) {
+							if (showDeleted && deletedDockMessages.has(msg)) markDeletedMessage(node);
+							queueMessageIfRequested(node, node.rawContents);
+						}
+					});
+				} finally {
+					historyReturnSyncPending = false;
+				}
+				cleanUpOldNodes();
 				jumptoBottom2();
 			}
 
@@ -6670,13 +7346,20 @@
 				historyBrowsing = true;
 				missedLiveCount = 0;
 				reachedOldest = false;
+				historyVisibleRowsLoaded = 0;
+				historyPageCount = 0;
 				getById("backToLive").style.display = "";
 				getById("missedCount").textContent = "0";
 				loadOlderMessages();
 			}
 
-			function loadOlderMessages() {
+			function loadOlderMessages(continueFilteredLoad) {
 				if (reversed || isLoadingHistory || reachedOldest) return;
+				if (!continueFilteredLoad) {
+					historyVisibleRowsLoaded = 0;
+					historyPageCount = 0;
+				}
+				historyPageCount += 1;
 				isLoadingHistory = true;
 				var firstNode = mainOutputWindow.firstElementChild;
 				if (firstNode && firstNode.rawContents && firstNode.rawContents.timestamp) {
@@ -6702,15 +7385,16 @@
 				});
 			}
 
+			function shouldContinueFilteredHistoryLoad(pageLength) {
+				return pageLength > 0 && historyVisibleRowsLoaded < historyVisibleLoadTarget && historyPageCount < historyMaxPageCount && !reachedOldest;
+			}
+
 			function pruneFromBottom() {
 				var nodes = document.querySelectorAll("#output>div:not(.queued)");
 				var limit = customNodeLimit || 200;
-				var excess = nodes.length - limit;
-				if (excess > 0) {
-					for (var i = nodes.length - 1; i >= nodes.length - excess; i--) {
-						nodes[i].remove();
-					}
-				}
+				selectDockNodesForPruning(nodes, limit, true).forEach(function(node) {
+					node.remove();
+				});
 			}
 
 				function returnToLive(options = {}) {
@@ -6782,9 +7466,35 @@
 				}
 			}
 
+			
+
 			var activeChatDestinations = new Set();
 
-			
+			function updateChatDestinationSelection(checkbox) {
+				if (!checkbox || !checkbox.dataset || checkbox.dataset.tab === undefined) {
+					return;
+				}
+				var tabId = String(checkbox.dataset.tab);
+				if (checkbox.checked) {
+					if (tabId === "BOT") {
+						activeChatDestinations.clear();
+						var destinationInputs = document.querySelectorAll("#chatDestinationsList input[data-tab]");
+						for (var i = 0; i < destinationInputs.length; i++) {
+							destinationInputs[i].checked = destinationInputs[i] === checkbox;
+						}
+					} else {
+						activeChatDestinations.delete("BOT");
+						var botInput = document.querySelector('#chatDestinationsList input[data-tab="BOT"]');
+						if (botInput) {
+							botInput.checked = false;
+						}
+					}
+					activeChatDestinations.add(tabId);
+				} else {
+					activeChatDestinations.delete(tabId);
+				}
+			}
+
 
 			function getCohostPeerSummary() {
 				var summary = { overlay: false, extension: false, labels: [] };
@@ -7163,9 +7873,222 @@
 				return false;
 			}
 
-			function processInput(data, force=false) {
+			var WEBHOOK_BACKGROUND_GRACE_MS = 1500;
+			var recentWebhookDeliveries = new Map();
+			var pendingRawWebhookFallbacks = new Map();
+			var pendingRawWebhookSequence = 0;
+			function pruneRecentWebhookDeliveries(now) {
+				var maxAge = 15 * 60 * 1000;
+				recentWebhookDeliveries.forEach(function (seenAt, seenKey) {
+					if (now - seenAt > maxAge) {
+						recentWebhookDeliveries.delete(seenKey);
+					}
+				});
+			}
+			function clearPendingRawWebhookFallback(key) {
+				var pending = pendingRawWebhookFallbacks.get(key);
+				if (!pending) {
+					return false;
+				}
+				clearTimeout(pending.timer);
+				pendingRawWebhookFallbacks.delete(key);
+				return true;
+			}
+			function cancelPendingRawWebhookFallback(data) {
+				var identity = getNormalizedDonationWebhookIdentity(data);
+				if (!identity) {
+					return;
+				}
+				if (identity.webhookId) {
+					var exactKey = getWebhookDeliveryKey(identity.provider, "webhook", identity.webhookId);
+					if (clearPendingRawWebhookFallback(exactKey)) {
+						return;
+					}
+				}
+				var fallbackKey = "";
+				pendingRawWebhookFallbacks.forEach(function (pending, key) {
+					if (!fallbackKey && pending.provider === identity.provider) {
+						fallbackKey = key;
+					}
+				});
+				if (fallbackKey) {
+					clearPendingRawWebhookFallback(fallbackKey);
+				}
+			}
+			function queueRawDonationWebhookFallback(data) {
+				var identity = getRawDonationWebhookIdentity(data);
+				if (!identity) {
+					return;
+				}
+				var now = Date.now();
+				pruneRecentWebhookDeliveries(now);
+				var key = identity.webhookId
+					? getWebhookDeliveryKey(identity.provider, "webhook", identity.webhookId)
+					: getWebhookDeliveryKey(identity.provider, "pending", ++pendingRawWebhookSequence);
+				if (recentWebhookDeliveries.has(key) || pendingRawWebhookFallbacks.has(key)) {
+					return;
+				}
+				var pending = {
+					provider: identity.provider,
+					webhookId: identity.webhookId,
+					timer: null
+				};
+				pending.timer = setTimeout(function () {
+					if (pendingRawWebhookFallbacks.get(key) !== pending) {
+						return;
+					}
+					pendingRawWebhookFallbacks.delete(key);
+					processInput(data, false, true);
+				}, WEBHOOK_BACKGROUND_GRACE_MS);
+				pendingRawWebhookFallbacks.set(key, pending);
+			}
+			function isDuplicateWebhookDelivery(data) {
+				if (!data || typeof data !== "object") {
+					return false;
+				}
+				var webhookId = normalizeWebhookDeliveryId(data.meta && data.meta.webhookId);
+				var legacyWebhookTypes = { stripe: true, kofi: true, bmac: true, fourthwall: true };
+				var legacyMessageId = !webhookId && legacyWebhookTypes[data.type] && data.id !== undefined && data.id !== null
+					? normalizeWebhookDeliveryId(data.id)
+					: "";
+				if (!webhookId && !legacyMessageId) {
+					return false;
+				}
+				var now = Date.now();
+				var key = getWebhookDeliveryKey(data.type, webhookId ? "webhook" : "message", webhookId || legacyMessageId);
+				pruneRecentWebhookDeliveries(now);
+				if (recentWebhookDeliveries.has(key)) {
+					return true;
+				}
+				recentWebhookDeliveries.set(key, now);
+				return false;
+			}
+
+			// The extension may deliver the same feed message over both the websocket and
+			// the VDO.Ninja bridge. IDs support a wider replay window; ID-less payloads are
+			// paired one-for-one only when the other transport follows within one second.
+			var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
+			var IDLESS_CROSS_TRANSPORT_DEDUPE_TTL_MS = 1000;
+			var recentTransportDeliveries = new Map();
+			var recentIdlessTransportDeliveries = new Map();
+			function stableTransportStringify(value, isRoot) {
+				if (value === null || typeof value !== "object") {
+					var serialized = JSON.stringify(value);
+					return serialized === undefined ? String(value) : serialized;
+				}
+				if (Array.isArray(value)) {
+					return "[" + value.map(function (item) {
+						return stableTransportStringify(item, false);
+					}).join(",") + "]";
+				}
+				var parts = [];
+				Object.keys(value).sort().forEach(function (key) {
+					if (isRoot && key === "out") return;
+					parts.push(JSON.stringify(key) + ":" + stableTransportStringify(value[key], false));
+				});
+				return "{" + parts.join(",") + "}";
+			}
+			function getTransportDeliveryKey(data) {
+				if (!data || typeof data !== "object") {
+					return "";
+				}
+				if ("action" in data || "get" in data || "callback" in data || "mid" in data) {
+					return "";
+				}
+				if (!(data.chatname || data.chatmessage || data.chatimg || data.hasDonation || data.membership || data.event || data.contentimg || data.meta)) {
+					return "";
+				}
+				if (data.id !== undefined && data.id !== null) {
+					return "id|" + String(data.id) +
+						"|" + (data.type || "") +
+						"|" + (data.chatname || "") +
+						"|" + String(data.chatmessage || "").slice(0, 100) +
+						"|" + (data.hasDonation || "") +
+						"|" + (data.event || "");
+				}
+				return "payload|" + stableTransportStringify(data, true);
+			}
+			function isDuplicateIdlessTransportDelivery(key, source) {
+				var now = Date.now();
+				recentIdlessTransportDeliveries.forEach(function (seenSources, seenKey) {
+					Object.keys(seenSources).forEach(function (seenSource) {
+						seenSources[seenSource] = seenSources[seenSource].filter(function (seenAt) {
+							return now - seenAt <= IDLESS_CROSS_TRANSPORT_DEDUPE_TTL_MS;
+						});
+						if (!seenSources[seenSource].length) {
+							delete seenSources[seenSource];
+						}
+					});
+					if (!Object.keys(seenSources).length) {
+						recentIdlessTransportDeliveries.delete(seenKey);
+					}
+				});
+
+				var seenSources = recentIdlessTransportDeliveries.get(key) || {};
+				var sourceNames = Object.keys(seenSources);
+				for (var i = 0; i < sourceNames.length; i++) {
+					var seenSource = sourceNames[i];
+					if (seenSource === source || !seenSources[seenSource].length) continue;
+					seenSources[seenSource].shift();
+					if (!seenSources[seenSource].length) {
+						delete seenSources[seenSource];
+					}
+					if (Object.keys(seenSources).length) {
+						recentIdlessTransportDeliveries.set(key, seenSources);
+					} else {
+						recentIdlessTransportDeliveries.delete(key);
+					}
+					return true;
+				}
+
+				var sourceQueue = seenSources[source] || [];
+				sourceQueue.push(now);
+				seenSources[source] = sourceQueue;
+				recentIdlessTransportDeliveries.set(key, seenSources);
+				return false;
+			}
+			function isDuplicateTransportDelivery(data, source) {
+				var key = getTransportDeliveryKey(data);
+				if (!key) return false;
+				source = source || "unknown";
+				if (key.indexOf("payload|") === 0) {
+					return isDuplicateIdlessTransportDelivery(key, source);
+				}
+				var now = Date.now();
+				recentTransportDeliveries.forEach(function (seenSources, seenKey) {
+					var newestSeenAt = 0;
+					Object.keys(seenSources).forEach(function (seenSource) {
+						newestSeenAt = Math.max(newestSeenAt, seenSources[seenSource]);
+					});
+					if (now - newestSeenAt > CROSS_TRANSPORT_DEDUPE_TTL_MS) {
+						recentTransportDeliveries.delete(seenKey);
+					}
+				});
+				var seenSources = recentTransportDeliveries.get(key) || {};
+				var duplicate = Object.keys(seenSources).some(function (seenSource) {
+					return seenSource !== source && now - seenSources[seenSource] <= CROSS_TRANSPORT_DEDUPE_TTL_MS;
+				});
+				if (duplicate) {
+					recentTransportDeliveries.delete(key);
+					return true;
+				}
+				seenSources[source] = now;
+				recentTransportDeliveries.set(key, seenSources);
+				return false;
+			}
+
+			function processInput(data, force=false, allowRawDonationFallback=false) {
 				if (!data) {
 					return featuredMode ? true : false;
+				}
+				// Prefer background.js normalization, but retain a delayed direct-server fallback for
+				// users whose saved Dock URL predates the remote API requirement.
+				if (!allowRawDonationFallback && shouldDeferRawDonationWebhook(data)) {
+					queueRawDonationWebhookFallback(data);
+					return false;
+				}
+				if (!isRawDonationWebhook(data)) {
+					cancelPendingRawWebhookFallback(data);
 				}
 				if (data.chatbotChunk && handleCohostLLMChunk(data.chatbotChunk)) {
 					return true;
@@ -7176,6 +8099,9 @@
 				if (data.chatbotChunk || data.chatbotResponse) {
 					return true;
 				}
+				if (data.action && data.target && data.target !== "null" && data.target !== thisLabel) {
+					return; // does not match, so we assume this isn't for us.
+				}
 				if ("mid" in data) {
 					if (data.mid && (syncDocks || force)) {
 						if (autoTimeoutEnabled) {
@@ -7183,7 +8109,7 @@
 						}
 
 						try {
-							
+
 							document.querySelectorAll("." + lastMessageClass).forEach(ele => {
 								// last message sent was to clear the overlay
 								ele.classList.remove(lastMessageClass); // no overlay is now active.
@@ -7332,7 +8258,10 @@
 						if (pinned){
 							selectedMessage(false,pinned);
 						}
-						return true;
+						return isVersionedRemoteControlRequest(data) ? {
+							featured: !!pinned,
+							messageId: pinned && pinned.dataset ? pinned.dataset.mid || null : null
+						} : true;
 					} catch (e) {}
 				} else if ("nextPinned" in data){
 					// selectedMessage
@@ -7341,16 +8270,16 @@
 						if (pinned){
 							selectedMessage(false,pinned);
 						}
-						return true;
+						return isVersionedRemoteControlRequest(data) ? {
+							featured: !!pinned,
+							messageId: pinned && pinned.dataset ? pinned.dataset.mid || null : null
+						} : true;
 					} catch (e) {}
 				} else if ("deleteMessage" in data) {
 					// delete by message ID; likely another dock is syncing their delete with me
 					//if ((syncDocks || force)){
 					try {
-						var ele = document.querySelector(dataAttributeSelector("data-mid", data.deleteMessage));
-						if (ele) {
-							ele.remove();
-						}
+						deleteMessages({ delete: { id: data.deleteMessage } });
 						return true;
 					} catch (e) {}
 					//}
@@ -7369,6 +8298,21 @@
 					//console.log(data.tabsList);
 					if (isOBSBrowserSource) {
 						return;
+					}
+					if (!data.tabsList.some(function(tab) {
+						return String(tab.id) === "BOT";
+					})) {
+						activeChatDestinations.delete("BOT");
+						if (!activeChatDestinations.size) {
+							getById("getChatSources").innerHTML = "🌐";
+							getById("getChatSources").title = "Sending to all end points";
+						}
+					}
+					// Private BOT prompts are intentionally exclusive so they cannot also be
+					// published to a selected chat destination.
+					if (activeChatDestinations.has("BOT") && activeChatDestinations.size > 1) {
+						activeChatDestinations.clear();
+						activeChatDestinations.add("BOT");
 					}
 					if (document.getElementById("getChatSourcesButton")) {
 						clearTimeout(getById("getChatSourcesButton").setTimeout);
@@ -7438,11 +8382,8 @@
 					  para.appendChild(smallText);
 
 					  checkbox.onclick = function (event) {
-						if (this.checked) {
-						  activeChatDestinations.add(this.dataset.tab.toString());
-						} else {
-						  activeChatDestinations.delete(this.dataset.tab.toString());
-						}
+						event.stopPropagation();
+						updateChatDestinationSelection(this);
 						if (activeChatDestinations.size) {
 						  getById("getChatSources").innerHTML = "🎯";
 						  getById("getChatSources").title = "Sending to selected end points only";
@@ -7462,11 +8403,7 @@
 						modal.classList.add("hidden");
 						chatDestinationsList.innerHTML = "";
 					  } else if (event.target && event.target.dataset && event.target.dataset.tab) {
-						if (event.target.checked) {
-						  activeChatDestinations.add(event.target.dataset.tab);
-						} else {
-						  activeChatDestinations.delete(event.target.dataset.tab);
-						}
+						updateChatDestinationSelection(event.target);
 
 						if (activeChatDestinations.size) {
 						  getById("getChatSources").innerHTML = "🎯";
@@ -7478,6 +8415,10 @@
 					  }
 					};
 				} else if (data.recentHistory) {
+					if (historyViewCleared) {
+						waitingForRecentHistory = false;
+						return true;
+					}
 					waitingForRecentHistory = false;
 					if (historyFlushTimer) {
 						clearTimeout(historyFlushTimer);
@@ -7502,13 +8443,16 @@
 								}
 							}
 						});
-						cleanUpOldNodes();
 						console.log("Loaded from remote DB storage");
 						historyReturnSyncPending = false;
 						flushMissedLiveBuffer();
 						jumptoBottom2();
 					},1000);
 				} else if (data.historyBefore) {
+					if (historyViewCleared) {
+						isLoadingHistory = false;
+						return true;
+					}
 					if (!historyBrowsing) {
 						isLoadingHistory = false;
 						return;
@@ -7518,6 +8462,7 @@
 					var prevScrollTop = hContainer.scrollTop;
 
 					var histMsgs = data.historyBefore;
+					var visibleRowsAdded = 0;
 					if (histMsgs.length && histMsgs[histMsgs.length - 1] && histMsgs[histMsgs.length - 1].timestamp) {
 						var oldestMsg = histMsgs[histMsgs.length - 1];
 						oldestLoadedTimestamp = oldestMsg.timestamp;
@@ -7532,16 +8477,28 @@
 							prependMode = true;
 							processData({contents: normalizedMsg});
 							prependMode = false;
+							var mountedNode = displayId ? document.querySelector(dataAttributeSelector("data-mid", displayId)) : null;
+							if (isDockMessageVisible(mountedNode)) {
+								visibleRowsAdded += 1;
+							}
 						}
 					});
+					historyVisibleRowsLoaded += visibleRowsAdded;
 
 					var newScrollHeight = hContainer.scrollHeight;
 					hContainer.scrollTop = newScrollHeight - (prevScrollHeight - prevScrollTop);
+					historySuppressScrollUntil = Date.now() + 150;
 
 					pruneFromBottom();
 
-					isLoadingHistory = false;
 					if (!data.historyBefore.length) { reachedOldest = true; }
+					isLoadingHistory = false;
+					if (shouldContinueFilteredHistoryLoad(histMsgs.length)) {
+						loadOlderMessages(true);
+					} else {
+						historyVisibleRowsLoaded = 0;
+						historyPageCount = 0;
+					}
 				} else if ("userHistory" in data) {
 					//delete messages, but also block user. remote, so we won't sync,
 					//console.log(data.userHistory);
@@ -7598,13 +8555,13 @@
 					try {
 						if (data.timeoutUser.username && data.timeoutUser.type && data.timeoutUser.duration) {
 							// Optional: Add visual feedback for timed out users
-							
+
 							timedOutUsers[data.timeoutUser.username+":"+data.timeoutUser.type] = Date.now() + data.timeoutUser.duration*1000;
 
 							document.querySelectorAll(dataAttributeSelector("data-chatname", data.timeoutUser.username) + dataAttributeSelector("data-source-type", data.timeoutUser.type)).forEach(ele => {
 								ele.remove();
 							});
-							
+
 							if (data.timeoutUser.type=="youtube"){
 								document.querySelectorAll(dataAttributeSelector("data-chatname", data.timeoutUser.username) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
 									ele.remove();
@@ -7817,6 +8774,7 @@
 						message.membership = "";
 						message.contentimg = "";
 						message.type = "stripe";
+						setRawWebhookMeta(message, data.stripe.id || (data.stripe.data && data.stripe.data.object && data.stripe.data.object.id));
 
 						data = message; // replace inbound stripe message with new message
 					} catch (e) {
@@ -7870,6 +8828,7 @@
 						message.membership = "";
 						message.contentimg = "";
 						message.type = "kofi";
+						setRawWebhookMeta(message, kofi.message_id);
 
 						data = message; // replace inbound stripe message with new message
 					} catch (e) {
@@ -7917,7 +8876,8 @@
 							message.chatimg = "";
 							message.membership = "";
 							message.type = "bmac";
-							data = message; 
+							setRawWebhookMeta(message, bmac.event_id || bmac.id || (bmac.data && (bmac.data.id || bmac.data.transaction_id || bmac.data.support_id)));
+							data = message;
 
 					} 
 					} catch (e) {
@@ -7981,7 +8941,8 @@
 					message.membership = "";
 					message.contentimg = "";
 					message.type = "fourthwall";
-					
+					setRawWebhookMeta(message, data.fourthwall.id || (data.fourthwall.data && data.fourthwall.data.id));
+
 					data = message; // replace inbound fourthwall message with new message
 				  } catch (e) {
 					errorlog(e);
@@ -8004,6 +8965,10 @@
 					return;
 				}
 
+				if (isDuplicateWebhookDelivery(data)) {
+					return false;
+				}
+
 				if (data.action) {
 				
 					if (data.target && data.target !== "null" && data.target !== thisLabel) {
@@ -8011,31 +8976,55 @@
 					}
 					//console.log(data);
 
-					if (data.action == "clear" || data.action == "clearAll") {
+					if (data.action == "clear" || data.action == "clearAll" || data.action == "clearDock") {
 						// clears all except pinned messages
-						getById("output").innerHTML = "";
-						resetHorizontalTicker();
-						autoShowQueue = [];
-						selectedQueue = [];
-						odd = false;
+						clearAll(true);
 						if (data.ctrl) {
 							getById("pinned").innerHTML = "";
 						}
-						sendDataP2P(false);
-						updateQueueButton();
-						TTS.clearQueue();
+						return true;
+					} else if (data.action == "historyCleared") {
+						if (data.ok === false) {
+							showDockActionNotice(data.error || "Saved message history could not be cleared.");
+							getById("chatHistoryClearButton").disabled = false;
+							return true;
+						}
+						clearAll(true);
+						historyMissedLiveBuffer = [];
+						getById("chatHistoryClearButton").disabled = false;
+						showDockActionNotice("Saved message history cleared.");
+						return true;
+					} else if (data.action == "privateBotStatus") {
+						showDockActionNotice(data.message || "The AI bot could not process that request.");
+						return true;
+					} else if (data.action == "resetleaderboard") {
 						return true;
 					} else if (data.action == "clearOverlay") {
 						// or just send data=false
 						sendDataP2P(false);
+						return isVersionedRemoteControlRequest(data) ? { cleared: true } : true;
+					} else if (data.action == "cohostFeatureMessage") {
+						var cohostMessage = data.value && typeof data.value === "object" ? data.value : null;
+						if (!cohostMessage) return false;
+						var cohostMessageId = cohostMessage.id || cohostMessage.mid;
+						var cohostMessageElement = cohostMessageId ? document.querySelector(dataAttributeSelector("data-mid", cohostMessageId)) : null;
+						if (!cohostMessageElement) cohostMessageElement = processInput(cohostMessage, true);
+						if (!cohostMessageElement) return false;
+						selectedMessage(false, cohostMessageElement);
+						return isVersionedRemoteControlRequest(data) ? { featured: true, messageId: cohostMessageElement.dataset.mid || null } : true;
+					} else if (data.action == "clearBotOverlay") {
+						sendDataP2P({ action: "clearBotOverlay", target: "bot" });
 						return true;
 					} else if (data.action == "nextInQueue") {
+						var hadQueuedMessage = selectedQueue.length > 0;
 						nextInQueue();
-						return true;
+						return isVersionedRemoteControlRequest(data) ? {
+							featured: hadQueuedMessage,
+							queueLength: selectedQueue.length
+						} : true;
 					} else if (data.action == "getQueueSize") {
-						// or just send data=false
 						updateQueueButton();
-						return true;
+						return isVersionedRemoteControlRequest(data) ? { queueLength: selectedQueue.length } : true;
 					} else if (data.action == "autoShow") {
 						// or just send data=false
 						if (data.value == "toggle") {
@@ -8092,8 +9081,9 @@
 							} else {
 								queue.push({ contents: content });
 								if (queue.length > 100) {
-									// keep the queue from exploding in size
-									queue.shift();
+									// Prefer queue candidates while keeping the paused buffer capped at 100.
+									var discardIndex = queue.findIndex(item => !isQueueRequested(item.contents));
+									queue.splice(discardIndex === -1 ? 0 : discardIndex, 1);
 								}
 							}
 							return true;
@@ -8105,6 +9095,32 @@
 						} else{
 							console.log("No message found to feature that hasn't already been featured");
 						}
+					} else if (data.action == "pin" || data.action == "unpin") {
+						var pinValues = Array.isArray(data.value) ? data.value : [data.value];
+						pinValues.forEach(function(pinValue) {
+							var pinElement = false;
+							if (pinValue && typeof pinValue === "object") {
+								var pinId = pinValue.id || pinValue.mid;
+								if (pinId) {
+									pinElement = document.querySelector(dataAttributeSelector("data-mid", pinId));
+								}
+								if (!pinElement && data.action == "pin") {
+									pinElement = processInput(pinValue, true);
+								}
+							} else if (pinValue !== undefined && pinValue !== null && pinValue !== "") {
+								pinElement = document.querySelector(dataAttributeSelector("data-mid", pinValue));
+							}
+							if (!pinElement) {
+								return;
+							}
+							if (data.action == "pin") {
+								pinIt(pinElement);
+							} else {
+								unpinIt(pinElement);
+							}
+							applyHiddenState(pinElement);
+						});
+						return true;
 					} else if (data.action === "toggleTTS" || data.action === "tts") {
 						if ("value" in data){
 							if (data.value == "toggle") {
@@ -8180,8 +9196,9 @@
 					} else {
 						queue.push({ contents: data.content });
 						if (queue.length > 100) {
-							// keep the queue from exploding in size
-							queue.shift();
+							// Prefer queue candidates while keeping the paused buffer capped at 100.
+							var discardIndex = queue.findIndex(item => !isQueueRequested(item.contents));
+							queue.splice(discardIndex === -1 ? 0 : discardIndex, 1);
 						}
 					}
 					return true;
@@ -8228,8 +9245,9 @@
 					}
 					queue.push({ contents: data });
 					if (queue.length > 100) {
-						// keep the queue from exploding in size
-						queue.shift();
+						// Prefer queue candidates while keeping the paused buffer capped at 100.
+						var discardIndex = queue.findIndex(item => !isQueueRequested(item.contents));
+						queue.splice(discardIndex === -1 ? 0 : discardIndex, 1);
 					}
 					return true;
 				}
@@ -8240,9 +9258,9 @@
 				var iframe = document.createElement("iframe");
 				iframe.connectedPeers = {};
 				if (featuredMode) {
-					iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + lanonly + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + room + "&scene&novideo&noaudio&cleanoutput&room=" + room;
+					iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(password) + lanonly + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + room + "&scene&novideo&noaudio&cleanoutput&room=" + room;
 				} else {
-					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + lanonly + obsremote + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + room;
+					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + lanonly + obsremote + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + room;
 				}
 				// push and view, as we will connect with other docks also. I suppose I can have it only do this if &sync is enabled?
 				iframe.style.width = "0px";
@@ -8338,7 +9356,18 @@
 					if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
 						// raw data
 						if ("overlayNinja" in e.data.dataReceived) {
-							processInput(e.data.dataReceived.overlayNinja);
+							var remotePayload = e.data.dataReceived.overlayNinja;
+							if (!isDuplicateTransportDelivery(remotePayload, "p2p")) {
+								var remoteExecution = executeRemoteControlDockRequest(remotePayload);
+								if (!remoteExecution.skip && isVersionedRemoteControlRequest(remotePayload) && remotePayload.get) {
+									send2Extension(
+										{ callback: { get: remotePayload.get, result: remoteExecution.result } },
+										e.data.UUID || null,
+										true,
+										true
+									);
+								}
+							}
 						}
 					}
 				});
@@ -8465,9 +9494,11 @@
 			 // modal.style.display = "block";
 			}
 
-			roomID.split(",").forEach(roomz => {
-				RecvDataWindow(roomz.trim());
-			});
+			if (!useServerOnlyTransport()) {
+				roomID.split(",").forEach(roomz => {
+					RecvDataWindow(roomz.trim());
+				});
+			}
 
 			if (getById("cohostApprovalSpeak")) {
 				getById("cohostApprovalSpeak").addEventListener("click", speakCohostApproval);
@@ -8491,9 +9522,9 @@
 			}
 
 			function createElementFromHTML(htmlString) {
-				var div = document.createElement("template");
+				var div = document.createElement("div");
 				div.innerHTML = htmlString.trim();
-				return div.content.firstChild;
+				return div.firstChild;
 			}
 
 			//	if (forceAutoscroll){
@@ -8930,6 +9961,7 @@
 				const sourceTabId = rawContents.tid;
 				const chatName = element.dataset.chatname || rawContents.chatname || "";
 				const userId = rawContents.userid || rawContents.userId || rawContents.authorChannelId || "";
+				const username = rawContents.username || element.dataset.username || "";
 				const chatImg = element.dataset.chatimg || rawContents.chatimg || "";
 				if (sourceTabId !== undefined && sourceTabId !== null && sourceTabId !== "") {
 					payload.tid = sourceTabId;
@@ -8939,6 +9971,9 @@
 				}
 				if (userId) {
 					payload.userid = userId;
+				}
+				if (username) {
+					payload.username = username;
 				}
 				if (chatImg) {
 					payload.chatimg = chatImg;
@@ -8956,7 +9991,13 @@
 				} catch (e) {
 					console.error(e);
 				}
-				element.remove();
+				if (element.dataset.mid) {
+					deleteMessages({ delete: { id: element.dataset.mid, type: element.dataset.sourceType } });
+				} else if (selectedQueue.includes(element)) {
+					removeQueue(element);
+				}
+				if (showDeleted) markDeletedMessage(element);
+				else element.remove();
 			}
 
 			var dockActionNoticeTimer = null;
@@ -9026,6 +10067,7 @@
 				try{
 					var blockUnavailableReason = getBlockUserUnavailableReason();
 					var chatName = element.dataset.chatname;
+					var username = element.dataset.username || "";
 					var chatImg = element.dataset.chatimg || "";
 					var type = element.dataset.sourceType;
 					
@@ -9056,6 +10098,9 @@
 
 						if (element.rawContents && (element.rawContents.userid || element.rawContents.userId || element.rawContents.authorChannelId)) {
 							sendBlob.userid = element.rawContents.userid || element.rawContents.userId || element.rawContents.authorChannelId;
+						}
+						if (username) {
+							sendBlob.username = username;
 						}
 						if (chatImg) {
 							sendBlob.chatimg = chatImg;
@@ -9097,13 +10142,13 @@
 					try {
 						if (userId && userType && duration) {
 							// Optional: Add visual feedback for timed out users
-							
+
 							timedOutUsers[userId+":"+userType] = Date.now() + duration*1000;
 
 							document.querySelectorAll(dataAttributeSelector("data-chatname", userId) + dataAttributeSelector("data-source-type", userType)).forEach(ele => {
 								ele.remove();
 							});
-							
+
 							if (userType=="youtube"){
 								document.querySelectorAll(dataAttributeSelector("data-chatname", userId) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
 									ele.remove();
@@ -9126,7 +10171,9 @@
 					|| element.dataset.userid
 					|| (rawContents && (rawContents.chatname || rawContents.userid))
 					|| "";
+				const rawMentionName = (rawContents && rawContents.username) || rawChatName;
 				const chatName = (typeof unescapeHtml === "function") ? unescapeHtml(rawChatName) : rawChatName;
+				const mentionName = (typeof unescapeHtml === "function") ? unescapeHtml(rawMentionName) : rawMentionName;
 				const type = element.dataset.sourceType;
 				const tid = rawContents ? rawContents.tid : null;
 				
@@ -9223,7 +10270,7 @@
 
 					if (!response.startsWith("@")) {
 						// Don't add @ if username already starts with @
-						const prefix = chatName.startsWith("@") ? chatName : `@${chatName}`;
+						const prefix = mentionName.startsWith("@") ? mentionName : `@${mentionName}`;
 						response = `${prefix} ${response}`;
 					}
 					
@@ -9284,22 +10331,25 @@
 			function markUserAs(element, role) {
 				const chatName = element.getAttribute("data-chatname");
 				const userId = element.getAttribute("data-userid") || "";
+				const username = element.getAttribute("data-username") || "";
 				const userType = element.getAttribute("data-source-type");
 				
 				if (chatName && userType) {
 					applyRoleMarker(chatName, userType, role);
-					send2Extension({ action: "markUser", value: { chatname: chatName, userid: userId, type: userType, role: role} });
+					send2Extension({ action: "markUser", value: { chatname: chatName, userid: userId, username: username, type: userType, role: role} });
 				
 				}
 			}
 		 
 
 			function toggleVIPUser(element) {
-				const userId = element.getAttribute("data-chatname");
+				const chatName = element.getAttribute("data-chatname");
+				const userId = element.getAttribute("data-userid") || "";
+				const username = element.getAttribute("data-username") || "";
 				const userType = element.getAttribute("data-source-type");
 
-				if (userId && userType) {
-					send2Extension({ action: "toggleVIPUser", value: { chatname: userId, type: userType } });
+				if (chatName && userType) {
+					send2Extension({ action: "toggleVIPUser", value: { chatname: chatName, userid: userId, username: username, type: userType } });
 				}
 			}
 
@@ -9495,42 +10545,40 @@
 			}
 
 			function cleanUpOldNodes() {
-				if (historyBrowsing) return;
+				if (historyBrowsing || historyReturnSyncPending) return;
 				if (horizontal) {
 					horizontalPruneMessages();
 					return;
 				}
 				var nodes = document.querySelectorAll("#output>div:not(.queued)");
-				var total2Remove = 0;
+				var nodeLimit = 0;
 				if (isOBSBrowserSource && !doubleLimit) {
 					// This is an OBS browser source, so lets go light on it.
 					if (customNodeLimit) {
-						total2Remove = nodes.length - customNodeLimit;
+						nodeLimit = customNodeLimit;
 					} else if (window.innerHeight > 1600) {
-						total2Remove = nodes.length - 39;
+						nodeLimit = 39;
 					} else if (window.innerHeight > 1200) {
-						total2Remove = nodes.length - 30;
+						nodeLimit = 30;
 					} else if (window.innerHeight > 800) {
-						total2Remove = nodes.length - 22;
+						nodeLimit = 22;
 					} else if (window.innerHeight > 400) {
-						total2Remove = nodes.length - 14;
+						nodeLimit = 14;
 					} else {
-						total2Remove = nodes.length - 10;
+						nodeLimit = 10;
 					}
 				} else if (customNodeLimit) {
-					total2Remove = nodes.length - customNodeLimit;
+					nodeLimit = customNodeLimit;
 				} else if (window.innerHeight > 900) {
-					total2Remove = nodes.length - 80;
+					nodeLimit = 80;
 				} else if (window.innerHeight > 600) {
-					total2Remove = nodes.length - 70;
+					nodeLimit = 70;
 				} else {
-					total2Remove = nodes.length - 60;
+					nodeLimit = 60;
 				}
-				if (total2Remove > 0) {
-					for (var i = total2Remove - 1; i >= 0; i--) {
-						transitionOutNode(nodes[i]);
-					}
-				}
+				selectDockNodesForPruning(nodes, nodeLimit, false).forEach(function(node) {
+					transitionOutNode(node);
+				});
 			}
 
 			function animateCSS(node, animation) {
@@ -9618,10 +10666,40 @@
 				}
 			}
 
+			
+
 			function stripHtmlFunction(html) {
+				html = String(html == null ? "" : html);
+				try {
+					if (typeof DOMParser !== "undefined") {
+						let doc = new DOMParser().parseFromString(html, "text/html");
+						if (doc && doc.body) {
+							doc.body.querySelectorAll("script,style,noscript,template").forEach(function (node) {
+								node.remove();
+							});
+							return doc.body.textContent || "";
+						}
+					}
+				} catch (e) {}
 				let tmp = document.createElement("template");
 				tmp.innerHTML = html;
 				return tmp.content.textContent || "";
+			}
+
+			function isExactBlockedMessage(data, blockedMessages) {
+				if (!data || !blockedMessages || !blockedMessages.length) return false;
+				var messageText = data.textContent || data.chatmessage || "";
+				// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+				messageText = (data.textContent || data.textonly ? messageText : stripHtmlFunction(messageText)).trim().toLowerCase();
+				return blockedMessages.indexOf(messageText) !== -1;
+			}
+
+			
+
+			function plainTextToHtml(value) {
+				let span = document.createElement("span");
+				span.textContent = value == null ? "" : String(value);
+				return span.innerHTML;
 			}
 
 			function isAllCapsMessage(text, isHTML = true) {
@@ -9655,10 +10733,86 @@
 				}
 			}
 
-			function plainTextToHtml(value) {
-				let span = document.createElement("span");
-				span.textContent = value == null ? "" : String(value);
-				return span.innerHTML;
+			function colorReplyLabel(chatmessage, data) {
+				if (!replyLabelColorEnabled) {
+					return chatmessage;
+				}
+				var template = document.createElement("template");
+				template.innerHTML = chatmessage;
+				var context = template.content.firstElementChild;
+				while (context && context.tagName === "I") {
+					context = context.firstElementChild;
+				}
+				if (!context) {
+					return chatmessage;
+				}
+				var text = context.textContent;
+				var label = text.match(/^Replying to\s+[^:]+:/i);
+				var author = data.meta && data.meta.reply && data.meta.reply.author;
+				if (!label && typeof author === "string" && author && text.indexOf(author + ":") === 0) {
+					label = [author + ":"];
+				}
+				if (!label) {
+					return chatmessage;
+				}
+				// Wrap only the label's text range, preserving nested name formatting and quoted emotes.
+				var remaining = label[0].length;
+				var walker = document.createTreeWalker(context, 4);
+				var textNode;
+				while ((textNode = walker.nextNode())) {
+					if (remaining <= textNode.length) {
+						var range = document.createRange();
+						range.selectNodeContents(context);
+						range.setEnd(textNode, remaining);
+						var span = document.createElement("span");
+						span.className = "reply-label";
+						span.appendChild(range.extractContents());
+						range.insertNode(span);
+						return template.innerHTML;
+					}
+					remaining -= textNode.length;
+				}
+				return chatmessage;
+			}
+
+			function colorReplyContext(chatmessage, data) {
+				// This parameter is the local display string: plain bodies have already been escaped once.
+				// Reply wrappers/colors may decorate that display, but must not enter literal data.chatmessage.
+				// Existing <i> markup in HTML-mode messages is valid and may be retained.
+				if ((!replyColorEnabled && !replyLabelColorEnabled) || DoNotShowInitialReply || !data.initial || !data.reply || !chatmessage) {
+					return chatmessage;
+				}
+				// Color the source's quoted context; tolerate wrappers from older event rows.
+				// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+				if (!data.textonly && !stripHTML && /^(<i>)?<i><small>/i.test(chatmessage)) {
+					if (replyColorEnabled) {
+						chatmessage = chatmessage.replace(/^(<i>)?<i><small>/i, function (match, eventWrapper) {
+							return (eventWrapper || "") + '<i class="reply-context"><small>';
+						});
+					}
+					return colorReplyLabel(chatmessage, data);
+				}
+				// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+				if (data.textonly || stripHTML) {
+					var initial = String(data.initial);
+					// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+					if (stripHTML && !data.textonly) {
+						initial = stripHtmlFunction(initial);
+					}
+					var prefix = initial.replace(/[\r\n]+/g, "").replace(/\s+/g, " ").trim() + ":";
+					// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode retains upstream-sanitized markup.
+					if (data.textonly) {
+						prefix = escapeHtml(prefix);
+					}
+					if (NormalizeText) {
+						prefix = normalizeText(prefix, false);
+					}
+					if (chatmessage.indexOf(prefix) === 0) {
+						chatmessage = '<span' + (replyColorEnabled ? ' class="reply-context"' : '') + '>' + chatmessage.slice(0, prefix.length) + '</span>' + chatmessage.slice(prefix.length);
+						return colorReplyLabel(chatmessage, data);
+					}
+				}
+				return chatmessage;
 			}
 
 			function escapeAttributeValue(value) {
@@ -9825,15 +10979,325 @@
 			
 			
 			
-			function isEmojiOnly(str, isHTML = true) {
-				function stripEmojis(text) {
-					return text
-						.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "")
-						.replace(/[\u200D\uFE0F]/g, "")
-						.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "");
+			function stripEmojisFromText(text) {
+				return text
+					.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "")
+					.replace(/[\u200D\uFE0F]/g, "")
+					.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "");
+			}
+
+			// Lazily initialized only for ?staticemotes and its aliases. Normal docks allocate no
+			// emote cache, install no handlers, and never enter the per-image feature path.
+			function createStaticEmoteProcessor() {
+				var MAX_FROZEN_EMOTES = 300;
+				var MAX_CANVAS_DIMENSION = 512;
+				var MAX_CANVAS_PIXELS = 262144;
+				var frozenEmoteCache = Object.create(null);
+				var frozenEmoteCacheKeys = [];
+				var pendingFrozenEmotes = Object.create(null);
+
+				function hasOwn(object, key) {
+					return Object.prototype.hasOwnProperty.call(object, key);
 				}
 
-				let strippedStr = stripEmojis(str);
+				function getEmoteSourceDetails(src) {
+					if (!src || src.indexOf("data:") === 0) {
+						return null;
+					}
+					try {
+						var url = new URL(src, document.baseURI);
+						var host = url.hostname.toLowerCase();
+						var path = url.pathname.toLowerCase();
+						if (host === "cdn.7tv.app" && path.indexOf("/emote/") === 0) {
+							return { provider: "7tv", url: url };
+						}
+						if (host === "cdn.betterttv.net" && path.indexOf("/emote/") === 0) {
+							return { provider: "bttv", url: url };
+						}
+						if (host === "cdn.frankerfacez.com" && path.indexOf("/emot") === 0) {
+							return { provider: "ffz", url: url };
+						}
+						if (host === "static-cdn.jtvnw.net" && path.indexOf("/emoticons/") === 0) {
+							return { provider: "twitch", url: url };
+						}
+						if (/\.cloudfront\.net$/i.test(host) && path.indexOf("/actions/") === 0) {
+							return { provider: "cheermote", url: url };
+						}
+						if ((host === "cdn.discordapp.com" || host === "media.discordapp.net") && path.indexOf("/emojis/") === 0) {
+							return { provider: "discord", url: url };
+						}
+						if (host === "files.kick.com" && path.indexOf("/emotes/") === 0) {
+							return { provider: "kick", url: url };
+						}
+					} catch (e) {}
+					return null;
+				}
+
+				function getStaticEmoteSrc(src) {
+					var details = getEmoteSourceDetails(src);
+					if (!details || details.provider === "kick") {
+						return null;
+					}
+
+					var url = details.url;
+					var path = url.pathname;
+					var rewrittenPath = path;
+
+					if (details.provider === "7tv") {
+						if (/_static\.(webp|avif|gif|png)$/i.test(path)) {
+							return { src: url.href, changed: false };
+						}
+						rewrittenPath = path.replace(/\/([1-4]x)\.(webp|avif|gif|png)$/i, "/$1_static.$2");
+					} else if (details.provider === "bttv") {
+						if (/\/static\//i.test(path)) {
+							return { src: url.href, changed: false };
+						}
+						rewrittenPath = path.replace(/(\/emote\/[^\/]+)\/([1-3]x)(?:\.(?:webp|gif|png))?$/i, "$1/static/$2.webp");
+					} else if (details.provider === "ffz") {
+						if (!/\/animated\//i.test(path)) {
+							return { src: url.href, changed: false };
+						}
+						rewrittenPath = path.replace(/\/animated\//i, "/").replace(/\.(webp|avif|gif)$/i, "");
+					} else if (details.provider === "twitch") {
+						if (/\/static\//i.test(path)) {
+							return { src: url.href, changed: false };
+						}
+						rewrittenPath = path.replace(/\/(default|animated)\//i, "/static/");
+					} else if (details.provider === "cheermote") {
+						if (!/\/animated\//i.test(path)) {
+							return { src: url.href, changed: false };
+						}
+						rewrittenPath = path.replace(/\/animated\//i, "/static/").replace(/\.gif$/i, ".png");
+					} else if (details.provider === "discord") {
+						if (/\.gif$/i.test(path)) {
+							rewrittenPath = path.replace(/\.gif$/i, ".png");
+						} else if (/\.(webp|avif)$/i.test(path) && url.searchParams.get("animated") === "true") {
+							rewrittenPath = path.replace(/\.(webp|avif)$/i, ".png");
+						} else {
+							return { src: url.href, changed: false };
+						}
+						if (url.searchParams.get("animated") === "true") {
+							url.searchParams.set("animated", "false");
+						}
+					}
+
+					if (rewrittenPath === path) {
+						return null;
+					}
+					url.pathname = rewrittenPath;
+					return { src: url.href, changed: true };
+				}
+
+				function getStaticEmoteSrcset(srcset) {
+					var parts = srcset.split(",");
+					var out = [];
+					var changed = false;
+					for (var s = 0; s < parts.length; s++) {
+						var entry = parts[s].trim();
+						if (!entry) {
+							continue;
+						}
+						var bits = entry.split(/\s+/);
+						var rewritten = getStaticEmoteSrc(bits[0]);
+						if (!rewritten) {
+							return null;
+						}
+						if (rewritten.changed) {
+							bits[0] = rewritten.src;
+							changed = true;
+						}
+						out.push(bits.join(" "));
+					}
+					if (!out.length) {
+						return null;
+					}
+					return { srcset: out.join(", "), changed: changed };
+				}
+
+				function getFirstSrcsetUrl(srcset) {
+					if (!srcset) {
+						return "";
+					}
+					var firstEntry = srcset.split(",")[0].trim();
+					return firstEntry ? firstEntry.split(/\s+/)[0] : "";
+				}
+
+				function isSupportedEmoteImage(img) {
+					if (getEmoteSourceDetails(img.currentSrc || "") || getEmoteSourceDetails(img.src || "")) {
+						return true;
+					}
+					var srcset = img.getAttribute("srcset") || "";
+					var parts = srcset.split(",");
+					for (var s = 0; s < parts.length; s++) {
+						var entry = parts[s].trim();
+						if (entry && getEmoteSourceDetails(entry.split(/\s+/)[0])) {
+							return true;
+						}
+					}
+					return false;
+				}
+
+				function installStaticUrlFallback(img, original) {
+					var previousOnerror = img.onerror;
+					var fallbackUsed = false;
+					img.onerror = function () {
+						if (fallbackUsed) {
+							if (previousOnerror) {
+								previousOnerror.call(this);
+							}
+							return;
+						}
+						fallbackUsed = true;
+						this.onerror = previousOnerror;
+						this.dataset.staticEmote = "fallback";
+						this.removeAttribute("srcset");
+						if (original.hadSrc) {
+							this.setAttribute("src", original.src);
+						} else {
+							this.removeAttribute("src");
+						}
+						if (original.hadSrcset) {
+							this.setAttribute("srcset", original.srcset);
+						}
+					};
+				}
+
+				function cacheFrozenResult(src, value) {
+					if (!hasOwn(frozenEmoteCache, src)) {
+						if (frozenEmoteCacheKeys.length >= MAX_FROZEN_EMOTES) {
+							delete frozenEmoteCache[frozenEmoteCacheKeys.shift()];
+						}
+						frozenEmoteCacheKeys.push(src);
+					}
+					frozenEmoteCache[src] = value;
+				}
+
+				function applyFrozenEmote(img, dataUrl) {
+					img.dataset.staticEmote = "done";
+					img.removeAttribute("srcset");
+					img.src = dataUrl;
+				}
+
+				function finishFrozenEmote(src, dataUrl) {
+					var waiting = pendingFrozenEmotes[src] || [];
+					delete pendingFrozenEmotes[src];
+					cacheFrozenResult(src, dataUrl || false);
+					for (var w = 0; w < waiting.length; w++) {
+						var img = waiting[w];
+						if (img.staticEmotePendingSrc !== src) {
+							continue;
+						}
+						delete img.staticEmotePendingSrc;
+						if (dataUrl) {
+							applyFrozenEmote(img, dataUrl);
+						} else {
+							img.dataset.staticEmote = "fallback";
+						}
+					}
+				}
+
+				function freezeAnimatedImage(img, src) {
+					if (!src || img.dataset.staticEmote) {
+						return;
+					}
+					var details = getEmoteSourceDetails(src);
+					if (!details || details.provider !== "kick") {
+						return;
+					}
+					img.dataset.staticEmote = "pending";
+					img.staticEmotePendingSrc = src;
+					if (hasOwn(frozenEmoteCache, src)) {
+						var cached = frozenEmoteCache[src];
+						delete img.staticEmotePendingSrc;
+						if (cached) {
+							applyFrozenEmote(img, cached);
+						} else {
+							img.dataset.staticEmote = "fallback";
+						}
+						return;
+					}
+					if (pendingFrozenEmotes[src]) {
+						pendingFrozenEmotes[src].push(img);
+						return;
+					}
+					pendingFrozenEmotes[src] = [img];
+
+					var probe = new Image();
+					probe.crossOrigin = "anonymous";
+					probe.onload = function () {
+						try {
+							var width = probe.naturalWidth;
+							var height = probe.naturalHeight;
+							if (!width || !height || width > MAX_CANVAS_DIMENSION || height > MAX_CANVAS_DIMENSION || width * height > MAX_CANVAS_PIXELS) {
+								finishFrozenEmote(src, null);
+								return;
+							}
+							var canvas = document.createElement("canvas");
+							canvas.width = width;
+							canvas.height = height;
+							var context = canvas.getContext("2d");
+							if (!context) {
+								finishFrozenEmote(src, null);
+								return;
+							}
+							context.drawImage(probe, 0, 0, width, height);
+							var frozen = canvas.toDataURL("image/png");
+							finishFrozenEmote(src, frozen && frozen.length > 32 ? frozen : null);
+						} catch (e) {
+							finishFrozenEmote(src, null);
+						}
+					};
+					probe.onerror = function () {
+						finishFrozenEmote(src, null);
+					};
+					probe.src = src;
+				}
+
+				function makeStatic(img) {
+					if (!img || img.dataset.staticEmote || !isSupportedEmoteImage(img)) {
+						return;
+					}
+
+					var original = {
+						hadSrc: img.hasAttribute("src"),
+						src: img.getAttribute("src") || "",
+						hadSrcset: img.hasAttribute("srcset"),
+						srcset: img.getAttribute("srcset") || ""
+					};
+					var resolvedSrc = original.hadSrc ? (img.src || original.src) : "";
+					var rewrittenSrc = resolvedSrc ? getStaticEmoteSrc(resolvedSrc) : null;
+					var rewrittenSrcset = original.hadSrcset ? getStaticEmoteSrcset(original.srcset) : null;
+					var removeSrcset = original.hadSrcset && !rewrittenSrcset && !!rewrittenSrc;
+					var rewriteUrl = !!(rewrittenSrc && rewrittenSrc.changed);
+					var rewriteSrcset = !!(rewrittenSrcset && rewrittenSrcset.changed);
+
+					if (rewriteUrl || rewriteSrcset || removeSrcset) {
+						installStaticUrlFallback(img, original);
+						img.dataset.staticEmote = "rewritten";
+						if (original.hadSrcset && (rewriteSrcset || removeSrcset)) {
+							img.removeAttribute("srcset");
+						}
+						if (rewriteUrl) {
+							img.src = rewrittenSrc.src;
+						}
+						if (rewriteSrcset) {
+							img.setAttribute("srcset", rewrittenSrcset.srcset);
+						}
+						return;
+					}
+
+					if ((rewrittenSrc && !rewrittenSrc.changed) || (rewrittenSrcset && !rewrittenSrcset.changed)) {
+						return;
+					}
+
+					var freezeSrc = img.currentSrc || resolvedSrc || getFirstSrcsetUrl(original.srcset);
+					freezeAnimatedImage(img, freezeSrc);
+				}
+
+				return makeStatic;
+			}
+			function isEmojiOnly(str, isHTML = true) {
+				let strippedStr = stripEmojisFromText(str);
 				strippedStr = strippedStr.replace(/\s+/g, '');
 				if (strippedStr.length === 0) {
 					return true; // Contains only emojis and/or spaces
@@ -10339,6 +11803,11 @@
 				if (data.contents) {
 					data = data.contents;
 
+					// Temporary Web Store ad-announcement workaround; remove on 2026-10-07 (one week).
+					if (data.type === "twitch" && ["ad_break", "adbreak", "ad_request", "ad_schedule"].includes(data.event)) {
+						return;
+					}
+
 					var shouldDeferForHistory = (historyBrowsing || historyReturnSyncPending) && !reloaded && !prependMode && !processDataOptions.skipHistoryDeferral;
 					if (shouldDeferForHistory) {
 						if (historyBrowsing) {
@@ -10351,7 +11820,8 @@
 
 					var invisible = false;
 					var makeBlurred = false;
-					var suppressLiveSideEffects = prependMode === true || processDataOptions.suppressLiveSideEffects === true;
+					var isDeletedMessage = showDeleted && deletedDockMessages.has(data);
+					var suppressLiveSideEffects = prependMode === true || processDataOptions.suppressLiveSideEffects === true || isDeletedMessage;
 
 					if (debug){
 						console.log(data);
@@ -10413,6 +11883,14 @@
 								}
 								break;
 							}
+						}
+					}
+
+					if (isExactBlockedMessage(data, exactBlockedMessages)) {
+						if (blurred) {
+							makeBlurred = true;
+						} else {
+							return;
 						}
 					}
 
@@ -10514,6 +11992,26 @@
 					}
 				}
 
+					if (!suppressLiveSideEffects) {
+						try {
+							if (applyCustomActions) {
+								let response = applyCustomActions(data); // Any custom actions (not synced with github)
+								if (response === false) {
+									// cancel
+									return;
+								} else if (response === null) {
+									// cancel <== official way of cancelling.
+									return;
+								} else if (response) {
+									// replace with modified message
+									data = response;
+								} // else if 'undefined', just ignore the response.
+							}
+						} catch (e) {
+							console.error(e);
+						}
+					}
+
 					if (filterEvents && data.event) {
 						const eventName = typeof data.event === "string" ? data.event.trim().toLowerCase() : "";
 						const messageText = (data.textContent || data.chatmessage || "").toLowerCase();
@@ -10538,6 +12036,8 @@
 						data.type = data.type.toString();
 						showType = data.type;
 					}
+					var safeDataId = escapeAttributeValue(data.id);
+					var safeDataType = escapeAttributeValue(data.type);
 					if (stripDonationData){
 						data.hasDonation = "";
 					}
@@ -10568,6 +12068,13 @@
 						if (stripHTML) {
 							data.chatname = stripHtmlFunction(data.chatname);
 						}
+						if (stripNameEmojis) {
+							var emojiFallbackName = data.chatname; // post-striphtml, so the fallback can't restore stripped HTML
+							data.chatname = stripEmojisFromText(data.chatname);
+							if (!data.chatname.trim()) {
+								data.chatname = emojiFallbackName;
+							}
+						}
 						data.chatname = data.chatname.trim();
 
 						if (localBlockUserList) {
@@ -10595,14 +12102,7 @@
 						if (stripHTML) {
 							// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
 							if (!data.textonly) {
-							// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
-							if (!data.textonly) {
 								data.chatmessage = stripHtmlFunction(data.chatmessage);
-								if (data.initial) data.initial = stripHtmlFunction(data.initial);
-								if (data.reply) data.reply = stripHtmlFunction(data.reply);
-								// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
-								data.textonly = true;
-							}
 								if (data.initial) data.initial = stripHtmlFunction(data.initial);
 								if (data.reply) data.reply = stripHtmlFunction(data.reply);
 								// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
@@ -10695,10 +12195,10 @@
 
 					var addImage = "";
 					if (data.contentimg) {
-						if (data.contentimg.includes('.mp4') || data.contentimg.includes('.webm')){
-							addImage = '<div class="hl-imgContent"><video autoplay="true" muted="true" src="' + data.contentimg + '" onerror="this.style.display = \'none\';" /></video></div>';
+						if (/\.(mp4|webm)$/i.test(data.contentimg.split(/[?#]/)[0])){
+							addImage = '<div class="hl-imgContent"><video autoplay="true" muted="true" src="' + escapeAttributeValue(data.contentimg) + '" /></video></div>';
 						} else {
-							addImage = '<div class="hl-imgContent"><img src="' + data.contentimg + '" onerror="this.style.display = \'none\';" /></div>';
+							addImage = '<div class="hl-imgContent"><img alt="" src="' + escapeAttributeValue(data.contentimg) + '" /></div>';
 						}
 					} else if (attachmentsonly) {
 						data.chatmessage = "";
@@ -10716,8 +12216,7 @@
 					}
 
 					if (data.chatmessage && stripEmojis) {
-						data.chatmessage = data.chatmessage.replace(/\p{Emoji_Presentation}|\p{Emoji}\uFE0F/gu, "").replace(/[\u200D\uFE0F]/g, ""); // Remove zero-width joiner and variation selector
-						data.chatmessage = data.chatmessage.replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, ""); // fail safe?
+						data.chatmessage = stripEmojisFromText(data.chatmessage);
 					}
 
 					if (data.chatmessage) {
@@ -10786,8 +12285,6 @@
 						}
 					}
 
-					var safeDataId = escapeAttributeValue(data.id);
-					var safeDataType = escapeAttributeValue(data.type);
 					var chatImg = data.chatimg;
 					if (hideUnknownAvatar && isUnknownAvatarURL(chatImg)) {
 						chatImg = "";
@@ -10824,11 +12321,18 @@
 
 					if (data.sourceImg && customSource) {
 						var safeSourceImg = escapeAttributeValue(data.sourceImg);
+						var channelIconSizeClass = largeChannelIcon ? " large-channel-icon" : "";
 						if (largeavatar) {
-							showType += '<img src="' + safeSourceImg + '" class="icon hl-source-type  avatar-badge" onerror="this.style.display=\'none\'" />';
+							showType += '<img src="' + safeSourceImg + '" class="icon hl-source-type channel-source-icon avatar-badge' + channelIconSizeClass + '" onerror="this.style.display=\'none\'" />';
 						} else {
-							showType += '<img src="' + safeSourceImg + '" class="icon hl-source-type" onerror="this.style.display=\'none\'" />';
+							showType += '<img src="' + safeSourceImg + '" class="icon hl-source-type channel-source-icon' + channelIconSizeClass + '" onerror="this.style.display=\'none\'" />';
 						}
+					}
+					var channelSourceName = showChannelName && data.sourceName
+						? '<span class="channel-source-name">' + escapeHtml(data.sourceName) + '</span>'
+						: '';
+					if (!largeavatar) {
+						showType += channelSourceName;
 					}
 
 					var timeArrived = "";
@@ -10876,23 +12380,36 @@
 					}
 
 					var nameColor = "";
-					if (data.nameColor && colorized) {
-						nameColor = "style='color:" + escapeAttributeValue(data.nameColor) + ";'";
+					var dockNameColor = getDockNameColor(data);
+					if (dockNameColor) {
+						nameColor = "style='color:" + escapeAttributeValue(dockNameColor) + ";'";
 						if (largeavatar){
-							nameColor = "style='color:" + escapeAttributeValue(data.nameColor) + ";display: flex;'";
+							nameColor = "style='color:" + escapeAttributeValue(dockNameColor) + ";display: flex;'";
 						}
 					} else if (largeavatar){
 						nameColor = "style='display: flex;'";
 					}
 
 					var chatbadges = "";
+					var has7TVBadge = false;
+					if (typeof data.chatbadges == "string") {
+						has7TVBadge = data.chatbadges.toLowerCase().indexOf("cdn.7tv.app") !== -1;
+					} else if (Array.isArray(data.chatbadges)) {
+						for (var badgeIndex = 0; badgeIndex < data.chatbadges.length; badgeIndex++) {
+							var badgeEntry = data.chatbadges[badgeIndex];
+							var badgeUrl = typeof badgeEntry == "string" ? badgeEntry : badgeEntry && badgeEntry.src;
+							if (typeof badgeUrl == "string" && badgeUrl.toLowerCase().indexOf("cdn.7tv.app") !== -1) {
+								has7TVBadge = true;
+								break;
+							}
+						}
+					}
 					
 					var displayBadges = SocialStreamBadges.toArray(data.chatbadges);
 					if (giveVIPBadge && vip) {
 						displayBadges.push("./icons/vip.png");
 						data.chatbadges = displayBadges;
 					}
-
 					chatbadges = showbadges ? SocialStreamBadges.render(displayBadges, { className: "hl-badge", limit: limitbadges }) : "";
 
 					var specialMessage = false;
@@ -10960,6 +12477,7 @@
 						//timeArrived = "";
 						chatImg = "";
 						showType = "";
+						channelSourceName = "";
 						chatbadges = "";
 						//if (datestamp) {
 						//	timeArrived = "<div class='time-arrived'></div>";
@@ -10997,7 +12515,7 @@
 								chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + chatname + afterName + "</div>";
 							}
 						} else {
-							chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + chatbadges + chatname + "</div>";
+							chatname = '<div dir="' + textDirection + '" ' + nameColor + ' class="hl-name' + splitMode + '">' + chatbadges + chatname + (inlinechat ? afterName : "") + "</div>";
 						}
 					} else if (specialMessage && compactmode) {
 						chatname = '<div dir="' + textDirection + '" class="hl-name' + splitMode + '"></div>';
@@ -11041,8 +12559,11 @@
 					}
 					
 					
+					chatmessage = colorReplyContext(chatmessage, data);
+
+					// Chat HTML was checked above; generated row controls and reply decoration stay separate.
 					if (largeavatar) {
-						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + safeDataType + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived  +  "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
+						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + safeDataType + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + channelSourceName + timeArrived  +  "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
 					} else if (twoLines) {
 						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + '<div class="hl-firstline">' + "" + "<div class='queueid'></div>" + showType + chatImg + chatname + '</div><div class="hl-message"><span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">'+ timeArrived  + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
 					} else if (splitMode) {
@@ -11060,6 +12581,10 @@
 						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + donationHTML+ "</div>" + addImage + "</div>");
 					} else {
 						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
+					}
+
+					if (has7TVBadge) {
+						node.classList.add("7tv");
 					}
 
 					if (filtering) {
@@ -11101,8 +12626,8 @@
 
 					if (data.highlightColor && trivialevents) {
 						node.classList.add("special-highlight");
-						if (!bubble) {
-							node.style.backgroundColor = data.highlightColor;
+						if (!bubble || trivialHighlightColor) {
+							node.style.backgroundColor = trivialHighlightColor || data.highlightColor;
 						}
 					}
 					
@@ -11116,6 +12641,9 @@
 					
 					if (data.userid){
 						node.dataset.userid = data.userid;
+					}
+					if (data.username){
+						node.dataset.username = data.username;
 					}
 					
 					if (data.hasDonation) {
@@ -11150,6 +12678,10 @@
 						node.dataset.member = "true";
 					} else {
 						data.membership = "";
+					}
+
+					if (stripMemberships) {
+						memebershipHTML = "";
 					}
 
 					if (data.membership && !bubble && highlightMembers) {
@@ -11306,9 +12838,11 @@
 
 
 					
-					if (chatmessage && hlMessage && (stripLinks || activeLinks || shortlink)) {
-						processURLs(hlMessage, { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
+					var stripLinksForMessage = shouldStripLinksForMessage(data);
+					if (chatmessage && hlMessage && (stripLinksForMessage || activeLinks || shortlink)) {
+						processURLs(hlMessage, { makeClickable: activeLinks, stripLinks: stripLinksForMessage, shortenURLs: shortlink });
 					} 
+					SSNContentImage.watch(node, data, contentElement || hlMessage);
 					
 					if (data.type && data.type == "twitch" && avatars && data.chatimg && data.chatname) { 
 						// Load Twitch avatar
@@ -11384,8 +12918,11 @@
 					}
 
 					node.rawContents = data;
+					if (isDeletedMessage) markDeletedMessage(node);
 					
 					const metaFeatured = data.meta && data.meta.featured;
+					const metaPinnedTarget = data.meta && data.meta.pinnedTarget;
+					const metaPinned = data.meta && data.meta.pinned === true && (!metaPinnedTarget || metaPinnedTarget === thisLabel);
 
 					if (!suppressLiveSideEffects) {
 						if (metaFeatured) {
@@ -11479,7 +13016,6 @@
 							imageElements[i].srcBackup = imageElements[i].src;
 							imageElements[i].src = imageElements[i].src.replaceAll("/light/", "/dark/");
 						}
-						
 						imageElements[i].removeAttribute("width");
 						imageElements[i].removeAttribute("height");
 
@@ -11495,13 +13031,18 @@
 							}
 						};
 					}
-					
+
+					if (makeEmoteStatic) {
+						for (var staticImageIndex = 0; staticImageIndex < imageElements.length; staticImageIndex++) {
+							makeEmoteStatic(imageElements[staticImageIndex]);
+						}
+					}
 					if (typewriterEnabled) {
 						enqueueTypewriter(contentElement, node);
 					}
 					
 					if (!suppressLiveSideEffects) {
-						const shouldBeep = beep || (beepFirstTime && data.firsttime);
+						const shouldBeep = shouldDockBeep(data, mod);
 						if (shouldBeep) { 
 							if (!(data.command && doNotTTSBeep) && !(nobeepevent && data.event) && !(nobeepmod && mod) && !(nobeephost && host) && !(nobeepbot && bot)){
 								playtone();
@@ -11513,36 +13054,19 @@
 
 					if (!suppressLiveSideEffects) {
 						applyBotActions(data); // Official actions
+                        if (window.SSNQuestionTracker) window.SSNQuestionTracker.add(node, data);
 
-						if (data.queueme) {
-							selectedQueue.push(node);
-							node.children[0].dataset.qid = selectedQueue.length;
-							node.classList.add("queued");
-							updateQueueButton();
-						} else if (selfQueue && data.chatmessage && (selfQueue.some(item => data.chatmessage.split(" ").includes(item)))) {
-							selectedQueue.push(node);
-							node.children[0].dataset.qid = selectedQueue.length;
-							node.classList.add("queued");
-							updateQueueButton(); 
-						} else if (autoQueueQuestions && data.question) {
-							// Auto-pin questions when autoQueueQuestions URL parameter is set
-							selectedQueue.push(node);
-							node.children[0].dataset.qid = selectedQueue.length;
-							node.classList.add("queued");
-							updateQueueButton();
-						} else if (autoQueueDonations && (data.hasDonation || data.donation)) {
-							// Auto-pin questions when autoQueueQuestions URL parameter is set
-							selectedQueue.push(node);
-							node.children[0].dataset.qid = selectedQueue.length;
-							node.classList.add("queued");
-							updateQueueButton();
-						}
+						queueMessageIfRequested(node, data);
 						
 						if (autoPinQuestions && data.question) {
 							pinIt(node);
 						}
 						
 						if (autoPinDonations && data.hasDonation) {
+							pinIt(node);
+						}
+
+						if (metaPinned) {
 							pinIt(node);
 						}
 						
@@ -11658,24 +13182,24 @@
 				send2Extension({ action: "requestViewerCount", value: { ttl: viewerCountRequestTtl } }, uid || null, true);
 			}
 
-			function send2Extension(data, uid = null, force) {
-				if (!force && (blockMessageSelecting || blockMessageSelecting3)) {
-					return;
-				}
-
-				if (socketserverExtension && server3) {
-					try {
-						if (data.out){
-							delete data.out;
-						}
-						socketserverExtension.send(JSON.stringify(data));
-						return;
-					} catch (e) {
-						// if failed, try p2p
-						console.error(e);
+			function sendExtensionDataToServer(data) {
+				if (!socketserverExtension || !server3 || socketserverExtension.readyState !== 1) return false;
+				try {
+					var serverPayload = data;
+					if (data && data.out) {
+						serverPayload = Object.assign({}, data);
+						delete serverPayload.out;
 					}
+					socketserverExtension.send(JSON.stringify(serverPayload));
+					return true;
+				} catch (e) {
+					console.error(e);
+					return false;
 				}
+			}
 
+			function sendExtensionDataToPeers(data, uid) {
+				var sent = false;
 				iframes.forEach(iframe => {
 					if (!uid) {
 						var keys = Object.keys(iframe.connectedPeers);
@@ -11685,6 +13209,7 @@
 								var label = iframe.connectedPeers[UUID];
 								if (label === "SocialStream") {
 									iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs", UUID: UUID }, "*");
+									sent = true;
 								}
 							} catch (e) {}
 						}
@@ -11692,9 +13217,29 @@
 						var label = iframe.connectedPeers[uid];
 						if (label === "SocialStream") {
 							iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs", UUID: uid }, "*");
+							sent = true;
 						}
 					}
 				});
+				return sent;
+			}
+
+			function send2Extension(data, uid = null, force, preferP2P = false) {
+				if (!force && (blockMessageSelecting || blockMessageSelecting3)) {
+					return false;
+				}
+
+				var legacyTransport = usesLegacyExtensionTransport();
+				if (!preferP2P && !legacyTransport && sendExtensionDataToServer(data)) {
+					return true;
+				}
+				if (sendExtensionDataToPeers(data, uid)) {
+					return true;
+				}
+				if (!preferP2P && legacyTransport) {
+					return sendExtensionDataToServer(data);
+				}
+				return false;
 			}
 			
 			function syncDataAny(data, UUID = false, force = false) {
@@ -11821,10 +13366,19 @@
 								return;
 							}
 						}
+						if (tid.includes("BOT")) {
+							// BOT is intentionally private-only and exclusive in the picker. Keep
+							// this return as a fail-safe for stale or externally supplied arrays.
+							send2Extension({ action: "askBot", value: data });
+							return;
+						}
 					} else if (tid === "TTS") {
 						if (data){
 							TTS.speak(data, true);
 						}
+						return;
+					} else if (tid === "BOT") {
+						send2Extension({ action: "askBot", value: data });
 						return;
 					}
 				}
@@ -12333,6 +13887,7 @@
 				const input = getById("chatInput");
 				const chatInputButton = getById("chatInputButton");
 				const chatClearButton = getById("chatClearButton");
+				const chatHistoryClearButton = getById("chatHistoryClearButton");
 				const getChatSourcesButton = getById("getChatSources");
 				const chatInputCloseButton = getById("chatInputCloseButton");
 				const chatInputLockButton = getById("chatInputLockButton");
@@ -12434,6 +13989,19 @@
 					clearAll(true);
 				});
 
+				chatHistoryClearButton.addEventListener("click", function(event) {
+					event.preventDefault();
+					event.stopPropagation();
+					if (!window.confirm("Permanently delete all saved message history? This also resets first-time chatter and last-activity history.")) {
+						return;
+					}
+					chatHistoryClearButton.disabled = true;
+					send2Extension({ action: "clearHistory", value: { confirm: true } });
+					setTimeout(function() {
+						chatHistoryClearButton.disabled = false;
+					}, 10000);
+				});
+
 				chatInputCloseButton.addEventListener("click", function(event) {
 					event.preventDefault();
 					event.stopPropagation();
@@ -12467,15 +14035,30 @@
 				autoShowQueue = [];
 				selectedQueue = [];
 				odd = false;
+				if (historyMode) {
+					historyViewCleared = true;
+					historyBrowsing = false;
+					isLoadingHistory = false;
+					waitingForRecentHistory = false;
+					historyReturnSyncPending = false;
+					historyReturnSyncTimedOut = false;
+					reachedOldest = true;
+					if (historyFlushTimer) {
+						clearTimeout(historyFlushTimer);
+						historyFlushTimer = null;
+					}
+				}
 				sendDataP2P(false);
 				updateQueueButton();
 				TTS.clearQueue();
-				if (relay){
-					syncDataAny({ "clearAll": true }, false, true);
+				if (relay && syncDocks){
+					syncDataAny({ "clearAll": true });
 				}
 			}
 
+			{}
 
+			{}
 			if (urlParams.has("reload")) {
 				try {
 					setTimeout(function () {
@@ -12750,5 +14333,6 @@
 			initHotkeys();
 
 		</script>
-	</body>
+	<script src="dock-questions.js"></script>
+</body>
 </html>

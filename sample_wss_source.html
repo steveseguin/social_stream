@@ -1,4 +1,12 @@
 <html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Source Example - Social Stream Ninja</title>
+    <meta name="description" content="WebSocket Source Example. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
+</head>
 <body>
 <script>
 	var conCon = 1;
@@ -49,7 +57,7 @@
 			console.log(event.data);
 		});
 	}
-	var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+	var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja";
 	socketserver = new WebSocket(serverURL); 
 	setupSocket();
 	

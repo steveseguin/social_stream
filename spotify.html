@@ -180,7 +180,7 @@
                 <li><strong>Description:</strong> Integration for displaying Spotify "Now Playing" data</li>
                 <li><strong>Website:</strong> https://socialstream.ninja</li>
             </ul>
-            <p>Add <strong>all</strong> of the following Redirect URIs (extension + hosted + beta + Electron):</p>
+            <p>Add <strong>all</strong> of the following Redirect URIs (extension + beta + hosted + Electron):</p>
             <div class="uri-list">
                 <div class="uri-item">
                     <span class="uri-text" data-uri>https://cppibjhfemifednoimlblfcmjgfhfjeg.chromiumapp.org/spotify</span>
@@ -188,6 +188,10 @@
                 </div>
                 <div class="uri-item">
                     <span class="uri-text" data-uri>https://socialstream.ninja/beta/spotify.html</span>
+                    <button class="copy-button" data-copy>Copy</button>
+                </div>
+                <div class="uri-item">
+                    <span class="uri-text" data-uri>https://cppibjhfemifednoimlblfcmjgfhfjeg.chromiumapp.org/spotify.html</span>
                     <button class="copy-button" data-copy>Copy</button>
                 </div>
                 <div class="uri-item">
@@ -211,7 +215,7 @@
                     <button class="copy-button" data-copy>Copy</button>
                 </div>
             </div>
-            <p class="note" style="margin-top:14px;">Tip: Keep this redirect list exactly in sync with the build you are running. The <code>chromiumapp.org</code> entry is the Chrome Web Store extension’s own callback and is the one the extension uses; if you loaded an unpacked copy instead, its extension ID differs, so use the <code>socialstream.ninja/spotify.html</code> entry and paste the callback URL back into the popup. Desktop OAuth uses <code>http://127.0.0.1:&lt;port&gt;/callback</code> with ports <code>8888</code>, <code>8080</code>, and <code>8181</code>, so add all three loopback entries exactly as shown. Missing one URI can cause login to fail after consent.</p>
+            <p class="note" style="margin-top:14px;">Tip: Keep this redirect list exactly in sync with the extension ID/build you are running. Desktop OAuth uses <code>http://127.0.0.1:&lt;port&gt;/callback</code> with ports <code>8888</code>, <code>8080</code>, and <code>8181</code>, so add all three loopback entries exactly as shown. Missing one URI can cause login to fail after consent.</p>
         </div>
 
         <div class="step">
@@ -256,37 +260,6 @@
         <div id="content"></div>
     </div>
 
-    <script>
-        document.querySelectorAll('[data-copy]').forEach((button) => {
-            button.addEventListener('click', () => {
-                const uri = button.parentElement.querySelector('[data-uri]').textContent.trim();
-                navigator.clipboard.writeText(uri).then(() => {
-                    button.textContent = 'Copied!';
-                    setTimeout(() => button.textContent = 'Copy', 1600);
-                }).catch(() => {
-                    alert('Press Ctrl+C (Cmd+C on Mac) to copy the highlighted text.');
-                    const range = document.createRange();
-                    range.selectNode(button.parentElement.querySelector('[data-uri]'));
-                    const selection = window.getSelection();
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                });
-            });
-        });
-
-        (function() {
-            const params = new URLSearchParams(window.location.search);
-            if (params.has('code') || params.has('error')) {
-                const guide = document.getElementById('guide-container');
-                if (guide) guide.style.display = 'none';
-                const callbackShell = document.getElementById('callback-container');
-                if (callbackShell) callbackShell.style.display = 'block';
-
-                const script = document.createElement('script');
-                script.src = 'spotify-callback.js';
-                document.body.appendChild(script);
-            }
-        })();
-    </script>
+    <script src="spotify-setup.js"></script>
 </body>
 </html>

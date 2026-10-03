@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Chat Overlay: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
 <script src="../../libs/objects.js"></script>
 <script src="../../shared/utils/chatHtml.js"></script>
 <script src="../../shared/utils/chatBadges.js"></script>
 <link rel="stylesheet" href="../../shared/utils/chatBadges.css">
-
+<script type="text/javascript" src="../../js/local-server-url.js"></script>
+<script type="text/javascript" src="../../js/transport-dedupe.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Overlay</title>
@@ -36,7 +41,7 @@
         #chat-container::-webkit-scrollbar {
             display: none; /* Hide scrollbar for WebKit browsers */
         }
-        
+
         /* Overlay size adjustments */
         .small-overlay #chat-container {
             transform: scale(0.6);
@@ -116,7 +121,7 @@
             font-size: clamp(0.85em, 2.5vw, 1em);
             line-height: 1.4;
         }
-        
+
         @keyframes slideFadeIn {
             0% {
                 opacity: 0;
@@ -139,7 +144,8 @@
             }
         }
 
-        .text img {
+        .text img,
+        .text svg {
             max-width: 1.5em; /* Adjust size as needed */
             max-height: 1.5em;
             vertical-align: middle; /* Align emotes with text */
@@ -149,7 +155,21 @@
             opacity: 0;
             transition: opacity 1.5s ease-out;
         }
-    </style>
+        .badge.svg { overflow: hidden; }
+        .badge.svg svg { display: block; width: auto !important; height: 100% !important; max-width: 100px !important; max-height: 100% !important; }
+
+/* Keep content attachments separate from the smaller inline emotes. */
+img.ssn-content-image {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-top: 6px;
+}
+</style>
 </head>
 <body>
     <div id="chat-container"></div>
@@ -160,8 +180,46 @@
 
 	// Parameters for Social Stream Ninja
 	const urlParams = new URLSearchParams(window.location.search);
+	const SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+	// Transport migration guard: only pages with full server parity may skip the legacy bridge.
+	var TRANSPORT_CAPABILITIES = {
+		serverFeed: true,
+		serverTargeted: false,
+		upstreamCommands: false,
+		customChannel: false,
+		legacyBridgeRequired: false,
+		exclusiveServerParams: { server: false, server2: true, server3: false }
+	};
+	function versionAtLeast(value, minimum) {
+		const a = String(value || "").split(".");
+		const b = String(minimum || "").split(".");
+		const len = Math.max(a.length, b.length);
+		for (let i = 0; i < len; i++) {
+			const av = parseInt(a[i], 10) || 0;
+			const bv = parseInt(b[i], 10) || 0;
+			if (av > bv) return true;
+			if (av < bv) return false;
+		}
+		return true;
+	}
+	// Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+	function hasExclusiveServerTransport(caps) {
+		var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+		return (params.server === true && urlParams.has("server")) ||
+			(params.server2 !== false && urlParams.has("server2")) ||
+			(params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+	}
+	function useServerOnlyTransport() {
+		var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+		return hasExclusiveServerTransport(caps) &&
+			versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+			caps.serverFeed === true &&
+			caps.legacyBridgeRequired !== true &&
+			caps.upstreamCommands !== true &&
+			caps.customChannel !== true;
+	}
 	const roomID = urlParams.get("session") || "7RUWtGBfz2";
-	const password = "false";
+	const password = urlParams.get("password") || urlParams.get("pass") || urlParams.get("pw") || "false";
 	const featuredMode = false;
 
 	// showtime: if set via URL, override default. Otherwise keep current default (0 = no auto-hiding)
@@ -185,7 +243,10 @@
 	}
 	if (urlParams.has("font")) {
 		var _fs = parseInt(urlParams.get("font"), 10);
-		if (!isNaN(_fs) && _fs > 0) { document.documentElement.style.fontSize = _fs + "px"; }
+		if (!isNaN(_fs) && _fs > 0) {
+			document.documentElement.style.fontSize = _fs + "px";
+			document.body.style.fontSize = _fs + "px";
+		}
 	}
 	if (urlParams.has("fontfamily")) {
 		var _ff = (urlParams.get("fontfamily") || "").trim();
@@ -279,15 +340,70 @@
 		chatContainer.appendChild(eventDiv);
 	}
 
-	function addMessageToOverlay(data) {
+	// Cross-transport dedupe: in server mode the same feed message can arrive over both
+	// the websocket relay and the VDO.Ninja bridge; render only the first copy.
+	var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
+	var recentTransportDeliveries = new Map();
+	var transportDeliveryDedupe = typeof SocialStreamTransportDedupe !== "undefined" ? SocialStreamTransportDedupe.create() : null;
+	function isDuplicateTransportDelivery(data, source) {
+		if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) {
+			return false;
+		}
+		if (transportDeliveryDedupe) return transportDeliveryDedupe(data, source);
+		if (!data || typeof data !== "object") {
+			return false;
+		}
+		if (data.id === undefined || data.id === null) {
+			return false;
+		}
+		if ("action" in data || "get" in data || "callback" in data || "mid" in data) {
+			return false;
+		}
+		if (!(data.chatname || data.chatmessage || data.chatimg || data.hasDonation || data.membership || data.event || data.contentimg)) {
+			return false;
+		}
+		var key =
+			String(data.id) +
+			"|" + (data.type || "") +
+			"|" + (data.chatname || "") +
+			"|" + String(data.chatmessage || "").slice(0, 100) +
+			"|" + (data.hasDonation || "") +
+			"|" + (data.event || "");
+		var now = Date.now();
+		recentTransportDeliveries.forEach(function (seenAt, seenKey) {
+			if (now - seenAt > CROSS_TRANSPORT_DEDUPE_TTL_MS) {
+				recentTransportDeliveries.delete(seenKey);
+			}
+		});
+		if (recentTransportDeliveries.has(key)) {
+			return true;
+		}
+		recentTransportDeliveries.set(key, now);
+		return false;
+	}
+	// Content images are separate from chat text (including GIF-only messages).
+	function appendContentImage(container, data) {
+		if (typeof data.contentimg !== 'string' || !data.contentimg.trim()) return;
+		const img = document.createElement('img');
+		img.className = 'ssn-content-image';
+		img.alt = (data.meta && data.meta.gifLabel) || 'Content image';
+		img.onerror = function () { this.style.display = 'none'; };
+		img.src = data.contentimg;
+		container.appendChild(img);
+	}
+
+	function addMessageToOverlay(data, source) {
+		if (isDuplicateTransportDelivery(data, source)) {
+			return;
+		}
 		if (hideBots && data.bot) { return; }
-		if (!data || !data.chatname || !data.chatmessage) {
+		if (!data || (!data.chatmessage && !data.contentimg && !data.hasDonation && !data.donation)) {
 			console.error("Invalid message data", data);
 			return;
 		}
 
 		// Skip meta-only messages (follower/viewer data without actual content)
-		if (!data.chatname && data.meta) {
+		if (!data.chatname && data.meta && !data.chatmessage && !data.contentimg && !data.hasDonation && !data.donation) {
 			return;
 		}
 
@@ -296,12 +412,14 @@
 			return;
 		}
 
+		// textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
 		const renderedChatMessage = data.textonly ? escapeHtml(data.chatmessage || '') : (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatmessage || '') : fallbackEscapeHtml(data.chatmessage || ''));
 		if (lastSender === data.chatname && lastMessageDiv && lastMessageDiv.isConnected && !lastMessageDiv.classList.contains('fading')) {
 			// Append new message to the existing message container
 			const textDiv = document.createElement('div');
 			textDiv.classList.add('text');
 			textDiv.innerHTML = renderedChatMessage;
+			appendContentImage(textDiv, data);
 			lastMessageDiv.querySelector('.message').appendChild(textDiv);
 			messageTimestamps.set(lastMessageDiv.id, Date.now());
 		} else {
@@ -329,13 +447,14 @@
 			messageDiv.innerHTML = `
 				<div class="username-box">
 					${sourceIcon}
-					<span>${window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(data.chatname) : escapeHtml(data.chatname)}</span>
+					<span>${escapeHtml(data.chatname)}</span>
 					<span class="badges">${chatbadges}</span>
 				</div>
 				<div class="text">${renderedChatMessage}</div>
 				${(data.donation || data.hasDonation) ? `<div class="donation">${escapeHtml(data.donation || data.hasDonation)}</div>` : ''}
 			`;
 
+			appendContentImage(messageDiv, data);
 			messageContainer.appendChild(messageDiv);
 			chatContainer.appendChild(messageContainer);
 
@@ -344,20 +463,22 @@
 		}
 	}
 	
-	const iframe = document.createElement("iframe");
-	iframe.src = featuredMode
-		? `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`
-		: `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${roomID}`;
+	if (!useServerOnlyTransport()) {
+		const iframe = document.createElement("iframe");
+		iframe.src = featuredMode
+			? `https://vdo.socialstream.ninja/?ln&password=${encodeURIComponent(password)}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`
+			: `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${roomID}`;
 
-	iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
-	document.body.appendChild(iframe);
+		iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+		document.body.appendChild(iframe);
 
-	window.addEventListener("message", (event) => {
-		if (event.source !== iframe.contentWindow) return;
-		if (event.data && typeof event.data === "object" && event.data.dataReceived && typeof event.data.dataReceived === "object" && event.data.dataReceived.overlayNinja) {
-			addMessageToOverlay(event.data.dataReceived.overlayNinja);
-		}
-	});
+		window.addEventListener("message", (event) => {
+			if (event.source !== iframe.contentWindow) return;
+			if (event.data && typeof event.data === "object" && event.data.dataReceived && typeof event.data.dataReceived === "object" && event.data.dataReceived.overlayNinja) {
+				addMessageToOverlay(event.data.dataReceived.overlayNinja, "p2p");
+			}
+		});
+	}
 
 	document.addEventListener('DOMContentLoaded', () => {
 		applyOverlaySize(); // Apply overlay size based on URL parameter
@@ -368,7 +489,7 @@
 	var conCon = 1;
 	var socketserver = false;
 	// localserver mode can be used via the stand-alone app; file-> enable local server, or use the publicly hosted one.
-	var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+	var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja";
 
 	function setupSocket(){
 		socketserver.onclose = function (){
@@ -386,7 +507,7 @@
 			var resp = false
 			if (event.data){
 				var data = JSON.parse(event.data);
-				addMessageToOverlay(data);
+				addMessageToOverlay(data, "server");
 				if (data.get){
 					var ret = {};
 					ret.callback = {};

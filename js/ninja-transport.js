@@ -6,7 +6,7 @@
     constructor(opts = {}) {
       super();
       if (typeof VDONinjaSDK === 'undefined') {
-        throw new Error('VDONinjaSDK not available. Ensure sources/grabvideo.js is loaded.');
+        throw new Error('VDONinjaSDK not available. Ensure thirdparty/vdoninja-sdk.js is loaded.');
       }
 
       this.opts = Object.assign(
@@ -24,9 +24,12 @@
       this.password = false;
       this.streamID = null;
       this.connected = false;
+      this._cancelInit = null;
 
       // uuid -> label mapping (eg. 'dock', 'ticker', ...)
       this.labelsByUUID = {};
+      // Prefer labels learned from peer info/listings over connection-time fallbacks.
+      this._labelPriorityByUUID = {};
       // Track remote streams we've attempted to view
       this._viewedStreams = new Set();
     }
@@ -49,55 +52,95 @@
         reconnectDelay: 2000,
       });
 
-      this._bindEvents();
-      // Set up auto-view handlers before we join so we don't miss initial listing
-      this._enableAutoView();
-      await this.vdo.connect();
-
-      // Join the room
-      await this.vdo.joinRoom({ room, password: this.password || false });
-
-      // Publish a data-only stream whose streamID equals the room's ID
-      // so overlays can subscribe to it, mirroring the iframe's &push=room behavior.
+      const sdk = this.vdo;
+      let cancelled = false;
+      let cancelInit;
+      const cancellation = new Promise(resolve => {
+        cancelInit = () => { cancelled = true; resolve(false); };
+      });
+      this._cancelInit = cancelInit;
+      // A stalled WebSocket handshake must not hold the background's lifecycle
+      // queue open. Late SDK work belongs to this instance and is disposed too.
+      const waitForStep = operation => Promise.race([
+        Promise.resolve(operation).then(async () => {
+          if (cancelled) {
+            try { await sdk.disconnect(); } catch (e) {}
+            return false;
+          }
+          return true;
+        }),
+        cancellation,
+      ]);
       try {
-        await this.vdo.announce({
-          streamID: this.streamID || room,
-          label: this.opts.label || 'SocialStream',
-          // Keep metadata minimal; data-channel only
-          allowchunked: true,
-          iframe: false,
-          widget: false,
-        });
-      } catch (e) {
-        // If publish fails (older SDK), continue with DC-only viewer below
-        if (this.opts.debug) console.warn('NinjaBridge: publish failed; continuing', e);
+        this._bindEvents();
+        // Set up auto-view handlers before we join so we don't miss initial listing.
+        this._enableAutoView();
+        if (!await waitForStep(sdk.connect()) || cancelled) return false;
+        const publishStreamID = this.streamID || room;
+
+        // Join and publish the data-only stream that overlay viewers subscribe to.
+        if (!await waitForStep(sdk.joinRoom({ room, password: this.password || false })) || cancelled) return false;
+        if (!await waitForStep(this._announcePublishStream(publishStreamID)) || cancelled) return false;
+
+        this.connected = true;
+        this._syncGlobalPeers();
+        this.dispatchEvent(new CustomEvent('ready'));
+        return true;
+      } finally {
+        if (this._cancelInit === cancelInit) this._cancelInit = null;
+      }
+    }
+
+    cancelPendingInit() {
+      if (this._cancelInit) this._cancelInit();
+    }
+
+    async _announcePublishStream(publishStreamID) {
+      try {
+        if (typeof this.vdo.announce === 'function') {
+          await this.vdo.announce({
+            streamID: publishStreamID,
+            label: this.opts.label || 'SocialStream',
+            // Keep metadata minimal; data-channel only
+            allowchunked: true,
+            iframe: false,
+            widget: false,
+          });
+          return;
+        }
+
+        await this._sendLegacyListing(publishStreamID);
+      } catch (error) {
+        console.warn('[NinjaBridge] Stream announcement failed; continuing transport init.', error);
+        try {
+          await this._sendLegacyListing(publishStreamID);
+        } catch (fallbackError) {
+          console.warn('[NinjaBridge] Legacy listing fallback failed; continuing transport init.', fallbackError);
+        }
+      }
+    }
+
+    async _sendLegacyListing(publishStreamID) {
+      if (this.vdo.state) {
+        this.vdo.state.streamID = publishStreamID;
       }
 
-      // Auto-view handlers already enabled above
-
-      this.connected = true;
-      this._syncGlobalPeers();
-      this.dispatchEvent(new CustomEvent('ready'));
-      return true;
+      if (typeof this.vdo._startListingBroadcast === 'function') {
+        this.vdo._startListingBroadcast();
+      } else if (typeof this.vdo._sendListing === 'function') {
+        await this.vdo._sendListing();
+      }
     }
 
     _bindEvents() {
       // Track peers and their labels as they appear in listings/updates
       const labelHandler = (e) => {
         const { uuid, label } = e.detail || {};
-        if (!uuid) return;
-        if (label) {
-          this.labelsByUUID[uuid] = label;
-          this._syncGlobalPeers();
-          this.dispatchEvent(
-            new CustomEvent('peerLabel', { detail: { uuid, label } })
-          );
-        }
+        this._setPeerLabel(uuid, label, 2);
       };
       // Try a few likely event names for broad SDK compatibility
       this.vdo.addEventListener('peerListing', labelHandler);
       this.vdo.addEventListener('peerUpdated', labelHandler);
-      this.vdo.addEventListener('peerConnected', labelHandler);
       // Full SDK emits granular listing and info events as well
       this.vdo.addEventListener('listing', labelHandler);
       // Peer info carries label under detail.info.label
@@ -105,21 +148,16 @@
         const d = e.detail || {};
         const uuid = d.uuid;
         const label = d.info && d.info.label;
-        if (uuid && label) {
-          this.labelsByUUID[uuid] = label;
-          this._syncGlobalPeers();
-          this.dispatchEvent(new CustomEvent('peerLabel', { detail: { uuid, label } }));
-        }
+        this._setPeerLabel(uuid, label, 3);
       });
 
-      // If connection object already has a label, record it
+      // Connection-time labels are fallbacks only. They can describe the local
+      // side in dual announce/view setups, so they must not replace listings or
+      // peerInfo received for the remote UUID.
       this.vdo.addEventListener('peerConnected', (e) => {
-        const { uuid, connection } = e.detail || {};
-        if (uuid && connection && connection.info && connection.info.label) {
-          this.labelsByUUID[uuid] = connection.info.label;
-          this._syncGlobalPeers();
-          this.dispatchEvent(new CustomEvent('peerLabel', { detail: { uuid, label: connection.info.label } }));
-        }
+        const detail = e.detail || {};
+        const connectionLabel = detail.connection && detail.connection.info && detail.connection.info.label;
+        this._setPeerLabel(detail.uuid, detail.label || connectionLabel, 1);
       });
 
       // Cleanup on disconnects
@@ -127,6 +165,7 @@
         const { uuid } = e.detail || {};
         if (uuid && this.labelsByUUID[uuid]) {
           delete this.labelsByUUID[uuid];
+          delete this._labelPriorityByUUID[uuid];
           this._syncGlobalPeers();
           this.dispatchEvent(
             new CustomEvent('peerRemoved', { detail: { uuid } })
@@ -136,6 +175,10 @@
 
       this.vdo.addEventListener('disconnected', () => {
         this.connected = false;
+      });
+      this.vdo.addEventListener('reconnected', () => {
+        this.connected = true;
+        this.dispatchEvent(new CustomEvent('reconnected'));
       });
 
       // Route data payloads from peers to background.js
@@ -168,9 +211,25 @@
           if (this.opts.debug) console.warn('NinjaBridge: data handler error', e);
         }
       };
-      // Try both event names used across SDK versions
+      // The vendored SDK emits both dataReceived and the legacy data alias for
+      // WebSocket fallback packets. Listen only to the canonical event so one
+      // packet becomes one bridge event.
       this.vdo.addEventListener('dataReceived', dataHandler);
-      this.vdo.addEventListener('data', dataHandler);
+    }
+
+    _setPeerLabel(uuid, label, priority) {
+      if (!uuid || !label) return false;
+      const currentPriority = this._labelPriorityByUUID[uuid] || 0;
+      if (currentPriority > priority) return false;
+
+      const changed = this.labelsByUUID[uuid] !== label;
+      this.labelsByUUID[uuid] = label;
+      this._labelPriorityByUUID[uuid] = priority;
+      this._syncGlobalPeers();
+      if (changed) {
+        this.dispatchEvent(new CustomEvent('peerLabel', { detail: { uuid, label } }));
+      }
+      return changed;
     }
 
     _enableAutoView() {
@@ -241,14 +300,18 @@
       return Object.assign({}, this.labelsByUUID);
     }
 
+    identifyPeer(uuid, label) {
+      return this._setPeerLabel(uuid, label, 4);
+    }
+
     // Send to a specific UUID or broadcast to all peers with an optional label filter
     async send(data, uuid = null) {
       if (!this.isReady()) throw new Error('NinjaBridge not ready');
       const payload = { overlayNinja: data };
       if (uuid) {
         try {
-          await this.vdo.sendData(payload, uuid);
-          return true;
+          const sent = await this.vdo.sendData(payload, uuid);
+          return sent !== false;
         } catch (e) {
           console.warn('NinjaBridge send error (uuid)', e);
           return false;
@@ -257,8 +320,8 @@
 
       // Default broadcast to all peers
       try {
-        await this.vdo.sendData(payload);
-        return true;
+        const sent = await this.vdo.sendData(payload);
+        return sent !== false;
       } catch (e) {
         console.warn('NinjaBridge broadcast error', e);
         return false;
@@ -274,7 +337,8 @@
       let ok = true;
       for (const uuid of targets) {
         try {
-          await this.vdo.sendData(payload, uuid);
+          const sent = await this.vdo.sendData(payload, uuid);
+          if (sent === false) ok = false;
         } catch (e) {
           console.warn('NinjaBridge sendToLabel error', label, uuid, e);
           ok = false;
@@ -284,10 +348,12 @@
     }
 
     async destroy() {
+      this.cancelPendingInit();
       try {
         if (this.vdo) {
           try { this.vdo.stopPublishing && this.vdo.stopPublishing(); } catch(e){}
-          await this.vdo.leaveRoom();
+          try { this.vdo.leaveRoom && await this.vdo.leaveRoom(); } catch(e){}
+          try { this.vdo.disconnect && this.vdo.disconnect(); } catch(e){}
         }
       } catch (e) {
         // ignore
@@ -295,6 +361,8 @@
         this.vdo = null;
         this.connected = false;
         this.labelsByUUID = {};
+        this._labelPriorityByUUID = {};
+        this._viewedStreams.clear();
         this._syncGlobalPeers();
       }
     }

@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Spotify Now Playing. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+<script src="shared/overlay-control-transport.js"></script>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
 
 	<meta name="viewport" content="width=device-width,initial-scale=1">
 	<title>Social Stream - Spotify Now Playing</title>
@@ -167,6 +172,68 @@ body {
   gap: 6px;
 }
 
+.queue-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.show-queue #overlay {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+}
+
+.show-queue .queue-list {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.queue-row {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.queue-art {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.queue-details {
+  min-width: 0;
+}
+
+.queue-title,
+.queue-requester {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.queue-requester,
+.queue-time {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.queue-time {
+  min-width: 82px;
+  text-align: right;
+}
+
 .error-message {
   color: #ff5252;
   font-size: 0.85rem;
@@ -203,6 +270,9 @@ body {
 }
 .theme-glass .artist { color: #0b5c2c; }
 .theme-glass .bar { background: rgba(0, 0, 0, 0.12); }
+.theme-glass .queue-list { border-top-color: rgba(0, 0, 0, 0.16); }
+.theme-glass .queue-requester,
+.theme-glass .queue-time { color: #0b5c2c; }
 .theme-glass body { color: #0c1a12; }
 
 .theme-comic {
@@ -257,12 +327,18 @@ body {
   100% { transform: translateX(-50%); }
 }
 .theme-ticker .art { width: 72px; height: 72px; }
+.theme-ticker.show-queue #overlay {
+  grid-template-columns: 72px minmax(0, 1fr);
+}
 .theme-ticker .progress,
 .theme-ticker .meta .details {
   display: none;
 }
 
 .compact .art { width: 68px; height: 68px; }
+.compact.show-queue #overlay {
+  grid-template-columns: 68px minmax(0, 1fr);
+}
 .compact .title { font-size: 1rem; }
 .compact .bar { height: 6px; }
 
@@ -302,11 +378,50 @@ body {
 				<div class="ticker-track" id="tickerTrack"></div>
 			</div>
 		</div>
+		<div class="queue-list" id="queueList" hidden></div>
 	</div>
 	<span class="sr-only" id="ariaStatus" aria-live="polite"></span>
 	<script>
 (function() {
 	const urlParams = new URLSearchParams(location.search);
+	const SERVER_EXCLUSIVE_TRANSPORT_VERSION = '3.52.0';
+	// Transport migration guard: only pages with full server parity may skip the legacy bridge.
+	var TRANSPORT_CAPABILITIES = {
+		serverFeed: false,
+		serverTargeted: false,
+		upstreamCommands: false,
+		customChannel: true,
+		legacyBridgeRequired: true,
+		legacyBridgeReason: "Spotify overlay updates are still sent with sendSpotifyOverlay."
+	};
+	function versionAtLeast(value, minimum) {
+		const a = String(value || '').split('.');
+		const b = String(minimum || '').split('.');
+		const len = Math.max(a.length, b.length);
+		for (let i = 0; i < len; i += 1) {
+			const av = parseInt(a[i], 10) || 0;
+			const bv = parseInt(b[i], 10) || 0;
+			if (av > bv) return true;
+			if (av < bv) return false;
+		}
+		return true;
+	}
+	// Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+	function hasExclusiveServerTransport(caps) {
+		var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+		return (params.server === true && urlParams.has("server")) ||
+			(params.server2 !== false && urlParams.has("server2")) ||
+			(params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+	}
+	function useServerOnlyTransport() {
+		var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+		return hasExclusiveServerTransport(caps) &&
+			versionAtLeast(urlParams.get('v'), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+			caps.serverFeed === true &&
+			caps.legacyBridgeRequired !== true &&
+			caps.upstreamCommands !== true &&
+			caps.customChannel !== true;
+	}
 	const sessionId = urlParams.get('session') || urlParams.get('room') || '';
 	const password = urlParams.get('password') || 'false';
 	const label = urlParams.get('label') || 'spotify';
@@ -319,6 +434,7 @@ body {
 	const hideDevice = urlParams.has('hidedevice');
 	const hideStatus = urlParams.has('hidestatus');
 	const compact = urlParams.has('compact');
+	const showQueue = urlParams.has('showqueue');
 	const accent = urlParams.get('accent');
 	const theme = (urlParams.get('style') || urlParams.get('theme') || 'spotify').toLowerCase();
 	const tickerMode = theme === 'ticker' || urlParams.has('ticker');
@@ -333,7 +449,8 @@ body {
 		progressMs: 0,
 		durationMs: 0,
 		receivedAt: Date.now(),
-		device: null
+		device: null,
+		queue: []
 	};
 
 	const overlayEl = document.getElementById('overlay');
@@ -350,9 +467,11 @@ body {
 	const barEl = document.getElementById('bar');
 	const tickerLine = document.getElementById('tickerLine');
 	const tickerTrack = document.getElementById('tickerTrack');
+	const queueList = document.getElementById('queueList');
 	const ariaStatus = document.getElementById('ariaStatus');
 
 	document.body.classList.toggle('compact', compact);
+	document.body.classList.toggle('show-queue', showQueue);
 	document.body.classList.add(`theme-${theme}`);
 	if (accent) {
 		document.body.style.setProperty('--accent', accent);
@@ -366,6 +485,7 @@ body {
 	if (hideProgress) progressRow.style.display = 'none';
 	if (hideDevice) deviceEl.style.display = 'none';
 	if (hideStatus) statusEl.style.display = 'none';
+	queueList.hidden = !showQueue;
 
 	function formatMs(ms) {
 		if (!ms && ms !== 0) return '0:00';
@@ -393,6 +513,70 @@ body {
 		barEl.style.setProperty('--progress', `${pct}%`);
 		currentTimeEl.textContent = formatMs(clamped);
 		totalTimeEl.textContent = formatMs(durationMs);
+	}
+
+	function getRemainingTrackMs() {
+		if (!state.durationMs) return 0;
+		let elapsed = state.progressMs || 0;
+		if (state.status === 'playing' || state.isPlaying) {
+			elapsed += Date.now() - (state.receivedAt || Date.now());
+		}
+		return Math.max(0, state.durationMs - Math.min(state.durationMs, elapsed));
+	}
+
+	function updateQueueTimes() {
+		if (!showQueue) return;
+		const remainingMs = getRemainingTrackMs();
+		const timeEls = queueList.querySelectorAll('.queue-time');
+		Array.prototype.forEach.call(timeEls, function(timeEl) {
+			const offsetMs = parseInt(timeEl.getAttribute('data-offset-ms') || '0', 10) || 0;
+			timeEl.textContent = 'Starts in ' + formatMs(remainingMs + offsetMs);
+		});
+	}
+
+	function renderQueue() {
+		if (!showQueue) return;
+		queueList.textContent = '';
+		const queue = Array.isArray(state.queue) ? state.queue.slice(0, 5) : [];
+		queueList.hidden = queue.length === 0;
+		let offsetMs = 0;
+
+		queue.forEach(function(track) {
+			const row = document.createElement('div');
+			row.className = 'queue-row';
+
+			const art = document.createElement('img');
+			art.className = 'queue-art';
+			art.alt = '';
+			art.src = track.imageUrl || fallbackArt;
+
+			const details = document.createElement('div');
+			details.className = 'queue-details';
+			const title = document.createElement('div');
+			title.className = 'queue-title';
+			title.textContent = (track.name || 'Unknown track') + (track.artist ? ' - ' + track.artist : '');
+			details.appendChild(title);
+
+			if (track.requesterName && track.requesterName !== 'Unknown') {
+				const requester = document.createElement('div');
+				requester.className = 'queue-requester';
+				requester.textContent = 'Requested by ' + track.requesterName;
+				details.appendChild(requester);
+			}
+
+			const time = document.createElement('div');
+			time.className = 'queue-time';
+			time.setAttribute('data-offset-ms', String(offsetMs));
+
+			row.appendChild(art);
+			row.appendChild(details);
+			row.appendChild(time);
+			queueList.appendChild(row);
+
+			offsetMs += Math.max(0, Number(track.duration) || 0);
+		});
+
+		updateQueueTimes();
 	}
 
 	function render() {
@@ -451,10 +635,15 @@ body {
 		}
 
 		updateProgressBar();
+		renderQueue();
 		ariaStatus.textContent = `${track?.name || 'No track'} ${badge}`;
 	}
 
-	function processPayload(raw) {
+    var spotifyStateTracker = SSNOverlayControl.createStateTracker();
+	if (label === 'spotify') SSNOverlayControl.connect(urlParams, sessionId, "spotify", processPayload);
+function processPayload(raw) {
+    if (!SSNOverlayControl.accept(raw, "spotify")) return;
+    if (raw && raw.ssnState) { var transition = spotifyStateTracker(raw.ssnState); if (!transition.accept || !transition.changed) return; }
 		const payload = raw?.spotify || raw;
 		if (!payload || typeof payload !== 'object') return;
 
@@ -466,6 +655,8 @@ body {
 			progressMs: payload.progressMs || payload.progress || 0,
 			durationMs: payload.durationMs || payload.duration || payload.track?.duration || 0,
 			device: payload.device || null,
+			// Playback/error updates can be partial; only an explicit queue array replaces it.
+			queue: Array.isArray(payload.queue) ? payload.queue : state.queue,
 			receivedAt: payload.receivedAt || Date.now(),
 			message: payload.message || null
 		};
@@ -474,17 +665,19 @@ body {
 	}
 
 	// VDO Ninja bridge
-	const iframe = document.createElement('iframe');
-	iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=${encodeURIComponent(label)}&cleanoutput&room=${encodeURIComponent(sessionId)}`;
-	iframe.style.cssText = "width:0;height:0;border:0;position:absolute;left:-200px;top:-200px;";
-	document.body.appendChild(iframe);
+	if (!useServerOnlyTransport()) {
+		const iframe = document.createElement('iframe');
+		iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=${encodeURIComponent(label)}&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+		iframe.style.cssText = "width:0;height:0;border:0;position:absolute;left:-200px;top:-200px;";
+		document.body.appendChild(iframe);
 
-	window.addEventListener("message", (event) => {
-		if (event.source !== iframe.contentWindow) return;
-		if (event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja) {
-			processPayload(event.data.dataReceived.overlayNinja);
-		}
-	});
+		window.addEventListener("message", (event) => {
+			if (event.source !== iframe.contentWindow) return;
+			if (event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+				processPayload(event.data.dataReceived.overlayNinja);
+			}
+		});
+	}
 
 	// Optional websocket bridge (server/server2/server3)
 	function setupSocket(serverURL, outChan, inChan) {
@@ -523,11 +716,11 @@ body {
 	}
 
 	if (urlParams.has("server") || urlParams.has("localserver")) {
-		const serverURL = urlParams.get("server") || (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api");
+		const serverURL = urlParams.get("server") || (urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/api");
 		setupSocket(serverURL, outChannel, inChannel);
 	}
 	if (urlParams.has("server2") || urlParams.has("server3")) {
-		const serverURL = urlParams.get("server2") || urlParams.get("server3") || "wss://io.socialstream.ninja/extension";
+		const serverURL = urlParams.get("server2") || SocialStreamLocalServer.getRelayUrl(urlParams, "server3", "wss://io.socialstream.ninja/extension");
 		setupSocket(serverURL, outChannel, inChannel);
 	}
 
@@ -535,7 +728,10 @@ body {
 	render();
 
 	// Keep progress smooth while playing
-	setInterval(updateProgressBar, 500);
+	setInterval(function() {
+		updateProgressBar();
+		updateQueueTimes();
+	}, 500);
 })();
 	</script>
 </body>

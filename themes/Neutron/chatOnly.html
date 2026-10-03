@@ -8,6 +8,7 @@
 <link rel="stylesheet" type="text/css" href="./chatOnly.css">
 <!-- <link href='https://fonts.googleapis.com/css?family=Dekko' rel='stylesheet'> -->
 <link href="https://fonts.cdnfonts.com/css/minecraft-4" rel="stylesheet">
+
 <title>Some Title Here</title>
 </head>
 <body>
@@ -58,6 +59,15 @@
 	if (urlParams.has("showtime")){
 		params += "&showtime=" + urlParams.get("showtime");
 	}
+	var password = urlParams.get("password") || urlParams.get("pass") || urlParams.get("pw");
+	if (password){
+		params += "&password=" + encodeURIComponent(password);
+	}
+	["server", "server2", "server3", "localserver", "localserverport"].forEach(function(key){
+		if (!urlParams.has(key)) return;
+		var value = urlParams.get(key);
+		params += value ? "&" + key + "=" + encodeURIComponent(value) : "&" + key;
+	});
 
 	// --- Common overlay tweaks (shared across themes) ---
 	// hidebots is handled by the embedded dock.html, so pass it through
@@ -77,7 +87,7 @@
 		getById("iframeOverlay").src = `../../dock.html?session=${urlParams.get("session")}${params}`;
 	}
 
-	function formatClock(date) {
+		function formatClock(date) {
 		let hours = date.getHours();
 		const meridiem = hours >= 12 ? "PM" : "AM";
 		hours = hours % 12 || 12;
@@ -85,9 +95,9 @@
 		const seconds = String(date.getSeconds()).padStart(2, "0");
 		return `${meridiem} ${String(hours).padStart(2, "0")}:${minutes}:${seconds}`;
 	}
-
 	setInterval(function updateTime() {
-		getById("dateTime").innerText = formatClock(new Date());
+		const now = formatClock(new Date());
+		getById("dateTime").innerText = now;
 	}, 333);
 
 	</script>

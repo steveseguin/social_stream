@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="../../js/local-server-url.js"></script>
-<script src="../../shared/utils/chatHtml.js"></script>
-
+    <meta charset="UTF-8">
+    <meta name="description" content="Featured Message - Modern Styles: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
+    <meta name="robots" content="noindex">
 <script src="../../libs/objects.js"></script>
+<script src="../../shared/utils/chatHtml.js"></script>
 <script src="../../shared/utils/chatBadges.js"></script>
 <link rel="stylesheet" href="../../shared/utils/chatBadges.css">
-
+<script src="../../js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Featured Message - Modern Styles</title>
@@ -237,7 +238,7 @@
             line-height: 1.4;
             word-wrap: break-word;
         }
-        
+
         /* Inline images/SVGs in chat messages */
         .text img,
         .text svg {
@@ -250,7 +251,7 @@
             margin: 0 2px;
             display: inline-block;
         }
-        
+
         /* Emote-specific sizing */
         .text img.emote,
         .text svg.emote,
@@ -433,7 +434,7 @@
         .donation-info:empty {
             display: none;
         }
-        
+
         /* Ensure show state persists */
         .message-wrapper.show {
             opacity: 1 !important;
@@ -452,21 +453,23 @@
             .message {
                 padding: 16px;
             }
-            
+
             .avatar {
                 width: 48px;
                 height: 48px;
             }
-            
+
             .username {
                 font-size: 16px;
             }
-            
+
             .text {
                 font-size: 18px;
             }
         }
     </style>
+<link rel="stylesheet" href="../collections.css">
+<link rel="stylesheet" href="artwork.css">
 </head>
 <body>
     <div id="container">
@@ -485,6 +488,15 @@
         
         // Apply selected style
         document.body.className = `style-${style}`;
+        if (['cute', 'cozy', 'cats', 'music', 'arcade', 'slate', 'paper', 'micro'].indexOf(style) !== -1) {
+            document.body.classList.add('collection', 'collection-featured');
+        }
+
+        if (['art-cat', 'art-dog', 'art-halloween', 'art-christmas', 'art-music', 'art-forest', 'art-space', 'art-dragon'].indexOf(style) !== -1) {
+            document.body.classList.add('art-featured');
+        }
+
+        if (urlParams.has('staticart')) document.body.classList.add('static-art');
 
         // State
         let messageTimeout = null;
@@ -497,10 +509,10 @@
 
 			if (pseudodock) {
 				// Connect as dock to receive direct messages
-				iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
+				iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
 			} else {
 				// Standard overlay connection
-				iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
+				iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(password) + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
 			}
 			
 			iframe.style.width = "0px";
@@ -572,7 +584,7 @@
                 if (data.value) {
                     try {
                         const parsed = JSON.parse(data.value);
-                        if (parsed && "chatmessage" in parsed) {
+                        if (parsed && ("chatmessage" in parsed || "contentimg" in parsed)) {
                             showMessage(parsed);
                         }
                     } catch (e) {
@@ -583,14 +595,14 @@
                 }
             }
             // Direct message format
-            else if (data && "chatmessage" in data) {
+            else if (data && ("chatmessage" in data || "contentimg" in data)) {
                 showMessage(data);
             }
         }
 
         // Display message
         function showMessage(content) {
-            if (!content.chatmessage && !content.chatname) return;
+            if (!content.chatmessage && !content.chatname && !content.contentimg) return;
 
             hideMessage(() => {
                 const wrapper = document.createElement('div');
@@ -650,6 +662,7 @@
                 if (content.chatmessage) {
                     const text = document.createElement('div');
                     text.className = 'text';
+                    // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
                     if (content.textonly === true) text.textContent = content.chatmessage;
                     else text.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(content.chatmessage) : fallbackEscapeHtml(content.chatmessage));
                     if (content.textColor) {
@@ -708,9 +721,11 @@
 
                 // Auto-hide after showtime
                 if (messageTimeout) clearTimeout(messageTimeout);
-                messageTimeout = setTimeout(() => {
-                    hideMessage();
-                }, showtime);
+                if (showtime > 0) {
+                    messageTimeout = setTimeout(() => {
+                        hideMessage();
+                    }, showtime);
+                }
             });
         }
 

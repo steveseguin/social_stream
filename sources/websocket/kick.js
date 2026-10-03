@@ -426,6 +426,7 @@ const kickViewerHeartbeat = {
 };
 let pendingKickChatEchoSeq = 0;
 const pendingKickChatEchoes = [];
+const pendingKickMessages = new Set();
 
 const LITE_MESSAGE_PREFIX = 'kick-lite-';
 let liteBridgeCoreReady = false;
@@ -6648,6 +6649,7 @@ function shouldIgnoreBridgeChatEvent(packet) {
 }
 
 async function forwardChatMessage(evt, bridgeMeta) {
+    const pendingMessage = {};
     try {
         const payload = evt || {};
         const message = payload.message || payload.data?.message || payload.payload?.message || payload;
@@ -6679,6 +6681,9 @@ async function forwardChatMessage(evt, bridgeMeta) {
                 payload.username
             ]);
         const content = extractMessageContent(message) || extractMessageContent(payload) || '';
+        pendingMessage.id = resolvedId == null ? '' : String(resolvedId);
+        pendingMessage.chatname = chatname;
+        pendingKickMessages.add(pendingMessage);
         const badgeCandidates = collectBadgesFromSources(...profileSources);
         // Fresh identity selection/order takes precedence over cached profile badges.
         const hasFreshBadges = profileSources.some(source => source && [source.identity, source, source.profile, source.membership, source.subscription]
@@ -6737,6 +6742,7 @@ async function forwardChatMessage(evt, bridgeMeta) {
             payload.event_type ||
             'chat';
         resolvePendingKickChatEcho(resolvedId, content, rawEventType, ids);
+        if (pendingMessage.deleted) return;
         const chatmessageHtml = renderKickMessageHtml(message, content, payload);
         const membership = actorProfile.membership || pickFirstString(
             [
@@ -6848,6 +6854,8 @@ async function forwardChatMessage(evt, bridgeMeta) {
         appendChatFeedMessage(messagePayload, content);
     } catch (err) {
         console.error('Failed to handle Kick chat message', err);
+    } finally {
+        pendingKickMessages.delete(pendingMessage);
     }
 }
 
@@ -8794,6 +8802,11 @@ function pushMessage(data) {
 }
 
 function pushDeleteMessage(data) {
+    pendingKickMessages.forEach(function(message) {
+        if (data.id ? message.id === String(data.id) : !data.chatname || message.chatname === data.chatname) {
+            message.deleted = true;
+        }
+    });
     // Prefer direct Electron bridge when available.
     if (isElectronEnvironment() && window.ninjafy && window.ninjafy.sendMessage) {
         try {

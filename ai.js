@@ -34,13 +34,12 @@ let hostedLLMConfigCache = {
 const OPENCODE_ZEN_MODELS_URL = "https://opencode.ai/zen/v1/models";
 const OPENCODE_ZEN_CHAT_COMPLETIONS_ENDPOINT = "https://opencode.ai/zen/v1/chat/completions";
 const OPENCODE_ZEN_FREE_MODEL_ORDER = [
-    "big-pickle",
-    "deepseek-v4-flash-free",
+    "nemotron-3.5-lightning-free",
     "mimo-v2.5-free",
-    "qwen3.6-plus-free",
-    "minimax-m3-free",
+    "ling-3.0-flash-fin-free",
     "nemotron-3-ultra-free",
-    "nemotron-3-super-free"
+    "big-pickle",
+    "deepseek-v4-flash-free"
 ];
 const OPENCODE_ZEN_FREE_MODEL_COOLDOWN_MS = 60 * 60 * 1000;
 const OPENCODE_ZEN_MODEL_CACHE_MS = 60 * 60 * 1000;
@@ -64,6 +63,10 @@ class LLMServiceError extends Error {
         this.endpoint = details.endpoint || null;
         this.hint = details.hint || null;
         this.details = details.details || null;
+        this.requestId = details.requestId || null;
+        this.organization = details.organization || null;
+        this.project = details.project || null;
+        this.missingScope = details.missingScope || null;
         this.reported = false;
     }
 }
@@ -72,6 +75,11 @@ function getLLMHint(status, code, details = {}) {
     const provider = details.provider || '';
     const model = details.model || '';
     const message = String(details.message || '').toLowerCase();
+    const normalizedCode = String(code || '').toLowerCase();
+
+    if (provider === 'chatgpt' && (normalizedCode === 'missing_scope' || details.missingScope || message.includes('missing scope'))) {
+        return 'OpenAI rejected the credential\'s effective model-request permission. This is not a missing request field. Confirm this is a standard project API key and that your project role permits model requests. If a newly created unrestricted key still fails, test it directly against OpenAI and include the Request ID when contacting OpenAI support.';
+    }
 
     if (provider === 'hostedllm' && (message.includes('failed to fetch') || message.includes('networkerror') || message.includes('network error'))) {
         return 'The SSN hosted trial endpoint is unavailable from this browser. Try again later, use Ollama, or enter your own hosted token/endpoint.';
@@ -150,6 +158,35 @@ function createLLMError(baseDetails, extra = {}) {
     const err = new LLMServiceError(merged);
     reportLLMError(err);
     return err;
+}
+
+function getLLMResponseHeader(headers, name) {
+    if (!headers) return null;
+    if (typeof headers.get === 'function') {
+        return headers.get(name) || null;
+    }
+    const target = String(name || '').toLowerCase();
+    for (const key in headers) {
+        if (String(key).toLowerCase() === target) {
+            return headers[key] || null;
+        }
+    }
+    return null;
+}
+
+function getLLMResponseMetadata(headers, errorData) {
+    const errorPayload = errorData?.error && typeof errorData.error === 'object' ? errorData.error : errorData;
+    let missingScope = errorPayload?.missing_scope || errorPayload?.missingScope || null;
+    if (!missingScope && typeof errorPayload?.message === 'string') {
+        const match = errorPayload.message.match(/missing\s+scope\s*:\s*([a-zA-Z0-9._:-]+)/i);
+        if (match) missingScope = match[1].replace(/[.,;:]+$/, '');
+    }
+    return {
+        requestId: getLLMResponseHeader(headers, 'x-request-id'),
+        organization: getLLMResponseHeader(headers, 'openai-organization'),
+        project: getLLMResponseHeader(headers, 'openai-project'),
+        missingScope
+    };
 }
 
 function stripLLMReasoningOutput(response) {
@@ -387,19 +424,13 @@ function inferOpenCodeZenModelFreeFlag(modelId, entry = {}) {
         if (entry.meta && typeof entry.meta === "object" && typeof entry.meta.is_free === "boolean") {
             return entry.meta.is_free;
         }
-        const pricing = entry.pricing && typeof entry.pricing === "object" ? entry.pricing : null;
+        const pricing = entry.pricing;
         if (pricing) {
-            const pricingValues = [pricing.input, pricing.output, pricing.prompt, pricing.completion];
-            for (let i = 0; i < pricingValues.length; i++) {
-                const raw = pricingValues[i];
-                if (raw === undefined || raw === null) {
-                    continue;
-                }
-                const normalizedValue = String(raw).trim();
-                const parsed = Number(normalizedValue);
-                if (!Number.isNaN(parsed) && parsed <= 0) {
-                    return true;
-                }
+            const input = pricing.input !== undefined ? pricing.input : pricing.prompt;
+            const output = pricing.output !== undefined ? pricing.output : pricing.completion;
+            if (input !== undefined && input !== null && String(input).trim() !== '' &&
+                output !== undefined && output !== null && String(output).trim() !== '') {
+                return Number(input) === 0 && Number(output) === 0;
             }
         }
     }
@@ -431,24 +462,24 @@ function sortOpenCodeZenModels(modelIds) {
         const bOrder = Number.isFinite(openCodeZenModelApiOrder[String(b || "").toLowerCase()])
             ? openCodeZenModelApiOrder[String(b || "").toLowerCase()]
             : Number.MAX_SAFE_INTEGER;
-        if (aOrder !== bOrder) {
-            return aOrder - bOrder;
-        }
         if (aFree && bFree) {
             const rankDiff = getOpenCodeZenFreeModelRank(a) - getOpenCodeZenFreeModelRank(b);
             if (rankDiff) return rankDiff;
         }
+        if (aOrder !== bOrder) return aOrder - bOrder;
         return String(a).localeCompare(String(b));
     });
 }
 
 function isOpenCodeZenAutoModel(modelId) {
     const value = String(modelId || "").trim().toLowerCase();
-    return !value || value === "auto" || value === "free-auto";
+    return !value || value === "auto" || value === "free-auto" || value === "go-auto";
 }
 
 function isOpenCodeZenChatCompletionsModel(modelId) {
     const value = String(modelId || "").trim().toLowerCase();
+    if (value.indexOf('muse-') === 0 || value.indexOf('grok-') === 0) return false;
+    if (value.indexOf('go/') === 0) return ['go/glm-5.3-flash', 'go/mimo-v2.5', 'go/deepseek-v4-flash'].indexOf(value) !== -1;
     return isOpenCodeZenFreeModel(value) ||
         value === "big-pickle" ||
         value.indexOf("deepseek-") === 0 ||
@@ -462,6 +493,7 @@ function isOpenCodeZenChatCompletionsModel(modelId) {
 
 function getOpenCodeZenSelectedModel(llmSettings, modelOverride) {
     const override = String(modelOverride || "").trim();
+    if (override === "go-auto") return override;
     if (override && !isOpenCodeZenAutoModel(override)) {
         return override;
     }
@@ -471,6 +503,7 @@ function getOpenCodeZenSelectedModel(llmSettings, modelOverride) {
         llmSettings.opencodemodel?.textsetting ||
         ""
     ).trim();
+    if (saved === "go-auto") return saved;
     if (saved && !isOpenCodeZenAutoModel(saved)) {
         return saved;
     }
@@ -544,7 +577,7 @@ async function fetchOpenCodeZenModels(apiKey = "", force = false) {
         return openCodeZenModelCache.models.slice();
     }
 
-    const headers = { "Accept": "application/json" };
+    const headers = { "Accept": "application/json", "x-opencode-session": "ssn-model-discovery" };
     if (apiKey) {
         headers.Authorization = "Bearer " + apiKey;
     }
@@ -630,56 +663,46 @@ function isOpenCodeZenReasoningEffortUnsupported(error) {
     return /reasoning_effort|reasoning effort|unknown parameter|unsupported parameter|unrecognized parameter|extra field/.test(code + " " + message);
 }
 
-async function requestOpenCodeZenWithFallback(llmSettings, makeRequest) {
-    const triedModels = {};
-    let candidates = await getOpenCodeZenCandidateModels(llmSettings, false);
-    let lastError = null;
-
-    if (!candidates.length) {
-        candidates = await getOpenCodeZenCandidateModelsWithPaymentMode(llmSettings, true, false);
-        if (!candidates.length) {
-            throw createLLMError({
-                provider: "opencode",
-                endpoint: OPENCODE_ZEN_CHAT_COMPLETIONS_ENDPOINT
-            }, {
-                status: 429,
-                code: "opencode_no_models_available",
-                message: "No OpenCode Zen chat models are currently available."
-            });
+async function getOpenCodeGoFallbackModels(apiKey) {
+    const headers = { Accept: 'application/json', 'x-opencode-session': 'ssn-model-discovery' };
+    if (apiKey) headers.Authorization = 'Bearer ' + apiKey;
+    const allowed = ['glm-5.3-flash', 'mimo-v2.5', 'deepseek-v4-flash'];
+    try {
+        let payload;
+        const url = 'https://opencode.ai/zen/go/v1/models';
+        if (typeof ipcRenderer !== 'undefined' && typeof fetchNode !== 'undefined') {
+            const response = await fetchNode(url, headers, 'GET', null);
+            if (!response || response.status >= 400) throw new Error('Go catalog unavailable');
+            payload = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
+        } else {
+            const response = await fetch(url, { headers });
+            if (!response.ok) throw new Error('Go catalog unavailable');
+            payload = await response.json();
         }
+        const ids = (payload.data || []).map(function (entry) { return entry.id; });
+        return allowed.filter(function (id) { return ids.indexOf(id) !== -1; }).map(function (id) { return 'go/' + id; });
+    } catch (error) {
+        return allowed.map(function (id) { return 'go/' + id; });
     }
+}
 
-    while (candidates.length) {
-        const candidate = candidates.shift();
-        if (triedModels[candidate]) {
-            continue;
-        }
-        triedModels[candidate] = true;
+async function requestOpenCodeZenWithFallback(llmSettings, makeRequest, allowGo) {
+    const free = await getOpenCodeZenCandidateModels(llmSettings, true);
+    const go = allowGo ? await getOpenCodeGoFallbackModels(getOpenCodeZenApiKey(llmSettings)) : [];
+    const candidates = free.concat(go);
+    let lastError;
+    for (const candidate of candidates) {
         try {
             return await makeRequest(candidate);
         } catch (error) {
             lastError = error;
-            if (!shouldTryNextOpenCodeZenModel(error)) {
-                throw error;
-            }
-            if (isOpenCodeZenFreeModel(candidate)) {
-                markOpenCodeZenFreeModelCooldown(candidate);
-            }
-            candidates = await getOpenCodeZenCandidateModelsWithPaymentMode(llmSettings, true, false);
-            candidates = candidates.filter(function (modelId) {
-                return !triedModels[modelId];
-            });
-            console.warn("[OpenCode Zen] Model failed, trying next candidate:", candidate, error && error.message ? error.message : error);
+            if (!shouldTryNextOpenCodeZenModel(error) && !(allowGo && error.status === 401)) throw error;
+            if (isOpenCodeZenFreeModel(candidate)) markOpenCodeZenFreeModelCooldown(candidate);
+            console.warn('[OpenCode] Model failed:', candidate, error.message);
         }
     }
-
-    throw lastError || createLLMError({
-        provider: "opencode",
-        endpoint: OPENCODE_ZEN_CHAT_COMPLETIONS_ENDPOINT
-    }, {
-        status: 503,
-        code: "opencode_all_models_failed",
-        message: "All OpenCode Zen free fallback models failed."
+    throw lastError || createLLMError({ provider: 'opencode' }, {
+        status: 503, code: 'opencode_all_models_failed', message: 'No available OpenCode fallback models.'
     });
 }
 
@@ -1073,7 +1096,7 @@ let tmpModelFallback = "";
 let localBrowserLLMClient = null;
 let localBrowserActiveRequestState = null;
 let localBrowserLLMQueue = Promise.resolve();
-const LOCAL_BROWSER_WORKER_VERSION = '2';
+const LOCAL_BROWSER_WORKER_VERSION = '19';
 
 function getLocalBrowserWorkerPath() {
     if (typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
@@ -1144,6 +1167,71 @@ function normalizeLocalBrowserImage(image) {
     return '';
 }
 
+function extractImageString(image) {
+    if (!image) {
+        return '';
+    }
+    if (typeof image === 'string') {
+        return image.trim();
+    }
+    if (typeof image === 'object') {
+        if (typeof image.url === 'string') {
+            return image.url.trim();
+        }
+        if (typeof image.image_url === 'string') {
+            return image.image_url.trim();
+        }
+        if (image.image_url && typeof image.image_url.url === 'string') {
+            return image.image_url.url.trim();
+        }
+    }
+    return '';
+}
+
+function guessBase64ImageMimeType(base64) {
+    if (base64.startsWith('iVBOR')) return 'image/png';
+    if (base64.startsWith('R0lGOD')) return 'image/gif';
+    if (base64.startsWith('UklGR')) return 'image/webp';
+    return 'image/jpeg';
+}
+
+function normalizeImagesForOpenAI(images) {
+    return (Array.isArray(images) ? images : (images ? [images] : []))
+        .map(extractImageString)
+        .filter(Boolean)
+        .map(value => {
+            if (/^(data:|https?:\/\/)/i.test(value)) {
+                return value;
+            }
+            return `data:${guessBase64ImageMimeType(value)};base64,${value}`;
+        });
+}
+
+function normalizeImagesForOllama(images) {
+    return (Array.isArray(images) ? images : (images ? [images] : []))
+        .map(extractImageString)
+        .filter(value => value && !/^https?:\/\//i.test(value)) // Ollama only accepts base64 payloads
+        .map(value => {
+            const match = value.match(/^data:image\/[a-z0-9.+-]+;base64,/i);
+            return match ? value.slice(match[0].length) : value;
+        });
+}
+
+function supportsOpenAICompatibleImages(provider, model) {
+    const modelId = String(model || "");
+    switch (provider) {
+        case "deepseek":
+        case "bedrock":
+            return false;
+        case "xai":
+            return /grok-4|vision|image/i.test(modelId);
+        case "groq":
+            return /llama-4|vision|pixtral/i.test(modelId);
+        default:
+            return true;
+    }
+}
+
 function isLocalBrowserProvider(providerKey) {
     const catalog = getLocalBrowserCatalog();
     return !!(providerKey && catalog?.getLocalBrowserModelConfig?.(providerKey));
@@ -1155,7 +1243,7 @@ function getLocalBrowserProviderSettings(providerKey, llmSettings, modelOverride
         ? (catalog.getLocalBrowserModelConfig(providerKey) || {})
         : {};
     const fallbackHost = defaultConfig.remoteHost || catalog?.DEFAULT_REMOTE_HOST || 'https://largefiles.socialstream.ninja/';
-    const modelSettingKey = providerKey === 'localqwen' ? 'localqwenmodel' : 'localgemmamodel';
+    const modelSettingKey = providerKey.startsWith('localqwen') ? 'localqwenmodel' : 'localgemmamodel';
     const remoteHost = catalog?.normalizeRemoteHost
         ? catalog.normalizeRemoteHost(llmSettings.localgemmahost?.textsetting || fallbackHost)
         : String(llmSettings.localgemmahost?.textsetting || fallbackHost || '').trim().replace(/\/?$/, '/');
@@ -1205,7 +1293,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			model = model || llmSettings.ollamamodel?.textsetting || tmpModelFallback || null;
 			break;
 		case "localgemma":
-		case "localqwen": {
+		case "localqwen":
+		case "localqwen2b": {
 			const localBrowserSettings = getLocalBrowserProviderSettings(provider, llmSettings, model);
 			model = localBrowserSettings.modelId;
 			endpoint = localBrowserSettings.remoteHost;
@@ -1214,13 +1303,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		}
 		case "chatgpt":
 			endpoint = "https://api.openai.com/v1/chat/completions";
-			model = model || llmSettings.chatgptmodel?.textsetting || "gpt-4o-mini";
+			model = model || llmSettings.chatgptmodel?.textsetting || "gpt-5.4-mini";
 			apiKey = llmSettings.chatgptApiKey?.textsetting;
 			callback = null;
 			break;
 		case "deepseek":
-			endpoint = "https://api.deepseek.com/v1/chat/completions";
-			model = model || llmSettings.deepseekmodel?.textsetting || "deepseek-chat";
+			endpoint = "https://api.deepseek.com/chat/completions";
+			model = model || llmSettings.deepseekmodel?.textsetting || "deepseek-v4-flash";
 			apiKey = llmSettings.deepseekApiKey?.textsetting;
 			callback = null;
 			break;
@@ -1232,14 +1321,14 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			break;
 		case "xai":  // New case for Grok
 			endpoint = "https://api.x.ai/v1/chat/completions";
-			model = model || llmSettings.xaimodel?.textsetting || "grok-beta";  // Default to grok-beta
+			model = model || llmSettings.xaimodel?.textsetting || "grok-4.3";
 			apiKey = llmSettings.xaiApiKey?.textsetting;  // Requires an API key from xAI
 			// streamable = true;  // Grok supports streaming
 			callback = null;
 			break;
 		case "bedrock":
 			endpoint = `https://bedrock-runtime.${llmSettings.bedrockRegion?.textsetting || "us-east-1"}.amazonaws.com/model`;
-			model = model || llmSettings.bedrockmodel?.textsetting || "anthropic.claude-3-sonnet-20240229-v1:0";
+			model = model || llmSettings.bedrockmodel?.textsetting || "anthropic.claude-sonnet-5";
 			apiKey = llmSettings.bedrockAccessKey?.textsetting;
 			const secretKey = llmSettings.bedrockSecretKey?.textsetting;
 			const region = llmSettings.bedrockRegion?.textsetting || "us-east-1";
@@ -1247,13 +1336,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			break;
 		case "openrouter":
 			endpoint = "https://openrouter.ai/api/v1/chat/completions";
-			model = model || llmSettings.openroutermodel?.textsetting || "openai/gpt-4o";
+			model = model || llmSettings.openroutermodel?.textsetting || "openai/gpt-5.4-mini";
 			apiKey = llmSettings.openrouterApiKey?.textsetting;
 			callback = null;
 			break;
 		case "groq":
 			endpoint = "https://api.groq.com/openai/v1/chat/completions";
-			model = model || llmSettings.groqmodel?.textsetting || "llama-3.1-8b-instant";
+			model = model || llmSettings.groqmodel?.textsetting || "openai/gpt-oss-120b";
 			apiKey = llmSettings.groqApiKey?.textsetting;
 			break;
 		case "opencode":
@@ -1419,11 +1508,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
             const result = await client.generate(provider, {
                 prompt,
                 systemPrompt: typeof options.systemPrompt === 'string' ? options.systemPrompt : '',
-                maxNewTokens: Number.isFinite(localBrowserGeneration.maxNewTokens) ? localBrowserGeneration.maxNewTokens : 220,
-                temperature: Number.isFinite(localBrowserGeneration.temperature) ? localBrowserGeneration.temperature : 0.65,
-                topP: Number.isFinite(localBrowserGeneration.topP) ? localBrowserGeneration.topP : 0.92,
+                ...(Number.isFinite(localBrowserGeneration.maxNewTokens) ? { maxNewTokens: localBrowserGeneration.maxNewTokens } : {}),
+                ...(Number.isFinite(localBrowserGeneration.temperature) ? { temperature: localBrowserGeneration.temperature } : {}),
+                ...(Number.isFinite(localBrowserGeneration.topP) ? { topP: localBrowserGeneration.topP } : {}),
+                ...(Number.isFinite(localBrowserGeneration.topK) ? { topK: localBrowserGeneration.topK } : {}),
                 images: requestImages,
-                stateless: localBrowserStateless
+                stateless: localBrowserStateless,
+                moderation: provider === 'localqwen' && options.localBrowserModeration === true
             }, {
                 modelOverride: model,
                 remoteHost: endpoint
@@ -1583,7 +1674,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 				'bedrock'
 			);
 			
-			if (typeof ipcRenderer !== 'undefined') {
+			if (typeof ipcRenderer !== 'undefined' && !options.strictEndpoint) {
 				const response = await fetchNode(bedrockEndpoint, signedHeaders, 'POST', requestBody);
 				
 				if (response.status !== 200) {
@@ -1620,6 +1711,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 					method: 'POST',
 					headers: signedHeaders,
 					body: JSON.stringify(requestBody),
+					redirect: options.strictEndpoint ? 'error' : 'follow',
+					credentials: options.strictEndpoint ? 'omit' : 'same-origin',
 					signal: abortController?.signal
 				});
 				
@@ -1661,18 +1754,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		}
     // Replace the else block in callLLMAPI with:
 	} else { // non-Ollama Request, but rather ChatGPT compatible APIs
-		const normalizedImages = (Array.isArray(images) ? images : (images ? [images] : []))
-			.map(img => {
-				if (!img) return null;
-				if (typeof img === 'string') return img.trim();
-				if (typeof img === 'object') {
-					if (typeof img.image_url === 'string') return img.image_url.trim();
-					if (img.image_url && typeof img.image_url.url === 'string') return img.image_url.url.trim();
-					if (typeof img.url === 'string') return img.url.trim();
-				}
-				return null;
-			})
-			.filter(Boolean);
+		const normalizedImages = supportsOpenAICompatibleImages(provider, model) ? normalizeImagesForOpenAI(images) : [];
 
 		const userContent = normalizedImages.length
 			? [{ type: "text", text: prompt }].concat(
@@ -1736,14 +1818,27 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			openCodeZenReasoningEffortEnabled = true;
 		}
 
+        const openCodeAllowGo = provider === 'opencode' && message.model === 'go-auto';
+        if (provider === 'opencode') {
+            const sessionSource = String(options.sessionId || UUID || Array.from(crypto.getRandomValues(new Uint8Array(16))).join('-'));
+            const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(sessionSource));
+            headers['x-opencode-session'] = 'ssn-' + Array.from(new Uint8Array(hash)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+            if (typeof ipcRenderer !== 'undefined') headers['User-Agent'] = 'social-stream-ninja/1.0';
+        }
+
 		const makeOpenAICompatibleRequest = async function (currentModel) {
 			if (typeof currentModel === "string" && currentModel.trim()) {
 				model = currentModel.trim();
 				message.model = model;
+                if (provider === 'opencode') {
+                    const useGo = model.indexOf('go/') === 0;
+                    endpoint = useGo ? 'https://opencode.ai/zen/go/v1/chat/completions' : OPENCODE_ZEN_CHAT_COMPLETIONS_ENDPOINT;
+                    message.model = useGo ? model.slice(3) : model;
+                }
 			}
 
 		try {
-			if (typeof ipcRenderer !== 'undefined') {
+			if (typeof ipcRenderer !== 'undefined' && !options.strictEndpoint) {
 				if (callback) {
 					return new Promise((resolve, reject) => {
 						const channelId = `streaming-nodepost-${Date.now()}`;
@@ -1757,11 +1852,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 								streamProcessor.flush();
 								resolve(stripLLMReasoningOutput(fullResponse));
 							} else if (typeof chunk === 'object' && chunk.error) {
+								const responseMetadata = getLLMResponseMetadata(chunk.headers, chunk);
 								const err = createLLMError(buildContext(), {
 									status: chunk.status || chunk.error?.status || null,
 									code: chunk.code || chunk.error?.code || null,
 									message: chunk.message || chunk.error?.message || 'Streaming response returned an error.',
-									details: chunk
+									details: chunk,
+									...responseMetadata
 								});
 								reject(err);
 							} else {
@@ -1773,7 +1870,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 							channelId,
 							url: endpoint,
 							body: message,
-							headers
+							headers,
+							diagnostics: { kind: 'llm', provider, model: message.model }
 						});
 
 						if (abortController) {
@@ -1783,7 +1881,12 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						}
 					});
 				} else {
-					const response = await fetchNode(endpoint, headers, 'POST', message);
+					const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
+					const response = await electronFetch(endpoint, headers, 'POST', message, {
+						kind: 'llm',
+						provider,
+						model: message.model
+					}, options.requestTimeoutMs);
 					
 					if (response.status !== 200) {
 						let errorMessage = '';
@@ -1794,11 +1897,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						} catch(e) {
 							errorMessage = `HTTP error! status: ${response.status}`;
 						}
+						const responseMetadata = getLLMResponseMetadata(response.headers, errorData);
 						throw createLLMError(buildContext(), {
 							status: response.status,
 							code: errorData?.error?.code || errorData?.error?.type || errorData?.code || null,
 							message: errorMessage,
-							details: errorData || response.data
+							details: errorData || response.data,
+							...responseMetadata
 						});
 					}
 
@@ -1811,6 +1916,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						method: 'POST',
 						headers,
 						body: JSON.stringify(message),
+						redirect: options.strictEndpoint ? 'error' : 'follow',
+						credentials: options.strictEndpoint ? 'omit' : 'same-origin',
 						signal: abortController?.signal
 					});
 
@@ -1823,11 +1930,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						} catch(e) {
 							// ignore parse issue; keep default message
 						}
+						const responseMetadata = getLLMResponseMetadata(response.headers, errorPayload);
 						throw createLLMError(buildContext(), {
 							status: response.status,
 							code: errorPayload?.error?.code || errorPayload?.error?.type || errorPayload?.code || null,
 							message: errorMessage,
-							details: errorPayload
+							details: errorPayload,
+							...responseMetadata
 						});
 					}
 
@@ -1857,6 +1966,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						method: 'POST',
 						headers,
 						body: JSON.stringify(message),
+						redirect: options.strictEndpoint ? 'error' : 'follow',
+						credentials: options.strictEndpoint ? 'omit' : 'same-origin',
 						signal: abortController?.signal
 					});
 
@@ -1869,11 +1980,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 						} catch(e) {
 							errorMessage = `HTTP error! status: ${response.status}`;
 						}
+						const responseMetadata = getLLMResponseMetadata(response.headers, errorData);
 						throw createLLMError(buildContext(), {
 							status: response.status,
 							code: errorData?.error?.code || errorData?.error?.type || errorData?.code || null,
 							message: errorMessage,
-							details: errorData
+							details: errorData,
+							...responseMetadata
 						});
 					}
 
@@ -1896,7 +2009,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		};
 
 		if (provider === "opencode" && isOpenCodeZenAutoModel(message.model)) {
-			return requestOpenCodeZenWithFallback(llmSettings, makeOpenAICompatibleRequest);
+			return requestOpenCodeZenWithFallback(options.strictEndpoint ? { ...llmSettings, opencodeApiKey: { textsetting: '' } } : llmSettings, makeOpenAICompatibleRequest, openCodeAllowGo);
 		}
 
 		return makeOpenAICompatibleRequest(message.model);
@@ -1904,6 +2017,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 
     async function makeRequestToOllama(currentModel) {  // ollama only api
         const isStreaming = callback !== null;
+        const ollamaImages = normalizeImagesForOllama(images);
         let fullResponse = '';
         let responseComplete = false;
 
@@ -1920,7 +2034,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 
             let response;
 			let responseComplete;
-            if (typeof ipcRenderer !== 'undefined') {  // ollama still
+            if (typeof ipcRenderer !== 'undefined' && !options.strictEndpoint) {  // ollama still
                 // Your existing Electron implementation
                 if (isStreaming) {
                     response = await new Promise((resolve, reject) => {
@@ -1946,8 +2060,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 							keep_alive: llmSettings.ollamaKeepAlive ?  parseInt(llmSettings.ollamaKeepAlive.numbersetting)+"m" : "5m"
                         };
                         
-                        if (images){
-                            message.images = images;
+                        if (ollamaImages.length){
+                            message.images = ollamaImages;
                         }
 
                         ipcRenderer.send('streaming-nodepost', {
@@ -1973,8 +2087,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                         stream: false
                     };
                     
-                    if (images){
-                        message.images = images;
+                    if (ollamaImages.length){
+                        message.images = ollamaImages;
                     }
                     
                     response = fetchNode(`${endpoint}/api/generate`, {
@@ -2005,8 +2119,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 					keep_alive: llmSettings.ollamaKeepAlive ?  parseInt(llmSettings.ollamaKeepAlive.numbersetting)+"m" : "5m"
                 };
                 
-                if (images){
-                    message.images = images;
+                if (ollamaImages.length){
+                    message.images = ollamaImages;
                 }
                 
                 response = await fetch(`${endpoint}/api/generate`, {
@@ -2015,6 +2129,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify(message),
+                    redirect: options.strictEndpoint ? 'error' : 'follow',
+                    credentials: options.strictEndpoint ? 'omit' : 'same-origin',
                     signal: abortController ? abortController.signal : undefined,
                 });
 
@@ -2158,8 +2274,13 @@ function getActiveCensorProviderKey() {
     return settings?.aiProvider?.optionsetting || "ollama";
 }
 
+function getAiSettingFlag(settingKey) {
+    const entry = settings && settings[settingKey];
+    return entry === true || !!(entry && typeof entry === "object" && entry.setting === true);
+}
+
 function shouldUseBinaryCensorPrompt(providerKey) {
-    return providerKey === "localqwen";
+    return providerKey.startsWith("localqwen");
 }
 
 function buildCensorContextEntry(data, cleanedText) {
@@ -2399,7 +2520,7 @@ async function censorMessageWithLLM(data) {
 
     if (compactProfanityCandidate) {
         rememberCensorContextMessage(data, cleanedText, true);
-        if (getSettingFlag("ollamaCensorBotBlockMode")) {
+        if (getAiSettingFlag("ollamaCensorBotBlockMode")) {
             return false;
         } else if (isExtensionOn) {
             sendToDestinations({ delete: data });
@@ -2433,6 +2554,7 @@ async function censorMessageWithLLM(data) {
             null,
             {
                 localBrowserStateless: isLocalBrowserProvider(providerKey),
+                localBrowserModeration: providerKey === 'localqwen',
                 localBrowserGeneration: shouldUseBinaryCensorPrompt(providerKey)
                     ? { maxNewTokens: 8, temperature: 0.15, topP: 0.9 }
                     : null
@@ -2444,7 +2566,7 @@ async function censorMessageWithLLM(data) {
 
         if (decision.blocked) {
             rememberCensorContextMessage(data, cleanedText, true);
-            if (getSettingFlag("ollamaCensorBotBlockMode")) {
+            if (getAiSettingFlag("ollamaCensorBotBlockMode")) {
                 return false;
             } else if (isExtensionOn) {
                 sendToDestinations({ delete: data });
@@ -2690,7 +2812,7 @@ function getAITranslateCacheKey(targetLanguage, text) {
 }
 
 function getCachedAITranslation(targetLanguage, text) {
-    if (getSettingFlag("aiAutoTranslateContext")) {
+    if (getAiSettingFlag("aiAutoTranslateContext")) {
         return null;
     }
     const normalizedText = String(text || "").trim();
@@ -2702,7 +2824,7 @@ function getCachedAITranslation(targetLanguage, text) {
 }
 
 function setCachedAITranslation(targetLanguage, text, translatedText) {
-    if (getSettingFlag("aiAutoTranslateContext")) {
+    if (getAiSettingFlag("aiAutoTranslateContext")) {
         return;
     }
     const normalizedText = String(text || "").trim();
@@ -2732,7 +2854,7 @@ function stripAITranslateHtmlToText(value, textonly) {
 }
 
 async function getAITranslateContextLines(limit = 10) {
-    if (!getSettingFlag("aiAutoTranslateContext") || typeof messageStoreDB === "undefined" || !messageStoreDB?.getRecentMessages) {
+    if (!getAiSettingFlag("aiAutoTranslateContext") || typeof messageStoreDB === "undefined" || !messageStoreDB?.getRecentMessages) {
         return [];
     }
     try {
@@ -2937,7 +3059,7 @@ function ensureAITranslateMeta(data) {
 
 async function translateMessageWithLLM(data, options = {}) {
     const enabledSetting = options.enabledSetting || "aiAutoTranslate";
-    if (!getSettingFlag(enabledSetting) || !data || data.bot || !data.chatmessage) {
+    if (!getAiSettingFlag(enabledSetting) || !data || data.bot || !data.chatmessage) {
         return true;
     }
 
@@ -2948,7 +3070,7 @@ async function translateMessageWithLLM(data, options = {}) {
         return true;
     }
 
-    const blockOnBusy = options.blockOnFailure === true || getSettingFlag("aiAutoTranslateBlockMode");
+    const blockOnBusy = options.blockOnFailure === true || getAiSettingFlag("aiAutoTranslateBlockMode");
     const availableSlot = aiTranslateProcessingSlots.findIndex(function (slot) { return !slot; });
     if (availableSlot === -1) {
         return blockOnBusy ? false : true;
@@ -3168,7 +3290,7 @@ function queueOutgoingTranslation(data, originalResponse) {
 }
 
 async function translateOutgoingMessageWithLLM(data) {
-    if (!getSettingFlag("aiAutoTranslateOutgoing") || !data || typeof data.response !== "string" || !data.response.trim()) {
+    if (!getAiSettingFlag("aiAutoTranslateOutgoing") || !data || typeof data.response !== "string" || !data.response.trim()) {
         return true;
     }
 
@@ -3358,7 +3480,7 @@ function inferAiOverlayEmotion(text) {
 }
 
 function sendChatBotAiOverlay(text, data, botname, source = "chatbot") {
-    if (!getSettingFlag("aiOverlayFromChatBot") || typeof sendAiOverlayCommand !== "function") {
+    if (!getAiSettingFlag("aiOverlayFromChatBot") || typeof sendAiOverlayCommand !== "function") {
         return;
     }
     const responseText = String(text || "").trim();
@@ -3373,7 +3495,7 @@ function sendChatBotAiOverlay(text, data, botname, source = "chatbot") {
             source,
             emotion: inferAiOverlayEmotion(responseText),
             talking: true,
-            tts: getSettingFlag("aiOverlayTts")
+            tts: getAiSettingFlag("aiOverlayTts")
         }
     }, {
         target: settings?.aiOverlayLabel?.textsetting || "",
@@ -3421,6 +3543,8 @@ async function processSummary(data){
 		
 		sendTargetP2P({
 			chatmessage: summary,
+			// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
+			textonly: true,
 			chatname: botname,
 			chatimg: "./icons/bot.png",
 			type: "socialstream",
@@ -3444,10 +3568,13 @@ async function processSummary(data){
 }
 
 async function processMessageWithOllama(data, idx=null) { 
-  if (!data.tid) return;
-  
+  const botOverlayOnly = Boolean(settings.ollamaoverlayonly || data?.privateBotPrompt);
+  // API messages have no source tab. Only accept them when replies stay on overlays;
+  // platform/account-role routing still requires the original source destination.
+  if (!data || (!data.tid && !botOverlayOnly)) return;
+
   const currentTime = Date.now();
-  if (!reserveBotResponseSlot(data)) return;
+  if (!reserveBotResponseSlot(data)) return false;
   
   //console.log("starting processing");
   try {
@@ -3462,7 +3589,7 @@ async function processMessageWithOllama(data, idx=null) {
       ollamaRateLimitPerTab = Math.max(0, parseInt(settings.ollamaRateLimitPerTab.numbersetting) || 0);
     }
 
-    if (data.type !== "stageten" && !settings.ollamaoverlayonly && data.tid && lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
+    if (data.type !== "stageten" && !botOverlayOnly && data.tid && lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
       const waitMs = Math.max(0, ollamaRateLimitPerTab - (currentTime - lastResponseTime[data.tid]));
       noteChatBotDecision('rate-limited', data, { waitMs });
       return;
@@ -3497,7 +3624,7 @@ async function processMessageWithOllama(data, idx=null) {
     }
 
     // Trigger words check
-    if (settings.bottriggerwords?.textsetting.trim()) { // bottriggerwords
+    if (!data?.privateBotPrompt && settings.bottriggerwords?.textsetting.trim()) { // bottriggerwords
       if (!checkTriggerWords(settings.bottriggerwords.textsetting, data.chatmessage)) {
         noteChatBotDecision('missing-trigger', data);
         return;
@@ -3532,7 +3659,7 @@ async function processMessageWithOllama(data, idx=null) {
       }
     }
 
-    if (!allowHostReflectionResponse) {
+    if (!allowHostReflectionResponse && !data?.privateBotPrompt) {
       const score = fastMessageSimilarity(cleanedText, lastSentMessage);
       if (score > 0.5) {
         noteChatBotDecision('too-similar-to-last-reply', data);
@@ -3553,15 +3680,19 @@ async function processMessageWithOllama(data, idx=null) {
 	let shouldSendResponse = false;
 	if (response && typeof response === 'string') {
 	  const lowerResponse = response.toLowerCase();
-	  shouldSendResponse = (
-	    !response.includes("@@@@@") &&
-	    !lowerResponse.startsWith("not available") &&
-	    (settings.alwaysRespondLLM || (
-	      !response.includes("NO_RESPONSE") &&
-	      !response.startsWith("No ") &&
-	      !response.startsWith("NO ")
-	    ))
-	  );
+	  if (data?.privateBotPrompt) {
+		shouldSendResponse = !response.includes("@@@@@") && !lowerResponse.includes("no_response") && !lowerResponse.startsWith("not available");
+	  } else {
+		shouldSendResponse = (
+		  !response.includes("@@@@@") &&
+		  !lowerResponse.startsWith("not available") &&
+		  (settings.alwaysRespondLLM || (
+			!response.includes("NO_RESPONSE") &&
+			!response.startsWith("No ") &&
+			!response.startsWith("NO ")
+		  ))
+		);
+	  }
 	}
 	//console.log(response);
 
@@ -3575,6 +3706,8 @@ async function processMessageWithOllama(data, idx=null) {
 	  // Send to overlay if enabled
 	  sendTargetP2P({
 		chatmessage: response,
+		// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
+		textonly: true,
         chatname: botname,
         chatimg: "./icons/bot.png",
         type: "socialstream",
@@ -3590,7 +3723,7 @@ async function processMessageWithOllama(data, idx=null) {
       // }
 
       // Send to tabs if not overlay-only
-      if (!settings.ollamaoverlayonly) {
+      if (!botOverlayOnly) {
         const msg = {
           tid: data.tid,
           response: settings.noollamabotname ? response.trim() : (botname + ": " + response.trim()),
@@ -3623,8 +3756,15 @@ async function processMessageWithOllama(data, idx=null) {
 	  }
     }
 
+	if (data?.privateBotPrompt) {
+	  return shouldSendResponse ? true : null;
+	}
+
   } catch (error) {
     console.warn("Error processing message:", error);
+	if (data?.privateBotPrompt) {
+	  return null;
+	}
   } finally {
     releaseBotResponseSlot();
   }
@@ -3633,17 +3773,20 @@ async function processMessageWithOllama(data, idx=null) {
 async function processUserInput(userInput, data, additionalInstructions, botname) {
   try {
     additionalInstructions = resolveChatbotPromptVariables(additionalInstructions || '');
+	const privateBotPrompt = Boolean(data?.privateBotPrompt);
 
     // Build base prompt with context
-    let promptBase = `${additionalInstructions || ''}\n\nYou are an AI chat assistant and a participant in a live group chat room.`;
+	let promptBase = privateBotPrompt
+		? `${additionalInstructions || ''}\n\nYou are an AI assistant responding directly to a private request from the host. The host deliberately addressed this request to you, so answer it directly and succinctly.`
+		: `${additionalInstructions || ''}\n\nYou are an AI chat assistant and a participant in a live group chat room.`;
 	
 	let botname = "Bot";
     if (settings.ollamabotname?.textsetting) {
 		botname = settings.ollamabotname.textsetting.trim();
     }
-	if (botname){
+	if (!privateBotPrompt && botname){
 		promptBase += `\n\nYour name in the group chat is: ${botname}.\n\nSpeak only when important or when spoken directly to by name.`;
-	} else {
+	} else if (!privateBotPrompt) {
 		promptBase += `\n\nSpeak only when it's exceedingly helpful to be doing so.`;
 	}
 	
@@ -3668,9 +3811,13 @@ async function processUserInput(userInput, data, additionalInstructions, botname
 			promptBase += `\n\nPrevious messages from ${data.chatname} via ${data.type} chat:\n ${context.userHistory}`;
 		}
 		
-		promptBase += `\n\nCurrent message from ${data.chatname}: ${userInput}`;
+		promptBase += privateBotPrompt
+			? `\n\nCurrent private request from ${data.chatname}: ${userInput}`
+			: `\n\nCurrent message from ${data.chatname}: ${userInput}`;
 	} else {
-		promptBase += `\n\nCurrent group chat message from ${data.chatname}: ${userInput}`;
+		promptBase += privateBotPrompt
+			? `\n\nCurrent private request from ${data.chatname}: ${userInput}`
+			: `\n\nCurrent group chat message from ${data.chatname}: ${userInput}`;
 	}
 
     // Add current message
@@ -3719,7 +3866,9 @@ Prefer this exact format:
 	if (settings.ollamabotname?.textsetting) {
 		debugmode = settings.ollamabotname?.textsetting == "Tommas" ? true : false;
 	}
-	if (debugmode){
+	if (privateBotPrompt) {
+		promptBase += '\n\nAnswer the current private request directly. Do not decline merely because the host did not address you by name.';
+	} else if (debugmode){
 		if (!settings.nollmcontext){
 			promptBase += '\n\nRespond conversationally to the current message, if appropriate, doing so directly and succinctly, or instead reply with NO_RESPONSE, followed by stating why no response is needed.';
 		} else {
@@ -3746,7 +3895,11 @@ Prefer this exact format:
 		response = response.replace(botname+":","").trim();
 	}
 	
-    if (!response || response.toLowerCase().includes('no_response') || response.toLowerCase().startsWith('no ') || response.toLowerCase().startsWith('@@@@')) {
+	const lowerResponse = response ? response.toLowerCase() : '';
+    if (!response || lowerResponse.includes('no_response') || (!privateBotPrompt && lowerResponse.startsWith('no ')) || lowerResponse.startsWith('@@@@')) {
+		if (privateBotPrompt) {
+			return false;
+		}
 		if (settings.alwaysRespondLLM && (response && !response.toLowerCase().startsWith('@@@@'))){
 			return response;
 		}

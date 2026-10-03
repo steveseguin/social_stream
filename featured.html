@@ -1,13 +1,16 @@
 <html lang="en" style="font-size: 10px; font-family: Roboto, Arial, sans-serif">
 	<head>
-  <script type="text/javascript" src="./js/local-server-url.js"></script>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta name="description" content="Overlay. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
 <script src="./libs/objects.js"></script>
-<script src="./shared/utils/chatHtml.js"></script>
 <script src="./shared/utils/chatBadges.js"></script>
+<script src="./shared/utils/chatHtml.js"></script>
 <link rel="stylesheet" href="./shared/utils/chatBadges.css">
-
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
+  <script type="text/javascript" src="./js/transport-dedupe.js"></script>
+  <script src="./shared/utils/contentImage.js"></script>
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+
 		<meta content="utf-8" http-equiv="encoding" />
 		<title>Social Stream - Overlay</title>
 		<meta name="title" content="Social Stream - Overlay" />
@@ -38,7 +41,7 @@
 				--donation-gradient-stop2: #b38728;
 				--donation-label-color: #fff;
 				--donation-shadow-color: #fff;
-				
+
 				--image-content-max-height: 300px;
 				--shown-comment-bg-color: #555555;
 				--highlighted-comment-bg-color: #f0f07d;
@@ -157,7 +160,7 @@
 			#tooltip {
 				display: none;
 			}
-			
+
 			svg.regular-emote, img.regular-emote {
 				margin: auto 0;
 			}
@@ -171,11 +174,29 @@
 				margin: 0 !important;
 				z-index: 4;
 			}
+			body.square-source-icons .sourcetype[data-icon-name] {
+				border-radius: 0;
+				clip-path: inset(14.65%);
+				transform: scale(1.4142);
+			}
 			.dono .sourcetype {
 				max-width: 32px !important;
 				max-height: 32px !important;
 				left: 122px;
 				top: calc(var(--author-avatar-size) - 47px);
+			}
+			.sourcetype.channel-source-icon.large-channel-icon {
+				max-width: 56px !important;
+				max-height: 56px !important;
+				left: 66px;
+				top: calc(var(--author-avatar-size) - 42px);
+			}
+			.channel-source-name {
+				font-size: 0.55em;
+				font-weight: 600;
+				margin-left: 10px;
+				opacity: 0.8;
+				white-space: nowrap;
 			}
 
 			.noavatar-source {
@@ -419,8 +440,8 @@
 				z-index: 1;
 				margin: auto auto;
 			}
-			
-			
+
+
 			.hl-message img+img, .hl-message img+svg, .hl-message svg+img, .hl-message svg+svg {
 				margin: auto 0px;
 			}
@@ -438,14 +459,14 @@
 				height: max(100%, 200px);
 				overflow: hidden;
 			}
-			
+
 			.largeImage {
 				padding:0;
 				left:120px;
 				background-color:unset;
 				box-shadow: unset;
 			}
-			
+
 			.largeImage>img, .largeImage>video {
 				max-width: calc(100vw - 200px);
 				max-height: 240px;
@@ -540,11 +561,11 @@
 			}
 
 			.youtubedonation.donation-title {
-			
+
 			}
 
 			.membership.donation-title {
-			
+
 			}
 			.subtitle {
 				font-size: 18px;
@@ -555,7 +576,7 @@
 				padding: 3px 0 5px;
 				color: #2d2108;
 			}
-			
+
 			.donation::after {
 				content: "";
 				position: absolute;
@@ -657,19 +678,19 @@
 				right: 100px;
 				left: unset;
 			}
-			
+
 			.alignright .sourcetype {
 				right: 100px;
 				left: unset;
 			}
-			
+
 			.alignright .dono .sourcetype {
 				right: 122px;
 				left: unset;
 			}
-			
-			
-			
+
+
+
 		.emote-container {
 		  display: inline-grid;
 		  grid-template-columns: 1fr;
@@ -700,7 +721,7 @@
 		.zero-width-emote-centered {
 		  vertical-align: top;
 		}
-		
+
 
 		.hl-c-cont.highlight-chat.stacked {
 			width: fit-content;  /* Allow container to shrink to content */
@@ -740,7 +761,7 @@
 			margin-left: auto;
 			margin-right: 15px;
 		}
-		
+
 		/* Styles for when avatar is hidden */
 		.no-avatar-donation {
 		  position: relative;
@@ -818,6 +839,13 @@
 		  margin-left: 5px !important;
 		  vertical-align: middle;
 		}
+		.no-avatar .sourcetype.channel-source-icon.large-channel-icon {
+		  position: relative;
+		  top: auto;
+		  left: auto;
+		  max-width: 60px !important;
+		  max-height: 60px !important;
+		}
 
 		/* When stacked with no avatar */
 		.stacked.no-avatar .hl-name {
@@ -880,19 +908,25 @@
 		  font-weight: bold;
 		  border-radius: 0;
 		}
-		
+
 		.donation.membership .subtitle {
 			font-size: 16px;
 			line-height: 1.1;
 		}
-		
-		
+
+
 
 		.no-avatar .donation::after {
 		  display: none;
 		}
-		</style>
-	</head>
+			span.hl-badge svg {
+				width: 100% !important;
+				height: 100% !important;
+				max-width: 100% !important;
+				max-height: 100% !important;
+			}
+</style>
+</head>
 	<body>
 		<div id="output" class="output"></div>
 		<audio id="testtone" style="display: none" preload="metadata">
@@ -967,12 +1001,18 @@
 					.replace(/'/g, "&#039;");
 			}
 
-			function plainTextToHtml(value) {
-				return escapeHtml(value == null ? "" : value);
-			}
-
 			function escapeAttributeValue(value) {
 				return escapeHtml(value == null ? "" : String(value));
+			}
+
+			
+
+			
+
+			
+
+			function plainTextToHtml(value) {
+				return escapeHtml(value == null ? "" : value);
 			}
 
 			async function fetchWithTimeout(URL, timeout = 8000) {
@@ -1383,6 +1423,8 @@
 
 			var nextComment = null;
 			var roomID = "test";
+			var applyCustomFeatureActions = false;
+
 			if (urlParams.has("session")) {
 				roomID = urlParams.get("session");
 			} else if (urlParams.has("s")) {
@@ -1427,6 +1469,8 @@
 			if (urlParams.has("branded")) {
 				customSource = true;
 			}
+			var largeChannelIcon = urlParams.has("largechannelicon");
+			var showChannelName = urlParams.has("showchannelname");
 			
 			var fontfit = false;
 			if (urlParams.has("fontfit")) {
@@ -1441,6 +1485,39 @@
 			var stripLinks = false;
 			if (urlParams.has("striplinks")) {
 				stripLinks = true;
+			}
+
+			var allowBotLinks = false;
+			if (urlParams.has("allowbotlinks")) {
+				allowBotLinks = true;
+			}
+
+			var allowHostLinks = false;
+			if (urlParams.has("allowhostlinks")) {
+				allowHostLinks = true;
+			}
+
+			var allowModLinks = false;
+			if (urlParams.has("allowmodlinks")) {
+				allowModLinks = true;
+			}
+
+			var allowVipLinks = false;
+			if (urlParams.has("allowviplinks")) {
+				allowVipLinks = true;
+			}
+
+			function shouldStripLinksForMessage(data) {
+				if (!stripLinks) {
+					return false;
+				}
+				if (!data) {
+					return true;
+				}
+				if ((allowBotLinks && data.bot) || (allowHostLinks && data.host) || (allowModLinks && data.mod) || (allowVipLinks && data.vip)) {
+					return false;
+				}
+				return true;
 			}
 
 			var activeLinks = false;
@@ -1628,13 +1705,13 @@
 				scale = parseFloat(scale);
 				if (scale < 1) {
 					if (centering) {
-						document.body.style.transform = "scale(" + scale + "), 0%)";
+						document.body.style.transform = "scale(" + scale + ")";
 					} else {
 						document.body.style.transform = "scale(" + scale + ")";
 					}
 				} else {
 					if (centering) {
-						document.body.style.transform = "scale(" + scale + ") translate(-" + -1 * (scale * 50.0 - 50) + "%, 0%)";
+						document.body.style.transform = "scale(" + scale + ") translate(" + -1 * (scale * 50.0 - 50) + "%, 0%)";
 					} else {
 						document.body.style.transform = "scale(" + scale + ") translate(" + -1 * (50 - 50 / scale) + "%, 0%)";
 					}
@@ -1757,6 +1834,10 @@
 				showsource = true;
 			}
 
+			if (urlParams.has("squaresource")) {
+				document.body.classList.add("square-source-icons");
+			}
+
 			var lanonly = "";
 			if (urlParams.has("lanonly")) {
 				lanonly = "&lanonly";
@@ -1788,6 +1869,8 @@
 			if (urlParams.has("stacking") || urlParams.has("stacked") || urlParams.has("stack")) {
 				stacking = true;
 			}
+			var currentFeaturedMessageEl = null;
+			var currentFeaturedNameEl = null;
 
 			var textDirection = "auto";
 			if (urlParams.has("rtl")) {
@@ -1970,6 +2053,8 @@
 			
 			
 
+			
+			
 			function cleanupOldMessages() {
 				const messages = document.querySelectorAll('.hl-c-cont.highlight-chat.stacked');
 				if (messages.length > MAX_MESSAGES) {
@@ -2136,18 +2221,34 @@
 			  return validTLDs.has(tld.toLowerCase());
 			}
 
-
+			function getFeaturedElementByClass(className, referenceNode, fallbackId, fallbackElement) {
+				try {
+					if (referenceNode && referenceNode.closest) {
+						var container = referenceNode.closest(".highlight-chat");
+						if (container) {
+							var scopedElement = container.querySelector("." + className);
+							if (scopedElement) {
+								return scopedElement;
+							}
+						}
+					}
+				} catch (e) {}
+				return document.getElementById(fallbackId) || fallbackElement || null;
+			}
 
 			function realign(eventtype = false) {
+				var referenceNode = eventtype && eventtype.target ? eventtype.target : null;
+				var activeMessageEl = getFeaturedElementByClass("hl-message", referenceNode, "message", currentFeaturedMessageEl);
+				var activeNameEl = getFeaturedElementByClass("hl-name", referenceNode, "nameDIV", currentFeaturedNameEl);
 				if (centering) {
 					try {
-						var offsetLeft = (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth + 20)) / 2;
+						var offsetLeft = (parseInt(window.innerWidth) - parseInt(activeMessageEl.clientWidth + 20)) / 2;
 						offsetLeft -= 15;
 						document.documentElement.style.setProperty("--highlight-chat-left", offsetLeft + "px");
 					} catch (e) {}
 				}
 				try {
-					var img = document.getElementById("img");
+					var img = referenceNode && referenceNode.tagName === "IMG" ? referenceNode : document.getElementById("img");
 					if (!img) {
 						return;
 					}
@@ -2167,7 +2268,10 @@
 					if (ar1 > ar) {
 						ar = ar1;
 					}
-					var message = document.getElementById("message");
+					var message = activeMessageEl;
+					if (!message) {
+						return false;
+					}
 					var width = 300 * ar; // window.innerWidth*ar
 					//img.style.width = width+"px";
 
@@ -2197,14 +2301,14 @@
 						imgContent.style.right = "unset";
 
 						var offset = 0;
-						if (document.getElementById("nameDIV")) {
-							offset = document.getElementById("nameDIV").clientWidth + 110;
+						if (activeNameEl) {
+							offset = activeNameEl.clientWidth + 110;
 						}
 						if (offset < 300) {
 							offset = 300;
 						}
-						if (offset < document.getElementById("message").clientWidth + 19) {
-							offset = document.getElementById("message").clientWidth + 19;
+						if (offset < message.clientWidth + 19) {
+							offset = message.clientWidth + 19;
 						}
 						if (offset > window.innerWidth - 100) {
 							offset = Math.max(20, window.innerWidth - 100);
@@ -2223,8 +2327,8 @@
 						img.style.transformOrigin = "bottom";
 						imgContent.style.right = 0;
 						var offset = 0;
-						if (document.getElementById("nameDIV")) {
-							offset = document.getElementById("nameDIV").clientWidth + 110;
+						if (activeNameEl) {
+							offset = activeNameEl.clientWidth + 110;
 						}
 						if (offset < 300) {
 							offset = 300;
@@ -2255,6 +2359,20 @@
 			var socketserver = false;
 			var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja";
 			var reconnectionTimeout = null;
+
+			// Cross-transport dedupe: this page runs socket OR iframe, never both, so
+			// today this is defense-in-depth; it renders only the first copy if the
+			// transports ever overlap, matching the other overlays.
+			var transportDeliveryDedupe = typeof SocialStreamTransportDedupe !== "undefined" ? SocialStreamTransportDedupe.create() : null;
+			function isDuplicateTransportDelivery(data, source) {
+				if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) {
+					return false;
+				}
+				if (!transportDeliveryDedupe) {
+					return false;
+				}
+				return transportDeliveryDedupe(data, source);
+			}
 
 			function setupSocket(allin = false) {
 				if (reconnectionTimeout) {
@@ -2314,6 +2432,12 @@
 
 						if (data && "overlayNinja" in data) {
 							data = data.overlayNinja;
+						}
+
+						if (!pid && data && typeof data === "object") {
+							if (isDuplicateTransportDelivery(data, "websocket")) {
+								return;
+							}
 						}
 
 						var resp = false;
@@ -2464,10 +2588,10 @@
 				var iframe = document.createElement("iframe");
 
 				if (pseudodock) {
-					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + lanonly + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID; // push and view, as we will connect with other docks also.
-					// iframe.src = "https://vdo.socialstream.ninja/?ln&password="+password+"&notmobile&salt=vdo.ninja&label=overlay&exclude="+roomID+"&scene&novideo&noaudio&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
+					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(password) + lanonly + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID; // push and view, as we will connect with other docks also.
+					// iframe.src = "https://vdo.socialstream.ninja/?ln&password="+encodeURIComponent(password)+"&notmobile&salt=vdo.ninja&label=overlay&exclude="+roomID+"&scene&novideo&noaudio&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
 				} else {
-					iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + lanonly + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID; // exclude raw feed; we only want selected inputs.
+					iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + encodeURIComponent(password) + lanonly + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID; // exclude raw feed; we only want selected inputs.
 				}
 
 				iframe.style.width = "0px";
@@ -2490,10 +2614,18 @@
 					if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
 						// raw data
 						if ("overlayNinja" in e.data.dataReceived) {
+							try {
+								if (applyCustomFeatureActions) {
+									applyCustomFeatureActions(e.data.dataReceived.overlayNinja);
+								}
+							} catch (e) {
+								console.error(e);
+							}
+
 							//console.log(e.data.dataReceived.overlayNinja);
 							if (e.data.dataReceived.overlayNinja && "response" in e.data.dataReceived.overlayNinja) {
 								// pass
-							} else {
+							} else if (!isDuplicateTransportDelivery(e.data.dataReceived.overlayNinja, "p2p")) {
 								processData({ contents: e.data.dataReceived.overlayNinja });
 							}
 						}
@@ -2501,6 +2633,7 @@
 				});
 			}
 
+			// Transport migration: this page already chooses socket OR iframe; do not start the iframe when a server socket is active.
 			if (!socketserver) {
 				RecvDataWindow(); // only load the iframe if not connecting via wss
 			}
@@ -2832,11 +2965,15 @@
 					}
 
 					var resolvedSourceImg = data.sourceImg ? resolveSourceImageUrl(data.sourceImg) : "";
+					var channelIconSizeClass = largeChannelIcon ? " large-channel-icon" : "";
 					if (resolvedSourceImg && customSource && avatarForMessage) {
-					  showType += '<img src="' + escapeAttributeValue(resolvedSourceImg) + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
+					  showType += '<img src="' + escapeAttributeValue(resolvedSourceImg) + '" class="icon sourcetype channel-source-icon ' + customSourceClass + channelIconSizeClass + '"  onerror="this.style.display=\'none\'" />';
 					} else if (resolvedSourceImg && customSource && !avatarForMessage) {
-					  showType += '<img src="' + escapeAttributeValue(resolvedSourceImg) + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
+					  showType += '<img src="' + escapeAttributeValue(resolvedSourceImg) + '" class="icon sourcetype channel-source-icon ' + customSourceClass + ' noavatar-source' + channelIconSizeClass + '" onerror="this.style.display=\'none\'" />';
 					}
+					var channelSourceName = showChannelName && data.sourceName
+					  ? '<span class="channel-source-name">' + escapeHtml(data.sourceName) + '</span>'
+					  : '';
 
 					if (hideNames) {
 					  data.chatname = "";
@@ -2869,7 +3006,7 @@
 						data.hasMembership = getTranslation("membership", "Membership");
 					  }
 					  data.membership = data.hasMembership.toString();
-					  
+
 					  if (avatarForMessage) {
 						memebershipHTML = plainTextToHtml(data.membership);
 					  } else {
@@ -3057,7 +3194,7 @@
 						}
 						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + safeDataId + '" src="' + escapeAttributeValue(chatimg) + '" class="hl-profile-pic" data-username="' + safeAvatarUsername + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
 					  }
-					} 
+					}
 
 					var chatbadges = showbadges ? SocialStreamBadges.render(data.chatbadges, { className: "hl-badge" }) : "";
 
@@ -3065,7 +3202,11 @@
 					  chatbadges = '<div class="hl-badges" >' + chatbadges + "</div>";
 					}
 
+					// textonly=true: literal chatmessage goes to textContent, not an HTML sanitizer; even typed <i> is text.
+					// HTML mode may retain <i>/emotes after upstream checks. largeImage is separate generated media, not plain chat.
 					var renderChatMessageAsText = !!(data.textonly && !largeImage);
+					// Final HTML-only check after stale renders are canceled. textonly=true stays literal;
+					// generated attachments are separate from chat HTML. Do not change the stored body.
 					var renderedChatMessage = renderChatMessageAsText ? "" : (data.chatmessage || "");
 					if (!renderChatMessageAsText && !largeImage && renderedChatMessage) {
 						renderedChatMessage = window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(renderedChatMessage) : plainTextToHtml(renderedChatMessage);
@@ -3076,6 +3217,8 @@
 
 					// ADD NO-AVATAR CLASS TO CONTAINER
 					var noAvatarClass = avatarForMessage ? "" : " no-avatar";
+					var activeNameDiv = null;
+					var activeMessageDiv = null;
 
 					if (stacking) {
 					  try {
@@ -3099,7 +3242,7 @@
 					  }
 					  
 					  // Put name and badges in the name div
-					  nameDiv.innerHTML = renderedChatName + chatbadges;
+					  nameDiv.innerHTML = renderedChatName + chatbadges + channelSourceName;
 					  messageContainer.appendChild(nameDiv);
 
 					  const messageDiv = document.createElement('div');
@@ -3115,6 +3258,10 @@
 						messageDiv.innerHTML = renderedChatMessage;
 					  }
 					  messageContainer.appendChild(messageDiv);
+					  activeNameDiv = nameDiv;
+					  activeMessageDiv = messageDiv;
+					  currentFeaturedNameEl = nameDiv;
+					  currentFeaturedMessageEl = messageDiv;
 
 					  // Add the avatar and source type elements first
 					  const avatarContent = document.createElement('div');
@@ -3138,8 +3285,9 @@
 						}
 					  }
 					  
-					  if (data.chatmessage && messageDiv && (stripLinks || activeLinks || shortlink)) {
-						processURLs(messageDiv, { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
+					  var stripLinksForMessage = shouldStripLinksForMessage(data);
+					  if (data.chatmessage && messageDiv && (stripLinksForMessage || activeLinks || shortlink)) {
+						processURLs(messageDiv, { makeClickable: activeLinks, stripLinks: stripLinksForMessage, shortenURLs: shortlink });
 					  } 
 
 					  document.getElementById("output").appendChild(messageContainer);
@@ -3167,42 +3315,48 @@
 					} else {
 					  // Original non-stacking behavior with no-avatar class added
 					  document.getElementById("output").innerHTML = '<div class="hl-c-cont highlight-chat' + noAvatarClass + '" id="newmessage" data-source-type="' + safeDataType + '">' +
-						'<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + renderedChatName + chatbadges + "</div>" +
+						'<div class="hl-name" ' + styleOverrideName + ' id="nameDIV">' + renderedChatName + chatbadges + channelSourceName + "</div>" +
 						'<div id="message" ' + styleOverride + ' class="hl-message" dir="' + textDirection + '" >' + renderedChatMessage + "</div>" +
 						avatarImg + showType + addImage + (donationHTML || memebershipHTML) + "</div>";
-					  if (renderChatMessageAsText && document.getElementById("message")) {
-						document.getElementById("message").textContent = data.chatmessage || "";
+					  activeNameDiv = document.getElementById("nameDIV");
+					  activeMessageDiv = document.getElementById("message");
+					  currentFeaturedNameEl = activeNameDiv;
+					  currentFeaturedMessageEl = activeMessageDiv;
+					  if (renderChatMessageAsText && activeMessageDiv) {
+						activeMessageDiv.textContent = data.chatmessage || "";
 					  }
 
 					  if (data.hasDonation || memebershipHTML) {
 						document.getElementById("newmessage").classList.add("dono");
 					  }
 					  
-					  if ((stripLinks || activeLinks || shortlink) && data.chatmessage && document.getElementById("message")) {
-						processURLs(document.getElementById("message"), { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
+					  var stripLinksForMessage = shouldStripLinksForMessage(data);
+					  if ((stripLinksForMessage || activeLinks || shortlink) && data.chatmessage && activeMessageDiv) {
+						processURLs(activeMessageDiv, { makeClickable: activeLinks, stripLinks: stripLinksForMessage, shortenURLs: shortlink });
 					  } 
 					}
 					
-					if (!data.chatname && !data.chatbadges) {
-					  document.getElementById("nameDIV").style.display = "none";
+					if (!data.chatname && !data.chatbadges && activeNameDiv) {
+					  activeNameDiv.style.display = "none";
 					}
 
 					var fontsize = "";
 					var limitchar = parseInt(window.innerWidth / 6.5);
 
-					if (largeImage){
-					  document.getElementById("message").classList.add("largeImage");
-					} else if (fontfit) {
-					  if (document.getElementById("message").innerText.length > limitchar) {
-						fontsize = parseInt((limitchar * 100) / document.getElementById("message").innerText.length);
+					if (activeMessageDiv) SSNContentImage.watch(activeMessageDiv.closest(".hl-c-cont"), data, activeMessageDiv);
+					if (largeImage && activeMessageDiv){
+					  activeMessageDiv.classList.add("largeImage");
+					} else if (fontfit && activeMessageDiv) {
+					  if (activeMessageDiv.innerText.length > limitchar) {
+						fontsize = parseInt((limitchar * 100) / activeMessageDiv.innerText.length);
 						if (fontsize < 43) {
 						  fontsize = 43;
 						}
 
 						if (data.textColor && !data.textColor.startsWith("color")) {
-						  document.getElementById("message").style = data.backgroundColor + "; color:" + data.textColor + "; font-size: " + fontsize + "%;";
+						  activeMessageDiv.style = data.backgroundColor + "; color:" + data.textColor + "; font-size: " + fontsize + "%;";
 						} else {
-						  document.getElementById("message").style = data.backgroundColor + " " + data.textColor + "; font-size: " + fontsize + "%;";
+						  activeMessageDiv.style = data.backgroundColor + " " + data.textColor + "; font-size: " + fontsize + "%;";
 						}
 					  }
 					}
@@ -3232,7 +3386,7 @@
 
 					if (centering) {
 					  try {
-						var offsetLeft = (parseInt(window.innerWidth) - parseInt(document.getElementById("message").clientWidth + 20)) / 2;
+						var offsetLeft = (parseInt(window.innerWidth) - parseInt(activeMessageDiv.clientWidth + 20)) / 2;
 						offsetLeft -= 15;
 						document.documentElement.style.setProperty("--highlight-chat-left", offsetLeft + "px");
 					  } catch (e) {}
@@ -3400,6 +3554,25 @@
 			  }
 			}
 
+			/*if (urlParams.has("js")) {
+				// ie: &js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js
+				console.warn("Third-party Javascript has been injected into the code. Security cannot be ensured.");
+				var jsURL = urlParams.get("js");
+				jsURL = decodeURI(jsURL);
+				console.log(jsURL);
+				// type="text/javascript" crossorigin="anonymous"
+				var externalJavaascript = document.createElement("script");
+				externalJavaascript.type = "text/javascript";
+				externalJavaascript.crossorigin = "anonymous";
+				externalJavaascript.src = jsURL;
+				externalJavaascript.onerror = function () {
+					console.warn("Third-party Javascript failed to load");
+				};
+				externalJavaascript.onload = function () {
+					console.log("Third-party Javascript loaded");
+				};
+				document.head.appendChild(externalJavaascript);
+			}*/
 			
 			// Clean up audio context when page unloads
 			window.addEventListener('beforeunload', function() {

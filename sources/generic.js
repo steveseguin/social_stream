@@ -1,4 +1,7 @@
 (function () {
+  if (window.__SSN_GENERIC_ACTIVE__) return;
+  window.__SSN_GENERIC_ACTIVE__ = true;
+
   // Utility functions
   function escapeHtml(unsafe) {
     if (!unsafe) return "";
@@ -109,10 +112,25 @@
   // Enhanced getAllContentNodes function with better filtering
   function getAllContentNodes(element) {
     if (!element) return "";
+    if (element.nodeType === 3) {
+      return settings.textonlymode ? element.textContent : escapeHtml(element.textContent);
+    }
+    if (element.nodeType !== 1) return "";
+    if (element.tagName === 'BR') return settings.textonlymode ? "\n" : "<br>";
+    if (element.tagName === 'IMG') {
+      const alt = element.getAttribute('alt') || element.getAttribute('title') ||
+        (element.closest('[title]') ? element.closest('[title]').getAttribute('title') : '') || '';
+      if (settings.textonlymode) return alt;
+      if (!element.src) return escapeHtml(alt);
+      const image = element.cloneNode(false);
+      image.src = element.src;
+      return image.outerHTML;
+    }
     let resp = "";
     
     // Skip time-related and metadata elements
-    if (element.tagName === 'SMALL' || 
+    if (element.tagName === 'TIME' || element.tagName === 'SMALL' ||
+        /timestamp/i.test(element.className || '') ||
         element.tagName === 'I' && element.querySelector('small') ||
         element.classList && (
           element.classList.contains('timestamp') || 
@@ -126,7 +144,7 @@
     // Direct text node handling
     if (!element.children || element.children.length === 0) {
       if (element.textContent) {
-        return escapeHtml(element.textContent) || "";
+        return settings.textonlymode ? element.textContent : escapeHtml(element.textContent);
       } else {
         return "";
       }
@@ -137,7 +155,6 @@
       // Skip metadata elements with expanded detection
       if (node.nodeType === 1 && ( 
           node.tagName === 'SMALL' || 
-          node.tagName === 'I' || 
           node.tagName === 'TIME' ||
           (node.classList && (
             node.classList.contains('timestamp') || 
@@ -152,19 +169,14 @@
       
       if (node.childNodes && node.childNodes.length) {
         resp += getAllContentNodes(node);
-      } else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
-        resp += escapeHtml(node.textContent);
+      } else if ((node.nodeType === 3) && node.textContent) {
+        resp += settings.textonlymode ? node.textContent : escapeHtml(node.textContent);
       } else if (node.nodeType === 1) {
         // Capture contract: textonly=true means a literal chatmessage string, not HTML.
         // Do not add formatting tags or HTML-encode it; viewer-typed <i> / &amp; stays literal.
         // HTML mode may include markup for the normal relay checks. The flag applies only to chatmessage.
         // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
-        if (!settings.textonlymode) {
-          if ((node.nodeName == "IMG") && node.src) {
-            node.src = node.src + "";
-            resp += node.outerHTML;
-          }
-        }
+        resp += getAllContentNodes(node);
       }
     });
     return resp;
@@ -229,18 +241,17 @@
 
   function markExistingMessages(root) {
     if (!root || !root.querySelectorAll) return;
-    for (const selector of MESSAGE_SELECTORS) {
-      try {
-        root.querySelectorAll(selector).forEach(message => {
-          message.processed = true;
-          message.skip = true;
-        });
-      } catch (e) {}
-    }
+    root.querySelectorAll(CANDIDATE_SELECTOR).forEach(message => {
+      const row = resolveMessageElement(message);
+      if (row) rememberMessage(row);
+    });
   }
 
   // Expanded username selectors
   const USERNAME_SELECTORS = [
+    '#author-name', '.chat-author__display-name', '.chat-message-username', '.chat-msg__nick',
+    '[data-a-target="chat-message-username"]', '[data-nick]',
+    '[class*="ChatUserMessage"][class*="userName"]',
     '.chat-username', '.username', '.user-name', '.author', '.nme', 
     '.sender-name', '[class*="username"]', '[class*="user-name"]', 
     '[class*="author"]', '[class*="sender"]', '[class*="nickname"]', 
@@ -286,6 +297,10 @@
 
   // Expanded message content selectors
   const MESSAGE_CONTENT_SELECTORS = [
+    '#message', '.chat-message-text', '.chat-line__message-body',
+    '[data-a-target="chat-line-message-body"]', '[data-a-target="chat-message-text"]', '.kiwi-messagelist-body',
+    '[class*="ChatUserMessage"][class*="__message"]',
+    '.chat-msg-line > .text', '.msg',
     '.message-text', '.chat-text', '.message-content', '.content',
     '.text', '.body', '.comment-text', '[class*="message-text"]',
     '[class*="chat-text"]', '[class*="content"]', '[class*="message-body"]',
@@ -311,6 +326,97 @@
     '[data-role="message-text"]', '.stream-chat-message-text',
     '.chat-message__html', '.chat-history-message-body'
   ];
+
+  // A row owns its nested fragments. Vaughn's grouped messages each have their
+  // own body ID, but share the author and avatar on the surrounding list item.
+  const ROW_SELECTOR = '.chat-message, .chat-msg, .chat-line__message, [data-a-target="chat-line-message"], ' +
+    '[data-testid="chat-message"], [data-message-id], yt-live-chat-text-message-renderer, ' +
+    '.kiwi-messagelist-message, [class*="ChatUserMessage"][class*="__root"], [id^="chatv9msg-"]';
+  const CANDIDATE_SELECTOR = MESSAGE_SELECTORS.join(',') + ',' + ROW_SELECTOR;
+  const processedMessages = new WeakMap();
+  const pendingMessages = new Map();
+  const seenMessageIds = new Set();
+
+  function messageId(row) {
+    return row.getAttribute('data-message-id') || row.getAttribute('data-id') || row.id || '';
+  }
+
+  function rememberMessage(row) {
+    const id = messageId(row);
+    processedMessages.set(row, id);
+    if (id) {
+      seenMessageIds.add(id);
+      if (seenMessageIds.size > 1000) seenMessageIds.delete(seenMessageIds.values().next().value);
+    }
+  }
+
+  function structuredParts(row) {
+    let scope = row;
+    let nameElement = null;
+    let contents = [];
+    if (row.matches('[id^="chatv9msg-"]')) {
+      scope = row.closest('.vs_chatv9_msg');
+      if (!scope) return null;
+      nameElement = scope.querySelector('.vs_chatv9_msg_username');
+      contents = [row];
+    } else {
+      for (const selector of USERNAME_SELECTORS) {
+        nameElement = row.querySelector(selector);
+        if (nameElement) break;
+      }
+      for (const selector of MESSAGE_CONTENT_SELECTORS) {
+        contents = Array.from(row.querySelectorAll(selector)).filter(element =>
+          element !== nameElement && (!nameElement || !element.contains(nameElement)) &&
+          (!nameElement || !nameElement.contains(element)));
+        if (contents.length) break;
+      }
+    }
+    let name = nameElement ? (nameElement.getAttribute('data-nick') ||
+      nameElement.getAttribute('data-username') || nameElement.textContent).trim() :
+      (row.getAttribute('data-username') || row.getAttribute('data-author') || '').trim();
+    name = name.replace(/:\s*$/, '').trim();
+    if (!name || !contents.length) return null;
+    // A matching wrapper and its children must not contribute the same text twice.
+    contents = contents.filter(element => !contents.some(other => other !== element && other.contains(element)));
+    return { scope, nameElement, name, contents };
+  }
+
+  function resolveMessageElement(node) {
+    let element = node.nodeType === 1 ? node : node.parentElement;
+    if (!element) return null;
+    const row = element.closest(ROW_SELECTOR);
+    if (row) return row;
+    // Do not interpret a grouped message's timestamp or toolbar as another row.
+    if (element.closest('.vs_chatv9_msg') || element.querySelector(ROW_SELECTOR)) return null;
+    if (!element.closest(CANDIDATE_SELECTOR) && !element.closest('[role="log"], [role="feed"]')) return null;
+    for (let parent = element; parent && parent !== element.ownerDocument.body; parent = parent.parentElement) {
+      const parts = structuredParts(parent);
+      if (parts) {
+        if (!parts.nameElement) return parent;
+        let owner = parts.nameElement.parentElement;
+        while (owner && !parts.contents.every(content => owner.contains(content))) owner = owner.parentElement;
+        return owner;
+      }
+      if (parent.matches('ul, ol, [role="log"], [role="list"], [role="feed"], .chat-messages, .chat-list, .message-list')) break;
+    }
+    return element.matches(CANDIDATE_SELECTOR) || (element.parentElement &&
+      element.parentElement.matches('[role="log"], [role="feed"]')) ? element : null;
+  }
+
+  function queueMessage(node) {
+    const row = resolveMessageElement(node);
+    if (!row || (processedMessages.has(row) && processedMessages.get(row) === messageId(row))) return;
+    if (pendingMessages.has(row)) clearTimeout(pendingMessages.get(row));
+    pendingMessages.set(row, setTimeout(function () {
+      pendingMessages.delete(row);
+      processMessage(row);
+    }, 80));
+  }
+
+  function queueMessages(node) {
+    queueMessage(node);
+    if (node.querySelectorAll) node.querySelectorAll(CANDIDATE_SELECTOR).forEach(queueMessage);
+  }
 
   function pushMessage(data) {
     try {
@@ -662,32 +768,32 @@
 
   // Improved message processing function
   function processMessage(ele) {
-    if (!ele || ele.processed || !ele.isConnected) return;
-    ele.processed = true;
+    if (!ele || !ele.isConnected) return;
+    if (processedMessages.has(ele) && processedMessages.get(ele) === messageId(ele)) return;
+    const messageRow = ele;
+    const parts = structuredParts(ele);
+    if (parts) ele = parts.scope;
     
     // Handle container elements
     const containerClasses = ['chat-list', 'message-list', 'comments-list', 'chat-history'];
-    if (ele.tagName === 'UL' || ele.tagName === 'OL' || 
-        (ele.classList && containerClasses.some(cls => ele.classList.contains(cls)))) {
+    if (!parts && (ele.tagName === 'UL' || ele.tagName === 'OL' ||
+        (ele.classList && containerClasses.some(cls => ele.classList.contains(cls))))) {
       const messageElements = ele.querySelectorAll(MESSAGE_SELECTORS.join(','));
       if (messageElements.length) {
-        messageElements.forEach(messageEle => {
-          if (!messageEle.processed && messageEle !== ele) {
-            setTimeout(() => processMessage(messageEle), 10);
-          }
-        });
+        messageElements.forEach(queueMessage);
         return;
       }
     }
     
     // Extract username with priority-based approach
-    let name = "";
-    let nameElement = null;
+    let name = parts ? parts.name : "";
+    let nameElement = parts ? parts.nameElement : null;
     let nameSelector = null;
     
     // First try learned selectors (higher success rate)
     const bestNameSelectors = chatLearning.getBestNameSelectors();
     for (const selector of bestNameSelectors) {
+      if (name) break;
       try {
         const element = ele.querySelector(selector);
         if (element && element.textContent && element.textContent.trim()) {
@@ -787,7 +893,7 @@
     }
     
     // Clean username
-    name = cleanName(escapeHtml(name));
+    if (!parts) name = cleanName(escapeHtml(name));
     
     // Extract name color if available
     let nameColor = "";
@@ -798,13 +904,16 @@
     }
     
     // Extract message content with priority approach
-    let msg = "";
-    let msgElement = null;
+    let msg = parts ? parts.contents.map(getAllContentNodes).join('') : "";
+    let msgElement = parts ? parts.contents[0] : null;
     let msgSelector = null;
+    // A named row whose body is still empty can be filled by a later mutation.
+    if (parts && !msg.trim()) return;
     
     // First try learned message selectors
     const bestMessageSelectors = chatLearning.getBestMessageSelectors();
     for (const selector of bestMessageSelectors) {
+      if (msg) break;
       try {
         const element = ele.querySelector(selector);
         if (element) {
@@ -1007,15 +1116,15 @@
 	}
     
     // Final cleaning of message
-    msg = cleanMessage(msg.trim());
+    msg = parts ? msg.trim() : cleanMessage(msg.trim());
     
     // Skip if no message content or validation fails
-    if (!msg || !chatLearning.validateExtraction(name, msg, nameSelector, msgSelector)) {
+    if (!msg || (!parts && !chatLearning.validateExtraction(name, msg, nameSelector, msgSelector))) {
       return;
     }
     
     // Handle case where name is in message (improved)
-    if (name && msg.startsWith(name)) {
+    if (!parts && name && msg.startsWith(name)) {
       // Try to fix the common "Name: Message" format being captured entirely
       const remainingMsg = msg.substring(name.length).trim();
       if (remainingMsg.startsWith(':')) {
@@ -1024,7 +1133,7 @@
     }
     
     // Learn from successful extraction
-    chatLearning.learnFromSuccess(ele, nameSelector, msgSelector, name, msg);
+    if (!parts) chatLearning.learnFromSuccess(ele, nameSelector, msgSelector, name, msg);
     
     // Enhanced avatar extraction
     let chatimg = "";
@@ -1142,22 +1251,25 @@
     if (!name && !msg) return;
 	
 	
-	const cleanedName = cleanName(name);
-    const cleanedMessage = cleanMessage(msg);
+	const cleanedName = parts ? name : cleanName(name);
+    const cleanedMessage = parts ? msg : cleanMessage(msg);
 	
 	
-	if (messageDeduplication.isDuplicate(cleanedName, cleanedMessage)) {
+    const id = messageId(messageRow);
+    const duplicate = id ? seenMessageIds.has(id) : messageDeduplication.isDuplicate(cleanedName, cleanedMessage);
+    rememberMessage(messageRow);
+	if (duplicate) {
       return; 
     }
     
     // Prepare data for sending
     const data = {
-      chatname: cleanName(name),
+      chatname: cleanedName,
       chatbadges: chatbadges,
       backgroundColor: "",
       textColor: "",
       nameColor: nameColor,
-      chatmessage: cleanMessage(msg), 
+      chatmessage: cleanedMessage,
       chatimg: chatimg,
       hasDonation: "",
       membership: "",
@@ -1272,51 +1384,29 @@
       
       target.hasObserver = true;
       
-      const config = { childList: true, subtree: true };
+      const config = { childList: true, subtree: true, characterData: true,
+        attributes: true, attributeFilter: ['data-message-id', 'data-id', 'id'] };
       const observer = new MutationObserver(mutations => {
         mutations.forEach(mutation => {
-          if (mutation.addedNodes.length) {
-            for (let i = 0; i < mutation.addedNodes.length; i++) {
-              const node = mutation.addedNodes[i];
-              
-              // Skip already processed nodes
-              if (node.processed || node.skip) continue;
-              
-              // Check if node is an element
-              if (node.nodeType === 1) {
-                // Check if the node itself is a message
-                for (const selector of MESSAGE_SELECTORS) {
-                  try {
-                    if (node.matches && node.matches(selector)) {
-                      setTimeout(() => processMessage(node), 50);
-                      node.skip = true;
-                      break;
-                    }
-                  } catch (e) {}
-                }
-                
-                // Check for child messages
-                if (node.querySelectorAll) {
-                  for (const selector of MESSAGE_SELECTORS) {
-                    try {
-                      const messages = node.querySelectorAll(selector);
-                      if (messages.length) {
-                        messages.forEach(messageNode => {
-                          if (!messageNode.processed && !messageNode.skip) {
-                            setTimeout(() => processMessage(messageNode), 50);
-                            messageNode.skip = true;
-                          }
-                        });
-                      }
-                    } catch (e) {}
-                  }
-                }
-              }
-            }
+          if (mutation.type === 'characterData' || mutation.type === 'attributes') {
+            queueMessage(mutation.target);
+            return;
           }
+          // Renderers often insert the row first and fill its children later.
+          if (mutation.addedNodes.length) queueMessage(mutation.target);
+          mutation.addedNodes.forEach(node => {
+            if (node.nodeType !== 1 && node.nodeType !== 3) return;
+            // A newly mounted chat list contains history, as at initial startup.
+            if (node.nodeType === 1 && node.matches(CHAT_CONTAINER_SELECTORS.join(',')) &&
+                !node.matches(ROW_SELECTOR) && (node.querySelector(ROW_SELECTOR) || !structuredParts(node))) {
+              markExistingMessages(node);
+            } else {
+              queueMessages(node);
+            }
+          });
         });
       });
-      
+
       observer.observe(target, config);
       return observer;
     }
@@ -1459,6 +1549,9 @@
       } catch (e) {}
     }
     
+    initializeObservers();
+    createObserver(document.body);
+
     // Check for new containers and messages periodically
     let initCount = 0;
     const maxInitCount = 10; // Limit initial checks

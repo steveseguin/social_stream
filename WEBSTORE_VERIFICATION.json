@@ -1,0 +1,203 @@
+{
+  "version": "3.50.25",
+  "upstream_beta_commit": "693641140de3da8323a2c78de195020feb1b1245",
+  "backports": [
+    {
+      "commit": "8427009be74cdc1200e1e511d5bdc082e8a2938a",
+      "description": "Forward explicitly streakable TikFinity gifts only on completion.",
+      "package_paths": [
+        "sources/tikfinity.js"
+      ],
+      "supporting_paths": [
+        "tests/tikfinity-gift-streak.test.js"
+      ],
+      "partial_paths": [
+        "docs/event-reference.html"
+      ]
+    }
+  ],
+  "previous_version": "3.50.24",
+  "scope": "TikFinity completed-gift-streak fix, regression test, and event documentation.",
+  "artifact": {
+    "file": "social-stream-ninja-webstore-3.50.25.zip",
+    "sha256": "ce2e7b56676d4197a81e765bace53663c791cdb20e772b2760f1fd78f4d5e0ba",
+    "files": 974,
+    "byte_parity": true
+  },
+  "manifest_comparison": {
+    "against_version": "3.50.24",
+    "changed_keys": [
+      "version"
+    ]
+  },
+  "changes": {
+    "changed_package_files": [
+      "manifest.json",
+      "sources/tikfinity.js"
+    ],
+    "manifest_version_only": true,
+    "backport": {
+      "commit": "8427009be74cdc1200e1e511d5bdc082e8a2938a",
+      "description": "Forward explicitly streakable TikFinity gifts only on completion.",
+      "package_paths": [
+        "sources/tikfinity.js"
+      ],
+      "supporting_paths": [
+        "tests/tikfinity-gift-streak.test.js"
+      ],
+      "partial_paths": [
+        "docs/event-reference.html"
+      ]
+    },
+    "counts": {
+      "exact-beta": 894,
+      "store-adapted": 75,
+      "legacy-store": 5,
+      "added_package_files": 0,
+      "updated_package_files": 2
+    }
+  },
+  "tests": [
+    {
+      "file": "tikfinity-gift-streak.test.js",
+      "passed": true,
+      "targets": [
+        "working tree",
+        "extracted upload ZIP"
+      ]
+    },
+    {
+      "file": "webstore-selective-update.test.js",
+      "passed": true
+    },
+    {
+      "file": "webstore-extension-smoke.test.js",
+      "passed": true,
+      "targets": [
+        "extracted upload ZIP"
+      ]
+    },
+    {
+      "command": "node --check sources/tikfinity.js",
+      "passed": true
+    }
+  ],
+  "gift_fixture_checks": [
+    "Streak progress waits for final count and donation total.",
+    "Completion delays of 2, 3 and 5 seconds emit one gift with and without group IDs.",
+    "Immediate completion replays are deduplicated.",
+    "Separate gift groups are forwarded independently.",
+    "Non-streak gifts and payloads without completion flags retain immediate delivery.",
+    "String/numeric completion and explicit streak flags are handled."
+  ],
+  "chromium": {
+    "fresh_profile": true,
+    "extracted_zip": true,
+    "featured_chat_beginner_and_full_mode": true,
+    "popup_search": true,
+    "obs_tester": true,
+    "spotify_copy_fallback_callback": true,
+    "guide_editor_link": true,
+    "tested_page_runtime_and_csp_errors": []
+  },
+  "limits": [
+    "Gift tests run the actual source listener with a simulated clock and extension transport.",
+    "OBS transport and clipboard calls are simulated.",
+    "No live TikFinity session or Web Store submission."
+  ],
+  "release_validation": {
+    "date": "2026-10-02",
+    "artifact_sha256": "ce2e7b56676d4197a81e765bace53663c791cdb20e772b2760f1fd78f4d5e0ba",
+    "files": 974,
+    "working_tree_zip_and_extraction_match": true,
+    "regression_tests": [
+      {
+        "file": "popup-search.test.js",
+        "passed": true,
+        "exit_code": 0
+      },
+      {
+        "file": "popup-link-generation.test.js",
+        "passed": true,
+        "exit_code": 0
+      },
+      {
+        "file": "webstore-settings-compat.test.cjs",
+        "passed": true,
+        "exit_code": 0
+      },
+      {
+        "file": "webstore-runtime-parity.test.cjs",
+        "passed": true,
+        "exit_code": 0
+      },
+      {
+        "file": "webstore-featured-routing.test.cjs",
+        "passed": true,
+        "exit_code": 0
+      },
+      {
+        "file": "webstore-ad-announcements.test.cjs",
+        "passed": true,
+        "exit_code": 0
+      },
+      {
+        "file": "webstore-selective-update.test.js",
+        "passed": true,
+        "exit_code": 0
+      },
+      {
+        "file": "source-deletion-timing.test.cjs",
+        "passed": true,
+        "exit_code": 0
+      },
+      {
+        "file": "tikfinity-gift-streak.test.js",
+        "passed": true,
+        "exit_code": 0
+      },
+      {
+        "file": "generic-source.test.cjs",
+        "passed": true,
+        "exit_code": 0
+      }
+    ],
+    "packaged_code_audit": {
+      "files": 974,
+      "scripts": 327,
+      "inline": 127,
+      "json": 25,
+      "errors": [],
+      "missing": [],
+      "remote": [],
+      "dynamic": []
+    },
+    "fresh_chromium_extracted_zip": {
+      "startup": {
+        "status": "ready",
+        "currentScript": "",
+        "failures": []
+      },
+      "extension_to_dock_delivery": true,
+      "history_deletion": true,
+      "panel_persistence": true,
+      "excluded_panel_choices": true,
+      "showdeleted_and_default_deletion": true,
+      "iframe_recipient_routing": true,
+      "extension_smoke_test": true,
+      "panel_light_dark_visual_review": true,
+      "page_errors": [],
+      "console_errors": [],
+      "expected_absent_user_override_files": [
+        "settings.json",
+        "badwords.txt",
+        "goodwords.txt"
+      ]
+    },
+    "limits": [
+      "Source regression tests use local fixtures and simulated transport/timing.",
+      "Dock delivery uses a real isolated local WebSocket relay.",
+      "No authenticated live-provider sessions or Web Store submission."
+    ]
+  }
+}

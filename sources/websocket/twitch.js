@@ -281,6 +281,7 @@ const recentTwitchChatEchoIds = new Map();
 const TWITCH_CHAT_SEND_TIMEOUT_MS = Number(globalThis.__SSAPP_TWITCH_CHAT_SEND_TIMEOUT_MS__) || 15000;
 const TWITCH_CHAT_ECHO_TIMEOUT_MS = Number(globalThis.__SSAPP_TWITCH_CHAT_ECHO_TIMEOUT_MS__) || 10000;
 const twitchDisplayNameByLogin = new Map();
+const pendingTwitchMessages = new Set();
 const TWITCH_DELAYTWITCH_MS = 3000;
 const TWITCH_DELETE_DELAY_BUFFER_MS = 50;
 const WEBSOCKET_READY_STATE = {
@@ -1902,7 +1903,13 @@ function ensureClientFactory() {
 		}
 	}
 
-	function pushDeleteMessage(data) {
+	function pushDeleteMessage(data, username) {
+		// Deletes can arrive while profile lookups, moderation delay, or PluralMind are pending.
+		pendingTwitchMessages.forEach(function(message) {
+			if (data.id ? message.id === data.id : !username || message.username === normalizeTwitchLogin(username)) {
+				message.deleted = true;
+			}
+		});
 		sendDeleteMessage(data);
 		if (settings && settings.delaytwitch) {
 			setTimeout(function() {
@@ -1933,7 +1940,7 @@ function ensureClientFactory() {
 			if (!deletePayload.id && !deletePayload.username && !deletePayload.chatname) {
 				return;
 			}
-			pushDeleteMessage(deletePayload);
+			pushDeleteMessage(deletePayload, username);
 		});
 
 		client.on('ban', function(chan, username) {
@@ -1944,7 +1951,7 @@ function ensureClientFactory() {
 					deletePayload.username = username;
 					deletePayload.meta = { pluralmind: true };
 				}
-				pushDeleteMessage(deletePayload);
+				pushDeleteMessage(deletePayload, username);
 			}
 		});
 
@@ -1956,7 +1963,7 @@ function ensureClientFactory() {
 					deletePayload.username = username;
 					deletePayload.meta = { pluralmind: true };
 				}
-				pushDeleteMessage(deletePayload);
+				pushDeleteMessage(deletePayload, username);
 			}
 		});
 	}
@@ -2448,7 +2455,7 @@ async function ensureChatClientInstance() {
 					deletePayload.username = payload.user;
 					deletePayload.meta = { pluralmind: true };
 				}
-				pushDeleteMessage(deletePayload);
+				pushDeleteMessage(deletePayload, payload.user);
 			}
 			if (!activeSubscriptions.has('channel.ban')) {
 				pushTwitchBanMetaEvent({
@@ -3594,6 +3601,7 @@ async function ensureChatClientInstance() {
 
 
 	async function processMessage(parsedMessage) {
+		const pendingMessage = {};
 		try {
 		//console.log("Processing message:", parsedMessage);
 		const normalizedPayload = parsedMessage.__normalizedPayload || null;
@@ -3601,6 +3609,9 @@ async function ensureChatClientInstance() {
 		const normalizedEventTypeLower =
 			typeof normalizedEventType === 'string' ? normalizedEventType.toLowerCase() : '';
 		const user = parsedMessage.prefix.split('!')[0];
+		pendingMessage.id = parsedMessage.tags && parsedMessage.tags.id;
+		pendingMessage.username = normalizeTwitchLogin(user);
+		pendingTwitchMessages.add(pendingMessage);
 		let message = getTwitchMessageText(normalizedPayload, parsedMessage.trailing);
 		// Clean channel name from params (remove # prefix)
 		if (parsedMessage.params[0]) {
@@ -3711,6 +3722,10 @@ async function ensureChatClientInstance() {
 				resolvedDisplayName = pluralmindResult.name;
 				message = pluralmindResult.body;
 			}
+		}
+
+		if (pendingMessage.deleted) {
+			return;
 		}
 
 		// Parse reply if enabled
@@ -3827,7 +3842,11 @@ async function ensureChatClientInstance() {
 			data.timestamp = normalizedPayload.timestamp;
 		}
 		data.hasDonation = hasDonation;
-		if (hasDonation) data.donoValue = Number(parsedMessage.tags.bits) / 100;
+		if (hasDonation) {
+			data.donoValue = Number(parsedMessage.tags.bits) / 100;
+			data.meta = data.meta || {};
+			data.meta.bits = Number(parsedMessage.tags.bits);
+		}
 		if (sourceInfo.image) {
 			data.sourceImg = sourceInfo.image;
 		}
@@ -3849,9 +3868,13 @@ async function ensureChatClientInstance() {
 		
 		} catch(e){
 			console.error(e);
+		} finally {
+			pendingTwitchMessages.delete(pendingMessage);
 		}
 		//console.log(data);
-		pushMessage(data);
+		if (!pendingMessage.deleted) {
+			pushMessage(data);
+		}
 	}
 
 	function addEvent(description) {
@@ -5091,7 +5114,7 @@ async function cleanupCurrentConnection() {
 					deletePayload.username = event.user_login;
 					deletePayload.meta = { pluralmind: true };
 				}
-				pushDeleteMessage(deletePayload);
+				pushDeleteMessage(deletePayload, event.user_login);
 				pushTwitchBanMetaEvent({
 					username: event.user_login,
 					displayName: event.user_name,

@@ -4,6 +4,7 @@ class EventFlowSystem {
         this.db = null;
         this.dbName = options.dbName || 'eventFlowDB';
         this.storeName = options.storeName || 'flowSettings';
+        this.userMemoryStoreName = options.userMemoryStoreName || 'userMemoryState';
         this.pointsSystem = options.pointsSystem || null;
         // Prefer helpers from background.js when available so both surfaces share behavior
         this.sendMessageToTabs = options.sendMessageToTabs || window.sendMessageToTabs || null;
@@ -12,6 +13,7 @@ class EventFlowSystem {
         this.sanitizeRelay = options.sanitizeRelay || window.sanitizeRelay || null;
 		this.checkExactDuplicateAlreadyRelayed = options.checkExactDuplicateAlreadyRelayed || window.checkExactDuplicateAlreadyRelayed || null;
 		this.sendTargetP2P = options.sendTargetP2P || window.sendTargetP2P || null;
+		this.printThermal = options.printThermal || window.printThermal || null;
 		// For sending messages to background.js (e.g., Spotify actions)
 		this.sendMessageToBackground = options.sendMessageToBackground || ((msg) => {
 			if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
@@ -37,9 +39,19 @@ class EventFlowSystem {
 		// State node management for flow control
 		this.nodeStates = new Map(); // Persistent state storage for state nodes
 		this.stateTimers = new Map(); // Timeout management for auto-resets
-		this.messageQueues = new Map(); // Queue storage for queue nodes
-		this.semaphoreStates = new Map(); // Track concurrent operations for semaphore nodes
+        this.messageQueues = new Map(); // Queue storage for queue nodes
+        this.semaphoreStates = new Map(); // Track concurrent operations for semaphore nodes
         this.throttleStates = new Map(); // Track rate limiting for throttle nodes
+
+        // Named User Memory state. Each USER_MEMORY node owns an isolated set of users.
+        this.userMemoryStates = new Map();
+        this.userMemoryResetTimers = new Map();
+        this.userMemorySaveTimers = new Map();
+        this.userMemoryBroadcastTimers = new Map();
+        this.userMemoryListeners = new Set();
+        this.userMemoryInstanceId = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+        this.userMemoryChannel = null;
+        this.setupUserMemorySync();
         
         // Reflection control (per Event Flow) for "allow-first" windows
         this.reflectionSeen = new Map();
@@ -61,14 +73,84 @@ class EventFlowSystem {
         this.initPromise = this.initDatabase();
     }
 
-	detectCustomJsEvalSupport() {
-		return false;
-	}
+    parseDonationNumericValue(value) {
+        if (value === undefined || value === null || value === '') return null;
+        if (typeof value === 'number') return isFinite(value) ? value : null;
+
+        const text = String(value).replace(/,/g, '');
+        const match = text.match(/[+-]?(?:\d+\.?\d*|\.\d+)/);
+        if (!match) return null;
+
+        const parsed = parseFloat(match[0]);
+        return isFinite(parsed) ? parsed : null;
+    }
+
+    getDonationValueConverter() {
+        try {
+            if (typeof convertToUSD === 'function') return convertToUSD;
+        } catch (e) {}
+
+        try {
+            if (typeof window !== 'undefined' && typeof window.convertToUSD === 'function') {
+                return window.convertToUSD;
+            }
+        } catch (e) {}
+
+        return null;
+    }
+
+    parseDonationLabelValue(value, source) {
+        if (value === undefined || value === null || value === '') return null;
+        if (typeof value === 'number') return isFinite(value) ? value : null;
+
+        // Donation values are derived only from normalized amount labels such as "$5",
+        // "500 bits", or "cheer100"; never from prose in chatmessage.
+        const text = String(value);
+        if (!/[+-]?(?:\d+\.?\d*|\.\d+)/.test(text.replace(/,/g, ''))) {
+            return null;
+        }
+
+        const converter = this.getDonationValueConverter();
+        if (converter) {
+            try {
+                const converted = converter(text, String(source || '').toLowerCase());
+                if (typeof converted === 'number' && isFinite(converted)) {
+                    return converted;
+                }
+            } catch (e) {}
+        }
+
+        return this.parseDonationNumericValue(value);
+    }
+
+    getDonationNumericValue(message) {
+        if (!message) return null;
+        if (typeof getDonationValueUSD === 'function' &&
+            (message.donoValue !== undefined || message.hasDonation || message.donation || message.donationAmount)) {
+            return getDonationValueUSD(message);
+        }
+
+        const raw = message.donoValue;
+        if (typeof raw === 'number' || (typeof raw === 'string' && raw.trim())) {
+            const explicitValue = Number(typeof raw === 'string' ? raw.replace(/,/g, '') : raw);
+            if (Number.isFinite(explicitValue)) return explicitValue;
+        }
+
+        const legacyValue = this.parseDonationLabelValue(message.donationAmount, message.type);
+        if (legacyValue !== null) return legacyValue;
+
+        const labelValue = this.parseDonationLabelValue(message.hasDonation, message.type);
+        if (labelValue !== null) return labelValue;
+
+        return null;
+    }
+
+	detectCustomJsEvalSupport() { return false; }
 
 	warnCustomJsEvalDisabled(scope = 'customJs') {
 		if (this.customJsEvalWarningShown) return;
 		this.customJsEvalWarningShown = true;
-		console.warn(`[EventFlowSystem] ${scope} is disabled in the Chrome Web Store build due MV3 dynamic-code restrictions.`);
+		console.warn(`[EventFlowSystem] ${scope} is disabled in extension context due CSP (unsafe-eval not allowed). Use SSApp/Electron or a runtime addon.`);
 	}
 
     // Start periodic evaluation for time-based triggers (timeInterval/timeOfDay)
@@ -306,7 +388,7 @@ class EventFlowSystem {
                 if (!hasActiveInput) return false;
 
                 // Get probability from config (0-100), default to 50%
-                const probability = (nodeConfig && nodeConfig.probability) || 50;
+                const probability = (nodeConfig && nodeConfig.probability) ?? 50;
                 const roll = Math.random() * 100;
 
                 // Pass the input through if roll succeeds, otherwise block it
@@ -322,17 +404,565 @@ class EventFlowSystem {
         }
     }
     
+    setupUserMemorySync() {
+        if (typeof BroadcastChannel === 'undefined') return;
+
+        try {
+            this.userMemoryChannel = new BroadcastChannel(`social-stream-event-flow-state:${this.dbName}`);
+            this.userMemoryChannel.onmessage = event => {
+                const data = event && event.data;
+                if (!data || data.sourceInstanceId === this.userMemoryInstanceId) return;
+
+                if (data.kind === 'request-user-memory-state') {
+                    this.userMemoryStates.forEach(state => {
+                        this.userMemoryChannel.postMessage({
+                            kind: 'user-memory-state',
+                            sourceInstanceId: this.userMemoryInstanceId,
+                            targetInstanceId: data.sourceInstanceId,
+                            snapshot: this.serializeUserMemoryState(state)
+                        });
+                    });
+                    return;
+                }
+
+                if (data.kind !== 'user-memory-state') return;
+                if (data.targetInstanceId && data.targetInstanceId !== this.userMemoryInstanceId) return;
+                this.applyUserMemorySnapshot(data.snapshot);
+            };
+
+            setTimeout(() => this.requestUserMemorySnapshots(), 0);
+        } catch (error) {
+            this.userMemoryChannel = null;
+            console.warn('[UserMemory] State synchronization is unavailable:', error && error.message ? error.message : error);
+        }
+    }
+
+    requestUserMemorySnapshots() {
+        if (!this.userMemoryChannel) return;
+        try {
+            this.userMemoryChannel.postMessage({
+                kind: 'request-user-memory-state',
+                sourceInstanceId: this.userMemoryInstanceId
+            });
+        } catch (error) {
+            console.warn('[UserMemory] Unable to request state snapshots:', error && error.message ? error.message : error);
+        }
+    }
+
+    subscribeUserMemory(listener) {
+        if (typeof listener !== 'function') return () => {};
+        this.userMemoryListeners.add(listener);
+        return () => this.userMemoryListeners.delete(listener);
+    }
+
+    notifyUserMemoryListeners(state, reason) {
+        const snapshot = this.serializeUserMemoryState(state);
+        this.userMemoryListeners.forEach(listener => {
+            try {
+                listener(snapshot, reason || 'update');
+            } catch (error) {
+                console.warn('[UserMemory] State listener failed:', error && error.message ? error.message : error);
+            }
+        });
+    }
+
+    getUserMemoryStateKey(flowOrId, nodeId) {
+        const flowId = typeof flowOrId === 'object' && flowOrId
+            ? flowOrId.id
+            : flowOrId;
+        return `${flowId || 'draft'}::${nodeId}`;
+    }
+
+    resolveUserMemoryTarget(targetNodeId, flow = null) {
+        if (!targetNodeId) return null;
+
+        if (flow && Array.isArray(flow.nodes)) {
+            const node = flow.nodes.find(candidate => candidate.id === targetNodeId && candidate.type === 'state' && candidate.stateType === 'USER_MEMORY');
+            if (node) {
+                return { node, flow, flowId: flow.id || 'draft' };
+            }
+        }
+
+        for (const candidateFlow of this.flows || []) {
+            if (!candidateFlow || !Array.isArray(candidateFlow.nodes)) continue;
+            const node = candidateFlow.nodes.find(candidate => candidate.id === targetNodeId && candidate.type === 'state' && candidate.stateType === 'USER_MEMORY');
+            if (node) {
+                return { node, flow: candidateFlow, flowId: candidateFlow.id || 'draft' };
+            }
+        }
+
+        return null;
+    }
+
+    createUserMemoryState(target) {
+        const config = target.node.config || {};
+        return {
+            id: this.getUserMemoryStateKey(target.flowId, target.node.id),
+            flowId: target.flowId,
+            nodeId: target.node.id,
+            name: config.name || 'User Memory',
+            persistence: config.persistence === 'persistent' ? 'persistent' : 'session',
+            resetAfterMs: Math.max(0, Number(config.resetAfterMs) || 0),
+            entries: new Map(),
+            lastActivity: 0,
+            lastResetAt: 0,
+            updatedAt: 0,
+            loaded: config.persistence !== 'persistent',
+            loadPromise: null
+        };
+    }
+
+    serializeUserMemoryState(state) {
+        if (!state) return null;
+        return {
+            id: state.id,
+            flowId: state.flowId,
+            nodeId: state.nodeId,
+            name: state.name || 'User Memory',
+            persistence: state.persistence === 'persistent' ? 'persistent' : 'session',
+            resetAfterMs: Math.max(0, Number(state.resetAfterMs) || 0),
+            entries: Array.from(state.entries instanceof Map ? state.entries.values() : []),
+            count: state.entries instanceof Map ? state.entries.size : 0,
+            lastActivity: Number(state.lastActivity) || 0,
+            lastResetAt: Number(state.lastResetAt) || 0,
+            updatedAt: Number(state.updatedAt) || 0
+        };
+    }
+
+    applyUserMemorySnapshot(snapshot) {
+        if (!snapshot || !snapshot.id || !snapshot.nodeId) return null;
+
+        let state = this.userMemoryStates.get(snapshot.id);
+        if (state && Number(state.updatedAt) > Number(snapshot.updatedAt || 0)) {
+            return state;
+        }
+
+        if (!state) {
+            state = {
+                id: snapshot.id,
+                flowId: snapshot.flowId || 'draft',
+                nodeId: snapshot.nodeId,
+                entries: new Map(),
+                loaded: true,
+                loadPromise: null
+            };
+            this.userMemoryStates.set(snapshot.id, state);
+        }
+
+        const entries = new Map();
+        if (Array.isArray(snapshot.entries)) {
+            snapshot.entries.forEach(entry => {
+                if (!entry || !entry.key) return;
+                entries.set(String(entry.key), { ...entry, key: String(entry.key) });
+            });
+        }
+
+        state.flowId = snapshot.flowId || state.flowId || 'draft';
+        state.nodeId = snapshot.nodeId;
+        state.name = snapshot.name || state.name || 'User Memory';
+        state.persistence = snapshot.persistence === 'persistent' ? 'persistent' : 'session';
+        state.resetAfterMs = Math.max(0, Number(snapshot.resetAfterMs) || 0);
+        state.entries = entries;
+        state.lastActivity = Number(snapshot.lastActivity) || 0;
+        state.lastResetAt = Number(snapshot.lastResetAt) || 0;
+        state.updatedAt = Number(snapshot.updatedAt) || 0;
+        state.loaded = true;
+
+        this.scheduleUserMemoryReset(state);
+        this.notifyUserMemoryListeners(state, 'sync');
+        return state;
+    }
+
+    async loadPersistentUserMemoryState(state) {
+        try {
+            const db = await this.ensureDB();
+            if (!db || !db.objectStoreNames || !db.objectStoreNames.contains(this.userMemoryStoreName)) return null;
+
+            return await new Promise(resolve => {
+                const transaction = db.transaction(this.userMemoryStoreName, 'readonly');
+                const request = transaction.objectStore(this.userMemoryStoreName).get(state.id);
+                request.onsuccess = () => resolve(request.result || null);
+                request.onerror = () => resolve(null);
+            });
+        } catch (error) {
+            console.warn('[UserMemory] Unable to load saved state:', error && error.message ? error.message : error);
+            return null;
+        }
+    }
+
+    async savePersistentUserMemoryState(state) {
+        if (!state || state.persistence !== 'persistent') return;
+
+        try {
+            const db = await this.ensureDB();
+            if (!db || !db.objectStoreNames || !db.objectStoreNames.contains(this.userMemoryStoreName)) return;
+            const record = this.serializeUserMemoryState(state);
+
+            await new Promise(resolve => {
+                const transaction = db.transaction(this.userMemoryStoreName, 'readwrite');
+                transaction.objectStore(this.userMemoryStoreName).put(record);
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = () => resolve();
+                transaction.onabort = () => resolve();
+            });
+        } catch (error) {
+            console.warn('[UserMemory] Unable to save state:', error && error.message ? error.message : error);
+        }
+    }
+
+    async deletePersistentUserMemoriesForFlow(flowId) {
+        if (!flowId) return;
+        try {
+            const db = await this.ensureDB();
+            if (!db || !db.objectStoreNames || !db.objectStoreNames.contains(this.userMemoryStoreName)) return;
+            await new Promise(resolve => {
+                const transaction = db.transaction(this.userMemoryStoreName, 'readwrite');
+                const store = transaction.objectStore(this.userMemoryStoreName);
+                const request = store.openCursor();
+                request.onsuccess = event => {
+                    const cursor = event.target.result;
+                    if (!cursor) return;
+                    if (cursor.value && String(cursor.value.flowId) === String(flowId)) {
+                        cursor.delete();
+                    }
+                    cursor.continue();
+                };
+                transaction.oncomplete = () => resolve();
+                transaction.onerror = () => resolve();
+                transaction.onabort = () => resolve();
+            });
+        } catch (error) {
+            console.warn('[UserMemory] Unable to remove saved flow state:', error && error.message ? error.message : error);
+        }
+    }
+
+    queueUserMemorySave(state) {
+        if (!state || state.persistence !== 'persistent') return;
+        if (this.userMemorySaveTimers.has(state.id)) {
+            clearTimeout(this.userMemorySaveTimers.get(state.id));
+        }
+        const timer = setTimeout(() => {
+            this.userMemorySaveTimers.delete(state.id);
+            this.savePersistentUserMemoryState(state);
+        }, 150);
+        this.userMemorySaveTimers.set(state.id, timer);
+    }
+
+    queueUserMemoryBroadcast(state) {
+        if (!this.userMemoryChannel || !state) return;
+        if (this.userMemoryBroadcastTimers.has(state.id)) {
+            clearTimeout(this.userMemoryBroadcastTimers.get(state.id));
+        }
+        const timer = setTimeout(() => {
+            this.userMemoryBroadcastTimers.delete(state.id);
+            try {
+                this.userMemoryChannel.postMessage({
+                    kind: 'user-memory-state',
+                    sourceInstanceId: this.userMemoryInstanceId,
+                    snapshot: this.serializeUserMemoryState(state)
+                });
+            } catch (error) {
+                console.warn('[UserMemory] Unable to synchronize state:', error && error.message ? error.message : error);
+            }
+        }, 30);
+        this.userMemoryBroadcastTimers.set(state.id, timer);
+    }
+
+    commitUserMemoryState(state, reason) {
+        if (!state) return;
+        state.updatedAt = Date.now();
+        this.scheduleUserMemoryReset(state);
+        this.queueUserMemorySave(state);
+        this.queueUserMemoryBroadcast(state);
+        this.notifyUserMemoryListeners(state, reason || 'update');
+    }
+
+    scheduleUserMemoryReset(state) {
+        if (!state) return;
+        if (this.userMemoryResetTimers.has(state.id)) {
+            clearTimeout(this.userMemoryResetTimers.get(state.id));
+            this.userMemoryResetTimers.delete(state.id);
+        }
+
+        const resetAfterMs = Math.max(0, Number(state.resetAfterMs) || 0);
+        if (!resetAfterMs || !state.lastActivity) return;
+
+        const remaining = Math.max(0, resetAfterMs - (Date.now() - state.lastActivity));
+        const timer = setTimeout(() => {
+            this.userMemoryResetTimers.delete(state.id);
+            this.clearUserMemoryState(state, 'inactivity');
+        }, remaining);
+        this.userMemoryResetTimers.set(state.id, timer);
+    }
+
+    async ensureUserMemoryState(target) {
+        if (!target || !target.node) return null;
+        const key = this.getUserMemoryStateKey(target.flowId, target.node.id);
+        let state = this.userMemoryStates.get(key);
+        if (!state) {
+            state = this.createUserMemoryState(target);
+            this.userMemoryStates.set(key, state);
+        }
+
+        const config = target.node.config || {};
+        state.name = config.name || state.name || 'User Memory';
+        state.persistence = config.persistence === 'persistent' ? 'persistent' : 'session';
+        state.resetAfterMs = Math.max(0, Number(config.resetAfterMs) || 0);
+
+        if (state.persistence === 'persistent' && !state.loaded) {
+            if (!state.loadPromise) {
+                state.loadPromise = this.loadPersistentUserMemoryState(state).then(record => {
+                    if (record && Number(record.updatedAt || 0) >= Number(state.updatedAt || 0)) {
+                        this.applyUserMemorySnapshot(record);
+                    }
+                    const current = this.userMemoryStates.get(key) || state;
+                    current.loaded = true;
+                    current.loadPromise = null;
+                    return current;
+                });
+            }
+            state = await state.loadPromise;
+        } else {
+            state.loaded = true;
+        }
+
+        if (state.resetAfterMs > 0 && state.lastActivity && Date.now() - state.lastActivity >= state.resetAfterMs) {
+            await this.clearUserMemoryState(state, 'inactivity');
+        } else {
+            this.scheduleUserMemoryReset(state);
+        }
+
+        return state;
+    }
+
+    normalizeUserMemoryEntry(message) {
+        if (!message || typeof message !== 'object') return null;
+        const meta = message.meta && typeof message.meta === 'object' && !Array.isArray(message.meta) ? message.meta : {};
+        const displayName = String(message.chatname || message.displayname || message.username || '').trim();
+        const rawUserId = message.userid ?? message.username ?? meta.uniqueId ?? meta.userId ?? meta.userid ?? displayName;
+        const normalizedUserId = String(rawUserId || '').trim().replace(/^@/, '').toLowerCase();
+        if (!normalizedUserId) return null;
+
+        const source = String(message.type || message.platform || 'unknown').trim().toLowerCase() || 'unknown';
+        return {
+            key: `${source}:${normalizedUserId}`,
+            userid: String(rawUserId || '').trim(),
+            chatname: displayName || String(rawUserId || '').trim(),
+            type: source,
+            chatimg: String(message.chatimg || ''),
+            event: typeof message.event === 'string' ? message.event : '',
+            firstSeenAt: Date.now(),
+            lastSeenAt: Date.now(),
+            participationCount: 1,
+            reason: ''
+        };
+    }
+
+    async rememberUserInMemory(targetNodeId, message, flow = null, reason = '') {
+        const target = this.resolveUserMemoryTarget(targetNodeId, flow);
+        if (!target) return { success: false, error: 'User Memory target not found' };
+        const entry = this.normalizeUserMemoryEntry(message);
+        if (!entry) return { success: false, error: 'The event does not include a user identity' };
+
+        const state = await this.ensureUserMemoryState(target);
+        const existing = state.entries.get(entry.key);
+        const now = Date.now();
+        const cleanReason = String(reason || '').trim().slice(0, 500);
+
+        if (existing) {
+            state.entries.set(entry.key, {
+                ...existing,
+                chatname: entry.chatname || existing.chatname,
+                userid: entry.userid || existing.userid,
+                chatimg: entry.chatimg || existing.chatimg,
+                event: entry.event || existing.event,
+                lastSeenAt: now,
+                participationCount: (Number(existing.participationCount) || 1) + 1,
+                reason: cleanReason || existing.reason || ''
+            });
+        } else {
+            state.entries.set(entry.key, {
+                ...entry,
+                firstSeenAt: now,
+                lastSeenAt: now,
+                reason: cleanReason
+            });
+        }
+
+        state.lastActivity = now;
+        this.commitUserMemoryState(state, existing ? 'remember-again' : 'remember');
+        const storedEntry = state.entries.get(entry.key);
+        return {
+            success: true,
+            added: !existing,
+            entry: { ...storedEntry },
+            count: state.entries.size,
+            name: state.name
+        };
+    }
+
+    async forgetUserFromMemory(targetNodeId, message, flow = null) {
+        const target = this.resolveUserMemoryTarget(targetNodeId, flow);
+        if (!target) return { success: false, error: 'User Memory target not found' };
+        const entry = this.normalizeUserMemoryEntry(message);
+        if (!entry) return { success: false, error: 'The event does not include a user identity' };
+
+        const state = await this.ensureUserMemoryState(target);
+        const removed = state.entries.delete(entry.key);
+        if (removed) {
+            state.lastActivity = Date.now();
+            this.commitUserMemoryState(state, 'forget');
+        }
+        return { success: true, removed, count: state.entries.size, name: state.name };
+    }
+
+    async clearUserMemoryState(state, reason = 'clear') {
+        if (!state) return { success: false, error: 'User Memory state not found' };
+        const clearedCount = state.entries instanceof Map ? state.entries.size : 0;
+        if (!(state.entries instanceof Map)) state.entries = new Map();
+        state.entries.clear();
+        state.lastActivity = 0;
+        state.lastResetAt = Date.now();
+        this.commitUserMemoryState(state, reason);
+        return { success: true, clearedCount, count: 0, name: state.name };
+    }
+
+    async clearUserMemory(targetNodeId, flow = null, reason = 'clear') {
+        const target = this.resolveUserMemoryTarget(targetNodeId, flow);
+        if (!target) return { success: false, error: 'User Memory target not found' };
+        const state = await this.ensureUserMemoryState(target);
+        return this.clearUserMemoryState(state, reason);
+    }
+
+    async isUserRemembered(targetNodeId, message, flow = null) {
+        const target = this.resolveUserMemoryTarget(targetNodeId, flow);
+        if (!target) return false;
+        const entry = this.normalizeUserMemoryEntry(message);
+        if (!entry) return false;
+        const state = await this.ensureUserMemoryState(target);
+        return state.entries.has(entry.key);
+    }
+
+    getSecureRandomIndex(length) {
+        const size = Math.max(0, Math.floor(Number(length) || 0));
+        if (!size) return -1;
+
+        try {
+            const cryptoApi = typeof crypto !== 'undefined' && crypto && typeof crypto.getRandomValues === 'function'
+                ? crypto
+                : (typeof window !== 'undefined' && window.crypto && typeof window.crypto.getRandomValues === 'function' ? window.crypto : null);
+            if (cryptoApi) {
+                const range = 0x100000000;
+                const limit = range - (range % size);
+                const values = new Uint32Array(1);
+                do {
+                    cryptoApi.getRandomValues(values);
+                } while (values[0] >= limit);
+                return values[0] % size;
+            }
+        } catch (error) {}
+
+        return Math.floor(Math.random() * size);
+    }
+
+    async pickRandomUserFromMemory(targetNodeId, flow = null, removeSelected = false) {
+        const target = this.resolveUserMemoryTarget(targetNodeId, flow);
+        if (!target) return { success: false, error: 'User Memory target not found' };
+        const state = await this.ensureUserMemoryState(target);
+        const entries = Array.from(state.entries.values());
+        if (!entries.length) {
+            return { success: false, empty: true, error: 'User Memory is empty', count: 0, name: state.name };
+        }
+
+        const selected = entries[this.getSecureRandomIndex(entries.length)];
+        if (removeSelected && selected) {
+            state.entries.delete(selected.key);
+            state.lastActivity = Date.now();
+            this.commitUserMemoryState(state, 'pick-and-remove');
+        }
+
+        return {
+            success: true,
+            entry: { ...selected },
+            removed: !!removeSelected,
+            count: state.entries.size,
+            name: state.name
+        };
+    }
+
+    getUserMemorySummary(targetNodeId, flow = null) {
+        const target = this.resolveUserMemoryTarget(targetNodeId, flow);
+        if (!target) return null;
+        const key = this.getUserMemoryStateKey(target.flowId, target.node.id);
+        const state = this.userMemoryStates.get(key);
+        if (!state) {
+            return {
+                id: key,
+                flowId: target.flowId,
+                nodeId: target.node.id,
+                name: target.node.config?.name || 'User Memory',
+                count: 0,
+                loaded: target.node.config?.persistence !== 'persistent'
+            };
+        }
+        return { ...this.serializeUserMemoryState(state), loaded: state.loaded !== false };
+    }
+
+    async resetUserMemoriesForEvent(message) {
+        const eventType = String(message && message.event || '').toLowerCase();
+        const isStart = eventType === 'stream_started' || eventType === 'stream_online';
+        const isStop = eventType === 'stream_stopped' || eventType === 'stream_offline';
+        if (!isStart && !isStop) return;
+
+        const resets = [];
+        for (const flow of this.flows || []) {
+            if (!flow || !Array.isArray(flow.nodes)) continue;
+            for (const node of flow.nodes) {
+                if (!node || node.type !== 'state' || node.stateType !== 'USER_MEMORY') continue;
+                const config = node.config || {};
+                if ((isStart && config.resetOnStreamStart) || (isStop && config.resetOnStreamStop)) {
+                    resets.push(this.clearUserMemory(node.id, flow, isStart ? 'stream-start' : 'stream-stop'));
+                }
+            }
+        }
+        await Promise.all(resets);
+    }
+
     // Evaluate state nodes (Gate, Queue, Semaphore, etc.)
-    async evaluateStateNode(node, message, inputActive) {
+    async evaluateStateNode(node, message, inputActive, flow = null) {
         const nodeId = node.id;
         const stateType = node.stateType;
         const config = node.config || {};
+
+        // USER_MEMORY is a shared state resource. It is queried through the
+        // User Is Remembered trigger and changed by User Memory actions.
+        if (stateType === 'USER_MEMORY') {
+            const target = {
+                node,
+                flow,
+                flowId: flow && flow.id ? flow.id : 'draft'
+            };
+            await this.ensureUserMemoryState(target);
+            return { active: false, passMessage: false, modifiedMessage: null };
+        }
         
         // Initialize state if it doesn't exist
-        const stateStore = stateType === 'THROTTLE' ? this.throttleStates : this.nodeStates;
+        const stateStore = stateType === 'SEMAPHORE' ? this.semaphoreStates
+            : stateType === 'THROTTLE' ? this.throttleStates : this.nodeStates;
         if (!stateStore.has(nodeId)) {
             this.initializeStateNode(nodeId, stateType, config);
         }
+
+		// Keep editable counter settings current without resetting the live count.
+		// Previously, target/mode changes only took effect after creating a new node.
+		if (stateType === 'COUNTER') {
+			const counterState = this.nodeStates.get(nodeId);
+			if (counterState) {
+				counterState.targetCount = config.targetCount !== undefined ? config.targetCount : 10;
+				counterState.resetOnTarget = config.resetOnTarget !== false;
+				counterState.mode = config.mode || 'INCREMENT';
+			}
+		}
         
         // Return object includes both activation state and whether to pass message
         let result = { active: false, passMessage: false, modifiedMessage: null };
@@ -343,7 +973,7 @@ class EventFlowSystem {
                 break;
                 
             case 'QUEUE':
-                result = this.evaluateQueueNode(nodeId, config, message, inputActive);
+                result = this.evaluateQueueNode(nodeId, config, message, inputActive, flow);
                 break;
                 
             case 'SEMAPHORE':
@@ -375,6 +1005,7 @@ class EventFlowSystem {
     
     // Initialize state for a state node
     initializeStateNode(nodeId, stateType, config) {
+        this.clearStateNode(nodeId);
         switch (stateType) {
             case 'GATE':
                 this.nodeStates.set(nodeId, { 
@@ -460,7 +1091,7 @@ class EventFlowSystem {
     }
     
     // Queue node: FIFO message queue with overflow strategies
-    evaluateQueueNode(nodeId, config, message, inputActive) {
+    evaluateQueueNode(nodeId, config, message, inputActive, flow = null) {
         if (!inputActive) return { active: false, passMessage: false };
         
         const queue = this.messageQueues.get(nodeId) || [];
@@ -476,93 +1107,127 @@ class EventFlowSystem {
                         queue.shift(); // Remove oldest
                         break;
                     case 'DROP_NEWEST':
-                        return false; // Don't add new message
+                        return { active: false, passMessage: false };
                     case 'DROP_RANDOM':
                         const randomIndex = Math.floor(Math.random() * queue.length);
                         queue.splice(randomIndex, 1);
                         break;
                     default:
-                        return false; // Block by default
+                        return { active: false, passMessage: false };
                 }
             }
             
             // Add message with timestamp
             queue.push({
-                message: message,
+                message: { ...message },
                 timestamp: Date.now()
             });
             this.messageQueues.set(nodeId, queue);
         }
         
-        // Check if we should dequeue
-        if (config.autoDequeue && !state.processing) {
-            const now = Date.now();
-            const timeSinceLastProcess = now - state.lastProcessTime;
-            
-            if (timeSinceLastProcess >= config.processingDelayMs && queue.length > 0) {
-                // Check TTL and remove expired messages
-                const filteredQueue = queue.filter(item => {
-                    return (now - item.timestamp) < config.ttlMs;
-                });
-                this.messageQueues.set(nodeId, filteredQueue);
-                
-                if (filteredQueue.length > 0) {
-                    // Dequeue next message
-                    const item = filteredQueue.shift();
-                    state.processing = true;
-                    state.lastProcessTime = now;
-                    
-                    // Reset processing flag after delay
-                    setTimeout(() => {
-                        state.processing = false;
-                    }, config.processingDelayMs);
-                    
-                    // Return the dequeued message (async - doesn't return original)
-                    return { active: true, passMessage: false, modifiedMessage: item.message };
+        if (config.autoDequeue && !state.processing && !this.stateTimers.has(nodeId)
+            && Date.now() - state.lastProcessTime >= (Number(config.processingDelayMs) || 0)) {
+            const item = this.takeQueueMessage(nodeId, config);
+            if (item) {
+                state.lastProcessTime = Date.now();
+                this.scheduleQueueDrain(nodeId, config, flow, state);
+                return { active: true, passMessage: true, modifiedMessage: item.message };
+            }
+        }
+        this.scheduleQueueDrain(nodeId, config, flow, state);
+        return { active: false, passMessage: false };
+    }
+
+    takeQueueMessage(nodeId, config) {
+        const queue = this.messageQueues.get(nodeId) || [];
+        const ttl = Number(config.ttlMs);
+        while (queue.length) {
+            const item = queue.shift();
+            if (!(ttl > 0) || Date.now() - item.timestamp < ttl) return item;
+        }
+        return null;
+    }
+
+    // Resume only this queue's downstream branch; never replay the original triggers.
+    scheduleQueueDrain(nodeId, config, flow, state) {
+        if (!flow || !config.autoDequeue || state.processing || this.stateTimers.has(nodeId)
+            || !this.messageQueues.get(nodeId)?.length) return;
+        const delay = Math.max(0, (Number(config.processingDelayMs) || 0) - (Date.now() - state.lastProcessTime));
+        const timer = setTimeout(async () => {
+            this.stateTimers.delete(nodeId);
+            if (this.nodeStates.get(nodeId) !== state) return;
+            const currentFlow = this.flows.find(candidate => candidate.id === flow.id) || flow;
+            const node = currentFlow.nodes?.find(candidate => candidate.id === nodeId && candidate.stateType === 'QUEUE');
+            if (currentFlow.active === false || !node || !node.config?.autoDequeue) {
+                this.clearStateNode(nodeId);
+                return;
+            }
+            const item = this.takeQueueMessage(nodeId, node.config);
+            if (!item) return;
+            state.processing = true;
+            state.lastProcessTime = Date.now();
+            try {
+                await this.evaluateFlow(currentFlow, item.message, nodeId);
+            } catch (error) {
+                console.warn('[EventFlow] Queued message failed:', error);
+            } finally {
+                state.processing = false;
+                if (this.nodeStates.get(nodeId) === state) this.scheduleQueueDrain(nodeId, node.config, currentFlow, state);
+            }
+        }, delay);
+        this.stateTimers.set(nodeId, timer);
+    }
+
+    clearStateNode(nodeId) {
+        clearTimeout(this.stateTimers.get(nodeId));
+        this.stateTimers.delete(nodeId);
+        for (const timer of this.semaphoreStates.get(nodeId)?.activeOperations || []) clearTimeout(timer);
+        this.nodeStates.delete(nodeId);
+        this.messageQueues.delete(nodeId);
+        this.semaphoreStates.delete(nodeId);
+        this.throttleStates.delete(nodeId);
+    }
+
+    reconcileFlowState(nextFlows) {
+        for (const flow of this.flows) {
+            const next = nextFlows.find(candidate => candidate.id === flow.id);
+            if (!next) {
+                this.cleanupStateNodes(flow.id);
+                continue;
+            }
+            if (next.active === false) this.cancelFlowExecutions(flow.id);
+            for (const node of flow.nodes || []) {
+                const replacement = next.nodes?.find(candidate => candidate.id === node.id);
+                if (!replacement || replacement.stateType !== node.stateType
+                    || (node.stateType === 'QUEUE' && (next.active === false || !replacement.config?.autoDequeue))) {
+                    this.clearStateNode(node.id);
                 }
             }
         }
-        
-        // Message queued but not released yet
-        return { active: false, passMessage: false };
     }
-    
-    // Cleanup state nodes when flow is deactivated
+
+    // Clean up using the flow's actual node IDs, which need not contain the flow ID.
     cleanupStateNodes(flowId) {
-        // Clear all timers for this flow's nodes
-        this.stateTimers.forEach((timer, nodeId) => {
-            if (nodeId.startsWith(flowId)) {
-                clearTimeout(timer);
-                this.stateTimers.delete(nodeId);
+        this.cancelFlowExecutions(flowId);
+        const flow = this.flows.find(candidate => candidate.id === flowId);
+        for (const node of flow?.nodes || []) this.clearStateNode(node.id);
+
+        const memoryPrefix = `${flowId || 'draft'}::`;
+        this.userMemoryStates.forEach((state, stateId) => {
+            if (!stateId.startsWith(memoryPrefix)) return;
+            if (this.userMemoryResetTimers.has(stateId)) {
+                clearTimeout(this.userMemoryResetTimers.get(stateId));
+                this.userMemoryResetTimers.delete(stateId);
             }
-        });
-        
-        // Clear state storage
-        this.nodeStates.forEach((state, nodeId) => {
-            if (nodeId.startsWith(flowId)) {
-                this.nodeStates.delete(nodeId);
+            if (this.userMemorySaveTimers.has(stateId)) {
+                clearTimeout(this.userMemorySaveTimers.get(stateId));
+                this.userMemorySaveTimers.delete(stateId);
             }
-        });
-        
-        // Clear message queues
-        this.messageQueues.forEach((queue, nodeId) => {
-            if (nodeId.startsWith(flowId)) {
-                this.messageQueues.delete(nodeId);
+            if (this.userMemoryBroadcastTimers.has(stateId)) {
+                clearTimeout(this.userMemoryBroadcastTimers.get(stateId));
+                this.userMemoryBroadcastTimers.delete(stateId);
             }
-        });
-        
-        // Clear semaphore states
-        this.semaphoreStates.forEach((state, nodeId) => {
-            if (nodeId.startsWith(flowId)) {
-                this.semaphoreStates.delete(nodeId);
-            }
-        });
-        
-        // Clear throttle states
-        this.throttleStates.forEach((state, nodeId) => {
-            if (nodeId.startsWith(flowId)) {
-                this.throttleStates.delete(nodeId);
-            }
+            this.userMemoryStates.delete(stateId);
         });
     }
     
@@ -576,11 +1241,13 @@ class EventFlowSystem {
             
             // Auto-release after timeout
             if (config.timeoutMs > 0) {
-                setTimeout(() => {
+                const timer = setTimeout(() => {
+                    state.activeOperations = state.activeOperations.filter(active => active !== timer);
                     if (state.currentCount > 0) {
                         state.currentCount--;
                     }
                 }, config.timeoutMs);
+                state.activeOperations.push(timer);
             }
             
             // Allow message through
@@ -600,9 +1267,11 @@ class EventFlowSystem {
             
             // Auto-reset after timeout
             if (config.autoResetMs > 0) {
-                setTimeout(() => {
+                const timer = setTimeout(() => {
+                    this.stateTimers.delete(nodeId);
                     state.triggered = false;
                 }, config.autoResetMs);
+                this.stateTimers.set(nodeId, timer);
             }
             
             // First trigger - pass message through
@@ -705,12 +1374,15 @@ class EventFlowSystem {
     
     async initDatabase() {
         return new Promise((resolve, reject) => {
-            const request = indexedDB.open(this.dbName, 1);
+            const request = indexedDB.open(this.dbName, 2);
             
             request.onupgradeneeded = event => {
                 const db = event.target.result;
                 if (!db.objectStoreNames.contains(this.storeName)) {
                     db.createObjectStore(this.storeName, { keyPath: 'id' });
+                }
+                if (!db.objectStoreNames.contains(this.userMemoryStoreName)) {
+                    db.createObjectStore(this.userMemoryStoreName, { keyPath: 'id' });
                 }
             };
             
@@ -855,6 +1527,7 @@ class EventFlowSystem {
 						}
 					});
 					
+					this.reconcileFlowState(flowsFromDB);
 					this.flows = flowsFromDB;
 					
 					// Check if MIDI is required and set up listeners
@@ -875,7 +1548,8 @@ class EventFlowSystem {
 		const db = await this.ensureDB();
 		
 		if (!flowData.id) {
-			flowData.id = Date.now().toString(); // Generate ID if not present
+			// Imports can save multiple flows in the same millisecond.
+			flowData.id = `${Date.now()}_${Math.random().toString(16).slice(2)}`;
 		}
 
 		const existingFlowIndex = this.flows.findIndex(f => f.id === flowData.id);
@@ -903,6 +1577,8 @@ class EventFlowSystem {
 			const request = store.put(flowData); // flowData now includes 'order'
 			
 			request.onsuccess = async () => {
+				this.reconcileFlowState(existingFlowIndex === -1 ? [...this.flows, flowData]
+					: this.flows.map(flow => flow.id === flowData.id ? flowData : flow));
 				if (existingFlowIndex !== -1) {
 					this.flows[existingFlowIndex] = flowData;
 				} else {
@@ -978,7 +1654,9 @@ class EventFlowSystem {
             const request = store.delete(flowId);
             
             request.onsuccess = () => {
+                this.cleanupStateNodes(flowId);
                 this.flows = this.flows.filter(flow => flow.id !== flowId);
+                this.deletePersistentUserMemoriesForFlow(flowId);
                 // Re-order remaining flows
                 this.flows.sort((a, b) => (a.order || 0) - (b.order || 0));
                 this.flows.forEach((flow, index) => {
@@ -1028,6 +1706,12 @@ class EventFlowSystem {
 		return !hasChatFields;
 	}
 
+	isCounterEventPayload(message) {
+		if (!this.isMetaOnlyPayload(message)) return false;
+		const eventType = String(message.event || '').trim().toLowerCase();
+		return ['viewer_update', 'likes_update', 'follower_update', 'subscriber_update'].includes(eventType);
+	}
+
 	isObsEventPayload(message) {
 		return !!(message && typeof message === 'object' && (message.type || '').toLowerCase() === 'obs' && message.event);
 	}
@@ -1035,16 +1719,126 @@ class EventFlowSystem {
 	hasChatLikeFields(message) {
 		return !!(message && (message.chatname || message.chatmessage || message.hasDonation || message.contentimg));
 	}
+
+	isTikTokTeamMember(message) {
+		if (!message || String(message.type || '').toLowerCase() !== 'tiktok') return false;
+
+		const meta = message.meta && typeof message.meta === 'object' && !Array.isArray(message.meta)
+			? message.meta
+			: {};
+		const levelCandidates = [
+			meta.memberLevel,
+			meta.teamMemberLevel,
+			meta.fanLevel,
+			message.memberLevel,
+			message.teamMemberLevel,
+			message.fanLevel
+		];
+		if (levelCandidates.some(level => Number(level) > 0)) return true;
+
+		const badges = Array.isArray(message.chatbadges)
+			? message.chatbadges
+			: (message.chatbadges ? [message.chatbadges] : []);
+		return badges.some(badge => {
+			if (typeof badge === 'string') {
+				return /(?:fans?_badge|grade_badge)/i.test(badge);
+			}
+			try {
+				return /(?:fans?_badge|grade_badge)/i.test(JSON.stringify(badge));
+			} catch (e) {
+				return false;
+			}
+		});
+	}
     
+    // Only the native background bridge calls this path. Ordinary chat cannot mark
+    // itself trusted, even if it copies all fields of a host voice payload.
+    async processVoiceCommand(payload) {
+        if (!payload || typeof payload.text !== 'string' || !Number.isFinite(payload.expiresAt) || Date.now() > payload.expiresAt) return;
+        const flow = this.flows.find(f => f.active && f.id === payload.flowId);
+        if (!flow) return;
+        const trigger = flow.nodes.find(n => n.id === payload.nodeId && n.type === 'trigger' && n.triggerType === 'voicePhrase');
+        const normalizeVoice = value => String(value || '').normalize('NFKC').toLocaleLowerCase().replace(/[.,!?;:]/g, '').replace(/\s+/g, ' ').trim();
+        if (!trigger || normalizeVoice(trigger.config.phrase) !== normalizeVoice(payload.text)) return;
+        const message = {chatname:'Host', chatmessage:payload.text, type:'hostvoice', /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly:true};
+        if (!this.voiceMessages) this.voiceMessages = new WeakMap();
+        this.voiceMessages.set(message, payload);
+        try { await this.evaluateFlow(flow, message); } finally { this.voiceMessages.delete(message); }
+    }
+
+    // Only flows that explicitly opt in with a named API trigger are callable.
+    getWorkflowTriggers() {
+        const triggers = [];
+        for (const flow of this.flows || []) {
+            if (!flow.active) continue;
+            const names = new Set();
+            for (const node of flow.nodes || []) {
+                const name = node.type === 'trigger' && node.triggerType === 'apiTrigger'
+                    && typeof node.config?.trigger === 'string' ? node.config.trigger.trim() : '';
+                if (!name || name.length > 100 || names.has(name)) continue;
+                names.add(name);
+                triggers.push({ flowId: flow.id, flowName: flow.name, trigger: name });
+            }
+        }
+        return triggers;
+    }
+
+    createWorkflowMessage(trigger, data) {
+        const message = {
+            type: 'api', event: 'workflow_trigger', chatname: 'Stream Deck / API',
+            chatmessage: '', /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly: true,
+            meta: { workflow: { trigger, data: JSON.parse(JSON.stringify(data || {})) } }
+        };
+        if (!this.workflowMessages) this.workflowMessages = new WeakMap();
+        this.workflowMessages.set(message, trigger);
+        return message;
+    }
+
+    triggerWorkflow(value) {
+        if (typeof value === 'string') {
+            const text = value.trim();
+            if (text[0] === '{') {
+                try { value = JSON.parse(text); } catch (_) { return { ok: false, code: 'INVALID_VALUE', message: 'Workflow value must be a trigger name or valid JSON.' }; }
+            } else value = { trigger: text };
+        }
+        if (!value || typeof value !== 'object' || Array.isArray(value)
+            || Object.keys(value).some(key => !['trigger', 'flowId', 'data'].includes(key))
+            || typeof value.trigger !== 'string' || !value.trigger.trim() || value.trigger.trim().length > 100
+            || (value.flowId !== undefined && (typeof value.flowId !== 'string' || !value.flowId.trim()))
+            || (value.data !== undefined && (!value.data || typeof value.data !== 'object' || Array.isArray(value.data)))) {
+            return { ok: false, code: 'INVALID_VALUE', message: 'Use a trigger name (1–100 characters), optional flowId, and optional data object.' };
+        }
+        try {
+            if (JSON.stringify(value).length > 32768) return { ok: false, code: 'INVALID_VALUE', message: 'Workflow value must fit within 32,768 characters.' };
+        } catch (_) {
+            return { ok: false, code: 'INVALID_VALUE', message: 'Workflow data must be JSON serializable.' };
+        }
+        const trigger = value.trigger.trim();
+        const matches = this.getWorkflowTriggers().filter(item => item.trigger === trigger && (!value.flowId || item.flowId === value.flowId));
+        if (!matches.length) return { ok: false, code: 'WORKFLOW_NOT_FOUND', message: 'No enabled, saved workflow has this Stream Deck / API trigger.' };
+        matches.forEach(item => {
+            const flow = this.flows.find(candidate => candidate.id === item.flowId);
+            const message = this.createWorkflowMessage(trigger, value.data);
+            Promise.resolve().then(() => this.evaluateFlow(flow, message)).catch(error => {
+                console.warn('[Event Flow] Workflow failed:', item.flowName, error);
+            }).finally(() => this.workflowMessages.delete(message));
+        });
+        return { ok: true, trigger, matchedFlows: matches.length, flows: matches, status: 'accepted' };
+    }
+
     async processMessage(message) {
         
         if (!message) {
             ////console.log("[RELAY DEBUG - ProcessMessage] Message is null/undefined at start.");
             return message;
         }
+
+        // Automatic User Memory resets happen before flows evaluate the stream event.
+        await this.resetUserMemoriesForEvent(message);
         
-		// Ignore meta-only payloads (e.g., viewer/follower count updates) so they never trigger flows
-		if (this.isMetaOnlyPayload(message)) {
+		// Counter payloads may continue only to explicit matching event triggers.
+		// Other meta-only traffic remains excluded from Event Flow.
+		if (this.isMetaOnlyPayload(message) && !this.isCounterEventPayload(message)) {
 			return message;
 		}
 		
@@ -1089,21 +1883,67 @@ class EventFlowSystem {
         return blocked ? null : processed;
     }
     
-    async evaluateFlow(flow, message) {
+    cancelFlowExecutions(flowId) {
+        const execution = this.flowExecutions && this.flowExecutions.get(flowId);
+        if (!execution) return;
+        execution.cancelled = true;
+        for (const finish of execution.delays) finish();
+        this.flowExecutions.delete(flowId);
+    }
+
+    waitForFlowDelay(delayMs, execution) {
+        if (!execution) return new Promise(resolve => setTimeout(resolve, delayMs));
+        if (execution.cancelled) return Promise.resolve();
+        return new Promise(resolve => {
+            const finish = () => {
+                clearTimeout(timer);
+                execution.delays.delete(finish);
+                resolve();
+            };
+            const timer = setTimeout(finish, delayMs);
+            execution.delays.add(finish);
+        });
+    }
+
+    async evaluateFlow(flow, message, resumeNodeId = null) {
       //console.log(`[EvaluateFlow "${flow.name}"] Starting evaluation with message:`, JSON.stringify(message));
         if (!flow.nodes || !flow.connections) {
           //console.log(`[EvaluateFlow "${flow.name}"] Flow has no nodes or connections.`);
             return { modified: false, message, blocked: false };
         }
 
+        if (!this.flowExecutions) this.flowExecutions = new Map();
+        if (!this.flowExecutions.has(flow.id)) {
+            this.flowExecutions.set(flow.id, { cancelled: false, delays: new Set() });
+        }
+        const execution = this.flowExecutions.get(flow.id);
+        const canContinue = () => !execution.cancelled
+            && (this.flows.find(candidate => candidate.id === flow.id) || flow).active !== false;
         const nodeActivationStates = {}; 
+        if (resumeNodeId) {
+            const downstream = new Set([resumeNodeId]);
+            const pending = [resumeNodeId];
+            while (pending.length) {
+                const id = pending.shift();
+                for (const connection of flow.connections) {
+                    if (connection.from === id && !downstream.has(connection.to)) {
+                        downstream.add(connection.to);
+                        pending.push(connection.to);
+                    }
+                }
+            }
+            for (const node of flow.nodes) {
+                if (!downstream.has(node.id) || node.type === 'trigger') nodeActivationStates[node.id] = false;
+            }
+            nodeActivationStates[resumeNodeId] = true;
+        }
 
         // --- Pass 1: Evaluate all base triggers ---
       //console.log(`[EvaluateFlow "${flow.name}"] Pass 1: Evaluating Triggers`);
         for (const node of flow.nodes) {
-            if (node.type === 'trigger') {
+            if (node.type === 'trigger' && !resumeNodeId) {
               //console.log(`[EvaluateFlow "${flow.name}"] Evaluating Trigger Node ID: ${node.id}, Type: ${node.triggerType}`);
-                nodeActivationStates[node.id] = await this.evaluateTrigger(node, message);
+                nodeActivationStates[node.id] = await this.evaluateTrigger(node, message, flow);
               //console.log(`[EvaluateFlow "${flow.name}"] Trigger Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
             }
         }
@@ -1144,7 +1984,7 @@ class EventFlowSystem {
                     if (allInputsEvaluated) {
                         const inputActive = inputNodeIds.some(inputId => nodeActivationStates[inputId] === true);
                       //console.log(`[EvaluateFlow "${flow.name}"] Evaluating State Node ID: ${node.id} (${node.stateType}) with input active: ${inputActive}`);
-                        const result = await this.evaluateStateNode(node, message, inputActive);
+                        const result = await this.evaluateStateNode(node, message, inputActive, flow);
                         
                         // State nodes return an object with activation and pass-through info
                         nodeActivationStates[node.id] = result.active;
@@ -1172,9 +2012,11 @@ class EventFlowSystem {
         let overallResult = { modified: false, message: baseMessage, blocked: false }; 
         const nodeMap = new Map(flow.nodes.map(node => [node.id, node]));
         const executedActions = new Set(); // Track which actions have been executed
+        const pointRedemptions = new Map(); // Charges belonging to this event's direct AI rewards.
 
         // Process actions in topological order (following connections)
         const executeActionChain = async (actionId) => {
+            if (!canContinue()) return;
             if (executedActions.has(actionId)) {
                 return; // Already executed this action
             }
@@ -1191,7 +2033,8 @@ class EventFlowSystem {
             
             // Execute this action
             executedActions.add(actionId);
-            const actionResult = await this.executeAction(node, overallResult.message);
+            const actionResult = await this.executeAction(node, overallResult.message, flow, execution, pointRedemptions);
+            if (!canContinue()) return;
             
             if (actionResult) {
                 // Handle returnNow - mark message for immediate return
@@ -1225,6 +2068,7 @@ class EventFlowSystem {
                             let asyncBlocked = false;
 
                             const executeAsyncChain = async (asyncActionId) => {
+                                if (!canContinue()) return;
                                 if (asyncExecutedActions.has(asyncActionId)) return;
                                 if (asyncBlocked) return; // Stop if blocked
 
@@ -1232,7 +2076,8 @@ class EventFlowSystem {
                                 if (!asyncNode || asyncNode.type !== 'action') return;
 
                                 asyncExecutedActions.add(asyncActionId);
-                                const asyncResult = await this.executeAction(asyncNode, asyncMessage);
+                                const asyncResult = await this.executeAction(asyncNode, asyncMessage, flow, execution, pointRedemptions);
+                                if (!canContinue()) return;
 
                                 // Handle action results - mirror synchronous behavior
                                 if (asyncResult) {
@@ -1243,6 +2088,7 @@ class EventFlowSystem {
                                     if (asyncResult.modified && asyncResult.message) {
                                         asyncMessage = { ...asyncResult.message };
                                     }
+                                    if (asyncResult.stopChain) return;
                                     // If this action also wants to continue async, it will spawn its own setTimeout
                                     if (asyncResult.continueAsync) {
                                         // Already running async, so just continue normally
@@ -1274,6 +2120,8 @@ class EventFlowSystem {
                 }
             }
 
+            if (actionResult && actionResult.stopChain) return;
+
             // Find and execute downstream actions (synchronous path)
             let downstreamConnections = flow.connections.filter(conn => conn.from === actionId);
             // Prioritize lightweight/control actions before heavy ones (e.g., delay)
@@ -1285,6 +2133,10 @@ class EventFlowSystem {
                     case 'setCounter':
                     case 'incrementCounter':
                     case 'checkCounter':
+                    case 'rememberUser':
+                    case 'forgetUser':
+                    case 'clearUserMemory':
+                    case 'pickRandomUser':
                         return 0; // control/state updates first
                     case 'delay':
                         return 100; // run after immediate controls
@@ -1349,6 +2201,7 @@ class EventFlowSystem {
         return text.replace(/\s\s+/g, ' ').trim();
     }
 
+    // Read only own JSON fields; never traverse prototypes through user-entered paths.
     getMessageProperty(message, path) {
         const parts = String(path || '').split('.');
         let value = message;
@@ -1417,8 +2270,15 @@ class EventFlowSystem {
         return rewardPatterns.some(pattern => pattern.test(text));
     }
     
-    async evaluateTrigger(triggerNode, message) {
+    async evaluateTrigger(triggerNode, message, flow = null) {
         const { triggerType, config } = triggerNode;
+        if (triggerType === 'apiTrigger') {
+            const trigger = message && this.workflowMessages && this.workflowMessages.get(message);
+            return !!trigger && trigger === String(config?.trigger || '').trim();
+        }
+        const voice = message && this.voiceMessages && this.voiceMessages.get(message);
+        if (voice) return triggerType === 'voicePhrase' && triggerNode.id === voice.nodeId && Date.now() <= voice.expiresAt;
+        if (triggerType === 'voicePhrase') return false;
         // Boolean activity markers are valid payloads, but are not named events.
         const messageEvent = message && typeof message.event === 'string' ? message.event.toLowerCase() : '';
         // Scheduler ticks have no chat payload. Do not match message filters or
@@ -1431,8 +2291,9 @@ class EventFlowSystem {
         // console.log(`[EvaluateTrigger] Node: ${triggerNode.id}, Type: ${triggerType}, Config: ${JSON.stringify(config)}, Message: ${message.chatmessage}`);
         let match = false;
 		
-		// Skip meta-only payloads so metric updates can't trigger flows
-		if (this.isMetaOnlyPayload(message)){
+		// Known counters may match only an explicit Event Type trigger. This keeps
+		// them out of Any Message and other generic chat-oriented triggers.
+		if (this.isMetaOnlyPayload(message) && (triggerType !== 'eventOther' || !this.isCounterEventPayload(message))){
 			return false;
 		}
 		
@@ -1549,8 +2410,14 @@ class EventFlowSystem {
                 match = config && typeof config.username === 'string' && identifier === config.username.toLowerCase();
               ////console.log(`[EvaluateTrigger - fromUser] Config Username: "${config.username}", Message Identifier: "${identifier}", Match: ${match}`);
                 return match;
+
+            case 'userMemoryContains':
+                return this.isUserRemembered(config && config.targetNodeId, message, flow);
                 
             case 'userRole':
+                if (config && config.role === 'tiktokTeamMember') {
+                    return this.isTikTokTeamMember(message);
+                }
                 match = message && config && message[config.role] === true; 
               ////console.log(`[EvaluateTrigger - userRole] Config Role: "${config.role}", Message Role Value: ${message[config.role]}, Match: ${match}`);
                 return match;
@@ -1615,14 +2482,13 @@ class EventFlowSystem {
 
             case 'eventDonation': {
                 const event = messageEvent;
-                const eventMatch = event === 'donation' || event === 'cheer' || event === 'supersticker';
+				const eventMatch = !!message.hasDonation || event === 'superchat' || event === 'donation' || event === 'cheer' || event === 'supersticker' || event === 'jeweldonation';
                 const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
 
                 // Check minimum amount if specified
                 let amountMatch = true;
-                if (config.minAmount > 0 && message.hasDonation) {
-                    // Try to parse donation amount from hasDonation string
-                    const amount = typeof getDonationValueUSD === 'function' ? getDonationValueUSD(message) : (Number(message.donoValue) || 0);
+                if (config.minAmount > 0) {
+                    const amount = this.getDonationNumericValue(message) || 0;
                     amountMatch = amount >= config.minAmount;
                 }
 
@@ -1669,10 +2535,7 @@ class EventFlowSystem {
                 const eventMatch = this.eventTypeMatches(targetEventType, msgEventType);
 
                 // If there's a custom condition, evaluate it
-                if (eventMatch && config.customCondition) {
-                    this.warnCustomJsEvalDisabled('custom event condition');
-                    return false;
-                }
+                if (eventMatch && config.customCondition) { this.warnCustomJsEvalDisabled('custom event condition'); return false; }
 
                 return eventMatch;
             }
@@ -1707,6 +2570,16 @@ class EventFlowSystem {
                 return event === 'scene_changed' || event === 'obs_scene_changed';
             }
 
+            case 'obsMediaEnded': {
+                if ((message.type || '').toLowerCase() !== 'obs') return false;
+                const event = messageEvent;
+                if (event !== 'media_ended' && event !== 'obs_media_ended') return false;
+                const configuredSource = String(config.sourceName || '').trim().toLowerCase();
+                if (!configuredSource) return true;
+                const eventSource = String(message.meta?.inputName || message.inputName || '').trim().toLowerCase();
+                return eventSource === configuredSource;
+            }
+
             case 'obsReplaybufferSaved': {
                 // Matches OBS obs-browser's official replay-buffer event casing.
                 if ((message.type || '').toLowerCase() !== 'obs') return false;
@@ -1715,7 +2588,7 @@ class EventFlowSystem {
             }
 
             case 'compareProperty': {
-                const prop = config.property || 'donationAmount';
+                const prop = config.property || 'donoValue';
                 const operator = config.operator || 'gt';
                 const rawCompareValue = config.value;
 
@@ -1723,7 +2596,10 @@ class EventFlowSystem {
                 let msgValue = this.getMessageProperty(message, prop);
 
                 // Handle special cases for message length and word count
-                if (prop === 'messageLength' && message.chatmessage) {
+                if (prop === 'donationAmount' || prop === 'donoValue' ||
+                    (prop === 'hasDonation' && ['gt', 'gte', 'lt', 'lte'].includes(operator))) {
+                    msgValue = this.getDonationNumericValue(message);
+                } else if (prop === 'messageLength' && message.chatmessage) {
                     msgValue = message.chatmessage.length;
                 } else if (prop === 'wordCount' && message.chatmessage) {
                     msgValue = message.chatmessage.trim().split(/\s+/).filter(w => w.length > 0).length;
@@ -1829,9 +2705,7 @@ class EventFlowSystem {
                 // They'll be set up when flows are loaded/saved
                 return false;
                 
-            case 'customJs':
-                this.warnCustomJsEvalDisabled('customJs trigger');
-                return false;
+            case 'customJs': this.warnCustomJsEvalDisabled('customJs trigger'); return false;
                 
             case 'counter': {
                 const {
@@ -1898,14 +2772,14 @@ class EventFlowSystem {
             
             case 'userPool': {
                 const poolConfig = {
-                    poolName: trigger.config.poolName || 'default',
-                    maxUsers: trigger.config.maxUsers || 10,
-                    requireEntry: trigger.config.requireEntry !== false, // Default true
-                    entryKeyword: trigger.config.entryKeyword || '!enter',
-                    resetOnFull: trigger.config.resetOnFull || false,
-                    resetAfterMs: trigger.config.resetAfterMs || 0,
-                    allowReentry: trigger.config.allowReentry || false,
-                    scope: trigger.config.scope || 'global' // global, perSource
+                    poolName: config.poolName || 'default',
+                    maxUsers: config.maxUsers || 10,
+                    requireEntry: config.requireEntry !== false, // Default true
+                    entryKeyword: config.entryKeyword || '!enter',
+                    resetOnFull: config.resetOnFull || false,
+                    resetAfterMs: config.resetAfterMs || 0,
+                    allowReentry: config.allowReentry || false,
+                    scope: config.scope || 'global' // global, perSource
                 };
                 
                 // Initialize pool storage if needed
@@ -1994,14 +2868,14 @@ class EventFlowSystem {
             
             case 'accumulator': {
                 const accConfig = {
-                    accumulatorName: trigger.config.accumulatorName || 'default',
-                    threshold: trigger.config.threshold || 100,
-                    propertyName: trigger.config.propertyName || 'amount',
-                    operation: trigger.config.operation || 'sum', // sum, avg, max, min
-                    triggerMode: trigger.config.triggerMode || 'gte', // gte, exact, lte
-                    autoReset: trigger.config.autoReset || false,
-                    scope: trigger.config.scope || 'global', // global, perUser, perSource
-                    resetAfterMs: trigger.config.resetAfterMs || 0
+                    accumulatorName: config.accumulatorName || 'default',
+                    threshold: config.threshold || 100,
+                    propertyName: config.propertyName || 'amount',
+                    operation: config.operation || 'sum', // sum, avg, max, min
+                    triggerMode: config.triggerMode || 'gte', // gte, exact, lte
+                    autoReset: config.autoReset || false,
+                    scope: config.scope || 'global', // global, perUser, perSource
+                    resetAfterMs: config.resetAfterMs || 0
                 };
                 
                 // Initialize accumulator storage if needed
@@ -2276,7 +3150,7 @@ class EventFlowSystem {
             
             // Process action node
             if (node.type === 'action') {
-                const actionResult = await this.executeAction(node, currentMessage);
+                const actionResult = await this.executeAction(node, currentMessage, flow);
                 
                 if (actionResult) {
                     if (actionResult.blocked) {
@@ -2323,6 +3197,9 @@ class EventFlowSystem {
 		if (!text) return text || '';
 		if (!message) return text;
 
+		const donationNumericValue = this.getDonationNumericValue(message);
+		const donationAmountValue = donationNumericValue !== null ? donationNumericValue : (message.donationAmount || message.donoValue || '');
+
 		// Build lookup map with all supported variables (lowercase keys for case-insensitive matching)
 		const messageData = {
 			// Core aliases for backward compatibility
@@ -2336,7 +3213,8 @@ class EventFlowSystem {
 			chatmessage: message.chatmessage || '',
 			type: message.type || '',
 			hasdonation: message.hasDonation || '',
-			donationamount: message.donationAmount || '',
+			donationamount: donationAmountValue,
+			donovalue: donationAmountValue,
 			event: message.event || '',
 			membership: message.membership || '',
 			subtitle: message.subtitle || '',
@@ -2377,6 +3255,58 @@ class EventFlowSystem {
 				}
 			}
 			return String(val);
+		});
+	}
+
+	escapeThermalPrintText(value) {
+		return String(value ?? '')
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#39;');
+	}
+
+	renderThermalPrintText(template, message, weight) {
+		const render = text => this.escapeThermalPrintText(this.replaceTemplateVars(text, message));
+		if (weight !== 'selected') return render(template);
+		// Parse only the host's template. Buyer/item text cannot introduce formatting or HTML.
+		return template.split(/(\*\*[\s\S]+?\*\*)/g).map(part => {
+			if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+				return `<strong>${render(part.slice(2, -2))}</strong>`;
+			}
+			return render(part);
+		}).join('');
+	}
+
+	resolveThermalPrinter() {
+		if (typeof this.printThermal === 'function') return this.printThermal;
+		try {
+			if (typeof window.printThermal === 'function') return window.printThermal;
+		} catch (e) {}
+		try {
+			if (window.ninjafy && typeof window.ninjafy.printThermal === 'function') {
+				return window.ninjafy.printThermal.bind(window.ninjafy);
+			}
+		} catch (e) {}
+		return null;
+	}
+
+	/**
+	 * Render Event Flow variables inside JSON string values for a webhook body.
+	 * Bodies without template variables are returned unchanged.
+	 * @param {string} template - Custom webhook JSON body
+	 * @param {Object} message - Message object with field values
+	 * @returns {string} Rendered JSON body
+	 */
+	renderWebhookBody(template, message) {
+		if (typeof template !== 'string' || !/\{\w+(?:\.\w+)*\}/i.test(template)) {
+			return template;
+		}
+
+		const parsed = JSON.parse(template);
+		return JSON.stringify(parsed, (_key, value) => {
+			return typeof value === 'string' ? this.replaceTemplateVars(value, message) : value;
 		});
 	}
 
@@ -2472,7 +3402,42 @@ class EventFlowSystem {
 		return text.trim();
 	}
     
-    async executeAction(actionNode, message) {
+    async executeCommunityCheer() {
+        if (typeof this.sendTargetP2P !== 'function') return false;
+        // Reuse the established show-text overlay vocabulary, with a fixed bounded preset.
+        const payload = { actionType: 'show_text', text: 'Cheer!', textProcessed: true,
+            x: 50, y: 40, width: 60, fontSize: 48, fontFamily: 'Arial', color: '#ffffff',
+            backgroundColor: 'rgba(0,0,0,0.8)', duration: 3000, animation: 'none', clearFirst: false };
+        const sent = await this.sendTargetP2P({ overlayNinja: payload }, 'actions', { retry: false });
+        return sent === true; // Transport acceptance, never proof that OBS displayed it.
+    }
+
+    requestCommerceControl(request) {
+        return new Promise((resolve) => {
+            let settled = false;
+            const finish = (reply) => {
+                if (settled) return;
+                settled = true;
+                clearTimeout(timer);
+                resolve(reply && typeof reply === 'object' ? reply : { error: 'Product control did not return a result.' });
+            };
+            const timer = setTimeout(() => finish({ error: 'Product control timed out. Check SSN before retrying.' }), 8000);
+            try {
+                if (typeof window.handleMonetizationRequest === 'function') {
+                    Promise.resolve(window.handleMonetizationRequest(request)).then(finish, error => finish({ error: error && error.message || String(error) }));
+                } else if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                    chrome.runtime.sendMessage(request, reply => {
+                        const error = chrome.runtime.lastError;
+                        finish(error ? { error: error.message || 'Product control is unavailable.' } : reply);
+                    });
+                } else if (this.sendMessageToBackground) {
+                    Promise.resolve(this.sendMessageToBackground(request)).then(finish, error => finish({ error: error && error.message || String(error) }));
+                } else finish({ error: 'Product control is unavailable.' });
+            } catch (error) { finish({ error: error && error.message || String(error) }); }
+        });
+    }
+
+    async executeAction(actionNode, message, flow = null, execution = null, pointRedemptions = null) {
         const { actionType, config } = actionNode;
         //console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
         let result = { modified: false, message, blocked: false };
@@ -2568,7 +3533,7 @@ class EventFlowSystem {
                     this.reflectionSeen.set(basis, now);
                     // Not blocked
                 } else {
-                    // Within window and seen already â†’ block
+                    // Within window and seen already → block
                     result.blocked = true;
                 }
                 break;
@@ -2612,6 +3577,53 @@ class EventFlowSystem {
                 result.modified = true;
                 break;
 
+            case 'showAiEventOverlay': {
+                const profile = String(config.profile || 'default');
+                const charge = pointRedemptions && pointRedemptions.get(actionNode.id);
+                if (charge) {
+                    pointRedemptions.delete(actionNode.id);
+                    let delivered = false;
+                    try {
+                        if (!window.SSNAiEventBackground) throw new Error('Paid AI overlay rewards must run on the SSN host.');
+                        await window.SSNAiEventBackground.trigger({ profile, variation: config.variation, message, prepare: true, expiresAt: charge.expiresAt });
+                        delivered = true;
+                        if (charge.operationId && !(await charge.system.pointRedemption(charge.name, charge.type, charge.amount, charge.operationId, 'complete')).success) throw new Error('AI overlay point settlement was not confirmed.');
+                    } catch (error) {
+                        if (!delivered) {
+                            const refunded = await charge.system.refundPoints(charge.name, charge.type, charge.amount, charge.operationId);
+                            if (!refunded.success) throw new Error('AI overlay failed, but its point refund could not be confirmed.');
+                            if (typeof window.requestPointsLeaderboardBroadcast === 'function') window.requestPointsLeaderboardBroadcast('ai-overlay-refund', { immediate: true });
+                            throw new Error(error.message + ' The reward points were returned.');
+                        }
+                        throw error;
+                    }
+                    break;
+                }
+                if (window.SSNAiEventBackground) {
+                    await window.SSNAiEventBackground.trigger({ profile, variation: config.variation, message });
+                    break;
+                }
+                if (!this.sendTargetP2P && typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+                    await new Promise((resolve, reject) => {
+                        chrome.runtime.sendMessage({ cmd: 'aiEventFlow', action: 'show', profile, variation: config.variation, message }, response => {
+                            if (chrome.runtime.lastError || !response || response.error) reject(new Error(response && response.error || 'SSN is unavailable.'));
+                            else resolve(response.value);
+                        });
+                    });
+                    break;
+                }
+                const meta = message && message.meta && typeof message.meta === 'object' && !Array.isArray(message.meta)
+                    ? { ...message.meta } : (message && message.meta !== undefined ? { value: message.meta } : {});
+                meta.aiEventOverlay = { profile };
+                if (config.variation) meta.aiEventOverlay.variation = String(config.variation);
+                if (this.sendTargetP2P) {
+                    if (await this.sendTargetP2P({ ...(message || {}), meta }, 'aievent-' + profile, { retry: false }) === false) throw new Error('AI overlay is not connected.');
+                } else {
+                    throw new Error('Open the local Event Flow editor in SSN.');
+                }
+                break;
+            }
+
             case 'featureMessage': {
                 const currentMeta = (message && typeof message.meta === 'object' && message.meta !== null && !Array.isArray(message.meta))
                     ? { ...message.meta }
@@ -2623,6 +3635,70 @@ class EventFlowSystem {
                     meta: currentMeta
                 };
                 result.modified = true;
+                break;
+            }
+
+            case 'pinMessage': {
+                const actionConfig = config || {};
+                const mode = actionConfig.mode || 'pin';
+                const target = (actionConfig.target || '').toString().trim();
+                const sendDockPayload = async (payload) => {
+                    if (!payload || typeof payload !== 'object') return;
+                    const dockPayload = target ? { ...payload, target } : payload;
+                    if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                        this.sendTargetP2P(dockPayload, 'dock');
+                        return;
+                    }
+                    console.warn('[EventFlow pinMessage] Dock messaging is not available.');
+                };
+
+                if (mode === 'nextPinned') {
+                    await sendDockPayload({ action: 'nextPinned' });
+                    break;
+                }
+
+                const currentMeta = (message && typeof message.meta === 'object' && message.meta !== null && !Array.isArray(message.meta))
+                    ? { ...message.meta }
+                    : (message && message.meta !== undefined ? { value: message.meta } : {});
+                const idTemplate = actionConfig.messageId || '{id}';
+                const usesTriggerId = String(idTemplate).trim().toLowerCase() === '{id}';
+                const messageId = (usesTriggerId && message && message.id !== undefined && message.id !== null)
+                    ? message.id
+                    : this.replaceTemplateVars(idTemplate, message || {}).trim();
+
+                if (mode === 'unpin') {
+                    if (usesTriggerId || (message && messageId !== undefined && messageId !== null && String(messageId) === String(message.id))) {
+                        currentMeta.pinned = false;
+                        delete currentMeta.pinnedTarget;
+                        result.message = {
+                            ...(message || {}),
+                            meta: currentMeta
+                        };
+                        result.modified = true;
+                    }
+                    if (messageId !== undefined && messageId !== null && messageId !== '') {
+                        await sendDockPayload({ action: 'unpin', value: messageId });
+                    }
+                    break;
+                }
+
+                const pinsTriggerMessage = usesTriggerId || (message && messageId !== undefined && messageId !== null && String(messageId) === String(message.id));
+                if (pinsTriggerMessage) {
+                    currentMeta.pinned = true;
+                    if (target) {
+                        currentMeta.pinnedTarget = target;
+                    } else {
+                        delete currentMeta.pinnedTarget;
+                    }
+                    result.message = {
+                        ...(message || {}),
+                        meta: currentMeta
+                    };
+                    result.modified = true;
+                }
+                if (messageId !== undefined && messageId !== null && messageId !== '') {
+                    await sendDockPayload({ action: 'pin', value: messageId });
+                }
                 break;
             }
                 
@@ -2864,13 +3940,25 @@ class EventFlowSystem {
 
 					const method = config.method || 'POST';
 					const headers = { 'Content-Type': 'application/json', ...(config.headers || {}) };
-					const body = config.includeMessage ? JSON.stringify(message) : (config.body || '{}');
 					const webhookTimeout = config.timeout || 8000;
 
 					// Prepare fetch options
 					const fetchOpts = { method, headers };
 					if (method !== 'GET' && method !== 'HEAD') {
-						fetchOpts.body = body;
+						try {
+							fetchOpts.body = config.includeMessage
+								? JSON.stringify(message)
+								: this.renderWebhookBody(config.body || '{}', message);
+						} catch (error) {
+							const errorMessage = `Invalid custom webhook JSON: ${error.message}`;
+							console.error(`[ExecuteAction - webhook] ${errorMessage} for node ${actionNode.id}`);
+							result.message = { ...message, webhookError: errorMessage };
+							result.modified = true;
+							if (config.syncMode && config.blockOnFailure) {
+								result.blocked = true;
+							}
+							break;
+						}
 					}
 
 					if (config.syncMode) {
@@ -2931,6 +4019,7 @@ class EventFlowSystem {
 				break;
                 
             case 'addPoints':
+                if (message && message.meta && message.meta.economyTest) break;
 				try {
 					if (!this.pointsSystem && typeof window !== 'undefined' && typeof window.pointsSystemReady === 'function') {
 						await window.pointsSystemReady();
@@ -2958,42 +4047,121 @@ class EventFlowSystem {
 				break;
                 
             case 'spendPoints':
+                if (message && message.meta && message.meta.economyTest) break;
 				try {
 					if (!this.pointsSystem && typeof window !== 'undefined' && typeof window.pointsSystemReady === 'function') {
 						await window.pointsSystemReady();
 						this.pointsSystem = window.pointsSystem || this.pointsSystem;
 					}
 					const system = this.pointsSystem;
-					if (system && config.amount > 0) {
-						const spendResult = await system.spendPoints( // Capture the result
-							message.chatname,
-							message.type,
-							config.amount
-						);
+                    if (!system || !Number.isFinite(config.amount) || config.amount <= 0) throw new Error('Points system or amount is unavailable.');
+                    if (system && config.amount > 0) {
+						const next = flow && pointRedemptions ? flow.connections.filter(connection => connection.from === actionNode.id) : [];
+						const reward = next.length === 1 && flow.connections.filter(connection => connection.to === next[0].to).length === 1 && flow.nodes.find(node => node.id === next[0].to && node.actionType === 'showAiEventOverlay');
+						const charge = reward ? { system, name: message.chatname, type: message.type, amount: config.amount, expiresAt: Date.now() + 240000,
+							operationId: Number.isSafeInteger(config.amount) ? 'ai-flow-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2) : undefined } : null;
+						const spendArgs = [message.chatname, message.type, config.amount];
+						if (charge && charge.operationId) spendArgs.push(charge.operationId, 240000);
+						const spendResult = await system.spendPoints.apply(system, spendArgs);
 
 						if (!spendResult.success) {
 							result.blocked = true; // This will stop subsequent actions in this flow path.
 							result.message = { ...message, pointsSpendError: spendResult.message };
 							result.modified = true;
-						} else if (typeof window !== 'undefined' && typeof window.requestPointsLeaderboardBroadcast === 'function') {
-							window.requestPointsLeaderboardBroadcast('action-spend', { immediate: true });
+						} else {
+							if (charge) pointRedemptions.set(reward.id, charge);
+							if (typeof window !== 'undefined' && typeof window.requestPointsLeaderboardBroadcast === 'function') window.requestPointsLeaderboardBroadcast('action-spend', { immediate: true });
 						}
 					}
 				} catch (e) {
 					console.warn('[ExecuteAction - spendPoints] failed', e);
+                    result.stopChain = true;
 				}
 				break;
-                
-            case 'customJs':
-                this.warnCustomJsEvalDisabled('customJs action');
+
+            case 'giveawayControl': {
+                const allowed = ['entergiveaway','buygiveawaytickets','grantgiveawaytickets','closegiveaway','drawgiveaway','cancelgiveaway','getgiveawaystate'];
+                let reply;
+                try {
+                    if (!allowed.includes(config.command)) throw new Error('Choose a giveaway action.');
+                    if (message && message.meta && message.meta.economyTest) {
+                        reply = {ok:true,simulated:true,message:'Simulation only: no entries or points changed.'};
+                    } else {
+                        if (typeof window.handleGiveawayAction !== 'function') throw new Error('Giveaway actions must run on the SSN host.');
+                        if (!this.economyEpoch) this.economyEpoch = Date.now() + '-' + Math.random();
+                        const sourceId = message && message.meta && message.meta.messageId;
+                        const localId = message && message.id;
+                        if (!sourceId && localId === undefined) throw new Error('A captured message ID is required for safe giveaway automation.');
+                        const operationId = 'flow:' + JSON.stringify([flow.id,actionNode.id,sourceId || this.economyEpoch + ':' + localId,message.type]);
+                        reply = await window.handleGiveawayAction(config.command,{giveawayId:config.giveawayId || 'default',count:Number(config.count || 1),side:config.side || undefined,operationId:operationId},message);
+                    }
+                } catch (error) { reply = {ok:false,error:error.message}; }
+                if(message && message.meta != null && (typeof message.meta!=='object' || Array.isArray(message.meta)))result.giveawayControlResult=reply;
+                else {
+                    const meta={...(message && message.meta || {}),giveawayControlResult:reply};
+                    if(['entergiveaway','buygiveawaytickets','grantgiveawaytickets'].includes(config.command))meta.giveawayHandled=Array.from(new Set([...(Array.isArray(meta.giveawayHandled)?meta.giveawayHandled:[]),config.giveawayId || 'default']));
+                    result.message = {...message,meta:meta};result.modified = true;
+                }
+                if (!reply.ok) result.stopChain = true;
                 break;
+            }
+                
+            case 'customJs': this.warnCustomJsEvalDisabled('customJs action'); break;
+
+			case 'printThermal': {
+				const printer = this.resolveThermalPrinter();
+				let printResult;
+				if (!printer) {
+					printResult = {
+						success: false,
+						code: 'SSAPP_PRINT_UNAVAILABLE',
+						error: 'Thermal printing requires the Social Stream standalone app.'
+					};
+				} else {
+					const renderedText = this.renderThermalPrintText(config.text || '{username}', message || {}, config.fontWeight);
+					const fontSize = Math.max(6, Math.min(96, Number(config.fontSize) || 18));
+					const lineHeight = Math.max(0.8, Math.min(3, Number(config.lineHeight) || 1.15));
+					const fontWeight = ['normal', 'selected'].includes(config.fontWeight) ? 'normal' : 'bold';
+					const textAlign = ['left', 'center', 'right'].includes(config.textAlign) ? config.textAlign : 'center';
+					const fontFamily = String(config.fontFamily || 'monospace').replace(/[^\w\s,'"-]/g, '') || 'monospace';
+					const html = `<div style="white-space:pre-wrap;font-family:${fontFamily};font-size:${fontSize}pt;font-weight:${fontWeight};line-height:${lineHeight};text-align:${textAlign}">${renderedText}</div>`;
+					const printOptions = {
+						copies: Math.max(1, Math.min(99, Math.floor(Number(config.copies) || 1)))
+					};
+					if (String(config.printerName || '').trim()) printOptions.printerName = String(config.printerName).trim();
+					if (Number(config.labelHeight) > 0) printOptions.height = `${Math.max(20, Math.min(4000, Number(config.labelHeight)))}mm`;
+					try {
+						printResult = await printer(html, printOptions);
+					} catch (error) {
+						printResult = {
+							success: false,
+							code: error?.code || 'SSAPP_PRINT_FAILED',
+							error: error?.message || String(error)
+						};
+					}
+				}
+				if (message?.meta != null && (typeof message.meta !== 'object' || Array.isArray(message.meta))) {
+					// Counter events use numeric meta; printing must not reshape those events.
+					result.thermalPrintResult = printResult;
+				} else {
+					result.message = {
+						...(message || {}),
+						meta: { ...(message?.meta || {}), thermalPrintResult: printResult }
+					};
+					result.modified = true;
+				}
+				break;
+			}
 				
 			case 'playTenorGiphy':
-				if (config.mediaUrl) {
+				if (config.mediaUrl || (config.sourceType === 'local' && config.localAssetId)) {
 					const actionPayload = {
 						actionType: 'play_media', // This corresponds to the 'actionType' in actions.html
-						url: config.mediaUrl,
-						mediaType: config.mediaType || 'iframe',
+						url: config.sourceType === 'local' && config.localAssetId ? '' : config.mediaUrl,
+						sourceType: config.sourceType === 'local' && config.localAssetId ? 'local' : 'url',
+						localAssetId: config.sourceType === 'local' && config.localAssetId ? config.localAssetId : undefined,
+						localAssetName: config.sourceType === 'local' && config.localAssetId ? config.localAssetName : undefined,
+						mediaType: config.sourceType === 'local' && config.localAssetId ? (config.localMediaType || config.mediaType || 'image') : (config.mediaType || 'iframe'),
 						duration: config.duration ?? 10000, // Pass duration to actions.html
 						// Positioning and sizing (percent-based)
 						width: (typeof config.width === 'number') ? config.width : undefined,
@@ -3033,7 +4201,7 @@ class EventFlowSystem {
 						borderWidth: config.borderWidth ?? 3,
 						borderColor: config.borderColor || '#ffffff',
 						shadow: config.shadow !== false,
-						duration: config.duration || 5000,
+						duration: config.duration ?? 5000,
 						clearFirst: !!config.clearFirst,
 						messageData: {
 							chatimg: message.chatimg || '',
@@ -3050,11 +4218,40 @@ class EventFlowSystem {
 				}
 				break;
 
+            case 'commerceControl': {
+                const request = { cmd: 'monetization', action: 'commerceControl', command: config.command || 'show', url: config.url || '', seconds: Number(config.seconds || 0) };
+                let reply;
+                if (['boardSave','boardSpot','boardVisibility','saleAdd','saleRemove','salesClear','salesSettings'].includes(request.command)) {
+                    try {
+                        const data = typeof config.data === 'string' ? JSON.parse(config.data || '{}') : (config.data || {});
+                        if (!data || typeof data !== 'object' || Array.isArray(data) || JSON.stringify(data).length > 16000) throw new Error('Use a JSON object for board and sales fields.');
+                        request.data = {};
+                        for (const key of Object.keys(data)) {
+                            if (['__proto__','prototype','constructor'].includes(key)) throw new Error('Invalid commerce field.');
+                            request.data[key] = typeof data[key] === 'string' ? this.replaceTemplateVars(data[key], message) : data[key];
+                        }
+                    } catch (error) { reply = { error:error.message }; }
+                }
+                if (!reply) reply = await this.requestCommerceControl(request);
+                const controlResult = reply.error || !reply.commerceState || typeof reply.commerceState !== 'object' || Array.isArray(reply.commerceState)
+                    ? { success: false, error: String(reply.error || 'Product control did not return its state.') }
+                    : { success: true, commerce: reply.commerceState };
+                if (message?.meta != null && (typeof message.meta !== 'object' || Array.isArray(message.meta))) {
+                    result.commerceControlResult = controlResult;
+                } else {
+                    result.message = { ...(message || {}), meta: { ...(message?.meta || {}), commerceControlResult: controlResult } };
+                    result.modified = true;
+                }
+                // Stop dependent actions without suppressing the original purchase or tip.
+                if (!controlResult.success) result.stopChain = true;
+                break;
+            }
 			case 'showText':
 				{
 					const actionPayload = {
 						actionType: 'show_text',
-						text: config.text || 'Hello {username}!',
+						text: this.replaceTemplateVars(config.text ?? 'Hello {username}!', message),
+						textProcessed: true,
 						x: config.x ?? 50,
 						y: config.y ?? 50,
 						width: config.width ?? 80,
@@ -3070,30 +4267,8 @@ class EventFlowSystem {
 						outlineColor: config.outlineColor || '#000000',
 						animation: config.animation || 'fadeIn',
 						animationDuration: config.animationDuration ?? 500,
-						duration: config.duration || 5000,
-						clearFirst: !!config.clearFirst,
-						messageData: {
-							// Core aliases for backward compatibility
-							username: message.chatname || message.displayname || '',
-							message: message.chatmessage || '',
-							source: (message.type || '').charAt(0).toUpperCase() + (message.type || '').slice(1),
-							donation: message.hasDonation || '',
-							// Extended fields
-							chatname: message.chatname || '',
-							displayname: message.displayname || '',
-							chatmessage: message.chatmessage || '',
-							type: message.type || '',
-							hasdonation: message.hasDonation || '',
-							donationamount: message.donationAmount || '',
-							event: message.event || '',
-							membership: message.membership || '',
-							subtitle: message.subtitle || '',
-							userid: message.userid || '',
-							chatimg: message.chatimg || '',
-							contentimg: message.contentimg || '',
-							rewardtitle: message.rewardTitle || '',
-							meta: message.meta || ''
-						}
+						duration: config.duration ?? 5000,
+						clearFirst: !!config.clearFirst
 					};
 					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
 						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
@@ -3142,10 +4317,13 @@ class EventFlowSystem {
 				break;
 
 			case 'playAudioClip':
-				if (config.audioUrl) {
+				if (config.audioUrl || (config.sourceType === 'local' && config.localAssetId)) {
 					const actionPayload = {
 						actionType: 'play_audio',
-						audioUrl: config.audioUrl,
+						audioUrl: config.sourceType === 'local' && config.localAssetId ? '' : config.audioUrl,
+						sourceType: config.sourceType === 'local' && config.localAssetId ? 'local' : 'url',
+						localAssetId: config.sourceType === 'local' && config.localAssetId ? config.localAssetId : undefined,
+						localAssetName: config.sourceType === 'local' && config.localAssetId ? config.localAssetName : undefined,
 						volume: config.volume !== undefined ? config.volume : 1.0
 					};
 					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
@@ -3165,7 +4343,7 @@ class EventFlowSystem {
             case 'delay':
                 // Delay the message by specified milliseconds
                 if (config.delayMs && typeof config.delayMs === 'number') {
-                    await new Promise(resolve => setTimeout(resolve, config.delayMs));
+                    await this.waitForFlowDelay(config.delayMs, execution);
                 }
                 break;
             
@@ -3202,6 +4380,70 @@ class EventFlowSystem {
                     }
                 }
                 break;
+
+			case 'obsSetText':
+				if (config.sourceName) {
+					const textTemplate = config.text === undefined ? '{message}' : String(config.text);
+					const actionPayload = {
+						actionType: 'obsSetText',
+						sourceName: config.sourceName,
+						text: this.replaceTemplateVars(textTemplate, message)
+					};
+
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+					} else {
+						console.warn('[OBS] sendTargetP2P not available on this instance');
+					}
+				}
+				break;
+
+			case 'obsMediaControl':
+				if (config.sourceName) {
+					const actionPayload = {
+						actionType: 'obsMediaControl',
+						sourceName: config.sourceName,
+						operation: config.operation || 'restart'
+					};
+
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+					} else {
+						console.warn('[OBS] sendTargetP2P not available on this instance');
+					}
+				}
+				break;
+
+			case 'obsSetVolume':
+				if (config.sourceName) {
+					const actionPayload = {
+						actionType: 'obsSetVolume',
+						sourceName: config.sourceName,
+						volumeDb: Number(config.volumeDb ?? 0)
+					};
+
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+					} else {
+						console.warn('[OBS] sendTargetP2P not available on this instance');
+					}
+				}
+				break;
+
+			case 'obsRefreshBrowser':
+				if (config.sourceName) {
+					const actionPayload = {
+						actionType: 'obsRefreshBrowser',
+						sourceName: config.sourceName
+					};
+
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+					} else {
+						console.warn('[OBS] sendTargetP2P not available on this instance');
+					}
+				}
+				break;
             
             case 'obsSetSourceFilter':
                 if (config.sourceName && config.filterName) {
@@ -3283,6 +4525,19 @@ class EventFlowSystem {
                     console.warn('[OBS] sendTargetP2P not available');
                 }
                 break;
+
+			case 'obsReplayBufferControl':
+				const replayBufferControlPayload = {
+					actionType: 'obsReplayBufferControl',
+					operation: config.operation || 'start'
+				};
+
+				if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+					this.sendTargetP2P({ overlayNinja: replayBufferControlPayload }, 'actions');
+				} else {
+					console.warn('[OBS] sendTargetP2P not available');
+				}
+				break;
                 
             case 'obsReplayBuffer':
                 const replayBufferPayload = {
@@ -3358,7 +4613,7 @@ class EventFlowSystem {
                     // Get current track and format announcement
                     this.sendMessageToBackground({
                         spotifyAction: 'nowPlaying',
-                        format: config.format || 'ðŸŽµ Now playing: {song} by {artist}',
+                        format: config.format || '🎵 Now playing: {song} by {artist}',
                         sendToDock: config.sendToDock !== false
                     });
                 }
@@ -3404,6 +4659,7 @@ class EventFlowSystem {
                         overlayNinja: {
                             actionType: 'tts',
                             text: ttsText,
+                            voice: typeof config.voice === 'string' ? config.voice.trim() : '',
                             force: config.force || false
                         }
                     }, 'actions');
@@ -3494,6 +4750,86 @@ class EventFlowSystem {
                     }
                 }
                 break;
+
+            case 'rememberUser': {
+                const reason = this.replaceTemplateVars(config.reason || '', message || {});
+                const memoryResult = await this.rememberUserInMemory(config.targetNodeId, message, flow, reason);
+                if (!memoryResult.success) {
+                    console.warn(`[UserMemory] Remember User skipped: ${memoryResult.error}`);
+                    break;
+                }
+                result.message = {
+                    ...(message || {}),
+                    userMemoryName: memoryResult.name,
+                    userMemoryCount: memoryResult.count,
+                    userMemoryAdded: memoryResult.added,
+                    userMemoryEntryCount: memoryResult.entry.participationCount
+                };
+                result.modified = true;
+                break;
+            }
+
+            case 'forgetUser': {
+                const memoryResult = await this.forgetUserFromMemory(config.targetNodeId, message, flow);
+                if (!memoryResult.success) {
+                    console.warn(`[UserMemory] Forget User skipped: ${memoryResult.error}`);
+                    break;
+                }
+                result.message = {
+                    ...(message || {}),
+                    userMemoryName: memoryResult.name,
+                    userMemoryCount: memoryResult.count,
+                    userMemoryRemoved: memoryResult.removed
+                };
+                result.modified = true;
+                break;
+            }
+
+            case 'clearUserMemory': {
+                const memoryResult = await this.clearUserMemory(config.targetNodeId, flow, 'action');
+                if (!memoryResult.success) {
+                    console.warn(`[UserMemory] Clear User Memory skipped: ${memoryResult.error}`);
+                    break;
+                }
+                result.message = {
+                    ...(message || {}),
+                    userMemoryName: memoryResult.name,
+                    userMemoryCount: 0,
+                    userMemoryCleared: true,
+                    userMemoryClearedCount: memoryResult.clearedCount
+                };
+                result.modified = true;
+                break;
+            }
+
+            case 'pickRandomUser': {
+                const memoryResult = await this.pickRandomUserFromMemory(config.targetNodeId, flow, config.removeSelected === true);
+                if (!memoryResult.success) {
+                    result.message = {
+                        ...(message || {}),
+                        userMemoryName: memoryResult.name || '',
+                        userMemoryCount: memoryResult.count || 0,
+                        userMemoryEmpty: memoryResult.empty === true
+                    };
+                    result.modified = true;
+                    break;
+                }
+                result.message = {
+                    ...(message || {}),
+                    userMemoryName: memoryResult.name,
+                    userMemoryCount: memoryResult.count,
+                    userMemoryPicked: true,
+                    selectedUser: memoryResult.entry.chatname || memoryResult.entry.userid || '',
+                    selectedUserId: memoryResult.entry.userid || '',
+                    selectedUserSource: memoryResult.entry.type || '',
+                    selectedUserAvatar: memoryResult.entry.chatimg || '',
+                    selectedUserParticipationCount: memoryResult.entry.participationCount || 1,
+                    selectedUserReason: memoryResult.entry.reason || '',
+                    selectedUserRemoved: memoryResult.removed
+                };
+                result.modified = true;
+                break;
+            }
                 
             case 'setGateState':
                 // Set the state of a gate node (ALLOW or BLOCK)
@@ -3510,16 +4846,24 @@ class EventFlowSystem {
                 // Reset any state node to its initial state
                 if (config.targetNodeId) {
                     // Find the node to get its type
-                    const allFlows = this.flows || [];
+                    const allFlows = flow ? [flow, ...(this.flows || []).filter(candidate => candidate !== flow)] : (this.flows || []);
                     let targetNode = null;
+                    let targetFlow = null;
                     
-                    for (const flow of allFlows) {
-                        targetNode = flow.nodes?.find(n => n.id === config.targetNodeId);
-                        if (targetNode) break;
+                    for (const candidateFlow of allFlows) {
+                        targetNode = candidateFlow.nodes?.find(n => n.id === config.targetNodeId);
+                        if (targetNode) {
+                            targetFlow = candidateFlow;
+                            break;
+                        }
                     }
                     
                     if (targetNode && targetNode.type === 'state') {
-                        this.initializeStateNode(config.targetNodeId, targetNode.stateType, targetNode.config || {});
+                        if (targetNode.stateType === 'USER_MEMORY') {
+                            await this.clearUserMemory(config.targetNodeId, targetFlow, 'reset-state-node');
+                        } else {
+                            this.initializeStateNode(config.targetNodeId, targetNode.stateType, targetNode.config || {});
+                        }
                         console.log(`[ResetStateNode] State node ${config.targetNodeId} reset`);
                     }
                 }

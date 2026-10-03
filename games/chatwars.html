@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Chat Wars: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Wars - Social Stream Ninja</title>
-    <link rel="icon" href="../favicon.ico" />
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
     <style>
         /* Hide scrollbars */
         ::-webkit-scrollbar {
@@ -24,21 +28,21 @@
             font-family: 'Arial', sans-serif;
             color: white;
         }
-        
+
         body.chroma {
             background: #00ff00;
         }
-        
+
         body.darkmode {
             background: #000000;
         }
-        
+
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
+
         #battlefield {
             position: absolute;
             top: 50%;
@@ -55,7 +59,7 @@
             gap: 2px;
             background: #333;
         }
-        
+
         .territory {
             background: #555;
             border: 1px solid #777;
@@ -67,41 +71,41 @@
             font-size: 12px;
             font-weight: bold;
         }
-        
+
         .territory.team-red {
             background: linear-gradient(45deg, #ff4757, #ff6b7a);
             color: white;
             box-shadow: 0 0 10px rgba(255, 71, 87, 0.5);
         }
-        
+
         .territory.team-blue {
             background: linear-gradient(45deg, #3742fa, #5352ed);
             color: white;
             box-shadow: 0 0 10px rgba(55, 66, 250, 0.5);
         }
-        
+
         .territory.team-green {
             background: linear-gradient(45deg, #2ed573, #7bed9f);
             color: white;
             box-shadow: 0 0 10px rgba(46, 213, 115, 0.5);
         }
-        
+
         .territory.team-yellow {
             background: linear-gradient(45deg, #ffa502, #ff9f43);
             color: black;
             box-shadow: 0 0 10px rgba(255, 165, 2, 0.5);
         }
-        
+
         .capture-animation {
             animation: capture-pulse 0.5s ease-out;
         }
-        
+
         @keyframes capture-pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.1); box-shadow: 0 0 20px currentColor; }
             100% { transform: scale(1); }
         }
-        
+
         #team-stats {
             position: absolute;
             top: 20px;
@@ -113,14 +117,14 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
         }
-        
+
         .team-stat {
             display: flex;
             align-items: center;
             margin: 8px 0;
             font-size: 16px;
         }
-        
+
         .team-color {
             width: 20px;
             height: 20px;
@@ -128,12 +132,12 @@
             margin-right: 10px;
             border: 2px solid white;
         }
-        
+
         .team-red-color { background: #ff4757; }
         .team-blue-color { background: #3742fa; }
         .team-green-color { background: #2ed573; }
         .team-yellow-color { background: #ffa502; }
-        
+
         #battle-log {
             position: absolute;
             top: 20px;
@@ -148,23 +152,16 @@
             overflow-y: auto;
             z-index: 100;
         }
-        
+
         .log-entry {
             margin: 5px 0;
             padding: 5px;
-            border-left: 3px solid #666;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
             font-size: 14px;
             opacity: 0.9;
         }
-        
-        .log-entry.capture {
-            border-left-color: #00ff88;
-        }
-        
-        .log-entry.battle {
-            border-left-color: #ff6b7a;
-        }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -177,12 +174,12 @@
             font-size: 16px;
             z-index: 100;
         }
-        
+
         #instructions strong {
             color: #ffaa00;
             font-size: 18px;
         }
-        
+
         #victory-screen {
             position: absolute;
             top: 50%;
@@ -198,7 +195,7 @@
             display: none;
             border: 3px solid #ffaa00;
         }
-        
+
         .battle-effect {
             position: absolute;
             font-size: 24px;
@@ -206,7 +203,7 @@
             z-index: 50;
             animation: battle-burst 1s ease-out forwards;
         }
-        
+
         @keyframes battle-burst {
             0% {
                 opacity: 1;
@@ -268,6 +265,7 @@
     <script>
         // URL parameters
         const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
         const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
         const password = urlParams.get('password') || 'false';
 
@@ -335,7 +333,6 @@
 
         // Calculate team power based on recent activity
         function updateTeamPower() {
-            const now = Date.now();
             Object.values(gameState.teams).forEach(team => {
                 // Decay power over time
                 team.power *= 0.99;
@@ -499,8 +496,9 @@
             Object.values(gameState.teams).forEach(team => {
                 const players = Array.from(team.players);
                 team.players.clear();
-                // Keep 30% of players for next battle
-                players.slice(0, Math.ceil(players.length * 0.3)).forEach(player => {
+                // Keep 30% of most recent players (max 200) for next battle
+                const keep = Math.min(200, Math.ceil(players.length * 0.3));
+                players.slice(-keep).forEach(player => {
                     team.players.add(player);
                 });
             });
@@ -533,7 +531,8 @@
                 rawMessage = stripHtml(rawMessage);
             }
             const message = rawMessage.toLowerCase().trim();
-            const username = stripHtml(data.chatname);
+            const username = String(data.chatname);
+            const playerKey = JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]);
 
             // Check for team join commands
             const teamMatch = message.match(/^!(red|blue|green|yellow)$/);
@@ -542,11 +541,14 @@
                 
                 // Remove player from all teams
                 Object.values(gameState.teams).forEach(team => {
-                    team.players.delete(username);
+                    team.players.delete(playerKey);
                 });
 
-                // Add to new team
-                gameState.teams[newTeam].players.add(username);
+                // Add to new team (cap roster at 200, keeping most recent)
+                if (gameState.teams[newTeam].players.size >= 200) {
+                    gameState.teams[newTeam].players = new Set(Array.from(gameState.teams[newTeam].players).slice(-100));
+                }
+                gameState.teams[newTeam].players.add(playerKey);
 
                 // Log team join
                 const logEntry = document.createElement('div');
@@ -561,7 +563,7 @@
 
             // Find player's team and add power
             for (const [teamName, team] of Object.entries(gameState.teams)) {
-                if (team.players.has(username)) {
+                if (team.players.has(playerKey)) {
                     team.power += 1;
                     
                     // Chance to capture territory based on team activity
@@ -575,30 +577,32 @@
         }
 
         // Setup iframe communication
-        const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.position = "fixed";
-        iframe.style.left = "-100px";
-        iframe.style.top = "-100px";
-        iframe.id = "frame1";
-        document.body.appendChild(iframe);
-        
-        // Listen for messages
-        window.addEventListener("message", function(e) {
-            if (e.source !== iframe.contentWindow) return;
+        if (!urlParams.has('demo') && !chatRelay.enabled) {
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
             
-            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
-                if ("overlayNinja" in e.data.dataReceived) {
-                    processData(e.data.dataReceived.overlayNinja);
+            // Listen for messages
+            window.addEventListener("message", function(e) {
+                if (e.source !== iframe.contentWindow) return;
+                
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
                 }
-            }
-        });
-        
+            });
+        }
+
         // Handle WebSocket connection
-        if (urlParams.has('server')) {
-            const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
+        if (!urlParams.has('demo') && chatRelay.enabled) {
+            const serverUrl = chatRelay.url;
             let socketserver = null;
             let reconnectTimeout = null;
 
@@ -608,8 +612,7 @@
                 socketserver.onopen = function() {
                     socketserver.send(JSON.stringify({
                         join: sessionId.split(",")[0],
-                        out: 2,
-                        in: 1
+                        out: chatRelay.out, in: chatRelay.in
                     }));
                 };
 

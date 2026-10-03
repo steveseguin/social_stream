@@ -3,7 +3,11 @@
 <head>
 <script src="./libs/objects.js"></script>
 <script src="./shared/utils/chatHtml.js"></script>
-
+    <meta charset="UTF-8">
+    <meta name="description" content="Tip Jar Overlay. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+<script src="shared/overlay-control-transport.js"></script>
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tip Jar Overlay - Social Stream Ninja</title>
@@ -12,7 +16,7 @@
     <!-- Matter.js Library -->
     <script type="text/javascript" src="./thirdparty/matter.min.js"></script>
     <script type="text/javascript" src="currency.js"></script>
-    
+
     <style>
     * {
         margin: 0; 
@@ -42,7 +46,7 @@
         height: 100%;
         display: none;
     }
-    
+
     .style-container.active {
         display: block;
     }
@@ -609,6 +613,121 @@
         text-align: center;
         text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
     }
+    /* Shared palette keeps themes consistent across the goal layouts. */
+    :root {
+        --goal-accent: #66d9b2;
+        --goal-accent-end: #85baff;
+        --goal-panel: rgba(18, 24, 34, 0.94);
+        --goal-track: rgba(255, 255, 255, 0.12);
+        --goal-border: rgba(255, 255, 255, 0.16);
+        --goal-muted: #c1cbd8;
+    }
+    body.neon { --goal-accent: #df8bff; --goal-accent-end: #69e4ef; }
+    body.gold { --goal-accent: #edc56b; --goal-accent-end: #f5dfa7; --goal-panel: rgba(30, 26, 20, 0.95); }
+    body.tipjar-refresh .style-container { min-width: 0; font-variant-numeric: tabular-nums; }
+    body.tipjar-refresh .goal-title, body.tipjar-refresh .fluid-bar-title, body.tipjar-refresh .vertical-title, body.tipjar-refresh #tip-text { overflow-wrap: anywhere; }
+    body.tipjar-refresh .goal-meter-container {
+        background: var(--goal-panel);
+        border: 1px solid var(--goal-border);
+        border-radius: 18px;
+        padding: 24px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+    }
+    body.tipjar-refresh.neon .goal-meter-container, body.tipjar-refresh.gold .goal-meter-container {
+        background: var(--goal-panel);
+        border: 1px solid var(--goal-accent);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+    }
+    body.tipjar-refresh .goal-title { font-size: 24px; margin-bottom: 16px; }
+    body.tipjar-refresh .meter-wrapper { height: 48px; padding: 0; background: var(--goal-track); box-shadow: none; }
+    body.tipjar-refresh .meter-fill, body.tipjar-refresh.neon .meter-fill, body.tipjar-refresh.gold .meter-fill {
+        background: linear-gradient(90deg, var(--goal-accent), var(--goal-accent-end));
+        box-shadow: none;
+    }
+    body.tipjar-refresh .meter-text { width: calc(100% - 20px); text-align: center; font-size: 20px; overflow-wrap: anywhere; }
+    body.tipjar-refresh .milestones { color: var(--goal-muted); font-size: 12px; }
+    body.tipjar-refresh .recent-tips:empty { display: none; }
+    body.tipjar-refresh .tip-item { border-radius: 8px; background: rgba(255, 255, 255, 0.06); }
+    body.tipjar-refresh .tip-item > :first-child { min-width: 0; overflow-wrap: anywhere; margin-right: 12px; }
+    body.tipjar-refresh .tip-item > :last-child { flex-shrink: 0; }
+    body.tipjar-refresh .minimal-amount { color: var(--goal-accent); font-size: 42px; text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8); overflow-wrap: anywhere; }
+    body.tipjar-refresh .minimal-goal { color: #edf1f7; text-shadow: 0 2px 5px #000; overflow-wrap: anywhere; }
+    body.tipjar-refresh .minimal-percentage { background: none; -webkit-text-fill-color: currentColor; color: var(--goal-accent); font-size: 56px; margin: 12px 0; text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8); }
+    body.tipjar-refresh .fluid-bar-title { font-size: 26px; letter-spacing: 0; }
+    body.tipjar-refresh .fluid-bar-track { border-width: 1px; }
+    body.tipjar-refresh.neon .fluid-bar-track { border-color: var(--goal-accent); box-shadow: 0 0 12px rgba(223, 139, 255, 0.25); }
+    body.tipjar-refresh .fluid-bar-fill::before { opacity: 0.5; }
+    body.tipjar-refresh .fluid-bar-fill::after { opacity: 0.45; }
+    body.tipjar-refresh .compact-header { flex-wrap: wrap; line-height: 1.5; }
+    body.tipjar-refresh #compact-title { min-width: 0; overflow-wrap: anywhere; margin-right: 12px; }
+    body.tipjar-refresh .compact-amount { overflow-wrap: anywhere; }
+    body.tipjar-refresh .vertical-track { box-shadow: inset 0 0 0 4px rgba(0, 0, 0, 0.12); }
+    body.tipjar-refresh .text-line { white-space: normal; overflow-wrap: anywhere; line-height: 1.35; }
+    body.tipjar-refresh #tip-text { padding: 8px 16px; font-size: 22px; line-height: 1.35; }
+
+
+
+    /* Practical alternatives share the same progress state and formatting. */
+    #summary-style { width: 100%; max-width: 460px; padding: 16px; min-width: 0; font-variant-numeric: tabular-nums; }
+    .summary-panel {
+        color: #f7f9fc;
+        background: var(--goal-panel);
+        border: 1px solid var(--goal-border);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+    }
+    .summary-copy { min-width: 0; }
+    .summary-title { font-size: 16px; font-weight: 600; color: var(--goal-muted); line-height: 1.4; overflow-wrap: anywhere; }
+    .summary-amount { font-size: 40px; font-weight: 700; letter-spacing: -1px; margin: 10px 0 4px; overflow-wrap: anywhere; }
+    .summary-goal { color: var(--goal-muted); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+    .summary-footer { display: flex; justify-content: space-between; margin-top: 12px; font-size: 13px; color: var(--goal-muted); }
+    .summary-percent { color: var(--goal-accent); font-weight: 700; }
+    #summary-style.hide-percentage .summary-percent, #summary-style.hide-percentage .ring-percent { display: none; }
+    .summary-track { height: 10px; background: var(--goal-track); border-radius: 6px; margin-top: 20px; overflow: hidden; position: relative; }
+    .summary-fill { height: 100%; width: 0; border-radius: inherit; background: var(--goal-accent); transition: width 0.7s ease; }
+    .summary-ring { display: none; position: relative; width: 160px; height: 160px; margin: 0 auto 20px; }
+    .summary-ring svg { display: block; width: 100%; height: 100%; transform: rotate(-90deg); }
+    .ring-track, .ring-fill { fill: none; stroke-width: 8; }
+    .ring-track { stroke: var(--goal-track); }
+    .ring-fill { stroke: var(--goal-accent); stroke-dasharray: 100 100; stroke-dashoffset: 100; transition: stroke-dashoffset 0.7s ease; }
+    .ring-percent { position: absolute; top: 50%; left: 0; width: 100%; transform: translateY(-50%); text-align: center; font-size: 32px; font-weight: 700; }
+    #summary-style.layout-ring { max-width: 340px; }
+    .layout-ring .summary-ring { display: block; }
+    .layout-ring .summary-panel { text-align: center; }
+    .layout-ring .summary-track, .layout-ring .summary-footer { display: none; }
+    .layout-ring .summary-amount { font-size: 32px; }
+    #summary-style.layout-lowerthird { max-width: 880px; }
+    .layout-lowerthird .summary-panel { border-radius: 10px; padding: 18px 24px; border-left: 4px solid var(--goal-accent); }
+    .layout-lowerthird .summary-copy { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 20px; align-items: baseline; }
+    .layout-lowerthird .summary-title { grid-row: span 2; font-size: 20px; color: #f7f9fc; }
+    .layout-lowerthird .summary-amount { font-size: 28px; margin: 0; text-align: right; }
+    .layout-lowerthird .summary-goal { text-align: right; }
+    .layout-lowerthird .summary-track { margin-top: 14px; height: 6px; }
+    .layout-lowerthird .summary-footer { display: none; }
+    #summary-style.layout-segmented { max-width: 600px; }
+    .layout-segmented .summary-panel { border-radius: 12px; }
+    .layout-segmented .summary-track {
+        height: 24px;
+        border-radius: 0;
+        -webkit-mask-image: repeating-linear-gradient(90deg, #000 0, #000 calc(5% - 3px), transparent calc(5% - 3px), transparent 5%);
+        mask-image: repeating-linear-gradient(90deg, #000 0, #000 calc(5% - 3px), transparent calc(5% - 3px), transparent 5%);
+    }
+    .layout-segmented .summary-fill { border-radius: 0; }
+    @media (max-width: 420px) {
+        body.tipjar-refresh #meter-style, body.tipjar-refresh #bar-style { padding: 12px; }
+        body.tipjar-refresh .goal-meter-container { padding: 16px; }
+        body.tipjar-refresh .meter-text, body.tipjar-refresh .fluid-bar-text { font-size: 18px; }
+        body.tipjar-refresh .milestones > :nth-child(2), body.tipjar-refresh .milestones > :nth-child(4) { display: none; }
+        .summary-panel { padding: 20px; }
+        .layout-lowerthird .summary-copy { display: block; }
+        .layout-lowerthird .summary-amount, .layout-lowerthird .summary-goal { text-align: left; }
+        .layout-lowerthird .summary-amount { margin-top: 8px; }
+        body.tipjar-refresh .text-line { font-size: 20px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+        body.tipjar-refresh .style-container *, body.tipjar-refresh .style-container *::before, body.tipjar-refresh .style-container *::after, #summary-style *, #summary-style *::before, #summary-style *::after { animation: none !important; transition: none !important; }
+    }
     </style>
 </head>
 <body>
@@ -694,6 +813,28 @@
         <div class="text-line" id="text-line">Stream Goal: $0 / $250</div>
     </div>
 
+    <!-- Card, ring, lower third and segmented layouts -->
+    <div id="summary-style" class="style-container">
+        <div class="summary-panel" role="progressbar" aria-label="Goal progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="summary-progress">
+            <div class="summary-ring" aria-hidden="true">
+                <svg viewBox="0 0 120 120">
+                    <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+                    <circle class="ring-fill" id="summary-ring-fill" cx="60" cy="60" r="52" pathLength="100"></circle>
+                </svg>
+                <span class="ring-percent" id="summary-ring-percent">0%</span>
+            </div>
+            <div class="summary-copy">
+                <h2 class="summary-title" id="summary-title">Stream Goal</h2>
+                <div class="summary-amount" id="summary-amount">$0</div>
+                <div class="summary-goal" id="summary-goal">of $250 goal</div>
+            </div>
+            <div class="summary-track">
+                <div class="summary-fill" id="summary-fill"></div>
+            </div>
+            <div class="summary-footer"><span id="summary-status">Goal progress</span><span class="summary-percent" id="summary-percent">0%</span></div>
+        </div>
+    </div>
+
     <!-- Shared Elements -->
     <div id="notification"></div>
     <div class="celebration-container" id="celebration"></div>
@@ -725,15 +866,66 @@
     <script>
         // URL Parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const style = urlParams.get('style') || 'jar'; // jar, meter, minimal
+        const SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+        // Transport migration guard: only pages with full server parity may skip the legacy bridge.
+        var TRANSPORT_CAPABILITIES = {
+            serverFeed: true,
+            serverTargeted: false,
+            upstreamCommands: false,
+            customChannel: false,
+            legacyBridgeRequired: true,
+            legacyBridgeReason: "Tip jar reset/set commands are still sent with sendTargetP2P."
+        };
+        function versionAtLeast(value, minimum) {
+            const a = String(value || "").split(".");
+            const b = String(minimum || "").split(".");
+            const len = Math.max(a.length, b.length);
+            for (let i = 0; i < len; i++) {
+                const av = parseInt(a[i], 10) || 0;
+                const bv = parseInt(b[i], 10) || 0;
+                if (av > bv) return true;
+                if (av < bv) return false;
+            }
+            return true;
+        }
+        // Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+        function hasExclusiveServerTransport(caps) {
+            var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+            return (params.server === true && urlParams.has("server")) ||
+                (params.server2 !== false && urlParams.has("server2")) ||
+                (params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+        }
+        function useServerOnlyTransport() {
+            var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+            return hasExclusiveServerTransport(caps) &&
+                versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+                caps.serverFeed === true &&
+                caps.legacyBridgeRequired !== true &&
+                caps.upstreamCommands !== true &&
+                caps.customChannel !== true;
+        }
+        const previewMode = urlParams.has('preview');
+        const refreshedAppearance = urlParams.has('refresh');
+        const summaryStyles = ['card', 'ring', 'lowerthird', 'segmented'];
+        const requestedStyle = urlParams.get('style') || 'jar';
+        const style = ['jar', 'meter', 'minimal', 'bar', 'compact', 'vertical', 'text'].concat(summaryStyles).indexOf(requestedStyle) !== -1 ? requestedStyle : 'jar';
         const theme = urlParams.get('theme') || 'default'; // default, neon, gold
-        const hypeMode = urlParams.has('hype') || urlParams.get('mode') === 'hype';
-        const goal = readNumberParam('goal', hypeMode ? 100 : 250, 0.01);
+        const hideCurrency = urlParams.has('hidecurrency');
+        const requestedHypeMode = urlParams.has('hype') || urlParams.get('mode') === 'hype';
+        const goalMetric = normalizeGoalMetric(urlParams.get('goalmetric') || (urlParams.has('countdonations') ? 'count' : 'value'));
+        const countMode = goalMetric === 'count';
+        const hypeMode = requestedHypeMode && !countMode;
+        const eventTypeFilter = normalizeEventFilterList(urlParams.get('tipjarevent') || urlParams.get('tipjarevents') || '');
+        const excludeYoutubeGiftMemberships = urlParams.has('excludegiftpurchase');
+        const countLabel = String(urlParams.get('countlabel') || getDefaultCountLabel(eventTypeFilter)).trim() || 'donations';
+        const countSingularLabel = String(urlParams.get('countsingular') || getDefaultCountSingularLabel(eventTypeFilter, countLabel)).trim() || 'donation';
+        const parsedGoal = readNumberParam('goal', hypeMode ? 100 : 250, countMode ? 1 : 0.01);
+        const goal = countMode ? Math.max(1, Math.round(parsedGoal)) : parsedGoal;
         const celebration = urlParams.get('celebration') || 'hearts'; // hearts, confetti, fireworks, none
-        const persistent = urlParams.has('persistent'); // Keep amount between sessions
-        const sound = urlParams.has('sound'); // Play sound on donation
+        const persistent = !previewMode && urlParams.has('persistent'); // Keep amount between sessions
+        const sound = !previewMode && urlParams.has('sound'); // Play sound on donation
         const hasCustomTitle = urlParams.has('title');
-        const customTitle = urlParams.get('title') || (hypeMode ? 'Hype Goal' : 'Stream Goal');
+        const customTitle = urlParams.get('title') || (hypeMode ? 'Hype Goal' : (countMode ? getDefaultCountTitle(eventTypeFilter) : 'Stream Goal'));
         const showControls = urlParams.has('controls'); // Show control panel
         const customJarUrl = urlParams.get('jarimage'); // Custom jar image URL
         const alignRight = urlParams.has('alignright');
@@ -746,7 +938,6 @@
         const countGifts = !urlParams.has('nogifts');
         const countResubs = !urlParams.has('noresubs');
         const countGiftRedemptions = urlParams.has('countgiftredemptions');
-        const excludeGiftPurchases = urlParams.has('excludegiftpurchase') || urlParams.has('excludegiftpurchases');
         const resetOnComplete = hypeMode ? !urlParams.has('noresetoncomplete') : urlParams.has('resetoncomplete');
         const carryOverGoal = urlParams.has('carryover');
         const showCompletions = hypeMode && !urlParams.has('hidecompletions');
@@ -754,12 +945,14 @@
         const dedupeWindowMs = readNumberParam('dedupewindow', 8, 0) * 1000;
         const donationTypeFilter = normalizeDonationTypeFilter(urlParams.get('tipjartype') || urlParams.get('tipjarunit') || urlParams.get('donationtype') || '');
         const sourceTypeFilter = normalizeFilterList(urlParams.get('tipjarsource') || urlParams.get('donationsource') || '');
-        const nativeUnitMode = !!donationTypeFilter && donationTypeFilter !== 'usd';
+        const donationUsesNativeUnits = !!donationTypeFilter && donationTypeFilter !== 'usd';
+        const nativeUnitMode = donationUsesNativeUnits && !countMode;
         const nativeUnitLabel = urlParams.get('tipjarunitlabel') || getDonationTypeLabel(donationTypeFilter);
 
         // Fluid goal bar styling + recurring goal levels
-        const fillStartColor = urlParams.get('fillstart') || urlParams.get('barcolorstart') || '#2196F3';
-        const fillEndColor = urlParams.get('fillend') || urlParams.get('barcolorend') || '#f44336';
+        const themeFill = !refreshedAppearance ? ['#2196F3', '#f44336'] : theme === 'gold' ? ['#edc56b', '#f5dfa7'] : (theme === 'neon' ? ['#df8bff', '#69e4ef'] : ['#2196F3', '#f44336']);
+        const fillStartColor = urlParams.get('fillstart') || urlParams.get('barcolorstart') || themeFill[0];
+        const fillEndColor = urlParams.get('fillend') || urlParams.get('barcolorend') || themeFill[1];
         const fillMode = (urlParams.get('fillmode') || 'progress').toLowerCase(); // progress | gradient | solid
         const hasCustomFill = urlParams.has('fillstart') || urlParams.has('fillend') || urlParams.has('barcolorstart') || urlParams.has('barcolorend');
         const barLiquid = !urlParams.has('noliquid');
@@ -767,10 +960,13 @@
         const barTextSize = readNumberParam('bartextsize', readNumberParam('barfontsize', 0, 1), 1);
         const barRadius = urlParams.get('barradius'); // "0" for square edges, "12" for rounded, etc.
         const barOnly = urlParams.has('baronly');
-        const levelSize = readNumberParam('levelsize', readNumberParam('increment', 0, 0.0001), 0.0001);
+        const parsedLevelSize = readNumberParam('levelsize', readNumberParam('increment', 0, 0.0001), 0.0001);
+        const levelSize = countMode && parsedLevelSize > 0 ? Math.max(1, Math.round(parsedLevelSize)) : parsedLevelSize;
         const rollingGoal = urlParams.has('rollinggoal') || urlParams.has('cumulativegoal') || urlParams.has('goalladder');
-        const rollingGoalSize = readOptionalNumberParam(['rollinggoal', 'cumulativegoal', 'goalladder', 'goalstep', 'goalincrement'], 0.01) || goal;
-        const startAmount = readOptionalNumberParam(['startamount', 'initialamount', 'currentamount'], 0);
+        const parsedRollingGoalSize = readOptionalNumberParam(['rollinggoal', 'cumulativegoal', 'goalladder', 'goalstep', 'goalincrement'], 0.01) || goal;
+        const rollingGoalSize = countMode ? Math.max(1, Math.round(parsedRollingGoalSize)) : parsedRollingGoalSize;
+        const parsedStartAmount = readOptionalNumberParam(['startamount', 'initialamount', 'currentamount'], 0);
+        const startAmount = countMode && parsedStartAmount !== null ? Math.max(0, Math.round(parsedStartAmount)) : parsedStartAmount;
         const barTrackColor = urlParams.get('trackcolor') || urlParams.get('bartrackcolor') || urlParams.get('barbackground') || '';
         const fillStartRgb = parseColorToRgb(fillStartColor, [33, 150, 243]);
         const fillEndRgb = parseColorToRgb(fillEndColor, [244, 67, 54]);
@@ -803,12 +999,29 @@
         document.querySelectorAll('.style-container').forEach(container => {
             container.classList.remove('active');
         });
-        document.getElementById(`${style}-style`)?.classList.add('active');
+        const isSummaryStyle = summaryStyles.indexOf(style) !== -1;
+        const activeStyle = document.getElementById(isSummaryStyle ? 'summary-style' : `${style}-style`);
+        activeStyle.classList.add('active');
+        if (refreshedAppearance) document.body.classList.add('tipjar-refresh');
+        if (isSummaryStyle) activeStyle.classList.add('layout-' + style);
+        if (barTrackColor) document.documentElement.style.setProperty('--goal-track', barTrackColor);
+        if (hasCustomFill) document.documentElement.style.setProperty('--goal-accent', fillStartColor);
+        if (isSummaryStyle) {
+            const panelOpacity = readNumberParam('panelopacity', theme === 'gold' ? 0.95 : 0.94, 0);
+            const panelRgb = theme === 'gold' ? '30, 26, 20' : '18, 24, 34';
+            const panel = document.querySelector('.summary-panel');
+            panel.style.backgroundColor = `rgba(${panelRgb}, ${Math.min(1, panelOpacity)})`;
+            const accent = urlParams.get('accent');
+            if (accent && /^#[0-9a-f]{6}$/i.test(accent)) activeStyle.style.setProperty('--goal-accent', accent);
+            const amountSize = readOptionalNumberParam(['amountsize'], 12);
+            if (amountSize !== null) document.getElementById('summary-amount').style.fontSize = Math.min(96, amountSize) + 'px';
+            if (urlParams.has('hidepercent')) activeStyle.classList.add('hide-percentage');
+        }
 
         // Optional corner-friendly square (or custom) edges for any bar-based style.
         if (barRadius !== null && barRadius !== '') {
             const radiusValue = /^\d+(\.\d+)?$/.test(barRadius) ? barRadius + 'px' : barRadius;
-            document.querySelectorAll('.fluid-bar-track, .compact-track, .vertical-track').forEach(function(el) {
+            document.querySelectorAll('.fluid-bar-track, .compact-track, .vertical-track, .summary-track').forEach(function(el) {
                 el.style.borderRadius = radiusValue;
             });
         }
@@ -903,7 +1116,7 @@
                 }
             });
 
-            Runner.run(engine);
+            Runner.run(Runner.create(), engine);
             Render.run(render);
 
             // Create cup container
@@ -1035,7 +1248,7 @@
             renderAmount();
             clearJarContents();
             if (showNotice) {
-                showNotification(hypeMode ? 'Hype goal reset.' : 'Tip jar amount reset.');
+                showNotification(hypeMode ? 'Hype goal reset.' : (countMode ? 'Donation count reset.' : 'Tip jar amount reset.'));
             }
         }
 
@@ -1072,6 +1285,19 @@
         }
 
         function commandMatchesTipJarFilters(data) {
+            const commandMetric = normalizeGoalMetric(data.goalmetric || (data.countdonations ? 'count' : ''));
+            if (data.goalmetric || data.countdonations) {
+                if ((commandMetric === 'count') !== countMode) return false;
+            }
+
+            const commandEvents = normalizeEventFilterList(data.tipjarevent || data.tipjarevents || '');
+            if (commandEvents.length) {
+                if (!eventTypeFilter.length) return false;
+                for (let i = 0; i < commandEvents.length; i++) {
+                    if (eventTypeFilter.indexOf(commandEvents[i]) === -1) return false;
+                }
+            }
+
             const commandType = normalizeDonationTypeFilter(data.tipjartype || data.tipjarunit || data.donationtype || '');
             if (commandType) {
                 if (!donationTypeFilter || commandType !== donationTypeFilter) return false;
@@ -1096,7 +1322,7 @@
             }
             const previousAmount = currentAmount;
             clearLevelCompletionState();
-            currentAmount = Math.max(0, amount);
+            currentAmount = countMode ? Math.max(0, Math.round(amount)) : Math.max(0, amount);
             if (currentAmount < previousAmount) {
                 clearJarContents();
             }
@@ -1145,7 +1371,9 @@
             const percentage = state.percentage;
 
             // Update different styles
-            if (style === 'jar') {
+            if (isSummaryStyle) {
+                renderSummary(state);
+            } else if (style === 'jar') {
                 document.getElementById('tip-text').textContent = formatProgressText();
             } else if (style === 'meter') {
                 document.getElementById('meter-fill').style.width = percentage + '%';
@@ -1182,6 +1410,33 @@
             }
 
             updateCompletionDisplay();
+        }
+
+        function renderSummary(state) {
+            const percentage = Math.max(0, Math.min(100, state.percentage));
+            const title = state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle;
+            setElText('summary-title', title);
+            setElText('summary-amount', formatGoalValue(state.current, true));
+            setElText('summary-goal', `of ${formatGoalValue(state.goal)} goal`);
+            setElText('summary-percent', `${Math.round(percentage)}%`);
+            setElText('summary-ring-percent', `${Math.round(percentage)}%`);
+            setElText('summary-status', percentage >= 100 ? 'Goal reached' : 'Goal progress');
+            const fill = document.getElementById('summary-fill');
+            const ring = document.getElementById('summary-ring-fill');
+            fill.style.width = percentage + '%';
+            ring.style.strokeDashoffset = 100 - percentage;
+            if (hasCustomFill) {
+                if (fillMode === 'gradient') {
+                    fill.style.background = `linear-gradient(90deg, ${fillStartColor}, ${fillEndColor})`;
+                } else {
+                    applyFillColor(fill, percentage / 100);
+                }
+                ring.style.stroke = fillMode === 'solid' ? fillStartColor : lerpColor(fillStartRgb, fillEndRgb, percentage / 100);
+            }
+            const progress = document.getElementById('summary-progress');
+            progress.setAttribute('aria-label', title);
+            progress.setAttribute('aria-valuenow', String(Math.round(percentage)));
+            progress.setAttribute('aria-valuetext', formatProgressPair(state));
         }
 
         function applyFillColor(fillEl, t) {
@@ -1370,6 +1625,70 @@
             return filter === 'cash' ? 'usd' : filter;
         }
 
+        function normalizeGoalMetric(value) {
+            const metric = normalizeFilterValue(value);
+            return metric === 'count' || metric === 'events' || metric === 'donations' ? 'count' : 'value';
+        }
+
+        function normalizeTipJarEventValue(value) {
+            const eventName = normalizeFilterValue(value).replace(/[\s_-]+/g, '');
+            const aliases = {
+                superchat: 'superchat',
+                supersticker: 'supersticker',
+                giftpurchase: 'giftpurchase',
+                giftredemption: 'giftredemption',
+                giftsubscription: 'gift_subscription',
+                subscriptiongift: 'subscription_gift',
+                jeweldonation: 'jeweldonation'
+            };
+            return aliases[eventName] || normalizeFilterValue(value);
+        }
+
+        function normalizeEventFilterList(value) {
+            return String(value || '').split(',').map(function(item) {
+                return normalizeTipJarEventValue(item);
+            }).filter(function(item) {
+                return item && item !== 'all' && item !== 'any';
+            });
+        }
+
+        function hasExactEventFilters(filters, expected) {
+            if (filters.length !== expected.length) return false;
+            for (let i = 0; i < expected.length; i++) {
+                if (filters.indexOf(expected[i]) === -1) return false;
+            }
+            return true;
+        }
+
+        function getDefaultCountLabel(filters) {
+            if (hasExactEventFilters(filters, ['superchat'])) return 'Super Chats';
+            if (hasExactEventFilters(filters, ['supersticker'])) return 'Super Stickers';
+            if (hasExactEventFilters(filters, ['superchat', 'supersticker'])) return 'paid messages';
+            return filters.length ? 'events' : 'donations';
+        }
+
+        function getDefaultCountSingularLabel(filters, pluralLabel) {
+            const label = String(pluralLabel || '').trim();
+            if (label && label !== getDefaultCountLabel(filters)) {
+                if (/ies$/i.test(label)) return label.slice(0, -3) + 'y';
+                if (/s$/i.test(label) && !/ss$/i.test(label)) return label.slice(0, -1);
+                return label;
+            }
+            if (hasExactEventFilters(filters, ['superchat'])) return 'Super Chat';
+            if (hasExactEventFilters(filters, ['supersticker'])) return 'Super Sticker';
+            if (hasExactEventFilters(filters, ['superchat', 'supersticker'])) return 'paid message';
+            if (/ies$/i.test(label)) return label.slice(0, -3) + 'y';
+            if (/s$/i.test(label) && !/ss$/i.test(label)) return label.slice(0, -1);
+            return label || 'donation';
+        }
+
+        function getDefaultCountTitle(filters) {
+            if (hasExactEventFilters(filters, ['superchat'])) return 'Super Chat Goal';
+            if (hasExactEventFilters(filters, ['supersticker'])) return 'Super Sticker Goal';
+            if (hasExactEventFilters(filters, ['superchat', 'supersticker'])) return 'YouTube Paid Message Goal';
+            return 'Donation Count Goal';
+        }
+
         function normalizeTipJarSourceValue(value) {
             const source = normalizeFilterValue(value).replace(/[\s_-]+/g, '');
             if (source === 'youtubeshort' || source === 'youtubeshorts') {
@@ -1388,11 +1707,20 @@
 
         function buildTipJarStorageSuffix() {
             const parts = [];
+            if (countMode) {
+                parts.push('metric_count');
+            }
+            if (eventTypeFilter.length) {
+                parts.push('events_' + eventTypeFilter.join('_').replace(/[^a-z0-9_-]/g, ''));
+            }
             if (donationTypeFilter) {
                 parts.push('type_' + donationTypeFilter.replace(/[^a-z0-9_-]/g, ''));
             }
             if (sourceTypeFilter.length) {
                 parts.push('source_' + sourceTypeFilter.join('_').replace(/[^a-z0-9_-]/g, ''));
+            }
+            if (excludeYoutubeGiftMemberships) {
+                parts.push('exclude_youtube_gifts');
             }
             return parts.length ? '_' + parts.join('_') : '';
         }
@@ -1508,6 +1836,33 @@
             return sourceTypeFilter.indexOf(source) !== -1;
         }
 
+        function passesTipJarEventFilter(data) {
+            if (!eventTypeFilter.length) return true;
+            const meta = getMeta(data);
+            const source = normalizeTipJarSourceValue(data.type || data.platform || meta.source || '');
+            let eventName = normalizeTipJarEventValue(getEventName(data));
+
+            // Older YouTube WebSocket payloads used "donation" for Super Chats.
+            if (source === 'youtube' && eventName === 'donation' && eventTypeFilter.indexOf('superchat') !== -1) {
+                eventName = 'superchat';
+            }
+            return eventTypeFilter.indexOf(eventName) !== -1;
+        }
+
+        function shouldExcludeYoutubeGiftMembership(data) {
+            if (!excludeYoutubeGiftMemberships) return false;
+            const meta = getMeta(data);
+            const source = normalizeTipJarSourceValue(data.type || data.platform || meta.source || '');
+            if (source !== 'youtube') return false;
+
+            const eventName = normalizeTipJarEventValue(getEventName(data));
+            const membership = normalizeFilterValue(data.membership);
+            return eventName === 'giftpurchase' ||
+                eventName === 'gift_subscription' ||
+                eventName === 'subscription_gift' ||
+                membership === 'gift_giver';
+        }
+
         function readNumberParam(name, fallback, minValue) {
             const raw = urlParams.get(name);
             if (raw === null || raw === '') return fallback;
@@ -1534,7 +1889,16 @@
             return num % 1 === 0 ? num.toFixed(0) : num.toFixed(2);
         }
 
+        function formatCountGoalValue(value) {
+            const num = Math.max(0, Math.ceil(Number(value) || 0));
+            const label = num === 1 ? countSingularLabel : countLabel;
+            return `${formatNumber(num)} ${label}`;
+        }
+
         function formatGoalValue(value, forceCents) {
+            if (countMode) {
+                return formatCountGoalValue(value);
+            }
             if (hypeMode) {
                 return `${formatNumber(value)} ${unitLabel}`;
             }
@@ -1542,7 +1906,7 @@
                 return `${formatNumber(value)} ${nativeUnitLabel}`;
             }
             const num = Number(value) || 0;
-            return `$${forceCents ? num.toFixed(2) : formatNumber(num)}`;
+            return `${hideCurrency ? '' : '$'}${forceCents ? num.toFixed(2) : formatNumber(num)}`;
         }
 
         function getRollingGoalCompletions(amount) {
@@ -1597,13 +1961,16 @@
         }
 
         function formatProgressPair(state) {
+            if (countMode) {
+                return `${formatNumber(state.current)} / ${formatNumber(state.goal)} ${countLabel}`;
+            }
             return `${formatGoalValue(state.current, true)} / ${formatGoalValue(state.goal)}`;
         }
 
         function formatProgressText() {
             const state = getProgressState();
             const progress = formatProgressPair(state);
-            if (style === 'jar' && (hypeMode || hasCustomTitle || state.isLevel)) {
+            if (style === 'jar' && (hypeMode || countMode || hasCustomTitle || state.isLevel)) {
                 const titleText = state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle;
                 return `${titleText}: ${progress}`;
             }
@@ -1800,9 +2167,9 @@
 
         function getDonationRaw(data) {
             const meta = getMeta(data);
-            if (getEventName(data) === 'giftpurchase') {
-                const value = firstNumber([data.donoValue, data.donationAmount, meta.amount, meta.price]);
-                return '$' + (value || (extractContributionCount(data) * 5));
+            const eventName = getEventName(data);
+            if (eventName === 'giftpurchase' || eventName === 'giftredemption') {
+                return '';
             }
             return data.donation || data.hasDonation || data.donationAmount || data.donoValue ||
                 meta.amountText || meta.priceText || meta.amount || '';
@@ -1819,6 +2186,7 @@
             const eventName = getEventName(data);
             const membership = data.membership ? String(data.membership).toLowerCase() : '';
             if (eventName === 'jeweldonation' ||
+                eventName === 'giftpurchase' ||
                 eventName === 'giftredemption' ||
                 eventName === 'gift_subscription' ||
                 eventName === 'subscription_gift' ||
@@ -1827,10 +2195,6 @@
                 meta.youtubeGift) {
                 return false;
             }
-            if (eventName === 'giftpurchase' && excludeGiftPurchases) {
-                return false;
-            }
-
             if (unitInfo && unitInfo.type && unitInfo.type !== 'usd') {
                 return false;
             }
@@ -1839,7 +2203,7 @@
             if (/\bjewels?\b/.test(raw)) {
                 return false;
             }
-            return eventName === 'giftpurchase' || !(/\bgift(?:ed|s)?\b/.test(raw));
+            return !(/\bgift(?:ed|s)?\b/.test(raw));
         }
 
         function isGiftEvent(eventName, membership) {
@@ -1863,8 +2227,8 @@
 
         function isResubEvent(eventName) {
             return eventName === 'resub' ||
-                eventName === 'renewed_member' ||
-                eventName === 'membermilestone';
+                eventName === 'membershiprenewal' ||
+                eventName === 'renewed_member';
         }
 
         function buildHypeContribution(data) {
@@ -1872,6 +2236,8 @@
             const membership = data.membership ? String(data.membership).toLowerCase() : '';
             const source = data.type ? String(data.type).toLowerCase() : '';
             const name = data.chatname || 'Anonymous';
+            const legacyMembershipEvent = eventName === 'true' && !!membership;
+            const legacyResubEvent = legacyMembershipEvent && /\bresub(?:scribed)?\b/i.test(String(data.chatmessage || ''));
 
             if (isGiftRedemptionEvent(eventName, membership)) {
                 const giver = extractGiftGiver(data);
@@ -1903,7 +2269,7 @@
                 };
             }
 
-            if (isSubEvent(eventName)) {
+            if (isSubEvent(eventName) || (legacyMembershipEvent && !legacyResubEvent)) {
                 return {
                     kind: 'sub',
                     donator: name,
@@ -1917,7 +2283,7 @@
                 };
             }
 
-            if (isResubEvent(eventName)) {
+            if (isResubEvent(eventName) || legacyResubEvent) {
                 return {
                     kind: 'resub',
                     donator: name,
@@ -1951,7 +2317,7 @@
             return null;
         }
 
-        function isDuplicateContribution(data, contribution) {
+        function isDuplicateContribution(data, contribution, requireExplicitId) {
             if (!dedupeWindowMs) return false;
             const now = Date.now();
             Object.keys(processedContributions).forEach(function(key) {
@@ -1961,9 +2327,11 @@
             });
 
             const meta = getMeta(data);
-            const explicitId = data.id || meta.messageId || meta.id || meta.eventId || '';
-            const key = explicitId
-                ? `id:${explicitId}`
+            const webhookId = meta.webhookId || '';
+            const explicitId = webhookId || data.id || meta.messageId || meta.id || meta.eventId || '';
+            if (requireExplicitId && !explicitId) return false;
+			const key = explicitId
+				? (webhookId ? `webhook:${contribution.source}:${webhookId}` : `id:${contribution.source}:${explicitId}`)
                 : [
                     'sig',
                     contribution.kind,
@@ -2041,18 +2409,24 @@
                 return;
             }
 
-            const tipValue = nativeUnitMode && unitInfo ? unitInfo.amount : getDonationValueUSD(Object.assign({}, contribution, {hasDonation: rawDonation, type: source}));
+            const tipValue = donationUsesNativeUnits && unitInfo ? unitInfo.amount : getDonationValueUSD(Object.assign({}, contribution, {
+                hasDonation: rawDonation,
+                type: source
+            }));
 
-            if (isNaN(tipValue) || tipValue <= 0) {
+            if (!countMode && (isNaN(tipValue) || tipValue <= 0)) {
                 console.warn('Ignoring invalid donation value:', rawDonation);
                 return;
             }
 
             const parsedDonation = parseDonationString(rawDonation);
-            const storedAmount = parsedDonation.amount !== null ? parsedDonation.amount : tipValue;
-            const storedCurrency = nativeUnitMode ? (unitInfo && unitInfo.label ? unitInfo.label : nativeUnitLabel) : (parsedDonation.currency || 'USD');
-            const displayLabel = nativeUnitMode ? `${formatNumber(tipValue)} ${storedCurrency}` : (parsedDonation.display || `$${tipValue.toFixed(2)}`);
-            const goalValue = hypeMode ? tipValue * donationPointRate : tipValue;
+            const hasValidTipValue = !isNaN(tipValue) && tipValue > 0;
+            const storedAmount = parsedDonation.amount !== null ? parsedDonation.amount : (hasValidTipValue ? tipValue : '');
+            const storedCurrency = donationUsesNativeUnits ? (unitInfo && unitInfo.label ? unitInfo.label : nativeUnitLabel) : (parsedDonation.currency || 'USD');
+            const displayLabel = donationUsesNativeUnits && hasValidTipValue
+                ? `${formatNumber(tipValue)} ${storedCurrency}`
+                : (parsedDonation.display || (hasValidTipValue ? `$${tipValue.toFixed(2)}` : String(rawDonation)));
+            const goalValue = countMode ? 1 : (hypeMode ? tipValue * donationPointRate : tipValue);
 
             const donation = {
                 timestamp: new Date().toISOString(),
@@ -2064,8 +2438,9 @@
                 count: 1,
                 amount: storedAmount,
                 currency: storedCurrency,
-                usdValue: nativeUnitMode ? undefined : tipValue,
-                unitValue: nativeUnitMode ? tipValue : undefined,
+                usdValue: donationUsesNativeUnits || !hasValidTipValue ? undefined : tipValue,
+                unitValue: donationUsesNativeUnits && hasValidTipValue ? tipValue : undefined,
+                countValue: countMode ? 1 : undefined,
                 points: hypeMode ? goalValue : undefined,
                 raw: parsedDonation.display || ''
             };
@@ -2073,7 +2448,10 @@
             saveHistory();
 
             updateAmount(goalValue);
-            addRecentTip(donator, hypeMode ? `+${formatGoalValue(goalValue)} (${displayLabel})` : displayLabel);
+            const recentLabel = countMode
+                ? `+1 ${countSingularLabel} (${displayLabel})`
+                : (hypeMode ? `+${formatGoalValue(goalValue)} (${displayLabel})` : displayLabel);
+            addRecentTip(donator, recentLabel);
             playDonationSound();
 
             if (celebration === 'hearts' && style === 'jar') {
@@ -2089,10 +2467,14 @@
                 triggerFireworks();
             }
 
-            showNotification(hypeMode ? `${donator} added ${formatGoalValue(goalValue)}!` : `${donator} tipped ${displayLabel}!`);
+            showNotification(countMode
+                ? `${donator} added ${formatCountGoalValue(1)}!`
+                : (hypeMode ? `${donator} added ${formatGoalValue(goalValue)}!` : `${donator} tipped ${displayLabel}!`));
         }
 
-        function processData(data) {
+        if (!previewMode) SSNOverlayControl.connect(urlParams, roomID, "tipjar", processData);
+function processData(data) {
+    if (!SSNOverlayControl.accept(data, "tipjar")) return;
             console.log(data);
             
             if (data.content) {
@@ -2119,6 +2501,10 @@
                 return;
             }
 
+            if (shouldExcludeYoutubeGiftMembership(data) || !passesTipJarEventFilter(data)) {
+                return;
+            }
+
             if (hypeMode) {
                 processHypeContribution(data);
                 return;
@@ -2127,7 +2513,17 @@
             const donationString = getDonationRaw(data);
             if (donationString) {
                 const sourceType = data.type ? String(data.type).toLowerCase() : '';
-                processTip(donationString, data.chatname || 'Anonymous', sourceType, data);
+                const contribution = {
+                    kind: 'donation',
+                    donator: data.chatname || 'Anonymous',
+                    recipient: '',
+                    source: sourceType,
+                    event: getEventName(data),
+                    count: 1,
+                    raw: String(donationString)
+                };
+                if (isDuplicateContribution(data, contribution, true)) return;
+				processTip(donationString, contribution.donator, sourceType, data);
             }
         }
         
@@ -2136,7 +2532,7 @@
             socketserver.onclose = function() {
                 setTimeout(function() {
                     conCon += 1;
-                    const finalServerURL = useLocalServer ? "ws://127.0.0.1:3000" : (serverURL || "wss://io.socialstream.ninja");
+                    const finalServerURL = useLocalServer ? SocialStreamLocalServer.getWebSocketUrl() : (serverURL || "wss://io.socialstream.ninja");
                     socketserver = new WebSocket(finalServerURL);
                     setupSocket();
                 }, 100 * conCon);
@@ -2175,8 +2571,8 @@
         }
         
         // Initialize socket server if enabled
-        if (serverURL || useLocalServer) {
-            const finalServerURL = useLocalServer ? "ws://127.0.0.1:3000" : (serverURL || "wss://io.socialstream.ninja");
+        if (!previewMode && (serverURL || useLocalServer)) {
+            const finalServerURL = useLocalServer ? SocialStreamLocalServer.getWebSocketUrl() : (serverURL || "wss://io.socialstream.ninja");
             socketserver = new WebSocket(finalServerURL);
             setupSocket();
         }
@@ -2200,7 +2596,10 @@
         });
         
         document.getElementById('reset-amount').addEventListener('click', () => {
-            if (confirm(hypeMode ? 'Are you sure you want to reset the hype goal to 0?' : 'Are you sure you want to reset the tip jar amount to $0?')) {
+            const resetPrompt = hypeMode
+                ? 'Are you sure you want to reset the hype goal to 0?'
+                : (countMode ? 'Are you sure you want to reset the donation count to 0?' : 'Are you sure you want to reset the tip jar amount to $0?');
+            if (confirm(resetPrompt)) {
                 resetTipJarAmount(false);
             }
         });
@@ -2263,13 +2662,15 @@
 
         function exportToCSV() {
             if (donationHistory.length === 0) {
-                alert(hypeMode ? 'No hype contributions to export' : 'No donations to export');
+                alert(hypeMode ? 'No hype contributions to export' : (countMode ? 'No counted donations to export' : 'No donations to export'));
                 return;
             }
 
             let csv = hypeMode
                 ? 'Timestamp,Type,Name,Recipient,Count,Points,Amount,Currency,USD Value,Source,Event,Raw\n'
-                : 'Timestamp,Donator,Amount,Currency,USD Value,Unit Value,Source,Raw\n';
+                : (countMode
+                    ? 'Timestamp,Donator,Count,Amount,Currency,USD Value,Unit Value,Source,Event,Raw\n'
+                    : 'Timestamp,Donator,Amount,Currency,USD Value,Unit Value,Source,Event,Raw\n');
             donationHistory.forEach(donation => {
                 const date = new Date(donation.timestamp).toLocaleString();
                 if (hypeMode) {
@@ -2287,10 +2688,14 @@
                         csvCell(donation.event || ''),
                         csvCell(donation.raw || '')
                     ].join(',') + '\n';
+                } else if (countMode) {
+                    const usdValue = donation.usdValue !== undefined ? Number(donation.usdValue).toFixed(2) : '';
+                    const unitValue = donation.unitValue !== undefined ? formatNumber(donation.unitValue) : '';
+                    csv += `${csvCell(date)},${csvCell(donation.donator)},${donation.countValue || 1},${donation.amount},${csvCell(donation.currency)},${usdValue},${unitValue},${csvCell(donation.source || '')},${csvCell(donation.event || '')},${csvCell(donation.raw || '')}\n`;
                 } else {
                     const usdValue = donation.usdValue !== undefined ? Number(donation.usdValue).toFixed(2) : '';
                     const unitValue = donation.unitValue !== undefined ? formatNumber(donation.unitValue) : '';
-                    csv += `${csvCell(date)},${csvCell(donation.donator)},${donation.amount},${csvCell(donation.currency)},${usdValue},${unitValue},${csvCell(donation.source || '')},${csvCell(donation.raw || '')}\n`;
+                    csv += `${csvCell(date)},${csvCell(donation.donator)},${donation.amount},${csvCell(donation.currency)},${usdValue},${unitValue},${csvCell(donation.source || '')},${csvCell(donation.event || '')},${csvCell(donation.raw || '')}\n`;
                 }
             });
             
@@ -2299,7 +2704,7 @@
             const a = document.createElement('a');
             a.setAttribute('hidden', '');
             a.setAttribute('href', url);
-            a.setAttribute('download', `${hypeMode ? 'hype_contributions' : 'donations'}_${new Date().toISOString().split('T')[0]}.csv`);
+            a.setAttribute('download', `${hypeMode ? 'hype_contributions' : (countMode ? 'donation_counts' : 'donations')}_${new Date().toISOString().split('T')[0]}.csv`);
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -2310,7 +2715,7 @@
             historyList.innerHTML = '';
             
             if (donationHistory.length === 0) {
-                historyList.innerHTML = hypeMode ? '<p>No hype contributions yet</p>' : '<p>No donations yet</p>';
+                historyList.innerHTML = hypeMode ? '<p>No hype contributions yet</p>' : (countMode ? '<p>No counted donations yet</p>' : '<p>No donations yet</p>');
             } else {
                 const sortedHistory = [...donationHistory].reverse();
                 sortedHistory.forEach(donation => {
@@ -2319,9 +2724,11 @@
                     const kind = donation.kind || 'donation';
                     const detail = hypeMode
                         ? `${formatGoalValue(donation.points || 0)} - ${kind}${donation.count ? ` x${donation.count}` : ''}${donation.recipient ? ` - recipient: ${donation.recipient}` : ''}`
-                        : (donation.usdValue !== undefined
+                        : (countMode
+                            ? `${formatCountGoalValue(donation.countValue || 1)}${donation.raw ? ` - ${donation.raw}` : ''}${donation.event ? ` (${donation.event})` : ''}`
+                            : (donation.usdValue !== undefined
                             ? `${donation.amount} ${donation.currency} ($${Number(donation.usdValue).toFixed(2)} USD)`
-                            : `${formatNumber(donation.unitValue || donation.amount || 0)} ${donation.currency}`);
+                            : `${formatNumber(donation.unitValue || donation.amount || 0)} ${donation.currency}`));
                     item.style.cssText = 'margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;';
                     item.innerHTML = `
                         <div><strong>${(window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(donation.donator) : fallbackEscapeHtml(donation.donator))}</strong></div>
@@ -2333,10 +2740,12 @@
                 });
 
                 // Add total at the bottom
-                const total = donationHistory.reduce((sum, d) => sum + (hypeMode ? (d.points || 0) : (d.unitValue !== undefined ? d.unitValue : d.usdValue || 0)), 0);
+                const total = donationHistory.reduce((sum, d) => sum + (hypeMode
+                    ? (d.points || 0)
+                    : (countMode ? (d.countValue || 1) : (d.unitValue !== undefined ? d.unitValue : d.usdValue || 0))), 0);
                 const totalDiv = document.createElement('div');
                 totalDiv.style.cssText = 'margin-top: 20px; padding-top: 20px; border-top: 1px solid #666; font-size: 18px; font-weight: bold;';
-                totalDiv.textContent = hypeMode || nativeUnitMode ? `Total: ${formatGoalValue(total)}` : `Total: $${total.toFixed(2)} USD`;
+                totalDiv.textContent = hypeMode || nativeUnitMode || countMode ? `Total: ${formatGoalValue(total)}` : `Total: $${total.toFixed(2)} USD`;
                 historyList.appendChild(totalDiv);
             }
             
@@ -2367,7 +2776,7 @@
             leaderboardList.innerHTML = '';
             
             if (donationHistory.length === 0) {
-                leaderboardList.innerHTML = hypeMode ? '<p style="text-align: center;">No hype contributions yet</p>' : '<p style="text-align: center;">No donations yet</p>';
+                leaderboardList.innerHTML = hypeMode ? '<p style="text-align: center;">No hype contributions yet</p>' : (countMode ? '<p style="text-align: center;">No counted donations yet</p>' : '<p style="text-align: center;">No donations yet</p>');
             } else {
                 // Aggregate contributions by donator
                 const donatorTotals = {};
@@ -2403,7 +2812,9 @@
 
                 // Sort by points in hype mode, otherwise by total USD.
                 const sortedDonators = Object.entries(donatorTotals)
-                    .sort((a, b) => hypeMode ? b[1].totalPoints - a[1].totalPoints : (nativeUnitMode ? b[1].totalUnits - a[1].totalUnits : b[1].totalUSD - a[1].totalUSD))
+                    .sort((a, b) => hypeMode
+                        ? b[1].totalPoints - a[1].totalPoints
+                        : (countMode ? b[1].count - a[1].count : (nativeUnitMode ? b[1].totalUnits - a[1].totalUnits : b[1].totalUSD - a[1].totalUSD)))
                     .slice(0, 10); // Top 10
 
                 sortedDonators.forEach(([donator, data], index) => {
@@ -2416,7 +2827,9 @@
                     const currencyBreakdown = Object.entries(data.currencies)
                         .map(([currency, amount]) => `${amount.toFixed(2)} ${currency}`)
                         .join(' + ');
-                    const scoreLabel = hypeMode ? formatGoalValue(data.totalPoints) : (nativeUnitMode ? formatGoalValue(data.totalUnits) : `$${data.totalUSD.toFixed(2)}`);
+                    const scoreLabel = hypeMode
+                        ? formatGoalValue(data.totalPoints)
+                        : (countMode ? formatCountGoalValue(data.count) : (nativeUnitMode ? formatGoalValue(data.totalUnits) : `$${data.totalUSD.toFixed(2)}`));
                     const subLine = hypeMode
                         ? `${data.count} contribution${data.count > 1 ? 's' : ''}${data.subs ? ` - ${data.subs} sub/member` : ''}${data.gifts ? ` - ${data.gifts} gifted` : ''}`
                         : `${data.count} donation${data.count > 1 ? 's' : ''}`;
@@ -2451,30 +2864,32 @@
         }
 
         // IFRAME setup for Social Stream Ninja
-        const iframe = document.createElement("iframe");
-        const filename = "tipjar";
-        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + 
-            (password || "false") + "&solo&view=" + roomID + "&novideo&noaudio&label=" + 
-            filename + "&cleanoutput&room=" + roomID;
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.position = "fixed";
-        iframe.style.left = "-100px";
-        iframe.style.top = "-100px";
-        iframe.id = "frame1";
-        document.body.appendChild(iframe);
+        if (!previewMode && !useServerOnlyTransport()) {
+            const iframe = document.createElement("iframe");
+            const filename = "tipjar";
+            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" +
+                encodeURIComponent(password || "false") + "&solo&view=" + roomID + "&novideo&noaudio&label=" +
+                filename + "&cleanoutput&room=" + roomID;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
 
-        const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
-        const eventer = window[eventMethod];
-        const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
-        eventer(messageEvent, function (e) {
-            if (e.source != iframe.contentWindow) return;
-            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
-                if ("overlayNinja" in e.data.dataReceived) {
-                    processData(e.data.dataReceived.overlayNinja);
+            const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+            const eventer = window[eventMethod];
+            const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+            eventer(messageEvent, function (e) {
+                if (e.source != iframe.contentWindow) return;
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
                 }
-            }
-        });
+            });
+        }
     </script>
 </body>
 </html>

@@ -957,7 +957,7 @@ membershipFilter.addEventListener('change', () => {
 });
 
 clearFiltersButton.addEventListener('click', clearFilters);
-if (clearHistoryButton) clearHistoryButton.addEventListener('click', clearSavedHistory);
+clearHistoryButton.addEventListener('click', clearSavedHistory);
 
 messagesContainer.addEventListener('scroll', () => {
     const { scrollTop, scrollHeight, clientHeight } = messagesContainer;

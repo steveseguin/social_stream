@@ -11,7 +11,9 @@ var isExtensionOn = false;
 var iframe = null;
 // Optional: Use VDONinjaSDK instead of iframe transport to reduce memory
 var ninjaBridge = null;
-var useNinjaSDK = false; // toggled via URL param &sdk, or can be wired to settings in future
+var transportGeneration = 0;
+var transportTask = null;
+var useNinjaSDK = false; // toggled via URL params &sdk/&beta, or can be wired to settings in future
 
 var settings = {};
 var messageTimeout = {};
@@ -19,16 +21,13 @@ var lastSentMessage = "";
 var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
 const fakeChatThrottleState = new Map();
-const WEBSTORE_CONSERVATIVE_RELEASE = true;
 var sentimentAnalysisLoaded = false;
+function isSentimentAnalysisAvailable() { return false; }
 const commandAliasCache = new Map();
 const settingCommaListCache = new Map();
 const settingRoleListCache = new Map();
+const settingUserDisplayAliasCache = new Map();
 const DEFAULT_QUESTION_KEYWORDS = ["?", "Q:", "question:", "Question:", "how", "what", "when", "where", "why", "who", "which", "could", "would", "should", "can", "will"];
-
-function isSentimentAnalysisAvailable() {
-	return !WEBSTORE_CONSERVATIVE_RELEASE && typeof loadSentimentAnalysis === "function" && typeof inferSentiment === "function";
-}
 
 function trimSettingCache(cache) {
 	if (cache.size > 500) {
@@ -58,6 +57,38 @@ function getCachedCommaList(value, lowerCase = false, keepEmpty = false) {
 	return entries;
 }
 
+function normalizeSourceType(sourceType) {
+	return String(sourceType || "")
+		.trim()
+		.toLowerCase();
+}
+
+function isViewerCountSourceHidden(sourceType) {
+	const normalizedType = normalizeSourceType(sourceType);
+	if (!normalizedType) {
+		return false;
+	}
+	const hiddenSources = getCachedCommaList(getSettingTextValue("hideViewerCountSources"), true);
+	return hiddenSources.some(source => source && (normalizedType === source || normalizedType.startsWith(source + "-")));
+}
+
+function filterViewerCountSnapshotMeta(meta) {
+	if (!meta || typeof meta !== "object" || Array.isArray(meta)) {
+		return meta;
+	}
+	const filtered = {};
+	Object.keys(meta).forEach(type => {
+		if (!checkIfAllowed(type) && !isSSAPP) {
+			return;
+		}
+		if (isViewerCountSourceHidden(type)) {
+			return;
+		}
+		filtered[type] = meta[type];
+	});
+	return filtered;
+}
+
 function getCachedRoleList(value) {
 	const raw = String(value || "");
 	const cached = settingRoleListCache.get(raw);
@@ -77,6 +108,118 @@ function getCachedRoleList(value) {
 	trimSettingCache(settingRoleListCache);
 	settingRoleListCache.set(raw, entries);
 	return entries;
+}
+
+function normalizeRoleIdentifier(value) {
+	if (value === undefined || value === null) return "";
+	return String(value).toLowerCase().trim().replace(/^@+/, "");
+}
+
+function normalizeConfiguredUserSourceType(sourceType) {
+	const normalizedType = normalizeSourceType(sourceType);
+	return normalizedType === "youtubeshorts" ? "youtube" : normalizedType;
+}
+
+function getCachedUserDisplayAliases(value) {
+	let raw = "";
+	if (typeof value === "string") {
+		raw = value;
+	} else {
+		try {
+			raw = JSON.stringify(value || []);
+		} catch (e) {
+			return [];
+		}
+	}
+	const cached = settingUserDisplayAliasCache.get(raw);
+	if (cached) {
+		return cached;
+	}
+
+	let parsed = [];
+	try {
+		parsed = JSON.parse(raw || "[]");
+	} catch (e) {}
+	const entries = Array.isArray(parsed)
+		? parsed
+			.map(entry => ({
+				name: String(entry?.identifier || "").trim(),
+				displayName: String(entry?.displayName || "").trim(),
+				type: normalizeConfiguredUserSourceType(entry?.type)
+			}))
+			.filter(entry => entry.name && entry.displayName)
+		: [];
+	trimSettingCache(settingUserDisplayAliasCache);
+	settingUserDisplayAliasCache.set(raw, entries);
+	return entries;
+}
+
+function matchesConfiguredUser(entry, data, sourceType) {
+	if (!entry || !data) return false;
+	if (entry.type && entry.type !== sourceType) return false;
+
+	const configuredIdentifier = normalizeRoleIdentifier(entry.name);
+	if (!configuredIdentifier) return false;
+
+	const userId = normalizeRoleIdentifier(data.userid);
+	if (userId && configuredIdentifier === userId) return true;
+
+	const username = normalizeRoleIdentifier(data.username);
+	if (username && configuredIdentifier === username) return true;
+
+	const chatName = normalizeRoleIdentifier(data.chatname);
+	return !!chatName && configuredIdentifier === chatName;
+}
+
+function getUserDisplayAliasEntries() {
+	const configured = settings.userdisplayaliases;
+	if (!configured) return [];
+	return getCachedUserDisplayAliases(configured.object || configured.json || configured);
+}
+
+function findUserDisplayAlias(data, sourceType) {
+	if (!data || !(data.userid || data.username || data.chatname)) return null;
+	const normalizedType = normalizeConfiguredUserSourceType(sourceType || data.type);
+	return getUserDisplayAliasEntries().find(entry => matchesConfiguredUser(entry, data, normalizedType)) || null;
+}
+
+function applyUserDisplayAlias(data) {
+	if (!data || !data.chatname) return false;
+	const alias = findUserDisplayAlias(data, data.type);
+	if (!alias) return false;
+
+	if (!data.userid && !data.username) {
+		data.username = data.chatname;
+	}
+	data.chatname = typeof filterXSS === "function"
+		? filterXSS(alias.displayName.slice(0, 80))
+		: alias.displayName.slice(0, 80);
+	return true;
+}
+
+function getOverlayDisplayMessage(data) {
+	if (!data || typeof data !== "object") return data;
+	const displayMessage = Object.assign({}, data);
+	return applyUserDisplayAlias(displayMessage) ? displayMessage : data;
+}
+
+function getOverlayDisplayPayload(data) {
+	if (!data || typeof data !== "object") return data;
+	if (!getUserDisplayAliasEntries().length) return data;
+	let displayPayload = getOverlayDisplayMessage(data);
+	["userHistory", "recentHistory", "historyBefore"].forEach(key => {
+		if (!Array.isArray(data[key])) return;
+		if (displayPayload === data) displayPayload = Object.assign({}, data);
+		displayPayload[key] = data[key].map(getOverlayDisplayMessage);
+	});
+	if (data.delete && typeof data.delete === "object") {
+		const displayDelete = getOverlayDisplayMessage(data.delete);
+		if (displayDelete !== data.delete) {
+			if (displayPayload === data) displayPayload = Object.assign({}, data);
+			displayPayload.delete = displayDelete;
+		}
+	}
+	return displayPayload;
 }
 
 function getCommandAliases(commandString) {
@@ -211,11 +354,12 @@ const HANDLE_STORE_NAME = "handles";
 let fileHandleDBPromise = null;
 const HANDLE_KEYS = {
 	chatLog: "chatLog",
+	liveStats: "liveStats",
 	savedNames: "savedNames",
 	ticker: "tickerFile"
 };
 
-const HANDLE_STATUS_KEYS = ["chatLog", "savedNames", "ticker"];
+const HANDLE_STATUS_KEYS = ["chatLog", "liveStats", "savedNames", "ticker"];
 const HANDLE_STATUS_FIELDS = ["name", "status", "detail", "persisted"];
 const HANDLE_STATUS_STATES = {
 	ACTIVE: "active",
@@ -475,6 +619,10 @@ async function restoreBrowserHandle(key, mode = "readwrite") {
 
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
+function isTruthyUrlFlag(name) {
+	return urlParams.has(name) && !/^(0|false|off|no)$/i.test(urlParams.get(name) || "1");
+}
+var forceNinjaSDKFromUrl = isTruthyUrlFlag("sdk") || isTruthyUrlFlag("beta");
 var lastUseNinjaSDK = undefined; // track effective SDK usage across settings loads
 // initial default (may be recalculated when settings load)
 useNinjaSDK = false;
@@ -483,6 +631,7 @@ var FacebookDupes = "";
 var FacebookDupesTime = null;
 
 var fetchNode = false;
+var fetchNodeAsync = false;
 var postNode = false;
 var putNode = false;
 
@@ -751,8 +900,9 @@ if (typeof chrome.runtime == "undefined") {
 		log("FROM MAINS SENDER", args);
 
 		if (args.length) {
-			if (args[0] && typeof args[0] === "object" && ("response" in args[0] || "action" in args[0])) {
-				Promise.resolve(processIncomingRequest(args[0])).catch(error => {
+			const incomingRequest = args[0] && args[0].overlayNinja ? args[0].overlayNinja : args[0];
+			if (incomingRequest && typeof incomingRequest === "object" && ("response" in incomingRequest || "action" in incomingRequest)) {
+				Promise.resolve(processIncomingRequest(incomingRequest)).catch(error => {
 					console.error("fromMainSender-processIncomingRequest failed", error);
 				});
 				return;
@@ -770,6 +920,7 @@ if (typeof chrome.runtime == "undefined") {
 	ipcRenderer.on("fromPopup", (event, ...args) => {
 		//log("FROM POP UP (redirected)", args[0]);
 		var sender = {};
+		sender.aiEventLocalPopup = true;
 		sender.tab = {};
 		sender.tab.id = null;
 		const request = args[0];
@@ -786,12 +937,25 @@ if (typeof chrome.runtime == "undefined") {
 		});
 	});
 
-	fetchNode = function (URL, headers = {}, method = "GET", body = null) {
+	fetchNode = function (URL, headers = {}, method = "GET", body = null, diagnostics = null, timeout = undefined) {
 		return ipcRenderer.sendSync("nodefetch", {
 			url: URL,
 			headers: headers,
 			method: method,
-			body: body
+			body: body,
+			diagnostics: diagnostics,
+			timeout: timeout
+		});
+	};
+
+	fetchNodeAsync = function (URL, headers = {}, method = "GET", body = null, diagnostics = null, timeout = undefined) {
+		return ipcRenderer.invoke("nodefetch", {
+			url: URL,
+			headers: headers,
+			method: method,
+			body: body,
+			diagnostics: diagnostics,
+			timeout: timeout
 		});
 	};
 
@@ -1119,107 +1283,114 @@ try {
 	}
 } catch (e) {}
 
-function printThermal(htmlContent, options = {}) {
-	// --kiosk --kiosk-printing
-	// Default options
+///////////////////
+// Add this placeholder function to background.js
+
+
+
+// Function to reset the custom function to default
+
+//////////////
+async function printThermal(htmlContent, options = {}) {
+	const getNumberSetting = function (key, fallback, minimum, maximum) {
+		const value = Number(settings[key]?.numbersetting);
+		if (!Number.isFinite(value)) return fallback;
+		return Math.max(minimum, Math.min(maximum, value));
+	};
 	const defaultOptions = {
-		width: "58mm",
-		margin: "0mm",
+		width: `${getNumberSetting("printerPaperWidth", 58, 20, 120)}mm`,
+		marginTop: `${getNumberSetting("printerMarginTop", 0, 0, 25)}mm`,
+		marginRight: `${getNumberSetting("printerMarginRight", 2, 0, 25)}mm`,
+		marginBottom: `${getNumberSetting("printerMarginBottom", 0, 0, 25)}mm`,
+		marginLeft: `${getNumberSetting("printerMarginLeft", 2, 0, 25)}mm`,
+		feed: `${getNumberSetting("printerFeed", 1, 0, 25)}mm`,
+		marginType: settings.printerMarginMode?.optionsetting === "none" ? "none" : "printableArea",
 		fontSize: "10pt",
 		fontFamily: "monospace",
 		lineHeight: "1.2",
 		printerName: settings.printerName?.textsetting || null
 	};
+	const configuredLabelHeight = getNumberSetting("printerLabelHeight", 0, 0, 4000);
+	if (configuredLabelHeight > 0) defaultOptions.height = `${configuredLabelHeight}mm`;
 
-	// Merge provided options with defaults
 	const printOptions = { ...defaultOptions, ...options };
+	if (Object.prototype.hasOwnProperty.call(options, "margin")) {
+		["marginTop", "marginRight", "marginBottom", "marginLeft"].forEach(function (side) {
+			if (!Object.prototype.hasOwnProperty.call(options, side)) printOptions[side] = options.margin;
+		});
+	}
 
-	// Create an iframe to handle the print job
-	const printFrame = document.createElement("iframe");
-
-	// Make iframe invisible
-	printFrame.style.position = "fixed";
-	printFrame.style.width = "0";
-	printFrame.style.height = "0";
-	printFrame.style.border = "0";
-	printFrame.style.opacity = "0";
-
-	document.body.appendChild(printFrame);
-
-	// Get iframe's document object
-	const frameDoc = printFrame.contentWindow.document;
-
-	// Open document and write HTML
-	frameDoc.open();
-
-	// Create style for printing
-	const printStyles = `
-    @page {
-      size: ${printOptions.width} auto;
-      margin: ${printOptions.margin};
-    }
-    body {
-      width: ${printOptions.width};
-      font-family: ${printOptions.fontFamily};
-      font-size: ${printOptions.fontSize};
-      line-height: ${printOptions.lineHeight};
-      margin: 0;
-      padding: 0;
-    }
-    * {
-      box-sizing: border-box;
-    }
-  `;
-
-	// Write HTML to iframe with styles
-	frameDoc.write(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Print</title>
-        <style>${printStyles}</style>
-      </head>
-      <body>
-        ${htmlContent}
-      </body>
-    </html>
-  `);
-
-	frameDoc.close();
-
-	// Wait for content to load before printing
-	printFrame.onload = function () {
-		const printWindow = printFrame.contentWindow;
-
-		// If a specific printer name is provided, attempt to use it
-		if (printOptions.printerName) {
-			// Use the print API with specific printer
-			const printOpts = {
-				printer: printOptions.printerName,
-				silent: true
+	// SSApp can submit a silent job to the selected native printer. Browser
+	// window.print() cannot select a device by name, even when options are passed.
+	if (window.ninjafy && typeof window.ninjafy.printThermal === "function") {
+		try {
+			return await window.ninjafy.printThermal(htmlContent, printOptions);
+		} catch (error) {
+			console.error("[ThermalPrint] Native print failed:", error?.message || error);
+			return {
+				success: false,
+				error: error?.message || String(error),
+				code: error?.code || "SSAPP_PRINT_FAILED"
 			};
-
-			// Print with specified options
-			if (printWindow.navigator && printWindow.navigator.serviceWorker) {
-				printWindow.print(printOpts).catch(error => {
-					console.warn("Failed to select printer:", error);
-					// Fallback to default print
-					printWindow.print();
-				});
-			} else {
-				// Fallback to default print
-				printWindow.print();
-			}
-		} else {
-			// Use default print dialog
-			printWindow.print();
 		}
+	}
 
-		// Remove iframe after printing is complete
-		setTimeout(() => {
-			document.body.removeChild(printFrame);
-		}, 1000);
-	};
+	return await new Promise(resolve => {
+		// Create an iframe to handle the browser print dialog fallback.
+		const printFrame = document.createElement("iframe");
+		printFrame.style.position = "fixed";
+		printFrame.style.width = "0";
+		printFrame.style.height = "0";
+		printFrame.style.border = "0";
+		printFrame.style.opacity = "0";
+		document.body.appendChild(printFrame);
+
+		const frameDoc = printFrame.contentWindow.document;
+		printFrame.onload = function () {
+			const printWindow = printFrame.contentWindow;
+			if (printOptions.printerName) {
+				console.warn("[ThermalPrint] Browser printing cannot select a printer by name; opening the print dialog instead.");
+			}
+			printWindow.print();
+
+			setTimeout(() => {
+				printFrame.remove();
+				resolve({ success: true, native: false });
+			}, 1000);
+		};
+
+		frameDoc.open();
+		const printStyles = `
+			@page {
+				size: ${printOptions.width} ${printOptions.height || 'auto'};
+				margin: 0;
+			}
+			body {
+				width: ${printOptions.width};
+				font-family: ${printOptions.fontFamily};
+				font-size: ${printOptions.fontSize};
+				line-height: ${printOptions.lineHeight};
+				margin: 0;
+				padding: ${printOptions.marginTop} ${printOptions.marginRight} ${printOptions.marginBottom} ${printOptions.marginLeft};
+			}
+			* {
+				box-sizing: border-box;
+			}
+		`;
+
+		frameDoc.write(`
+			<!DOCTYPE html>
+			<html>
+				<head>
+					<title>Print</title>
+					<style>${printStyles}</style>
+				</head>
+				<body>${htmlContent}</body>
+			</html>
+		`);
+
+		frameDoc.close();
+	});
 }
 ////////
 
@@ -1384,6 +1555,63 @@ function pruneSettingsObjects(settingsObject) {
 	return changed;
 }
 
+function syncLikeTotalSettings(settingsObject, explicitValue) {
+	if (!settingsObject || typeof settingsObject !== "object") {
+		return false;
+	}
+
+	const settingKeys = ["captureliketotals", "captureyoutubelikes"];
+	const hasExplicitValue = typeof explicitValue === "boolean";
+	const enabled = hasExplicitValue
+		? explicitValue
+		: settingKeys.some(settingKey => {
+				const entry = settingsObject[settingKey];
+				return entry === true || !!(entry && typeof entry === "object" && entry.setting === true);
+			});
+	let changed = false;
+
+	for (const settingKey of settingKeys) {
+		const entry = settingsObject[settingKey];
+		const entryEnabled = entry === true || !!(entry && typeof entry === "object" && entry.setting === true);
+		if (enabled) {
+			if (!entryEnabled) {
+				settingsObject[settingKey] = { setting: true };
+				changed = true;
+			}
+		} else if (hasExplicitValue && settingKey in settingsObject) {
+			delete settingsObject[settingKey];
+			changed = true;
+		}
+	}
+
+	return changed;
+}
+
+const AI_CHATBOT_SETTING_KEY = "aiChatbotEnabled";
+const LEGACY_AI_CHATBOT_SETTING_KEY = "ollama";
+
+function migrateAiChatbotEnabledSetting(settingsObject) {
+	if (!settingsObject || typeof settingsObject !== "object") {
+		return false;
+	}
+
+	const hasCanonicalSetting = Object.prototype.hasOwnProperty.call(settingsObject, AI_CHATBOT_SETTING_KEY);
+	const legacyEntry = settingsObject[LEGACY_AI_CHATBOT_SETTING_KEY];
+	const legacyEnabled = legacyEntry === true || !!(legacyEntry && typeof legacyEntry === "object" && legacyEntry.setting === true);
+	let changed = false;
+
+	if (!hasCanonicalSetting && legacyEnabled) {
+		settingsObject[AI_CHATBOT_SETTING_KEY] = { setting: true };
+		changed = true;
+	}
+	if (Object.prototype.hasOwnProperty.call(settingsObject, LEGACY_AI_CHATBOT_SETTING_KEY)) {
+		delete settingsObject[LEGACY_AI_CHATBOT_SETTING_KEY];
+		changed = true;
+	}
+
+	return changed;
+}
+
 function loadSettings(item, resave = false) {
 	log("loadSettings (or saving new settings)", item);
 	let reloadNeeded = false;
@@ -1395,9 +1623,8 @@ function loadSettings(item, resave = false) {
 
 	if (incomingStreamId) {
 		if (streamID != incomingStreamId) {
-			streamID = incomingStreamId;
-			streamID = validateRoomId(streamID);
-			if (!streamID) {
+			const validatedStreamId = validateRoomId(incomingStreamId);
+			if (!validatedStreamId) {
 				try {
 					chrome.notifications.create({
 						type: "basic",
@@ -1411,6 +1638,7 @@ function loadSettings(item, resave = false) {
 					throw new Error("Invalid session ID");
 				}
 			}
+			streamID = validatedStreamId;
 			reloadNeeded = true;
 			persistSession({ streamId: streamID });
 		}
@@ -1459,8 +1687,19 @@ function loadSettings(item, resave = false) {
 
 	if (item && item.settings) {
 		settings = item.settings;
+		if (migrateAiChatbotEnabledSetting(settings)) {
+			normalizedSettings = true;
+		}
 		// Temporary migration cleanup for stale imported false toggle objects. Stop pruning on every import after May 31st 2026.
-		normalizedSettings = pruneSettingsObjects(settings);
+		if (pruneSettingsObjects(settings)) {
+			normalizedSettings = true;
+		}
+		if (syncLikeTotalSettings(settings)) {
+			normalizedSettings = true;
+		}
+		if (settings.showlikecount && syncLikeTotalSettings(settings, true)) {
+			normalizedSettings = true;
+		}
 
 		Object.keys(patterns).forEach(pattern => {
 			settings[pattern] = findExistingEvents(pattern, { settings });
@@ -1492,7 +1731,7 @@ function loadSettings(item, resave = false) {
 	// Recompute effective SDK usage on settings load
 	try {
 		const settingsSDK = settings?.sdk?.setting === true || settings?.sdk === true || settings?.usesdk?.setting === true;
-		const effective = !!settingsSDK;
+		const effective = !!(forceNinjaSDKFromUrl || settingsSDK);
 		if (lastUseNinjaSDK === undefined) {
 			lastUseNinjaSDK = effective;
 		} else if (effective !== lastUseNinjaSDK) {
@@ -1567,9 +1806,17 @@ function loadSettings(item, resave = false) {
 		relaytargets = false;
 	}
 
-	if (settings.translationlanguage) {
-		changeLg(settings.translationlanguage.optionsetting);
+	const selectedTranslationLanguage = settings.translationlanguage?.optionsetting || "";
+	if (selectedTranslationLanguage || hasCustomTranslationOverrides()) {
+		changeLg(selectedTranslationLanguage);
 	}
+	/////
+	
+	
+
+	{}
+	/////////
+
 	setupSocket();
 	setupSocketDock();
 	handleVideoStatsSettingsChange();
@@ -1585,6 +1832,38 @@ var miscTranslations = {
 	someonesaid: "Someone said: ",
 	someone: "Someone"
 };
+
+const CUSTOM_TRANSLATION_SETTINGS = Object.freeze({
+	customTwitchFollowMessage: "twitch-started-following-message",
+	customTwitchSubscribedMessage: "twitch-subscribed-message",
+	customTwitchSubscribedAtTierMessage: "twitch-subscribed-at-tier-message",
+	customTwitchResubscribedMessage: "twitch-resubscribed-message"
+});
+
+function getCustomTranslationOverrides() {
+	const overrides = {};
+	Object.keys(CUSTOM_TRANSLATION_SETTINGS).forEach(function(settingKey) {
+		const value = settings[settingKey]?.textsetting;
+		if (typeof value === "string" && value.trim()) {
+			overrides[CUSTOM_TRANSLATION_SETTINGS[settingKey]] = value.trim();
+		}
+	});
+	return overrides;
+}
+
+function hasCustomTranslationOverrides() {
+	return Object.keys(getCustomTranslationOverrides()).length > 0;
+}
+
+function applyCustomTranslationOverrides(baseTranslation) {
+	const overrides = getCustomTranslationOverrides();
+	if (!Object.keys(overrides).length) {
+		return baseTranslation || false;
+	}
+	const translationData = baseTranslation && typeof baseTranslation === "object" ? baseTranslation : {};
+	translationData.innerHTML = Object.assign({}, translationData.innerHTML || {}, overrides);
+	return translationData;
+}
 // In background.js or a shared utility file
 async function fetchWithTimeout(url, optionsOrTimeout = {}, timeoutOrHeaders = 8000) {
 	const argCount = arguments.length;
@@ -1670,11 +1949,24 @@ async function fetchWithTimeout(url, optionsOrTimeout = {}, timeoutOrHeaders = 8
 // Make it globally available if needed by other parts of background.js, or export if using modules
 window.fetchWithTimeout = fetchWithTimeout;
 
+let openAIRealtimeSafetyIdentifierPromise = null;
 let openAIRealtimeCohostCapabilityPromise = null;
 let openAIRealtimeCohostCapabilityRecord = null;
 let openAIRealtimeCohostCapabilityMustRotate = false;
+const openAIRealtimeMintTimes = new Map();
 const COHOST_CAPABILITY_STORAGE_KEY = "cohostAccessCapability";
 const COHOST_CAPABILITY_LIFETIME_MS = 12 * 60 * 60 * 1000;
+function getOpenAIRealtimeSafetyIdentifier() {
+	if (openAIRealtimeSafetyIdentifierPromise) return openAIRealtimeSafetyIdentifierPromise;
+	openAIRealtimeSafetyIdentifierPromise = (async () => {
+		if (!globalThis.crypto?.subtle || typeof TextEncoder === "undefined") return "";
+		const source = "ssn-realtime:" + String(streamID || "local-user");
+		const digest = await globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(source));
+		return Array.from(new Uint8Array(digest)).map(value => value.toString(16).padStart(2, "0")).join("");
+	})().catch(() => "");
+	return openAIRealtimeSafetyIdentifierPromise;
+}
+
 function getOpenAIRealtimeCohostCapability() {
 	const now = Date.now();
 	const scope = String(streamID || "");
@@ -1736,6 +2028,121 @@ function getOpenAIRealtimeCohostCapability() {
 	return openAIRealtimeCohostCapabilityPromise;
 }
 
+function enforceOpenAIRealtimeMintRateLimit(peerId, capability) {
+	const keys = ["peer:" + String(peerId || "unknown")];
+	if (capability) keys.push("capability:" + String(capability));
+	const now = Date.now();
+	for (const key of keys) {
+		const previous = openAIRealtimeMintTimes.get(key) || 0;
+		if (now - previous < 5000) throw new Error("Wait a few seconds before creating another OpenAI Realtime session.");
+	}
+	for (const key of keys) openAIRealtimeMintTimes.set(key, now);
+	if (openAIRealtimeMintTimes.size > 100) {
+		for (const [entryKey, timestamp] of openAIRealtimeMintTimes.entries()) {
+			if (now - timestamp > 5 * 60 * 1000) openAIRealtimeMintTimes.delete(entryKey);
+		}
+	}
+}
+
+function assertOpenAIRealtimeBrokerAvailable() {
+	if (!isExtensionOn) {
+		throw new Error("Turn on Social Stream Ninja before starting OpenAI Realtime.");
+	}
+}
+
+function supportsOpenAIRealtimeReasoning(model) {
+	return !/^gpt-realtime(?:$|-1(?:[.-]|$))/i.test(String(model || ""));
+}
+
+function isOpenAIRealtimeReasoningCompatibilityError(status, payload) {
+	if (status !== 400 && status !== 422) return false;
+	const error = payload && payload.error ? payload.error : {};
+	const identity = [error.param, error.code, error.type, error.message, payload && payload.message].filter(Boolean).join(" ");
+	return /reasoning/i.test(identity) && /(unsupported|unknown|invalid|not supported|unrecognized)/i.test(identity);
+}
+
+async function createOpenAIRealtimeClientSecret(request = {}) {
+	const apiKey = String(settings?.chatgptApiKey?.textsetting || "").trim();
+	if (!apiKey) {
+		throw new Error("Add your OpenAI API key under Chat Bots and AI services before starting OpenAI Realtime.");
+	}
+	const requestedModel = String(request.model || "").trim();
+	const model = /^gpt-realtime(?:-[a-z0-9.-]+)?$/i.test(requestedModel) ? requestedModel : "gpt-realtime-2.1";
+	const instructions = String(request.instructions || "").trim().slice(0, 12000);
+	const outputModalities = request.outputModalities === "text" ? ["text"] : ["audio"];
+	const requestedReasoningEffort = String(request.reasoningEffort || "").trim().toLowerCase();
+	const reasoningEffort = ["minimal", "low", "medium", "high", "xhigh"].includes(requestedReasoningEffort) ? requestedReasoningEffort : "";
+	const requestedVadEagerness = String(request.vadEagerness || "auto").trim().toLowerCase();
+	const vadEagerness = ["low", "medium", "high", "auto"].includes(requestedVadEagerness) ? requestedVadEagerness : "auto";
+	const safetyIdentifier = await getOpenAIRealtimeSafetyIdentifier();
+	const headers = {
+		Authorization: "Bearer " + apiKey,
+		"Content-Type": "application/json"
+	};
+	if (safetyIdentifier) headers["OpenAI-Safety-Identifier"] = safetyIdentifier;
+	const buildRequestBody = includeReasoning => ({
+		session: {
+			type: "realtime",
+			model,
+			instructions,
+			output_modalities: outputModalities,
+			max_output_tokens: 512,
+			...(includeReasoning ? { reasoning: { effort: reasoningEffort } } : {}),
+			audio: {
+				input: {
+					transcription: { model: "gpt-4o-mini-transcribe" },
+					turn_detection: {
+						type: "semantic_vad",
+						eagerness: vadEagerness,
+						create_response: false,
+						interrupt_response: true
+					}
+				},
+				output: { voice: "marin" }
+			}
+		}
+	});
+	const requestSecret = async includeReasoning => {
+		const response = await fetchWithTimeout(
+			"https://api.openai.com/v1/realtime/client_secrets",
+			{
+				method: "POST",
+				headers,
+				body: JSON.stringify(buildRequestBody(includeReasoning))
+			},
+			15000
+		);
+		let payload = null;
+		try {
+			payload = await response.json();
+		} catch (_error) {}
+		return { response, payload };
+	};
+	let reasoningSupported = true;
+	let includeReasoning = !!reasoningEffort && supportsOpenAIRealtimeReasoning(model);
+	if (reasoningEffort && !includeReasoning) reasoningSupported = false;
+	let result = await requestSecret(includeReasoning);
+	if (!result.response.ok && includeReasoning && isOpenAIRealtimeReasoningCompatibilityError(result.response.status, result.payload)) {
+		includeReasoning = false;
+		reasoningSupported = false;
+		result = await requestSecret(false);
+	}
+	const response = result.response;
+	const payload = result.payload;
+	if (!response.ok) {
+		const message = payload?.error?.message || payload?.message || "OpenAI could not create a Realtime client secret.";
+		throw new Error("OpenAI Realtime setup failed (" + response.status + "): " + message);
+	}
+	if (!payload || typeof payload.value !== "string" || !payload.value) {
+		throw new Error("OpenAI returned an invalid Realtime client secret response.");
+	}
+	return {
+		value: payload.value,
+		expires_at: payload.expires_at || null,
+		model,
+		reasoning_supported: reasoningSupported
+	};
+}
 
 let videoStatsPollTimer = null;
 let videoStatsPollInFlight = false;
@@ -1762,6 +2169,10 @@ function getSettingFlag(settingKey) {
 	return entry === true || !!(entry && typeof entry === "object" && entry.setting === true);
 }
 
+function isAiChatbotEnabled() {
+	return getSettingFlag(AI_CHATBOT_SETTING_KEY) || getSettingFlag(LEGACY_AI_CHATBOT_SETTING_KEY);
+}
+
 function getPopupBeginnerMode() {
 	return getSettingFlag("beginnerMode");
 }
@@ -1772,6 +2183,275 @@ function getSettingField(settingKey, fieldKey, fallback) {
 		return entry[fieldKey];
 	}
 	return fallback;
+}
+
+const BACKGROUND_CREDITS_STORAGE_KEY = "creditsBackgroundState";
+const BACKGROUND_CREDITS_MAX_USERS = 5000;
+const CREDITS_REMOTE_ACTIONS = new Set(["creditsStart", "creditsPreview", "creditsTest", "creditsReset"]);
+const BACKGROUND_CREDITS_MEMBERSHIP_EVENTS = new Set([
+	"sponsorship",
+	"membermilestone",
+	"member_milestone",
+	"new_subscriber",
+	"resub",
+	"subscription",
+	"membership",
+	"new_member",
+	"new_membership",
+	"newmember",
+	"upgraded_membership",
+	"membership_upgrade",
+	"membership_milestone",
+	"giftpurchase",
+	"giftredemption",
+	"subscription_gift",
+	"subgift",
+	"gift_membership",
+	"giftmemberships",
+	"gifted_membership",
+	"gifted_memberships",
+	"membership_gift",
+	"community_gift",
+	"channel_subscription_gifts",
+	"channel_subscription_gift",
+	"channel_subscription_new",
+	"channel_subscription_start",
+	"channel_subscription",
+	"subscription_gifts",
+	"subscription_renewal"
+]);
+var backgroundCreditsUsers = new Map();
+var backgroundCreditsSession = "";
+var backgroundCreditsUpdated = 0;
+var backgroundCreditsLoaded = false;
+var backgroundCreditsLoadPromise = null;
+var backgroundCreditsSaveTimer = null;
+
+function getCreditsTriggerModeSetting() {
+	return String(getSettingField("triggermode", "optionparam13", "auto") || "auto").toLowerCase();
+}
+
+function isBackgroundCreditsModeEnabled() {
+	return getCreditsTriggerModeSetting() === "background";
+}
+
+function getBackgroundCreditsSession() {
+	return String(streamID || "local").trim() || "local";
+}
+
+function normalizeBackgroundCreditsEvent(value) {
+	return typeof value === "string" ? value.toLowerCase().trim().replace(/[\s.-]+/g, "_") : "";
+}
+
+function hasBackgroundCreditsMembershipSignal(data) {
+	return !!(data && (data.membership || BACKGROUND_CREDITS_MEMBERSHIP_EVENTS.has(normalizeBackgroundCreditsEvent(data.event))));
+}
+
+function getBackgroundCreditsDonationAmount(data) {
+	try {
+		return getCreditsDonationValue(data);
+	} catch (e) {}
+	return 0;
+}
+
+function serializeBackgroundCreditsUsers() {
+	return Array.from(backgroundCreditsUsers.values()).map(function(user) {
+		return {
+			name: user.name,
+			type: user.type,
+			messageCount: user.messageCount,
+			donations: user.donations,
+			hasDonationActivity: !!user.hasDonationActivity,
+			isMember: !!user.isMember,
+			avatarUrl: user.avatarUrl || null,
+			giftStreaks: sanitizeCreditsGiftStreaks(user.giftStreaks)
+		};
+	});
+}
+
+function persistBackgroundCreditsState() {
+	if (backgroundCreditsSaveTimer) {
+		clearTimeout(backgroundCreditsSaveTimer);
+		backgroundCreditsSaveTimer = null;
+	}
+	var stored = {};
+	stored[BACKGROUND_CREDITS_STORAGE_KEY] = {
+		version: 1,
+		session: backgroundCreditsSession || getBackgroundCreditsSession(),
+		updated: backgroundCreditsUpdated || Date.now(),
+		users: serializeBackgroundCreditsUsers()
+	};
+	try {
+		chrome.storage.local.set(stored);
+	} catch (e) {
+		console.warn("Could not save background credits:", e);
+	}
+}
+
+function scheduleBackgroundCreditsSave() {
+	if (backgroundCreditsSaveTimer) {
+		clearTimeout(backgroundCreditsSaveTimer);
+	}
+	backgroundCreditsSaveTimer = setTimeout(persistBackgroundCreditsState, 250);
+}
+
+function ensureBackgroundCreditsLoaded() {
+	if (backgroundCreditsLoaded) {
+		return Promise.resolve();
+	}
+	if (backgroundCreditsLoadPromise) {
+		return backgroundCreditsLoadPromise;
+	}
+	backgroundCreditsLoadPromise = new Promise(function(resolve) {
+		try {
+			chrome.storage.local.get([BACKGROUND_CREDITS_STORAGE_KEY], function(result) {
+				try {
+					var saved = result && result[BACKGROUND_CREDITS_STORAGE_KEY];
+					var activeSession = getBackgroundCreditsSession();
+					backgroundCreditsSession = activeSession;
+					if (saved && saved.session === activeSession && Array.isArray(saved.users)) {
+						saved.users.slice(0, BACKGROUND_CREDITS_MAX_USERS).forEach(function(item) {
+							if (!item || !item.name || !item.type) return;
+							var user = {
+								name: String(item.name),
+								type: String(item.type),
+								messageCount: Math.max(0, Number(item.messageCount) || 0),
+								donations: Math.max(0, Number(item.donations) || 0),
+								hasDonationActivity: !!item.hasDonationActivity || Number(item.donations) > 0,
+								isMember: !!item.isMember,
+								avatarUrl: item.avatarUrl || null,
+								giftStreaks: sanitizeCreditsGiftStreaks(item.giftStreaks)
+							};
+							backgroundCreditsUsers.set(user.name + "-" + user.type, user);
+						});
+						backgroundCreditsUpdated = Number(saved.updated) || 0;
+					}
+				} catch (e) {
+					console.warn("Could not load background credits:", e);
+				}
+				backgroundCreditsLoaded = true;
+				backgroundCreditsLoadPromise = null;
+				resolve();
+			});
+		} catch (e) {
+			backgroundCreditsSession = getBackgroundCreditsSession();
+			backgroundCreditsLoaded = true;
+			backgroundCreditsLoadPromise = null;
+			resolve();
+		}
+	});
+	return backgroundCreditsLoadPromise;
+}
+
+function resetBackgroundCreditsCollection() {
+	backgroundCreditsUsers.clear();
+	backgroundCreditsSession = getBackgroundCreditsSession();
+	backgroundCreditsUpdated = Date.now();
+	backgroundCreditsLoaded = true;
+	backgroundCreditsLoadPromise = null;
+	persistBackgroundCreditsState();
+}
+
+function captureBackgroundCreditsMessage(data) {
+	if (!isBackgroundCreditsModeEnabled() || !data || !data.chatname || !data.type) {
+		return;
+	}
+	ensureBackgroundCreditsLoaded().then(function() {
+		if (!isBackgroundCreditsModeEnabled()) return;
+		var activeSession = getBackgroundCreditsSession();
+		if (backgroundCreditsSession !== activeSession) {
+			backgroundCreditsUsers.clear();
+			backgroundCreditsSession = activeSession;
+		}
+		var name = String(data.chatname);
+		var type = String(data.type);
+		var key = name + "-" + type;
+		var user = backgroundCreditsUsers.get(key);
+		if (!user) {
+			if (backgroundCreditsUsers.size >= BACKGROUND_CREDITS_MAX_USERS) return;
+			user = {
+				name: name,
+				type: type,
+				messageCount: 0,
+				donations: 0,
+				hasDonationActivity: false,
+				isMember: false,
+				avatarUrl: null
+			};
+			backgroundCreditsUsers.set(key, user);
+		}
+		user.messageCount += 1;
+		if (data.chatimg) user.avatarUrl = data.chatimg;
+		if (hasBackgroundCreditsMembershipSignal(data)) user.isMember = true;
+		if (data.hasDonation) {
+			user.hasDonationActivity = true;
+			user.donations += getCreditsDonationIncrement(user, data, getBackgroundCreditsDonationAmount(data));
+		}
+		backgroundCreditsUpdated = Date.now();
+		scheduleBackgroundCreditsSave();
+	});
+}
+
+async function getBackgroundCreditsSnapshot() {
+	await ensureBackgroundCreditsLoaded();
+	var activeSession = getBackgroundCreditsSession();
+	if (backgroundCreditsSession !== activeSession) {
+		backgroundCreditsUsers.clear();
+		backgroundCreditsSession = activeSession;
+		backgroundCreditsUpdated = Date.now();
+		persistBackgroundCreditsState();
+	}
+	return serializeBackgroundCreditsUsers();
+}
+
+function getBackgroundCreditsTestSnapshot() {
+	return [
+		{ name: "Test Participant", type: "youtube", messageCount: 4, donations: 0, hasDonationActivity: false, isMember: false, avatarUrl: null },
+		{ name: "Test Member", type: "twitch", messageCount: 2, donations: 0, hasDonationActivity: false, isMember: true, avatarUrl: null },
+		{ name: "Test Donor", type: "youtube", messageCount: 1, donations: 10, hasDonationActivity: true, isMember: false, avatarUrl: null }
+	];
+}
+
+async function sendCreditsCommandPacket(packet) {
+	packet = prepareOverlayControl(packet, "credits");
+	// Older Credits pages advertise the dock label. A relay acknowledgement must
+	// not prevent those connected WebRTC displays receiving the same command.
+	var results = await Promise.all([
+		sendTargetP2P(packet, "credits"),
+		sendTargetP2P(packet, "dock", { retry: false })
+	]);
+	if (results.some(Boolean)) return true;
+	return sendTargetP2P(packet, "dock", { retry: true, timeoutMs: 5000, intervalMs: 250 });
+}
+
+function isCreditsRemoteAction(action) {
+	return CREDITS_REMOTE_ACTIONS.has(String(action || ""));
+}
+
+async function runCreditsCommand(action) {
+	action = String(action || "");
+	var packet;
+	if (action === "creditsStart" || action === "creditsPreview") {
+		packet = { creditsCommand: action === "creditsStart" ? "start" : "preview" };
+		if (isBackgroundCreditsModeEnabled()) {
+			packet.creditsSnapshot = await getBackgroundCreditsSnapshot();
+		}
+	} else if (action === "creditsTest") {
+		packet = { creditsCommand: "test", creditsSnapshot: getBackgroundCreditsTestSnapshot() };
+	} else if (action === "creditsReset") {
+		resetBackgroundCreditsCollection();
+		packet = { creditsCommand: "reset" };
+	} else {
+		return { action: action, success: false, delivered: false, error: "Unsupported credits command" };
+	}
+
+	var delivered = await sendCreditsCommandPacket(packet);
+	return {
+		action: action,
+		success: action === "creditsReset" || !!delivered,
+		delivered: !!delivered,
+		creditsCount: packet.creditsSnapshot ? packet.creditsSnapshot.length : action === "creditsReset" ? 0 : undefined
+	};
 }
 
 function getVideoStatsConfig() {
@@ -2176,7 +2856,7 @@ async function changeLg(lang) {
 	log("changeLg: " + lang);
 	if (!lang) {
 		log("DISABLING TRANSLATIONS");
-		settings.translation = false;
+		settings.translation = applyCustomTranslationOverrides(false);
 		chrome.storage.local.set({
 			settings: settings
 		});
@@ -2199,7 +2879,7 @@ async function changeLg(lang) {
 							});
 						}
 						data.miscellaneous = miscTranslations;
-						settings.translation = data;
+						settings.translation = applyCustomTranslationOverrides(data);
 						chrome.storage.local.set({
 							settings: settings
 						});
@@ -2253,6 +2933,7 @@ function checkIntervalState(intervalIndex) {
 					//messageTimeout = Date.now();
 					const scheduledMessage = {};
 					scheduledMessage.response = settings["timemessagecommand" + currentIndex].textsetting;
+					scheduledMessage.outgoingOrigin = "chatbot";
 					//sendMessageToTabs(scheduledMessage, false, null, false, antispam);
 					sendMessageToTabs(scheduledMessage, false, null, false, antispam, false);
 				} else if (settings["timemessageinterval" + currentIndex].numbersetting) {
@@ -2271,6 +2952,7 @@ function checkIntervalState(intervalIndex) {
 							//messageTimeout = Date.now();
 							const scheduledMessage = {};
 							scheduledMessage.response = settings["timemessagecommand" + activeIndex].textsetting;
+							scheduledMessage.outgoingOrigin = "chatbot";
 							//sendMessageToTabs(scheduledMessage, false, null, false, antispam);
 							sendMessageToTabs(scheduledMessage, false, null, false, antispam, false);
 						},
@@ -2294,6 +2976,7 @@ function checkIntervalState(intervalIndex) {
 						//messageTimeout = Date.now();
 						const scheduledMessage = {};
 						scheduledMessage.response = settings["timemessagecommand" + activeIndex].textsetting;
+						scheduledMessage.outgoingOrigin = "chatbot";
 						sendMessageToTabs(scheduledMessage, false, null, false, antispam, false);
 					},
 					15 * 60000,
@@ -2385,11 +3068,16 @@ async function bringBackgroundPageToFrontForPicker() {
 
 		const backgroundTabs = await new Promise((resolve, reject) => {
 			try {
-				chrome.tabs.query({ url: backgroundUrl }, function (tabs) {
+				chrome.tabs.query({}, function (tabs) {
 					if (chrome.runtime.lastError) {
 						reject(chrome.runtime.lastError);
 					} else {
-						resolve(tabs || []);
+						resolve(
+							(tabs || []).filter(tab => {
+								const tabUrl = tab && (tab.url || tab.pendingUrl || "");
+								return tabUrl === backgroundUrl || tabUrl.startsWith(backgroundUrl + "?") || tabUrl.startsWith(backgroundUrl + "#");
+							})
+						);
 					}
 				});
 			} catch (err) {
@@ -2567,6 +3255,240 @@ async function overwriteFile(data = false) {
 			await writableStream.close();
 		}
 	}
+}
+
+var liveStatsFileHandle = false;
+var liveStatsWritePromise = Promise.resolve();
+var liveStatsWriterGeneration = 0;
+var liveStatsSnapshot = {
+	version: 1,
+	updatedAt: null,
+	platforms: {}
+};
+
+function normalizeLiveStatsPlatform(value) {
+	var platform = String(value || "")
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9_-]+/g, "-")
+		.replace(/^-+|-+$/g, "");
+	if (["__proto__", "constructor", "prototype"].includes(platform)) {
+		return "";
+	}
+	return platform;
+}
+
+function normalizeLiveStatsCount(value) {
+	if (value === null || value === undefined || value === "") {
+		return null;
+	}
+	if (typeof value === "string") {
+		value = value.replace(/,/g, "").trim();
+		if (!value) {
+			return null;
+		}
+	}
+	var number = Number(value);
+	if (!Number.isFinite(number)) {
+		return null;
+	}
+	return Math.max(0, Math.round(number));
+}
+
+function mergeLiveStatsPlatformUpdate(platform, update) {
+	platform = normalizeLiveStatsPlatform(platform);
+	if (!platform || !update || typeof update !== "object") {
+		return false;
+	}
+
+	var current = liveStatsSnapshot.platforms[platform] || {};
+	var next = Object.assign({}, current);
+	var changed = false;
+	["viewers", "likes", "followers", "subscribers"].forEach(function (field) {
+		if (!Object.prototype.hasOwnProperty.call(update, field)) {
+			return;
+		}
+		var count = normalizeLiveStatsCount(update[field]);
+		if (count !== null && next[field] !== count) {
+			next[field] = count;
+			changed = true;
+		}
+	});
+
+	if (Object.prototype.hasOwnProperty.call(update, "title") && update.title !== null && update.title !== undefined) {
+		var title = String(update.title);
+		if (next.title !== title) {
+			next.title = title;
+			changed = true;
+		}
+	}
+
+	if (typeof update.isLive === "boolean" && next.isLive !== update.isLive) {
+		next.isLive = update.isLive;
+		changed = true;
+	}
+
+	if (changed) {
+		next.updatedAt = new Date().toISOString();
+		liveStatsSnapshot.platforms[platform] = next;
+	}
+	return changed;
+}
+
+function commitLiveStatsSnapshot(changed) {
+	if (!changed) {
+		return false;
+	}
+	liveStatsSnapshot.updatedAt = new Date().toISOString();
+	writeLiveStatsSnapshot();
+	return true;
+}
+
+function updateLiveStatsSnapshot(update) {
+	if (!update || typeof update !== "object") {
+		return false;
+	}
+	var changed = false;
+	if (update.platforms && typeof update.platforms === "object" && !Array.isArray(update.platforms)) {
+		Object.keys(update.platforms).forEach(function (platform) {
+			changed = mergeLiveStatsPlatformUpdate(platform, update.platforms[platform]) || changed;
+		});
+	} else {
+		changed = mergeLiveStatsPlatformUpdate(update.platform || update.type, update);
+	}
+	return commitLiveStatsSnapshot(changed);
+}
+
+function captureLiveStatsFromMessage(message) {
+	if (!message || typeof message !== "object") {
+		return false;
+	}
+
+	var changed = false;
+	var eventName = String(message.event || "").toLowerCase();
+	var platform = normalizeLiveStatsPlatform(message.type);
+	var meta = message.meta;
+	var fieldByEvent = {
+		viewer_update: "viewers",
+		likes_update: "likes",
+		follower_update: "followers",
+		subscriber_update: "subscribers"
+	};
+
+	if (eventName === "viewer_updates" && meta && typeof meta === "object" && !Array.isArray(meta)) {
+		Object.keys(meta).forEach(function (sourceType) {
+			changed = mergeLiveStatsPlatformUpdate(sourceType, { viewers: meta[sourceType] }) || changed;
+		});
+	} else if (platform && fieldByEvent[eventName]) {
+		var metricUpdate = {};
+		metricUpdate[fieldByEvent[eventName]] = meta;
+		changed = mergeLiveStatsPlatformUpdate(platform, metricUpdate) || changed;
+	}
+
+	if (platform && (eventName === "stream_online" || eventName === "stream_offline")) {
+		var streamUpdate = { isLive: eventName === "stream_online" };
+		if (eventName === "stream_offline") {
+			streamUpdate.viewers = 0;
+		}
+		if (meta && typeof meta === "object") {
+			if (meta.title !== undefined) {
+				streamUpdate.title = meta.title;
+			} else if (meta.streamTitle !== undefined) {
+				streamUpdate.title = meta.streamTitle;
+			}
+			if (meta.likes !== undefined) {
+				streamUpdate.likes = meta.likes;
+			}
+		}
+		changed = mergeLiveStatsPlatformUpdate(platform, streamUpdate) || changed;
+	} else if (platform && meta && typeof meta === "object" && meta.streamTitle !== undefined) {
+		changed = mergeLiveStatsPlatformUpdate(platform, { title: meta.streamTitle }) || changed;
+	}
+
+	return commitLiveStatsSnapshot(changed);
+}
+
+function writeLiveStatsSnapshot() {
+	if (!liveStatsFileHandle) {
+		return Promise.resolve(false);
+	}
+	var handle = liveStatsFileHandle;
+	var generation = liveStatsWriterGeneration;
+	var data = JSON.stringify(liveStatsSnapshot, null, 2);
+	if (typeof handle === "string") {
+		ipcRenderer.send("write-to-file", { filePath: handle, data: data });
+		return Promise.resolve(true);
+	}
+
+	liveStatsWritePromise = liveStatsWritePromise
+		.catch(function () {})
+		.then(async function () {
+			if (generation !== liveStatsWriterGeneration || handle !== liveStatsFileHandle) {
+				return false;
+			}
+			var writableStream = await handle.createWritable();
+			await writableStream.write(data);
+			await writableStream.close();
+			return true;
+		})
+		.catch(function (error) {
+			console.warn("Could not write live stats file:", error);
+			updateHandleStatus("liveStats", {
+				status: HANDLE_STATUS_STATES.ERROR,
+				detail: "Could not write live stats file"
+			});
+			return false;
+		});
+	return liveStatsWritePromise;
+}
+
+async function overwriteLiveStatsFile(action = "setup") {
+	if (action === "stop") {
+		liveStatsWriterGeneration += 1;
+		liveStatsFileHandle = false;
+		if (isSSAPP) {
+			localStorage.removeItem("savedLiveStatsFilePath");
+		}
+		await dropBrowserHandle(HANDLE_KEYS.liveStats);
+		await updateHandleStatus("liveStats", {
+			name: null,
+			status: HANDLE_STATUS_STATES.MISSING,
+			detail: "",
+			persisted: false
+		});
+		return;
+	}
+
+	const opts = {
+		suggestedName: "social-stream-live-stats.json",
+		types: [
+			{
+				description: "JSON data",
+				accept: { "application/json": [".json"] }
+			}
+		]
+	};
+	if (!window.showSaveFilePicker) {
+		console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
+	}
+	const restoreTarget = await bringBackgroundPageToFrontForPicker();
+	try {
+		liveStatsFileHandle = await window.showSaveFilePicker(opts);
+	} finally {
+		await restorePreviousTabAfterPicker(restoreTarget);
+	}
+	liveStatsWriterGeneration += 1;
+	await persistBrowserHandle(HANDLE_KEYS.liveStats, liveStatsFileHandle);
+	if (isSSAPP && typeof liveStatsFileHandle === "string") {
+		localStorage.setItem("savedLiveStatsFilePath", liveStatsFileHandle);
+	}
+	await updateHandleStatus("liveStats", {
+		name: getFileHandleDisplayName(liveStatsFileHandle),
+		status: HANDLE_STATUS_STATES.ACTIVE,
+		detail: "",
+		persisted: shouldUseBrowserHandleStore() || isSSAPP
+	});
+	await writeLiveStatsSnapshot();
 }
 
 const MAX_NATIVE_FILE_PATH_LENGTH = 4096;
@@ -3053,6 +3975,7 @@ var intervalMessages = {};
 
 function updateExtensionState(sync = true) {
 	log("updateExtensionState", isExtensionOn);
+	if (window.SSNAiEventBackground) window.SSNAiEventBackground.syncRelay();
 
 	document.title = "Keep Open - Social Stream Ninja";
 
@@ -3071,12 +3994,9 @@ function updateExtensionState(sync = true) {
 	} else {
 		// document.title = "Idle - Social Stream Ninja";
 
-		if (ninjaBridge) {
-			try {
-				ninjaBridge.destroy();
-			} catch (e) {}
-			ninjaBridge = null;
-		}
+		// Invalidate pending starts before they can publish after the service stops.
+		cancelPendingNinjaTransport();
+		queueTransportTask(destroyNinjaTransport);
 
 		if (iframe) {
 			iframe.src = null;
@@ -4266,9 +5186,89 @@ function extractVideoId(url) {
 
 // The rest of your active chat sources code remains the same
 let activeChatSources = new Map();
+const INSTAGRAM_INBOX_POLLER_LEASE_MS = 60000;
+const INSTAGRAM_INBOX_POLLER_SEEN_LIMIT = 400;
+let instagramInboxPollerLease = {
+	owner: "",
+	tabId: null,
+	expiresAt: 0
+};
+let instagramInboxPollerStates = Object.create(null);
+
+function claimInstagramInboxPoller(senderTabId, claimantId) {
+	const now = Date.now();
+	const normalizedTabId = senderTabId === null || senderTabId === undefined ? null : senderTabId;
+	const owner = String(normalizedTabId === null ? "no-tab" : normalizedTabId) + ":" + String(claimantId || "default");
+	if (!instagramInboxPollerLease.owner || instagramInboxPollerLease.owner === owner || instagramInboxPollerLease.expiresAt <= now) {
+		instagramInboxPollerLease.owner = owner;
+		instagramInboxPollerLease.tabId = normalizedTabId;
+		instagramInboxPollerLease.expiresAt = now + INSTAGRAM_INBOX_POLLER_LEASE_MS;
+		return true;
+	}
+	return false;
+}
+
+function filterInstagramInboxStoryKeys(senderTabId, claimantId, accountId, storyKeys) {
+	const now = Date.now();
+	const normalizedTabId = senderTabId === null || senderTabId === undefined ? null : senderTabId;
+	const owner = String(normalizedTabId === null ? "no-tab" : normalizedTabId) + ":" + String(claimantId || "default");
+	if (instagramInboxPollerLease.owner !== owner || instagramInboxPollerLease.expiresAt <= now) {
+		return { granted: false, emitKeys: [] };
+	}
+
+	const normalizedAccountId = String(accountId || "default");
+	let state = instagramInboxPollerStates[normalizedAccountId];
+	if (!state) {
+		state = instagramInboxPollerStates[normalizedAccountId] = {
+			seeded: false,
+			seen: Object.create(null),
+			seenOrder: []
+		};
+	}
+
+	const uniqueKeys = [];
+	const requestKeys = Object.create(null);
+	if (Array.isArray(storyKeys)) {
+		storyKeys.forEach(key => {
+			key = String(key || "").trim();
+			if (key && !requestKeys[key]) {
+				requestKeys[key] = true;
+				uniqueKeys.push(key);
+			}
+		});
+	}
+
+	const emitKeys = [];
+	uniqueKeys.forEach(key => {
+		if (!state.seen[key]) {
+			state.seen[key] = true;
+			state.seenOrder.push(key);
+			if (state.seeded) {
+				emitKeys.push(key);
+			}
+		}
+	});
+	state.seeded = true;
+
+	while (state.seenOrder.length > INSTAGRAM_INBOX_POLLER_SEEN_LIMIT) {
+		delete state.seen[state.seenOrder.shift()];
+	}
+
+	return { granted: true, emitKeys };
+}
+
+function releaseInstagramInboxPollerForTab(tabId) {
+	if (instagramInboxPollerLease.tabId === tabId) {
+		instagramInboxPollerLease.owner = "";
+		instagramInboxPollerLease.tabId = null;
+		instagramInboxPollerLease.expiresAt = 0;
+	}
+}
+
 try {
 	if (chrome.tabs.onRemoved) {
 		chrome.tabs.onRemoved.addListener(tabId => {
+			releaseInstagramInboxPollerForTab(tabId);
 			forgetYouTubeChannel(tabId);
 			for (let key of activeChatSources.keys()) {
 				if (key.startsWith(`${tabId}-`)) {
@@ -4283,6 +5283,9 @@ try {
 	}
 	if (chrome.tabs.onUpdated) {
 		chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+			if (changeInfo.status === "loading") {
+				releaseInstagramInboxPollerForTab(tabId);
+			}
 			// Clear content script registration on navigation - it will re-register via getSettings
 			if (changeInfo.status === "loading" && changeInfo.url) {
 				priorityTabs.delete(tabId);
@@ -4416,7 +5419,66 @@ function prependFirstTimerBadge(data) {
 	data.chatbadges = [badge, data.chatbadges];
 }
 
+function normalizeEventName(message) {
+	if (!message || typeof message.event !== "string") {
+		return "";
+	}
+	return message.event
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "_")
+		.replace(/^_+|_+$/g, "");
+}
+
+function isIndividualLikeEvent(message) {
+	var eventName = normalizeEventName(message);
+	return eventName === "liked" || eventName === "like";
+}
+
+function isEventBlockedByCustomFilter(message) {
+	if (!settings.filtereventstoggle || !settings.filterevents || !settings.filterevents.textsetting || !message || !message.event) {
+		return false;
+	}
+
+	var blockedEvents = getCachedCommaList(settings.filterevents.textsetting, true);
+	var eventName = typeof message.event === "string" ? message.event.trim().toLowerCase() : "";
+	var messageText = String(message.textContent || message.chatmessage || "").toLowerCase();
+	return blockedEvents.some(function (blockedEvent) {
+		return (eventName && eventName === blockedEvent) || (messageText && messageText.includes(blockedEvent));
+	});
+}
+
+function routeIndividualLikeEvent(message, alreadyRouted) {
+	if (!isIndividualLikeEvent(message)) {
+		return { routed: false, stop: false };
+	}
+
+	if (getSettingFlag("hideevents")) {
+		return { routed: false, stop: true };
+	}
+
+	if (!alreadyRouted) {
+		var reactionPayload = message;
+		if (typeof sanitizeRelayPayloadFields === "function") {
+			reactionPayload = sanitizeRelayPayloadFields(Object.assign({}, message)) || message;
+		}
+		try {
+			sendTargetP2P(reactionPayload, "reactions");
+		} catch (e) {
+			console.error(e);
+		}
+	}
+
+	return {
+		routed: true,
+		stop: !getSettingFlag("capturelikeevent")
+	};
+}
+
 async function processIncomingMessage(message, sender = null) {
+	// Carry chatmessage and textonly together through processing: true is a literal string,
+	// false/missing may be HTML. Ingestion does not itself prove HTML has been sanitized.
+ if (message && message.type === "socialstreamchat" && window.ncAudience && window.ncAudience.ownsRoom(message.meta && message.meta.ninjachatter && message.meta.ninjachatter.room)) return; // Paired connector owns audience return.
+	var individualLikeRouting = { routed: false, stop: false };
 	try {
 		if (sender?.tab && (message.tid === undefined || message.tid === null)) {
 			message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
@@ -4427,6 +5489,9 @@ async function processIncomingMessage(message, sender = null) {
 		if (!checkIfAllowed(message.type)) {
 			return;
 		}
+
+        if (message.event === 'purchase' && window.recordCommercePurchase) window.recordCommercePurchase(message);
+        if (message.event === 'auction_update' && (message.type === 'whatnot' || message.type === 'ebay') && window.recordCommerceAuction) window.recordCommerceAuction(message);
 
 		if (settings.filtercommands && message.chatmessage && message.chatmessage.startsWith("!")) {
 			return;
@@ -4476,7 +5541,8 @@ async function processIncomingMessage(message, sender = null) {
 
 		if (
 			settings.noduplicates && // filters echos if same TYPE, USERID, and MESSAGE
-			checkDuplicateSources.isDuplicate(message.type, message.userid || message.chatname, message.chatmessage || message.hasDonation || (message.membership && message.event))
+			// Distinct anonymous Shopify orders share display text; compare their stable order IDs.
+			checkDuplicateSources.isDuplicate(message.type, message.userid || message.chatname, (message.type === "shopify" && message.event === "purchase" && /^shopify:[a-f0-9]{64}$/.test(message.id || "")) ? message.id : (message.chatmessage || message.hasDonation || (message.membership && message.event)))
 		) {
 			return;
 		}
@@ -4524,6 +5590,16 @@ async function processIncomingMessage(message, sender = null) {
 			}
 		}
 
+		if (isIndividualLikeEvent(message)) {
+			if (isEventBlockedByCustomFilter(message)) {
+				return message;
+			}
+			individualLikeRouting = routeIndividualLikeEvent(message, false);
+			if (individualLikeRouting.stop) {
+				return message;
+			}
+		}
+
 		if (!message.id) {
 			messageCounter += 1;
 			message.id = messageCounter;
@@ -4551,12 +5627,20 @@ async function processIncomingMessage(message, sender = null) {
 			return message;
 		}
 
-		await sendToDestinations(message); // send the data to the dock
+		await sendToDestinations(message, individualLikeRouting.routed); // send the data to the dock
 	}
 	return message;
 }
 
 async function handleRuntimeMessage(request, sender, sendResponseReal) {
+ if (request && request.ncAudience) {
+  // Only the packaged popup may operate the private connector; sources cannot obtain it.
+  const popupOrigin = chrome.runtime.getURL('popup.html');
+  if (!sender || !sender.url || sender.url.split('?')[0] !== popupOrigin) { sendResponseReal({error:'Not authorized'}); return; }
+  try { sendResponseReal(await window.ncAudience.handle(request.ncAudience)); } catch (_) { sendResponseReal({error:'Audience connection unavailable'}); }
+  return;
+ }
+
 	var response = {};
 	var alreadySet = false;
 
@@ -4605,7 +5689,32 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		const senderTabId = hasSenderTabId ? senderTab.id : null;
 		const senderTabUrl = senderTab && typeof senderTab.url === "string" ? senderTab.url : "";
 
-		if (request.cmd && request.cmd === "setOnOffState") {
+		if (request.cmd === "aiEvent") {
+            try {
+                sendResponse({ value: await window.SSNAiEventBackground.handleSettings(request, sender) });
+            } catch (error) {
+                sendResponse({ error: error.message || 'AI overlay settings are unavailable.' });
+            }
+            return response;
+        } else if (request.cmd === "aiEventFlow") {
+            try { sendResponse({ value: await window.SSNAiEventBackground.handleFlow(request, sender) }); }
+            catch (error) { sendResponse({ error: error.message || 'AI overlay is unavailable.' }); }
+            return response;
+        } else if (request.cmd === "monetization") {
+            sendResponse(window.handleMonetizationRequest ? await window.handleMonetizationRequest(request, sender) : {error:"Monetization is loading."});
+            return response;
+        } else if (request.action === "clearHistory") {
+			const clearHistoryResult = await clearSavedMessageHistory(request.value);
+			if (clearHistoryResult.ok) {
+				sendDataP2P({
+					action: "historyCleared",
+					ok: true,
+					deleted: clearHistoryResult.deleted || 0
+				});
+			}
+			sendResponse(clearHistoryResult);
+			return response;
+		} else if (request.cmd && request.cmd === "setOnOffState") {
 			// toggle the IFRAME (stream to the remote dock) on or off
 			isExtensionOn = request.data.value;
 			persistSession({ state: isExtensionOn });
@@ -4614,6 +5723,8 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode() });
 		} else if (request.cmd && request.cmd === "getOnOffState") {
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode() });
+		} else if (request.cmd && request.cmd === "getDockTransportHealth") {
+			sendResponse({ state: isExtensionOn, dockTransportHealth: getDockTransportHealth() });
 		} else if (request.cmd && request.cmd === "getSettings") {
 			ensureHandleStatusCache();
 			const cohostCapability = await getOpenAIRealtimeCohostCapability();
@@ -4625,9 +5736,29 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, beginnerMode: getPopupBeginnerMode(), handleStatus: getHandleStatusSnapshot(), cohostCapability };
 			}
 			sendResponse(responseData);
+		} else if (request.cmd && request.cmd === "claimInstagramInboxPoller") {
+			sendResponse({
+				granted: claimInstagramInboxPoller(senderTabId, request.claimantId),
+				leaseMs: INSTAGRAM_INBOX_POLLER_LEASE_MS
+			});
+		} else if (request.cmd && request.cmd === "filterInstagramInboxStories") {
+			sendResponse(filterInstagramInboxStoryKeys(
+				senderTabId,
+				request.claimantId,
+				request.accountId,
+				request.storyKeys
+			));
+		} else if (request.cmd && request.cmd === "createOpenAIRealtimeClientSecret") {
+			try {
+				assertOpenAIRealtimeBrokerAvailable();
+				const clientSecret = await createOpenAIRealtimeClientSecret(request);
+				sendResponse({ success: true, clientSecret });
+			} catch (error) {
+				sendResponse({ success: false, error: { message: error?.message || "OpenAI Realtime setup failed." } });
+			}
 		} else if (request.cmd && request.cmd === "testLLMProvider") {
 			try {
-				const llmResponse = await callLLMAPI(request.prompt || "Reply with one short sentence confirming this chatbot connection works.", null, null, null, null, null, { settings: request.settingsOverride || null });
+				const llmResponse = await callLLMAPI(request.prompt || "Reply with one short sentence confirming this chatbot connection works.", null, null, null, null, null, { settings: request.settingsOverride || null, requestTimeoutMs: 60000 });
 				sendResponse({ success: true, response: llmResponse });
 			} catch (error) {
 				let payload;
@@ -4637,7 +5768,11 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 						status: error.status,
 						code: error.code,
 						message: error.message,
-						hint: error.hint || null
+						hint: error.hint || null,
+						requestId: error.requestId || null,
+						organization: error.organization || null,
+						project: error.project || null,
+						missingScope: error.missingScope || null
 					};
 				} else {
 					payload = {
@@ -4668,6 +5803,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				sendResponse({ success: false, error: payload });
 			}
 		} else if (request.cmd && request.cmd === "saveSetting") {
+			if (request.setting === LEGACY_AI_CHATBOT_SETTING_KEY) {
+				request.setting = AI_CHATBOT_SETTING_KEY;
+			}
 			const typedSetting = typeof request.type === "string" && request.type !== "";
 			const existingSetting = settings[request.setting];
 			const isObjectSetting = existingSetting && typeof existingSetting === "object" && !Array.isArray(existingSetting);
@@ -4711,6 +5849,16 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				settings[request.setting] = request.value;
 			}
 
+			if (request.setting === "captureliketotals" || request.setting === "captureyoutubelikes") {
+				syncLikeTotalSettings(settings, !!request.value);
+			}
+			if (request.setting === "showlikecount" && request.value) {
+				syncLikeTotalSettings(settings, true);
+			}
+			if (request.setting === "triggermode" && request.type === "optionparam13" && request.value === "background") {
+				resetBackgroundCreditsCollection();
+			}
+
 			pruneSettingsObjects(settings);
 
 			if ((request.setting === "beepreturning" || request.setting === "firsttimerbadge") && request.value && !getSettingFlag("disableDB") && !getSettingFlag("firsttimers")) {
@@ -4721,33 +5869,31 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				settings[pattern] = findExistingEvents(pattern, { settings });
 			});
 
-			// For language changes, wait for storage AND translation file load to complete
+			// Translation files are the defaults; custom event wording is merged on top.
 			// This prevents race conditions where popup reloads before translation is ready
-			if (request.setting === "translationlanguage") {
+			if (request.setting === "translationlanguage" || Object.prototype.hasOwnProperty.call(CUSTOM_TRANSLATION_SETTINGS, request.setting)) {
 				chrome.storage.local.set({ settings: settings }, async () => {
 					chrome.runtime.lastError;
-					// Wait for changeLg to complete - it fetches the translation file
-					// and saves settings.translation to storage
-					if (settings.translationlanguage && settings.translationlanguage.optionsetting) {
-						await changeLg(settings.translationlanguage.optionsetting);
-					} else {
-						await changeLg(request.value);
-					}
+					const selectedLanguage = settings.translationlanguage?.optionsetting || "";
+					await changeLg(request.setting === "translationlanguage" ? (selectedLanguage || request.value) : selectedLanguage);
 					sendResponse({ state: isExtensionOn, saved: true });
 				});
 				return true; // Keep message channel open for async response
 			}
 
-			chrome.storage.local.set({
-				settings: settings
-			}, function () {
-				const storageError = chrome.runtime.lastError;
-				sendResponse({
-					state: isExtensionOn,
-					saved: !storageError,
-					error: storageError ? storageError.message : undefined
-				});
-			});
+			chrome.storage.local.set(
+				{
+					settings: settings
+				},
+				function () {
+					const storageError = chrome.runtime.lastError;
+					sendResponse({
+						state: isExtensionOn,
+						saved: !storageError,
+						error: storageError ? storageError.message : undefined
+					});
+				}
+			);
 
 			// If SDK setting changed, reinitialize transport if extension is ON
 			try {
@@ -4843,6 +5989,10 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 					}
 				}
 			}
+			if (["teams", "discord", "slack", "openai", "chime", "meet", "telegram", "whatsapp", "instagram", "xcapture"].includes(request.setting)) {
+				pushSettingChange();
+			}
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			if (request.setting == "textonlymode") {
 				pushSettingChange();
 			}
@@ -4853,6 +6003,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				pushSettingChange();
 			}
 			if (request.setting == "youtubeAudioPicker") {
+				pushSettingChange();
+			}
+			if (request.setting == "ignorepartibacklog") {
 				pushSettingChange();
 			}
 			if (request.setting == "vdoninjadiscord") {
@@ -4969,6 +6122,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (request.setting == "delaytwitch") {
 				pushSettingChange();
 			}
+			if (request.setting == "pluralmind") {
+				pushSettingChange();
+			}
 			if (request.setting == "customtwitchaccount") {
 				pushSettingChange();
 			}
@@ -5011,7 +6167,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			if (request.setting == "capturejoinedevent") {
 				pushSettingChange();
 			}
-			if (request.setting == "capturelikeevent") {
+			if (request.setting == "captureliketotals" || request.setting == "captureyoutubelikes") {
 				pushSettingChange();
 			}
 			if (request.setting == "bttv") {
@@ -5073,8 +6229,11 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				}
 				pushSettingChange();
 			}
-			if (request.setting == "showviewercount") {
+			if (request.setting == "showviewercount" || request.setting == "showlikecount") {
 				pushSettingChange();
+			}
+			if (request.setting == "hideViewerCountSources") {
+				publishViewerCountsFromMetaStore();
 			}
 
 			if (request.setting == "waitlistmode") {
@@ -5152,6 +6311,11 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			sendResponse({ state: isExtensionOn });
 			if (isExtensionOn && (request.delete.type || request.delete.chatname || request.delete.id)) {
 				sendToDestinations({ delete: request.delete });
+			}
+		} else if ("liveStats" in request) {
+			sendResponse({ state: isExtensionOn });
+			if (isExtensionOn) {
+				updateLiveStatsSnapshot(request.liveStats);
 			}
 		} else if ("message" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
@@ -5581,17 +6745,23 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				const method = String(request.method || "GET").toUpperCase();
 				const isOAuthTokenPost = method === "POST" && parsedUrl.pathname === "/api/oauth/token";
 				const isChatMessagePost = method === "POST" && /^\/api\/v1\/channels\/[^\/]+\/chat$/.test(parsedUrl.pathname);
-				if (method !== "GET" && !isOAuthTokenPost && !isChatMessagePost) {
+				const isChannelPatch = method === "PATCH" && /^\/api\/v1\/channels\/[^\/]+$/.test(parsedUrl.pathname);
+				const isModerationDelete = method === "DELETE" && /^\/api\/v1\/channels\/[^\/]+\/chat\/moderation$/.test(parsedUrl.pathname);
+				const isModerationBanPost = method === "POST" && /^\/api\/v1\/channels\/[^\/]+\/chat\/moderation\/bans$/.test(parsedUrl.pathname);
+				if (method !== "GET" && !isOAuthTokenPost && !isChatMessagePost && !isChannelPatch && !isModerationDelete && !isModerationBanPost) {
 					sendResponse({ ok: false, error: "VPZone fetch method not allowed" });
 					return response;
 				}
+				const hasJsonBody = isChatMessagePost || isChannelPatch || isModerationBanPost;
 				const headers = {
 					Accept: "application/json"
 				};
 				if (isOAuthTokenPost) {
 					headers["Content-Type"] = "application/x-www-form-urlencoded";
-				} else if (isChatMessagePost) {
-					headers["Content-Type"] = "application/json";
+				} else {
+					if (hasJsonBody) {
+						headers["Content-Type"] = "application/json";
+					}
 					if (request.authToken && typeof request.authToken === "string") {
 						headers.Authorization = "Bearer " + request.authToken.replace(/[\r\n]/g, "");
 					}
@@ -5601,7 +6771,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 					cache: "no-store",
 					credentials: "omit",
 					headers,
-					body: method === "POST" ? String(request.body || "") : undefined
+					body: isOAuthTokenPost || hasJsonBody ? String(request.body || "") : undefined
 				});
 				const responseText = await vpzoneResponse.text();
 				let responseJson = {};
@@ -5728,6 +6898,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if (request.cmd && request.cmd === "singlesave") {
 			sendResponse({ state: isExtensionOn });
 			overwriteFile("setup");
+		} else if (request.cmd && request.cmd === "livestatssave") {
+			sendResponse({ state: isExtensionOn });
+			overwriteLiveStatsFile("setup");
 		} else if (request.cmd && request.cmd === "excelsave") {
 			sendResponse({ state: isExtensionOn });
 			overwriteFileExcel("setup");
@@ -5889,6 +7062,15 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				detail: "",
 				persisted: false
 			});
+		} else if (request.cmd && request.cmd === "livestatssaveStop") {
+			sendResponse({ state: isExtensionOn });
+			await overwriteLiveStatsFile("stop");
+        } else if (request.cmd === 'recoverEconomyBackup') {
+            try { await window.pointsSystemReady(); sendResponse(await window.pointsSystem.recoverEconomyBackup(request.data)); }
+            catch(error) {sendResponse({success:false,error:error.message});}
+		} else if (isGiveawayAction(request.cmd)) {
+			sendResponse(await handleGiveawayAction(request.cmd, request.value));
+			return;
 		} else if (request.cmd && request.cmd === "selectwinner") {
 			////console.logrequest);
 			if ("value" in request) {
@@ -5900,6 +7082,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if (request.cmd && request.cmd === "resetwaitlist") {
 			resetWaitlist();
 			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "resetleaderboard") {
+			broadcastLeaderboardReset();
+			sendResponse({ state: isExtensionOn, success: true });
 		} else if (request.cmd && request.cmd === "resettipjar") {
 			sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
 			sendResponse({ state: isExtensionOn });
@@ -5909,13 +7094,21 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 					cmd: "settipjaramount",
 					value: request.value,
 					tipjarsource: request.tipjarsource || "",
-					tipjartype: request.tipjartype || ""
+					tipjartype: request.tipjartype || "",
+					goalmetric: request.goalmetric || "",
+					tipjarevent: request.tipjarevent || ""
 				},
 				"tipjar"
 			);
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "stopentries") {
 			toggleEntries(false);
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && (request.cmd === "startentries" || request.cmd === "openentries" || request.cmd === "resumeentries")) {
+			toggleEntries(true);
+			sendResponse({ state: isExtensionOn });
+		} else if (request.cmd && (request.cmd === "waitlistmessage" || request.cmd === "setwaitlistmessage")) {
+			setWaitlistMessage(request.value);
 			sendResponse({ state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "removefromwaitlist") {
 			removeWaitlist(parseInt(request.value) || 0);
@@ -5973,6 +7166,13 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			} catch (e) {
 				console.error(e);
 			}
+		} else if (request.cmd && request.cmd === "clearBotOverlay") {
+			sendResponse({ state: isExtensionOn });
+			try {
+				sendTargetP2P({ action: "clearBotOverlay" }, "bot");
+			} catch (e) {
+				console.error(e);
+			}
 		} else if (request.cmd && request.cmd === "uploadRAGfile") {
 			sendResponse({ state: isExtensionOn });
 			await importSettingsLLM(request.enhancedProcessing || false);
@@ -6005,18 +7205,17 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 
 			triggerFakeMetaMessage(request.value);
 		} else if (request.cmd && request.cmd === "creditsStart") {
-			sendResponse({ state: isExtensionOn });
-			// credits.html currently listens on the dock feed for chat collection.
-			sendTargetP2P({ creditsCommand: "start" }, "credits");
-			sendTargetP2P({ creditsCommand: "start" }, "dock");
+			var creditsStartResult = await runCreditsCommand("creditsStart");
+			sendResponse(Object.assign({ state: isExtensionOn }, creditsStartResult));
 		} else if (request.cmd && request.cmd === "creditsPreview") {
-			sendResponse({ state: isExtensionOn });
-			sendTargetP2P({ creditsCommand: "preview" }, "credits");
-			sendTargetP2P({ creditsCommand: "preview" }, "dock");
+			var creditsPreviewResult = await runCreditsCommand("creditsPreview");
+			sendResponse(Object.assign({ state: isExtensionOn }, creditsPreviewResult));
+		} else if (request.cmd && request.cmd === "creditsBackgroundTest") {
+			var creditsTestResult = await runCreditsCommand("creditsTest");
+			sendResponse(Object.assign({ state: isExtensionOn }, creditsTestResult));
 		} else if (request.cmd && request.cmd === "creditsReset") {
-			sendResponse({ state: isExtensionOn });
-			sendTargetP2P({ creditsCommand: "reset" }, "credits");
-			sendTargetP2P({ creditsCommand: "reset" }, "dock");
+			var creditsResetResult = await runCreditsCommand("creditsReset");
+			sendResponse(Object.assign({ state: isExtensionOn }, creditsResetResult));
 		} else if (request.action === "startReplay") {
 			// Handle replay messages from timestamp
 			console.log("Received startReplay request:", request);
@@ -6042,6 +7241,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			updateReplaySpeed(request.sessionId, request.speed);
 			sendResponse({ success: true, state: isExtensionOn });
 		} else if (request.cmd && request.cmd === "sidUpdated") {
+			const previousRelaySession = streamID;
 			const previousCohostCapabilityScope = String(streamID || "") + "\n" + String(password || "");
 			if (request.streamID) {
 				streamID = request.streamID;
@@ -6091,6 +7291,27 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				openAIRealtimeCohostCapabilityMustRotate = true;
 			}
 			persistSession({ streamId: streamID, state: isExtensionOn });
+			if (previousRelaySession !== streamID) {
+				// Each relay socket joins its room once. Recreate both enabled routes
+				// before sending chat or actions for the newly selected session.
+				clearTimeout(reconnectionTimeout);
+				clearTimeout(reconnectionTimeoutDock);
+				reconnectionTimeout = null;
+				reconnectionTimeoutDock = null;
+				for (const socket of [socketserver, socketserverDock]) {
+					if (socket) {
+						socket.onclose = null;
+						socket.close();
+					}
+				}
+				socketserver = false;
+				socketserverDock = false;
+				setupSocket();
+				setupSocketDock();
+				pollControlState = null;
+                mapControlState = null;
+                overlayStateSnapshots.clear();
+			}
 			if (iframe) {
 				if (iframe.src) {
 					iframe.src = null;
@@ -6101,13 +7322,12 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			}
 			if (isExtensionOn) {
 				initTransport(streamID, password);
+			} else {
+				cancelPendingNinjaTransport();
+				queueTransportTask(destroyNinjaTransport);
 			}
 
-			if (isSSAPP) {
-				sendResponse({ state: isExtensionOn });
-			} else {
-				sendResponse({ state: isExtensionOn, streamID: streamID, password: password, cohostCapability: await getOpenAIRealtimeCohostCapability() });
-			}
+			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, cohostCapability: await getOpenAIRealtimeCohostCapability() });
 		} else if (request.cmd && request.cmd === "uploadBadwords") {
 			localStorage.setItem("customBadwords", request.data);
 			try {
@@ -6401,7 +7621,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 	} catch (e) {
 		console.warn(e);
 	}
-	return true; // Keep message channel open for async responses
+	return true;
 }
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponseReal) {
@@ -6526,9 +7746,66 @@ function ajax(object2send, url, ajaxType = "PUT", type = "application/json; char
 const metaDataStore = new Map(); // Using Map instead of {} for better cleanup
 let cleanUpLastTabs;
 
-async function sendToDestinations(message) {
+function buildViewerCountsFromMetaStore() {
+	var counts = {};
+	for (const [tid, metaEntry] of metaDataStore) {
+		if (metaEntry.viewer_update && metaEntry.viewer_update.type) {
+			// Skip viewer counts from sites that are not opted-in or are viewer-count hidden.
+			if (!checkIfAllowed(metaEntry.viewer_update.type) || isViewerCountSourceHidden(metaEntry.viewer_update.type)) {
+				continue;
+			}
+
+			let count = parseInt(metaEntry.viewer_update.meta) || 0;
+
+			// Pump the numbers if enabled
+			if (settings.pumpTheNumbers) {
+				count = Math.round(count * 1.75);
+			}
+
+			counts[metaEntry.viewer_update.type] = (counts[metaEntry.viewer_update.type] || 0) + count;
+		}
+	}
+	return counts;
+}
+
+function publishViewerCountsFromMetaStore() {
+	var counts = buildViewerCountsFromMetaStore();
+	updateViewerCount({ event: "viewer_updates", meta: counts });
+
+	var viewerUpdateEvent = { event: "viewer_updates", meta: counts };
+	sendDataP2P(viewerUpdateEvent);
+	sendTargetP2P(viewerUpdateEvent, "meta");
+	sendTargetP2P(viewerUpdateEvent, "aioverlay");
+}
+
+function hasTargetedMetaPayload(message) {
+	if (!message || typeof message !== "object" || !Object.prototype.hasOwnProperty.call(message, "meta")) {
+		return false;
+	}
+	if (message.meta && typeof message.meta === "object" && !Array.isArray(message.meta)) {
+		const metaKeys = Object.keys(message.meta);
+		if (metaKeys.length === 1 && metaKeys[0] === "webhookId") {
+			return false;
+		}
+	}
+	return true;
+}
+
+async function sendToDestinations(message, individualLikeAlreadyRouted) {
+
 	if (typeof message == "object") {
+		captureLiveStatsFromMessage(message);
+
 		if (message.suppressRelay) {
+			return true;
+		}
+
+		if (message.event === "likes_update" && !getSettingFlag("captureliketotals") && !getSettingFlag("captureyoutubelikes")) {
+			return true;
+		}
+
+		const isTwitchAdEvent = message.type === "twitch" && ["ad_break", "ad_request", "ad_schedule"].includes(message.event);
+		if (isTwitchAdEvent && !settings.twichadannounce) {
 			return true;
 		}
 
@@ -6570,21 +7847,26 @@ async function sendToDestinations(message) {
 		}
 
 		if (settings.pronouns && message.type == "twitch" && message.chatname) {
-			let pronoun = await getPronounsNames(message.chatname);
-			if (!Pronouns && pronoun) {
-				await getPronouns();
-			}
-			if (Pronouns && pronoun && pronoun.pronoun_id) {
-				if (pronoun.pronoun_id in Pronouns) {
-					if (!message.chatbadges) {
-						message.chatbadges = [];
+			var hasPluralmindPronouns = settings.pluralmind && Array.isArray(message.chatbadges) && message.chatbadges.some(function (badge) {
+				return badge && typeof badge === "object" && badge.source === "pluralmind";
+			});
+			if (!hasPluralmindPronouns) {
+				let pronoun = await getPronounsNames(message.username || message.chatname);
+				if (!Pronouns && pronoun) {
+					await getPronouns();
+				}
+				if (Pronouns && pronoun && pronoun.pronoun_id) {
+					if (pronoun.pronoun_id in Pronouns) {
+						if (!message.chatbadges) {
+							message.chatbadges = [];
+						}
+						var bage = {};
+						bage.text = Pronouns[pronoun.pronoun_id];
+						bage.type = "text";
+						bage.bgcolor = "#000";
+						bage.color = "#FFF";
+						message.chatbadges.push(bage);
 					}
-					var bage = {};
-					bage.text = Pronouns[pronoun.pronoun_id];
-					bage.type = "text";
-					bage.bgcolor = "#000";
-					bage.color = "#FFF";
-					message.chatbadges.push(bage);
 				}
 			}
 		}
@@ -6604,13 +7886,22 @@ async function sendToDestinations(message) {
 			message.nameColor = adjustColorForOverlay(message.nameColor);
 		}
 
-		if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.event) {
-			const blockedEvents = getCachedCommaList(settings.filterevents.textsetting, true);
-			const eventName = typeof message.event === "string" ? message.event.trim().toLowerCase() : "";
-			const messageText = (message.textContent || message.chatmessage || "").toLowerCase();
-			if (blockedEvents.some(v => (eventName && eventName === v) || (messageText && messageText.includes(v)))) {
-				return false;
-			}
+		if (isEventBlockedByCustomFilter(message)) {
+			return false;
+		}
+
+		var individualLikeRouting = routeIndividualLikeEvent(message, !!individualLikeAlreadyRouted);
+		if (individualLikeRouting.stop) {
+			return true;
+		}
+
+		if (message.event === "viewer_updates" && message.meta && typeof message.meta === "object") {
+			message = Object.assign({}, message, {
+				meta: filterViewerCountSnapshotMeta(message.meta)
+			});
+		}
+		if (message.event === "viewer_update" && !message.tid && isViewerCountSourceHidden(message.type)) {
+			return true;
 		}
 
 		if (message.event && message.tid && "meta" in message) {
@@ -6641,32 +7932,7 @@ async function sendToDestinations(message) {
 				}
 
 				if (message.event === "viewer_update") {
-					var viewerCounts = {};
-					for (const [tid, metaEntry] of metaDataStore) {
-						if (metaEntry.viewer_update && metaEntry.viewer_update.type) {
-							// Skip viewer counts from sites that are not opted-in
-							if (!checkIfAllowed(metaEntry.viewer_update.type)) {
-								continue;
-							}
-
-							let count = parseInt(metaEntry.viewer_update.meta) || 0;
-
-							// Pump the numbers if enabled
-							if (settings.pumpTheNumbers) {
-								count = Math.round(count * 1.75);
-							}
-
-							viewerCounts[metaEntry.viewer_update.type] = (viewerCounts[metaEntry.viewer_update.type] || 0) + count;
-						}
-					}
-					if (settings.hypemode) {
-						updateViewerCount({ event: "viewer_updates", meta: viewerCounts }); // updateViewerCount already calls combineHypeData and sends
-					}
-
-					var viewerUpdateEvent = { event: "viewer_updates", meta: viewerCounts };
-					sendDataP2P(viewerUpdateEvent);
-					sendTargetP2P(viewerUpdateEvent, "meta");
-					sendTargetP2P(viewerUpdateEvent, "aioverlay");
+					publishViewerCountsFromMetaStore();
 				}
 
 				return true;
@@ -6693,20 +7959,22 @@ async function sendToDestinations(message) {
 		message = sanitizeRelayPayloadFields(message) || message;
 	}
 
-	var reactionEventName = "";
-	if (message && typeof message.event === "string") {
-		reactionEventName = message.event
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, "_")
-			.replace(/^_+|_+$/g, "");
+ if (window.ncAudience && window.ncAudience.paired()) window.ncAudience.publish(message);
+
+	try {
+		captureBackgroundCreditsMessage(message);
+	} catch (e) {
+		console.warn("Could not collect background credits:", e);
 	}
+
+	var reactionEventName = normalizeEventName(message);
 	var isDonationMessage = !!(message && (message.hasDonation || message.donation));
 	var donationAlertText = message ? String(message.hasDonation || message.donation || "").toLowerCase() : "";
 	var isRewardAlert = !!(reactionEventName === "channel_points" || reactionEventName === "reward" || (message && message.reward) || donationAlertText.includes("points"));
 	var isDonationAlert = !!(isDonationMessage && !isRewardAlert);
 	var isAlertMessage = !!(message && (message.event || isDonationMessage));
 	var excludeFromDockAsAlert = !!(settings.excludeAlertsDock && isAlertMessage && !isDonationAlert);
-	var isReactionMessage = reactionEventName === "reaction" || reactionEventName === "liked" || reactionEventName === "like";
+	var isReactionMessage = reactionEventName === "reaction";
 
 	try {
 		if (!excludeFromDockAsAlert) {
@@ -6716,7 +7984,7 @@ async function sendToDestinations(message) {
 		console.error(e);
 	}
 	try {
-		if (message && typeof message === "object" && Object.prototype.hasOwnProperty.call(message, "meta")) {
+		if (hasTargetedMetaPayload(message)) {
 			sendTargetP2P(message, "meta");
 			sendTargetP2P(message, "aioverlay");
 		}
@@ -6724,6 +7992,7 @@ async function sendToDestinations(message) {
 		console.error(e);
 	}
 	try {
+		if (giveawayHost) await processGiveawayEntry(message);
 		if (settings.pollEnabled) {
 			sendTargetP2P(message, "poll");
 		}
@@ -6797,6 +8066,10 @@ async function sendToDestinations(message) {
 	if (message.chatmessage || message.hasDonation || message.chatname) {
 		message.idx = await addMessageDB(message);
 	}
+	if (window.processStickerReward && /^!stickers?(?:\s|$)/i.test(message.chatmessage || '')) {
+		// Opt-in reward failures must never interrupt normal chat delivery.
+		window.processStickerReward(message).catch(function (error) { console.warn('Sticker reward failed:', error); });
+	}
 	return true;
 }
 
@@ -6808,6 +8081,7 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 		const store = transaction.objectStore(messageStoreDB.storeName);
 		const index = store.index("timestamp");
 		const messages = [];
+		const retentionCheckTime = Date.now();
 
 		let range;
 		if (endTimestamp) {
@@ -6821,7 +8095,9 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
 		cursorRequest.onsuccess = event => {
 			const cursor = event.target.result;
 			if (cursor) {
-				messages.push(cursor.value);
+				if (!messageStoreDB.isMessageExpired(cursor.value, retentionCheckTime)) {
+					messages.push(cursor.value);
+				}
 				cursor.continue();
 			} else {
 				if (messages.length === 0) {
@@ -7041,7 +8317,7 @@ function sendToH2R(data) {
 			msg.authorDetails = {};
 			msg.authorDetails.displayName = data.chatname || "";
 			if (data.type && data.type == "twitch" && !data.chatimg && data.chatname) {
-				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
 			} else if (data.type && (data.type == "youtube" || data.type == "youtubeshorts") && data.chatimg) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				msg.authorDetails.profileImageUrl = chatimg.replace("=s64-", "=s256-");
@@ -7470,6 +8746,7 @@ function sendToS10(data, fakechat = false, relayed = false) {
 			}
 
 			let cleaned = data.chatmessage;
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			if (!data.textonly) {
 				cleaned = decodeAndCleanHtml(cleaned);
 			}
@@ -7587,6 +8864,8 @@ function sendToS10(data, fakechat = false, relayed = false) {
 
 // Social Stream Chat integration - send messages to chat.socialstream.ninja
 function sendToSSC(data, fakechat = false, relayed = false) {
+ if (window.ncAudience && window.ncAudience.paired()) return; // Explicit paired path owns publication, including while offline.
+
 	if (settings.ssc && settings.sscapikey && settings.sscapikey.textsetting) {
 		if (settings.blockChannelPointRelays && data && (data.event === "channel_points" || data.event === "reward" || (data.reward && (data.reward.redemptionId || data.reward.cost || data.reward.title)) || (data.hasDonation && typeof data.hasDonation === "string" && data.hasDonation.includes("points")))) {
 			return null;
@@ -7604,6 +8883,7 @@ function sendToSSC(data, fakechat = false, relayed = false) {
 			}
 
 			let cleaned = data.chatmessage;
+			// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 			if (!data.textonly) {
 				cleaned = decodeAndCleanHtml(cleaned);
 			}
@@ -7820,6 +9100,13 @@ class StreamerbotWebsocketClient {
 	}
 
 	_connect() {
+		if (!this.enabled || (this.socket && (this.socket.readyState === WebSocket.CONNECTING || this.socket.readyState === WebSocket.OPEN))) {
+			return;
+		}
+		if (this.reconnectTimeout) {
+			clearTimeout(this.reconnectTimeout);
+			this.reconnectTimeout = null;
+		}
 		try {
 			this.log(`Connecting to ${this.url}...`);
 			this.socket = new WebSocket(this.url);
@@ -7957,7 +9244,7 @@ class StreamerbotWebsocketClient {
 	}
 
 	_scheduleReconnect() {
-		if (!this.enabled || !this.autoReconnect) return;
+		if (!this.enabled || !this.autoReconnect || this.reconnectTimeout) return;
 
 		this.reconnectAttempts++;
 
@@ -7980,7 +9267,7 @@ class StreamerbotWebsocketClient {
 		if (!this.isAuthenticated || this.messageQueue.length === 0) return;
 
 		this.log(`Processing queued messages (${this.messageQueue.length})`);
-		while (this.messageQueue.length > 0) {
+		while (this.messageQueue.length > 0 && this.isAuthenticated && this.socket && this.socket.readyState === WebSocket.OPEN) {
 			const message = this.messageQueue.shift();
 			this._sendMessage(message);
 		}
@@ -8271,6 +9558,7 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
 
 		// Plain-text messages may contain literal angle brackets and significant whitespace.
 		let cleaned = data.chatmessage;
+		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 		if (!data.textonly && typeof cleaned === "string") {
 			cleaned = decodeAndCleanHtml(cleaned); // Assuming decodeAndCleanHtml is defined elsewhere
 		}
@@ -8455,6 +9743,36 @@ function handleStreamerBotSettingsChange() {
 	}
 }
 
+function buildAllMessagesDiscordPayload(data, simpleFormat = false) {
+	const avatarUrl = validateImageUrl(data.chatimg);
+	const username = (data.chatname || "Unknown") + " @ " + capitalizeFirstLetter(data.type);
+	const description = decodeAndCleanHtml(data.chatmessage || "");
+
+	if (simpleFormat) {
+		return {
+			content: description.slice(0, 2000),
+			username: username,
+			avatar_url: avatarUrl || "https://socialstream.ninja/sources/images/unknown.png"
+		};
+	}
+
+	return {
+		username: username,
+		avatar_url: avatarUrl || "https://socialstream.ninja/sources/images/unknown.png",
+		embeds: [
+			{
+				description: description,
+				color: 0xffffff,
+				timestamp: new Date().toISOString(),
+				thumbnail: {
+					url: data.type ? `https://socialstream.ninja/sources/images/${data.type}.png` : null
+				},
+				fields: []
+			}
+		]
+	};
+}
+
 function sendAllToDiscord(data) {
 	if (!settings.postalldiscord || !settings.postallserverdiscord) {
 		return;
@@ -8465,24 +9783,7 @@ function sendAllToDiscord(data) {
 
 	try {
 		let postServerDiscord = normalizeWebhookUrl(settings.postallserverdiscord.textsetting);
-
-		const avatarUrl = validateImageUrl(data.chatimg);
-
-		const payload = {
-			username: (data.chatname || "Unknown") + " @ " + capitalizeFirstLetter(data.type), // Custom webhook name
-			avatar_url: avatarUrl || "https://socialstream.ninja/sources/images/unknown.png",
-			embeds: [
-				{
-					description: decodeAndCleanHtml(data.chatmessage || ""),
-					color: 0xffffff, // Green color for donations
-					timestamp: new Date().toISOString(),
-					thumbnail: {
-						url: data.type ? `https://socialstream.ninja/sources/images/${data.type}.png` : null
-					},
-					fields: []
-				}
-			]
-		};
+		const payload = buildAllMessagesDiscordPayload(data, getSettingFlag("postallserverdiscordsimple"));
 		fetch(postServerDiscord, {
 			method: "POST",
 			headers: {
@@ -8668,7 +9969,7 @@ function sendToPost(data) {
 			}
 
 			if (data.type && !data.chatimg && data.type == "twitch" && data.chatname) {
-				data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+				data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
 			} else if (data.type && (data.type == "youtube" || data.type == "youtubeshorts") && data.chatimg) {
 				let chatimg = data.chatimg.replace("=s32-", "=s256-");
 				data.chatimg = chatimg.replace("=s64-", "=s256-");
@@ -8752,17 +10053,19 @@ function initializeSpotify() {
 			progressMs: 0,
 			durationMs: 0,
 			track: null,
-			receivedAt: Date.now()
+			receivedAt: Date.now(),
+			queue: []
 		});
 	}
 }
 
 var socketserverDock = false;
-var serverURLDock = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/dock";
+var serverURLDock = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/dock";
 var conConDock = 0;
 var reconnectionTimeoutDock = null;
 
 function setupSocketDock() {
+	if (window.SSNAiEventBackground) window.SSNAiEventBackground.syncRelay();
 	if (!settings.server2 && !settings.server3) {
 		return;
 	} else if (!isExtensionOn) {
@@ -8786,13 +10089,17 @@ function setupSocketDock() {
 	}
 
 	socketserverDock = new WebSocket(serverURLDock);
+	const joinedDockSession = streamID;
+	const joinedDockSocket = socketserverDock;
 
 	socketserverDock.onerror = function (error) {
+		if (socketserverDock !== joinedDockSocket) return;
 		console.error("WebSocket error:", error);
 		socketserverDock.close();
 	};
 
 	socketserverDock.onclose = function () {
+		if (socketserverDock !== joinedDockSocket) return;
 		if ((settings.server2 || settings.server3) && isExtensionOn) {
 			// Fast first retry, then exponential backoff with jitter (cap 30s)
 			const nextAttempt = Math.min(conConDock + 1, 10);
@@ -8817,10 +10124,15 @@ function setupSocketDock() {
 		}
 	};
 	socketserverDock.onopen = function () {
+		if (streamID !== joinedDockSession || socketserverDock !== joinedDockSocket) return;
 		conConDock = 0;
 		socketserverDock.send(JSON.stringify({ join: streamID, out: 4, in: 3 }));
+		if (typeof window.requestPointsLeaderboardBroadcast === "function") {
+			window.requestPointsLeaderboardBroadcast("connected", { immediate: true });
+		}
 	};
 	socketserverDock.addEventListener("message", async function (event) {
+		if (streamID !== joinedDockSession || socketserverDock !== joinedDockSocket) return;
 		if (!event.data) {
 			return;
 		}
@@ -8828,6 +10140,13 @@ function setupSocketDock() {
 		try {
 			data = JSON.parse(event.data);
 		} catch (e) {
+			return;
+		}
+
+		// Give managed audience displays the same snapshot they can already receive.
+		if (handleOverlayControlRequest(data, socketserverDock, 3, !!settings.server2)) return;
+		if (data && data.action === "getgiveawaystate" && settings.server2 && isExtensionOn && !settings.disablehost) {
+			publishGiveawayState();
 			return;
 		}
 
@@ -8861,7 +10180,7 @@ function setupSocketDock() {
 //
 
 var socketserver = false;
-var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api";
+var serverURL = urlParams.has("localserver") ? SocialStreamLocalServer.getWebSocketUrl() : "wss://io.socialstream.ninja/api";
 var conCon = 0;
 var reconnectionTimeout = null;
 
@@ -9081,6 +10400,641 @@ function getDockTransportHealth() {
 	};
 }
 
+function getStreamDeckRemoteControlRouter() {
+	return typeof window !== "undefined" ? window.StreamDeckRemoteControl : null;
+}
+
+function createStreamDeckHostInstanceId() {
+	var randomPart = "";
+	try {
+		if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+			var values = new Uint32Array(2);
+			crypto.getRandomValues(values);
+			randomPart = values[0].toString(36) + values[1].toString(36);
+		}
+	} catch (e) {}
+	if (!randomPart) {
+		randomPart = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+	}
+	return "ssn-" + Date.now().toString(36) + "-" + randomPart.slice(0, 20);
+}
+
+var streamDeckHostInstanceId = createStreamDeckHostInstanceId();
+var pendingStreamDeckDockRequests = new Map();
+var MAX_PENDING_STREAM_DECK_DOCK_REQUESTS = 128;
+
+function clearPendingStreamDeckDockRequest(get) {
+	var pending = pendingStreamDeckDockRequests.get(get);
+	if (!pending) {
+		return null;
+	}
+	pendingStreamDeckDockRequests.delete(get);
+	if (pending.timer) {
+		clearTimeout(pending.timer);
+	}
+	return pending;
+}
+
+function sendStreamDeckDockResultToOrigin(pending, result) {
+	if (!pending) {
+		return false;
+	}
+	var packet = buildStreamDeckCommandResultPacket(pending.request, result);
+	if (pending.transport === "webrtc" && pending.UUID) {
+		sendDataP2P(packet, pending.UUID);
+		return true;
+	}
+	return false;
+}
+
+function registerPendingStreamDeckDockRequest(request, UUID) {
+	if (!request || !request.get || !UUID) {
+		return { ok: false, code: "INVALID_REQUEST", message: "The Dock request is missing routing information." };
+	}
+	var get = String(request.get);
+	var existing = pendingStreamDeckDockRequests.get(get);
+	if (existing) {
+		if (existing.UUID === UUID) {
+			return { ok: true, duplicate: true, pending: existing };
+		}
+		return { ok: false, code: "DUPLICATE_REQUEST_ID", message: "The correlation ID is already pending." };
+	}
+	if (pendingStreamDeckDockRequests.size >= MAX_PENDING_STREAM_DECK_DOCK_REQUESTS) {
+		return { ok: false, code: "TOO_MANY_PENDING_REQUESTS", message: "Too many Dock commands are awaiting results." };
+	}
+	var pending = {
+		request: request,
+		transport: "webrtc",
+		UUID: UUID,
+		timer: null
+	};
+	pending.timer = setTimeout(function () {
+		var expired = clearPendingStreamDeckDockRequest(get);
+		if (!expired) {
+			return;
+		}
+		var router = getStreamDeckRemoteControlRouter();
+		var result = router && typeof router.makeError === "function"
+			? router.makeError(request, "TARGET_UNAVAILABLE", "No default Dock page completed the command.")
+			: { ok: false, status: "failed", request: get, error: { code: "TARGET_UNAVAILABLE", message: "No default Dock page completed the command." } };
+		sendStreamDeckDockResultToOrigin(expired, result);
+	}, 8000);
+	pendingStreamDeckDockRequests.set(get, pending);
+	return { ok: true, duplicate: false, pending: pending };
+}
+
+function handleStreamDeckDockCallback(request) {
+	if (!request || !request.callback || !request.callback.get) {
+		return false;
+	}
+	var get = String(request.callback.get);
+	var pending = clearPendingStreamDeckDockRequest(get);
+	if (!pending) {
+		return false;
+	}
+	var router = getStreamDeckRemoteControlRouter();
+	var result = router && typeof router.normalizeCommandResult === "function"
+		? router.normalizeCommandResult(pending.request, request.callback.result)
+		: request.callback.result;
+	sendStreamDeckDockResultToOrigin(pending, result);
+	return true;
+}
+
+async function sendStreamDeckDockRequestP2P(request, originUUID) {
+	var sent = false;
+	if (ninjaBridge && ninjaBridge.isReady()) {
+		try {
+			var peers = typeof ninjaBridge.getPeers === "function" ? ninjaBridge.getPeers() : {};
+			var peerIds = Object.keys(peers || {});
+			for (var i = 0; i < peerIds.length; i++) {
+				var peerId = peerIds[i];
+				if (peerId !== originUUID && peers[peerId] === "dock") {
+					var sdkSent = await ninjaBridge.send(request, peerId);
+					if (sdkSent !== false) {
+						sent = true;
+					}
+				}
+			}
+		} catch (e) {
+			markP2PFailure("streamDeckDockSend");
+		}
+		if (sent) {
+			return true;
+		}
+	}
+
+	if (iframe && connectedPeers) {
+		var keys = Object.keys(connectedPeers);
+		for (var j = 0; j < keys.length; j++) {
+			var UUID = keys[j];
+			if (UUID === originUUID || connectedPeers[UUID] !== "dock") {
+				continue;
+			}
+			try {
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: request }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
+				sent = true;
+			} catch (e) {}
+		}
+	}
+
+	try {
+		if (settings.server2 && socketserverDock && socketserverDock.readyState === WebSocket.OPEN) {
+			socketserverDock.send(JSON.stringify(request));
+			sent = true;
+		}
+	} catch (e) {}
+	return sent;
+}
+
+async function getStreamDeckCapabilities() {
+	const router = getStreamDeckRemoteControlRouter();
+	if (!router || typeof router.buildCapabilities !== "function") {
+		return {
+			type: "capabilities",
+			version: 2,
+			role: "social-stream-host",
+			hostInstanceId: streamDeckHostInstanceId,
+			runtime: isSSAPP ? "electron" : "web",
+			ssapp: { available: false },
+			ssn: { actions: {} }
+		};
+	}
+
+	let ssapp = { available: false };
+	if (isSSAPP && ipcRenderer && typeof ipcRenderer.invoke === "function") {
+		try {
+			const response = await ipcRenderer.invoke("ssapp:background-command", {
+				cmd: "streamDeckSourceCommand",
+				action: "getCapabilities"
+			});
+			if (response && response.ok === true && response.payload && response.payload.available === true) {
+				ssapp = response.payload;
+				if (!ssapp.version && typeof ipcRenderer.sendSync === "function") {
+					try {
+						ssapp.version = ipcRenderer.sendSync("getVersion") || null;
+					} catch (error) {}
+				}
+				if (typeof ssapp.bridgeVersion !== "number") {
+					ssapp.bridgeVersion = 1;
+				}
+			}
+		} catch (error) {
+			console.warn("[StreamDeck] SSApp capability provider unavailable", error?.message || error);
+		}
+	}
+
+	return router.buildCapabilities({
+		runtime: isSSAPP ? "electron" : "web",
+		hostInstanceId: streamDeckHostInstanceId,
+		backgroundAvailable: !!(isExtensionOn && !settings.disablehost),
+		ssapp
+	});
+}
+
+function sendStreamDeckCallback(socket, request, result) {
+    if (!socket || socket.readyState !== WebSocket.OPEN) return false;
+    var packet = buildStreamDeckCallbackPacket(request, result);
+    if (!packet) return false;
+    socket.send(JSON.stringify(packet));
+    return true;
+}
+
+function buildStreamDeckCallbackPacket(request, result) {
+    if (request && request.get && request.replyFormat === "commandResult") {
+        return { type: "commandResult", action: request.action || null, get: request.get, result: result };
+    }
+	if (!request || !request.get) {
+		return null;
+	}
+	return {
+		callback: {
+			get: request.get,
+			result
+		}
+	};
+}
+
+function buildStreamDeckCommandResultPacket(request, result) {
+	return (
+		buildStreamDeckCallbackPacket(request, result) || {
+			type: "commandResult",
+			action: request && request.action ? request.action : null,
+			result
+		}
+	);
+}
+
+function sendStreamDeckCommandResult(socket, request, result) {
+	if (!socket || socket.readyState !== WebSocket.OPEN) {
+		return false;
+	}
+	// Hosted relays consume callback envelopes for their own HTTP requests.
+	// The browser Giveaway Manager opts into the existing commandResult shape
+	// instead, retaining result.request for correlation. Other clients are unchanged.
+	if (request && request.replyFormat === "commandResult" && isGiveawayAction(request.action)) {
+		socket.send(JSON.stringify({ type: "commandResult", action: request.action, result }));
+		return true;
+	}
+	if (sendStreamDeckCallback(socket, request, result)) {
+		return true;
+	}
+	socket.send(JSON.stringify(buildStreamDeckCommandResultPacket(request, result)));
+	return true;
+}
+
+function isClearHistoryConfirmed(value) {
+	if (value === true || value === "confirm") {
+		return true;
+	}
+	return !!(value && typeof value === "object" && value.confirm === true);
+}
+
+async function clearSavedMessageHistory(value) {
+	if (!isClearHistoryConfirmed(value)) {
+		return {
+			ok: false,
+			error: "Confirmation required. Pass value.confirm=true or value=confirm."
+		};
+	}
+	if (typeof messageStoreDB === "undefined" || !messageStoreDB || typeof messageStoreDB.clearMessages !== "function") {
+		return {
+			ok: false,
+			error: "The local message database is unavailable."
+		};
+	}
+	try {
+		const deleted = await messageStoreDB.clearMessages();
+		return {
+			ok: true,
+			deleted
+		};
+	} catch (error) {
+		console.error("Failed to clear saved message history:", error);
+		return {
+			ok: false,
+			error: error && error.message ? error.message : "Failed to clear saved message history."
+		};
+	}
+}
+
+const recentInboundWebhookDeliveries = new Map();
+function normalizeInboundWebhookId(value) {
+	if (value === undefined || value === null || value === "") {
+		return "";
+	}
+	return String(value).trim();
+}
+
+function getInboundWebhookDeliveryId(provider, payload) {
+	if (!payload || typeof payload !== "object") {
+		return "";
+	}
+	if (provider === "stripe") {
+		return normalizeInboundWebhookId(payload.id || (payload.data && payload.data.object && payload.data.object.id));
+	}
+	if (provider === "kofi") {
+		return normalizeInboundWebhookId(payload.message_id);
+	}
+	if (provider === "bmac") {
+		return normalizeInboundWebhookId(payload.event_id || payload.id || (payload.data && (payload.data.id || payload.data.transaction_id || payload.data.support_id)));
+	}
+	if (provider === "fourthwall") {
+		return normalizeInboundWebhookId(payload.id || (payload.data && payload.data.id));
+	}
+	return "";
+}
+
+function setInboundWebhookMeta(message, webhookId) {
+	if (!message || !webhookId) {
+		return message;
+	}
+	message.meta = Object.assign({}, message.meta || {}, { webhookId: String(webhookId) });
+	return message;
+}
+
+function isDuplicateInboundWebhook(provider, webhookId) {
+	if (!webhookId) {
+		return false;
+	}
+	const now = Date.now();
+	const maxAge = 15 * 60 * 1000;
+	const key = String(provider || "webhook") + ":" + String(webhookId);
+	recentInboundWebhookDeliveries.forEach((seenAt, seenKey) => {
+		if (now - seenAt > maxAge) {
+			recentInboundWebhookDeliveries.delete(seenKey);
+		}
+	});
+	if (recentInboundWebhookDeliveries.has(key)) {
+		return true;
+	}
+	recentInboundWebhookDeliveries.set(key, now);
+	return false;
+}
+
+// The io HTTP bridge holds the webhook sender's HTTP response open until a client
+// answers the callback pid (or its 5s timeout fires); ack before processing so
+// senders like Ko-fi get a fast response and don't time out and retry the delivery.
+function ackInboundWebhookDelivery(socket, data) {
+	if (!data || !data.get) {
+		return;
+	}
+	try {
+		if (socket && socket.readyState === WebSocket.OPEN) {
+			socket.send(JSON.stringify({ callback: { get: data.get, result: true } }));
+		}
+	} catch (e) {}
+	data.get = false;
+}
+
+const STREAM_DECK_SOURCE_RESPONSE_FIELDS = ["id", "target", "tabId", "username", "videoId", "connectionMode", "activeConnectionMode", "status", "isVisible", "isMuted", "autoActivate", "groupId"];
+
+function sanitizeStreamDeckSourceResponse(source) {
+	if (!source || typeof source !== "object" || Array.isArray(source)) {
+		return source;
+	}
+	const sanitized = {};
+	for (const field of STREAM_DECK_SOURCE_RESPONSE_FIELDS) {
+		if (Object.prototype.hasOwnProperty.call(source, field)) {
+			sanitized[field] = source[field];
+		}
+	}
+	return sanitized;
+}
+
+function sanitizeStreamDeckSsappPayload(value, parentKey = "") {
+	if (Array.isArray(value)) {
+		if (parentKey === "sources") {
+			return value.map(sanitizeStreamDeckSourceResponse);
+		}
+		return value.map(item => sanitizeStreamDeckSsappPayload(item));
+	}
+	if (!value || typeof value !== "object") {
+		return value;
+	}
+	if (parentKey === "source") {
+		return sanitizeStreamDeckSourceResponse(value);
+	}
+	const sanitized = {};
+	for (const [key, child] of Object.entries(value)) {
+		sanitized[key] = sanitizeStreamDeckSsappPayload(child, key);
+	}
+	return sanitized;
+}
+
+async function handleStreamDeckSsappRequest(request) {
+	const router = getStreamDeckRemoteControlRouter();
+	if (!router) {
+		return {
+			ok: false,
+			request: request && request.get ? request.get : null,
+			error: {
+				code: "UNSUPPORTED_ACTION",
+				message: "Stream Deck remote control router is unavailable."
+			}
+		};
+	}
+
+	const normalizedAction = router.normalizeAction(request.action);
+	const capabilities = await getStreamDeckCapabilities();
+	if (!capabilities || !capabilities.ssapp || capabilities.ssapp.available !== true) {
+		return router.makeError(request, "SSAPP_UNAVAILABLE", "SSApp source controls are unavailable in this runtime.");
+	}
+	if (!router.isSsappActionSupported(normalizedAction, capabilities)) {
+		return router.makeError(request, "UNSUPPORTED_ACTION", "SSApp action is not supported by the advertised capabilities.");
+	}
+	if (typeof router.validateRemoteSsappRequest === "function") {
+		const validation = router.validateRemoteSsappRequest(request);
+		if (!validation.ok) {
+			return router.makeError(request, validation.code || "INVALID_TARGET", validation.message || "SSApp command is not available remotely.");
+		}
+	}
+
+	try {
+		const response = await ipcRenderer.invoke("ssapp:background-command", {
+			cmd: "streamDeckSourceCommand",
+			request: {
+				...request,
+				action: normalizedAction
+			}
+		});
+
+		if (response && response.ok === false) {
+			const error = response.error && typeof response.error === "object" ? response.error : {};
+			return router.makeError(request, error.code || response.code || "UNSUPPORTED_ACTION", error.message || response.message || "SSApp command failed.");
+		}
+
+		const payload = response && "payload" in response ? response.payload : response;
+		return router.makeResponse(request, sanitizeStreamDeckSsappPayload(payload));
+	} catch (error) {
+		return router.makeError(request, "SSAPP_UNAVAILABLE", error?.message || "SSApp command bridge failed.");
+	}
+}
+
+function isStreamDeckTimerAction(action) {
+	return ["starttimer", "pausetimer", "resettimer", "gettimerstate"].indexOf(action) !== -1;
+}
+
+function isStreamDeckResetConfirmed(value) {
+	return value === true || value === "confirm" || !!(value && typeof value === "object" && value.confirm === true);
+}
+
+async function handleStreamDeckBackgroundRequest(request) {
+	const router = getStreamDeckRemoteControlRouter();
+	if (!router) {
+		return null;
+	}
+	if (!isExtensionOn || settings.disablehost) {
+		return router.makeError(request, "CONTROL_UNAVAILABLE", "Social Stream remote control is disabled.");
+	}
+
+	const action = router.normalizeAction(request.action);
+    if (action === "getWorkflowTriggers" || action === "triggerWorkflow") {
+        const system = window.eventFlowSystem;
+        if (!system || typeof system.triggerWorkflow !== "function") return router.makeError(request, "TARGET_UNAVAILABLE", "Event Flow is still loading.");
+        if (action === "getWorkflowTriggers") return router.makeResponse(request, { triggers: system.getWorkflowTriggers() });
+        const result = system.triggerWorkflow(request.value);
+        if (!result.ok) return router.makeError(request, result.code, result.message);
+        return router.makeResponse(request, { trigger: result.trigger, matchedFlows: result.matchedFlows, flows: result.flows }, "accepted");
+    }
+    if (action === "getCommerceState") {
+        if (!window.handleMonetizationRequest) return router.makeError(request, "TARGET_UNAVAILABLE", "Product controls are still loading.");
+        const result = await window.handleMonetizationRequest({ action: "getCommerceState" });
+        return router.makeResponse(request, result);
+    }
+    if (router.isCommerceAction(action)) {
+        const control = router.commerceRequest(request);
+        if (!control.ok) return router.makeError(request, "INVALID_VALUE", control.message);
+        if (!window.handleMonetizationRequest) return router.makeError(request, "TARGET_UNAVAILABLE", "Product controls are still loading.");
+        const result = await window.handleMonetizationRequest({ action: "commerceControl", command: control.command, url: control.url, seconds: control.seconds, data: control.data });
+        if (result.error) return router.makeError(request, "TARGET_UNAVAILABLE", result.error);
+        return router.makeResponse(request, { action: action, command: control.command, live: result.commerceLive || null, commerce: result.commerceState });
+    }
+	if (action === "creditsStart" || action === "creditsPreview" || action === "creditsTest" || action === "creditsReset") {
+		const result = await runCreditsCommand(action);
+		if (!result.success) {
+			return router.makeError(request, "TARGET_UNAVAILABLE", "No connected Credits page accepted the command.");
+		}
+		return router.makeResponse(request, result);
+	}
+	if (action === "sendChat") {
+		if (typeof request.value !== "string" || !request.value.trim()) {
+			return router.makeError(request, "INVALID_VALUE", "A non-empty chat message is required.");
+		}
+		if (request.value.length > 2000) {
+			return router.makeError(request, "PAYLOAD_TOO_LARGE", "Chat messages are limited to 2000 characters.");
+		}
+		const outgoingMessage = {
+			response: request.value,
+			outgoingOrigin: "host"
+		};
+		if (request.target && request.target !== "null") {
+			outgoingMessage.destination = request.target;
+		}
+		const requestedTabId = "tabId" in request ? request.tabId : request.tid;
+		const normalizedTabId = normalizeRelayTabId(requestedTabId);
+		if (normalizedTabId !== null) {
+			outgoingMessage.tid = normalizedTabId;
+		}
+		const accepted = await sendMessageToTabs(outgoingMessage, false, null, false, false, false);
+		if (!accepted) {
+			return router.makeError(request, "TARGET_UNAVAILABLE", "No writable capture source accepted the chat message.");
+		}
+		return router.makeResponse(
+			request,
+			{
+				accepted: true,
+				action: action,
+				destination: outgoingMessage.destination || null
+			},
+			"accepted"
+		);
+	}
+	if (action === "clearHistory") {
+		const clearHistoryResult = await clearSavedMessageHistory(request.value);
+		if (!clearHistoryResult.ok) {
+			const errorCode = isClearHistoryConfirmed(request.value) ? "TARGET_UNAVAILABLE" : "CONFIRMATION_REQUIRED";
+			return router.makeError(request, errorCode, clearHistoryResult.error || "Failed to clear saved message history.");
+		}
+		const historyClearedPayload = {
+			action: "historyCleared",
+			ok: true,
+			deleted: clearHistoryResult.deleted || 0
+		};
+		if (request.target) {
+			historyClearedPayload.target = request.target;
+		}
+		sendDataP2P(historyClearedPayload);
+		return router.makeResponse(request, clearHistoryResult);
+	}
+	if (isGiveawayAction(action)) {
+		const result = await handleGiveawayAction(action, request.value);
+		return result.ok ? router.makeResponse(request, result) : router.makeError(request, "GIVEAWAY_ERROR", result.error);
+	}
+	if (action === "getpollpresets") {
+		const presets = await new Promise(resolve => getPollPresets(resolve));
+		return router.makeResponse(request, presets);
+	}
+
+	if (isStreamDeckTimerAction(action)) {
+		if (action === "resettimer" && !isStreamDeckResetConfirmed(request.value)) {
+			return router.makeError(request, "CONFIRMATION_REQUIRED", "Timer reset requires value.confirm=true.");
+		}
+		if (action !== "gettimerstate") {
+			applyTimerAction(action, request.value);
+			initializeTimer();
+		}
+		return router.makeResponse(request, {
+			action: action,
+			timer: exportTimerState()
+		});
+	}
+
+	return router.makeError(request, "UNSUPPORTED_ACTION", "The requested Social Stream action is not part of the Phase 1 contract.");
+}
+
+async function routeStreamDeckRemoteRequest(request, context) {
+	const router = getStreamDeckRemoteControlRouter();
+	if (!router || !request || typeof request !== "object") {
+		return null;
+	}
+	if (typeof router.normalizeRemoteRequest === "function") {
+		request = router.normalizeRemoteRequest(request);
+	}
+	context = context || {};
+	if (router.isVersionedRequest(request) && typeof router.validateVersionedRequest === "function") {
+		const validation = router.validateVersionedRequest(request);
+		if (!validation.ok) {
+			return {
+				kind: "command",
+				result: router.makeError(request, validation.code || "INVALID_REQUEST", validation.message || "The remote-control request is invalid.")
+			};
+		}
+	}
+	if (router.isCapabilityRequest(request)) {
+		const capabilities = await getStreamDeckCapabilities();
+		return {
+			kind: "capabilities",
+			result: router.isVersionedRequest(request) && request.get ? router.makeResponse(request, capabilities) : capabilities
+		};
+	}
+	if (router.isSsappRequest(request)) {
+		return {
+			kind: "command",
+			result: await handleStreamDeckSsappRequest(request)
+		};
+	}
+	if ((router.isVersionedRequest(request) || isGiveawayAction(request.action) || isCreditsRemoteAction(request.action) || router.isCommerceAction(request.action) || request.action === "getCommerceState" || request.action === "triggerWorkflow" || request.action === "getWorkflowTriggers") && router.isRemoteSsnRequest(request, "background")) {
+		return {
+			kind: "command",
+			result: await handleStreamDeckBackgroundRequest(request)
+		};
+	}
+	if (router.isVersionedRequest(request) && router.isRemoteSsnRequest(request, "dock")) {
+		if (context.transport === "websocket") {
+			// A server-connected Dock is the authoritative owner and answers the
+			// control client's channel-1 request directly on channel 2.
+			return { kind: "deferred" };
+		}
+		if (context.transport === "webrtc" && context.UUID) {
+			const registration = registerPendingStreamDeckDockRequest(request, context.UUID);
+			if (!registration || registration.ok !== true) {
+				return {
+					kind: "command",
+					result: router.makeError(
+						request,
+						(registration && registration.code) || "CONTROL_UNAVAILABLE",
+						(registration && registration.message) || "The Dock command could not be queued."
+					)
+				};
+			}
+			if (registration.duplicate) {
+				return { kind: "deferred" };
+			}
+			const sent = await sendStreamDeckDockRequestP2P(request, context.UUID);
+			if (!sent) {
+				clearPendingStreamDeckDockRequest(String(request.get || ""));
+				return {
+					kind: "command",
+					result: router.makeError(request, "TARGET_UNAVAILABLE", "No connected default Dock page is available.")
+				};
+			}
+			return { kind: "deferred" };
+		}
+	}
+	return null;
+}
+
+function sendStreamDeckPeerResult(request, routed, UUID) {
+	if (!routed || routed.kind === "deferred" || !UUID) {
+		return false;
+	}
+	const packet = routed.kind === "capabilities" && !request.get
+		? routed.result
+		: buildStreamDeckCommandResultPacket(request, routed.result);
+	sendDataP2P(packet, UUID);
+	return true;
+}
+
 function setupSocket() {
 	if (!settings.socketserver) {
 		return;
@@ -9105,13 +11059,17 @@ function setupSocket() {
 	}
 
 	socketserver = new WebSocket(serverURL);
+	const joinedApiSession = streamID;
+	const joinedApiSocket = socketserver;
 
 	socketserver.onerror = function (error) {
+		if (socketserver !== joinedApiSocket) return;
 		console.error("WebSocket error:", error);
 		socketserver.close();
 	};
 
 	socketserver.onclose = function () {
+		if (socketserver !== joinedApiSocket) return;
 		if (settings.socketserver && isExtensionOn) {
 			// Fast first retry, then exponential backoff with jitter (cap 30s)
 			const nextAttempt = Math.min(conCon + 1, 10);
@@ -9136,10 +11094,12 @@ function setupSocket() {
 		}
 	};
 	socketserver.onopen = function () {
+		if (streamID !== joinedApiSession || socketserver !== joinedApiSocket) return;
 		conCon = 0;
 		socketserver.send(JSON.stringify({ join: streamID, out: 2, in: 1 }));
 	};
 	socketserver.addEventListener("message", async function (event) {
+		if (streamID !== joinedApiSession || socketserver !== joinedApiSocket) return;
 		if (event.data) {
 			var resp = false;
 
@@ -9151,6 +11111,8 @@ function setupSocket() {
 				return;
 			}
 
+			if (handleOverlayControlRequest(data, socketserver, 1, !!settings.socketserver)) return;
+
 			// Lightweight API: allow requesting a Hype snapshot and respond on the same paired channel
 			// Expected request formats:
 			//  - { action: "getHype", get: "token123" }
@@ -9160,7 +11122,7 @@ function setupSocket() {
 					try {
 						const snapshot = combineHypeData();
 						const ret = { callback: { get: data.get || "hype", result: { hype: snapshot } } };
-						socketserver && socketserver.send(JSON.stringify(ret));
+						socketserver && sendStreamDeckCallback(socketserver, Object.assign({}, data, { get: ret.callback.get }), ret.callback.result);
 					} catch (e) {
 						console.warn("Failed to respond to getHype on /api", e);
 					}
@@ -9174,6 +11136,24 @@ function setupSocket() {
 				data.target = "";
 			}
 
+			const streamDeckRoute = await routeStreamDeckRemoteRequest(data, {
+				transport: "websocket",
+				socket: socketserver
+			});
+			if (streamDeckRoute) {
+				if (streamDeckRoute.kind === "deferred") {
+					return;
+				}
+				if (streamDeckRoute.kind === "capabilities" && !data.get) {
+					if (socketserver && socketserver.readyState === WebSocket.OPEN) {
+						socketserver.send(JSON.stringify(streamDeckRoute.result));
+					}
+				} else {
+					sendStreamDeckCommandResult(socketserver, data, streamDeckRoute.result);
+				}
+				return;
+			}
+
 			if (data.action && data.action === "eventFlowEvent" && data.value) {
 				resp = await processEventFlowBridgeEvent(data.value);
 			} else if (data.action && data.action === "sendChat" && data.value) {
@@ -9181,6 +11161,11 @@ function setupSocket() {
 				outgoingMessage.response = data.value;
 				if (data.target) {
 					outgoingMessage.destination = data.target;
+				}
+				const requestedTabId = "tabId" in data ? data.tabId : data.tid;
+				const normalizedTabId = normalizeRelayTabId(requestedTabId);
+				if (normalizedTabId !== null) {
+					outgoingMessage.tid = normalizedTabId;
 				}
 				outgoingMessage.outgoingOrigin = "host";
 				resp = sendMessageToTabs(outgoingMessage, false, null, false, false, false);
@@ -9190,12 +11175,38 @@ function setupSocket() {
 				if (data.target) {
 					outgoingMessage.destination = decodeURIComponent(data.target);
 				}
+				const requestedTabId = "tabId" in data ? data.tabId : data.tid;
+				const normalizedTabId = normalizeRelayTabId(requestedTabId);
+				if (normalizedTabId !== null) {
+					outgoingMessage.tid = normalizedTabId;
+				}
 				outgoingMessage.outgoingOrigin = "host";
 				resp = sendMessageToTabs(outgoingMessage, false, null, false, false, false);
 			} else if (data.action && data.action === "blockUser" && data.value) {
 				let source = data.target.trim().toLowerCase() || "*";
 				let username = data.value.trim();
 				resp = blockUser({ chatname: username, type: source });
+			} else if (data.action && (data.action === "clearDock" || data.action === "clear" || data.action === "clearAll")) {
+				sendDataP2P(data);
+				resp = true;
+			} else if (data.action && data.action === "clearHistory") {
+				const clearHistoryResult = await clearSavedMessageHistory(data.value);
+				if (clearHistoryResult.ok) {
+					const historyClearedPayload = {
+						action: "historyCleared",
+						ok: true,
+						deleted: clearHistoryResult.deleted || 0
+					};
+					if (data.target) {
+						historyClearedPayload.target = data.target;
+					}
+					sendDataP2P(historyClearedPayload);
+				}
+				if (data.get) {
+					sendStreamDeckCallback(socketserver, data, clearHistoryResult);
+					data.get = false;
+				}
+				resp = clearHistoryResult.ok;
 			} else if (!data.action && data?.extContent) {
 				try {
 					if (!data.extContent.type) {
@@ -9241,8 +11252,14 @@ function setupSocket() {
 			} else if (data.action && data.action === "resetwaitlist") {
 				resetWaitlist();
 				resp = true;
+			} else if (data.action && data.action === "resetleaderboard") {
+				broadcastLeaderboardReset();
+				resp = true;
 			} else if (data.action && data.action === "resettipjar") {
 				sendTargetP2P({ cmd: "resettipjar" }, "tipjar");
+				resp = true;
+			} else if (data.action && data.action === "clearBotOverlay") {
+				sendTargetP2P({ action: "clearBotOverlay" }, "bot");
 				resp = true;
 			} else if (data.action && data.action === "settipjaramount") {
 				sendTargetP2P(
@@ -9250,12 +11267,19 @@ function setupSocket() {
 						cmd: "settipjaramount",
 						value: data.value,
 						tipjarsource: data.tipjarsource || "",
-						tipjartype: data.tipjartype || ""
+						tipjartype: data.tipjartype || "",
+						goalmetric: data.goalmetric || "",
+						tipjarevent: data.tipjarevent || ""
 					},
 					"tipjar"
 				);
 				resp = true;
-			} else if (data.action && data.action === "resetpoll") {
+			} else if (data.action === "commerceControl" && !settings.disablehost && window.handleMonetizationRequest) {
+                window.handleMonetizationRequest({ action: 'commerceControl', command: data.command, url: data.url, seconds: data.seconds, data: data.data });
+                resp = true;
+            } else if (isGiveawayAction(data.action)) {
+                resp = await handleGiveawayAction(data.action, data.value);
+            } else if (data.action && data.action === "resetpoll") {
 				sendTargetP2P({ cmd: "resetpoll" }, "poll");
 				resp = true;
 			} else if (data.action && data.action === "closepoll") {
@@ -9300,7 +11324,7 @@ function setupSocket() {
 				resp = true;
 			} else if (data.action && data.action === "gettimerstate" && !settings.disablehost) {
 				if (data.get) {
-					socketserver.send(JSON.stringify({ callback: { get: data.get, result: exportTimerState() } }));
+					sendStreamDeckCallback(socketserver, data, exportTimerState());
 					data.get = false;
 				}
 				resp = true;
@@ -9324,7 +11348,7 @@ function setupSocket() {
 						ret.callback = {};
 						ret.callback.get = data.get;
 						ret.callback.result = presets;
-						socketserver.send(JSON.stringify(ret));
+						sendStreamDeckCallback(socketserver, Object.assign({}, data, { get: ret.callback.get }), ret.callback.result);
 					}
 				});
 				resp = true;
@@ -9338,6 +11362,12 @@ function setupSocket() {
 				toggleEntries(false);
 				resp = true;
 				//sendResponse({ state: isExtensionOn });
+			} else if (data.action && (data.action === "startentries" || data.action === "openentries" || data.action === "resumeentries")) {
+				toggleEntries(true);
+				resp = true;
+			} else if (data.action && (data.action === "waitlistmessage" || data.action === "setwaitlistmessage")) {
+				setWaitlistMessage(data.value);
+				resp = true;
 			} else if (data.action && data.action === "downloadwaitlist") {
 				downloadWaitlist();
 				resp = true;
@@ -9413,7 +11443,7 @@ function setupSocket() {
 				resp = { emoteonlymode: enable };
 			} else if (data.action) {
 				try {
-					if (data.target && data.target.toLowerCase !== "null") {
+					if (data.target && String(data.target).toLowerCase() !== "null") {
 						sendTargetP2P(data, data.target);
 					} else {
 						sendDataP2P(data);
@@ -9423,6 +11453,7 @@ function setupSocket() {
 					console.error(e);
 				}
 			} else if ("stripe" in data) {
+				ackInboundWebhookDelivery(socketserver, data);
 				try {
 					if (data.stripe.type !== "checkout.session.completed") {
 						return false;
@@ -9430,6 +11461,10 @@ function setupSocket() {
 
 					console.log(data.stripe);
 
+					const stripeWebhookId = getInboundWebhookDeliveryId("stripe", data.stripe);
+					if (isDuplicateInboundWebhook("stripe", stripeWebhookId)) {
+						return false;
+					}
 					relayIncomingWebhook("stripe", data.stripe);
 
 					var message = {};
@@ -9554,6 +11589,7 @@ function setupSocket() {
 					message.membership = "";
 					message.contentimg = "";
 					message.type = "stripe";
+					setInboundWebhookMeta(message, stripeWebhookId);
 
 					data = message; // replace inbound stripe message with new message
 
@@ -9568,6 +11604,7 @@ function setupSocket() {
 							}
 
 							if (data) {
+								setInboundWebhookMeta(data, stripeWebhookId);
 								resp = await sendToDestinations(data);
 							}
 						}
@@ -9579,53 +11616,32 @@ function setupSocket() {
 					return;
 				}
 			} else if ("kofi" in data) {
+				ackInboundWebhookDelivery(socketserver, data);
 				try {
 					if (!data.kofi.data) {
 						return false;
 					}
 
-					relayIncomingWebhook("kofi", data.kofi);
 					try {
-						var kofi = JSON.parse(decodeURIComponent(data.kofi.data).replace(/\+/g, " "));
+						var kofi;
+                        try { kofi = JSON.parse(data.kofi.data); }
+                        catch (_) { kofi = JSON.parse(decodeURIComponent(String(data.kofi.data).replace(/\+/g, " "))); }
 					} catch (e) {
 						console.error(e);
 						return;
 					}
 
-					if (kofi.type !== "Donation") {
+					const kofiWebhookId = getInboundWebhookDeliveryId("kofi", kofi);
+					if (isDuplicateInboundWebhook("kofi", kofiWebhookId)) {
 						return false;
-					} else if (!kofi.is_public) {
-						return false;
 					}
 
-					const kofiMessage = {};
-					kofiMessage.chatname = decodeURIComponent(kofi.from_name) || "Anonymous";
-					kofiMessage.chatmessage = decodeURIComponent(kofi.message);
 
-					let kofiCurrency = "";
-
-					try {
-						kofiCurrency = kofi.currency.toLowerCase() || "";
-					} catch (e) {}
-
-					let kofiSymbol = {};
-					if (kofiCurrency && kofiCurrency in Currencies) {
-						kofiSymbol = Currencies[kofiCurrency];
-					}
-
-					if (kofi.amount) {
-						kofiMessage.hasDonation = (kofiSymbol.s || "") + (kofi.amount || "") + " " + (kofi.currency.toUpperCase() || "");
-						kofiMessage.hasDonation = kofiMessage.hasDonation.trim();
-					}
-					kofiMessage.id = parseInt(Math.random() * 100000 + 1000000);
-					kofiMessage.chatbadges = "";
-					kofiMessage.backgroundColor = "";
-					kofiMessage.textColor = "";
-					kofiMessage.nameColor = "";
-					kofiMessage.chatimg = "";
-					kofiMessage.membership = "";
-					kofiMessage.contentimg = "";
-					kofiMessage.type = "kofi";
+                    const kofiMessage = SSNMonetization.providerEvent("kofi", kofi, kofiWebhookId);
+                    if (typeof noteMonetizationProvider === "function") noteMonetizationProvider("kofi", !!kofiMessage);
+                    if (!kofiMessage) return false;
+                    relayIncomingWebhook("kofi", data.kofi);
+                    setInboundWebhookMeta(kofiMessage, kofiWebhookId);
 
 					data = kofiMessage; // replace inbound stripe message with new message
 
@@ -9640,6 +11656,7 @@ function setupSocket() {
 							}
 
 							if (data) {
+								setInboundWebhookMeta(data, kofiWebhookId);
 								resp = await sendToDestinations(data);
 							}
 						}
@@ -9651,51 +11668,23 @@ function setupSocket() {
 					return;
 				}
 			} else if ("bmac" in data) {
+				ackInboundWebhookDelivery(socketserver, data);
 				// Buy Me a Coffe New Membership and Donation detection
 				try {
 					if (!data.bmac) {
 						return false;
 					} else {
 						const bmac = data.bmac;
-						relayIncomingWebhook("bmac", data.bmac);
-						const bmacMessage = {};
-						if (bmac.type === "membership.started") {
-							bmacMessage.chatname = bmac.data.supporter_name || "Anonymous";
-							bmacMessage.chatmessage = (bmac.data.support_note || "").trim();
-							//We use the donation badge from Kofi to feature the membership level name
-							bmacMessage.hasDonation = bmac.data.membership_level_name || "";
+						const bmacWebhookId = getInboundWebhookDeliveryId("bmac", bmac);
+						if (isDuplicateInboundWebhook("bmac", bmacWebhookId)) {
+							return false;
 						}
-						if (bmac.type === "donation.created") {
-							bmacMessage.chatname = bmac.data.supporter_name || "Anonymous";
-							let bmacCurrency = "";
-							try {
-								bmacCurrency = bmac.data.currency.toLowerCase() || "";
-							} catch (e) {}
 
-							let bmacSymbol = {};
-							if (bmacCurrency && bmacCurrency in Currencies) {
-								bmacSymbol = Currencies[bmacCurrency];
-							}
-							var msgParts = [];
-							if (bmac.data.message) {
-								msgParts.push(bmac.data.message);
-							}
-							if (bmac.data.support_note) {
-								msgParts.push("<em>" + bmac.data.support_note + "</em>");
-							}
-							bmacMessage.chatmessage = msgParts.join(" - ").trim();
-							bmacMessage.hasDonation = (bmacSymbol.s || "") + (bmac.data.amount || "") + " " + (bmac.data.currency.toUpperCase() || "");
-							bmacMessage.hasDonation = bmacMessage.hasDonation.trim();
-						}
-						bmacMessage.contentimg = "";
-						bmacMessage.id = parseInt(Math.random() * 100000 + 1000000);
-						bmacMessage.chatbadges = "";
-						bmacMessage.backgroundColor = "";
-						bmacMessage.textColor = "";
-						bmacMessage.nameColor = "";
-						bmacMessage.chatimg = "";
-						bmacMessage.membership = "";
-						bmacMessage.type = "bmac";
+                        const bmacMessage = SSNMonetization.providerEvent("bmac", bmac, bmacWebhookId);
+                        if (typeof noteMonetizationProvider === "function") noteMonetizationProvider("bmac", !!bmacMessage);
+                    if (!bmacMessage) return false;
+                    relayIncomingWebhook("bmac", data.bmac);
+                        setInboundWebhookMeta(bmacMessage, bmacWebhookId);
 						data = bmacMessage; // replace inbound stripe message with new message
 
 						try {
@@ -9709,6 +11698,7 @@ function setupSocket() {
 								}
 
 								if (data) {
+									setInboundWebhookMeta(data, bmacWebhookId);
 									resp = await sendToDestinations(data);
 								}
 							}
@@ -9720,60 +11710,24 @@ function setupSocket() {
 					return;
 				}
 			} else if ("fourthwall" in data) {
+				ackInboundWebhookDelivery(socketserver, data);
 				// Dorthwall
 				try {
-					if (!data.fourthwall.data || data.fourthwall.type !== "ORDER_PLACED") {
+					if (!data.fourthwall.data) {
 						return false;
 					}
 
-					relayIncomingWebhook("fourthwall", data.fourthwall);
-
-					const fourthwallData = data.fourthwall.data;
-
-					const fourthwallMessage = {};
-					fourthwallMessage.chatname = fourthwallData.username || fourthwallData.billing?.address?.name || "Anonymous";
-					fourthwallMessage.chatmessage = fourthwallData.message || "";
-
-					let fourthwallCurrency = "";
-					try {
-						fourthwallCurrency = fourthwallData.amounts.total.currency.toLowerCase() || "";
-					} catch (e) {
-						console.error(e);
+					const fourthwallWebhookId = getInboundWebhookDeliveryId("fourthwall", data.fourthwall);
+					if (isDuplicateInboundWebhook("fourthwall", fourthwallWebhookId)) {
+						return false;
 					}
 
-					let fourthwallSymbol = {};
-					if (fourthwallCurrency && fourthwallCurrency in Currencies) {
-						fourthwallSymbol = Currencies[fourthwallCurrency];
-					}
 
-					if (fourthwallData.amounts && fourthwallData.amounts.total) {
-						fourthwallMessage.hasDonation = (fourthwallSymbol.s || "") + (fourthwallData.amounts.total.value || "") + " " + (fourthwallData.amounts.total.currency || "");
-						fourthwallMessage.hasDonation = fourthwallMessage.hasDonation.trim();
-					}
-
-					// Add product info to the subtitle
-					if (fourthwallData.offers && fourthwallData.offers.length) {
-						let productInfo = [];
-						fourthwallData.offers.forEach(offer => {
-							if (offer.name && offer.variant && offer.variant.quantity) {
-								productInfo.push(`${offer.variant.quantity}× ${offer.name}`);
-							}
-						});
-
-						if (productInfo.length) {
-							fourthwallMessage.subtitle = productInfo.join(", ");
-						}
-					}
-
-					fourthwallMessage.id = parseInt(Math.random() * 100000 + 1000000);
-					fourthwallMessage.chatbadges = "";
-					fourthwallMessage.backgroundColor = "";
-					fourthwallMessage.textColor = "";
-					fourthwallMessage.nameColor = "";
-					fourthwallMessage.chatimg = "";
-					fourthwallMessage.membership = "";
-					fourthwallMessage.contentimg = "";
-					fourthwallMessage.type = "fourthwall";
+                    const fourthwallMessage = SSNMonetization.providerEvent("fourthwall", data.fourthwall, fourthwallWebhookId);
+                    if (typeof noteMonetizationProvider === "function") noteMonetizationProvider("fourthwall", !!fourthwallMessage);
+                    if (!fourthwallMessage) return false;
+                    relayIncomingWebhook("fourthwall", data.fourthwall);
+                    setInboundWebhookMeta(fourthwallMessage, fourthwallWebhookId);
 
 					data = fourthwallMessage; // replace inbound fourthwall message with new message
 
@@ -9788,6 +11742,7 @@ function setupSocket() {
 							}
 
 							if (data) {
+								setInboundWebhookMeta(data, fourthwallWebhookId);
 								resp = await sendToDestinations(data);
 							}
 						}
@@ -9808,7 +11763,7 @@ function setupSocket() {
 				ret.callback = {};
 				ret.callback.get = data.get;
 				ret.callback.result = resp;
-				socketserver.send(JSON.stringify(ret));
+				sendStreamDeckCallback(socketserver, Object.assign({}, data, { get: ret.callback.get }), ret.callback.result);
 			}
 		}
 	});
@@ -9817,7 +11772,7 @@ function setupSocket() {
 function enableYouTube() {
 	// function to send data to the DOCk via the VDO.Ninja API
 	try {
-		iframe.contentWindow.postMessage({ enableYouTube: settings.youtubeapikey.textsetting }, "*"); // send only to 'viewers' of this stream
+		iframe.contentWindow.postMessage({ enableYouTube: settings.youtubeapikey.textsetting }, "https://vdo.socialstream.ninja"); // send only to 'viewers' of this stream
 	} catch (e) {
 		console.error(e);
 	}
@@ -10626,6 +12581,8 @@ async function openchat(target = null, force = false) {
 		}
 	}
 
+	{}
+
 	if (target == "vpzonews" || (!target && settings.vpzone_username && settings.vpzone_username.textsetting)) {
 		let url = "https://socialstream.ninja/sources/websocket/vpzone.html";
 		const vpzoneChannel = settings.vpzone_username && settings.vpzone_username.textsetting ? settings.vpzone_username.textsetting.trim().replace(/^@+/, "") : "";
@@ -10711,16 +12668,75 @@ async function openchat(target = null, force = false) {
 	}
 }
 
-function sendDataP2P(data, UUID = false) {
-	// function to send data to the DOCk via the VDO.Ninja API
+function sendDataToStreamDeckPeersP2P(data) {
+	var sent = false;
+	if (ninjaBridge && ninjaBridge.isReady()) {
+		try {
+			var peers = typeof ninjaBridge.getPeers === "function" ? ninjaBridge.getPeers() : {};
+			for (var peerId in peers) {
+				if (peers[peerId] === "streamdeck") {
+					sent = true;
+					break;
+				}
+			}
+			if (sent) {
+				var result = ninjaBridge.sendToLabel(data, "streamdeck");
+				if (result && typeof result.catch === "function") {
+					result.catch(function () {
+						markP2PFailure("streamDeckFeedSend");
+					});
+				} else if (result === false) {
+					markP2PFailure("streamDeckFeedSend");
+				}
+				return true;
+			}
+		} catch (e) {
+			markP2PFailure("streamDeckFeedSend");
+		}
+	}
 
+	if (iframe && connectedPeers) {
+		var keys = Object.keys(connectedPeers);
+		for (var i = 0; i < keys.length; i++) {
+			var UUID = keys[i];
+			if (connectedPeers[UUID] !== "streamdeck") {
+				continue;
+			}
+			try {
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
+				sent = true;
+			} catch (e) {
+				console.error(e);
+			}
+		}
+	}
+	return sent;
+}
+
+function sendDataP2P(data, UUID = false) {
+	// Transport preserves chatmessage/textonly; JSON/RTC serialization is not HTML sanitization.
+	// Literal bodies stay literal; callers supply checked HTML for HTML-mode messages.
+	// function to send data to the DOCk via the VDO.Ninja API
+	data = getOverlayDisplayPayload(data);
+	// Stream Deck can explicitly remain on P2P while a Dock uses the hosted
+	// WebSocket relay. Deliver its feed before the server2 early return below.
+	var streamDeckPeerSent = !UUID && sendDataToStreamDeckPeersP2P(data);
+
+	// TODO after 2026-09-01: make the server2 dock send additive by default.
+	// Overlay links generated from 3.52.0+ are prepared to use socket-only
+	// receive mode only when their TRANSPORT_CAPABILITIES opt in. Until then,
+	// this temporary setting lets users test additive delivery early.
 	if (!UUID && settings.server2 && socketserverDock && socketserverDock.readyState === 1) {
 		try {
-			if (data.out) {
-				delete data.out;
+			var server2Payload = data;
+			if (server2Payload && typeof server2Payload === "object" && server2Payload.out) {
+				server2Payload = Object.assign({}, server2Payload);
+				delete server2Payload.out;
 			}
-			socketserverDock.send(JSON.stringify(data));
-			return;
+			socketserverDock.send(JSON.stringify(server2Payload));
+			if (!getSettingFlag("server2additivedelivery")) {
+				return;
+			}
 		} catch (e) {
 			console.error(e);
 			// lets try to send it via P2P as a backup option
@@ -10769,8 +12785,15 @@ function sendDataP2P(data, UUID = false) {
 				trackSdkSendResult(ninjaBridge.sendToLabel(data, "aioverlay"));
 				trackSdkSendResult(ninjaBridge.sendToLabel(data, "cohost"));
 				trackSdkSendResult(ninjaBridge.sendToLabel(data, "tipjar"));
-			} else {
+			} else if (!streamDeckPeerSent) {
 				trackSdkSendResult(ninjaBridge.send(data)); // broadcast
+			} else {
+				// Stream Deck already received its copy; preserve the fallback feed for other peers.
+				for (var peerId in peers) {
+					if (peers[peerId] !== "streamdeck") {
+						trackSdkSendResult(ninjaBridge.send(data, peerId));
+					}
+				}
 			}
 			return;
 		} catch (e) {
@@ -10782,7 +12805,7 @@ function sendDataP2P(data, UUID = false) {
 	if (iframe) {
 		if (UUID && connectedPeers) {
 			try {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 			} catch (e) {
 				console.error(e);
 			}
@@ -10793,14 +12816,14 @@ function sendDataP2P(data, UUID = false) {
 					UUID = keys[i];
 					var label = connectedPeers[UUID] || false;
 					if (!label || label === "dock" || label === "aioverlay" || label === "cohost" || label === "tipjar") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*"); // docks, AI pages, and overlay-style pages are VIEWERS, since backend is PUSH-only
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja"); // docks, AI pages, and overlay-style pages are VIEWERS, since backend is PUSH-only
 					}
 				} catch (e) {
 					console.error(e);
 				}
 			}
 		} else {
-			iframe.contentWindow.postMessage({ sendData: msg, type: "pcs" }, "*"); // send only to 'viewers' of this stream
+			iframe.contentWindow.postMessage({ sendData: msg, type: "pcs" }, "https://vdo.socialstream.ninja"); // send only to 'viewers' of this stream
 		}
 	}
 }
@@ -10830,12 +12853,13 @@ function processHype(data) {
 
 	// If it's not a viewer_update, proceed to process as a chatter
 	const sourceType = data.type;
+	const userKey = data.userid || data.username || data.chatname;
 
 	let newSource = false;
 
 	if (users[sourceType] && data.chatname) {
 		// Site exists
-		if (!users[sourceType][data.chatname]) {
+		if (!users[sourceType][userKey]) {
 			// New user for this site
 			if (hype[sourceType]) {
 				hype[sourceType] += 1;
@@ -10844,11 +12868,11 @@ function processHype(data) {
 				newSource = true;
 			}
 		}
-		users[sourceType][data.chatname] = Date.now() + 60000 * 5;
+		users[sourceType][userKey] = Date.now() + 60000 * 5;
 	} else if (data.chatname) {
 		// New site
 		var site = {};
-		site[data.chatname] = Date.now() + 60000 * 5;
+		site[userKey] = Date.now() + 60000 * 5;
 		users[sourceType] = site;
 		hype[sourceType] = 1;
 		newSource = true;
@@ -10871,7 +12895,7 @@ function updateViewerCount(data) {
 		// Process each platform's viewer count
 		Object.keys(data.meta).forEach(type => {
 			// Skip viewer counts from sites that are not opted-in
-			if (!checkIfAllowed(type)) {
+			if (!checkIfAllowed(type) || isViewerCountSourceHidden(type)) {
 				return;
 			}
 			viewerCounts[type] = parseInt(data.meta[type]) || 0;
@@ -10884,7 +12908,7 @@ function updateViewerCount(data) {
 	// Handle legacy single viewer_update format
 	else if (data.type && "meta" in data) {
 		// Skip viewer counts from sites that are not opted-in
-		if (!checkIfAllowed(data.type)) {
+		if (!checkIfAllowed(data.type) || isViewerCountSourceHidden(data.type)) {
 			return;
 		}
 		const sourceKey = data.tid ? `${data.type}-${data.tid}` : data.type;
@@ -10966,7 +12990,7 @@ function combineHypeData() {
 
 	for (const sourceType in viewerCounts) {
 		// Skip sources that are not opted-in
-		if (!checkIfAllowed(sourceType)) {
+		if (!checkIfAllowed(sourceType) || isViewerCountSourceHidden(sourceType)) {
 			continue;
 		}
 		// Include all sources that have viewer data, even if 0
@@ -10985,11 +13009,13 @@ function combineHypeData() {
 	return result;
 }
 function sendHypeP2P(data, uid = null) {
+	var packet = uid ? { hype: data } : prepareOverlayControl({ hype: data }, "hype");
+	if (!uid) sendOverlayControlRelay(packet, "hype");
 	// function to send data to the HYPE overlay via the transport
 	if (ninjaBridge && ninjaBridge.isReady()) {
 		try {
 			if (!uid) {
-				ninjaBridge.sendToLabel({ hype: data }, "hype");
+				ninjaBridge.sendToLabel(packet, "hype");
 			} else {
 				ninjaBridge.send({ hype: data }, uid);
 			}
@@ -11007,14 +13033,14 @@ function sendHypeP2P(data, uid = null) {
 					var UUID = keys[i];
 					const peerLabel = connectedPeers[UUID];
 					if (peerLabel === "hype") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { hype: data } }, type: "pcs", UUID: UUID }, "*");
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: packet }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 					}
 				} catch (e) {}
 			}
 		} else {
 			const peerLabel = connectedPeers[uid];
 			if (peerLabel === "hype") {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { hype: data } }, type: "pcs", UUID: uid }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: packet }, type: "pcs", UUID: uid }, "https://vdo.socialstream.ninja");
 			}
 		}
 	}
@@ -11028,6 +13054,7 @@ function sendSpotifyOverlay(payload, uid = null) {
 	// Remember last payload for newly connected overlays
 	payload.receivedAt = payload.receivedAt || Date.now();
 	latestSpotifyOverlay = payload;
+	if (!uid) { sendTargetP2P({ spotify: payload }, "spotify", { retry: false }); return; }
 
 	if (ninjaBridge && ninjaBridge.isReady()) {
 		try {
@@ -11050,14 +13077,14 @@ function sendSpotifyOverlay(payload, uid = null) {
 					var UUID = keys[i];
 					const peerLabel = connectedPeers[UUID];
 					if (peerLabel === "spotify") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { spotify: payload } }, type: "pcs", UUID: UUID }, "*");
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { spotify: payload } }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 					}
 				} catch (e) {}
 			}
 		} else {
 			const peerLabel = connectedPeers[uid];
 			if (peerLabel === "spotify") {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { spotify: payload } }, type: "pcs", UUID: uid }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { spotify: payload } }, type: "pcs", UUID: uid }, "https://vdo.socialstream.ninja");
 			}
 		}
 	}
@@ -11109,17 +13136,167 @@ function sendAiOverlayCommand(input = {}, defaults = {}) {
 	return payload;
 }
 
-function sendTargetP2P(data, target) {
-	// function to send data to the DOCk via the VDO.Ninja API
+var overlayControlPending = new Map();
+var pollControlState = null;
+var mapControlState = null;
+var overlayStateEpoch = Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+var overlayStateSnapshots = new Map();
+var overlayStateSequence = 0;
+const POLL_CONTROL_KEYS = ["pollEnabled", "pollType", "pollQuestion", "multipleChoiceOptions", "pollMatchMode",
+	"pollStyle", "pollTimer", "pollTimerState", "pollTally", "pollSpam", "pollDonationWeighted"];
+function pollControlSettings(input) {
+	var selected = {};
+	POLL_CONTROL_KEYS.forEach(key => { if (Object.prototype.hasOwnProperty.call(input, key)) selected[key] = input[key]; });
+	return selected;
+}
+const MAP_CONTROL_KEYS = ["mapTitle", "mapShowList", "mapShowTotals", "mapAllowChanges", "mapEnabled", "mapType", "mapStyle", "mapOpacity", "mapopacity", "mapSpam", "mapRegion", "mapMotion", "mapAutoFit", "mapHideNumbers", "mapColorIntensity", "mapScale"];
+function prepareOverlayControl(data, target) {
+	if (!data || data.ssnControl) return data;
+	if (!(target === "actions" || (target === "credits" && data.creditsCommand) ||
+		(target === "poll" && (data.settings || data.setting || data.cmd)) || (target === "hype" && data.hype) ||
+        (target === "map" && (data.settings || data.setting || ["startmap", "pausemap", "resetmap"].includes(data.cmd))) ||
+        (target === "timer" && data.timer) || (target === "ticker" && data.ticker) || (target === "spotify" && data.spotify) ||
+        (target === "tipjar" && ["resettipjar", "settipjaramount"].includes(data.cmd)) ||
+        (target === "alerts" && data.action === "clearAlerts") || (target === "bot" && data.action === "clearBotOverlay") ||
+        (target === "wordcloud" && (data.chatmessage || "state" in data)) || (target === "gif" && data.contentimg) ||
+        (target === "reactions" && ["reaction", "liked", "like"].includes(data.event)) ||
+        (target === "waitlist" && ("drawmode" in data || "drawPoolSize" in data)))) return data;
+	var packet = Object.assign({}, data);
+    if (target === "map") {
+        if (data.setting && !MAP_CONTROL_KEYS.includes(data.setting)) return data;
+        if (!mapControlState || mapControlState.session !== streamID) mapControlState = { session: streamID, epoch: overlayStateEpoch + ":" + (++overlayStateSequence), revision: 0, reset: 0, paused: null };
+        if (packet.cmd === "resetmap") { mapControlState.reset++; mapControlState.revision++; }
+        if (packet.cmd === "startmap" || packet.cmd === "pausemap") { mapControlState.paused = packet.cmd === "pausemap"; mapControlState.revision++; }
+        packet.mapState = { epoch: mapControlState.epoch, revision: mapControlState.revision, reset: mapControlState.reset, paused: mapControlState.paused };
+        if (data.settings) {
+            packet.settings = {};
+            MAP_CONTROL_KEYS.forEach(key => { if (Object.prototype.hasOwnProperty.call(data.settings, key)) packet.settings[key] = data.settings[key]; });
+        }
+        var mapConfig = JSON.stringify(MAP_CONTROL_KEYS.map(key => settings[key]));
+        if (mapControlState.config !== mapConfig) { mapControlState.config = mapConfig; mapControlState.revision++; }
+        packet.mapState.revision = mapControlState.revision;
+    }
+	if (target === "poll") {
+		if (data.settings) packet.settings = pollControlSettings(data.settings);
+		if (data.setting && !POLL_CONTROL_KEYS.includes(data.setting)) return data;
+		var config = JSON.stringify(["pollType", "pollMatchMode", "pollQuestion", "multipleChoiceOptions"].map(key => settings[key]));
+		if (!pollControlState || pollControlState.session !== streamID) pollControlState = { session: streamID, config, closed: false, epoch: overlayStateEpoch + ":" + (++overlayStateSequence), revision: 0, reset: 0 };
+		if (pollControlState.config !== config) { pollControlState.config = config; pollControlState.closed = false; pollControlState.reset++; pollControlState.revision++; }
+		if (packet.cmd === "closepoll") { pollControlState.closed = true; pollControlState.revision++; }
+		if (packet.cmd === "startpoll" || packet.cmd === "resetpoll") { pollControlState.closed = false; pollControlState.reset++; pollControlState.revision++; }
+        packet.pollState = { epoch: pollControlState.epoch, revision: pollControlState.revision, reset: pollControlState.reset, closed: pollControlState.closed };
+	}
+	packet.ssnControl = { id: "control-" + Date.now().toString(36) + "-" + Array.from(crypto.getRandomValues(new Uint32Array(4))).join("-"), target };
+    if (target === "timer" || target === "ticker" || target === "spotify") {
+        var prior = overlayStateSnapshots.get(target);
+        var stateValue = packet[target];
+        if (target === "timer") {
+            stateValue = Object.assign({}, stateValue);
+            ["displayMs", "remainingToTargetMs", "done", "overtime", "progress"].forEach(key => delete stateValue[key]);
+        }
+        var signature = JSON.stringify(stateValue);
+        var sameSession = prior && prior.session === streamID;
+        packet.ssnState = { epoch: sameSession ? prior.packet.ssnState.epoch : overlayStateEpoch + ":" + (++overlayStateSequence),
+            revision: sameSession ? prior.packet.ssnState.revision + (signature === prior.signature ? 0 : 1) : 0 };
+        overlayStateSnapshots.set(target, { session: streamID, packet: packet, signature: signature });
+    }
+	return packet;
+}
+function handleOverlayControlRequest(data, socket, replyChannel, allowSnapshot) {
+	if (!data || (!data.ssnControlRequest && !data.ssnControlAck && data.action !== "requestViewerCount")) return false;
+	if (!isExtensionOn || settings.disablehost) return true;
+	if (data.action === "requestViewerCount") {
+		if (allowSnapshot || settings.server3) {
+			refreshTemporaryViewerCount(data.value && data.value.ttl);
+			updateViewerCount({ event: "viewer_updates", meta: buildViewerCountsFromMetaStore() });
+		}
+		return true;
+	}
+	if (data.ssnControlAck) {
+		var pending = overlayControlPending.get(data.ssnControlAck.id);
+		if (pending && pending.session === streamID && pending.target === data.ssnControlAck.target) pending.resolve(true);
+		return true;
+	}
+	if (data.ssnControlRequest && data.ssnControlRequest.target === "leaderboard") {
+		if (allowSnapshot || settings.server3) {
+			const session = streamID;
+			broadcastPointsLeaderboard("connected", undefined, packet => {
+				if (session === streamID && isExtensionOn && !settings.disablehost && socket.readyState === 1) {
+					socket.send(JSON.stringify(packet));
+				}
+			});
+		}
+		return true;
+	}
+	if (!allowSnapshot) return true;
+	var request = data.ssnControlRequest, packet;
+	if (request.target === "poll") {
+		packet = prepareOverlayControl({ settings: settings }, "poll");
+
+	} else if (request.target === "hype") {
+		packet = prepareOverlayControl({ hype: combineHypeData() }, "hype");
+		packet.ssnControl.viewerCountActive = !!(settings.showviewercount || settings.hypemode || isTemporaryViewerCountActive());
+	} else if (request.target === "map") {
+        packet = prepareOverlayControl({ settings: settings }, "map");
+    } else if (request.target === "timer" && timerStateInitialized) {
+        packet = prepareOverlayControl({ timer: exportTimerState() }, "timer");
+    } else if (request.target === "ticker" || request.target === "spotify") {
+        var saved = overlayStateSnapshots.get(request.target);
+        if (!saved || saved.session !== streamID) return true;
+        packet = Object.assign({}, saved.packet, { ssnControl: Object.assign({}, saved.packet.ssnControl) });
+    } else return true;
+	packet.ssnControl.client = String(request.client || "").slice(0, 160);
+	packet.ssnControl.reply = replyChannel;
+	socket.send(JSON.stringify(Object.assign({}, packet, { out: 7 })));
+	return true;
+}
+function sendOverlayControlRelay(data, target) {
+	if (!data || !data.ssnControl || data.ssnControl.target !== target || !isExtensionOn || settings.disablehost) return Promise.resolve(false);
+	var routes = [];
+	if ((settings.server2 || (target === "actions" && settings.server3)) && socketserverDock && socketserverDock.readyState === 1) routes.push([socketserverDock, 3]);
+	if (settings.socketserver && socketserver && socketserver.readyState === 1) routes.push([socketserver, 1]);
+	if (!routes.length) return Promise.resolve(false);
+	return new Promise(resolve => {
+		var id = data.ssnControl.id;
+		var timer = setTimeout(() => finish(false), 750);
+		function finish(delivered) { clearTimeout(timer); overlayControlPending.delete(id); resolve(delivered); }
+		overlayControlPending.set(id, { target, session: streamID, resolve: finish });
+		routes.forEach(([socket, reply]) => {
+			try { socket.send(JSON.stringify(Object.assign({}, data, { out: target === "actions" ? 6 : 7,
+				ssnControl: Object.assign({}, data.ssnControl, { reply }) }))); }
+			catch (error) { console.warn("[Overlay control] Relay send failed", error); }
+		});
+	});
+}
+async function trySendTargetP2P(data, target) {
+	// Relay delivery must never suppress connected WebRTC displays. Current
+	// receivers deduplicate the same control ID across both transports.
+	var relayDelivery = sendOverlayControlRelay(data, target);
+	// function to send data to a labelled page via the VDO.Ninja API
 	if (ninjaBridge && ninjaBridge.isReady()) {
 		try {
-			ninjaBridge.sendToLabel(data, target);
-			return;
+			var sdkPeers = typeof ninjaBridge.getPeers === "function" ? ninjaBridge.getPeers() : null;
+			var hasSdkTarget = !sdkPeers;
+			if (sdkPeers) {
+				for (var sdkUUID in sdkPeers) {
+					if (sdkPeers[sdkUUID] === target) {
+						hasSdkTarget = true;
+						break;
+					}
+				}
+			}
+			if (hasSdkTarget) {
+				var sdkResult = await ninjaBridge.sendToLabel(data, target);
+				if (sdkResult !== false) {
+					return true;
+				}
+			}
 		} catch (e) {
 			console.warn("SDK sendTargetP2P failed", e);
 		}
 	}
 
+	var sent = false;
 	if (iframe) {
 		var keys = Object.keys(connectedPeers);
 		for (var i = 0; i < keys.length; i++) {
@@ -11127,11 +13304,151 @@ function sendTargetP2P(data, target) {
 				var UUID = keys[i];
 				var label = connectedPeers[UUID];
 				if (label === target) {
-					iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+					iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
+					sent = true;
 				}
 			} catch (e) {}
 		}
 	}
+	return sent || await relayDelivery;
+}
+
+async function sendTargetP2P(data, target, options) {
+	// Targeted delivery also preserves the body format; it is not a blanket HTML sanitizer.
+	// textonly=true must reach receivers as literal text, including tag/entity-looking characters.
+	data = getOverlayDisplayPayload(data);
+	data = prepareOverlayControl(data, target);
+	options = options || {};
+	var retry = typeof options.retry === "boolean" ? options.retry : target === "actions";
+	var timeoutMs = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : 10000;
+	var intervalMs = Number(options.intervalMs) > 0 ? Number(options.intervalMs) : 500;
+	var expiresAt = Date.now() + timeoutMs;
+	var targetSession = streamID;
+
+	do {
+		if (targetSession !== streamID) return false;
+		if (await trySendTargetP2P(data, target)) {
+			return true;
+		}
+		if (!retry || Date.now() >= expiresAt) {
+			break;
+		}
+		await new Promise(function (resolve) {
+			setTimeout(resolve, intervalMs);
+		});
+	} while (Date.now() < expiresAt);
+
+	if (retry) {
+		console.warn("No connected P2P target found for label:", target);
+	}
+	return false;
+}
+
+function broadcastLeaderboardReset() {
+	var payload = { action: "resetleaderboard" };
+	try {
+		sendTargetP2P(payload, "dock");
+	} catch (e) {
+		console.error(e);
+	}
+	try {
+		if (settings.server2 && socketserverDock && socketserverDock.readyState === WebSocket.OPEN) {
+			socketserverDock.send(JSON.stringify(payload));
+		}
+	} catch (e) {
+		console.error(e);
+	}
+}
+
+var giveawayHost = null;
+var giveawayHostSession = null;
+var giveawayBroadcastTimer = null;
+var giveawayPendingStates = new Map();
+var giveawayRouting = new Map();
+var giveawayCaptureEpoch = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+async function getGiveawayHost() {
+    await window.pointsSystemReady();
+    if (!giveawayHost || giveawayHostSession !== streamID) {
+        if(giveawayBroadcastTimer)clearTimeout(giveawayBroadcastTimer);
+        giveawayBroadcastTimer=null;giveawayPendingStates.clear();giveawayRouting.clear();
+        giveawayHostSession = streamID;
+        giveawayHost = new SSNGiveawayService(window.pointsSystem, streamID);
+        await giveawayHost.recoverRounds();
+        (await giveawayHost.list()).forEach(state=>giveawayRouting.set(state.giveawayId,state));
+    }
+    return giveawayHost;
+}
+async function publishGiveawayState(state) {
+    try {
+        var states = state && state.epoch ? [state] : await (await getGiveawayHost()).list(true);
+        for (var current of states) {
+            var payload = { event: "giveaway_state", meta: { giveaway: current } };
+            sendTargetP2P(payload, "giveaway");
+            if (settings.server2 && socketserverDock && socketserverDock.readyState === WebSocket.OPEN) socketserverDock.send(JSON.stringify(payload));
+            if (settings.socketserver && socketserver && socketserver.readyState === WebSocket.OPEN) socketserver.send(JSON.stringify(payload));
+        }
+    } catch (error) { console.warn('Giveaway state unavailable', error); }
+}
+function isGiveawayAction(action) {
+    return ["startgiveaway", "closegiveaway", "drawgiveaway", "resetgiveaway", "getgiveawaystate", "cancelgiveaway", "listgiveaways", "getgiveawayhistory", "entergiveaway", "buygiveawaytickets", "grantgiveawaytickets", "guessgiveaway", "getgiveawayentries", "removegiveawayentry"].indexOf(action) !== -1;
+}
+async function handleGiveawayAction(action, value, actor) {
+    if (settings.disablehost) return { ok: false, error: "Host controls are disabled." };
+    try {
+        value = value && typeof value === 'object' ? Object.assign({}, value) : {};
+        var useStoredRules = action === 'startgiveaway' && !value.config && !Object.prototype.hasOwnProperty.call(value,'keyword');
+        if (action === "startgiveaway" && !value.config) {
+            value.config = Object.prototype.hasOwnProperty.call(value, 'keyword') ? Object.assign({}, value) : {
+                keyword: settings.giveawayKeyword ? settings.giveawayKeyword.textsetting : "!enter",
+                match: settings.giveawayMatch ? settings.giveawayMatch.optionsetting : "exact",
+                membersOnly: getSettingFlag("giveawayMembersOnly"),
+                removeWinner: !getSettingFlag("giveawayRepeatWinners")
+            };
+        }
+        var host = await getGiveawayHost();
+        if(useStoredRules){
+            var current=(await host.run('getgiveawaystate',{giveawayId:value.giveawayId})).giveaway;
+            if(current.roundId)value.config=current.config;
+            else Object.assign(value.config,{ticketCost:getNumericSettingValue('giveawayCost',0),maxTickets:getNumericSettingValue('giveawayLimit',100),prizePoints:getNumericSettingValue('giveawayPrize',0),winnerCount:getNumericSettingValue('giveawayWinners',1),kind:settings.giveawayKind ? settings.giveawayKind.optionsetting : 'giveaway'});
+        }
+        if (action === 'listgiveaways') return {ok:true, giveaways:await host.list()};
+        if (action === 'getgiveawayhistory') return {ok:true, history:await host.history()};
+        if (action === 'getgiveawayentries') return await host.entries(value.giveawayId,value.page);
+        var rules = value.config;
+        if ((rules && (rules.ticketCost || rules.prizePoints || rules.kind === 'coin') || action === 'buygiveawaytickets') && !isPointsSystemEnabled()) {
+            throw new Error('Enable SSN loyalty points before using paid tickets or point prizes.');
+        }
+        var result = await host.run(action, value, actor || value.actor);
+        if(host.session!==String(streamID))return result;
+        if(result.giveaway)giveawayRouting.set(result.giveaway.giveawayId,result.giveaway);
+        if (['entergiveaway','buygiveawaytickets','grantgiveawaytickets','guessgiveaway'].includes(action)) {
+            giveawayPendingStates.set(result.giveaway.giveawayId,result.giveaway);
+            if(!giveawayBroadcastTimer)giveawayBroadcastTimer=setTimeout(function(){giveawayBroadcastTimer=null;var pending=Array.from(giveawayPendingStates.values());giveawayPendingStates.clear();pending.forEach(s=>publishGiveawayState(s));},150);
+        } else {giveawayPendingStates.delete(result.giveaway.giveawayId);await publishGiveawayState(result.giveaway);}
+        try {if (typeof window.requestPointsLeaderboardBroadcast === 'function') window.requestPointsLeaderboardBroadcast('giveaway');}catch(error){console.warn('Giveaway committed; leaderboard refresh failed',error);}
+        return result;
+    } catch (error) { return { ok: false, error: error.message }; }
+}
+async function processGiveawayEntry(message) {
+    if (!giveawayHost || !message || !message.chatmessage || message.event || message.bot || message.private || message.history || message.replay || message.reflection || message.reload || message.meta && message.meta.economyTest) return;
+    // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+    if (message && message.textonly === false && typeof message.chatmessage === "string") message = Object.assign({}, message, { chatmessage: decodeAndCleanHtml(message.chatmessage) });
+    try {
+        var host = await getGiveawayHost(), rounds = Array.from(giveawayRouting.values());
+        var text = String(message.chatmessage || '').trim();
+        var ticket = text.match(/^!ticket\s+([a-zA-Z0-9_-]+)\s+(\d+)(?:\s+(heads|tails))?$/i);
+        var guess = text.match(/^!guess\s+([a-zA-Z0-9_-]+)\s+(\d+)$/i);
+        var matches = guess ? rounds.filter(r=>r.giveawayId===guess[1] && r.config.kind==='number') : ticket ? rounds.filter(r => r.giveawayId === ticket[1]) : rounds.filter(r => r.open && r.config.kind==='giveaway' && !r.config.ticketCost &&
+            (r.config.match === 'exact' ? text.toLowerCase() === r.keyword.toLowerCase() : text.toLowerCase().split(/\s+/).includes(r.keyword.toLowerCase())));
+        if (matches.length !== 1) return;
+        var round = matches[0];
+        if(message.meta && Array.isArray(message.meta.giveawayHandled) && message.meta.giveawayHandled.includes(round.giveawayId))return;
+        var nativeId = message.meta && message.meta.messageId;
+        var sourceKey=nativeId ? 'native:'+nativeId : message.id!=null ? 'capture:'+giveawayCaptureEpoch+':'+message.id : null;
+        var operationId = sourceKey ? 'chat:' + JSON.stringify([message.type,message.userid || message.chatname,sourceKey,round.roundId]) : undefined;
+        var result = ticket && !sourceKey ? {ok:false,error:'This source did not provide a message ID. No points spent.'} : await handleGiveawayAction(guess ? 'guessgiveaway' : ticket ? 'buygiveawaytickets' : 'entergiveaway', {giveawayId:round.giveawayId,roundId:round.roundId,guess:guess ? Number(guess[2]) : undefined,count:ticket ? Number(ticket[2]) : 1,side:ticket && ticket[3] ? ticket[3].toLowerCase() : undefined,operationId:operationId}, message);
+        if (ticket && typeof sendMessageToTabs === 'function') sendMessageToTabs({response:'@' + message.chatname + ' ' + (result.ok ? 'Tickets accepted for ' + round.giveawayId + '.' : result.error),type:message.type,tid:message.tid,bot:true},false,null,false,false,false);
+    } catch (error) { console.warn('Giveaway entry failed', error); }
 }
 
 var timerState = {
@@ -11187,6 +13504,7 @@ function exportTimerState(now = Date.now()) {
 }
 
 function sendTimerP2P(payload, uid = null) {
+    if (!uid) { sendTargetP2P({ timer: payload }, "timer", { retry: false }); return; }
 	if (ninjaBridge && ninjaBridge.isReady()) {
 		try {
 			if (!uid) {
@@ -11208,13 +13526,13 @@ function sendTimerP2P(payload, uid = null) {
 					var UUID = keys[i];
 					var label = connectedPeers[UUID];
 					if (label === "timer") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { timer: payload } }, type: "pcs", UUID: UUID }, "*");
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { timer: payload } }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 					}
 				} catch (e) {}
 			}
 		} else {
 			try {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { timer: payload } }, type: "pcs", UUID: uid }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { timer: payload } }, type: "pcs", UUID: uid }, "https://vdo.socialstream.ninja");
 			} catch (e) {}
 		}
 	}
@@ -11465,13 +13783,34 @@ async function handleSpotifyAction(msg) {
 	return result;
 }
 
+function getCohostObsSceneAllowlist() {
+	const raw = settings.cohostObsScenes && typeof settings.cohostObsScenes.textsetting === "string" ? settings.cohostObsScenes.textsetting : "";
+	return raw.split(",").map(function (scene) {
+		return scene.replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 120);
+	}).filter(function (scene, index, scenes) {
+		return !!scene && scenes.map(function (value) { return value.toLowerCase(); }).indexOf(scene.toLowerCase()) === index;
+	}).slice(0, 50);
+}
+
 function getCohostToolStatus() {
+	const obsScenes = getCohostObsSceneAllowlist();
 	return {
 		tools: {
 			spotify: {
 				enabled: !!settings.cohostSpotifyControl,
 				configured: !!(settings.spotifyEnabled && spotify),
 				available: !!(settings.cohostSpotifyControl && settings.spotifyEnabled && spotify)
+			},
+			obs: {
+				enabled: !!settings.cohostObsControl,
+				configured: obsScenes.length > 0,
+				available: !!settings.cohostObsControl && obsScenes.length > 0,
+				scenes: obsScenes
+			},
+			featuredChat: {
+				enabled: !!settings.cohostFeaturedChatControl,
+				configured: true,
+				available: !!settings.cohostFeaturedChatControl
 			}
 		}
 	};
@@ -11542,27 +13881,91 @@ function normalizeCohostSpotifyRequest(request) {
 }
 
 async function handleCohostToolRequest(request) {
-	if (!request || request.tool !== "spotify") {
-		return { tool: request && request.tool ? request.tool : "", command: request && request.command ? request.command : "", success: false, message: "Unsupported co-host tool." };
+	const tool = request && request.tool ? String(request.tool) : "";
+	const command = request && request.command ? String(request.command) : "";
+	if (tool === "spotify") {
+		if (!settings.cohostSpotifyControl) {
+			return { tool, command, success: false, message: "Co-host Spotify control is disabled in the popup." };
+		}
+		const normalized = normalizeCohostSpotifyRequest(request);
+		if (normalized.error) {
+			return { tool, command, success: false, message: normalized.error };
+		}
+		const result = await handleSpotifyAction(normalized.msg);
+		return {
+			tool,
+			command: command || normalized.msg.spotifyAction,
+			success: !!(result && result.success),
+			message: result && result.message ? result.message : result && result.success ? "Spotify command completed." : "Spotify command failed.",
+			track: result && result.track ? result.track : null
+		};
 	}
-	if (!settings.cohostSpotifyControl) {
-		return { tool: "spotify", command: request.command || "", success: false, message: "Co-host Spotify control is disabled in the popup." };
+	if (tool === "obs") {
+		if (!settings.cohostObsControl) {
+			return { tool, command, success: false, message: "Co-host OBS scene control is disabled in the popup." };
+		}
+		if (command !== "switchScene") {
+			return { tool, command, success: false, message: "Unsupported OBS command." };
+		}
+		const requestedSceneName = String(request.value && request.value.sceneName || "").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 120);
+		if (!requestedSceneName) {
+			return { tool, command, success: false, message: "An OBS scene name is required." };
+		}
+		const allowedScenes = getCohostObsSceneAllowlist();
+		const sceneName = allowedScenes.find(function (scene) { return scene.toLowerCase() === requestedSceneName.toLowerCase(); });
+		if (!sceneName) {
+			return { tool, command, success: false, message: "That OBS scene is not in the co-host allowlist." };
+		}
+		const sentToActions = await sendTargetP2P({ actionType: "obsChangeScene", sceneName }, "actions", { retry: false });
+		return {
+			tool,
+			command,
+			success: sentToActions,
+			message: sentToActions ? "OBS scene change request delivered to Flow Actions." : "Flow Actions is not connected; open actions.html with the same SSN session and connect it to OBS.",
+			sceneName
+		};
 	}
-	const normalized = normalizeCohostSpotifyRequest(request);
-	if (normalized.error) {
-		return { tool: "spotify", command: request.command || "", success: false, message: normalized.error };
+	if (tool === "featuredChat") {
+		if (!settings.cohostFeaturedChatControl) {
+			return { tool, command, success: false, message: "Co-host featured chat control is disabled in the popup." };
+		}
+		if (command === "clear") {
+			const cleared = await sendTargetP2P({ action: "clearOverlay" }, "dock", { retry: false });
+			return { tool, command, success: cleared, message: cleared ? "Featured chat clear request delivered to the dock." : "No Streaming Chat dock is connected." };
+		}
+		if (command !== "feature") {
+			return { tool, command, success: false, message: "Unsupported featured chat command." };
+		}
+		const value = request.value && typeof request.value === "object" ? request.value : {};
+		const sourceMessage = value.message && typeof value.message === "object" ? value.message : null;
+		if (!sourceMessage) {
+			return { tool, command, success: false, message: "A recent chat message is required." };
+		}
+		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+		const allowedKeys = ["id", "mid", "chatname", "chatmessage", "chatimg", "chatbadges", "type", "platform", "nameColor", "backgroundColor", "textColor", "hasDonation", "donoValue", "membership", "subtitle", "contentimg", "event", "textonly", "meta"];
+		const featuredMessage = {};
+		allowedKeys.forEach(function (key) {
+			if (Object.prototype.hasOwnProperty.call(sourceMessage, key)) featuredMessage[key] = sourceMessage[key];
+		});
+		if (typeof featuredMessage.chatname !== "string" || typeof featuredMessage.chatmessage !== "string" || !featuredMessage.chatmessage.trim()) {
+			return { tool, command, success: false, message: "The selected chat message is invalid." };
+		}
+		featuredMessage.chatname = featuredMessage.chatname.slice(0, 80);
+		featuredMessage.chatmessage = featuredMessage.chatmessage.slice(0, 500);
+		// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
+		featuredMessage.textonly = true;
+		if (JSON.stringify(featuredMessage).length > 24000) {
+			return { tool, command, success: false, message: "The selected chat message is too large to feature." };
+		}
+		const safeMessage = typeof sanitizeRelayPayloadFields === "function" ? sanitizeRelayPayloadFields(featuredMessage) : featuredMessage;
+		const featured = await sendTargetP2P({ action: "cohostFeatureMessage", value: safeMessage }, "dock", { retry: false });
+		return { tool, command, success: featured, message: featured ? "Feature request for " + featuredMessage.chatname + " was delivered to the dock." : "No Streaming Chat dock is connected." };
 	}
-	const result = await handleSpotifyAction(normalized.msg);
-	return {
-		tool: "spotify",
-		command: request.command || normalized.msg.spotifyAction,
-		success: !!(result && result.success),
-		message: result && result.message ? result.message : result && result.success ? "Spotify command completed." : "Spotify command failed.",
-		track: result && result.track ? result.track : null
-	};
+	return { tool, command, success: false, message: "Unsupported co-host tool." };
 }
 
 function sendTickerP2P(data, uid = null) {
+    if (!uid) { sendTargetP2P({ ticker: data }, "ticker", { retry: false }); return; }
 	// function to send data to the DOCk via the VDO.Ninja API
 
 	if (ninjaBridge && ninjaBridge.isReady()) {
@@ -11586,14 +13989,14 @@ function sendTickerP2P(data, uid = null) {
 					var UUID = keys[i];
 					var label = connectedPeers[UUID];
 					if (label === "ticker") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: UUID }, "*");
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: UUID }, "https://vdo.socialstream.ninja");
 					}
 				} catch (e) {}
 			}
 		} else {
 			const peerLabel = connectedPeers[uid];
 			if (peerLabel === "ticker") {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: uid }, "*");
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: uid }, "https://vdo.socialstream.ninja");
 			}
 		}
 	}
@@ -11636,12 +14039,101 @@ function extractWaitlistMessage(chatMessage = "", trigger = "") {
 	}
 }
 
+function getWaitlistControlCommand(settingKey, fallback) {
+	try {
+		const entry = settings && settings[settingKey];
+		if (entry && entry.textsetting !== undefined && entry.textsetting !== null && entry.textsetting.toString().trim()) {
+			return entry.textsetting.toString().trim();
+		}
+	} catch (e) {}
+	return fallback;
+}
+
+function getWaitlistControlValue(chatMessage, commandString, fallback) {
+	try {
+		const matchedCommand = getMatchedCommandAlias(commandString, chatMessage, "startsWithToken");
+		if (!matchedCommand) {
+			return fallback;
+		}
+		const rest = String(chatMessage || "")
+			.trim()
+			.slice(matchedCommand.length)
+			.trim();
+		const value = parseInt(rest, 10);
+		if (Number.isFinite(value) && value > 0) {
+			return value;
+		}
+	} catch (e) {}
+	return fallback;
+}
+
+function processWaitlistControlCommand(data) {
+	try {
+		if (!getSettingFlag("waitlistcontrolcommands") || !data || !data.chatmessage || data.bot || data.reflection || data.replay || data.history || data.reload) {
+			return false;
+		}
+		if (!(data.mod || data.host || data.admin)) {
+			return false;
+		}
+
+		const message = data.chatmessage;
+		const commands = [
+			{
+				setting: "waitlistcommandstop",
+				fallback: "!wlstop",
+				action: function () {
+					toggleEntries(false);
+				}
+			},
+			{
+				setting: "waitlistcommandremove",
+				fallback: "!wlremove",
+				action: function (command) {
+					removeWaitlist(getWaitlistControlValue(message, command, 0));
+				}
+			},
+			{
+				setting: "waitlistcommandreset",
+				fallback: "!wlreset",
+				action: function () {
+					resetWaitlist();
+				}
+			},
+			{
+				setting: "waitlistcommandselect",
+				fallback: "!wlpick",
+				action: function (command) {
+					selectRandomWaitlist(getWaitlistControlValue(message, command, 1));
+				}
+			},
+			{
+				setting: "waitlistcommandhighlight",
+				fallback: "!wlhighlight",
+				action: function (command) {
+					highlightWaitlist(getWaitlistControlValue(message, command, 0));
+				}
+			}
+		];
+
+		for (var i = 0; i < commands.length; i++) {
+			const command = getWaitlistControlCommand(commands[i].setting, commands[i].fallback);
+			if (command && commandAliasMatches(command, message, "startsWithToken")) {
+				commands[i].action(command);
+				return true;
+			}
+		}
+	} catch (e) {
+		console.error(e);
+	}
+	return false;
+}
+
 function forgetWaitlistUser(entry) {
 	try {
 		if (!entry || !entry.type || !entry.chatname || !waitListUsers[entry.type]) {
 			return;
 		}
-		delete waitListUsers[entry.type][entry.chatname];
+		delete waitListUsers[entry.type][entry.userid || entry.username || entry.chatname];
 		if (!Object.keys(waitListUsers[entry.type]).length) {
 			delete waitListUsers[entry.type];
 		}
@@ -11667,16 +14159,17 @@ function processWaitlist(data) {
 		data.waitlistTrigger = trigger;
 		data.waitlistJoinMessage = extractWaitlistMessage(data.chatmessage, trigger);
 
+		var userKey = data.userid || data.username || data.chatname;
 		var update = false;
 		if (waitListUsers[data.type]) {
-			if (!waitListUsers[data.type][data.chatname]) {
+			if (!waitListUsers[data.type][userKey]) {
 				update = true;
-				waitListUsers[data.type][data.chatname] = Date.now();
+				waitListUsers[data.type][userKey] = Date.now();
 				waitlist.push(data);
 			}
 		} else {
 			var site = {};
-			site[data.chatname] = Date.now();
+			site[userKey] = Date.now();
 			waitListUsers[data.type] = site;
 			waitlist.push(data);
 			update = true;
@@ -11685,16 +14178,7 @@ function processWaitlist(data) {
 			drawListCount += 1;
 
 			if (settings.drawmode) {
-				var keys = Object.keys(connectedPeers);
-				for (var i = 0; i < keys.length; i++) {
-					try {
-						var UUID = keys[i];
-						var label = connectedPeers[UUID];
-						if (label === "waitlist") {
-							iframe.contentWindow.postMessage({ sendData: { overlayNinja: { drawPoolSize: drawListCount } }, type: "pcs", UUID: UUID }, "*");
-						}
-					} catch (e) {}
-				}
+				sendTargetP2P({ drawPoolSize: drawListCount }, "waitlist");
 			} else {
 				sendWaitlistConfig(waitlist, false);
 			}
@@ -11945,6 +14429,13 @@ function toggleEntries(state = false) {
 	allowNewEntries = state;
 	sendWaitlistConfig();
 }
+function setWaitlistMessage(value = "") {
+	const message = value === undefined || value === null ? "" : String(value);
+	settings.customwaitlistmessagetoggle = true;
+	settings.customwaitlistmessage = { textsetting: message };
+	chrome.storage.local.set({ settings: settings });
+	sendWaitlistConfig(null, true);
+}
 function objectArrayToCSV(data, delimiter = ",") {
 	if (!data || !Array.isArray(data) || data.length === 0) {
 		return "";
@@ -11991,142 +14482,18 @@ async function downloadWaitlist() {
 }
 
 function sendWaitlistConfig(data = null, sendMessage = true, clear = false) {
-	//console.warn("sendWaitlistConfig");
-	if (iframe) {
-		if (sendMessage) {
-			var trigger = "!join";
-			if (settings.customwaitlistcommand && settings.customwaitlistcommand.textsetting.trim()) {
-				trigger = settings.customwaitlistcommand.textsetting.trim();
-			}
-			var message = "Type " + trigger + " to join this wait list";
-			if (settings.drawmode) {
-				if (!allowNewEntries) {
-					message = "No new entries allowed";
-				} else {
-					message = "Type " + trigger + " to join the random draw";
-				}
-			}
-			if (settings.customwaitlistmessagetoggle) {
-				if (settings.customwaitlistmessage) {
-					message = settings.customwaitlistmessage.textsetting.trim();
-					message = message.replace(/{trigger}/g, trigger);
-				} else {
-					message = "";
-				}
-			}
-		}
-
-		//console.log(data);
-
-		var keys = Object.keys(connectedPeers);
-		for (var i = 0; i < keys.length; i++) {
-			try {
-				var UUID = keys[i];
-				var label = connectedPeers[UUID];
-				if (label === "waitlist") {
-					if (sendMessage) {
-						if (data === null) {
-							if (settings.drawmode) {
-								iframe.contentWindow.postMessage(
-									{
-										sendData: {
-											overlayNinja: {
-												waitlistmessage: message,
-												drawPoolSize: drawListCount,
-												drawmode: true,
-												clearWinner: clear
-											}
-										},
-										type: "pcs",
-										UUID: UUID
-									},
-									"*"
-								);
-							} else {
-								iframe.contentWindow.postMessage(
-									{
-										sendData: {
-											overlayNinja: {
-												waitlistmessage: message,
-												drawmode: false
-											}
-										},
-										type: "pcs",
-										UUID: UUID
-									},
-									"*"
-								);
-							}
-						} else if (settings.drawmode) {
-							iframe.contentWindow.postMessage(
-								{
-									sendData: {
-										overlayNinja: {
-											waitlistmessage: message,
-											winlist: data,
-											drawPoolSize: drawListCount,
-											drawmode: true,
-											clearWinner: clear
-										}
-									},
-									type: "pcs",
-									UUID: UUID
-								},
-								"*"
-							);
-						} else {
-							iframe.contentWindow.postMessage(
-								{
-									sendData: {
-										overlayNinja: {
-											waitlist: data,
-											waitlistmessage: message,
-											drawmode: false
-										}
-									},
-									type: "pcs",
-									UUID: UUID
-								},
-								"*"
-							);
-						}
-					} else if (data !== null) {
-						if (settings.drawmode) {
-							iframe.contentWindow.postMessage(
-								{
-									sendData: {
-										overlayNinja: {
-											drawPoolSize: drawListCount,
-											drawmode: true,
-											clearWinner: clear,
-											waitlist: data
-										}
-									},
-									type: "pcs",
-									UUID: UUID
-								},
-								"*"
-							);
-						} else {
-							iframe.contentWindow.postMessage(
-								{
-									sendData: {
-										overlayNinja: {
-											drawmode: false,
-											waitlist: data
-										}
-									},
-									type: "pcs",
-									UUID: UUID
-								},
-								"*"
-							);
-						}
-					}
-				}
-			} catch (e) {}
-		}
-	}
+    if (!sendMessage && data === null) return;
+    var packet = { drawmode: !!settings.drawmode };
+    if (sendMessage) {
+        var trigger = settings.customwaitlistcommand && settings.customwaitlistcommand.textsetting.trim() || "!join";
+        var message = "Type " + trigger + " to join this wait list";
+        if (settings.drawmode) message = allowNewEntries ? "Type " + trigger + " to join the random draw" : "No new entries allowed";
+        if (settings.customwaitlistmessagetoggle) message = settings.customwaitlistmessage ? settings.customwaitlistmessage.textsetting.trim().replace(/{trigger}/g, trigger) : "";
+        packet.waitlistmessage = message;
+    }
+    if (settings.drawmode) { packet.drawPoolSize = drawListCount; packet.clearWinner = clear; }
+    if (data !== null) packet[sendMessage && settings.drawmode ? "winlist" : "waitlist"] = data;
+    return sendTargetP2P(packet, "waitlist");
 }
 
 ///
@@ -12143,7 +14510,7 @@ function sendToDisk(data) {
 				}
 
 				if (data.type && data.type == "twitch" && !data.chatimg && data.chatname) {
-					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
 				}
 
 				overwriteFile(JSON.stringify(data));
@@ -12161,7 +14528,7 @@ function sendToDisk(data) {
 				}
 
 				if (data.type && data.type == "twitch" && !data.chatimg && data.chatname) {
-					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+					data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.username || data.chatname); // 150x150
 				}
 				overwriteFileExcel(data);
 			}
@@ -12173,22 +14540,50 @@ function sendToDisk(data) {
 	}
 }
 
-async function initTransport(roomStreamID, pass = false) {
-	// this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
-	resetP2PTransportStateForStream(roomStreamID);
+function cancelPendingNinjaTransport() {
+	transportGeneration++;
+	if (ninjaBridge && typeof ninjaBridge.cancelPendingInit === "function") {
+		ninjaBridge.cancelPendingInit();
+	}
+	return transportGeneration;
+}
 
+function queueTransportTask(task) {
+	const previous = transportTask;
+	const pending = (async function () {
+		if (previous) await previous;
+		await task();
+	})().catch(error => console.warn("[Transport] Lifecycle operation failed", error));
+	transportTask = pending;
+	pending.then(function () {
+		if (transportTask === pending) transportTask = null;
+	});
+	return pending;
+}
+
+async function destroyNinjaTransport() {
+	const bridge = ninjaBridge;
+	ninjaBridge = null;
+	if (bridge) {
+		try {
+			await bridge.destroy();
+		} catch (e) {}
+	}
+}
+
+function initTransport(roomStreamID, pass = false) {
 	// Re-evaluate effective SDK flag each init, based on flexible truthy parsing
 	try {
 		const raw = settings && (settings.sdk !== undefined ? settings.sdk : settings.usesdk);
-		let flag = false;
+		let flag = !!forceNinjaSDKFromUrl;
 		if (typeof raw === "boolean") {
-			flag = raw;
+			flag = flag || raw;
 		} else if (raw && typeof raw === "object") {
 			// supports { setting: true/"true"/1 }
 			const v = raw.setting;
-			flag = v === true || v === 1 || (typeof v === "string" && /^(1|true|on|yes)$/i.test(v));
+			flag = flag || v === true || v === 1 || (typeof v === "string" && /^(1|true|on|yes)$/i.test(v));
 		} else if (typeof raw === "string") {
-			flag = /^(1|true|on|yes)$/i.test(raw);
+			flag = flag || /^(1|true|on|yes)$/i.test(raw);
 		} else if (raw === 1) {
 			flag = true;
 		}
@@ -12198,12 +14593,34 @@ async function initTransport(roomStreamID, pass = false) {
 	}
 
 	log("Init transport for VDO", useNinjaSDK ? "SDK" : "IFRAME");
+	const generation = cancelPendingNinjaTransport();
+	const sdkEnabled = useNinjaSDK;
+	return queueTransportTask(async function () {
+		if (!isExtensionOn || generation !== transportGeneration) return;
+		try {
+			await initializeTransport(roomStreamID, pass, sdkEnabled, generation);
+		} finally {
+			// Finish disposing this attempt before a newer start may claim the session.
+			if (!isExtensionOn || generation !== transportGeneration) {
+				await destroyNinjaTransport();
+			}
+		}
+	});
+}
+
+async function initializeTransport(roomStreamID, pass, sdkEnabled, generation) {
+	function isCurrent() {
+		return isExtensionOn && generation === transportGeneration;
+	}
+	resetP2PTransportStateForStream(roomStreamID);
 
 	// If SDK is enabled and available, use it (lazy-load SDK/bridge if needed)
-	if (useNinjaSDK) {
+	if (sdkEnabled) {
+		let bridge = ninjaBridge;
 		try {
 			// Lazy load SDK and bridge if not present
 			await ensureNinjaSDKLoaded();
+			if (!isCurrent()) return;
 			if (typeof NinjaBridge === "undefined") throw new Error("NinjaBridge unavailable");
 			// Clean any existing iframe (graceful teardown to release streamID)
 			if (iframe) {
@@ -12214,28 +14631,28 @@ async function initTransport(roomStreamID, pass = false) {
 				try {
 					await new Promise(r => setTimeout(r, 300));
 				} catch (e) {}
+				if (!isCurrent()) return;
 				try {
 					iframe.remove();
 				} catch (e) {}
 				iframe = null;
 			}
 			// Reuse existing bridge if room changes? Destroy and recreate for safety
-			if (ninjaBridge) {
-				try {
-					await ninjaBridge.destroy();
-				} catch (e) {}
-				ninjaBridge = null;
-			}
+			await destroyNinjaTransport();
+			if (!isCurrent()) return;
 			// short wait to let signaling release prior streamID
 			try {
 				await new Promise(r => setTimeout(r, 600));
 			} catch (e) {}
-			ninjaBridge = new NinjaBridge({ debug: devmode });
+			if (!isCurrent()) return;
+			bridge = new NinjaBridge({ debug: devmode });
+			ninjaBridge = bridge;
 			try {
 				window.ninjaBridge = ninjaBridge;
 			} catch (e) {}
-			bindNinjaBridgeTransportTracking(ninjaBridge);
-			ninjaBridge.addEventListener("peerLabel", ev => {
+			bindNinjaBridgeTransportTracking(bridge);
+			bridge.addEventListener("peerLabel", ev => {
+				if (!isCurrent()) return;
 				try {
 					const { uuid, label } = ev.detail || {};
 					if (!uuid || !label) return;
@@ -12252,6 +14669,8 @@ async function initTransport(roomStreamID, pass = false) {
 						try {
 							initializeWaitlist();
 						} catch (e) {}
+					} else if (label === "giveaway") {
+						 publishGiveawayState();
 					} else if (label === "poll") {
 						try {
 							initializePoll();
@@ -12267,22 +14686,28 @@ async function initTransport(roomStreamID, pass = false) {
 			});
 			// Try initializing SDK; if it fails (eg, streamID still in use), retry once
 			try {
-				await ninjaBridge.init({ room: roomStreamID, password: pass, streamID: roomStreamID });
-				bindNinjaBridgeTransportTracking(ninjaBridge);
+				await bridge.init({ room: roomStreamID, password: pass, streamID: roomStreamID });
+				if (!isCurrent()) return;
+				bindNinjaBridgeTransportTracking(bridge);
 			} catch (e1) {
+				if (!isCurrent()) return;
 				console.warn("SDK init failed; retrying after short delay…", e1?.message || e1);
 				try {
 					await new Promise(r => setTimeout(r, 900));
 				} catch (e) {}
+				if (!isCurrent()) return;
 				try {
-					await ninjaBridge.destroy();
+					await bridge.destroy();
 				} catch (e) {}
-				ninjaBridge = new NinjaBridge({ debug: devmode });
+				if (!isCurrent()) return;
+				bridge = new NinjaBridge({ debug: devmode });
+				ninjaBridge = bridge;
 				try {
 					window.ninjaBridge = ninjaBridge;
 				} catch (e) {}
-				bindNinjaBridgeTransportTracking(ninjaBridge);
-				ninjaBridge.addEventListener("peerLabel", ev => {
+				bindNinjaBridgeTransportTracking(bridge);
+				bridge.addEventListener("peerLabel", ev => {
+					if (!isCurrent()) return;
 					try {
 						const { uuid, label } = ev.detail || {};
 						if (!uuid || !label) return;
@@ -12298,6 +14723,8 @@ async function initTransport(roomStreamID, pass = false) {
 							try {
 								initializeWaitlist();
 							} catch (e) {}
+						} else if (label === "giveaway") {
+						 publishGiveawayState();
 						} else if (label === "poll") {
 							try {
 								initializePoll();
@@ -12311,12 +14738,15 @@ async function initTransport(roomStreamID, pass = false) {
 						console.warn(e);
 					}
 				});
-				await ninjaBridge.init({ room: roomStreamID, password: pass, streamID: roomStreamID });
-				bindNinjaBridgeTransportTracking(ninjaBridge);
+				await bridge.init({ room: roomStreamID, password: pass, streamID: roomStreamID });
+				if (!isCurrent()) return;
+				bindNinjaBridgeTransportTracking(bridge);
 			}
 			try {
-				// Receive overlay messages via SDK (support both event names and wrapper passthrough)
+				// NinjaBridge normalizes both SDK event shapes into one event. Listening
+				// directly to the SDK as well would process each P2P message twice.
 				const handleSDKData = ev => {
+					if (!isCurrent()) return;
 					try {
 						const detail = ev.detail || {};
 						const pkt = detail.data || detail;
@@ -12334,7 +14764,7 @@ async function initTransport(roomStreamID, pass = false) {
 						if (!data) return;
 						if (typeof data !== "object") return;
 						let payload = data.overlayNinja || null;
-						if (!payload && (data.action || "response" in data)) {
+						if (!payload && (data.action || data.callback || "response" in data || data.type === "ssnPeerHello")) {
 							payload = data;
 						}
 						if (payload) {
@@ -12344,14 +14774,13 @@ async function initTransport(roomStreamID, pass = false) {
 						console.warn(e);
 					}
 				};
-				ninjaBridge.vdo.addEventListener("data", handleSDKData);
-				ninjaBridge.vdo.addEventListener("dataReceived", handleSDKData);
-				ninjaBridge.addEventListener("data", handleSDKData);
+				bridge.addEventListener("data", handleSDKData);
 			} catch (e) {
 				console.warn(e);
 			}
 			return; // success
 		} catch (e) {
+			if (!isCurrent()) return;
 			markP2PFailure("sdkInit");
 			console.warn("Falling back to iframe transport:", e);
 			// If SDK fails, fall through to iframe
@@ -12361,18 +14790,14 @@ async function initTransport(roomStreamID, pass = false) {
 	// IFRAME fallback
 	// Ensure SDK bridge is torn down before creating iframe, to avoid streamID collision
 	if (ninjaBridge) {
-		try {
-			await ninjaBridge.destroy();
-		} catch (e) {}
-		ninjaBridge = null;
-		try {
-			window.ninjaBridge = null;
-		} catch (e) {}
+		await destroyNinjaTransport();
+		if (!isCurrent()) return;
 		// small delay to allow signaling server to release streamID
 		try {
 			await new Promise(r => setTimeout(r, 600));
 		} catch (e) {}
 	}
+	if (!isCurrent()) return;
 	var lanonly = "";
 	try {
 		if (settings["lanonly"]) {
@@ -12383,13 +14808,13 @@ async function initTransport(roomStreamID, pass = false) {
 		if (!pass) {
 			pass = "false";
 		}
-		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + pass + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(pass) + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
 	} else {
 		iframe = document.createElement("iframe");
 		if (!pass) {
 			pass = "false";
 		}
-		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + pass + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
+		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + encodeURIComponent(pass) + lanonly + "&room=" + roomStreamID + "&push=" + roomStreamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
 		document.body.appendChild(iframe);
 	}
 }
@@ -12415,6 +14840,16 @@ async function ensureNinjaSDKLoaded() {
 			await window.loadScript("./thirdparty/vdoninja-sdk.js");
 		} else {
 			await dynamicLoadScript("./thirdparty/vdoninja-sdk.js");
+		}
+		// Electron exposes CommonJS globals in this renderer. The browser SDK then
+		// publishes itself through module.exports instead of creating its normal
+		// window globals, so adopt that export before loading NinjaBridge.
+		if (typeof window.VDONinjaSDK === "undefined" && typeof module !== "undefined" && module.exports) {
+			var exportedSDK = module.exports.default || module.exports.VDONinjaSDK || module.exports.VDONinja || module.exports;
+			if (typeof exportedSDK === "function") {
+				window.VDONinjaSDK = exportedSDK;
+				window.VDONinja = exportedSDK;
+			}
 		}
 	}
 	if (typeof window.NinjaBridge === "undefined") {
@@ -12678,8 +15113,28 @@ async function processEventFlowBridgeEvent(value) {
 
 async function processIncomingRequest(request, UUID = false) {
 	// from the dock or chat bot, etc.
+	if (request && request.action === "stickerReceipt") {
+		if (window.receiveStickerReceipt) window.receiveStickerReceipt(request, UUID);
+		return;
+	}
+	if (request && request.type === "ssnPeerHello" && request.label && UUID) {
+		var announcedLabel = String(request.label).trim().slice(0, 100);
+		if (announcedLabel) {
+			if (ninjaBridge && typeof ninjaBridge.identifyPeer === "function") {
+				ninjaBridge.identifyPeer(String(UUID), announcedLabel);
+			} else {
+				markP2PPeerConnected(String(UUID), announcedLabel);
+			}
+		}
+		return true;
+	}
+	if (handleStreamDeckDockCallback(request)) {
+		return true;
+	}
 	if (request && request.action === "requestViewerCount") {
+		if (!isExtensionOn || settings.disablehost) return;
 		refreshTemporaryViewerCount(request.value && request.value.ttl);
+		updateViewerCount({ event: "viewer_updates", meta: buildViewerCountsFromMetaStore() });
 		return;
 	}
 	if (request && request.action === "eventFlowEvent" && request.value) {
@@ -12689,8 +15144,28 @@ async function processIncomingRequest(request, UUID = false) {
 	if (settings.disablehost) {
 		return;
 	}
+	if (request && request.ssnControlRequest && request.ssnControlRequest.target === "leaderboard" && UUID) {
+		if (isExtensionOn) {
+			await broadcastPointsLeaderboard("connected", undefined, packet => sendDataP2P(packet, UUID));
+		}
+		return true;
+	}
 	if (await handleBridgeChunkRequest(request, UUID)) {
 		return;
+	}
+
+	// WebRTC SDK and iframe traffic enters here, while server mode enters setupSocket().
+	// Route both through the same SSApp command implementation and answer the originating
+	// peer using the existing Social Stream P2P transport.
+	const streamDeckRoute = await routeStreamDeckRemoteRequest(request, {
+		transport: "webrtc",
+		UUID: UUID
+	});
+	if (streamDeckRoute) {
+		if (streamDeckRoute.kind !== "deferred") {
+			sendStreamDeckPeerResult(request, streamDeckRoute, UUID);
+		}
+		return streamDeckRoute.result;
 	}
 
 	if ("response" in request) {
@@ -12700,8 +15175,49 @@ async function processIncomingRequest(request, UUID = false) {
 		}
 		sendMessageToTabs(request, false, null, false, false, false);
 	} else if ("action" in request) {
-		if (request.action === "openChat") {
+		if (request.action === "phraseGuessResponse") {
+			// Game-only dock announcements use the native inbound relay contract.
+			// setupSocketDock still requires server3, and disablehost is checked above.
+			const value = request.value;
+			if (!isExtensionOn || !value || value.type !== "bot" || typeof value.chatname !== "string" || typeof value.chatmessage !== "string" || value.chatmessage.length > 2000) return;
+			return sendToDestinations({type: "bot", chatname: value.chatname.slice(0, 200), chatmessage: value.chatmessage, /* textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload. */ textonly: true});
+		} else if (request.action === "openChat") {
 			openchat(request.value || null);
+		} else if (request.action === "askBot" && typeof request.value === "string" && request.value.trim()) {
+			if (isAiChatbotEnabled() && typeof processMessageWithOllama === "function") {
+				const privateBotResult = await processMessageWithOllama({
+					chatname: "Host",
+					chatmessage: request.value.trim(),
+					type: "socialstream",
+					tid: "BOT",
+					host: true,
+					mod: true,
+					// textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
+					textonly: true,
+					privateBotPrompt: true
+				});
+				if (privateBotResult === false) {
+					sendDataP2P({
+						action: "privateBotStatus",
+						status: "busy",
+						message: "The AI bot is busy. Please try again in a moment."
+					}, UUID);
+				} else if (privateBotResult !== true) {
+					sendDataP2P({
+						action: "privateBotStatus",
+						status: "error",
+						message: "The AI bot could not generate a response. Check its provider settings and try again."
+					}, UUID);
+				}
+			} else {
+				sendDataP2P({
+					action: "privateBotStatus",
+					status: "unavailable",
+					message: "Enable the AI chat bot before asking it privately."
+				}, UUID);
+			}
+		} else if (request.action === "clearBotOverlay") {
+			sendTargetP2P({ action: "clearBotOverlay" }, "bot");
 		} else if (request.action === "aiOverlay" || request.action === "cohostOverlay") {
 			sendAiOverlayCommand(request, {
 				meta: {
@@ -12757,7 +15273,7 @@ async function processIncomingRequest(request, UUID = false) {
 				altSourceType = "youtube";
 			}
 
-			const userToVIP = { username: request.value.userid || request.value.chatname, type: altSourceType };
+			const userToVIP = { username: request.value.userid || request.value.username || request.value.chatname, type: altSourceType };
 			const isAlreadyVIP = viplist.some(({ username, type }) => userToVIP.username === username && (userToVIP.type === type || type === ""));
 
 			if (!isAlreadyVIP) {
@@ -12770,7 +15286,7 @@ async function processIncomingRequest(request, UUID = false) {
 			}
 
 			if (isExtensionOn) {
-				sendToDestinations({ vipUser: userToVIP });
+				sendToDestinations({ vipUser: { username: request.value.chatname, type: altSourceType } });
 			}
 		} else if (request.action === "markUser" && request.value && request.value.chatname && request.value.type && request.value.role) {
 			let settingsKey = "";
@@ -12796,8 +15312,7 @@ async function processIncomingRequest(request, UUID = false) {
 					altSourceType = "youtube";
 				}
 
-				const useCaptureNameForRoles = request.value.role == "host" || (request.value.role == "bot" && (altSourceType == "youtube" || altSourceType == "kick"));
-				const storageUsername = useCaptureNameForRoles ? request.value.chatname || request.value.userid || "" : request.value.userid || request.value.chatname || "";
+				const storageUsername = request.value.userid || request.value.username || request.value.chatname || "";
 				const userToMark = { username: storageUsername, type: altSourceType };
 				const dockUserToMark = {
 					username: request.value.chatname || request.value.userid || storageUsername,
@@ -12873,6 +15388,16 @@ async function processIncomingRequest(request, UUID = false) {
 
 					tabsList.push(ttsTab);
 
+					if (isAiChatbotEnabled()) {
+						let botTab = {};
+						botTab.url = "";
+						botTab.id = "BOT";
+						botTab.title = "Ask the AI bot privately";
+						botTab.favIconUrl = "./icons/bot.png";
+
+						tabsList.push(botTab);
+					}
+
 					sendDataP2P({ tabsList: tabsList }, UUID);
 				});
 			}
@@ -12920,6 +15445,14 @@ async function processIncomingRequest(request, UUID = false) {
 			if (UUID) {
 				initializeTimer(UUID);
 			}
+		} else if (["getAiEventProfiles", "saveAiEventProfile", "generateAiEvent", "aiEventDelivered"].includes(request.action) && UUID) {
+			try {
+				if (!window.SSNAiEventBackground) throw new Error("AI Event Overlay is still loading. Try again.");
+				const value = await window.SSNAiEventBackground.handle(request);
+				sendDataP2PChunked({ aiEventResponse: { target: request.target, value } }, UUID);
+			} catch (error) {
+				sendDataP2P({ aiEventResponse: { target: request.target, error: error.message || "AI overlay request failed." } }, UUID);
+			}
 		} else if (request.action === "saveAiPromptOverlays" && request.value) {
 			const saveResult = await saveAiPromptOverlays(request.value);
 			if (UUID && request.target) {
@@ -12942,6 +15475,26 @@ async function processIncomingRequest(request, UUID = false) {
 			} else {
 				const status = getCohostToolStatus();
 				sendDataP2P({ cohostToolStatus: { target: request.target || null, value: status, tools: status.tools } }, UUID);
+			}
+		} else if (request.action === "openaiRealtimeClientSecret" && UUID) {
+			try {
+				assertOpenAIRealtimeBrokerAvailable();
+				const expectedCapability = await getOpenAIRealtimeCohostCapability();
+				const suppliedCapability = String(request.value?.capability || "");
+				if (!expectedCapability || suppliedCapability !== expectedCapability) {
+					throw new Error("OpenAI Realtime access denied. Reopen the co-host link from the SSN popup.");
+				}
+				enforceOpenAIRealtimeMintRateLimit(UUID, suppliedCapability);
+				const clientSecret = await createOpenAIRealtimeClientSecret(request.value || {});
+				sendDataP2P({ openaiRealtimeClientSecret: Object.assign({ target: request.target || null, success: true }, clientSecret) }, UUID);
+			} catch (error) {
+				sendDataP2P({
+					openaiRealtimeClientSecret: {
+						target: request.target || null,
+						success: false,
+						error: { message: error?.message || "OpenAI Realtime setup failed." }
+					}
+				}, UUID);
 			}
 		} else if (request.action === "cohostTool" && UUID) {
 			try {
@@ -12968,6 +15521,16 @@ async function processIncomingRequest(request, UUID = false) {
 		} else if (request.action === "getAiPromptOverlays" && UUID) {
 			const overlayStore = await getAiPromptOverlays();
 			sendDataP2PChunked({ aiPromptOverlays: { target: request.target || null, value: overlayStore } }, UUID);
+		} else if (request.action === "chatbotStop" && UUID) {
+			const activeController = privateChatbotControllers[UUID];
+			if (activeController) {
+				try {
+					activeController.abort();
+				} catch (e) {}
+				delete privateChatbotControllers[UUID];
+			}
+		} else if (request.action === "chatbotCapabilities" && UUID) {
+			sendDataP2P({ chatbotCapabilities: { target: request.target || null, value: getPrivateChatbotCapabilities() } }, UUID);
 		} else if (request.value && "target" in request && UUID && request.action === "chatbot") {
 			// target is the callback ID
 			if (isExtensionOn && settings.allowChatBot) {
@@ -12980,6 +15543,10 @@ async function processIncomingRequest(request, UUID = false) {
 						sendDataP2P({ chatbotChunk: { value: chunk, target: request.target } }, UUID);
 					};
 					const sendChatbotFinal = fullResponse => {
+						if (fullResponse && typeof fullResponse === "object") {
+							// aborted requests can resolve with an object instead of text
+							fullResponse = fullResponse.response || fullResponse.value || "";
+						}
 						const responseText = fullResponse == null ? "" : String(fullResponse);
 						if (streamedChunks > 0) {
 							sendDataP2P({ chatbotResponse: { value: "", target: request.target } }, UUID);
@@ -13002,12 +15569,19 @@ async function processIncomingRequest(request, UUID = false) {
 					}
 					let model = request.model || null;
 					const controller = new AbortController();
+					privateChatbotControllers[UUID] = controller;
 
 					callLLMAPI(prompt, model, sendChatbotChunk, controller, UUID, request.images || null)
 						.then(fullResponse => {
+							if (privateChatbotControllers[UUID] === controller) {
+								delete privateChatbotControllers[UUID];
+							}
 							sendChatbotFinal(fullResponse);
 						})
 						.catch(error => {
+							if (privateChatbotControllers[UUID] === controller) {
+								delete privateChatbotControllers[UUID];
+							}
 							let payload;
 							if (typeof LLMServiceError !== "undefined" && error instanceof LLMServiceError) {
 								payload = {
@@ -13042,6 +15616,76 @@ async function processIncomingRequest(request, UUID = false) {
 	}
 }
 
+const privateChatbotControllers = {};
+
+function getPrivateChatbotCapabilities() {
+	// Describes the currently configured LLM to the private chatbot page.
+	// imageInput: true = vision known to work, false = never sent to the model, "maybe" = model-dependent.
+	const enabled = !!(isExtensionOn && settings?.allowChatBot);
+	if (!enabled) {
+		return { enabled: false, imageInput: false };
+	}
+	const provider = settings?.aiProvider?.optionsetting || "ollama";
+	let model = "";
+	let imageInput = "maybe";
+	switch (provider) {
+		case "ollama":
+			model = settings?.ollamamodel?.textsetting || "";
+			imageInput = /vision|llava|moondream|minicpm|bakllava|gemma3|qwen2\.5vl|qwen2-vl|qwen-vl|pixtral|llama4|internvl/i.test(model) ? true : "maybe";
+			break;
+		case "localgemma":
+		case "localqwen":
+			try {
+				const localBrowserSettings = typeof getLocalBrowserProviderSettings === "function" ? getLocalBrowserProviderSettings(provider, settings || {}) : null;
+				model = localBrowserSettings?.modelId || "";
+				imageInput = localBrowserSettings ? !!localBrowserSettings.supportsVision : "maybe";
+			} catch (e) {}
+			break;
+		case "chatgpt":
+			model = settings?.chatgptmodel?.textsetting || "gpt-5.4-mini";
+			imageInput = true;
+			break;
+		case "gemini":
+			model = settings?.geminimodel?.textsetting || "gemini-2.5-flash";
+			imageInput = true;
+			break;
+		case "deepseek":
+			model = settings?.deepseekmodel?.textsetting || "deepseek-v4-flash";
+			imageInput = false;
+			break;
+		case "xai":
+			model = settings?.xaimodel?.textsetting || "grok-4.3";
+			imageInput = /grok-4|vision|image/i.test(model) ? true : false;
+			break;
+		case "bedrock":
+			model = settings?.bedrockmodel?.textsetting || "anthropic.claude-sonnet-5";
+			imageInput = false; // the Bedrock request path is text-only
+			break;
+		case "openrouter":
+			model = settings?.openroutermodel?.textsetting || "openai/gpt-5.4-mini";
+			imageInput = /gpt-[45]|gpt-5|gemini|claude|grok|vision|llava|pixtral/i.test(model) ? true : "maybe";
+			break;
+		case "groq":
+			model = settings?.groqmodel?.textsetting || "openai/gpt-oss-120b";
+			imageInput = /llama-4|vision|pixtral/i.test(model) ? true : false;
+			break;
+		case "opencode":
+			try {
+				model = typeof getOpenCodeZenSelectedModel === "function" ? getOpenCodeZenSelectedModel(settings || {}, null) : "";
+			} catch (e) {}
+			break;
+		case "custom":
+			model = settings?.customAIModel?.textsetting || "";
+			break;
+	}
+	return {
+		enabled,
+		provider,
+		model: model || "",
+		imageInput
+	};
+}
+
 function fowardOBSCommand(data) {
 	// data.value = {value:{action: 'setCurrentScene', value: sceneName}}
 	if (isExtensionOn && data.value) {
@@ -13060,7 +15704,7 @@ function normalizeSourceControlPlatform(type) {
 function getSourceControlPlatforms(type) {
 	const normalized = normalizeSourceControlPlatform(type);
 	if (normalized === "*" || !normalized) {
-		return ["twitch", "kick", "youtube"];
+		return ["twitch", "kick", "youtube", "vpzone"];
 	}
 	return [normalized];
 }
@@ -13078,6 +15722,9 @@ function getWebsocketSourcePlatformFromUrl(url) {
 	}
 	if (lowerUrl.includes("/sources/websocket/youtube.html")) {
 		return "youtube";
+	}
+	if (lowerUrl.includes("/sources/websocket/vpzone.html")) {
+		return "vpzone";
 	}
 	return "";
 }
@@ -13190,7 +15837,7 @@ function blockUser(data) {
 			altSourceType = "youtube";
 		}
 
-		const userToBlock = { username: data.userid || data.chatname, type: altSourceType };
+		const userToBlock = { username: data.userid || data.username || data.chatname, type: altSourceType };
 		if (data.chatname && data.chatname !== userToBlock.username) {
 			userToBlock.chatname = data.chatname;
 		}
@@ -13225,7 +15872,10 @@ function blockUser(data) {
 		if (isExtensionOn) {
 			sendToDestinations({ blockUser: userToBlock });
 		}
-		forwardSourceControlToWebsocketPages("blockUser", userToBlock);
+		const sourceControlUser = Object.assign({}, userToBlock, {
+			chatname: data.username || data.chatname
+		});
+		forwardSourceControlToWebsocketPages("blockUser", sourceControlUser);
 	} catch (e) {
 		console.error(e);
 		return false;
@@ -13263,6 +15913,8 @@ eventer(messageEvent, async function (e) {
 						processTicker();
 					} else if (connectedPeers[e.data.UUID] == "waitlist") {
 						initializeWaitlist();
+					} else if (connectedPeers[e.data.UUID] == "giveaway") {
+						publishGiveawayState();
 					} else if (connectedPeers[e.data.UUID] == "poll") {
 						initializePoll();
 					} else if (connectedPeers[e.data.UUID] == "timer") {
@@ -13272,10 +15924,11 @@ eventer(messageEvent, async function (e) {
 							latestSpotifyOverlay || {
 								status: "idle",
 								isPlaying: false,
-								progressMs: 0,
-								durationMs: 0,
-								track: null,
-								receivedAt: Date.now()
+				progressMs: 0,
+				durationMs: 0,
+				track: null,
+				receivedAt: Date.now(),
+				queue: []
 							},
 							e.data.UUID
 						);
@@ -13292,6 +15945,8 @@ eventer(messageEvent, async function (e) {
 						processTicker();
 					} else if (connectedPeers[e.data.UUID] == "waitlist") {
 						initializeWaitlist();
+					} else if (connectedPeers[e.data.UUID] == "giveaway") {
+						publishGiveawayState();
 					} else if (connectedPeers[e.data.UUID] == "poll") {
 						initializePoll();
 					} else if (connectedPeers[e.data.UUID] == "timer") {
@@ -13301,10 +15956,11 @@ eventer(messageEvent, async function (e) {
 							latestSpotifyOverlay || {
 								status: "idle",
 								isPlaying: false,
-								progressMs: 0,
-								durationMs: 0,
-								track: null,
-								receivedAt: Date.now()
+				progressMs: 0,
+				durationMs: 0,
+				track: null,
+				receivedAt: Date.now(),
+				queue: []
 							},
 							e.data.UUID
 						);
@@ -13796,6 +16452,30 @@ function claimPublishedUrl(published, url) {
 	return true;
 }
 
+function isYouTubeShortsRelayUrl(url) {
+	if (!url) {
+		return false;
+	}
+	try {
+		const parsedUrl = new URL(url);
+		return parsedUrl.pathname.toLowerCase().includes("/shorts") || parsedUrl.searchParams.has("shorts");
+	} catch (e) {
+		const normalizedUrl = String(url).toLowerCase();
+		return normalizedUrl.includes("/shorts") || /[?&]shorts(?:[=&]|$)/.test(normalizedUrl);
+	}
+}
+
+function getExactYouTubeRelaySourceType(tab, sourceType) {
+	const exactSourceType = String(sourceType || "").toLowerCase();
+	if (exactSourceType === "youtubeshorts") {
+		return "youtubeshorts";
+	}
+	if (normalizeSourceControlPlatform(exactSourceType) !== "youtube") {
+		return exactSourceType;
+	}
+	return isYouTubeShortsRelayUrl(tab && tab.url) ? "youtubeshorts" : "youtube";
+}
+
 async function matchesRelayDestination(tab, destination, mode = "sourceType", sourceType = false) {
 	if (!destination) {
 		return true;
@@ -13806,7 +16486,8 @@ async function matchesRelayDestination(tab, destination, mode = "sourceType", so
 	if (mode === "url") {
 		return urlMatchesDestination(tab.url, destination);
 	}
-	const normalizedDestination = normalizeSourceControlPlatform(destination.toLowerCase());
+	const exactDestination = String(destination).toLowerCase();
+	const normalizedDestination = normalizeSourceControlPlatform(exactDestination);
 	if (!sourceType) {
 		if (!tab.id) {
 			return false;
@@ -13815,6 +16496,10 @@ async function matchesRelayDestination(tab, destination, mode = "sourceType", so
 		if (!sourceType) {
 			return false;
 		}
+	}
+
+	if (exactDestination === "youtube" || exactDestination === "youtubeshorts") {
+		return getExactYouTubeRelaySourceType(tab, sourceType) === exactDestination;
 	}
 
 	return normalizeSourceControlPlatform(sourceType) === normalizedDestination;
@@ -13886,13 +16571,14 @@ function isWebsocketSourceTabUrl(url) {
 	return !!(url && url.includes("/sources/websocket/") && (url.includes("socialstream.ninja") || url.startsWith("file://") || url.startsWith("chrome-extension://")));
 }
 
-function relayMessageToWebsocketSourceTab(tabId, message) {
+function relayMessageToWebsocketSourceTab(tabId, message, messageOrigin = "relay") {
 	try {
 		chrome.tabs.sendMessage(
 			tabId,
 			{
 				type: "SEND_MESSAGE",
-				message: message
+				message: message,
+				messageOrigin: messageOrigin
 			},
 			function () {
 				chrome.runtime.lastError;
@@ -14035,8 +16721,8 @@ async function dispatchRelayMessageToTab(tab, data, options = {}) {
 		return;
 	}
 
-	if (isWebsocketSourceTabUrl(url)) {
-		if (relayMessageToWebsocketSourceTab(tab.id, data.response)) {
+	if (isWebsocketSourceTabUrl(url) || (isSSAPP && tab.virtualSourceTarget === "discord")) {
+		if (relayMessageToWebsocketSourceTab(tab.id, data.response, messageOrigin)) {
 			relayTabContext.storeMessage(data.response);
 			lastSentMessage = sanitizeMessageForTracking(data.response, false);
 			lastSentTimestamp = now;
@@ -14114,7 +16800,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		return false;
 	}
 
-	const messageOrigin = data.outgoingOrigin || (data.bot ? "chatbot" : data.host ? "host" : "relay");
+	const messageOrigin = data.outgoingOrigin || (data.bot || data.botRoleControlled ? "chatbot" : data.host ? "host" : "relay");
 
 	if (messageOrigin === "host" && getSettingFlag("aiAutoTranslateOutgoing")) {
 		try {
@@ -14150,15 +16836,6 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 
 	const shouldCheckDynamicPerTab = antispam && settings["dynamictiming"];
 
-	if (!reverse && !overrideTimeout && data.tid) {
-		// we do this early to avoid the blue bar if not needed
-		if (data.tid in messageTimeout) {
-			if (now - messageTimeout[data.tid] < overrideTimeout) {
-				return;
-			}
-		}
-	}
-
 	lastAntiSpam = messageCounter;
 
 	if (settings.s10apikey && settings.s10) {
@@ -14167,6 +16844,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		} catch (e) {}
 	}
 
+	let processedAnyTab = false;
 	try {
 		let tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
 		let routingData = data;
@@ -14196,10 +16874,13 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		tabs = filterRelayCandidateTabs(tabs, routingData, roleRoutingReverse);
 
 		var published = {};
-		let processedAnyTab = false;
 
 		const processTab = async tab => {
 			processedAnyTab = true;
+			// Apply the configured delay to the resolved destination, including bot-account routing.
+			if (overrideTimeout > 0 && tab.id in messageTimeout && Date.now() - messageTimeout[tab.id] < overrideTimeout) {
+				return;
+			}
 			await dispatchRelayMessageToTab(tab, routingData, {
 				now: now,
 				overrideTimeout: overrideTimeout,
@@ -14225,7 +16906,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		return false;
 	}
 
-	return true;
+	return processedAnyTab;
 }
 
 // Helper function to check if a tab is valid for processing
@@ -14250,12 +16931,6 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
 			return false;
 		}
 	}
-	if (reverse && !overrideTimeout && tab.id) {
-		if (tab.id in messageTimeout && now - messageTimeout[tab.id] < overrideTimeout) {
-			return false;
-		}
-	}
-
 	if (relayMode && relaytargets) {
 		if (!sourceType || !relaytargets.includes(sourceType)) {
 			return false;
@@ -14608,6 +17283,9 @@ function resolveThrottleProfile(tabId, throttleProfile, overrideTimeout) {
 			maxQueue: MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT
 		};
 	}
+	if (typeof overrideTimeout === "number" && overrideTimeout > 0) {
+		profile.minInterval = Math.max(profile.minInterval, overrideTimeout);
+	}
 
 	profile.maxQueue = Number.isFinite(profile.maxQueue) ? Math.max(0, profile.maxQueue) : MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT;
 
@@ -14623,7 +17301,7 @@ function ensureThrottleState(tabId) {
 	if (!state) {
 		state = {
 			queue: [],
-			lastSent: 0,
+			lastSent: messageTimeout[tabId] || 0,
 			processing: false,
 			timer: null
 		};
@@ -15019,15 +17697,23 @@ async function performGeneralFakeChatSend(tabId, { message, middle = true, keypr
 			return;
 		}
 
+		if (settings.limitcharactersstate) {
+			const limit = settings.limitcharacters?.numbersetting || 200;
+			const originalMessage = sanitizeMessageForTracking(message, false);
+			message = limitString(message, limit);
+			const entries = messageStore[tabId] || [];
+			for (let i = entries.length - 1; i >= 0; i--) {
+				if (entries[i].message === originalMessage) {
+					entries[i].message = sanitizeMessageForTracking(message, false);
+					break;
+				}
+			}
+		}
+
 		lastSentMessage = message.replace(/<\/?[^>]+(>|$)/g, "").replace(/\s\s+/g, " ");
 		lastSentTimestamp = Date.now();
 		lastMessageCounter = 0;
 		messageTimeout[tabId] = Date.now();
-
-		if (settings.limitcharactersstate) {
-			const limit = settings.limitcharacters?.numbersetting || 200;
-			message = limitString(message, limit);
-		}
 
 		if (backspace) {
 			try {
@@ -15390,33 +18076,15 @@ async function applyBotActions(data, tab = false) {
 			altSourceType = "youtube";
 		}
 
-		const normalizeRoleIdentifier = value => {
-			if (value === undefined || value === null) return "";
-			return String(value).toLowerCase().trim().replace(/^@+/, "");
-		};
 		const roleUserIdLower = normalizeRoleIdentifier(data.userid);
 		const roleChatNameLower = normalizeRoleIdentifier(data.chatname);
-		const useCaptureNameForRoles = altSourceType == "youtube" || altSourceType == "kick";
-		const primaryRoleIdentifier = useCaptureNameForRoles ? roleChatNameLower || roleUserIdLower : roleUserIdLower || roleChatNameLower;
-		const roleIdentifierMatches = name => {
-			name = normalizeRoleIdentifier(name);
-			if (!name) return false;
-			if (settings.matchRolesByDisplayName) {
-				return name === roleUserIdLower || name === roleChatNameLower;
-			}
-			return name === primaryRoleIdentifier;
-		};
 
 		if (settings.blacklistuserstoggle && settings.blacklistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return null;
+				if (!roleUserIdLower && !roleChatNameLower) return null;
 
 				const blacklist = getCachedRoleList(settings.blacklistusers.textsetting);
-
-				const isBlocked = blacklist.some(entry => {
-					return entry.type ? entry.name === userIdentifier && entry.type === altSourceType : entry.name === userIdentifier;
-				});
+				const isBlocked = blacklist.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 
 				if (isBlocked) {
 					return null;
@@ -15429,14 +18097,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (settings.whitelistuserstoggle && settings.whitelistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return null;
+				if (!roleUserIdLower && !roleChatNameLower) return null;
 
 				const whitelist = getCachedRoleList(settings.whitelistusers.textsetting);
-
-				const isWhitelisted = whitelist.some(entry => {
-					return entry.type ? entry.name === userIdentifier && entry.type === altSourceType : entry.name === userIdentifier;
-				});
+				const isWhitelisted = whitelist.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 
 				if (!isWhitelisted) {
 					return null;
@@ -15459,12 +18123,7 @@ async function applyBotActions(data, tab = false) {
 
 				const bots = getCachedRoleList(settings.botnamesext.textsetting);
 
-				data.bot = bots.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					return roleIdentifierMatches(entry.name);
-				});
+				data.bot = bots.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 				data.bot = false;
@@ -15479,21 +18138,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.host && settings.hostnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const hosts = getCachedRoleList(settings.hostnamesext.textsetting);
-
-				data.host = hosts.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.host = hosts.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 				data.host = false;
@@ -15532,21 +18180,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.mod && settings.modnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const mods = getCachedRoleList(settings.modnamesext.textsetting);
-
-				data.mod = mods.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.mod = mods.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 				data.mod = false;
@@ -15562,21 +18199,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.admin && settings.adminnames?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const admins = getCachedRoleList(settings.adminnames.textsetting);
-
-				data.admin = admins.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.admin = admins.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 			}
@@ -15584,21 +18210,10 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.vip && settings.viplistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdLower = (data.userid || "").toLowerCase().trim();
-				const chatNameLower = (data.chatname || "").toLowerCase().trim();
-				if (!userIdLower && !chatNameLower) return;
+				if (!roleUserIdLower && !roleChatNameLower) return;
 
 				const vips = getCachedRoleList(settings.viplistusers.textsetting);
-
-				data.vip = vips.some(entry => {
-					const typeMatches = !entry.type || entry.type === altSourceType;
-					if (!typeMatches) return false;
-
-					if (settings.matchRolesByDisplayName) {
-						return entry.name === userIdLower || entry.name === chatNameLower;
-					}
-					return entry.name === (userIdLower || chatNameLower);
-				});
+				data.vip = vips.some(entry => matchesConfiguredUser(entry, data, altSourceType));
 			} catch (e) {
 				errorlog(e);
 			}
@@ -16116,256 +18731,8 @@ async function applyBotActions(data, tab = false) {
 			//}
 		}
 
-		if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy && data.chatmessage && data.chatmessage.indexOf("!giphy") != -1 && !data.contentimg) {
-			let giphySearchTerm = data.chatmessage;
-			giphySearchTerm = giphySearchTerm.replaceAll("!giphy", "").trim();
-			if (giphySearchTerm) {
-				let giphyOrder = 0;
-				if (settings.randomgif) {
-					giphyOrder = parseInt(Math.random() * 15);
-				}
-				const giphyUrl = await fetch("https://api.giphy.com/v1/gifs/search?q=" + encodeURIComponent(giphySearchTerm) + "&api_key=" + settings.giphyKey.textsetting + "&limit=1&offset=" + giphyOrder)
-					.then(response => response.json())
-					.then(response => {
-						try {
-							return response.data[0].images.downsized_large.url;
-						} catch (e) {
-							console.error(e);
-							return false;
-						}
-					});
-				if (giphyUrl) {
-					data.contentimg = giphyUrl;
-					if (settings.hidegiphytrigger) {
-						data.chatmessage = "";
-					}
-				} else if (!data.hasDonation && !data.contentimg) {
-					return false;
-				}
-			}
-		} else if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy2 && data.chatmessage && data.chatmessage.indexOf("#") != -1 && !data.contentimg) {
-			const messageText = data.textContent || data.chatmessage;
-			const xx = messageText.split(" ");
-			for (let tagIndex = 0; tagIndex < xx.length; tagIndex++) {
-				let word = xx[tagIndex];
-				if (!word.startsWith("#")) {
-					continue;
-				}
-				word = word.replaceAll("#", " ").trim();
-				if (word) {
-					let order = 0;
-					if (tagIndex + 1 < xx.length) {
-						order = parseInt(xx[tagIndex + 1]) || 0;
-					}
-
-					if (settings.hidegiphytrigger) {
-						if (messageText.includes("#" + word + " " + order)) {
-							data.chatmessage = data.chatmessage.replace("#" + word + " " + order, "");
-						} else if (messageText.includes("#" + word + " ")) {
-							data.chatmessage = data.chatmessage.replace("#" + word + " ", "");
-						} else {
-							data.chatmessage = data.chatmessage.replace("#" + word, "");
-						}
-						data.chatmessage = data.chatmessage.trim();
-					}
-
-					if (settings.randomgif) {
-						order = parseInt(Math.random() * 15);
-					}
-					const gurl = await fetch("https://api.giphy.com/v1/gifs/search?q=" + encodeURIComponent(word) + "&api_key=" + settings.giphyKey.textsetting + "&limit=1&offset=" + order)
-						.then(response => response.json())
-						.then(response => {
-							try {
-								return response.data[0].images.downsized_large.url;
-							} catch (e) {
-								return false;
-							}
-						});
-
-					if (gurl) {
-						data.contentimg = gurl;
-						break;
-					}
-
-					if (!data.contentimg && !data.chatmessage && !data.hasDonation) {
-						return false;
-					}
-				}
-			}
-			// curl "https://tenor.googleapis.com/v2/search?q=excited&key=&client_key=my_test_app&limit=8"
-		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.tenor && data.chatmessage && data.chatmessage.indexOf("!tenor") != -1 && !data.contentimg) {
-			let searchGif = data.chatmessage;
-			searchGif = searchGif.replaceAll("!tenor", "").trim();
-			if (searchGif) {
-				let order = 1;
-				if (settings.randomgif) {
-					order = parseInt(Math.random() * 15) + 1;
-				}
-				const gurl = await fetch("https://tenor.googleapis.com/v2/search?contentfilter=high&media_filter=tinygif,tinywebp_transparent&q=" + encodeURIComponent(searchGif) + "&key=" + settings.tenorKey.textsetting + "&limit=" + order)
-					.then(response => response.json())
-					.then(response => {
-						try {
-							if (response.results.length < order - 1) {
-								order = response.results.length;
-							}
-							if (response.results[order - 1].media_formats.tinywebp_transparent) {
-								return response.results[order - 1].media_formats.tinywebp_transparent.url;
-							} else if (response.results[order - 1].media_formats.tinygif) {
-								return response.results[order - 1].media_formats.tinygif.url;
-							} else {
-								return false;
-							}
-						} catch (e) {
-							console.error(e);
-							return false;
-						}
-					});
-				if (gurl) {
-					data.contentimg = gurl;
-					if (settings.hidegiphytrigger) {
-						data.chatmessage = "";
-					}
-				} else if (!data.hasDonation && !data.contentimg) {
-					return false;
-				}
-			}
-		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.giphy2 && data.chatmessage && data.chatmessage.indexOf("##") != -1 && !data.contentimg) {
-			const xx = data.chatmessage.split(" ");
-			for (let tagIndex = 0; tagIndex < xx.length; tagIndex++) {
-				let word = xx[tagIndex];
-				if (!word.startsWith("##")) {
-					continue;
-				}
-				word = word.trim();
-				search_word = word.replace(/[-_]/g, " ");
-				search_word = search_word.replace(/[^\w\s]/g, "");
-
-				if (word) {
-					let order = 1; // Start from 1
-					if (tagIndex + 1 < xx.length) {
-						order = parseInt(xx[tagIndex + 1]) || 1;
-					}
-
-					if (settings.hidegiphytrigger) {
-						let re = new RegExp(word + " " + order, "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						re = new RegExp(word + " ", "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						re = new RegExp(word, "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						data.chatmessage = data.chatmessage.trim();
-					}
-					let skip = false;
-					if (tagIndex + 1 < xx.length) {
-						if (xx[tagIndex + 1] == order) {
-							skip = true;
-						}
-					}
-					if (!skip && settings.randomgif) {
-						order = parseInt(Math.random() * 8) + 1; // Adjust for 1-based indexing and 8 stickers randomization, because less actual amount
-					}
-					if (order > 40) {
-						order = 40;
-					}
-					const gurl = await fetch("https://tenor.googleapis.com/v2/search?contentfilter=high&searchfilter=sticker&media_filter=tinygif,tinywebp_transparent&q=" + encodeURIComponent(search_word) + "&key=" + settings.tenorKey.textsetting + "&limit=" + order)
-						.then(response => response.json())
-						.then(response => {
-							try {
-								if (response.results.length < order - 1) {
-									order = response.results.length;
-								}
-								if (response.results[order - 1].media_formats.tinywebp_transparent) {
-									return response.results[order - 1].media_formats.tinywebp_transparent.url;
-								} else if (response.results[order - 1].media_formats.tinygif) {
-									return response.results[order - 1].media_formats.tinygif.url;
-								} else {
-									return false;
-								}
-							} catch (e) {
-								console.error(e);
-								return false;
-							}
-						});
-
-					if (gurl) {
-						data.contentimg = gurl;
-						break;
-					}
-
-					if (!data.contentimg && !data.chatmessage && !data.hasDonation) {
-						return false;
-					}
-				}
-			}
-		} else if (settings.tenorKey && settings.tenorKey.textsetting && settings.giphy2 && data.chatmessage && data.chatmessage.indexOf("#") != -1 && !data.contentimg) {
-			const xx = data.chatmessage.split(" ");
-			for (let tagIndex = 0; tagIndex < xx.length; tagIndex++) {
-				let word = xx[tagIndex];
-				if (!word.startsWith("#")) {
-					continue;
-				}
-				word = word.trim();
-				search_word = word.replace(/[-_]/g, " ");
-				search_word = search_word.replace(/[^\w\s]/g, "");
-
-				if (word) {
-					let order = 1; // Start from 1
-					if (tagIndex + 1 < xx.length) {
-						order = parseInt(xx[tagIndex + 1]) || 1;
-					}
-
-					if (settings.hidegiphytrigger) {
-						let re = new RegExp(word + " " + order, "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						re = new RegExp(word + " ", "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						re = new RegExp(word, "g");
-						data.chatmessage = data.chatmessage.replace(re, "");
-						data.chatmessage = data.chatmessage.trim();
-					}
-					let skip = false;
-					if (tagIndex + 1 < xx.length) {
-						if (xx[tagIndex + 1] == order) {
-							skip = true;
-						}
-					}
-					if (!skip && settings.randomgif) {
-						order = parseInt(Math.random() * 15) + 1; // Adjust for 1-based indexing
-					}
-					if (order > 40) {
-						order = 40;
-					}
-					const gurl = await fetch("https://tenor.googleapis.com/v2/search?contentfilter=high&media_filter=tinygif,tinywebp_transparent&q=" + encodeURIComponent(search_word) + "&key=" + settings.tenorKey.textsetting + "&limit=" + order)
-						.then(response => response.json())
-						.then(response => {
-							try {
-								if (response.results.length < order - 1) {
-									order = response.results.length;
-								}
-								if (response.results[order - 1].media_formats.tinywebp_transparent) {
-									return response.results[order - 1].media_formats.tinywebp_transparent.url;
-								} else if (response.results[order - 1].media_formats.tinygif) {
-									return response.results[order - 1].media_formats.tinygif.url;
-								} else {
-									return false;
-								}
-							} catch (e) {
-								console.error(e);
-								return false;
-							}
-						});
-
-					if (gurl) {
-						data.contentimg = gurl;
-						break;
-					}
-
-					if (!data.contentimg && !data.chatmessage && !data.hasDonation) {
-						return false;
-					}
-				}
-			}
-		}
+		applyExternalGifToMessage(data, settings);
+		await applyGiphyToMessage(data, settings);
 	} catch (e) {
 		console.error(e);
 	}
@@ -16427,6 +18794,14 @@ async function applyBotActions(data, tab = false) {
 		if (settings.defaultavatar.textsetting && !data.chatimg) {
 			data.chatimg = settings.defaultavatar.textsetting;
 		}
+	}
+
+	try {
+		if (settings.waitlistmode && processWaitlistControlCommand(data)) {
+			return null;
+		}
+	} catch (e) {
+		console.error(e);
 	}
 
 	try {
@@ -16529,7 +18904,7 @@ async function applyBotActions(data, tab = false) {
 				console.log(e); // ai.js file missing?
 			}
 		}
-		if (settings.ollama) {
+		if (isAiChatbotEnabled()) {
 			try {
 				if (settings.modLLMonly) {
 					if (data.mod) {
@@ -16548,6 +18923,8 @@ async function applyBotActions(data, tab = false) {
 				console.log(e); // ai.js file missing?
 			}
 		}
+
+		{}
 
 		const emoteOnlyModeEnabled = !!(settings.emoteonlymode && (settings.emoteonlymode.setting ?? settings.emoteonlymode));
 		if (emoteOnlyModeEnabled && hadOriginalChatMessage) {
@@ -16808,8 +19185,15 @@ async function fetchData(url, useLocalFs = false) {
 	}
 }
 
-// Example usage in window.onload:
-window.onload = async function () {
+let backgroundInitializationStarted = false;
+async function initializeBackgroundSettings() {
+	if (backgroundInitializationStarted) return;
+	// SSApp's verified downloads can finish after the browser load event.
+	// The loader calls this explicitly once the full script sequence is ready.
+	if (window.ssappBackgroundLoadState?.status === 'loading'
+		&& window.ssappFallback && typeof window.ssappFallback.fetchBackgroundScript === 'function'
+		&& location.protocol === 'https:') return;
+	backgroundInitializationStarted = true;
 	// Pass true as second parameter to force local file system in Electron
 	let programmedSettings = await fetchData("settings.json", true);
 	if (programmedSettings && typeof programmedSettings === "object") {
@@ -16879,7 +19263,8 @@ window.onload = async function () {
 			});
 		});
 	}
-};
+}
+window.onload = initializeBackgroundSettings;
 
 let fileHandleTicker;
 let fileContentTicker = "";
@@ -17085,6 +19470,33 @@ async function initializeFileHandles() {
 			});
 		}
 
+		const savedLiveStatsFilePathRaw = localStorage.getItem("savedLiveStatsFilePath");
+		const savedLiveStatsFilePath = sanitizeNativeFilePath(savedLiveStatsFilePathRaw);
+		if (savedLiveStatsFilePathRaw && !savedLiveStatsFilePath) {
+			console.warn("[LiveStats] Invalid live stats file path detected. Clearing remembered value.");
+			localStorage.removeItem("savedLiveStatsFilePath");
+		}
+		if (savedLiveStatsFilePath) {
+			liveStatsFileHandle = savedLiveStatsFilePath;
+			liveStatsWriterGeneration += 1;
+			await updateHandleStatus("liveStats", {
+				name: getFileHandleDisplayName(savedLiveStatsFilePath),
+				status: HANDLE_STATUS_STATES.ACTIVE,
+				detail: "",
+				persisted: true
+			});
+			if (Object.keys(liveStatsSnapshot.platforms).length) {
+				await writeLiveStatsSnapshot();
+			}
+		} else {
+			await updateHandleStatus("liveStats", {
+				name: null,
+				status: HANDLE_STATUS_STATES.MISSING,
+				detail: "",
+				persisted: false
+			});
+		}
+
 		// Restore saved names file handle
 		const savedNamesFilePathRaw = localStorage.getItem("savedNamesFilePath");
 		const savedNamesFilePath = sanitizeNativeFilePath(savedNamesFilePathRaw);
@@ -17176,6 +19588,32 @@ async function initializeFileHandles() {
 		await updateHandleStatus("chatLog", {
 			status: HANDLE_STATUS_STATES.ERROR,
 			detail: "Could not restore chat log file",
+			persisted: false
+		});
+	}
+
+	try {
+		const restoredLiveStatsHandle = await restoreBrowserHandle(HANDLE_KEYS.liveStats, "readwrite");
+		if (restoredLiveStatsHandle) {
+			liveStatsFileHandle = restoredLiveStatsHandle;
+			liveStatsWriterGeneration += 1;
+			await updateHandleStatus("liveStats", {
+				name: getFileHandleDisplayName(restoredLiveStatsHandle),
+				status: HANDLE_STATUS_STATES.ACTIVE,
+				detail: "",
+				persisted: true
+			});
+			if (Object.keys(liveStatsSnapshot.platforms).length) {
+				await writeLiveStatsSnapshot();
+			}
+		} else {
+			await markHandleNeedsAttention("liveStats", "Select a file to save current live stats");
+		}
+	} catch (error) {
+		console.warn("Could not restore live stats handle:", error);
+		await updateHandleStatus("liveStats", {
+			status: HANDLE_STATUS_STATES.ERROR,
+			detail: "Could not restore live stats file",
 			persisted: false
 		});
 	}
@@ -17736,6 +20174,7 @@ let tmp = new EventFlowSystem({
 	messageStore: messageStore || {}, // Share the message store for duplicate detection
 	handleMessageStore: handleMessageStore || null, // Share the message store handler
 	sendTargetP2P: window.sendTargetP2P || null, // Add sendTargetP2P for OBS and other actions
+	printThermal: printThermal,
 	// Handle Spotify actions locally since we're already in background.js
 	sendMessageToBackground: async msg => {
 		if (!msg || typeof msg !== "object") return;
@@ -17753,6 +20192,19 @@ let tmp = new EventFlowSystem({
 tmp.initPromise
 	.then(() => {
 		window.eventFlowSystem = tmp;
+        // Native-only channel, separate from untrusted chat and overlay messages.
+        if (window.ninjafy && typeof window.ninjafy.syncVoiceCommands === 'function') {
+            const syncVoiceCommands = () => {
+                const commands = [];
+                tmp.flows.filter(f => f.active).forEach(f => f.nodes.forEach(n => {
+                    if (n.type === 'trigger' && n.triggerType === 'voicePhrase') commands.push({flowId:f.id,nodeId:n.id,phrase:n.config.phrase || '',cooldown:n.config.cooldown || 5});
+                }));
+                window.ninjafy.syncVoiceCommands(commands).catch(() => {});
+            };
+            window.ninjafy.onVoiceCommand(payload => tmp.processVoiceCommand(payload).catch(() => {}));
+            syncVoiceCommands();setInterval(syncVoiceCommands, 1500);
+        }
+
 		// Start periodic scheduler so time-based triggers (timeInterval/timeOfDay) work without incoming messages
 		try {
 			tmp.startScheduler && tmp.startScheduler();
@@ -17771,3 +20223,98 @@ window.addEventListener("beforeunload", async function () {
 window.addEventListener("unload", async function () {
 	document.title = "Close me - Social Stream Ninja";
 });
+
+function getExternalGifUrl(value) {
+    if (typeof value !== "string" || value.length > 2048) return "";
+    try {
+        const safeUrl = sanitizeRelayUrl(value, false);
+        const url = new URL(safeUrl);
+        if (!/^https?:$/.test(url.protocol) || url.username || url.password || !/\.gif$/i.test(url.pathname)) return "";
+        return url.href;
+    } catch (e) {
+        return "";
+    }
+}
+
+function findExternalGifInText(text) {
+    const links = /(?:^|[\s([{<>"'\u0060\u2018\u201c])(https?:\/\/[^\s<>"'\u0060\u2018\u2019\u201c\u201d]+)/gi;
+    let match;
+    while ((match = links.exec(text))) {
+        // Keep valid query strings intact; trim sentence punctuation only when needed.
+        const url = getExternalGifUrl(match[1]) || getExternalGifUrl(match[1].replace(/[.,!?;:)\]}]+$/, ""));
+        if (url) return url;
+    }
+    return "";
+}
+
+function applyExternalGifToMessage(data, gifSettings) {
+    if (!gifSettings.allowExternalGifs || gifSettings.removeContentImage || data.contentimg || typeof data.chatmessage !== "string") return;
+    let url = "";
+    // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
+    if (data.textonly) {
+        url = findExternalGifInText(data.chatmessage);
+    } else {
+        // A template keeps source HTML inert: extracting links must not load images or run scripts.
+        const template = document.createElement("template");
+        template.innerHTML = data.chatmessage;
+        template.content.querySelectorAll("script,style,noscript,template,iframe,object").forEach(node => node.remove());
+        const walker = document.createTreeWalker(template.content, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+        let node;
+        while ((node = walker.nextNode())) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                url = findExternalGifInText(node.textContent);
+            } else if (node.tagName === "A") {
+                url = getExternalGifUrl(node.getAttribute("href"));
+            }
+            if (url) break;
+        }
+    }
+    // Preserve the message/link as a fallback if the remote image cannot load.
+    if (url) {
+        data.contentimg = url;
+        if (gifSettings.hideExternalGifUrl && (data.meta == null || (typeof data.meta === "object" && !Array.isArray(data.meta)))) {
+            data.meta = Object.assign({}, data.meta, { hideExternalGifUrl: true });
+        }
+    }
+}
+
+// Tenor search was retired June 2026. Saved !tenor toggles remain GIPHY aliases;
+// API keys are provider-specific and must never be reused across providers.
+async function applyGiphyToMessage(data, gifSettings) {
+    const key = gifSettings.giphyKey && gifSettings.giphyKey.textsetting;
+    if (!key || !data.chatmessage || data.contentimg) return;
+    const message = data.textContent || data.chatmessage;
+    let query = "", endpoint = "gifs", trigger = "", offset = 0, command = false;
+    const commandMatch = message.match(/(?:^|\s)(!(giphy|tenor))\s+(.+)/i);
+    if (commandMatch && ((commandMatch[2].toLowerCase() === "giphy" && gifSettings.giphy) ||
+        (commandMatch[2].toLowerCase() === "tenor" && gifSettings.tenor))) {
+        query = commandMatch[3].trim();
+        command = true;
+    } else if (gifSettings.giphy2) {
+        const tag = message.match(/(?:^|\s)(#{1,2}[^\s#]+)(?:\s+(\d+)(?=\s|$))?/);
+        if (tag) {
+            endpoint = tag[1].indexOf("##") === 0 ? "stickers" : "gifs";
+            query = tag[1].replace(/^#+/, "").replace(/[-_]/g, " ").trim();
+            trigger = tag[1] + (tag[2] !== undefined ? " " + tag[2] : "");
+            offset = Math.min(4999, parseInt(tag[2], 10) || 0);
+        }
+    }
+    if (!query) return;
+    if (gifSettings.randomgif) offset = Math.floor(Math.random() * 10);
+    try {
+        const response = await fetch("https://api.giphy.com/v1/" + endpoint + "/search?q=" +
+            encodeURIComponent(query) + "&api_key=" + encodeURIComponent(key) + "&limit=1&rating=g&offset=" + offset);
+        if (!response.ok) return;
+        const result = await response.json();
+        const item = result && result.data && result.data[0];
+        const images = item && item.images;
+        const image = images && (images.downsized_large || images.fixed_height || images.original);
+        if (!image || !/^https:\/\//i.test(image.url || "")) return;
+        data.contentimg = image.url;
+        if (gifSettings.hidegiphytrigger) {
+            data.chatmessage = command ? "" : data.chatmessage.replace(trigger, "").trim();
+        }
+    } catch (e) {
+        // Network failures and rate limits must not discard the original chat message.
+    }
+}

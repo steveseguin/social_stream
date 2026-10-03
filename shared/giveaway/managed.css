@@ -1,0 +1,19 @@
+﻿/* The audience sees only the presentation; host controls remain in the popup/API. */
+body.managed-giveaway { background:transparent; min-height:100vh; padding:20px; }
+.managed-giveaway .app-header, .managed-giveaway header, .managed-giveaway .col-right,
+.managed-giveaway .spin-row, .managed-giveaway .stats-row, .managed-giveaway #winner-display { display:none; }
+.managed-giveaway .layout { display:block; }
+.managed-giveaway .page { max-width:900px; margin:auto; padding:0; }
+.managed-giveaway .giveaway-stage { background:var(--bg); border:1px solid var(--panel-border); border-radius:20px; padding:32px; text-align:center; }
+.managed-giveaway .giveaway-stage h1 { font-size:28px; margin:0 0 16px; }
+.managed-giveaway .giveaway-stage p { margin:12px 0; font-size:20px; }
+.managed-giveaway .giveaway-result { color:var(--accent); font-size:48px; font-weight:bold; min-height:1.3em; overflow-wrap:anywhere; }
+.managed-giveaway[data-presentation="card"] .col-left > .card,
+.managed-giveaway[data-presentation="reel"] .col-left > .card { display:none; }
+.managed-giveaway[data-presentation="reel"] .giveaway-result { border-top:2px solid var(--accent); border-bottom:2px solid var(--accent); padding:20px 0; }
+.managed-giveaway[data-presentation="wheel"] .col-left > .card { background:var(--bg); max-width:560px; margin:16px auto; }
+.managed-giveaway[data-backdrop="transparent"] .giveaway-stage,
+.managed-giveaway[data-backdrop="transparent"] .col-left > .card { background:transparent; border-color:transparent; box-shadow:none; }
+.managed-giveaway[data-backdrop="transparent"] .giveaway-stage { text-shadow:0 1px 3px #000,0 0 7px #000; color:#fff; }
+.managed-giveaway .giveaway-stage { overflow-wrap:anywhere; }
+@media (max-width:480px) { body.managed-giveaway {padding:8px;} .managed-giveaway .giveaway-stage {padding:12px;} .managed-giveaway .giveaway-result {font-size:32px;} }

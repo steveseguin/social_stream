@@ -1585,6 +1585,7 @@
 	  if (kickUsername && chatname){
 		  chatimg = await getKickAvatarImage(chatname, kickUsername) || "";
 	  }
+	  if (deleteThis(ele)) return;
 	  
 	  var data = {};
 	  
@@ -1915,6 +1916,7 @@
 	  if (kickUsername && chatname){
 		  chatimg = await getKickAvatarImage(chatname, kickUsername) || "";
 	  }
+	  if (deleteThis(ele)) return;
 	  
 	  var data = {};
 	  

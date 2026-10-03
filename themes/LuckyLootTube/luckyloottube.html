@@ -2,6 +2,11 @@
 <html lang="en">
 
 <head>
+    <meta charset="UTF-8" />
+    <meta name="description" content="From LuckyLootTube with Love: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+<script src="../../js/local-server-url.js"></script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>From LuckyLootTube with Love</title>
@@ -615,7 +620,12 @@ if (urlParams.has("chroma")) {
 }
 if (urlParams.has("font")) {
     const _fs = parseInt(urlParams.get("font"), 10);
-    if (!isNaN(_fs) && _fs > 0) { document.documentElement.style.fontSize = _fs + "px"; }
+    if (!isNaN(_fs) && _fs > 0) {
+        document.documentElement.style.fontSize = _fs + "px";
+        document.documentElement.style.setProperty("--msgSize", _fs + "px");
+        document.documentElement.style.setProperty("--nameSize", Math.round(_fs * 1.4) + "px");
+        document.body.style.fontSize = _fs + "px";
+    }
 }
 if (urlParams.has("fontfamily")) {
     const _ff = (urlParams.get("fontfamily") || "").trim();
@@ -972,11 +982,11 @@ function processData(data) {
 if (!data) return;
 if (data.content) data = data.content;
 if (hideBots && data.bot) return;
-if (data.chatmessage) addMessage(data);
+if (data.chatmessage || data.contentimg || data.hasDonation) addMessage(data);
 }
 
 const session = urlParams.get('session');
-if (session) {
+if (session && !SocialStreamLocalServer.connectLocalRelay(urlParams, session, processData, false)) {
 const iframe = document.createElement("iframe");
 const filename = "dock";
 const password = urlParams.get('password') || 'false';

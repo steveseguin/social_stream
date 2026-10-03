@@ -25,6 +25,7 @@ const SETTINGS_CATEGORIES = Object.freeze({
   'must_enable_the_trigger_to_use': { label: "Must enable the trigger to use", order: 47 },
   'other_customization_options': { label: "Other customization options", order: 48 },
   'configure_select_a_winner_draw_mode': { label: "Configure select-a-winner draw mode", order: 57 },
+  'chat_control_commands': { label: "Chat control commands", order: 58 },
   'poll_settings': { label: "Poll Settings", order: 64 },
   'top_bar_settings': { label: "Top Bar Settings", order: 71 },
   'custom_gif_commands_settings': { label: "Custom GIF Commands Settings", order: 116 },
@@ -39,7 +40,8 @@ const SETTINGS_CATEGORIES = Object.freeze({
   'general_settings': { label: "General Settings", order: 126 },
   'commands': { label: "Commands", order: 127 },
   'management': { label: "Management", order: 128 },
-  'giphy_tenor_support': { label: "Giphy/Tenor support", order: 130 },
+  'custom_javascript': { label: "Custom JavaScript", order: 129 },
+  'giphy_tenor_support': { label: "GIPHY GIFs and stickers", order: 130 },
   'trigger_webhook_url_by_a_command': { label: "Trigger webhook URL by a !command", order: 131 },
   'send_fixed_messages_at_intervals': { label: "Send fixed messages at intervals", order: 132 },
   'auto_responder': { label: "Auto-responder", order: 133 },
@@ -130,7 +132,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "bedrockmodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "Bedrock model identifier to request (for example anthropic.claude-v2)."
+    description: "Bedrock model identifier to request (for example anthropic.claude-sonnet-5)."
   },
   "beepvolume": {
     type: "number",
@@ -192,6 +194,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "custom_injection",
     description: "Block stream events (follows, likes, subs) from appearing anywhere."
   },
+  "showtwitchwatchstreaks": {
+    type: "boolean",
+    category: "custom_injection",
+    description: "Opt in to Twitch Watch Streak notices shared by viewers."
+  },
   "capturejoinedevent": {
     type: "boolean",
     category: "custom_injection",
@@ -200,7 +207,17 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "capturelikeevent": {
     type: "boolean",
     category: "custom_injection",
-    description: "Allow 'liked' stream events in TikTok (high volume)"
+    description: "Include individual 'liked' events from supported platforms in the main chat/events feed"
+  },
+  "captureliketotals": {
+    type: "boolean",
+    category: "custom_injection",
+    description: "Send absolute platform like totals to the dock feed and custom consumers"
+  },
+  "captureyoutubelikes": {
+    type: "boolean",
+    category: "youtube_api",
+    description: "Legacy compatibility alias for captureliketotals"
   },
   "chatbotHistoryTotal": {
     type: "number",
@@ -222,10 +239,30 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "configure_llm_api",
     description: "OpenAI API key used when the ChatGPT provider is selected."
   },
+  "cohostSpotifyControl": {
+    type: "boolean",
+    category: "configure_llm_api",
+    description: "Allow explicitly requested co-host Spotify controls."
+  },
+  "cohostObsControl": {
+    type: "boolean",
+    category: "configure_llm_api",
+    description: "Allow explicitly requested co-host OBS scene changes."
+  },
+  "cohostObsScenes": {
+    type: "text",
+    category: "configure_llm_api",
+    description: "Comma-separated OBS scene names the co-host is allowed to select."
+  },
+  "cohostFeaturedChatControl": {
+    type: "boolean",
+    category: "configure_llm_api",
+    description: "Allow explicitly requested co-host feature and clear chat actions."
+  },
   "chatgptmodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "Model slug to request from OpenAI (for example gpt-4o-mini)."
+    description: "Model slug to request from OpenAI (for example gpt-5.4-mini)."
   },
   "chatwebhookpost": {
     type: "boolean",
@@ -412,6 +449,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "configure_llm_api",
     description: "Model identifier or folder name override for the Local Qwen browser model."
   },
+  
   "customdiscordchannel": {
     type: "text",
     category: "opt_in_options",
@@ -490,7 +528,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "deepseekmodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "DeepSeek model name to request (e.g., deepseek-chat)."
+    description: "DeepSeek model name to request (e.g., deepseek-v4-flash)."
   },
   "defaultavatar": {
     type: "text",
@@ -727,6 +765,16 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "configure_llm_api",
     description: "Gemini model identifier to call (for example gemini-2.5-flash)."
   },
+  "allowExternalGifs": {
+    type: "boolean",
+    category: "giphy_tenor_support",
+    description: "Display the first direct HTTP(S) GIF link in chat, including .gif URLs with query parameters. Disabled by default; no API key required. External images are not content-filtered."
+  },
+  "hideExternalGifUrl": {
+    type: "boolean",
+    category: "giphy_tenor_support",
+    description: "Hide a detected external GIF link in the dock and featured overlay only after its image loads. Preserve other text and keep the link on failure. Disabled by default."
+  },
   "giphy": {
     type: "boolean",
     category: "giphy_tenor_support",
@@ -735,7 +783,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "giphy2": {
     type: "boolean",
     category: "giphy_tenor_support",
-    description: "When enabled, include a GIF when #{somekeyword} is used."
+    description: "When enabled, search GIPHY for #keyword GIFs and ##keyword stickers."
   },
   "giphyKey": {
     type: "text",
@@ -765,7 +813,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "groqmodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "Model slug provided by Groq (for example llama-3.1-8b-instant)."
+    description: "Model slug provided by Groq (for example openai/gpt-oss-120b)."
   },
   "h2r": {
     type: "boolean",
@@ -797,6 +845,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "assign_roles_classes_to_certain_users",
     description: "When enabled, filter out messages for listed bots."
   },
+  "hideViewerCountSources": {
+    type: "text",
+    category: "other_filters",
+    description: "Selected source types to exclude from viewer-count totals while leaving chat capture enabled."
+  },
   "stripatext": {
     type: "boolean",
     category: "streaming_chat_dock_overlay",
@@ -805,7 +858,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "hidegiphytrigger": {
     type: "boolean",
     category: "giphy_tenor_support",
-    description: "Hide the Giphy/Tenor trigger word or sentence."
+    description: "Hide the GIF trigger word or sentence."
   },
   "hidehostsext": {
     type: "boolean",
@@ -849,8 +902,8 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   },
   "hypemode": {
     type: "boolean",
-    category: "must_enable_the_trigger_to_use",
-    description: "Enable to the hype meter's processing"
+    category: "viewer_count_and_chat_activity_overlay",
+    description: "Track active chatters"
   },
   "identifyQuestions": {
     type: "boolean",
@@ -1042,7 +1095,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "custom_injection",
     description: "Remove links when sending messages to Tiktok from SocialStreamNinja"
   },
-  "ollama": {
+  "aiChatbotEnabled": {
     type: "boolean",
     category: "chat_bot",
     description: "Enable the LLM AI Bot responder."
@@ -1160,7 +1213,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "openroutermodel": {
     type: "text",
     category: "configure_llm_api",
-    description: "Model identifier from the OpenRouter catalog (e.g., openai/gpt-4o)."
+    description: "Model identifier from the OpenRouter catalog (e.g., openai/gpt-5.4-mini)."
   },
   "overlayPreset": {
     type: "select",
@@ -1247,6 +1300,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "printer_control",
     description: "Discord webhook URL that receives every captured message."
   },
+  "postallserverdiscordsimple": {
+    type: "boolean",
+    category: "printer_control",
+    description: "Post all-message Discord webhooks without embeds, timestamps, or platform thumbnails."
+  },
   "postdiscord": {
     type: "boolean",
     category: "printer_control",
@@ -1266,6 +1324,51 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     type: "text",
     category: "printer_control",
     description: "Local printer name to use when printing chat from the dock."
+  },
+  "printerPaperWidth": {
+    type: "number",
+    category: "printer_control",
+    description: "Thermal printer paper width in millimetres."
+  },
+  "printerLabelHeight": {
+    type: "number",
+    category: "printer_control",
+    description: "Fixed thermal label length in millimetres; zero uses content-sized receipt paper."
+  },
+  "printerMarginLeft": {
+    type: "number",
+    category: "printer_control",
+    description: "Extra left safe margin for thermal printing in millimetres."
+  },
+  "printerMarginRight": {
+    type: "number",
+    category: "printer_control",
+    description: "Extra right safe margin for thermal printing in millimetres."
+  },
+  "printerMarginTop": {
+    type: "number",
+    category: "printer_control",
+    description: "Extra top safe margin for thermal printing in millimetres."
+  },
+  "printerMarginBottom": {
+    type: "number",
+    category: "printer_control",
+    description: "Extra bottom safe margin for thermal printing in millimetres."
+  },
+  "printerFeed": {
+    type: "number",
+    category: "printer_control",
+    description: "Extra paper feed after each thermal print in millimetres."
+  },
+  "printerMarginMode": {
+    type: "select",
+    category: "printer_control",
+    description: "Use the printer driver's printable area or the full configured paper width."
+  },
+  "pluralmind": {
+    type: "boolean",
+    category: "custom_injection",
+    description: "Identify PluralMind members in Twitch chat. Looks up Twitch user IDs or usernames via pluralmind.chat; message matching stays local."
   },
   "pronouns": {
     type: "boolean",
@@ -1412,6 +1515,11 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     category: "printer_control",
     description: "See documentation on socialstream.ninja for details."
   },
+  "server2additivedelivery": {
+    type: "boolean",
+    category: "printer_control",
+    description: "Temporary experimental option to also send API-routed chat through normal dock/overlay connections."
+  },
   "soundvolume": {
     type: "number",
     category: "other_customization_options",
@@ -1420,7 +1528,7 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "speechifyspeed": {
     type: "number",
     category: "speechify_tts_options",
-    description: "Playback speed multiplier for Speechify TTS voices."
+    description: "Speechify speaking speed multiplier (0.5-3), applied through SSML prosody."
   },
   "speed": {
     type: "number",
@@ -1515,13 +1623,14 @@ const SETTINGS_DEFINITIONS = Object.freeze({
   "tenor": {
     type: "boolean",
     category: "giphy_tenor_support",
-    description: "When enabled, include a GIF when !tenor is used."
+    description: "Enable the legacy !tenor command alias using the GIPHY API key."
   },
   "tenorKey": {
     type: "text",
     category: "giphy_tenor_support",
-    description: "Tenor API key used to enable GIF search support."
+    description: "Deprecated Tenor API key; retained for saved-settings compatibility. Set giphyKey instead."
   },
+  // Chat body representation only: true is literal text without added HTML; false permits sanitized HTML. This is not a trust flag for other fields.
   "textonlymode": {
     type: "boolean",
     category: "other_filters",
@@ -1556,6 +1665,26 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     type: "select",
     category: "miscellaneous",
     description: "Choose a different translation. Note: Re-open menu to apply any langugage changes to it."
+  },
+  "customTwitchFollowMessage": {
+    type: "text",
+    category: "miscellaneous",
+    description: "Override the selected translation for Twitch follow event messages. Supports {name}."
+  },
+  "customTwitchSubscribedAtTierMessage": {
+    type: "text",
+    category: "miscellaneous",
+    description: "Override the selected translation for Twitch subscription event messages with a tier. Supports {name} and {tier}."
+  },
+  "customTwitchSubscribedMessage": {
+    type: "text",
+    category: "miscellaneous",
+    description: "Override the selected translation for Twitch subscription event messages without a tier. Supports {name}."
+  },
+  "customTwitchResubscribedMessage": {
+    type: "text",
+    category: "miscellaneous",
+    description: "Override the selected translation for Twitch resubscription fallback messages. Supports {name}."
   },
   "trimname": {
     type: "number",
@@ -1616,6 +1745,36 @@ const SETTINGS_DEFINITIONS = Object.freeze({
     type: "boolean",
     category: "other_customization_options",
     description: "Allow removed users to join the waitlist again."
+  },
+  "waitlistcommandhighlight": {
+    type: "text",
+    category: "chat_control_commands",
+    description: "Chat command to highlight the top or numbered waitlist entry."
+  },
+  "waitlistcommandremove": {
+    type: "text",
+    category: "chat_control_commands",
+    description: "Chat command to remove the top or numbered waitlist entry."
+  },
+  "waitlistcommandreset": {
+    type: "text",
+    category: "chat_control_commands",
+    description: "Chat command to reset the waitlist."
+  },
+  "waitlistcommandselect": {
+    type: "text",
+    category: "chat_control_commands",
+    description: "Chat command to select one or more names."
+  },
+  "waitlistcommandstop": {
+    type: "text",
+    category: "chat_control_commands",
+    description: "Chat command to stop new waitlist entries."
+  },
+  "waitlistcontrolcommands": {
+    type: "boolean",
+    category: "chat_control_commands",
+    description: "Enable mod/host/admin chat commands for waitlist controls."
   },
   "waitlistmode": {
     type: "boolean",

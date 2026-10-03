@@ -1,33 +1,6 @@
-// popup.js
-
-function normalizePopupTranslationLanguage(lang) {
-	if (!lang || typeof lang !== "string") return "";
-	const trimmed = lang.trim();
-	if (!trimmed) return "";
-	const lower = trimmed.toLowerCase();
-	if (lower === "test") return "test";
-	if (lower === "zh" || lower === "zh-cn" || lower === "zh-hans") return "zh-CN";
-	if (lower === "zh-tw" || lower === "zh-hk" || lower === "zh-hant") return "zh-TW";
-	if (lower === "en-gb" || lower === "en-uk") return "en-uk";
-	if (lower === "en" || lower.startsWith("en-")) return "en-us";
-	if (lower === "pt-br" || lower.startsWith("pt")) return "pt-br";
-	if (lower.startsWith("es")) return "es";
-	if (lower.startsWith("de")) return "de";
-	if (lower.startsWith("cs")) return "cs";
-	if (lower.startsWith("th")) return "th";
-	if (lower.startsWith("tr")) return "tr";
-	if (lower.startsWith("uk")) return "uk";
-	return "";
-}
-
-let pendingExternalTranslationLanguage = "";
-let latestExternalTranslationApply = "";
-let requestedImmediateTranslationLanguage = "";
-let appliedImmediateTranslationLanguage = "";
-
 const WEBSTORE_CONSERVATIVE_RELEASE = true;
 const WEBSTORE_DISABLED_TTS_PROVIDERS = new Set(["kokoro", "kitten", "espeak", "piper"]);
-const WEBSTORE_DISABLED_AI_PROVIDERS = new Set(["localgemma", "localqwen"]);
+const WEBSTORE_DISABLED_AI_PROVIDERS = new Set(["localgemma", "localqwen", "localqwen2b"]);
 
 function normalizeWebStoreTtsProvider(provider) {
 	const normalized = (provider || "").toString().trim().toLowerCase();
@@ -98,6 +71,46 @@ function applyWebStoreConservativeReleaseGates() {
 	].forEach(hideWebStoreDisabledControl);
 }
 
+
+// popup.js
+
+function normalizePopupTranslationLanguage(lang) {
+	if (!lang || typeof lang !== "string") return "";
+	const trimmed = lang.trim();
+	if (!trimmed) return "";
+	const lower = trimmed.toLowerCase();
+	if (lower === "test") return "test";
+	if (lower === "zh" || lower === "zh-cn" || lower === "zh-hans") return "zh-CN";
+	if (lower === "zh-tw" || lower === "zh-hk" || lower === "zh-hant") return "zh-TW";
+	if (lower === "en-gb" || lower === "en-uk") return "en-uk";
+	if (lower === "en" || lower.startsWith("en-")) return "en-us";
+	if (lower === "pt-br" || lower.startsWith("pt")) return "pt-br";
+	if (lower.startsWith("fr")) return "fr";
+	if (lower.startsWith("es")) return "es";
+	if (lower.startsWith("de")) return "de";
+	if (lower.startsWith("cs")) return "cs";
+	if (lower.startsWith("th")) return "th";
+	if (lower.startsWith("tr")) return "tr";
+	if (lower.startsWith("uk")) return "uk";
+	if (lower.startsWith("ar")) return "ar";
+	return "";
+}
+
+let pendingExternalTranslationLanguage = "";
+let latestExternalTranslationApply = "";
+let requestedImmediateTranslationLanguage = "";
+let appliedImmediateTranslationLanguage = "";
+
+function applyPopupTextDirection(lang) {
+	const normalized = normalizePopupTranslationLanguage(lang);
+	const isRtl = normalized === "ar";
+	document.documentElement.lang = normalized === "en-uk" ? "en-GB" : (normalized || "en");
+	document.documentElement.dir = isRtl ? "rtl" : "ltr";
+	if (document.body) {
+		document.body.dir = document.documentElement.dir;
+	}
+}
+
 function refreshPopupSettingsAfterLanguageSave() {
 	if (typeof chrome === "undefined" || !chrome.runtime || typeof chrome.runtime.sendMessage !== "function") {
 		return false;
@@ -130,7 +143,9 @@ function applyPopupTranslationLanguageImmediately(lang) {
 			if (lastResponse && lastResponse.settings) {
 				lastResponse.settings.translation = data;
 			}
+			applyPopupTextDirection(normalized);
 			miniTranslate(document.body);
+			renderHandleStatus();
 		})
 		.catch(function(error) {
 			if (requestedImmediateTranslationLanguage === normalized) {
@@ -223,11 +238,15 @@ window.addEventListener('message', function(event) {
 
 var urlParams = new URLSearchParams(window.location.search);
 const devmode = urlParams.has("devmode");
-var sourcemode = urlParams.get("sourcemode") || false;
+var sourcemode = getSourceModeBase(urlParams.get("sourcemode")) || false;
 var ssapp = false;
 
 if (urlParams.has("ssapp")) {
 	ssapp = true;
+}
+
+if (ssapp) {
+	document.documentElement.classList.remove("extension-popup-surface");
 }
 
 if (typeof window !== "undefined") {
@@ -244,16 +263,18 @@ const HANDLE_STATUS_STATES = {
 	NEEDS_PERMISSION: "needs-permission",
 	ERROR: "error"
 };
-const HANDLE_STATUS_KEYS = ["ticker", "chatLog", "savedNames"];
+const HANDLE_STATUS_KEYS = ["ticker", "chatLog", "liveStats", "savedNames"];
 const HANDLE_STATUS_LABELS = {
-	ticker: "Ticker source",
-	chatLog: "Last message file",
-	savedNames: "Names log"
+	ticker: ["file-status-ticker-source", "Ticker source"],
+	chatLog: ["file-status-last-message", "Last message file"],
+	liveStats: ["file-status-live-stats", "Live stats file"],
+	savedNames: ["file-status-names-log", "Names log"]
 };
 const HANDLE_STATUS_HELP = {
-	ticker: "Select a ticker source file to stream text",
-	chatLog: "Choose where the last message should be saved",
-	savedNames: "Choose where unique chat names should be stored"
+	ticker: ["file-status-help-ticker", "Select a ticker source file to stream text"],
+	chatLog: ["file-status-help-chat-log", "Choose where the last message should be saved"],
+	liveStats: ["file-status-help-live-stats", "Choose where the current live stats should be saved"],
+	savedNames: ["file-status-help-names-log", "Choose where unique chat names should be stored"]
 };
 const popupHandleStatusState = {};
 HANDLE_STATUS_KEYS.forEach((key) => {
@@ -293,20 +314,31 @@ function mergeHandleStatusFromBackground(statusMap = {}) {
 	}
 }
 
+function getHandleStatusTranslation(key, fallback, values = {}) {
+	return String(getTranslation(key, fallback)).replace(/\{(\w+)\}/g, function(match, name) {
+		return Object.prototype.hasOwnProperty.call(values, name) ? values[name] : match;
+	});
+}
+
 function getHandleStatusLabel(key, entry) {
-	const fallback = HANDLE_STATUS_LABELS[key] || "Selected file";
+	const label = HANDLE_STATUS_LABELS[key] || ["file-status-selected-file", "Selected file"];
+	const fallback = getHandleStatusTranslation(label[0], label[1]);
 	const fileName = entry.name || fallback;
 	switch (entry.status) {
 		case HANDLE_STATUS_STATES.ACTIVE:
-			return `Active: ${fileName}`;
+			return getHandleStatusTranslation("file-status-active", "Active: {file}", { file: fileName });
 		case HANDLE_STATUS_STATES.READY:
-			return `Ready: ${fileName}`;
+			return getHandleStatusTranslation("file-status-ready", "Ready: {file}", { file: fileName });
 		case HANDLE_STATUS_STATES.NEEDS_PERMISSION:
-			return entry.name ? `Needs permission: ${entry.name}` : "Needs permission";
+			return entry.name
+				? getHandleStatusTranslation("file-status-needs-permission-file", "Needs permission: {file}", { file: entry.name })
+				: getHandleStatusTranslation("file-status-needs-permission", "Needs permission");
 		case HANDLE_STATUS_STATES.ERROR:
-			return entry.name ? `Error: ${entry.name}` : "File error";
+			return entry.name
+				? getHandleStatusTranslation("file-status-error-file", "Error: {file}", { file: entry.name })
+				: getHandleStatusTranslation("file-status-file-error", "File error");
 		default:
-			return "No file selected";
+			return getHandleStatusTranslation("file-status-none", "No file selected");
 	}
 }
 
@@ -315,10 +347,11 @@ function getHandleStatusDetail(key, entry) {
 		return entry.detail;
 	}
 	if (entry.status === HANDLE_STATUS_STATES.MISSING) {
-		return HANDLE_STATUS_HELP[key] || "";
+		const help = HANDLE_STATUS_HELP[key];
+		return help ? getHandleStatusTranslation(help[0], help[1]) : "";
 	}
 	if (!entry.persisted && (entry.status === HANDLE_STATUS_STATES.ACTIVE || entry.status === HANDLE_STATUS_STATES.READY)) {
-		return "Needs to be selected again after reloading.";
+		return getHandleStatusTranslation("file-status-reselect-after-reload", "Needs to be selected again after reloading.");
 	}
 	return "";
 }
@@ -745,13 +778,20 @@ if (typeof(chrome.runtime)=='undefined'){
 				// Generate unique callback ID
 				const callbackId = ++callbackIdCounter;
 				const isGetSettingsRequest = !!(data && data.cmd === "getSettings");
-				const timeoutMs = isGetSettingsRequest ? 3000 : 500;
+				const isLLMProviderTestRequest = !!(data && data.cmd === "testLLMProvider");
+				const isAiEventRequest = !!(data && data.cmd === "aiEvent");
+				const timeoutMs = isAiEventRequest ? 195000 : isLLMProviderTestRequest ? 60000 : (isGetSettingsRequest ? 3000 : 500);
 				
 				// Create promise with timeout
 				const promise = new Promise((resolve) => {
 					// Store callback with timeout
 					const timeoutId = setTimeout(() => {
 						pendingCallbacks.delete(callbackId);
+						if (isLLMProviderTestRequest || isAiEventRequest) {
+							// The provider may still be working. Never resubmit a timed-out test.
+							resolve({ success: false, error: isAiEventRequest ? 'AI overlay request timed out.' : 'Connection test timed out.' });
+							return;
+						}
 						if (isGetSettingsRequest) {
 							// For startup hydration, avoid forcing a synchronous fallback from potentially stale cache.
 							// Let periodic retries continue, and allow late async callback responses to update the UI.
@@ -888,6 +928,28 @@ if (typeof(chrome.runtime)=='undefined'){
 	}
 }
 
+async function copyStreamId(event) {
+	var button = event.currentTarget;
+	var sessionId = lastResponse && lastResponse.streamID;
+	var originalLabel = button.innerHTML;
+	button.disabled = true;
+	try {
+		if (!sessionId) {
+			button.textContent = "[stream ID unavailable]";
+			return;
+		}
+		await navigator.clipboard.writeText(sessionId);
+		button.textContent = "[stream ID copied]";
+	} catch (error) {
+		button.textContent = "[copy failed; try again]";
+	} finally {
+		setTimeout(function() {
+			button.innerHTML = originalLabel;
+			button.disabled = false;
+		}, 2000);
+	}
+}
+
 function copyToClipboard(event) {
 	
 	// if (event.target.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
@@ -913,6 +975,454 @@ function copyToClipboard(event) {
 		console.error('Could not find element with raw URL to copy');
 	}
 }
+
+function getEditableGeneratedLinkConfig(targetId) {
+	// Only pages whose controls use an independent getTargetMap namespace belong here.
+	// Template collections, games, and commerce have separate configuration flows.
+	var pages = {
+		dock: ["dock.html", "Main Chat"],
+		overlay: ["featured.html", "Featured Chat (Classic)"],
+		multialerts: ["multi-alerts.html", "Multi-Stream Alert Box"],
+		eventsdashboard: ["events.html", "Events Dashboard"],
+		reactions: ["reactions.html", "Reactions"],
+		emoteswall: ["emotes.html", "Emote Wall"],
+		hypemeter: ["hype.html", "Viewer Count & Chat Activity"],
+		meta: ["meta.html", "Meta Bar"],
+		tipjar: ["tipjar.html", "Tip Jar"],
+		waitlist: ["waitlist.html", "Waitlist"],
+		flowactions: ["actions.html", "Flow Actions"],
+		giveaway: ["giveaway.html", "Giveaway"],
+		poll: ["poll.html", "Poll"],
+		map: ["map.html", "Map"],
+		credits: ["credits.html", "Credits"],
+		leaderboard: ["leaderboard.html", "Leaderboard"],
+		scoreboard: ["scoreboard.html", "Scoreboard"],
+		ticker: ["ticker.html", "Ticker"],
+		wordcloud: ["wordcloud.html", "Word Cloud"],
+		"custom-gif-commands": ["gif.html", "Custom GIF Commands"],
+		timer: ["timer.html", "Timer"],
+		spotify: ["spotify-overlay.html", "Spotify"]
+	};
+	var page = Object.prototype.hasOwnProperty.call(pages, targetId) ? pages[targetId] : null;
+	return page ? { path: page[0], label: page[1] } : null;
+}
+
+function normalizeEditableGeneratedLink(rawUrl, targetId) {
+	var config = getEditableGeneratedLinkConfig(targetId);
+	if (!config) throw new Error("This link editor is not available.");
+	var trimmed = String(rawUrl || "").trim();
+	if (!trimmed) {
+		throw new Error("Paste an existing " + config.label + " link.");
+	}
+
+	var targetElement = document.getElementById(targetId);
+	var targetBase = targetElement && targetElement.raw ? targetElement.raw : baseURL;
+	var parsed;
+
+	try {
+		if (trimmed.charAt(0) === "?") {
+			parsed = new URL(trimmed, targetBase);
+		} else {
+			parsed = new URL(trimmed);
+		}
+	} catch (error) {
+		throw new Error("That does not look like a complete link.");
+	}
+
+	if (["http:", "https:", "file:"].indexOf(parsed.protocol) === -1) {
+		throw new Error("Only web or local file links can be edited.");
+	}
+
+	var expectedFile = config.path;
+	var fileName = parsed.pathname.split("/").pop().toLowerCase();
+	if (!expectedFile || fileName !== expectedFile) {
+		throw new Error("Paste a " + config.label + " " + expectedFile + " link here.");
+	}
+
+	if (!parsed.searchParams.get("session") && !parsed.searchParams.get("room")) {
+		throw new Error("That link is missing its session ID.");
+	}
+
+	if (targetId === "giveaway") parsed.searchParams.set("managed", "");
+	return parsed;
+}
+
+function decodeImportedCssParamValue(encodedValue) {
+	try {
+		return decodeURIComponent(atob(String(encodedValue || "").replace(/ /g, "+")));
+	} catch (error) {
+		return null;
+	}
+}
+
+function getImportedParamCheckboxState(params, paramValue, allParamValues) {
+	var parts = String(paramValue || "").split("=");
+	var rawKey = parts.shift();
+	var expectedValue = parts.length ? parts.join("=") : null;
+	var effectiveKey = normalizeParamKey(rawKey);
+	var values = params.getAll(effectiveKey);
+
+	if (!values.length) {
+		return false;
+	}
+
+	if (expectedValue !== null) {
+		return values.indexOf(expectedValue) !== -1;
+	}
+
+	if (rawKey === "chromaalpha") {
+		return values.some(function(value) {
+			return /^(?:[0-9a-f]{4}|[0-9a-f]{8})$/i.test(String(value || "").replace("#", ""));
+		});
+	}
+
+	var hasFixedSibling = allParamValues.some(function(candidate) {
+		var candidateParts = String(candidate || "").split("=");
+		return candidateParts.length > 1 && normalizeParamKey(candidateParts[0]) === effectiveKey;
+	});
+
+	if (hasFixedSibling) {
+		return values.indexOf("") !== -1;
+	}
+
+	return true;
+}
+
+function findImportedOptionValue(selectElement, paramKey, params) {
+	if (paramKey === "ttsprovider" && !params.has(paramKey)) {
+		return { found: true, value: "system" };
+	}
+
+	var directValue = params.get(paramKey);
+	var options = Array.prototype.slice.call(selectElement.options || []);
+
+	if (directValue !== null) {
+		var exactOption = options.find(function(option) {
+			return option.value === directValue;
+		});
+		if (exactOption) {
+			return { found: true, value: exactOption.value };
+		}
+	}
+
+	for (var i = 0; i < options.length; i++) {
+		var option = options[i];
+		if (!option.value || option.value.indexOf("=") === -1) {
+			continue;
+		}
+
+		var optionParams = new URLSearchParams(option.value);
+		var matched = true;
+		var matchedCount = 0;
+		optionParams.forEach(function(value, key) {
+			matchedCount++;
+			if (params.get(key) !== value) {
+				matched = false;
+			}
+		});
+		if (matched && matchedCount) {
+			return { found: true, value: option.value };
+		}
+	}
+
+	if (directValue !== null) {
+		return { found: true, value: directValue };
+	}
+
+	return { found: false, value: "" };
+}
+
+function getImportedControlDefaultValue(element) {
+	if (!element) {
+		return "";
+	}
+
+	if (String(element.tagName || "").toUpperCase() === "SELECT") {
+		var options = Array.prototype.slice.call(element.options || []);
+		var defaultOption = options.find(function(option) {
+			return option.defaultSelected;
+		}) || options[0];
+		return defaultOption ? String(defaultOption.value || "") : "";
+	}
+
+	return element.defaultValue === undefined || element.defaultValue === null
+		? ""
+		: String(element.defaultValue);
+}
+
+function saveImportedLinkControl(element, type, setting, value) {
+	chrome.runtime.sendMessage({
+		cmd: "saveSetting",
+		type: type,
+		target: element.dataset.target || null,
+		setting: setting,
+		value: value
+	}, function() {});
+}
+
+function applyImportedGeneratedLink(targetId, parsedUrl) {
+	var targetMap = getTargetMap();
+	var paramNum = targetMap[targetId];
+	var targetElement = document.getElementById(targetId);
+	if (!paramNum || !targetElement) {
+		throw new Error("This link editor is not available.");
+	}
+
+	var params = parsedUrl.searchParams;
+	var paramType = "param" + paramNum;
+	var numberType = paramNum === 1 ? "numbersetting" : "numbersetting" + paramNum;
+	var textType = "textparam" + paramNum;
+	var optionType = "optionparam" + paramNum;
+	var checkboxSelector = "input[data-" + paramType + "]";
+	var checkboxes = Array.prototype.slice.call(document.querySelectorAll(checkboxSelector));
+	var allParamValues = checkboxes.map(function(element) {
+		return element.dataset[paramType];
+	});
+	var linkOwnedNumberKeys = {};
+	allParamValues.forEach(function(value) {
+		var rawKey = String(value || "").split("=")[0];
+		linkOwnedNumberKeys[normalizeParamKey(rawKey)] = true;
+	});
+	var loadedControlCount = 0;
+
+	checkboxes.forEach(function(element) {
+		var nextChecked = getImportedParamCheckboxState(params, element.dataset[paramType], allParamValues);
+		if (nextChecked) {
+			loadedControlCount++;
+		}
+		if (element.checked !== nextChecked) {
+			element.checked = nextChecked;
+			saveImportedLinkControl(element, paramType, element.dataset[paramType], nextChecked);
+		}
+	});
+
+	var numberSelector = "[data-" + numberType + "]";
+	Array.prototype.slice.call(document.querySelectorAll(numberSelector)).forEach(function(element) {
+		var setting = element.dataset[numberType];
+		var effectiveKey = normalizeParamKey(setting);
+		if (paramNum === 1 && !linkOwnedNumberKeys[effectiveKey]) {
+			return;
+		}
+		var importedValue = null;
+
+		if (setting === "chromaalpha") {
+			var chromaValue = params.get("chroma");
+			if (chromaValue && /^(?:[0-9a-f]{4}|[0-9a-f]{8})$/i.test(chromaValue.replace("#", ""))) {
+				importedValue = getPercentFromChromaValue(chromaValue);
+			}
+		} else if (params.has(effectiveKey)) {
+			importedValue = params.get(effectiveKey);
+		}
+
+		if (importedValue === null || importedValue === undefined) {
+			importedValue = getImportedControlDefaultValue(element);
+		} else {
+			loadedControlCount++;
+		}
+
+		importedValue = String(importedValue);
+		if (element.value !== importedValue) {
+			element.value = importedValue;
+			saveImportedLinkControl(element, numberType, setting, importedValue);
+		}
+		updateRangeDisplay(element);
+	});
+
+	var textSelector = "[data-" + textType + "]";
+	Array.prototype.slice.call(document.querySelectorAll(textSelector)).forEach(function(element) {
+		var setting = element.dataset[textType];
+		var importedValue = null;
+		var found = false;
+
+		if (setting === "cssb64") {
+			["cssb64", "base64css", "b64css", "cssbase64"].some(function(alias) {
+				if (!params.has(alias)) {
+					return false;
+				}
+				var decoded = decodeImportedCssParamValue(params.get(alias));
+				if (decoded !== null) {
+					importedValue = decoded;
+					found = true;
+				}
+				return true;
+			});
+		} else if (params.has(setting)) {
+			importedValue = params.get(setting);
+			found = true;
+		}
+
+		if (!found) {
+			importedValue = getImportedControlDefaultValue(element);
+		} else {
+			loadedControlCount++;
+		}
+
+		if (element.value !== importedValue) {
+			element.value = importedValue;
+			saveImportedLinkControl(element, textType, setting, importedValue);
+		}
+		handleColorAndPalette(element);
+		if (commaTagInputs.indexOf(element.id) !== -1) {
+			refreshCommaTagInput(element.id);
+		} else if (userTypes.indexOf(element.id) !== -1) {
+			updateUsernameList(element.id);
+		}
+	});
+
+	var optionSelector = "[data-" + optionType + "]";
+	Array.prototype.slice.call(document.querySelectorAll(optionSelector)).forEach(function(element) {
+		var setting = element.dataset[optionType];
+		var imported = findImportedOptionValue(element, setting, params);
+		if (!imported.found) {
+			imported.value = getImportedControlDefaultValue(element);
+		} else {
+			loadedControlCount++;
+		}
+
+		if (element.value !== imported.value) {
+			if (imported.found) {
+				ensureSelectValueOption(element, imported.value);
+			}
+			element.value = imported.value;
+			saveImportedLinkControl(element, optionType, setting, imported.value);
+
+			if (element.dataset.optionsetting) {
+				saveImportedLinkControl(element, "optionsetting", element.dataset.optionsetting, imported.value);
+			}
+		}
+		if (element.dataset.optionsetting) {
+			handleOptionSetting(element, false);
+		}
+		if (paramNum !== 1 && setting === "ttsprovider") {
+			var providerSettingType = "optionsetting" + paramNum;
+			if (element.dataset[providerSettingType]) {
+				saveImportedLinkControl(element, providerSettingType, element.dataset[providerSettingType], imported.value);
+			}
+			if (paramNum === 2) handleTTSProvider2Visibility(imported.value);
+			if (paramNum === 18) handleTTSProvider18Visibility(imported.value);
+		}
+
+	});
+
+	if (targetId === "overlay") {
+		var presetSelector = document.getElementById("featured-preset-select");
+		if (presetSelector) {
+			presetSelector.value = "";
+			saveImportedLinkControl(presetSelector, "optionsetting", "featuredOverlayStyle", "");
+			applyFeaturedOverlayPreset("");
+		}
+	}
+
+	setGeneratedLink(targetElement, parsedUrl.href);
+	if (targetId === "dock") {
+		syncChatOverlayTemplateLinkFromDock();
+	}
+
+	return loadedControlCount;
+}
+
+function showImportedLinkStatus(targetId, loadedControlCount) {
+	var status = document.getElementById(targetId + "-edit-status");
+	if (!status) {
+		return;
+	}
+	status.textContent = "Existing link loaded (" + loadedControlCount + " options). Customize it below, then copy the updated link.";
+	status.classList.add("visible");
+}
+
+function openEditGeneratedLinkDialog(targetId) {
+	var config = getEditableGeneratedLinkConfig(targetId);
+	if (!config) return;
+	var modal = document.createElement("div");
+	modal.className = "arc-modal";
+	modal.setAttribute("role", "dialog");
+	modal.setAttribute("aria-modal", "true");
+	modal.setAttribute("aria-label", "Edit an existing " + config.label + " link");
+
+	var dialog = document.createElement("div");
+	dialog.className = "arc-dialog";
+
+	var title = document.createElement("p");
+	title.textContent = "Edit an existing " + config.label + " link";
+
+	var note = document.createElement("span");
+	note.className = "edit-link-dialog-note";
+	note.textContent = "Paste the old " + config.path + " link. This replaces only the " + config.label + " link controls. Other overlays and your global stream ID stay unchanged; links already in OBS are not changed.";
+
+	var input = document.createElement("input");
+	input.type = "text";
+	input.className = "arc-input";
+	input.placeholder = "https://socialstream.ninja/" + config.path + "?session=...";
+	input.autocomplete = "off";
+	input.setAttribute("aria-label", "Existing " + config.label + " link");
+	var currentLinkElement = document.getElementById(targetId);
+	input.value = currentLinkElement && currentLinkElement.raw ? currentLinkElement.raw : "";
+
+	var errorBox = document.createElement("div");
+	errorBox.className = "edit-link-dialog-error";
+	errorBox.setAttribute("role", "alert");
+
+	var buttonContainer = document.createElement("div");
+	buttonContainer.className = "arc-button-container";
+
+	var cancelButton = document.createElement("button");
+	cancelButton.type = "button";
+	cancelButton.textContent = "Cancel";
+	cancelButton.className = "arc-button arc-cancel-button";
+
+	var loadButton = document.createElement("button");
+	loadButton.type = "button";
+	loadButton.textContent = "Load link";
+	loadButton.className = "arc-button arc-ok-button";
+
+	function closeDialog() {
+		if (modal.parentNode) {
+			modal.parentNode.removeChild(modal);
+		}
+	}
+
+	cancelButton.onclick = closeDialog;
+	loadButton.onclick = function() {
+		try {
+			var parsedUrl = normalizeEditableGeneratedLink(input.value, targetId);
+			var loadedControlCount = applyImportedGeneratedLink(targetId, parsedUrl);
+			closeDialog();
+			showImportedLinkStatus(targetId, loadedControlCount);
+			showPopupToast("success", config.label + " link loaded", "Customize it below, then copy the updated link.");
+		} catch (error) {
+			errorBox.textContent = error && error.message ? error.message : "The link could not be loaded.";
+			input.focus();
+		}
+	};
+
+	input.addEventListener("keydown", function(event) {
+		if (event.key === "Enter") {
+			event.preventDefault();
+			loadButton.click();
+		} else if (event.key === "Escape") {
+			closeDialog();
+		}
+	});
+
+	modal.addEventListener("click", function(event) {
+		if (event.target === modal) {
+			closeDialog();
+		}
+	});
+
+	buttonContainer.appendChild(cancelButton);
+	buttonContainer.appendChild(loadButton);
+	dialog.appendChild(title);
+	dialog.appendChild(note);
+	dialog.appendChild(input);
+	dialog.appendChild(errorBox);
+	dialog.appendChild(buttonContainer);
+	modal.appendChild(dialog);
+	document.body.appendChild(modal);
+	input.focus();
+	input.select();
+}
+
 var translation = {};
 
 function getTranslation(key, value=false){ 
@@ -1028,6 +1538,7 @@ function miniTranslate(ele, ident = false, direct=false) {
 			" (OBS Browser Source is already transparent by default)"
 		);
 	}
+	if (ele === document.body && window.updateMonetizationLanguage) window.updateMonetizationLanguage();
 }
 
 if (urlParams.has("ln")) {
@@ -1102,11 +1613,45 @@ function setupLazyFontDropdowns() {
     });
 }
 
-function createUniqueVoiceIdentifiers(voices) {
-    // Helper to get a clean voice name for use in parameters
-    const getCleanVoiceName = (name) => name.replace(/[^a-zA-Z0-9\s]/g, '').trim().replaceAll(' ', '_');
+function normalizePopupSystemVoiceIdentifier(value) {
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .split("")
+        .filter(function(character) {
+            // Only ASCII separators and punctuation get dropped. Stripping every
+            // non-ASCII character collapsed CJK voice names down to a bare "google".
+            return /[a-z0-9]/.test(character) || character.charCodeAt(0) > 127;
+        })
+        .join("");
+}
 
-    // Group voices by language
+function popupSystemVoiceLanguageRank(voice, requestedLangLower, requestedLangBase) {
+    if (!requestedLangLower) return 2;
+    const voiceLang = String(voice && voice.lang || "").toLowerCase();
+    if (voiceLang === requestedLangLower) return 0;
+    if (requestedLangBase && voiceLang.split("-")[0] === requestedLangBase) return 1;
+    return 2;
+}
+
+function getLegacyPopupSystemVoiceIdentifiers(voiceName, voicesInLang) {
+    const identifiers = [];
+    const words = voiceName.split(" ").filter(word => word.length > 0);
+
+    for (let i = 0; i < words.length; i++) {
+        const potentialIdentifier = words[i];
+        if (voicesInLang.filter(voice => voice.name.includes(potentialIdentifier)).length === 1) {
+            identifiers.push(potentialIdentifier);
+            break;
+        }
+    }
+
+    identifiers.push(voiceName.replace(/[^a-zA-Z0-9\s]/g, "").trim().replaceAll(" ", "_"));
+    identifiers.push(voiceName.replace(/[^a-zA-Z0-9]/g, ""));
+    return Array.from(new Set(identifiers.filter(Boolean)));
+}
+
+function createUniqueVoiceIdentifiers(voices) {
     const voicesByLang = voices.reduce((acc, voiceObj) => {
         if (!acc[voiceObj.lang]) {
             acc[voiceObj.lang] = [];
@@ -1115,38 +1660,83 @@ function createUniqueVoiceIdentifiers(voices) {
         return acc;
     }, {});
 
-    // Assign unique identifiers within each language group
-    for (const lang in voicesByLang) {
+    const voiceDescriptors = [];
+    Object.keys(voicesByLang).forEach(lang => {
         const voicesInLang = voicesByLang[lang];
-
         voicesInLang.forEach(voiceObj => {
-            let uniquePart = '';
-
-            // Attempt to find a unique word within the voice name for this language
-            const words = voiceObj.name.split(' ').filter(word => word.length > 0);
-            for (let i = 0; i < words.length; i++) {
-                const potentialIdentifier = words[i];
-                if (voicesInLang.filter(v => v.name.includes(potentialIdentifier)).length === 1) {
-                    uniquePart = potentialIdentifier;
-                    break;
-                }
-            }
-
-            // Fallback to a cleaned full name if no unique word is found
-            if (!uniquePart) {
-                uniquePart = getCleanVoiceName(voiceObj.name);
-            }
-
-            // Construct the code using separate lang and voice parameters
-            voiceObj.code = `lang=${voiceObj.lang}&voice=${encodeURIComponent(uniquePart)}`;
-            voiceObj.lang = voiceObj.lang; // Ensure lang is explicitly available
-            voiceObj.name = voiceObj.name; // Ensure name is explicitly available
-            voiceObj.voiceId = uniquePart; // Store just the voice identifier separately
+            voiceDescriptors.push({
+                voice: voiceObj,
+                name: voiceObj.name,
+                lang: voiceObj.lang,
+                default: !!voiceObj.default,
+                localService: !!voiceObj.localService,
+                voiceURI: voiceObj.voiceURI || "",
+                code: `lang=${voiceObj.lang}&voice=${encodeURIComponent(voiceObj.name)}`,
+                voiceId: voiceObj.name,
+                legacyVoiceIds: getLegacyPopupSystemVoiceIdentifiers(voiceObj.name, voicesInLang),
+            });
         });
+    });
+    return voiceDescriptors;
+}
+
+function resolvePopupSystemVoice(voices, selection, language) {
+    if (!voices || !voices.length || !selection) return null;
+
+    let requestedName = String(selection);
+    let requestedLanguage = language || "";
+    if (requestedName.includes("=")) {
+        try {
+            const params = new URLSearchParams(requestedName);
+            requestedName = params.get("voice") || requestedName;
+            requestedLanguage = params.get("lang") || requestedLanguage;
+        } catch (_) { }
     }
 
-    // Flatten the grouped voices back into a single array
-    return Object.values(voicesByLang).flat();
+    requestedName = requestedName.trim();
+    if (!requestedName) return null;
+
+    const requestedLower = requestedName.toLowerCase();
+    const requestedNormalized = normalizePopupSystemVoiceIdentifier(requestedName);
+    const requestedLangLower = requestedLanguage.toLowerCase();
+    const requestedLangBase = requestedLangLower.split("-")[0];
+    const pickBestMatch = matches => {
+        if (!matches.length) return null;
+        return matches.slice().sort((a, b) => {
+            const aRank = popupSystemVoiceLanguageRank(a, requestedLangLower, requestedLangBase);
+            const bRank = popupSystemVoiceLanguageRank(b, requestedLangLower, requestedLangBase);
+            if (aRank !== bRank) return aRank - bRank;
+            if (a.default !== b.default) return a.default ? -1 : 1;
+            if (a.name.length !== b.name.length) return a.name.length - b.name.length;
+            return 0;
+        })[0];
+    };
+
+    let matches = voices.filter(voice => String(voice.name || "").toLowerCase() === requestedLower);
+    if (matches.length) return pickBestMatch(matches);
+
+    matches = voices.filter(voice => (voice.legacyVoiceIds || []).some(identifier => identifier.toLowerCase() === requestedLower));
+    if (matches.length) return pickBestMatch(matches);
+
+    const normalizedMatches = requestedNormalized
+        ? voices.filter(voice => normalizePopupSystemVoiceIdentifier(voice.name) === requestedNormalized)
+        : [];
+    const partialMatches = voices.filter(voice => String(voice.name || "").toLowerCase().includes(requestedLower));
+
+    // Both of these are fuzzy name matches, so neither should win by ignoring the
+    // requested language. A partial match in the right language beats a normalized
+    // match in the wrong one.
+    const normalizedBest = pickBestMatch(normalizedMatches);
+    if (normalizedBest && popupSystemVoiceLanguageRank(normalizedBest, requestedLangLower, requestedLangBase) < 2) {
+        return normalizedBest;
+    }
+
+    const partialBest = pickBestMatch(partialMatches);
+    if (partialBest && popupSystemVoiceLanguageRank(partialBest, requestedLangLower, requestedLangBase) < 2) {
+        return partialBest;
+    }
+
+    return normalizedBest || partialBest;
 }
 
 var popupSpeechVoiceCache = null;
@@ -1171,6 +1761,16 @@ function getPopupSpeechVoices() {
 function populateSystemVoiceDropdown(dropdown, voices) {
     if (!dropdown || !voices || !voices.length) return;
     const currentValue = dropdown.value;
+    const selectedVoice = resolvePopupSystemVoice(voices, currentValue);
+
+    if (selectedVoice) {
+        Array.from(dropdown.options).forEach(option => {
+            if (option.dataset.lazyStoredValue === "true") {
+                option.remove();
+            }
+        });
+    }
+
     const existingValues = new Set(Array.from(dropdown.options).map(option => option.value));
 
     voices.forEach(voice => {
@@ -1187,7 +1787,9 @@ function populateSystemVoiceDropdown(dropdown, voices) {
         }
     });
 
-    if (currentValue) {
+    if (selectedVoice) {
+        dropdown.value = selectedVoice.code;
+    } else if (currentValue) {
         dropdown.value = currentValue;
     }
 }
@@ -1231,8 +1833,12 @@ function setupLazySystemVoiceDropdowns() {
     }
 }
 
+function getUsernameInput(type) {
+  return document.getElementById(type) || document.querySelector(`[data-textsetting="${type}"], [data-textparam2="${type}"]`);
+}
+
 function addUsername(username, type='blacklistusers') {
-  const input = document.querySelector(`[data-textsetting="${type}"]`);
+  const input = getUsernameInput(type);
   if (!input) return;
   
   const usernames = input.value.split(',').map(u => u.trim()).filter(u => u);
@@ -1244,10 +1850,7 @@ function addUsername(username, type='blacklistusers') {
   
   const newEntry = sourceType ? `${username}:${sourceType}` : username;
   
-  if (!usernames.some(entry => {
-    const [name] = entry.split(':');
-    return name === username;
-  })) {
+  if (!usernames.some(entry => entry.toLowerCase() === newEntry.toLowerCase())) {
     usernames.push(newEntry);
     input.value = usernames.join(', ');
     updateUsernameList(type);
@@ -1256,7 +1859,7 @@ function addUsername(username, type='blacklistusers') {
 }
 
 function removeUsername(username, sourceType='', type='blacklistusers') {
-  const input = document.querySelector(`[data-textsetting="${type}"]`);
+  const input = getUsernameInput(type);
   if (!input) return;
   
   const usernames = input.value.split(',').map(u => u.trim()).filter(u => u);
@@ -1277,7 +1880,7 @@ function updateUsernameList(type = 'blacklistusers') {
 	
 	if (!userTypes.includes(type)) return;
 	
-  const input = document.querySelector(`[data-textsetting="${type}"]`);
+  const input = getUsernameInput(type);
   const list = document.getElementById(`${type}List`);
   
   if (!input || !list) return;
@@ -1294,10 +1897,85 @@ function updateUsernameList(type = 'blacklistusers') {
 
   list.innerHTML = usernames.map(({ name, sourceType }) => `
     <div class="username-tag">
-      <span>${name}${sourceType ? `<span class="source-type"><img class="icon" src="./sources/images/${sourceType}.png" /></span>` : ''}</span>
-      <button class="remove-username" data-username="${name}" data-source-type="${sourceType || ''}">×</button>
+      <span>${escapeHtml(name)}${sourceType === '*' ? '<span class="source-type">All sources</span>' : (sourceType ? `<span class="source-type"><img class="icon" src="./sources/images/${escapeHtml(sourceType)}.png" /></span>` : '')}</span>
+      <button class="remove-username" data-username="${escapeHtml(name)}" data-source-type="${escapeHtml(sourceType || '')}">×</button>
     </div>
   `).join('');
+}
+
+var userDisplayAliases = [];
+
+function normalizeUserDisplayAliasSource(sourceType) {
+  sourceType = String(sourceType || '').toLowerCase().trim();
+  return sourceType === 'youtubeshorts' ? 'youtube' : sourceType;
+}
+
+function normalizeUserDisplayAliasEntry(entry) {
+  if (!entry || typeof entry !== 'object') return null;
+  const identifier = String(entry.identifier || '').trim();
+  const displayName = String(entry.displayName || '').trim();
+  const type = normalizeUserDisplayAliasSource(entry.type);
+  if (!identifier || !displayName) return null;
+  return { identifier, displayName, type };
+}
+
+function updateUserDisplayAliasesList() {
+  const list = document.getElementById('userDisplayAliasesList');
+  if (!list) return;
+
+  list.innerHTML = userDisplayAliases.map((entry, index) => `
+    <div class="username-tag">
+      <span>${escapeHtml(entry.identifier)} → ${escapeHtml(entry.displayName)}${entry.type ? `<span class="source-type"><img class="icon" src="./sources/images/${escapeHtml(entry.type)}.png" /></span>` : '<span class="source-type">All sources</span>'}</span>
+      <button class="remove-user-display-alias" data-index="${index}">×</button>
+    </div>
+  `).join('');
+}
+
+function saveUserDisplayAliases() {
+  chrome.runtime.sendMessage({
+    cmd: 'saveSetting',
+    type: 'json',
+    setting: 'userdisplayaliases',
+    value: JSON.stringify(userDisplayAliases)
+  }, function () {});
+}
+
+function addUserDisplayAlias() {
+  const identifierInput = document.getElementById('newUserDisplayAliasIdentifier');
+  const displayNameInput = document.getElementById('newUserDisplayAliasDisplayName');
+  const sourceInput = document.getElementById('newUserDisplayAliasType');
+  const entry = normalizeUserDisplayAliasEntry({
+    identifier: identifierInput?.value,
+    displayName: displayNameInput?.value,
+    type: sourceInput?.value
+  });
+  if (!entry) return;
+
+  const existingIndex = userDisplayAliases.findIndex(existing =>
+    existing.identifier.toLowerCase() === entry.identifier.toLowerCase() && existing.type === entry.type
+  );
+  if (existingIndex === -1) {
+    userDisplayAliases.push(entry);
+  } else {
+    userDisplayAliases[existingIndex] = entry;
+  }
+
+  identifierInput.value = '';
+  displayNameInput.value = '';
+  sourceInput.value = '';
+  updateUserDisplayAliasesList();
+  saveUserDisplayAliases();
+}
+
+function loadUserDisplayAliases(value) {
+  try {
+    const entries = Array.isArray(value) ? value : JSON.parse(value || '[]');
+    userDisplayAliases = entries.map(normalizeUserDisplayAliasEntry).filter(Boolean);
+  } catch (e) {
+    console.error('Error parsing user display aliases:', e);
+    userDisplayAliases = [];
+  }
+  updateUserDisplayAliasesList();
 }
 
 function addSourceType(sourceType, type) {
@@ -1780,6 +2458,56 @@ function setupSourceSelection(inputId, isSettingBased = false) {
     updateSourceTypeList(inputId);
 }
 
+function setupViewerCountSourceTags() {
+    const inputId = 'hideViewerCountSources';
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    const container = input.closest('.textInputContainer');
+    if (!container || document.getElementById(`${inputId}List`)) return;
+
+    input.classList.add('hidden');
+
+    const listContainer = document.createElement('div');
+    listContainer.className = 'source-list-container';
+    listContainer.id = `${inputId}List`;
+
+    const addContainer = document.createElement('div');
+    addContainer.className = 'add-source-container';
+    addContainer.innerHTML = `
+        <select id="new${inputId}Type">
+            <option value="" selected>Select source</option>
+        </select>
+        <button id="add${inputId}">Add</button>
+    `;
+
+    container.parentNode.classList.add('isolate');
+    container.parentNode.insertBefore(listContainer, container.nextSibling);
+    container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+
+    const select = document.getElementById(`new${inputId}Type`);
+    setupLazySourceSelect(select);
+    ensureLazySourcesLoaded(function() {
+        appendSourceOptions(select);
+    });
+
+    listContainer.addEventListener('click', function(event) {
+        if (event.target.classList.contains('remove-source')) {
+            removeSourceType(event.target.dataset.sourceType, inputId);
+        }
+    });
+
+    document.getElementById(`add${inputId}`).addEventListener('click', function() {
+        const sourceType = select.value.trim();
+        if (sourceType) {
+            addSourceType(sourceType, inputId);
+            select.value = '';
+        }
+    });
+
+    updateSourceTypeList(inputId);
+}
+
 // Templates for different event types
 const eventTemplates = {
   botReply: (id) => `
@@ -2233,10 +2961,12 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 }
 
 const sourceTypes = ['relaytargets','eventsSources','ttssources'];
-const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents'];
-const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
-// Canonical payload types that cannot always be inferred from a manifest filename.
-// Keep these available even when a hosted/app manifest is temporarily unavailable.
+const sourceSelectTagInputs = ['hideViewerCountSources'];
+const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents', 'dockfilterevents', 'featuredfilterevents', 'exactblockedmessages'];
+const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers', 'filterfeaturedusers'];
+// These are canonical payload types that cannot be inferred reliably from a
+// manifest filename. Keep them available even when a hosted/app manifest is
+// temporarily unavailable.
 const additionalSourceTypes = [
     'arena',
     'clouthub',
@@ -2314,8 +3044,8 @@ function appendSourceOptions(select) {
     if (currentValue) {
         select.value = currentValue;
     }
-    // A fill made without the manifest contains only the seeded fallback types;
-    // leave it open for a later retry so the manifest can complete the list.
+    // A fill made without the manifest holds only the seeded fallback types;
+    // leave the select open for a retry so a late manifest load completes it.
     select.dataset.sourceOptionsLoaded = sourcesManifestLoaded ? "true" : "partial";
 }
 
@@ -2493,6 +3223,11 @@ async function ensureSourcesListLoaded(options = {}) {
 }
 
 
+// Function to handle custom JS file upload
+
+
+
+
 let tabsInitialized = false;
 
 function createTabsFromSettings(response) {
@@ -2612,6 +3347,17 @@ function getPopupVersionParam() {
   return "";
 }
 
+function getLocalServerConnectionParams(params = urlParams) {
+  if (!params || !params.has("localserver")) return "";
+
+  let result = "&localserver";
+  const explicitPort = SocialStreamLocalServer.getExplicitPort(params);
+  if (explicitPort !== null) {
+    result += "&localserverport=" + explicitPort;
+  }
+  return result;
+}
+
 function getAiOverlayControlValue(id, fallback = "") {
   const ele = document.getElementById(id);
   if (!ele) return fallback;
@@ -2625,11 +3371,9 @@ function getAiOverlayControlValue(id, fallback = "") {
 function getAiOverlayPasswordParam(response) {
   let password = "";
   if (response && response.password) {
-    password = "&password=" + response.password;
+    password = "&password=" + encodeURIComponent(response.password);
   }
-  if (urlParams.has("localserver")) {
-    password += "&localserver";
-  }
+  password += getLocalServerConnectionParams();
   return password;
 }
 
@@ -2656,7 +3400,8 @@ function updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, v
     versionParam.split("&").filter(Boolean).forEach(part => params.push(part));
   }
 
-  const overlayUrl = baseURL + "cohost-overlay.html?" + params.join("&");
+  const overlayParams = mergeSupportedServerParamsIntoQuery(params.join("&"), "aioverlay", document.getElementById("dock"), "cohost-overlay.html");
+  const overlayUrl = baseURL + "cohost-overlay.html" + (overlayParams ? "?" + overlayParams : "");
   const overlayElement = document.getElementById("aioverlay");
   const overlayLink = document.getElementById("aioverlaylink");
   if (overlayElement) overlayElement.raw = overlayUrl;
@@ -2673,7 +3418,7 @@ function updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, v
     cohostElement.raw = cleanURL(cohostUrl);
     if (cohostLink) {
       cohostLink.href = cohostElement.raw;
-      cohostLink.innerText = hideLinks ? "Click to open link" : cohostElement.raw;
+      cohostLink.innerText = hideLinks ? "Click to open link" : getGeneratedLinkDisplayUrl(cohostElement, cohostElement.raw);
     }
   }
 }
@@ -2720,6 +3465,7 @@ const CHAT_OVERLAY_TEMPLATE_CONFIGS = {
   "themes/overlay-cards.html": "overlay-cards-overlay-config",
   "themes/horizontal.html": "horizontal-overlay-config",
   "themes/overlay-ticker-news.html": "ticker-news-overlay-config",
+  "themes/overlay-credits.html": "credits-overlay-config",
   "themes/overlay-danmaku.html": "danmaku-overlay-config",
   "themes/Neutron/chatOnly.html": "Neutron-overlay-config",
   "themes/Neutron/stream.html": "Neutron-overlay-config",
@@ -2740,6 +3486,7 @@ const CHAT_OVERLAY_COMMON_SUPPORT = new Set([
   "themes/overlay-comic-classic.html",
   "themes/horizontal.html",
   "themes/overlay-ticker-news.html",
+  "themes/overlay-credits.html",
   "themes/overlay-danmaku.html",
   "themes/overlay-xacception.html",
   "themes/pretty.html",
@@ -2750,6 +3497,207 @@ const CHAT_OVERLAY_COMMON_SUPPORT = new Set([
   "themes/t3nk3y/index.html",
   "themes/LuckyLootTube/luckyloottube.html"
 ]);
+
+const SERVER_LINK_PARAM_NAMES = ["server", "server2", "server3"];
+const FULL_SERVER_LINK_SUPPORT = { server: true, server2: true, server3: true };
+const NO_SERVER_LINK_SUPPORT = { server: false, server2: false, server3: false };
+
+const SERVER_PARAM_SUPPORT_BY_TARGET = {
+  dock: FULL_SERVER_LINK_SUPPORT,
+  emoteswall: FULL_SERVER_LINK_SUPPORT,
+  multialerts: FULL_SERVER_LINK_SUPPORT,
+  chatbot: FULL_SERVER_LINK_SUPPORT,
+  cohost: { server: true, server2: true, server3: false },
+  aioverlay: { server: true, server2: true, server3: false },
+  meta: { server: true, server2: true, server3: false },
+  hypetrain: FULL_SERVER_LINK_SUPPORT,
+  poll: FULL_SERVER_LINK_SUPPORT,
+  reactions: FULL_SERVER_LINK_SUPPORT,
+  scoreboard: FULL_SERVER_LINK_SUPPORT,
+  spotify: FULL_SERVER_LINK_SUPPORT,
+  map: FULL_SERVER_LINK_SUPPORT,
+  aiprompt: { server: true, server2: true, server3: false },
+  aievent: FULL_SERVER_LINK_SUPPORT,
+  hypemeter: { server: true, server2: true, server3: false },
+  ticker: { server: true, server2: true, server3: false },
+  tipjar: { server: true, server2: true, server3: false },
+  eventsdashboard: { server: true, server2: true, server3: false },
+  flowactions: FULL_SERVER_LINK_SUPPORT,
+  timer: { server: true, server2: true, server3: false },
+  giveaway: { server: true, server2: true, server3: false },
+  credits: { server: false, server2: true, server3: true },
+  leaderboard: { server: false, server2: true, server3: true },
+  waitlist: { server: true, server2: true, server3: false },
+  wordcloud: { server: true, server2: true, server3: false },
+  "custom-gif-commands": { server: true, server2: true, server3: false },
+  privatechatbot: NO_SERVER_LINK_SUPPORT
+};
+
+const CHAT_OVERLAY_SERVER_PARAM_SUPPORT = {
+  "sampleoverlay.html": { server: true, server2: true, server3: false },
+  "themes/compact-classic.html": { server: true, server2: true, server3: false },
+  "themes/compact-clean.html": { server: true, server2: true, server3: false },
+  "themes/compact-glass.html": { server: true, server2: true, server3: false },
+  "themes/overlay-neon-cyberpunk.html": { server: true, server2: true, server3: false },
+  "themes/overlay-particles.html": { server: true, server2: true, server3: false },
+  "themes/overlay-typewriter.html": { server: true, server2: true, server3: false },
+  "themes/overlay-bubbles.html": { server: true, server2: true, server3: false },
+  "themes/overlay-cards.html": { server: true, server2: true, server3: false },
+  "themes/overlay-comic-pop.html": { server: true, server2: true, server3: false },
+  "themes/overlay-comic-classic.html": { server: true, server2: true, server3: false },
+  "themes/horizontal.html": { server: true, server2: true, server3: false },
+  "themes/overlay-ticker-news.html": { server: true, server2: true, server3: false },
+  "themes/overlay-credits.html": { server: true, server2: true, server3: false },
+  "themes/overlay-danmaku.html": { server: true, server2: true, server3: false },
+  "themes/overlay-xacception.html": { server: true, server2: true, server3: false },
+  "themes/pretty.html": FULL_SERVER_LINK_SUPPORT,
+  "themes/Neutron/chatOnly.html": FULL_SERVER_LINK_SUPPORT,
+  "themes/Neutron/stream.html": FULL_SERVER_LINK_SUPPORT,
+  "themes/Windows3.1/index.html": { server: true, server2: true, server3: false },
+  "themes/deuks_overlay/overlay1.html": { server: true, server2: true, server3: false },
+  "themes/deuks_overlay/overlay2.html": { server: true, server2: true, server3: false },
+  "themes/rainbowpuke/index.html": { server: true, server2: true, server3: false },
+  "themes/t3nk3y/index.html": { server: true, server2: true, server3: false }
+};
+
+const FULL_SERVER_GAME_PATHS = new Set([
+  "games.html",
+  "battle.html",
+  "games/chickenroyale.html"
+]);
+
+function normalizeGeneratedPath(path) {
+  path = (path || "").toString().replace(/\\/g, "/").split("#")[0].split("?")[0];
+  if (!path) return "";
+  try {
+    const url = new URL(path, baseURL);
+    path = url.pathname || path;
+  } catch (e) {}
+  const marker = "/social_stream/";
+  const markerIndex = path.toLowerCase().lastIndexOf(marker);
+  if (markerIndex !== -1) {
+    path = path.slice(markerIndex + marker.length);
+  }
+  path = path.replace(/^\/+/, "").replace(/^\.\//, "");
+  return path;
+}
+
+function getPathFromGeneratedUrl(rawUrl) {
+  return normalizeGeneratedPath(rawUrl || "");
+}
+
+function isServerLinkParam(paramName) {
+  return SERVER_LINK_PARAM_NAMES.indexOf(paramName) !== -1;
+}
+
+function getFeaturedServerParamSupport() {
+  return FULL_SERVER_LINK_SUPPORT;
+}
+
+function getGameServerParamSupport(contextPath) {
+  const selector = document.getElementById("games-preset-select");
+  let gamePath = contextPath || (selector && selector.value) || getPathFromGeneratedUrl(document.getElementById("games")?.raw) || "games.html";
+  gamePath = normalizeGeneratedPath(gamePath);
+  if (FULL_SERVER_GAME_PATHS.has(gamePath)) {
+    return FULL_SERVER_LINK_SUPPORT;
+  }
+  if (gamePath.indexOf("games/") === 0) {
+    return { server: true, server2: true, server3: false };
+  }
+  return SERVER_PARAM_SUPPORT_BY_TARGET.games || FULL_SERVER_LINK_SUPPORT;
+}
+
+function getServerParamSupportForTarget(targetId, contextPath) {
+  if (targetId === "chatoverlaytemplate") {
+    if (normalizeGeneratedPath(contextPath || getSelectedChatOverlayTemplatePath()) === 'themes/LuckyLootTube/luckyloottube.html') {
+      return { server: true, server2: true, server3: false };
+    }
+    return CHAT_OVERLAY_SERVER_PARAM_SUPPORT[normalizeGeneratedPath(contextPath || getSelectedChatOverlayTemplatePath())] || NO_SERVER_LINK_SUPPORT;
+  }
+  if (targetId === "overlay") {
+    return getFeaturedServerParamSupport(contextPath);
+  }
+  if (targetId === "games") {
+    return getGameServerParamSupport(contextPath);
+  }
+  return SERVER_PARAM_SUPPORT_BY_TARGET[targetId] || NO_SERVER_LINK_SUPPORT;
+}
+
+function targetSupportsServerParam(targetId, paramName, contextPath) {
+  const support = getServerParamSupportForTarget(targetId, contextPath);
+  return !!(support && support[paramName]);
+}
+
+function isBothParamChecked(paramName) {
+  const checkbox = document.querySelector(`input[data-both='${paramName}']`);
+  return !!(checkbox && checkbox.checked);
+}
+
+function getQueryParamTokenFromUrl(url, paramName) {
+  if (!url || typeof url !== "string" || url.indexOf("?") === -1) return "";
+  const query = url.split("?")[1].split("#")[0];
+  const parts = query.split("&");
+  for (let i = 0; i < parts.length; i += 1) {
+    const part = parts[i];
+    if (!part) continue;
+    const key = part.split("=")[0];
+    if (key === paramName || decodeURIComponent(key) === paramName) {
+      return part;
+    }
+  }
+  return "";
+}
+
+function collectServerParamTokens(sourceElement) {
+  const tokens = {};
+  SERVER_LINK_PARAM_NAMES.forEach(function(paramName) {
+    tokens[paramName] = getQueryParamTokenFromUrl(sourceElement && sourceElement.raw, paramName) ||
+      getQueryParamTokenFromUrl(document.getElementById("dock")?.raw, paramName) ||
+      paramName;
+  });
+  return tokens;
+}
+
+function getServerParamToken(paramName, sourceElement, sourceTokens) {
+  return (sourceTokens && sourceTokens[paramName]) ||
+    getQueryParamTokenFromUrl(sourceElement && sourceElement.raw, paramName) ||
+    getQueryParamTokenFromUrl(document.getElementById("dock")?.raw, paramName) ||
+    paramName;
+}
+
+function mergeSupportedServerParamsIntoQuery(params, targetId, sourceElement, contextPath) {
+  const sourceTokens = collectServerParamTokens(sourceElement);
+  let workingUrl = "https://socialstream.invalid/" + (params ? "?" + params : "");
+  SERVER_LINK_PARAM_NAMES.forEach(function(paramName) {
+    workingUrl = removeQueryParamWithValue(workingUrl, paramName);
+    if (isBothParamChecked(paramName) && targetSupportsServerParam(targetId, paramName, contextPath)) {
+      workingUrl = updateURL(getServerParamToken(paramName, sourceElement, sourceTokens), workingUrl);
+    }
+  });
+  return workingUrl.indexOf("?") === -1 ? "" : workingUrl.split("?")[1];
+}
+
+function syncSupportedServerParamsForTarget(targetId, targetElement, sourceElement, contextPath, sourceTokens) {
+  if (!targetElement || typeof targetElement.raw !== "string") return;
+  SERVER_LINK_PARAM_NAMES.forEach(function(paramName) {
+    targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramName);
+    if (isBothParamChecked(paramName) && targetSupportsServerParam(targetId, paramName, contextPath)) {
+      targetElement.raw = updateURL(getServerParamToken(paramName, sourceElement, sourceTokens), targetElement.raw);
+    }
+  });
+  // Explicit auto-show keeps consuming captured chat, even if server is checked.
+  // Manual selections are carried by Dock/Featured without adding an API opt-in.
+  if (targetId === "overlay" && isBothParamChecked("server2") && new URL(targetElement.raw, baseURL).searchParams.has("autoshow")) {
+    targetElement.raw = removeQueryParamWithValue(targetElement.raw, "server");
+  }
+	// Flow Actions has an independent command channel. An explicitly enabled
+	// API receiver can carry actions even when chat forwarding is disabled.
+	if (targetId === "flowactions" && !isBothParamChecked("server") && !isBothParamChecked("server2") && !isBothParamChecked("server3")
+		&& document.querySelector('input[data-setting="socketserver"]')?.checked) {
+		targetElement.raw = updateURL(getServerParamToken("server", sourceElement, sourceTokens), targetElement.raw);
+	}
+  targetElement.raw = cleanURL(targetElement.raw);
+}
 
 function getSelectedChatOverlayTemplatePath() {
   const selector = document.getElementById("overlay-preset-select");
@@ -2768,6 +3716,28 @@ function getKnownSessionParamValue() {
     return encodeURIComponent(lastResponse.streamID);
   }
   return "";
+}
+
+function buildGeneratedUrl(path, params, rootUrl) {
+  const targetUrl = new URL(path || "", rootUrl || baseURL);
+  const incomingParams = params instanceof URLSearchParams ? params : new URLSearchParams(params || "");
+  const valuesByKey = {};
+
+  incomingParams.forEach(function(value, key) {
+    if (!Object.prototype.hasOwnProperty.call(valuesByKey, key)) {
+      valuesByKey[key] = [];
+    }
+    valuesByKey[key].push(value);
+  });
+
+  Object.keys(valuesByKey).forEach(function(key) {
+    targetUrl.searchParams.delete(key);
+    valuesByKey[key].forEach(function(value) {
+      targetUrl.searchParams.append(key, value);
+    });
+  });
+
+  return targetUrl.href;
 }
 
 function getGeneratedLinkParams(primaryElement, fallbackElement) {
@@ -2803,6 +3773,15 @@ function getGeneratedLinkParams(primaryElement, fallbackElement) {
   return "";
 }
 
+function getGeneratedLinkDisplayUrl(element, url) {
+  const value = typeof url === "string" ? url : "";
+  const elementId = element && element.id ? element.id : "";
+  if (elementId === "cohost" || elementId === "cohostlink") {
+    return value.replace(/#cohostauth=[^&\s]*/i, "#private-cohost-access");
+  }
+  return value;
+}
+
 function setGeneratedLink(element, url) {
   if (!element) return;
   element.raw = cleanURL(url);
@@ -2813,12 +3792,12 @@ function setGeneratedLink(element, url) {
     link = element.querySelector("a");
   }
   if (!link) {
-    element.innerHTML = `<a target='_blank' id='${linkId}' href='${element.raw}'>${document.body.classList.contains("hidelinks") ? "Click to open link" : element.raw}</a>`;
+    element.innerHTML = `<a target='_blank' id='${linkId}' href='${element.raw}'>${document.body.classList.contains("hidelinks") ? "Click to open link" : getGeneratedLinkDisplayUrl(element, element.raw)}</a>`;
     return;
   }
 
   link.href = element.raw;
-  link.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : element.raw;
+  link.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : getGeneratedLinkDisplayUrl(element, element.raw);
 }
 
 function moveChatOverlayThemeOptions() {
@@ -2858,6 +3837,11 @@ function syncChatOverlayTemplateConfig(templatePath) {
   let activeSection = null;
   const normalizedPath = (templatePath || DEFAULT_CHAT_OVERLAY_TEMPLATE).split("?")[0];
   const configId = CHAT_OVERLAY_TEMPLATE_CONFIGS[normalizedPath] || "";
+
+  const membershipOption = document.getElementById("compact-clean-membership-option");
+  if (membershipOption) {
+    membershipOption.style.display = normalizedPath === "themes/compact-clean.html" ? "" : "none";
+  }
 
   document.querySelectorAll(".overlay-config-section").forEach(function(section) {
     section.style.display = "none";
@@ -2906,11 +3890,20 @@ function applyChatOverlayTemplatePreset(presetValue, options) {
   }
 
   const dockElement = document.getElementById("dock");
-  const params = options.preferDockParams ? getGeneratedLinkParams(dockElement, templateElement) : getGeneratedLinkParams(templateElement, dockElement);
-  let templateUrl = baseURL + (templatePath || DEFAULT_CHAT_OVERLAY_TEMPLATE);
-  if (params) {
-    templateUrl += (templateUrl.indexOf("?") === -1 ? "?" : "&") + params;
+  let params = options.preferDockParams ? getGeneratedLinkParams(dockElement, templateElement) : getGeneratedLinkParams(templateElement, dockElement);
+  params = mergeSupportedServerParamsIntoQuery(params, "chatoverlaytemplate", dockElement, templatePath);
+  // Auto-hide is managed with the main chat settings, including disabling it.
+  const templateParams = new URLSearchParams(params);
+  // The selected collection owns its style; do not carry the previous preset forward.
+  if (templatePath.split("?")[0] === "themes/compact-clean.html") {
+    templateParams.delete("style");
+    const selectedStyle = new URL(templatePath, baseURL).searchParams.get("style");
+    if (selectedStyle) templateParams.set("style", selectedStyle);
   }
+  const dockParams = new URLSearchParams(getGeneratedLinkParams(dockElement));
+  templateParams.set("showtime", dockParams.get("showtime") || "0");
+  params = templateParams.toString();
+  const templateUrl = buildGeneratedUrl(templatePath || DEFAULT_CHAT_OVERLAY_TEMPLATE, params);
 
   setGeneratedLink(templateElement, templateUrl);
   syncChatOverlayTemplateConfig(templatePath);
@@ -2928,19 +3921,22 @@ function syncChatOverlayTemplateLinkFromDock() {
 }
 
 function setupPageLinks(hideLinks, baseURL, streamID, password) {
+  const tipjarPreview = document.getElementById('tipjar-style-preview');
+  if (tipjarPreview) tipjarPreview.href = new URL('tipjar-preview.html', baseURL).href;
   // Get any custom parameters from the current URL
   let customParams = getSelectedTranslationLinkParam();
   try {
     const currentUrl = new URL(window.location.href);
     
     // List of parameters to ignore (TTS-related and standard ones)
-    const ignoreParams = ['session', 'password', 'cohostauth', 'localserver'];
+    const ignoreParams = ['session', 'password', 'cohostauth', 'localserver', 'localserverport'];
   const ttsRelatedParams = [
     'ttsprovider', 'lang', 'voice', 'rate', 'pitch',
     'elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency', 'elevenstability', 
     'elevensimilarity', 'elevenstyle', 'elevenspeakerboost', 'elevenrate',
     'googleapikey', 'googlevoice', 'googleaudioprofile', 'googlerate', 'googlelang',
     'geminikey', 'geminimodel', 'voicegemini', 'geminilang', 'geministyle', 'geminiprompt',
+    'fishkey', 'voicefish', 'fishmodel', 'fishspeed', 'fishendpoint',
     'speechifykey', 'speechifyvoice', 'voicespeechify', 'speechifymodel', 'speechifylang', 'speechifyspeed',
     'kokorokey', 'voicekokoro', 'kokorospeed'
   ];
@@ -2966,6 +3962,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "chatoverlaytemplate", path: getSelectedChatOverlayTemplatePath() },
     { id: "overlay", path: "featured.html" },
     { id: "multialerts", path: "multi-alerts.html" },
+    { id: "stickeroverlay", path: "stickers.html" },
     { id: "emoteswall", path: "emotes.html" },
     { id: "hypemeter", path: "hype.html" },
     { id: "hypetrain", path: "meta.html", defaultParams: "&hype" },
@@ -2975,13 +3972,15 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
 	{ id: "leaderboard", path: "leaderboard.html" },
 	{ id: "games", path: "games.html" },
     { id: "ticker", path: "ticker.html" },
+    { id: "wordcloud", path: "wordcloud.html" },
     { id: "poll", path: "poll.html" },
     { id: "chatbot", path: "bot.html", linkPath: "chatbot.html" },
 	{ id: "cohost", path: "cohost.html", capability: true },
-    { id: "giveaway", path: "giveaway.html" },
+    { id: "giveaway", path: "giveaway.html", defaultParams: "&managed" },
     { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
     { id: "aiprompt", path: "aiprompt.html" },
+    { id: "aievent", path: "aievent.html" },
     { id: "aioverlay", path: "cohost-overlay.html" },
     { id: "eventsdashboard", path: "events.html" },
 	{ id: "reactions", path: "reactions.html" },
@@ -2989,59 +3988,167 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
 	{ id: "custom-gif-commands", path: "gif.html" },
 	{ id: "spotify", path: "spotify-overlay.html" },
 	{ id: "scoreboard", path: "scoreboard.html"},
+	{ id: "map", path: "map.html" },
 	{ id: "timer", path: "timer.html" },
 	
   ];
   
   // Process all standard pages
+  const serverParamTokenSource = document.getElementById("dock");
+  const serverParamTokens = collectServerParamTokens(serverParamTokenSource);
   pages.forEach(page => {
     // Skip featured overlay update if a preset is selected
     if (page.id === "overlay") {
       const featuredPresetSelector = document.getElementById('featured-preset-select');
       if (featuredPresetSelector && featuredPresetSelector.value) {
-        return; // Skip updating featured overlay when preset is active
+        const existingOverlay = document.getElementById(page.id);
+        if (existingOverlay && existingOverlay.raw) {
+          setGeneratedLink(existingOverlay, existingOverlay.raw);
+          return; // Preserve the active preset, but always restore its anchor.
+        }
       }
     }
     
     const linkPath = page.linkPath || page.path;
     const pageDefaultParams = page.defaultParams || "";
-    const capabilityFragment = page.capability && cohostAccessCapability ? `#cohostauth=${encodeURIComponent(cohostAccessCapability)}` : "";
-    const fullURL = `${baseURL}${page.path}?session=${streamID}${password}${customParams}${pageDefaultParams}${versionParam}` + capabilityFragment;
-    const displayURL = `${baseURL}${linkPath}?session=${streamID}${password}${customParams}${pageDefaultParams}${versionParam}`;
+	const capabilityFragment = page.capability && cohostAccessCapability ? `#cohostauth=${encodeURIComponent(cohostAccessCapability)}` : "";
+	const generatedParams = `session=${encodeURIComponent(streamID)}${password}${customParams}${pageDefaultParams}${versionParam}`;
+	const fullURL = buildGeneratedUrl(page.path, generatedParams, baseURL) + capabilityFragment;
+	const displayURL = buildGeneratedUrl(linkPath, generatedParams, baseURL);
+	const visibleURL = page.capability && capabilityFragment ? displayURL + "#private-cohost-access" : displayURL;
     const element = document.getElementById(page.id);
     
     if (element) {
       const linkStyle = page.style ? `style="${page.style}"` : "";
-      element.innerHTML = hideLinks 
-        ? "Click to open link" 
-        : `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${displayURL}</a>`;
+	  element.innerHTML = `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${hideLinks ? "Click to open link" : visibleURL}</a>`;
       element.raw = fullURL;
+      syncSupportedServerParamsForTarget(page.id, element, serverParamTokenSource, page.path, serverParamTokens);
     }
   });
 
   syncChatOverlayTemplateLinkFromDock();
+  if (window.updateMonetizationLinks) window.updateMonetizationLinks();
   updateAiOverlayGeneratedLinks(hideLinks, baseURL, streamID, password, versionParam);
   
   // Update sample overlay and remote control URLs too
   const sampleOverlay = document.getElementById("sampleoverlay");
   if (sampleOverlay) {
-    sampleOverlay.href = `${baseURL}sampleoverlay.html?session=${streamID}${password}${customParams}${versionParam}`;
+    sampleOverlay.href = buildGeneratedUrl("sampleoverlay.html", `session=${encodeURIComponent(streamID)}${password}${customParams}${versionParam}`, baseURL);
   }
   
+  ['games_gallery_url', 'games_gallery_menu_url'].forEach(function(id) {
+    const link = document.getElementById(id);
+    if (link) link.href = buildGeneratedUrl("docs/games-gallery.html", `session=${encodeURIComponent(streamID)}${password}`, baseURL);
+  });
+
   const remoteControlUrl = document.getElementById("remote_control_url");
   if (remoteControlUrl) {
-    remoteControlUrl.href = `${baseURL}sampleapi.html?session=${streamID}${password}${customParams}${versionParam}`;
+    remoteControlUrl.href = buildGeneratedUrl("sampleapi.html", `session=${encodeURIComponent(streamID)}${password}${customParams}${versionParam}`, baseURL);
   }
+
+  const obsControlDockUrl = document.getElementById("obs_control_dock_url");
+  if (obsControlDockUrl) {
+    obsControlDockUrl.href = buildGeneratedUrl("obs-control-dock.html", `session=${encodeURIComponent(streamID)}${getLocalServerConnectionParams()}`, baseURL);
+  }
+
+	const streamElementsImporterUrl = document.getElementById("streamelements_importer_link");
+	if (streamElementsImporterUrl) {
+		streamElementsImporterUrl.href = buildGeneratedUrl("streamelements-importer.html", `session=${encodeURIComponent(streamID)}${password}`, baseURL);
+	}
 
   syncAllOverlayPreviews();
 }
 
+const FEATURED_CONNECTION_PARAM_NAMES = [
+	'session', 'password', 'v', 'ln', 'server', 'server2', 'server3', 'localserver', 'localserverport'
+];
+
+function appendMissingGeneratedParams(targetParams, rawUrl, paramNames) {
+	if (!rawUrl) return;
+	let sourceUrl;
+	try {
+		sourceUrl = new URL(rawUrl, baseURL);
+	} catch (e) {
+		return;
+	}
+
+	paramNames.forEach(function(paramName) {
+		if (targetParams.has(paramName)) return;
+		sourceUrl.searchParams.getAll(paramName).forEach(function(value) {
+			targetParams.append(paramName, value);
+		});
+	});
+}
+
+function getFeaturedConnectionParams(rawUrl) {
+	const params = new URLSearchParams();
+	const dockElement = document.getElementById('dock');
+	const sources = [rawUrl, dockElement && dockElement.raw];
+
+	sources.forEach(function(sourceUrl) {
+		appendMissingGeneratedParams(params, sourceUrl, FEATURED_CONNECTION_PARAM_NAMES);
+	});
+
+	if (!params.has('session')) {
+		for (let i = 0; i < sources.length; i += 1) {
+			if (!sources[i]) continue;
+			try {
+				const room = new URL(sources[i], baseURL).searchParams.get('room');
+				if (room) {
+					params.set('session', room);
+					break;
+				}
+			} catch (e) {}
+		}
+	}
+
+	if (!params.has('session')) {
+		const sessionInput = document.getElementById('sessionid');
+		const session = (sessionInput && sessionInput.value) || (lastResponse && lastResponse.streamID) || '';
+		if (session) params.set('session', session);
+	}
+
+	if (!params.has('password')) {
+		const passwordInput = document.getElementById('sessionpassword');
+		const password = passwordInput ? passwordInput.value : ((lastResponse && lastResponse.password) || '');
+		if (password) params.set('password', password);
+	}
+
+	if (!params.has('v')) {
+		appendMissingGeneratedParams(params, 'https://socialstream.invalid/?' + getPopupVersionParam().replace(/^&/, ''), ['v']);
+	}
+	if (!params.has('ln')) {
+		appendMissingGeneratedParams(params, 'https://socialstream.invalid/?' + getSelectedTranslationLinkParam().replace(/^&/, ''), ['ln']);
+	}
+	if (!params.has('localserver') && urlParams.has('localserver')) {
+		params.set('localserver', '');
+	}
+	if (params.has('localserver') && !params.has('localserverport')) {
+		const explicitPort = SocialStreamLocalServer.getExplicitPort(urlParams);
+		if (explicitPort !== null) params.set('localserverport', String(explicitPort));
+	}
+
+	return params;
+}
+
+function getFeaturedClassicParams(rawUrl) {
+	if (!rawUrl) return '';
+	try {
+		const params = new URL(rawUrl, baseURL).searchParams;
+		FEATURED_CONNECTION_PARAM_NAMES.concat(['room']).forEach(function(paramName) {
+			params.delete(paramName);
+		});
+		return params.toString();
+	} catch (e) {
+		return '';
+	}
+}
+
 function applyFeaturedOverlayPreset(presetValue) {
 	const overlayDiv = document.getElementById('overlay');
-	const overlayLink = document.getElementById('overlaylink');
 	const presetSelector = document.getElementById('featured-preset-select');
 
-	if (!overlayDiv || !overlayLink) {
+	if (!overlayDiv) {
 		return;
 	}
 
@@ -3054,36 +4161,20 @@ function applyFeaturedOverlayPreset(presetValue) {
 	});
 
 	const toggleClassicOptions = (show) => {
-		document.querySelectorAll('.wrapper:has(.options_group.single_message)').forEach(wrapper => {
-			wrapper.style.display = show ? '' : 'none';
+		document.querySelectorAll('.wrapper').forEach(wrapper => {
+			if (wrapper.querySelector('.options_group.single_message')) {
+				wrapper.style.display = show ? '' : 'none';
+			}
 		});
 	};
 
 	if (presetValue) {
-		const presetUrl = baseURL + presetValue;
-		let currentParams = overlayDiv.raw?.split('?')[1] || '';
-		let session = '';
-
-		if (currentParams) {
-			const params = new URLSearchParams(currentParams);
-			session = params.get('session') || params.get('room') || '';
+		if (normalizeGeneratedPath(overlayDiv.raw) === 'featured.html') {
+			overlayDiv.classicParams = getFeaturedClassicParams(overlayDiv.raw);
 		}
 
-		if (!session) {
-			const sessionInput = document.getElementById('sessionid');
-			if (sessionInput && sessionInput.value) {
-				session = sessionInput.value;
-			}
-		}
-
-		let newUrl = presetUrl;
-		if (session) {
-			newUrl += (presetUrl.includes('?') ? '&' : '?') + 'session=' + session;
-		}
-
-		overlayDiv.raw = newUrl;
-		overlayLink.href = newUrl;
-		overlayLink.innerText = document.body.classList.contains('hidelinks') ? 'Click to open link' : newUrl;
+		const newUrl = buildGeneratedUrl(presetValue, getFeaturedConnectionParams(overlayDiv.raw), baseURL);
+		setGeneratedLink(overlayDiv, newUrl);
 
 		toggleClassicOptions(false);
 
@@ -3095,20 +4186,16 @@ function applyFeaturedOverlayPreset(presetValue) {
 			}
 		}
 	} else {
-		let currentParams = overlayDiv.raw?.split('?')[1] || '';
-
-		if (!currentParams) {
-			const sessionInput = document.getElementById('sessionid');
-			if (sessionInput && sessionInput.value) {
-				currentParams = 'session=' + sessionInput.value;
-			}
-		}
-
-		const classicUrl = baseURL + 'featured.html' + (currentParams ? '?' + currentParams : '');
-
-		overlayDiv.raw = classicUrl;
-		overlayLink.href = classicUrl;
-		overlayLink.innerText = document.body.classList.contains('hidelinks') ? 'Click to open link' : classicUrl;
+		const classicParams = new URLSearchParams(overlayDiv.classicParams || '');
+		const connectionParams = getFeaturedConnectionParams(overlayDiv.raw);
+		FEATURED_CONNECTION_PARAM_NAMES.forEach(function(paramName) {
+			classicParams.delete(paramName);
+			connectionParams.getAll(paramName).forEach(function(value) {
+				classicParams.append(paramName, value);
+			});
+		});
+		const classicUrl = buildGeneratedUrl('featured.html', classicParams, baseURL);
+		setGeneratedLink(overlayDiv, classicUrl);
 
 		toggleClassicOptions(true);
 	}
@@ -3136,6 +4223,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
         elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate','voice11'],
         google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
         gemini: ['geminikey', 'geminimodel', 'voicegemini', 'geminilang', 'geministyle', 'geminiprompt'],
+        fish: ['fishkey', 'voicefish', 'fishmodel', 'fishspeed', 'fishendpoint'],
         speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
         kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
         kitten: ['kittenvoice', 'kittenspeed', 'kittensamplerate'],
@@ -3179,17 +4267,27 @@ function removeTTSProviderParams(url, selectedProvider=null) {
 
 
 function setupTtsProviders(response) {
+    const getSavedTtsProvider = (paramType) => {
+        const value = response.settings?.ttsprovider?.[paramType];
+        return value ? value.toString().trim().toLowerCase() : "";
+    };
+    const inferTtsProvider = (ttsService, paramNum) => {
+        if (ttsService !== "system") return ttsService;
+        const textParam = `textparam${paramNum}`;
+        if (response.settings?.geminikey?.[textParam]) return "gemini";
+        if (response.settings?.ttskey?.[textParam]) return "google";
+        if (response.settings?.googleAPIKey?.[textParam]) return "google";
+        if (response.settings?.elevenlabskey?.[textParam]) return "elevenlabs";
+        if (response.settings?.speechifykey?.[textParam]) return "speechify";
+        if (response.settings?.openaikey?.[textParam]) return "openai";
+        if (response.settings?.openaiendpoint?.[textParam]) return "customtts";
+        return ttsService;
+    };
+
     // Handle main TTS provider
     if (!response.settings?.ttsProvider?.optionsetting) {
-        let ttsService = "system";
-        if (response.settings?.geminikey?.textparam1) ttsService = "gemini";
-        else if (response.settings?.ttskey?.textparam1) ttsService = "google";
-        else if (response.settings?.googleAPIKey?.textparam1) ttsService = "google";
-        else if (response.settings?.elevenlabskey?.textparam1) ttsService = "elevenlabs";
-        else if (response.settings?.speechifykey?.textparam1) ttsService = "speechify";
-        else if (response.settings?.openaikey?.textparam1) ttsService = "openai";
-        else if (response.settings?.openaiendpoint?.textparam1) ttsService = "customtts";
-        
+        let ttsService = inferTtsProvider(getSavedTtsProvider("optionparam1") || "system", "1");
+
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
         }
@@ -3198,43 +4296,33 @@ function setupTtsProviders(response) {
     
     // Handle featured TTS provider (for param2)
     if (!response.settings?.ttsProvider?.optionsetting2) {
-        let ttsService = "system";
-        if (response.settings?.geminikey?.textparam2) ttsService = "gemini";
-        else if (response.settings?.ttskey?.textparam2) ttsService = "google";
-        else if (response.settings?.googleAPIKey?.textparam2) ttsService = "google";
-        else if (response.settings?.elevenlabskey?.textparam2) ttsService = "elevenlabs";
-        else if (response.settings?.speechifykey?.textparam2) ttsService = "speechify";
-        else if (response.settings?.openaikey?.textparam2) ttsService = "openai";
-        else if (response.settings?.openaiendpoint?.textparam2) ttsService = "customtts";
-        
+        let ttsService = inferTtsProvider(getSavedTtsProvider("optionparam2") || "system", "2");
+
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
         }
         response.settings.ttsProvider.optionsetting2 = ttsService;
     }
-    
+
     // Handle secondary TTS provider (for param10)
     if (!response.settings?.ttsProvider?.optionsetting10) {
-        let ttsService = "system";
-        if (response.settings?.geminikey?.textparam10) ttsService = "gemini";
-        else if (response.settings?.ttskey?.textparam10) ttsService = "google";
-        else if (response.settings?.googleAPIKey?.textparam10) ttsService = "google";
-        else if (response.settings?.elevenlabskey?.textparam10) ttsService = "elevenlabs";
-        else if (response.settings?.speechifykey?.textparam10) ttsService = "speechify";
-        else if (response.settings?.openaikey?.textparam10) ttsService = "openai";
-        else if (response.settings?.openaiendpoint?.textparam10) ttsService = "customtts";
-        
+        let ttsService = inferTtsProvider(getSavedTtsProvider("optionparam10") || "system", "10");
+
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
         }
         response.settings.ttsProvider.optionsetting10 = ttsService;
     }
 
-    ["optionsetting", "optionsetting2", "optionsetting10", "optionsetting18"].forEach(function(key) {
-        if (response.settings?.ttsProvider?.[key]) {
-            response.settings.ttsProvider[key] = normalizeWebStoreTtsProvider(response.settings.ttsProvider[key]);
+    // Handle Flow Actions TTS provider (for param18)
+    if (!response.settings?.ttsProvider?.optionsetting18) {
+        let ttsService = inferTtsProvider(getSavedTtsProvider("optionparam18") || "system", "18");
+
+        if (!response.settings.ttsProvider) {
+            response.settings.ttsProvider = {};
         }
-    });
+        response.settings.ttsProvider.optionsetting18 = ttsService;
+    }
 }
 
 // Process parameter settings from objects with a consistent approach
@@ -3284,6 +4372,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 }
                 if (commaTagInputs.includes(ele.id) || commaTagInputs.includes(key)) {
                     refreshCommaTagInput(ele.id || key);
+                } else if (userTypes.includes(ele.id) || userTypes.includes(key)) {
+                    updateUsernameList(ele.id || key);
                 }
             }
         }
@@ -3469,7 +4559,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
             updateSettings(ele, sync);
             if (userTypes.includes(key)) {
                 updateUsernameList(key);
-            } else if (sourceTypes.includes(key)) {
+            } else if (sourceTypes.includes(key) || sourceSelectTagInputs.includes(key)) {
                 updateSourceTypeList(key);
             } else if (commaTagInputs.includes(key)) {
                 updateCommaTagList(key);
@@ -3482,11 +4572,6 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
     if ("optionsetting" in settingObj) {
         const ele = document.querySelector(`select[data-optionsetting='${key}']`);
         if (ele) {
-            if (key === "ttsProvider") {
-                settingObj.optionsetting = normalizeWebStoreTtsProvider(settingObj.optionsetting);
-            } else if (key === "aiProvider") {
-                settingObj.optionsetting = normalizeWebStoreAiProvider(settingObj.optionsetting);
-            }
             if (key == "midiOutputDevice" || key.startsWith("mididevice") || key == "opencodemodel") {
                 if (settingObj.optionsetting && (ele.value !== settingObj.optionsetting)) {
                     // Check if option already exists
@@ -3526,9 +4611,6 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
     if ("optionsetting2" in settingObj) {
         const ele = document.querySelector(`select[data-optionsetting2='${key}']`);
         if (ele) {
-            if (key === "ttsProvider") {
-                settingObj.optionsetting2 = normalizeWebStoreTtsProvider(settingObj.optionsetting2);
-            }
             ensureSelectValueOption(ele, settingObj.optionsetting2);
             ele.value = settingObj.optionsetting2;
             updateSettings(ele, sync);
@@ -3541,9 +4623,6 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
     if ("optionsetting10" in settingObj) {
         const ele = document.querySelector(`select[data-optionsetting10='${key}']`);
         if (ele) {
-            if (key === "ttsProvider") {
-                settingObj.optionsetting10 = normalizeWebStoreTtsProvider(settingObj.optionsetting10);
-            }
             ensureSelectValueOption(ele, settingObj.optionsetting10);
             ele.value = settingObj.optionsetting10;
             updateSettings(ele, sync);
@@ -3563,6 +4642,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 });
             }
         } catch(e) { console.error("Error parsing customGifCommands JSON:", e); }
+    } else if (key === 'userdisplayaliases') {
+        loadUserDisplayAliases(settingObj.object || settingObj.json || []);
     } else if (key === 'savedPolls' && settingObj.json) {
         try {
             PollManager.savedPolls = JSON.parse(settingObj.json || '[]'); // Assuming PollManager is defined
@@ -3571,8 +4652,39 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
     }
 }
 
+function syncCreditsControlUi() {
+	var triggerMode = document.getElementById('creditsTriggerModeSelect');
+	var startButton = document.getElementById('creditsStartBtn');
+	var previewButton = document.getElementById('creditsPreviewBtn');
+	var testButton = document.getElementById('creditsBackgroundTestBtn');
+	var hint = document.getElementById('creditsControlHint');
+	var mode = triggerMode ? triggerMode.value : 'auto';
+	var buttonTriggered = mode === 'manual' || mode === 'background';
+
+	if (startButton) startButton.hidden = !buttonTriggered;
+	if (previewButton) previewButton.hidden = !buttonTriggered;
+	if (testButton) testButton.hidden = mode !== 'background';
+
+	if (hint) {
+		if (mode === 'background') {
+			hint.textContent = 'Collects credits in the background; use Start Credits when your ending scene is ready.';
+		} else if (mode === 'manual') {
+			hint.textContent = 'Use Start Credits when you are ready to run the saved credits.';
+		} else {
+			hint.textContent = 'Starts automatically when the credits source becomes visible.';
+		}
+	}
+}
+
 
 function update(response, sync = true) {
+    if (response && response.settings) {
+        for (const key of ['optionsetting', 'optionsetting2', 'optionsetting10', 'optionsetting18']) {
+            if (response.settings.ttsProvider && response.settings.ttsProvider[key]) response.settings.ttsProvider[key] = normalizeWebStoreTtsProvider(response.settings.ttsProvider[key]);
+        }
+        if (response.settings.aiProvider && response.settings.aiProvider.optionsetting) response.settings.aiProvider.optionsetting = normalizeWebStoreAiProvider(response.settings.aiProvider.optionsetting);
+    }
+
     log("update-> response: ", response);
     
     // Skip update if we're loading a poll
@@ -3582,7 +4694,10 @@ function update(response, sync = true) {
     }
     
     if (response !== undefined) {
-        if (response.cohostCapability) cohostAccessCapability = response.cohostCapability;
+		if (response.cohostCapability) cohostAccessCapability = response.cohostCapability;
+        if (response.settings) {
+            popupPanelVisibility = (response.settings.popupPanelVisibility || {}).object || {};
+        }
         applyPopupBeginnerMode(getPopupBeginnerMode(response));
 
         // Load profiles if they weren't loaded during init (e.g., due to startup timing)
@@ -3600,14 +4715,15 @@ function update(response, sync = true) {
 
         if (response.streamID) {
             lastResponse = response;
+            if (window.updateStickerRewardSettings) window.updateStickerRewardSettings(response.settings);
             streamID = true;
 
             var password = "";
             if ('password' in response && response.password) {
-                password = "&password=" + response.password;
+                password = "&password=" + encodeURIComponent(response.password);
             }
 
-            var localServer = urlParams.has("localserver") ? "&localserver" : "";
+            var localServer = getLocalServerConnectionParams();
             password += localServer;
 
             // Determine hideLinks status initially
@@ -3635,23 +4751,25 @@ function update(response, sync = true) {
 			}
 			
             document.getElementById("remote_control_url").href = baseURL + "sampleapi.html?session=" + response.streamID + password;
+            const obsControlDockUrl = document.getElementById("obs_control_dock_url");
+            if (obsControlDockUrl) {
+                obsControlDockUrl.href = baseURL + "obs-control-dock.html?session=" + encodeURIComponent(response.streamID) + getLocalServerConnectionParams();
+            }
             // The hideLinks variable is not reset to false globally here, its state is managed by the checkbox and classList.
 
             // Refresh all page links.
             refreshLinks();
-			const aipromptUrl = baseURL + "aiprompt.html?session=" + response.streamID + password + "&v=" + chrome.runtime.getManifest().version;
-			if (document.getElementById("aiprompt") && document.getElementById("aipromptlink")) document.getElementById("aiprompt").raw = document.getElementById("aipromptlink").href = document.getElementById("aipromptlink").innerText = aipromptUrl;
 
             try {
                 // Define your link configurations: { linkId: 'idOfLinkElement', sourcePropertyProvider: () => document.getElementById('sourceElementId')?.raw || document.getElementById('idOfLinkElement').href }
                 // A more robust way is if refreshLinks stores the raw URLs on the elements or returns them.
                 // For now, let's assume link elements have an href that needs cleaning.
                 const linkIdsToClean = [
-                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink', 'aioverlaylink',
+                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 'aipromptlink', 'aieventlink', 'aioverlaylink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'hypetrainlink', 'metalink', 'waitlistlink',
-                    'tipjarlink', 'tickerlink', 'polllink', 'flowactionslink',
+                    'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
-					'spotifylink'
+					'spotifylink','maplink'
                     // Add other link IDs that are generated and need cleaning
                 ];
 
@@ -3664,8 +4782,8 @@ function update(response, sync = true) {
                         const originalHref = linkElement.href; // Or from a 'data-raw-url' attribute if refreshLinks sets one
                         const cleanedUrl = removeTTSProviderParams(originalHref);
                         linkElement.href = cleanedUrl;
-                        if (linkElement.innerText !== "Click to open link" || !currentHideLinks) { // Avoid overwriting "Click to open" if links are hidden
-                           linkElement.innerText = currentHideLinks ? "Click to open link" : cleanedUrl;
+                        if (!currentHideLinks || linkElement.textContent !== "Click to open link") { // Read text without forcing layout between link updates.
+                           linkElement.innerText = currentHideLinks ? "Click to open link" : getGeneratedLinkDisplayUrl(linkElement, cleanedUrl);
                         }
                         // If your old `sourceElement.raw` was important, you might need to update a similar attribute
                         // if (linkElement.raw) linkElement.raw = cleanedUrl;
@@ -3719,8 +4837,13 @@ function update(response, sync = true) {
                     }
                 }
 
+				syncCreditsControlUi();
+
                 if ("translation" in response.settings) {
                     translation = response.settings["translation"];
+                    applyPopupTextDirection(
+                        response.settings.translationlanguage && response.settings.translationlanguage.optionsetting
+                    );
                     miniTranslate(document.body); // Assuming miniTranslate is defined
                 }
 
@@ -3746,6 +4869,9 @@ function update(response, sync = true) {
 
         if (("state" in response) && streamID) {
             isExtensionOn = response.state;
+            // The status is dynamic; a later language fetch must not replace it
+            // with the static "Extension active" translation for toggle-on-off.
+            document.getElementById("disableButtonText").removeAttribute("data-translate");
             if (isExtensionOn) {
                 document.body.classList.add("extension-enabled");
                 document.body.classList.remove("extension-disabled");
@@ -3840,19 +4966,20 @@ function processLegacySetting(key, value, sync) {
         updateSettings(ele, sync);
         if (commaTagInputs.includes(ele.id) || commaTagInputs.includes(key)) {
             refreshCommaTagInput(ele.id || key);
+        } else if (sourceSelectTagInputs.includes(ele.id) || sourceSelectTagInputs.includes(key)) {
+            updateSourceTypeList(ele.id || key);
         }
     }
 }
 
 const OPENCODE_ZEN_MODELS_URL = "https://opencode.ai/zen/v1/models";
 const OPENCODE_ZEN_FREE_MODEL_ORDER = [
-    "big-pickle",
-    "deepseek-v4-flash-free",
+    "nemotron-3.5-lightning-free",
     "mimo-v2.5-free",
-    "qwen3.6-plus-free",
-    "minimax-m3-free",
+    "ling-3.0-flash-fin-free",
     "nemotron-3-ultra-free",
-    "nemotron-3-super-free"
+    "big-pickle",
+    "deepseek-v4-flash-free"
 ];
 const OPENCODE_ZEN_MODEL_CACHE_MS = 60 * 60 * 1000;
 let openCodeModelLoadInFlight = null;
@@ -3874,6 +5001,8 @@ function getOpenCodeFreeModelRank(modelId) {
 
 function isOpenCodeChatCompletionsModel(modelId) {
     const value = String(modelId || "").trim().toLowerCase();
+    if (value.indexOf('muse-') === 0 || value.indexOf('grok-') === 0) return false;
+    if (value.indexOf('go/') === 0) return ['go/glm-5.3-flash', 'go/mimo-v2.5', 'go/deepseek-v4-flash'].indexOf(value) !== -1;
     return isOpenCodeFreeModelId(value) ||
         value === "big-pickle" ||
         value.indexOf("deepseek-") === 0 ||
@@ -3915,12 +5044,16 @@ function populateOpenCodeModelSelect(modelIds) {
     autoOption.value = "auto";
     autoOption.textContent = "Auto - free models only";
     select.appendChild(autoOption);
+    const goAuto = document.createElement('option');
+    goAuto.value = 'go-auto';
+    goAuto.textContent = 'Auto - free first, then Go subscription';
+    select.appendChild(goAuto);
 
     sortOpenCodeModelIds((modelIds || []).filter(isOpenCodeChatCompletionsModel)).forEach(function (id) {
         if (!id) return;
         const option = document.createElement("option");
         option.value = id;
-        option.textContent = isOpenCodeFreeModelId(id) ? id + " (free)" : id;
+        option.textContent = id.indexOf("go/") === 0 ? id.slice(3) + " (Go subscription)" : (isOpenCodeFreeModelId(id) ? id + " (free)" : id);
         select.appendChild(option);
     });
 
@@ -3950,7 +5083,7 @@ async function loadOpenCodeModels(force) {
     setOpenCodeModelStatus("Loading OpenCode models...", "#bbb");
     openCodeModelLoadInFlight = (async function () {
         try {
-            const headers = { "Accept": "application/json" };
+            const headers = { "Accept": "application/json", "x-opencode-session": "ssn-model-discovery" };
             const apiKey = getOpenCodeApiKeyFromPopup();
             if (apiKey) headers.Authorization = "Bearer " + apiKey;
             const response = await fetch(OPENCODE_ZEN_MODELS_URL, {
@@ -3969,6 +5102,16 @@ async function loadOpenCodeModels(force) {
                 throw new Error("No models returned");
             }
             const compatibleModels = models.filter(isOpenCodeChatCompletionsModel);
+            try {
+                const goResponse = await fetch('https://opencode.ai/zen/go/v1/models', { headers: headers });
+                if (goResponse.ok) {
+                    const goPayload = await goResponse.json();
+                    (goPayload.data || []).forEach(function (entry) {
+                        const id = 'go/' + entry.id;
+                        if (isOpenCodeChatCompletionsModel(id)) compatibleModels.push(id);
+                    });
+                }
+            } catch (error) { console.warn('[OpenCode] Go model discovery unavailable.'); }
             const modelList = compatibleModels.length ? compatibleModels : OPENCODE_ZEN_FREE_MODEL_ORDER;
             openCodeModelCache = {
                 fetchedAt: Date.now(),
@@ -3994,7 +5137,6 @@ async function loadOpenCodeModels(force) {
 
 // Handle AI provider visibility
 function handleAIProviderVisibility(provider) {
-    provider = normalizeWebStoreAiProvider(provider);
     // Hide all provider-specific elements first
     [
         "ollamamodel", "ollamaendpoint", "chatgptApiKey", "ollamaKeepAlive",
@@ -4055,7 +5197,7 @@ function handleAIProviderVisibility(provider) {
         document.getElementById("localgemmahost").classList.remove("hidden");
         document.getElementById("localbrowserhelp").classList.remove("hidden");
         document.getElementById("localgemmamodel").classList.remove("hidden");
-    } else if (provider == "localqwen") {
+    } else if (provider == "localqwen" || provider == "localqwen2b") {
         document.getElementById("localgemmahost").classList.remove("hidden");
         document.getElementById("localbrowserhelp").classList.remove("hidden");
         document.getElementById("localqwenmodel").classList.remove("hidden");
@@ -4088,6 +5230,136 @@ function getPopupBeginnerMode(response) {
 		return !!response.beginnerMode;
 	}
 	return !!(response.settings && response.settings.beginnerMode && response.settings.beginnerMode.setting === true);
+}
+
+var popupPanelVisibility = {};
+var popupPanelSections = null;
+var popupPanelPreview = '';
+
+function getPopupPanelSections() {
+	if (popupPanelSections) return popupPanelSections;
+	popupPanelSections = [];
+	document.querySelectorAll('.container > [data-panel-section]').forEach(function(element) {
+		var id = element.dataset.panelSection;
+		if (WEBSTORE_CONSERVATIVE_RELEASE && (id === 'map' || id === 'wordcloud')) return;
+		var section = popupPanelSections.find(function(item) { return item.id === id; });
+		if (!section) {
+			section = { id: id, elements: [], heading: null };
+			popupPanelSections.push(section);
+		}
+		section.elements.push(element);
+		var heading = element.querySelector(':scope > h2');
+		if (heading) section.heading = heading;
+	});
+	return popupPanelSections;
+}
+
+function getPopupPanelSection(element) {
+	var part = element && element.closest('[data-panel-section]');
+	return part ? getPopupPanelSections().find(function(section) { return section.id === part.dataset.panelSection; }) : null;
+}
+
+function getPopupPanelSectionLabel(section) {
+	var label = (section.heading.querySelector('.title-group') || section.heading).cloneNode(true);
+	label.querySelectorAll('a, button, label').forEach(function(action) { action.remove(); });
+	label.querySelectorAll('.emoji').forEach(function(emoji) { emoji.appendChild(document.createTextNode(' ')); });
+	return label.textContent.replace(/\s+/g, ' ').trim();
+}
+
+function isPopupPanelBeginnerHidden(section) {
+	return document.body.classList.contains('beginner-mode') && section.heading.parentElement.classList.contains('beginner-advanced');
+}
+
+function isPopupPanelSectionShown(section) {
+	if (typeof popupPanelVisibility[section.id] === 'boolean') return popupPanelVisibility[section.id];
+	return !isPopupPanelBeginnerHidden(section);
+}
+
+function applyPopupPanelVisibility() {
+	var changed = false;
+	getPopupPanelSections().forEach(function(section) {
+		var preview = popupPanelPreview === section.id;
+		var hidden = popupPanelVisibility[section.id] === false && !preview;
+		// Override the beginner preset for entire features it normally omits.
+		var selected = (popupPanelVisibility[section.id] === true || preview) && isPopupPanelBeginnerHidden(section);
+		section.elements.forEach(function(element) {
+			if (element.classList.contains('popup-panel-hidden') !== hidden || element.classList.contains('popup-panel-selected') !== selected) changed = true;
+			element.classList.toggle('popup-panel-hidden', hidden);
+			element.classList.toggle('popup-panel-selected', selected);
+			element.querySelectorAll('.beginner-advanced').forEach(function(child) {
+				child.classList.toggle('popup-panel-selected', selected);
+			});
+		});
+	});
+	var notice = document.getElementById('panelPreviewNotice');
+	notice.hidden = !popupPanelPreview;
+	if (popupPanelPreview) {
+		var section = getPopupPanelSections().find(function(item) { return item.id === popupPanelPreview; });
+		document.getElementById('panelPreviewText').textContent = getTranslation('viewing-hidden-section', 'Viewing a hidden section:') + ' ' + getPopupPanelSectionLabel(section);
+	}
+	if (changed) document.dispatchEvent(new Event('popup-panel-visibility-changed'));
+}
+
+function setupPopupPanelEditor() {
+	var dialog = document.getElementById('panelEditor');
+	var list = document.getElementById('panelSectionList');
+	var save = document.getElementById('savePanelSections');
+	var showAll = document.getElementById('showAllPanelSections');
+	var cancel = document.getElementById('cancelPanelEditor');
+	var error = document.getElementById('panelEditorError');
+	document.getElementById('customizePanel').addEventListener('click', function() {
+		list.textContent = '';
+		error.textContent = '';
+		getPopupPanelSections().forEach(function(section) {
+			var row = document.createElement('div');
+			row.className = 'popup-toggle-row';
+			var toggle = document.createElement('label');
+			toggle.className = 'switch';
+			var input = document.createElement('input');
+			input.type = 'checkbox';
+			input.id = 'panel-section-' + section.id;
+			input.dataset.panelChoice = section.id;
+			input.checked = isPopupPanelSectionShown(section);
+			var slider = document.createElement('span');
+			slider.className = 'slider round';
+			toggle.appendChild(input);
+			toggle.appendChild(slider);
+			var label = document.createElement('label');
+			label.htmlFor = input.id;
+			label.textContent = getPopupPanelSectionLabel(section);
+			row.appendChild(toggle);
+			row.appendChild(label);
+			list.appendChild(row);
+		});
+		dialog.showModal();
+	});
+	showAll.addEventListener('click', function() {
+		list.querySelectorAll('input').forEach(function(input) { input.checked = true; });
+	});
+	cancel.addEventListener('click', function() { dialog.close(); });
+	dialog.addEventListener('cancel', function(event) { if (save.disabled) event.preventDefault(); });
+	save.addEventListener('click', function() {
+		var selection = Object.assign({}, popupPanelVisibility);
+		list.querySelectorAll('input').forEach(function(input) { selection[input.dataset.panelChoice] = input.checked; });
+		save.disabled = showAll.disabled = cancel.disabled = dialog.querySelector('fieldset').disabled = true;
+		error.textContent = '';
+		chrome.runtime.sendMessage({ cmd: 'saveSetting', type: 'json', setting: 'popupPanelVisibility', value: JSON.stringify(selection) }, function(response) {
+			save.disabled = showAll.disabled = cancel.disabled = dialog.querySelector('fieldset').disabled = false;
+			if (chrome.runtime.lastError || !response || response.saved === false || response.error) {
+				error.textContent = getTranslation('panel-save-failed', 'Could not save the panel. Please try again.');
+				return;
+			}
+			popupPanelVisibility = selection;
+			popupPanelPreview = '';
+			applyPopupPanelVisibility();
+			dialog.close();
+		});
+	});
+	document.getElementById('hidePanelPreview').addEventListener('click', function() {
+		popupPanelPreview = '';
+		applyPopupPanelVisibility();
+		document.getElementById('customizePanel').focus();
+	});
 }
 
 var BEGINNER_ADVANCED_OPTION_SELECTORS = {
@@ -4147,6 +5419,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-param1="autoqueuequestions"]',
 		'[data-param1="autopindonations"]',
 		'[data-param1="autoqueuedonations"]',
+		'[data-param1="autoqueuememberships"]',
 		'[data-param1="sync"]',
 		'[data-param1="featuredmode"]',
 		'[data-param1="pinnedonly"]',
@@ -4158,6 +5431,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-textparam1="selfqueue"]'
 	],
 	"wrapper-chat-message-styling-options": [
+		'[data-param1="inline"]',
 		'[data-param1="donationright"]',
 		'[data-param1="nooutline"]',
 		'[data-param1="bolder"]',
@@ -4183,6 +5457,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-param1="normalize"]',
 		'[data-param1="fixed"]',
 		'[data-textparam1="cssb64"]',
+		'[data-textparam1="jsb64"]',
 		'[data-textparam1="googlefont"]'
 	],
 	"wrapper-global-mechanics-options": [
@@ -4191,6 +5466,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-setting="notiktoklinks"]',
 		'[data-setting="capturejoinedevent"]',
 		'[data-setting="capturelikeevent"]',
+		'[data-setting="captureliketotals"]',
 		'[data-setting="notiktokdonations"]',
 		'[data-setting="disabletiktokpoke"]',
 		'[data-setting="blockpremiumshorts"]',
@@ -4204,13 +5480,20 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-setting="addkarma"]',
 		'[data-setting="pumpTheNumbers"]',
 		'[data-textsetting="printerName"]',
+		'[data-numbersetting="printerPaperWidth"]',
+		'[data-numbersetting="printerLabelHeight"]',
+		'[data-numbersetting="printerMarginLeft"]',
+		'[data-numbersetting="printerMarginRight"]',
+		'[data-numbersetting="printerMarginTop"]',
+		'[data-numbersetting="printerMarginBottom"]',
+		'[data-numbersetting="printerFeed"]',
+		'[data-optionsetting="printerMarginMode"]',
 		'[data-setting="sharestreamid"]',
 		'[data-setting="disableRelayThrottle"]',
 		'[data-setting="disablehost"]',
 		'[data-setting="socketserver"]',
+		'[data-setting="server2additivedelivery"]',
 		'[data-setting="lanonly"]',
-		'[data-setting="ssc"]',
-		'[data-textsetting="sscapikey"]',
 		'[data-setting="videostatspoller"]',
 		'[data-textsetting="videostatsurl"]',
 		'[data-textsetting="videostatspublisher"]',
@@ -4231,6 +5514,7 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-textsetting="postserver"]',
 		'[data-setting="postalldiscord"]',
 		'[data-textsetting="postallserverdiscord"]',
+		'[data-setting="postallserverdiscordsimple"]',
 		'[data-setting="postdiscord"]',
 		'[data-textsetting="postserverdiscord"]',
 		'[data-setting="webhookrelay"]',
@@ -4262,6 +5546,8 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-setting="dice"]',
 		'[data-setting="questionKeywords"]',
 		'[data-textsetting="questionKeywords"]',
+		'[data-setting="allowExternalGifs"]',
+		'[data-setting="hideExternalGifUrl"]',
 		'[data-setting="giphy"]',
 		'[data-setting="tenor"]',
 		'[data-setting="giphy2"]',
@@ -4279,6 +5565,55 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 		'[data-setting="midi"]',
 		'#midiConfig',
 		'#midiCommands'
+	],
+	"wrapper-global-message-processing-options": [
+		'[data-setting="pronounscombined"]',
+		'[data-setting="discordmemberships"]',
+		'[data-setting="limitedyoutubememberchat"]',
+		'[data-setting="limitedtwitchmemberchat"]',
+		'[data-setting="addkarma"]',
+		'[data-setting="pumpTheNumbers"]'
+	],
+	"wrapper-global-connections-integrations-options": [
+		'[data-textsetting="printerName"]',
+		'[data-numbersetting="printerPaperWidth"]',
+		'[data-numbersetting="printerLabelHeight"]',
+		'[data-numbersetting="printerMarginLeft"]',
+		'[data-numbersetting="printerMarginRight"]',
+		'[data-numbersetting="printerMarginTop"]',
+		'[data-numbersetting="printerMarginBottom"]',
+		'[data-numbersetting="printerFeed"]',
+		'[data-optionsetting="printerMarginMode"]',
+		'[data-setting="sharestreamid"]',
+		'[data-setting="disableRelayThrottle"]',
+		'[data-setting="disablehost"]',
+		'[data-setting="socketserver"]',
+		'[data-setting="server2additivedelivery"]',
+		'[data-setting="lanonly"]',
+		'[data-setting="videostatspoller"]',
+		'[data-textsetting="videostatsurl"]',
+		'[data-textsetting="videostatspublisher"]',
+		'[data-textsetting="videostatsapplication"]',
+		'[data-textsetting="videostatskey"]',
+		'[data-textsetting="videostatsapikey"]',
+		'[data-textsetting="videostatsusername"]',
+		'[data-textsetting="videostatspassword"]',
+		'[data-numbersetting="videostatsinterval"]',
+		'[data-textsetting="videostatslabel"]',
+		'[data-setting="streamerbot"]',
+		'[data-textsetting="streamerbotendpoint"]',
+		'[data-textsetting="streamerbotpassword"]',
+		'[data-textsetting="streamerbotactionid"]',
+		'[data-setting="h2r"]',
+		'[data-textsetting="h2rserver"]',
+		'[data-setting="post"]',
+		'[data-textsetting="postserver"]',
+		'[data-setting="postalldiscord"]',
+		'[data-textsetting="postallserverdiscord"]',
+		'[data-setting="postallserverdiscordsimple"]',
+		'[data-setting="postdiscord"]',
+		'[data-textsetting="postserverdiscord"]',
+		'[data-setting="webhookrelay"]'
 	],
 	"wrapper-global-message-visibility-options": [
 		'[data-setting="hideallreplies"]',
@@ -4306,12 +5641,13 @@ var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 
 var BEGINNER_ADVANCED_OPTION_HEADINGS = {
 	"wrapper-chat-message-styling-options": ["Text Glow"],
-	"wrapper-global-mechanics-options": ["Printer Control"]
+	"wrapper-global-connections-integrations-options": ["Printer Control"]
 };
 
 var BEGINNER_ADVANCED_OPTION_HEADING_SECTIONS = {
 	"wrapper-global-message-visibility-options": ["Message doubling / echos / duplicates / relayed"],
 	"wrapper-global-mechanics-options": [
+		"Custom JavaScript",
 		"Giphy/Tenor support",
 		"Trigger webhook URL by a !command",
 		"Send fixed messages at intervals",
@@ -4390,10 +5726,15 @@ function markBeginnerAdvancedSections() {
 }
 
 function applyPopupBeginnerMode(enabled) {
+	var modeChanged = document.body.classList.contains("beginner-mode") !== !!enabled;
 	markBeginnerAdvancedSections();
 	document.body.classList.toggle("beginner-mode", !!enabled);
+	applyPopupPanelVisibility();
 	if (typeof checkImportantChanges === "function" && popupImportantChangesReady === true) {
 		checkImportantChanges();
+	}
+	if (modeChanged) {
+		document.dispatchEvent(new Event("popup-beginner-mode-changed"));
 	}
 }
 
@@ -4501,8 +5842,20 @@ function formatLLMProviderTestError(error) {
     if (error.code) {
         parts.push(`Code: ${error.code}`);
     }
+    if (error.missingScope) {
+        parts.push(`Missing scope: ${error.missingScope}`);
+    }
     if (error.message) {
         parts.push(`Message: ${error.message}`);
+    }
+    if (error.requestId) {
+        parts.push(`Request ID: ${error.requestId}`);
+    }
+    if (error.organization) {
+        parts.push(`OpenAI organization: ${error.organization}`);
+    }
+    if (error.project) {
+        parts.push(`OpenAI project: ${error.project}`);
     }
     if (error.hint) {
         parts.push(`Hint: ${error.hint}`);
@@ -4534,11 +5887,12 @@ async function testSelectedLLMProvider() {
     output.textContent = '';
 
     try {
-        const response = await sendPopupBackgroundCommand({
+        // Submit once: the generic background-command fallback can repeat a slow request.
+        const response = await sendRuntimeCommandMessage({
             cmd: 'testLLMProvider',
             prompt: 'Reply with one short sentence confirming this chatbot connection works.',
             settingsOverride: collectLLMProviderTestSettings()
-        }, 60000);
+        }, 60000, false);
 
         if (response && response.success) {
             status.textContent = 'Connected';
@@ -4553,7 +5907,7 @@ async function testSelectedLLMProvider() {
     } catch (error) {
         status.textContent = 'Failed';
         status.style.color = '#ff8a8a';
-        output.textContent = error?.message || String(error);
+        output.textContent = error?.message === 'Response timeout' ? 'Connection test timed out.' : (error?.message || String(error));
         console.error('[LLM Test] Provider test threw:', error);
     } finally {
         output.style.display = 'block';
@@ -4573,9 +5927,8 @@ function isOpenAITTSProvider(provider) {
 
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
-    provider = normalizeWebStoreTtsProvider(provider);
     // Hide all TTS elements
-    ["systemTTS", "elevenlabsTTS", "googleTTS", "geminiTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS"].forEach(id => {
+    ["systemTTS", "elevenlabsTTS", "googleTTS", "geminiTTS", "fishTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS", "piperTTS", "espeakTTS"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -4588,6 +5941,8 @@ function handleTTSProviderVisibility(provider) {
         document.getElementById("googleTTS").classList.remove("hidden");
     } else if (provider == "gemini") {
         document.getElementById("geminiTTS").classList.remove("hidden");
+    } else if (provider == "fish") {
+        document.getElementById("fishTTS").classList.remove("hidden");
     } else if (provider == "speechify") {
         document.getElementById("speechifyTTS").classList.remove("hidden");
     } else if (provider == "kokoro") {
@@ -4596,14 +5951,17 @@ function handleTTSProviderVisibility(provider) {
         document.getElementById("kittenTTS").classList.remove("hidden");
     } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS").classList.remove("hidden");
+    } else if (provider == "piper") {
+        document.getElementById("piperTTS").classList.remove("hidden");
+    } else if (provider == "espeak") {
+        document.getElementById("espeakTTS").classList.remove("hidden");
     }
 }
 
 // Handle secondary TTS provider visibility
 function handleTTSProvider10Visibility(provider) {
-    provider = normalizeWebStoreTtsProvider(provider);
     // Hide all TTS10 elements
-    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "geminiTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10"].forEach(id => {
+    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "geminiTTS10", "fishTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10", "piperTTS10", "espeakTTS10"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -4616,6 +5974,8 @@ function handleTTSProvider10Visibility(provider) {
         document.getElementById("googleTTS10").classList.remove("hidden");
     } else if (provider == "gemini") {
         document.getElementById("geminiTTS10").classList.remove("hidden");
+    } else if (provider == "fish") {
+        document.getElementById("fishTTS10").classList.remove("hidden");
     } else if (provider == "speechify") {
         document.getElementById("speechifyTTS10").classList.remove("hidden");
     } else if (provider == "kokoro") {
@@ -4624,14 +5984,17 @@ function handleTTSProvider10Visibility(provider) {
         document.getElementById("kittenTTS10").classList.remove("hidden");
     } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS10").classList.remove("hidden");
+    } else if (provider == "piper") {
+        document.getElementById("piperTTS10").classList.remove("hidden");
+    } else if (provider == "espeak") {
+        document.getElementById("espeakTTS10").classList.remove("hidden");
     }
 }
 
 // Handle featured TTS provider visibility (param2)
 function handleTTSProvider2Visibility(provider) {
-    provider = normalizeWebStoreTtsProvider(provider);
     // Hide all TTS2 elements
-    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "geminiTTS2", "speechifyTTS2", "kokoroTTS2", "kittenTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
+    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "geminiTTS2", "fishTTS2", "speechifyTTS2", "kokoroTTS2", "kittenTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -4644,6 +6007,8 @@ function handleTTSProvider2Visibility(provider) {
         document.getElementById("googleTTS2").classList.remove("hidden");
     } else if (provider == "gemini") {
         document.getElementById("geminiTTS2").classList.remove("hidden");
+    } else if (provider == "fish") {
+        document.getElementById("fishTTS2").classList.remove("hidden");
     } else if (provider == "speechify") {
         document.getElementById("speechifyTTS2").classList.remove("hidden");
     } else if (provider == "kokoro") {
@@ -4661,9 +6026,8 @@ function handleTTSProvider2Visibility(provider) {
 
 // Handle Flow Actions TTS provider visibility (param18)
 function handleTTSProvider18Visibility(provider) {
-    provider = normalizeWebStoreTtsProvider(provider);
     // Hide all TTS18 elements
-    ["systemTTS18", "elevenlabsTTS18", "googleTTS18", "geminiTTS18", "speechifyTTS18", "kokoroTTS18", "kittenTTS18", "openaiTTS18"].forEach(id => {
+    ["systemTTS18", "elevenlabsTTS18", "googleTTS18", "geminiTTS18", "fishTTS18", "speechifyTTS18", "kokoroTTS18", "kittenTTS18", "openaiTTS18", "piperTTS18", "espeakTTS18"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
 
@@ -4676,6 +6040,8 @@ function handleTTSProvider18Visibility(provider) {
         document.getElementById("googleTTS18")?.classList.remove("hidden");
     } else if (provider == "gemini") {
         document.getElementById("geminiTTS18")?.classList.remove("hidden");
+    } else if (provider == "fish") {
+        document.getElementById("fishTTS18").classList.remove("hidden");
     } else if (provider == "speechify") {
         document.getElementById("speechifyTTS18")?.classList.remove("hidden");
     } else if (provider == "kokoro") {
@@ -4684,6 +6050,10 @@ function handleTTSProvider18Visibility(provider) {
         document.getElementById("kittenTTS18")?.classList.remove("hidden");
     } else if (isOpenAITTSProvider(provider)) {
         document.getElementById("openaiTTS18")?.classList.remove("hidden");
+    } else if (provider == "piper") {
+        document.getElementById("piperTTS18")?.classList.remove("hidden");
+    } else if (provider == "espeak") {
+        document.getElementById("espeakTTS18")?.classList.remove("hidden");
     }
 }
 
@@ -4865,14 +6235,16 @@ function renderBeginnerWelcomeBanner(container) {
     container = container || document.getElementById("importantChanges");
     if (!container) return;
 
-    const videoGuideText = shouldShowBeginnerChromeVideoGuide() ? ` If stuck getting started, check out this <a href="https://www.youtube.com/watch?v=Zql6Q5H2Eqw" target="_blank" rel="noopener noreferrer">video guide</a>.` : "";
+    const videoGuideText = shouldShowBeginnerChromeVideoGuide()
+        ? getTranslation("beginner-video-guide", ` If stuck getting started, check out this <a href="https://www.youtube.com/watch?v=Zql6Q5H2Eqw" target="_blank" rel="noopener noreferrer">video guide</a>.`)
+        : "";
 
     container.classList.add('show', 'beginner-welcome');
     container.innerHTML = `
         <div class="beginner-welcome-card">
-            <strong>Welcome to Social Stream Ninja</strong>
-            <small>You are in beginner mode, so only the most common setup options are shown.${videoGuideText}</small>
-            <button type="button" id="beginnerWelcomeAdvanced">Switch to full mode</button>
+            <strong>${getTranslation("welcome-to-social-stream-ninja", "Welcome to Social Stream Ninja")}</strong>
+            <small>${getTranslation("beginner-mode-description", "You are in beginner mode, so only the most common setup options are shown.")}${videoGuideText}</small>
+            <button type="button" id="beginnerWelcomeAdvanced">${getTranslation("switch-to-full-mode", "Switch to full mode")}</button>
         </div>
     `;
 
@@ -5016,6 +6388,219 @@ function scrollToSetting(targetSection, targetSetting) {
 
 var baseURL = "https://socialstream.ninja/";
 
+function getSourceModeBase(value) {
+	if (!value) return "";
+	try {
+		const parsed = new URL(value);
+		if (!["http:", "https:", "file:", "chrome-extension:", "moz-extension:"].includes(parsed.protocol)) return "";
+		return value;
+	} catch (e) {
+		return "";
+	}
+}
+
+function normalizeGeneratedLinkBase(value) {
+	if (!value || typeof value !== "string") return "";
+	try {
+		const parsed = new URL(value);
+		const allowedHosts = new Set(["socialstream.ninja", "beta.socialstream.ninja"]);
+		if (parsed.protocol !== "https:" || !allowedHosts.has(parsed.hostname.toLowerCase())) return "";
+		return `${parsed.protocol}//${parsed.host}/`;
+	} catch (e) {
+		return "";
+	}
+}
+
+/**
+ * Keep SSApp history under the app's file:// top-level page. Chromium partitions storage
+ * for the remotely loaded popup/background frames by their top-level site, so a separate
+ * BrowserWindow cannot see that IndexedDB even when it loads the same remote URL.
+ */
+function isSsappUnlimitedDBSettingEnabled(value) {
+	return value === true || !!(value && typeof value === "object" && value.setting === true);
+}
+
+function readSsappUnlimitedDBSetting() {
+	const checkboxValue = () => {
+		const input = document.querySelector('[data-setting="unlimitedDB"]');
+		return !!(input && input.checked);
+	};
+
+	if (popupStartupSettingsHydrated) return Promise.resolve(checkboxValue());
+	if (typeof chrome === "undefined" || !chrome.runtime || typeof chrome.runtime.sendMessage !== "function") {
+		return Promise.resolve(checkboxValue());
+	}
+
+	return new Promise(resolve => {
+		let settled = false;
+		let timeout = null;
+		const finish = value => {
+			if (settled) return;
+			settled = true;
+			if (timeout !== null) clearTimeout(timeout);
+			resolve(value);
+		};
+		timeout = setTimeout(() => finish(checkboxValue()), 3500);
+
+		try {
+			chrome.runtime.sendMessage({ cmd: "getSettings" }, response => {
+				if (chrome.runtime.lastError || !response || !response.settings) {
+					finish(checkboxValue());
+					return;
+				}
+				finish(isSsappUnlimitedDBSettingEnabled(response.settings.unlimitedDB));
+			});
+		} catch (error) {
+			finish(checkboxValue());
+		}
+	});
+}
+
+async function readSsappChatHistorySnapshot() {
+	const unlimitedDB = await readSsappUnlimitedDBSetting();
+	const databases = typeof indexedDB.databases === "function" ? await indexedDB.databases() : null;
+	if (databases && !databases.some(database => database.name === "chatMessagesDB_v3")) {
+		return { messages: [], version: null, stores: [], unlimitedDB };
+	}
+
+	return new Promise((resolve, reject) => {
+		const request = indexedDB.open("chatMessagesDB_v3");
+		request.onerror = () => reject(request.error || new Error("Unable to open the local message database."));
+		request.onsuccess = () => {
+			const database = request.result;
+			const stores = Array.from(database.objectStoreNames);
+			if (!database.objectStoreNames.contains("messages")) {
+				database.close();
+				reject(new Error("The local message database does not contain the messages store."));
+				return;
+			}
+
+			const allMessages = database.transaction("messages", "readonly").objectStore("messages").getAll();
+			allMessages.onerror = () => {
+				database.close();
+				reject(allMessages.error || new Error("Unable to read saved messages."));
+			};
+			allMessages.onsuccess = () => {
+				const snapshot = {
+					messages: Array.isArray(allMessages.result) ? allMessages.result : [],
+					version: database.version,
+					stores,
+					unlimitedDB
+				};
+				database.close();
+				resolve(snapshot);
+			};
+		};
+	});
+}
+
+function createSsappChatHistorySnapshotDocument(historyUrl, snapshot) {
+	const snapshotJson = JSON.stringify(snapshot);
+	const snapshotLiteral = JSON.stringify(snapshotJson).replace(/</g, "\\u003c");
+	const historyUrlLiteral = JSON.stringify(historyUrl.toString()).replace(/</g, "\\u003c");
+	let targetOrigin = "*";
+	try {
+		if (historyUrl.protocol === "http:" || historyUrl.protocol === "https:") targetOrigin = historyUrl.origin;
+	} catch (_) {}
+
+	return `<!doctype html>
+		<html>
+		<head>
+			<meta charset="utf-8">
+			<title>Message Browser</title>
+			<style>
+				html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #fff; }
+				#history-frame { display: block; width: 100%; height: 100%; border: 0; background: #fff; }
+			</style>
+		</head>
+		<body>
+			<iframe id="history-frame" title="Message Browser"></iframe>
+			<script>
+				const snapshot = JSON.parse(${snapshotLiteral});
+				const frame = document.getElementById("history-frame");
+				const targetOrigin = ${JSON.stringify(targetOrigin)};
+				const sendSnapshot = () => frame.contentWindow && frame.contentWindow.postMessage({
+					type: "ssapp-chat-history-snapshot",
+					snapshot
+				}, targetOrigin);
+				window.addEventListener("message", event => {
+					if (event.source !== frame.contentWindow || !event.data) return;
+					if (event.data.type === "ssapp-chat-history-ready") {
+						sendSnapshot();
+					} else if (event.data.type === "ssapp-chat-history-clear") {
+						let ok = false;
+						try {
+							if (window.ninjafy && typeof window.ninjafy.sendMessage === "function") {
+								window.ninjafy.sendMessage(null, {
+									type: "toBackground",
+									data: { action: "clearHistory", value: { confirm: true } }
+								});
+								ok = true;
+							}
+						} catch (_) {}
+						frame.contentWindow.postMessage({
+							type: "ssapp-chat-history-clear-result",
+							requestId: event.data.requestId,
+							ok
+						}, targetOrigin);
+					}
+				});
+				frame.src = ${historyUrlLiteral};
+			</script>
+		</body>
+		</html>`;
+}
+
+function setupSsappChatHistoryPanel() {
+	const historyLink = document.getElementById("chathistory");
+	if (!historyLink) return;
+
+	let historyUrl;
+	try {
+		historyUrl = new URL("./chathistory.html", window.location.href);
+		historyUrl.searchParams.set("ssapp", "1");
+	} catch (error) {
+		console.error("Unable to create the SSApp chat history URL:", error);
+		return;
+	}
+
+	historyUrl.searchParams.set("ssappSnapshot", "1");
+
+	const configureHistoryLink = () => {
+		const currentHistoryLink = document.getElementById("chathistory");
+		if (!currentHistoryLink) return;
+		currentHistoryLink.href = "#";
+		currentHistoryLink.target = "_self";
+	};
+	configureHistoryLink();
+
+	const databaseSettingsRow = document.getElementById("databaseSettingsRow");
+	if (databaseSettingsRow && !databaseSettingsRow.__ssappHistoryLinkObserver) {
+		databaseSettingsRow.__ssappHistoryLinkObserver = new MutationObserver(configureHistoryLink);
+		databaseSettingsRow.__ssappHistoryLinkObserver.observe(databaseSettingsRow, { childList: true, subtree: true });
+	}
+
+	document.addEventListener("click", async event => {
+		const clickedLink = event.target && event.target.closest ? event.target.closest("#chathistory") : null;
+		if (!clickedLink) return;
+		event.preventDefault();
+		if (clickedLink.getAttribute("aria-busy") === "true") return;
+		clickedLink.setAttribute("aria-busy", "true");
+		try {
+			const snapshot = await readSsappChatHistorySnapshot();
+			const html = createSsappChatHistorySnapshotDocument(historyUrl, snapshot);
+			const blobUrl = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+			window.open(blobUrl, "_blank");
+			setTimeout(() => URL.revokeObjectURL(blobUrl), 300000);
+		} catch (error) {
+			console.error("Unable to open the SSApp chat history:", error);
+			window.alert(error && error.message ? error.message : "Unable to open the local message database.");
+		} finally {
+			clickedLink.removeAttribute("aria-busy");
+		}
+	});
+}
+
 // First check if we're on a beta URL (either subdomain or path)
 if (location.href.includes("/beta/") || location.hostname === "beta.socialstream.ninja"){
     Beta = true;
@@ -5025,8 +6610,11 @@ if (location.href.includes("/beta/") || location.hostname === "beta.socialstream
 if (sourcemode){
 	baseURL = sourcemode;
 } else if (devmode) {
-    const currentPageUrl = location.href.split(/[?#]/)[0];
-    baseURL = currentPageUrl.substring(0, currentPageUrl.lastIndexOf('/') + 1);
+    if (location.protocol === "file:") {
+        baseURL = location.href.substring(0, location.href.lastIndexOf('/') + 1);
+    } else {
+        baseURL = "file:///C:/Users/steve/Code/social_stream/";
+    }
 } else if (location.hostname === "cache.socialstream.ninja") {
     baseURL = Beta ? "https://beta.socialstream.ninja/" : "https://socialstream.ninja/";
 } else if (location.protocol !== "chrome-extension:" && !Beta) {
@@ -5034,13 +6622,15 @@ if (sourcemode){
     baseURL = `${location.protocol}//${location.host}/`;
 }
 
+const generatedLinkBaseOverride = normalizeGeneratedLinkBase(urlParams.get("generatedlinkbase"));
+if (generatedLinkBaseOverride) {
+	baseURL = generatedLinkBaseOverride;
+}
+
 
 
 
 function updateURL(param, href) {
-    const hashIndex = href.indexOf("#");
-    const fragment = hashIndex < 0 ? "" : href.slice(hashIndex);
-    if (hashIndex >= 0) href = href.slice(0, hashIndex);
     href = href.replace("??", "?");
     var arr = href.split('?');
     var newurl;
@@ -5050,12 +6640,16 @@ function updateURL(param, href) {
         newurl = href + '?' + param;
     }
     newurl = newurl.replace("?&", "?");
-    return newurl + fragment;
+    return newurl;
 }
 
 function removeQueryParamWithValue(url, paramWithValue) {
-    const hashIndex = url.indexOf("#");
-    if (hashIndex >= 0) return removeQueryParamWithValue(url.slice(0, hashIndex), paramWithValue) + url.slice(hashIndex);
+    if (typeof url !== "string") {
+        url = url ? String(url) : "";
+    }
+    if (!url) {
+        return "";
+    }
     let [baseUrl, queryString] = url.split('?');
     if (!queryString) {
         return url;
@@ -5106,6 +6700,8 @@ function getTargetMap() {
         'timer': 26,
 		'reactions': 27,
         'hypetrain': 29,
+        'aiprompt': 31,
+        'aievent': 32,
     };
 }
 
@@ -5191,6 +6787,35 @@ function setupFirstTimerControls() {
     updateFirstTimerUiState();
 }
 
+function syncDuplicateParamCheckboxes(ele, paramType, paramValue) {
+    document.querySelectorAll(`input[data-${paramType}]`).forEach(function(peer) {
+        if (peer !== ele && peer.dataset[paramType] === paramValue) {
+            peer.checked = ele.checked;
+        }
+    });
+}
+
+function syncDuplicateParamValues(ele, paramType, paramValue) {
+    document.querySelectorAll(`[data-${paramType}]`).forEach(function(peer) {
+        if (peer !== ele && peer.dataset[paramType] === paramValue && 'value' in peer) {
+            peer.value = ele.value;
+            if (peer.dataset.rangeDisplay) {
+                updateRangeDisplay(peer);
+            }
+        }
+    });
+}
+
+function saveParamCheckboxState(ele, paramType, paramValue, checked) {
+    chrome.runtime.sendMessage({
+        cmd: "saveSetting",
+        type: paramType,
+        target: ele.dataset.target || null,
+        setting: paramValue,
+        value: checked
+    }, function (response) {});
+}
+
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const paramAttr = `data-${paramType}`;
     const paramValue = ele.dataset[paramType]; // e.g., 'scale=0.77' or 'darkmode'
@@ -5204,6 +6829,8 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const keyOnly = parts[0]; // e.g., 'scale' or 'darkmode'
     const valueInAttr = parts.length > 1 ? parts[1] : undefined; // e.g., '0.77' or undefined
     const effectiveKey = normalizeParamKey(keyOnly);
+
+    syncDuplicateParamCheckboxes(ele, paramType, paramValue);
 
     if (ele.checked) {
         // Remove any existing instance of this parameter based on the key part
@@ -5259,12 +6886,10 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
                         targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voice');
                         // Add new parameters
                         targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
-                        targetElement.raw = updateURL(`voice=${voiceValue}`, targetElement.raw);
+                        targetElement.raw = updateURL(`voice=${encodeURIComponent(voiceValue)}`, targetElement.raw);
                     } else if (keyOnly === 'speechifylang') {
-                        // Remove existing parameter first
-                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voicespeechify');
-                        // Speechify only uses voice parameter
-                        targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
+                        targetElement.raw = updateURL(`speechifylang=${langValue}`, targetElement.raw);
+                        if (voiceValue) targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
                     } else if (keyOnly.endsWith('lang')) {
                         // Generic handling for other *lang parameters
                         const prefix = keyOnly.slice(0, -4);
@@ -5337,7 +6962,7 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
         } else if (keyOnly === 'lang' || keyOnly === 'systemlang') {
             targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voice');
         } else if (keyOnly === 'speechifylang') {
-            targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voicespeechify');
+            // Speechify voice ID is independent of the optional language override.
         } else if (keyOnly.endsWith('lang')) {
             // Generic handling for other *lang parameters
             const prefix = keyOnly.slice(0, -4);
@@ -5349,13 +6974,7 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
 
     if (sync) {
         // Still save the checkbox state using the full paramValue
-        chrome.runtime.sendMessage({
-            cmd: "saveSetting",
-            type: paramType,
-            target: ele.dataset.target || null,
-            setting: paramValue, // Save the full paramValue ('scale=0.77')
-            value: ele.checked
-        }, function (response) {});
+        saveParamCheckboxState(ele, paramType, paramValue, ele.checked);
 
         // Save associated text/number/option value if applicable, using the key part
         const numberSettingSuffixSave = paramNum === '1' ? '' : paramNum;
@@ -5385,13 +7004,18 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const paramPrefixRaw = paramValue.split('=')[0];
     const normalizedPrefix = normalizeParamKey(paramPrefixRaw);
     // Only handle siblings if the param contains '=' (like scale=2, opacity=0.3) or the bare key itself
-    if (paramValue.includes('=') || paramValue === paramPrefixRaw) {
+    if (ele.checked && (paramValue.includes('=') || paramValue === paramPrefixRaw)) {
         // Select only inputs that control the same key for this param group, excluding the current element
         const selector = `input[data-${paramType}^='${normalizedPrefix}='], input[data-${paramType}='${normalizedPrefix}'], input[data-${paramType}='${paramPrefixRaw}']`;
         document.querySelectorAll(selector).forEach(ele1 => {
-            if (ele1 !== ele && ele1.checked) {
+            if (ele1 === ele || ele1.dataset[paramType] === paramValue) {
+                return;
+            }
+            if (ele1.checked) {
                 ele1.checked = false;
-                updateSettings(ele1, sync);
+                if (sync) {
+                    saveParamCheckboxState(ele1, paramType, ele1.dataset[paramType], false);
+                }
             }
         });
     }
@@ -5412,7 +7036,10 @@ function handleExclusiveCases(ele, paramType, paramValue, sync) {
             'darkmode': 'lightmode',
             'lightmode': 'darkmode',
             'onlytwitch': 'hidetwitch',
-            'hidetwitch': 'onlytwitch'
+            'hidetwitch': 'onlytwitch',
+            'color': ['randomcolor', 'randomcolorall'],
+            'randomcolor': ['color', 'randomcolorall'],
+            'randomcolorall': ['color', 'randomcolor']
         },
         param2: {
             'transparent': 'chroma',
@@ -5477,6 +7104,8 @@ function handleTextParam(ele, targetId, paramType, sync) {
     
     const paramValue = ele.dataset[paramType];
     if (!paramValue) return false;
+
+    syncDuplicateParamValues(ele, paramType, paramValue);
     
     // Get the param number (e.g., "10" from "textparam10")
     const paramNum = paramType.match(/\d+$/) ? paramType.match(/\d+$/)[0] : '';
@@ -5497,12 +7126,19 @@ function handleTextParam(ele, targetId, paramType, sync) {
     // Only modify URL if there's no checkbox, or if checkbox exists and is checked
     if (!checkbox || checkbox.checked) {
         // First remove any existing instance of this parameter
-        targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
+        if (paramValue === 'cssb64') {
+            ['base64css', 'b64css', 'cssbase64', 'cssb64'].forEach(function(alias) {
+                targetElement.raw = removeQueryParamWithValue(targetElement.raw, alias);
+            });
+        } else {
+            targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
+        }
         
         if (ele.value) {
             // If there's a value, add the parameter with value
             if (paramValue === 'cssb64') {
-                targetElement.raw = updateURL(`${paramValue}=${btoa(encodeURIComponent(ele.value))}`, targetElement.raw);
+                const encodedCss = encodeURIComponent(btoa(encodeURIComponent(ele.value)));
+                targetElement.raw = updateURL(`${paramValue}=${encodedCss}`, targetElement.raw);
             } else {
                 targetElement.raw = updateURL(`${paramValue}=${encodeURIComponent(ele.value)}`, targetElement.raw);
             }
@@ -5565,6 +7201,8 @@ function handleOptionParam(ele, targetId, paramType, sync) {
     
     const paramValue = ele.dataset[paramType];
     if (!paramValue) return false;
+
+    syncDuplicateParamValues(ele, paramType, paramValue);
     
     const isMapTarget = targetId === 'map';
     const paramKey = isMapTarget ? paramValue.toLowerCase() : paramValue;
@@ -5623,12 +7261,12 @@ function handleOptionParam(ele, targetId, paramType, sync) {
                     targetElement.raw = updateURL(`googlelang=${langValue}`, targetElement.raw);
                     targetElement.raw = updateURL(`voicegoogle=${voiceValue}`, targetElement.raw);
                 } else if (paramValue === 'speechifylang') {
-                    // Speechify doesn't use separate lang param, just voice
-                    targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
+                    targetElement.raw = updateURL(`speechifylang=${langValue}`, targetElement.raw);
+                    if (voiceValue) targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
                 } else if (paramValue === 'lang' || paramValue === 'systemlang') {
                     // System TTS uses generic lang and voice
                     targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
-                    targetElement.raw = updateURL(`voice=${voiceValue}`, targetElement.raw);
+                    targetElement.raw = updateURL(`voice=${encodeURIComponent(voiceValue)}`, targetElement.raw);
                 } else if (paramValue.endsWith('lang')) {
                     // Generic handling for other *lang parameters
                     const prefix = paramValue.slice(0, -4);
@@ -5695,15 +7333,33 @@ function handleDelParam(ele, sync) {
 
 function handleBothParam(ele, sync) {
     if (!ele.dataset.both) return false;
+
+    if (isServerLinkParam(ele.dataset.both)) {
+        const sourceElement = document.getElementById("dock");
+        const sourceTokens = collectServerParamTokens(sourceElement);
+        Object.keys(getTargetMap()).forEach(id => {
+            syncSupportedServerParamsForTarget(id, document.getElementById(id), sourceElement, null, sourceTokens);
+        });
+
+        if (sync) {
+            chrome.runtime.sendMessage({
+                cmd: "saveSetting",
+                type: "both",
+                target: ele.dataset.target || null,
+                setting: ele.dataset.both,
+                value: ele.checked
+            }, function (response) {});
+        }
+
+        return true;
+    }
     
     // Use the same list of targets as defined in the targetMap
-    const elements = Object.keys(getTargetMap()).filter(id => id !== "chatoverlaytemplate");
+    const elements = Object.keys(getTargetMap());
 
     elements.forEach(id => {
         const element = document.getElementById(id);
-        // Some Web Store-only omissions leave a hidden link without a URL.
-        // Skip that target so the switch can still save and refresh other links.
-        if (element && typeof element.raw === "string") {
+        if (element) {
             element.raw = ele.checked 
                 ? updateURL(ele.dataset.both, element.raw)
                 : removeQueryParamWithValue(element.raw, ele.dataset.both);
@@ -5777,6 +7433,10 @@ function handleSetting(ele, sync) {
         }
     }
     
+    if (ele.dataset.setting === "socketserver") {
+        syncSupportedServerParamsForTarget("flowactions", document.getElementById("flowactions"), document.getElementById("dock"), "actions.html");
+        refreshLinks();
+    }
     if (ele.dataset.setting === "hideyourlinks") {
         refreshLinks();
     }
@@ -5820,6 +7480,43 @@ function handleSetting(ele, sync) {
     return true;
 }
 
+function replaceGeneratedConnectionParam(rawUrl, paramName, value) {
+    if (!rawUrl || typeof rawUrl !== 'string') return rawUrl;
+    let updatedUrl = removeQueryParamWithValue(rawUrl, paramName);
+    if (paramName === 'session') {
+        updatedUrl = removeQueryParamWithValue(updatedUrl, 'room');
+    }
+    if (value !== null && value !== undefined && value !== '') {
+        updatedUrl = updateURL(paramName + '=' + encodeURIComponent(value), updatedUrl);
+    }
+    return cleanURL(updatedUrl);
+}
+
+function refreshGeneratedConnectionLinks(paramName, value) {
+    if (!lastResponse || typeof lastResponse !== 'object') {
+        lastResponse = {};
+    }
+    if (paramName === 'session') {
+        lastResponse.streamID = value;
+    } else if (paramName === 'password') {
+        lastResponse.password = value || '';
+    }
+
+    document.querySelectorAll('[data-raw]').forEach(function(element) {
+        if (typeof element.raw !== 'string' || !element.raw) return;
+        setGeneratedLink(element, replaceGeneratedConnectionParam(element.raw, paramName, value));
+    });
+
+    ['sampleoverlay', 'remote_control_url', 'obs_control_dock_url', 'games_gallery_url', 'games_gallery_menu_url'].forEach(function(elementId) {
+        const link = document.getElementById(elementId);
+        if (!link || !link.href) return;
+        link.href = replaceGeneratedConnectionParam(link.href, paramName, value);
+    });
+
+    refreshLinks();
+    if (window.updateMonetizationLinks) window.updateMonetizationLinks();
+}
+
 function handleSpecialSettings(ele, sync) {
     if (!ele.dataset.special) return false;
     
@@ -5829,6 +7526,7 @@ function handleSpecialSettings(ele, sync) {
             alert("Invalid session ID.");
         } else {
             ele.value = xsx;
+            refreshGeneratedConnectionLinks('session', xsx);
             if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set) {
                 chrome.storage.sync.set({ streamID: xsx });
             }
@@ -5838,12 +7536,13 @@ function handleSpecialSettings(ele, sync) {
                 streamID: xsx
             }, function (response) { 
 				log("Password updated");
-				if (response.streamID || response.password){
+				if (response && (response.streamID || response.password || response.cohostCapability)){
 					update(response, false);
 				}
 			});
         }
     } else if (ele.dataset.special === "password") {
+        refreshGeneratedConnectionLinks('password', ele.value || '');
         if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set) {
             chrome.storage.sync.set({ password: ele.value });
         }
@@ -5853,7 +7552,7 @@ function handleSpecialSettings(ele, sync) {
             password: ele.value || ""
         }, function (response) {
 			log("Password updated");
-			if (response.streamID || response.password){
+			if (response && (response.streamID || response.password || response.cohostCapability)){
 				update(response, false);
 			}
 		});
@@ -5869,14 +7568,6 @@ function handleOptionSetting(ele, sync) {
                        (ele.dataset.optionsetting2 ? 'optionsetting2' :
                        (ele.dataset.optionsetting10 ? 'optionsetting10' : 'optionsetting18'));
     const settingValue = ele.dataset[settingType];
-
-    if (settingValue === "ttsProvider") {
-        const normalizedProvider = normalizeWebStoreTtsProvider(ele.value);
-        if (normalizedProvider !== ele.value) ele.value = normalizedProvider;
-    } else if (settingValue === "aiProvider") {
-        const normalizedProvider = normalizeWebStoreAiProvider(ele.value);
-        if (normalizedProvider !== ele.value) ele.value = normalizedProvider;
-    }
     
     // Handle poll type
     if (settingValue === "pollType") {
@@ -5968,6 +7659,7 @@ function handleOptionSetting(ele, sync) {
                 document.getElementById("localgemmamodel").classList.remove("hidden");
                 break;
             case 'localqwen':
+            case 'localqwen2b':
                 document.getElementById("localgemmahost").classList.remove("hidden");
                 document.getElementById("localbrowserhelp").classList.remove("hidden");
                 document.getElementById("localqwenmodel").classList.remove("hidden");
@@ -5986,7 +7678,7 @@ function handleOptionSetting(ele, sync) {
         const suffix = settingType === 'optionsetting2' ? '2' : (settingType === 'optionsetting10' ? '10' : (settingType === 'optionsetting18' ? '18' : ''));
         const ttsProviderElements = [
             `systemTTS${suffix}`, `elevenlabsTTS${suffix}`, `googleTTS${suffix}`, `geminiTTS${suffix}`,
-            `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `kittenTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
+            `fishTTS${suffix}`, `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `kittenTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
         ];
         
         ttsProviderElements.forEach(id => {
@@ -6112,6 +7804,8 @@ function handleNumberSetting(ele, sync) {
         if (!ele.dataset[settingType]) continue;
         
         const settingValue = ele.dataset[settingType];
+
+        syncDuplicateParamValues(ele, settingType, settingValue);
         
         if (sync) {
             chrome.runtime.sendMessage({
@@ -6138,7 +7832,10 @@ function handleNumberSetting(ele, sync) {
             checkbox = document.querySelector(`input[${relatedAttr}*='${settingValue}']`);
         }
 
-        if (checkbox && checkbox.checked) {
+        // These standalone controls have no enable checkbox.
+        const isStandaloneNumber = (targetId === 'scoreboard' && settingValue === 'maxusers') ||
+            (targetId === 'leaderboard' && (settingValue === 'updateinterval' || settingValue === 'rotateinterval'));
+        if (isStandaloneNumber || (checkbox && checkbox.checked)) {
             const targetElement = document.getElementById(targetId);
             const effectiveKey = normalizeParamKey(settingValue);
             targetElement.raw = removeQueryParamWithValue(targetElement.raw, effectiveKey);
@@ -6391,6 +8088,11 @@ function handlePollSettings(ele, sync) {
 }
 
 function updateSettings(ele, sync = true, value = null) {
+    if (ele && ele.value && ele.dataset) {
+        if (ele.dataset.optionsetting === 'aiProvider') ele.value = normalizeWebStoreAiProvider(ele.value);
+        if ([ele.dataset.optionsetting, ele.dataset.optionsetting2, ele.dataset.optionsetting10, ele.dataset.optionsetting18].includes('ttsProvider')) ele.value = normalizeWebStoreTtsProvider(ele.value);
+    }
+
     if (ele.target) {
         ele = this;
     }
@@ -6551,6 +8253,50 @@ function validateRoomId(roomId) {
 
 let overlayPreviewSequence = 0;
 
+function attachMultiAlertSoundLibrary(inputId) {
+    const input = document.getElementById(inputId);
+    if (!input || !window.SSNSoundLibrary || document.getElementById(inputId + '-library')) return;
+    const container = document.createElement('div');
+    container.style.width = input.closest('.ssn-alert-setup') ? '100%' : '95%';
+    const custom = document.createElement('details');
+    custom.className = 'ssn-sound-custom';
+    const summary = document.createElement('summary');
+    summary.textContent = '📎 Custom sound URL / upload';
+    custom.appendChild(summary);
+    const inputRow = input.parentElement;
+    inputRow.insertAdjacentElement('beforebegin', container);
+    inputRow.insertAdjacentElement('beforebegin', custom);
+    custom.appendChild(inputRow);
+    window.SSNSoundLibrary.attach({
+        container, input, id: inputId, label: ({
+            'multi-alert-custombeep': 'Default alert sound',
+            'multi-alert-followsound': 'Follow sound',
+            'multi-alert-subsound': 'Subscription sound',
+            'multi-alert-donosound': 'Donation sound',
+            'multi-alert-bitssound': 'Bits / cheer sound',
+            'multi-alert-raidsound': 'Raid sound',
+            'multi-alert-auctionsound': 'Auction win sound',
+            'multi-alert-hypesound': 'Hype train sound'
+        })[inputId] || '🔊 Sound (optional)',
+        getValue: () => input.value,
+        setValue: value => {
+            input.value = value;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            const enabled = document.querySelector('[data-param25="beep"]');
+            if (enabled && !enabled.checked) {
+                enabled.checked = true;
+                enabled.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        },
+        getVolume: () => {
+            const enabled = document.querySelector('[data-param25="beepvolume"]');
+            const volume = document.querySelector('[data-numbersetting25="beepvolume"]');
+            return enabled && enabled.checked && volume ? Number(volume.value) / 100 : 0.35;
+        }
+    });
+}
+
 const overlayPreviewConfigs = Object.freeze({
     multialerts: {
         frameId: 'multi-alerts-preview-frame',
@@ -6562,7 +8308,7 @@ const overlayPreviewConfigs = Object.freeze({
 });
 
 const overlayPreviewState = {
-    multialerts: { pending: null, timer: null, muted: false }
+    multialerts: { pending: null, timer: null, muted: false, loading: false, playOnLoad: false }
 };
 
 function getLocalOverlayUrl(path) {
@@ -6733,7 +8479,42 @@ function buildOverlayPreviewUrl(previewKey) {
     return previewUrl.toString();
 }
 
-function syncOverlayPreview(previewKey) {
+function syncAlertEffectSummaries() {
+    for (let index = 1; index <= 3; index++) {
+        const prefix = 'multi-alert-effect' + index;
+        const summary = document.getElementById(prefix + '-summary');
+        if (!summary) continue;
+        const value = key => document.getElementById(prefix + '-' + key).value.trim();
+        const media = value('media'), sound = value('sound');
+        const parts = [];
+        if (value('state') === 'false') parts.push('Paused');
+        if (!media && !sound) parts.push('Not configured');
+        else {
+            const type = document.getElementById(prefix + '-type');
+            parts.push(type.options[type.selectedIndex].textContent);
+            const min = value('min'), max = value('max');
+            if (min || max) {
+                if (!['donation', 'bits'].includes(type.value) || (min && (!Number.isFinite(Number(min)) || Number(min) < 0)) || (max && (!Number.isFinite(Number(max)) || Number(max) < 0)) || (min && max && Number(min) > Number(max))) parts.push('Check amount limits');
+                else parts.push(min && max && Number(min) === Number(max) ? 'exactly $' + Number(min) + ' USD' : (min && max ? '$' + Number(min) + '–$' + Number(max) + ' USD' : min ? '$' + Number(min) + '+ USD' : 'up to $' + Number(max) + ' USD'));
+            }
+            if (media) parts.push('Media');
+            if (sound) {
+                const entry = window.SSNSoundLibrary && window.SSNSoundLibrary.sounds.find(item => item.url === sound);
+                parts.push(entry ? entry.name : 'Custom sound');
+            } else parts.push('Default sound');
+        }
+        summary.textContent = parts.join(' · ');
+    }
+}
+
+function syncOverlayPreview(previewKey, force = false) {
+    syncAlertEffectSummaries();
+    for (let index = 1; index <= 3; index++) {
+        const toggle = document.getElementById('multi-alert-effect' + index + '-enabled');
+        const saved = document.getElementById('multi-alert-effect' + index + '-state');
+        if (toggle && saved) toggle.checked = saved.value !== 'false';
+    }
+    if (window.SSNSoundLibrary) window.SSNSoundLibrary.syncAll();
     const config = overlayPreviewConfigs[previewKey];
     if (!config) {
         return;
@@ -6744,6 +8525,12 @@ function syncOverlayPreview(previewKey) {
         return;
     }
 
+    // The closed preview should not parse an overlay or create an AudioContext
+    // on every menu opening. Once loaded, keep it in sync even when collapsed.
+    const section = frame.closest('.collapsible');
+    const toggle = section && section.querySelector('input.collapsible-input');
+    if (!force && !frame.dataset.currentPreviewUrl && toggle && !toggle.checked) return;
+
     const nextUrl = buildOverlayPreviewUrl(previewKey);
     if (frame.dataset.currentPreviewUrl === nextUrl) {
         replayOverlayPreview(previewKey, { silent: true });
@@ -6751,6 +8538,7 @@ function syncOverlayPreview(previewKey) {
     }
 
     frame.dataset.currentPreviewUrl = nextUrl;
+    overlayPreviewState[previewKey].loading = true;
     frame.src = nextUrl;
 }
 
@@ -6803,6 +8591,7 @@ function sendOverlayPreview(previewKey, descriptor) {
 
     state.pending = descriptor;
     if (descriptor === false) {
+        state.playOnLoad = false;
         if (state.timer) {
             clearTimeout(state.timer);
             state.timer = null;
@@ -6813,6 +8602,13 @@ function sendOverlayPreview(previewKey, descriptor) {
         return;
     }
 
+    syncOverlayPreview(previewKey, true);
+    if (state.loading) {
+        // Keep an explicit first test (including its sound) until the lazy frame
+        // is ready. Ordinary settings refreshes still replay silently.
+        state.playOnLoad = true;
+        return;
+    }
     replayOverlayPreview(previewKey, { silent: false });
 }
 
@@ -6899,6 +8695,15 @@ function getMultiAlertPreviewPlatformKey() {
     return document.getElementById('multi-alert-preview-platform')?.value || 'tiktok';
 }
 
+function formatCustomEventTranslation(settingKey, fallback, values = {}) {
+    const input = document.querySelector(`[data-textsetting="${settingKey}"]`);
+    let template = input && typeof input.value === 'string' && input.value.trim() ? input.value.trim() : fallback;
+    Object.keys(values).forEach((key) => {
+        template = template.replace(new RegExp(`\\{${key}\\}`, 'g'), String(values[key] ?? ''));
+    });
+    return template;
+}
+
 function buildMultiAlertPreviewDescriptor(category) {
     const platformKey = getMultiAlertPreviewPlatformKey();
     const profile = MULTI_ALERT_PREVIEW_PLATFORMS[platformKey] || MULTI_ALERT_PREVIEW_PLATFORMS.tiktok;
@@ -6908,6 +8713,12 @@ function buildMultiAlertPreviewDescriptor(category) {
         chatname: profile.chatname,
         chatimg: createPreviewAvatarDataUri(profile.avatarLabel, profile.accent)
     };
+    const followMessage = platformKey === 'twitch'
+        ? formatCustomEventTranslation('customTwitchFollowMessage', `${profile.chatname} has started following`, { name: profile.chatname })
+        : `${profile.chatname} has started following`;
+    const subscriptionMessage = platformKey === 'twitch'
+        ? formatCustomEventTranslation('customTwitchSubscribedAtTierMessage', `${profile.chatname} has subscribed at tier 1`, { name: profile.chatname, tier: '1' })
+        : `${profile.chatname} has subscribed`;
 
     switch (category) {
         case 'follow':
@@ -6916,7 +8727,7 @@ function buildMultiAlertPreviewDescriptor(category) {
                 overrides: {
                     ...commonOverrides,
                     event: 'new_follower',
-                    chatmessage: `${profile.chatname} has started following`
+                    chatmessage: followMessage
                 }
             };
         case 'subscription':
@@ -6927,7 +8738,7 @@ function buildMultiAlertPreviewDescriptor(category) {
                     event: 'new_subscriber',
                     membership: profile.subscriptionLabel,
                     subtitle: profile.subscriptionSubtitle,
-                    chatmessage: 'Welcome to the squad!'
+                    chatmessage: subscriptionMessage
                 }
             };
         case 'donation':
@@ -7003,7 +8814,7 @@ function buildTestAlertPayload(category, overrides = {}) {
             event: 'new_subscriber',
             chatname: 'Markus',
             chatimg: 'https://socialstream.ninja/media/user2.jpg',
-            chatmessage: 'Welcome to the squad!',
+			chatmessage: 'Markus has subscribed at tier 1',
             membership: 'Tier 1',
             subtitle: 'Tier 1 subscription'
         },
@@ -7062,7 +8873,7 @@ function buildTipJarTestDonationPayload(kind) {
         'youtube-superchat': {
             type: 'youtube',
             platform: 'youtube',
-            event: 'donation',
+            event: 'superchat',
             chatname: 'SuperChat Fan',
             chatmessage: 'Testing a Super Chat donation',
             hasDonation: '$10.00',
@@ -7119,6 +8930,35 @@ function attachTipJarTestDonationButtons() {
     });
 }
 
+function attachReactionTestButton() {
+    var button = document.getElementById('test-reaction-button');
+    if (!button) {
+        return;
+    }
+    button.addEventListener('click', function() {
+        chrome.runtime.sendMessage({
+            message: {
+                chatname: 'YouTube Live',
+                chatmessage: '<span class="reaction-heart">👍</span>',
+                chatimg: '',
+                contentimg: '',
+                // Chat body representation only: true is literal text without added HTML; false permits sanitized HTML. This is not a trust flag for other fields.
+                textonly: false,
+                platform: 'youtube',
+                type: 'youtube',
+                event: 'reaction',
+                meta: {
+                    reactionType: '👍',
+                    source: 'popup_test'
+                }
+            },
+            target: 'reactions'
+        }, function() {
+            log('ignore callback for this action');
+        });
+    });
+}
+
 function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
     const config = overlayPreviewConfigs[previewKey];
     if (!config) {
@@ -7127,8 +8967,17 @@ function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
 
     const frame = document.getElementById(config.frameId);
     if (frame) {
+        const section = frame.closest('.collapsible');
+        const toggle = section && section.querySelector('input.collapsible-input');
+        if (toggle) toggle.addEventListener('change', () => {
+            if (toggle.checked) syncOverlayPreview(previewKey);
+        });
         frame.addEventListener('load', () => {
-            replayOverlayPreview(previewKey, { silent: true });
+            const state = overlayPreviewState[previewKey];
+            state.loading = false;
+            const silent = !state.playOnLoad;
+            state.playOnLoad = false;
+            replayOverlayPreview(previewKey, { silent });
         });
     }
 
@@ -7179,43 +9028,18 @@ function endPopupLinkRefreshBatch() {
 	}
 }
 
-function getQueryParamTokenFromUrl(url, paramName) {
-  if (!url || typeof url !== "string" || url.indexOf("?") === -1) return "";
-  const query = url.split("?")[1].split("#")[0];
-  const parts = query.split("&");
-  for (let i = 0; i < parts.length; i += 1) {
-    const part = parts[i];
-    if (!part) continue;
-    const key = part.split("=")[0];
-    if (key === paramName || decodeURIComponent(key) === paramName) {
-      return part;
-    }
-  }
-  return "";
-}
-
 function refreshLinks(){
   if (popupLinkRefreshBatchDepth > 0) {
     popupLinkRefreshPending = true;
     return;
   }
 
-  // Refresh Featured transport flags after preset and auto-show changes.
-  // Match beta's routing while leaving the Dock API switch explicitly opt-in.
+  // Also recalculate after changing auto-show/presets, not just transport toggles.
   const selectionSource = document.getElementById("dock");
-  const featuredTarget = document.getElementById("overlay");
-  if (selectionSource && featuredTarget && typeof featuredTarget.raw === "string") {
-    const autoShow = new URL(featuredTarget.raw, baseURL).searchParams.has("autoshow");
-    ["server", "server2", "server3"].forEach(function(paramName) {
-      const input = document.getElementById(paramName);
-      const token = getQueryParamTokenFromUrl(selectionSource.raw, paramName) ||
-        getQueryParamTokenFromUrl(featuredTarget.raw, paramName) || paramName;
-      featuredTarget.raw = removeQueryParamWithValue(featuredTarget.raw, paramName);
-      if (input && input.checked && !(paramName === "server" && autoShow && document.getElementById("server2").checked)) {
-        featuredTarget.raw = updateURL(token, featuredTarget.raw);
-      }
-    });
-  }
+  const selectionTokens = collectServerParamTokens(selectionSource);
+  ["dock", "overlay"].forEach(function(targetId) {
+    syncSupportedServerParamsForTarget(targetId, document.getElementById(targetId), selectionSource, null, selectionTokens);
+  });
 
   let hideLinks = false;
   document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
@@ -7255,6 +9079,7 @@ function refreshLinks(){
       'creditslink': 'credits',
       'privatechatbotlink': 'privatechatbot',
       'aipromptlink': 'aiprompt',
+      'aieventlink': 'aievent',
       'eventsdashboardlink': 'eventsdashboard',
       'reactionslink': 'reactions',
       'custom-gif-commandslink': 'custom-gif-commands',
@@ -7280,13 +9105,17 @@ function refreshLinks(){
         linkElement.href = cleanedUrl; // Update the link's href
 
         // Update link's text based on hideLinks status
-        linkElement.innerText = currentHideLinks ? "Click to open link" : cleanedUrl;
+        linkElement.innerText = currentHideLinks ? "Click to open link" : getGeneratedLinkDisplayUrl(divElement, cleanedUrl);
       }
     });
 
     const remoteCtrlUrlElement = document.getElementById("remote_control_url");
     if (remoteCtrlUrlElement && remoteCtrlUrlElement.href) {
       remoteCtrlUrlElement.href = removeTTSProviderParams(remoteCtrlUrlElement.href);
+    }
+    const obsControlDockUrlElement = document.getElementById("obs_control_dock_url");
+    if (obsControlDockUrlElement && obsControlDockUrlElement.href) {
+      obsControlDockUrlElement.href = removeTTSProviderParams(obsControlDockUrlElement.href);
     }
   } catch (e) {
     console.error("Error cleaning TTS params from links:", e);
@@ -7496,6 +9325,33 @@ async function openHostedMediaUploadForInput(inputElement, popupName = 'uploadMe
     };
 
     window.addEventListener('message', handler);
+}
+
+function setupDockBeepPreview() {
+    const button = document.getElementById('dock-loud-beep-preview');
+    const status = document.getElementById('dock-loud-beep-status');
+    if (!button || !status) return;
+    let audio = null;
+    button.onclick = function() {
+        if (!audio) audio = new Audio('./audio/tone-loud.wav');
+        const enabled = document.querySelector('[data-param1="beepvolume"]');
+        const volume = document.getElementById('dock-beep-volume-range');
+        const requestedVolume = enabled && enabled.checked && volume ? parseInt(volume.value, 10) / 100 : 1;
+        audio.volume = Number.isFinite(requestedVolume) ? Math.min(1, Math.max(0, requestedVolume)) : 1;
+        audio.currentTime = 0;
+        button.disabled = true;
+        function finish(message) {
+            button.disabled = false;
+            status.textContent = message;
+        }
+        audio.onended = function() { finish('Preview finished.'); };
+        audio.onerror = function() { finish('Could not play the beep preview.'); };
+        status.textContent = 'Playing preview at ' + Math.round(audio.volume * 100) + '% volume.';
+        audio.play().catch(function() { finish('Could not play the beep preview.'); });
+    };
+    window.addEventListener('pagehide', function() {
+        if (audio) audio.pause();
+    });
 }
 
 function triggerCustomGifPreview(entry) {
@@ -8308,6 +10164,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 rate: getParam('kokorospeed') ? getNumber('kokorospeed', 1.0) : 1.0,
             },
             
+            piper: {
+                speed: getParam('piperspeed') ? getNumber('piperspeed', 1.0) : 1.0
+            },
+
             // Kitten TTS settings
             kitten: {
                 voice: getId('kittenVoiceSelect')?.selectedOptions[0]?.value || "expr-voice-4-f",
@@ -8348,13 +10208,20 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 				speakingRate: getParam('elevenrate') ? getNumber('elevenrate', 1.0) : 1.0
 			},
             
+            fish: {
+                endpoint: (getId('fishEndpoint')?.value || getText('fishendpoint') || '').trim(),
+                key: (getId('fishAPIKey')?.value || getText('fishkey') || '').trim(),
+                voice: (getId('fishVoiceID')?.value || getText('voicefish') || '').trim(),
+                model: getOption('fishmodel', 's2.1-pro-free'),
+                speed: getParam('fishspeed') ? Math.max(0.5, Math.min(2, getNumber('fishspeed', 1))) : 1
+            },
             // Speechify settings
             speechify: {
                 key: getId('speechifyAPIKey')?.value || getText('speechifykey'),
                 voice: getId('speechifyVoiceID')?.value || getText('voicespeechify'),
-                lang: getParam('speechifylang') ? getOption('speechifylang', 'en-US') : 'en-US',
+                lang: getParam('speechifylang') ? getOption('speechifylang', 'en-US') : undefined,
                 speed: getParam('speechifyspeed') ? getNumber('speechifyspeed', 1.0) : 1.0,
-                model: getParam('speechifymodel') ? getOption('speechifymodel', 'simba-english') : 'simba-english'
+                model: getParam('speechifymodel') ? getOption('speechifymodel', 'simba-3.0') : 'simba-3.0'
             },
             
             // OpenAI settings
@@ -8423,16 +10290,25 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     },
     
     testTTS(section = "") {
-        const testPhrase = "The quick brown fox jumps over the lazy dog";
+        const testPhrase = getLocalTtsSample(this.getProviderSelect(section)?.value,
+            document.getElementById('kokoroVoiceSelect' + section)?.value,
+            document.getElementById('piperVoiceSelect' + section)?.value);
+        const provider = this.getProviderSelect(section)?.value || "system";
+        if (provider === "system") {
+            populateSystemVoiceDropdowns();
+        }
         const serviceName = this.getServiceName(section);
         
         // Check if the provider supports testing
-        const provider = this.getProviderSelect(section)?.value || "system";
         if (this.premiumQueueActive) {
             this.showFeedback("A TTS test is already running. Cancel it before starting another test.", 'warning', section, 0);
             return;
         }
-        if (provider === 'piper' || provider === 'espeak') {
+        if (provider === 'piper' && this.piperPreviewBusy) {
+            this.showFeedback("Piper is finishing the previous test. Try again in a moment.", 'info', section);
+            return;
+        }
+        if (provider === 'espeak') {
             let warningMsg = getTranslation("tts-test-not-available", "Testing is not available for {provider}. This TTS provider works during streaming only.");
             warningMsg = warningMsg.replace('{provider}', serviceName);
             this.showFeedback(warningMsg, 'error', section);
@@ -8455,19 +10331,25 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         // Add success feedback after audio plays
         if (this.audio) {
             this.audio.onended = () => {
-                this.showFeedback(`${serviceName} test completed successfully`, 'success', section);
+                this.showFeedback(`Audio played here. Check OBS playback separately.`, 'success', section);
                 this.audio.onended = originalOnEnded;
                 this.finishedAudio();
             };
         }
 
         try {
+            if (settings.volume <= 0) {
+                throw new Error("TTS volume is set to 0. Increase it under More TTS options before testing.");
+            }
             // Check for required API keys if using premium services
             if (provider === 'google' && !settings.google.key) {
                 throw new Error('Google Cloud API key is required');
             }
             if (provider === 'elevenlabs' && !settings.elevenLabs.key) {
                 throw new Error('ElevenLabs API key is required');
+            }
+            if (provider === 'fish' && !settings.fish.key && !settings.fish.endpoint) {
+                throw new Error('Fish Audio API key is required');
             }
             if (provider === 'speechify' && !settings.speechify.key) {
                 throw new Error('Speechify API key is required');
@@ -8505,6 +10387,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 if (!this.premiumQueueActive) {
                     await this.elevenLabsTTS(text, settings, section);
                 } 
+            } else if (settings.service === "fish" && (settings.fish.key || settings.fish.endpoint)) {
+                if (!this.premiumQueueActive) await this.fishTTS(text, settings, section);
             } else if ((settings.service == "speechify") && settings.speechify.key) {
                 if (!this.premiumQueueActive) {
                     await this.speechifyTTS(text, settings, section);
@@ -8521,25 +10405,74 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 if (!this.premiumQueueActive) {
                     await this.kokoroTTS(text, settings, section);
                 }
+            } else if (settings.service == "piper") {
+                await this.piperTTS(text, settings, section);
             } else if (settings.service == "kitten") {
                 if (!this.premiumQueueActive) {
                     await this.kittenTTS(text, settings, section);
                 }
             } else if (!settings.service || (settings.service == "system")) {
-                this.systemTTS(text, settings);
+                this.systemTTS(text, settings, section);
             } else if (allow) {
                 this.showFeedback(`${this.getServiceName(section)} is not configured for testing`, 'error', section);
                 this.finishedAudio();
             }
         } catch (error) {
-            this.showFeedback(`Error: ${error.message}`, 'error');
+            this.showFeedback(`Error: ${error.message}`, 'error', section);
             this.finishedAudio();
             console.error(error);
         }
     },
     
-    systemTTS(text, settings) {
-        if (!window.speechSynthesis) return;
+    async systemTTS(text, settings, section = this.currentTtsSection || "") {
+        let desktopBridge = window.ninjafy || window.electronApi;
+        try {
+            desktopBridge = desktopBridge || window.parent?.ninjafy || window.parent?.electronApi;
+        } catch (_) {}
+
+        if (ssapp && desktopBridge && typeof desktopBridge.systemTts === "function") {
+            try {
+                this.premiumQueueActive = true;
+                this.setTestRunning(section, true, "Generating...");
+                const response = await desktopBridge.systemTts(text, {
+                    voice: settings.system.voice,
+                    lang: settings.system.lang,
+                    rate: settings.system.rate,
+                    pitch: settings.system.pitch
+                });
+                this.lastDesktopSystemTts = {
+                    voice: response?.voice || "",
+                    lang: response?.lang || ""
+                };
+                if (this.cancelRequested) return;
+
+                const wavBuffer = response?.wavBuffer || response;
+                const audioBlob = new Blob([wavBuffer], { type: "audio/wav" });
+                const audioElement = document.createElement("audio");
+                this.activeAudioElement = audioElement;
+                this.activeAudioUrl = URL.createObjectURL(audioBlob);
+                audioElement.src = this.activeAudioUrl;
+                audioElement.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
+                audioElement.onended = () => {
+                    this.showFeedback("Audio played here. Check OBS playback separately.", "success", section);
+                    this.finishedAudio(section);
+                };
+                audioElement.onerror = () => {
+                    this.showFeedback("System TTS audio could not be played", "error", section);
+                    this.finishedAudio(section);
+                };
+                this.setTestRunning(section, true, "Playing...");
+                await audioElement.play();
+                return;
+            } catch (error) {
+                console.warn("Desktop System TTS failed; falling back to Web Speech:", error);
+                this.finishedAudio(section);
+            }
+        }
+
+        if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+            throw new Error("System speech is unavailable here. Choose another TTS provider.");
+        }
         
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = settings.system.lang;
@@ -8547,13 +10480,33 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         utterance.volume = settings.volume;
         utterance.pitch = settings.system.pitch;
         
-        if (this.voices && settings.system.voice) {
-            const matchingVoice = this.voices.find(v => v.name === settings.system.voice);
+        const voices = this.voices && this.voices.length ? this.voices : populateSystemVoiceDropdowns();
+        if (!voices || !voices.length) {
+            throw new Error("No system voices are available yet. Retry, or choose another TTS provider.");
+        }
+        if (voices && settings.system.voice) {
+            const matchingVoice = resolvePopupSystemVoice(voices, settings.system.voice, settings.system.lang);
             if (matchingVoice) {
-                utterance.voice = matchingVoice;
+                utterance.voice = matchingVoice.voice || matchingVoice;
             }
         }
         
+        this.activeSystemUtterance = utterance;
+        this.premiumQueueActive = true;
+        this.setTestRunning(section, true, "Generating...");
+        utterance.onstart = () => {
+            if (this.activeSystemUtterance === utterance) this.setTestRunning(section, true, "Playing...");
+        };
+        utterance.onend = () => {
+            if (this.activeSystemUtterance !== utterance) return;
+            this.showFeedback("Browser reported speech complete. Check OBS playback separately.", "success", section);
+            this.finishedAudio(section);
+        };
+        utterance.onerror = (event) => {
+            if (this.activeSystemUtterance !== utterance) return;
+            this.showFeedback("System voice could not speak (" + (event.error || "unknown error") + "). Try another voice or provider.", "error", section);
+            this.finishedAudio(section);
+        };
         window.speechSynthesis.speak(utterance);
     },
 	
@@ -8562,7 +10515,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             this.premiumQueueActive = true;
             this.cancelRequested = false;
             this.setTestRunning(section, true, "Loading...");
-			if (ssapp){
+			if (ssapp && !/^(ef_dora|em_alex|em_santa|pf_dora|pm_alex|pm_santa)$/.test(settings.kokoro.voice)){
 				try {
                     this.setTestRunning(section, true, "Generating...");
                     this.showFeedback("Generating Kokoro test audio in the desktop app...", 'info', section, 0);
@@ -8582,13 +10535,11 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                     this.activeAudioUrl = URL.createObjectURL(audioBlob);
 					audioElement.src = this.activeAudioUrl;
 					audioElement.onended = () => {
-                        this.showFeedback("Kokoro TTS test completed successfully", 'success', section);
+                        this.showFeedback("Audio played here. Check OBS playback separately.", 'success', section);
                         this.finishedAudio(section);
                     };
 					
-					// Set volume if needed
-					//const settings = { volume: 0.8 }; // Replace with your actual settings
-					//if (settings.volume) audioElement.volume = settings.volume;
+					audioElement.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
 					
 					await audioElement.play();
 					return;
@@ -8600,11 +10551,12 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 			
 			if (!kokoroTtsInstance) {
                 this.showFeedback("Loading Kokoro TTS. First use may download a large model and can take a while.", 'warning', section, 0);
-				const initialized = await initKokoro();
+				const initialized = await initKokoro(true);
                 if (this.cancelRequested) {
                     return;
                 }
 				if (!initialized) {
+                    this.showFeedback("Kokoro could not load. Retry, or choose Piper for a lighter voice.", "error", section, 0);
 					this.finishedAudio(section);
 					return;
 				}
@@ -8618,7 +10570,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 			const audioElement = document.createElement("audio");
             this.activeAudioElement = audioElement;
 			audioElement.onended = () => {
-                this.showFeedback("Kokoro TTS test completed successfully", 'success', section);
+                this.showFeedback("Audio played here. Check OBS playback separately.", 'success', section);
                 this.finishedAudio(section);
             };
 			
@@ -8665,6 +10617,71 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 		}
 	},
     
+    async piperTTS(text, settings, section = "") {
+        const token = {};
+        this.localPiperTest = token;
+        this.piperPreviewBusy = true;
+        this.premiumQueueActive = true;
+        this.setTestRunning(section, true, "Loading...");
+        this.showFeedback("Loading Piper. First use downloads the selected voice.", 'info', section, 0);
+        try {
+            if (!window.ProperPiperTTS) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = './thirdparty/piper/piper-tts-proper.js';
+                    script.onload = resolve;
+                    script.onerror = () => { script.remove(); reject(new Error('Could not load Piper')); };
+                    document.head.appendChild(script);
+                });
+            }
+            if (!window.ort) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = './thirdparty/ort.min.js';
+                    script.onload = resolve;
+                    script.onerror = () => { script.remove(); reject(new Error('Could not load the speech runtime')); };
+                    document.head.appendChild(script);
+                });
+            }
+            const voice = document.getElementById('piperVoiceSelect' + section)?.value || 'en_US-hfc_female-medium';
+            if (!this.piperPreview || this.piperPreview.voiceId !== voice) {
+                if (this.piperPreview?.session?.release) await this.piperPreview.session.release();
+                this.piperPreview = new window.ProperPiperTTS(voice);
+            }
+            const instance = this.piperPreview;
+            await instance.init();
+            if (this.localPiperTest !== token) return;
+            this.setTestRunning(section, true, "Generating...");
+            this.showFeedback('Generating Piper preview...', 'info', section, 0);
+            const blob = await instance.synthesize(text, settings.piper?.speed || 1.0);
+            if (this.localPiperTest !== token) return;
+            const audio = document.createElement('audio');
+            this.activeAudioElement = audio;
+            this.activeAudioUrl = URL.createObjectURL(blob);
+            audio.src = this.activeAudioUrl;
+            audio.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
+            audio.onended = () => {
+                if (this.localPiperTest !== token) return;
+                this.showFeedback("Audio played here. Check OBS playback separately.", 'success', section);
+                this.finishedAudio(section);
+            };
+            audio.onerror = () => {
+                if (this.localPiperTest !== token) return;
+                this.showFeedback("Piper audio could not be played", 'error', section);
+                this.finishedAudio(section);
+            };
+            this.setTestRunning(section, true, "Playing...");
+            this.showFeedback('Playing Piper preview...', 'info', section, 0);
+            await audio.play();
+        } catch (error) {
+            if (this.localPiperTest !== token) return;
+            this.showFeedback("Piper: " + error.message, 'error', section, 0);
+            this.finishedAudio(section);
+        } finally {
+            this.piperPreviewBusy = false;
+        }
+    },
+
     async kittenTTS(text, settings) {
         try {
             const baseUrl = chrome.runtime.getURL('');
@@ -8980,20 +10997,73 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 	},
 
     
+    async fishTTS(text, settings, section = this.currentTtsSection || "") {
+        this.premiumQueueActive = true;
+        this.setTestRunning(section, true, "Generating...");
+        const audio = document.createElement("audio");
+        this.activeAudioElement = audio;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000);
+        try {
+            const bridge = settings.fish.endpoint;
+            const data = bridge
+                ? { input: text, voice: settings.fish.voice || "", model: settings.fish.model, response_format: "mp3", speed: settings.fish.speed }
+                : { text: text, format: "mp3", prosody: { speed: settings.fish.speed } };
+            if (!bridge && settings.fish.voice) data.reference_id = settings.fish.voice;
+            const headers = { "Content-Type": "application/json", "Accept": "audio/mpeg" };
+            if (settings.fish.key) headers.Authorization = "Bearer " + settings.fish.key;
+            if (!bridge) headers.model = settings.fish.model;
+            const response = await fetch(bridge || "https://api.fish.audio/v1/tts", {
+                method: "POST", headers: headers,
+                body: JSON.stringify(data), signal: controller.signal
+            });
+            if (!response.ok) throw new Error("Fish Audio request failed with HTTP " + response.status);
+            const blob = await response.blob();
+            if (!blob.size) throw new Error("Fish Audio returned empty audio");
+            if (this.activeAudioElement !== audio) return;
+            this.activeAudioUrl = URL.createObjectURL(blob);
+            audio.src = this.activeAudioUrl;
+            audio.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
+            audio.onended = () => {
+                if (this.activeAudioElement !== audio) return;
+                this.showFeedback("Audio played here. Check OBS playback separately.", "success", section);
+                this.finishedAudio(section);
+            };
+            audio.onerror = () => {
+                if (this.activeAudioElement !== audio) return;
+                this.showFeedback("Fish Audio playback failed.", "error", section);
+                this.finishedAudio(section);
+            };
+            this.setTestRunning(section, true, "Playing...");
+            await audio.play();
+        } catch (error) {
+            if (this.activeAudioElement !== audio) return;
+            this.showFeedback(error.name === "AbortError" ? "Fish Audio request timed out. Try again." : error.message, "error", section);
+            this.finishedAudio(section);
+        } finally {
+            clearTimeout(timeout);
+        }
+    },
+
     speechifyTTS(text, settings) {
         this.premiumQueueActive = true;
-        const url = "https://api.sws.speechify.com/v1/audio/speech";
+        const url = "https://api.speechify.ai/v1/audio/speech";
+        // Speechify uses SSML percentage adjustments, not a top-level speed field.
+        const speed = Math.max(0.5, Math.min(3, parseFloat(settings.speechify.speed) || 1));
+        const rate = Math.round((speed - 1) * 100);
+        const escapedText = String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+        const input = '<speak><prosody rate="' + (rate >= 0 ? '+' : '') + rate + '%">' + escapedText + '</prosody></speak>';
         
         const data = {
-            input: `<speak>${text}</speak>`,
+            input: input,
             voice_id: settings.speechify.voice || "henry",
             model: settings.speechify.model,
             audio_format: "mp3",
-            speed: settings.speechify.speed,
             language: settings.speechify.lang
         };
         
-        this.fetchAudioContent(url, {
+        return this.fetchAudioContent(url, {
             method: "POST",
             headers: {
                 "Authorization": `Bearer ${settings.speechify.key}`,
@@ -9100,6 +11170,13 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     cancelTest(section = this.currentTtsSection || "") {
         if (!this.premiumQueueActive) return;
         this.cancelRequested = true;
+        if (this.activeSystemUtterance) {
+            this.activeSystemUtterance.onstart = null;
+            this.activeSystemUtterance.onend = null;
+            this.activeSystemUtterance.onerror = null;
+            this.activeSystemUtterance = null;
+            try { window.speechSynthesis.cancel(); } catch (e) {}
+        }
         try {
             if (this.activeAudioElement) {
                 this.activeAudioElement.pause();
@@ -9117,6 +11194,13 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     },
 
     finishTtsTest(section = this.currentTtsSection || "", keepCancelFlag = false) {
+        this.localPiperTest = null;
+        if (this.activeSystemUtterance) {
+            this.activeSystemUtterance.onstart = null;
+            this.activeSystemUtterance.onend = null;
+            this.activeSystemUtterance.onerror = null;
+            this.activeSystemUtterance = null;
+        }
         if (this.activeAudioUrl) {
             try {
                 URL.revokeObjectURL(this.activeAudioUrl);
@@ -9202,11 +11286,11 @@ async function initKokoroWithFallback(preferredDevice) {
 	throw lastError || new Error("Unable to initialize Kokoro TTS");
 }
 
-async function initKokoro() {
-	if (ssapp) return false;
+async function initKokoro(browserOnly = false) {
+	if (ssapp && !browserOnly) return false;
 	if (kokoroDownloadInProgress) return false;
 	
-	if (!KokoroTTS) {
+	if (!KokoroTTS || !kokoroTtsInstance) {
 		try {
 			const kokoroAssets = getKokoroAssets();
 			kokoroDownloadInProgress = true;
@@ -9449,10 +11533,117 @@ function initHotkeys() {
     });
 }
 
+function reorderGlobalSettingsSections() {
+    const globalAnchor = document.getElementById('global-settings-and-tools-options');
+    const globalContainer = globalAnchor?.parentNode;
+    if (!globalContainer) return;
+
+    const commonSectionIds = [
+        'wrapper-profiles-options',
+        'wrapper-privhostbot-options-ext',
+        'wrapper-session-options',
+        'wrapper-export-options'
+    ];
+    let insertionPoint = globalAnchor;
+    commonSectionIds.forEach((id) => {
+        const wrapper = document.getElementById(id)?.closest('.wrapper');
+        if (!wrapper || wrapper.parentNode !== globalContainer) return;
+        globalContainer.insertBefore(wrapper, insertionPoint.nextSibling);
+        insertionPoint = wrapper;
+    });
+
+    const translationWrapper = document.getElementById('wrapper-custom-translation-options')?.closest('.wrapper');
+    const quickOpenWrapper = document.getElementById('wrapper-quick-open-chats-options')?.closest('.wrapper');
+    if (translationWrapper && quickOpenWrapper && translationWrapper.parentNode === quickOpenWrapper.parentNode) {
+        quickOpenWrapper.parentNode.insertBefore(translationWrapper, quickOpenWrapper.nextSibling);
+    }
+}
+
+function getThermalPrinterOptionsFromPopup() {
+	const getNumber = function (setting, fallback) {
+		const value = Number(document.querySelector(`[data-numbersetting="${setting}"]`)?.value);
+		return Number.isFinite(value) ? value : fallback;
+	};
+	const labelHeight = getNumber('printerLabelHeight', 0);
+	const options = {
+		printerName: document.getElementById('printerName')?.value?.trim() || '',
+		width: `${getNumber('printerPaperWidth', 58)}mm`,
+		marginLeft: `${getNumber('printerMarginLeft', 2)}mm`,
+		marginRight: `${getNumber('printerMarginRight', 2)}mm`,
+		marginTop: `${getNumber('printerMarginTop', 0)}mm`,
+		marginBottom: `${getNumber('printerMarginBottom', 0)}mm`,
+		feed: `${getNumber('printerFeed', 1)}mm`,
+		marginType: document.querySelector('[data-optionsetting="printerMarginMode"]')?.value || 'printableArea'
+	};
+	if (labelHeight > 0) options.height = `${labelHeight}mm`;
+	return options;
+}
+
+function setThermalPrinterStatus(message, isError) {
+	const status = document.getElementById('thermalPrinterStatus');
+	if (!status) return;
+	status.textContent = message;
+	status.style.color = isError ? '#c62828' : '';
+}
+
+async function refreshThermalPrinterList() {
+	if (!window.ninjafy || typeof window.ninjafy.listThermalPrinters !== 'function') {
+		setThermalPrinterStatus('Printer discovery is available in SSApp.', true);
+		return [];
+	}
+	setThermalPrinterStatus('Finding printers...', false);
+	try {
+		const response = await window.ninjafy.listThermalPrinters();
+		const printers = Array.isArray(response) ? response : [];
+		const datalist = document.getElementById('thermalPrinterNames');
+		if (datalist) {
+			datalist.replaceChildren(...printers.map(function (printer) {
+				const option = document.createElement('option');
+				option.value = printer.name;
+				option.label = `${printer.displayName || printer.name}${printer.isDefault ? ' (default)' : ''}`;
+				return option;
+			}));
+		}
+		setThermalPrinterStatus(printers.length ? `${printers.length} printer${printers.length === 1 ? '' : 's'} found.` : 'No printers found.', !printers.length);
+		return printers;
+	} catch (error) {
+		setThermalPrinterStatus(error?.message || 'Could not list printers.', true);
+		return [];
+	}
+}
+
+async function testThermalPrinterAlignment() {
+	if (!window.ninjafy || typeof window.ninjafy.printThermal !== 'function') {
+		setThermalPrinterStatus('Silent test printing is available in SSApp.', true);
+		return;
+	}
+	const button = document.getElementById('testThermalPrinter');
+	if (button) button.disabled = true;
+	setThermalPrinterStatus('Sending alignment test...', false);
+	try {
+		const html = '<div style="border:1px solid #000;padding:1mm;font-size:8pt;line-height:1.2">' +
+			'<div style="display:flex;justify-content:space-between;font-size:8pt"><b>| LEFT</b><b>RIGHT |</b></div>' +
+			'<div style="font-size:10pt;font-weight:bold;text-align:center;margin:1mm 0">SAFE WIDTH TEST</div>' +
+			'<div style="text-align:center">Both side borders should be visible.</div></div>';
+		const result = await window.ninjafy.printThermal(html, getThermalPrinterOptionsFromPopup());
+		setThermalPrinterStatus(result?.success ? 'Alignment test sent.' : (result?.error || 'Print failed.'), !result?.success);
+	} catch (error) {
+		setThermalPrinterStatus(error?.message || 'Print failed.', true);
+	} finally {
+		if (button) button.disabled = false;
+	}
+}
+
 document.addEventListener("DOMContentLoaded", async function(event) {
-    applyWebStoreConservativeReleaseGates();
+    setupPopupPanelEditor();
+    reorderGlobalSettingsSections();
     loadSourcesListFromRuntimeManifest();
-    setupDynamicCustomUrlControls();
+	setupDynamicCustomUrlControls();
+	document.getElementById('refreshThermalPrinters')?.addEventListener('click', refreshThermalPrinterList);
+	document.getElementById('testThermalPrinter')?.addEventListener('click', testThermalPrinterAlignment);
+	if (window.ninjafy && typeof window.ninjafy.listThermalPrinters === 'function') {
+		refreshThermalPrinterList();
+	}
 
     // Initialize hotkey system
     initHotkeys();
@@ -9471,6 +11662,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	// Initialize blocked words tag input
 	setupBlockedWordsInput();
+	setupViewerCountSourceTags();
 	commaTagInputs.forEach((inputId) => {
 		setupCommaTagInput(inputId);
 	});
@@ -9486,9 +11678,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	// Add event listeners for credits roll buttons and trigger mode
 	const creditsStartBtn = document.getElementById('creditsStartBtn');
 	const creditsPreviewBtn = document.getElementById('creditsPreviewBtn');
+	const creditsBackgroundTestBtn = document.getElementById('creditsBackgroundTestBtn');
 	const creditsResetBtn = document.getElementById('creditsResetBtn');
-	const creditsTriggerMode = document.querySelector('select[data-optionparam13="triggermode"]');
-	const creditsActionsDiv = document.querySelector('.credits-actions');
+	const creditsTriggerMode = document.getElementById('creditsTriggerModeSelect');
 	const creditsOptionsGroup = document.querySelector('.options_group.credits');
 	const setCreditsPresetParams = function(paramsToEnable, paramsToDisable) {
 		const findCreditsParamInput = function(paramName) {
@@ -9551,20 +11743,33 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	if (creditsBackgroundTestBtn) {
+		creditsBackgroundTestBtn.addEventListener('click', function() {
+			const label = creditsBackgroundTestBtn.querySelector('span');
+			const originalLabel = label ? label.textContent : creditsBackgroundTestBtn.textContent;
+			creditsBackgroundTestBtn.disabled = true;
+			if (label) label.textContent = 'Testing...';
+			chrome.runtime.sendMessage({ cmd: "creditsBackgroundTest" }, function(response) {
+				const delivered = !!(response && response.success);
+				if (label) label.textContent = delivered ? 'Test sent' : 'No credits source connected';
+				setTimeout(function() {
+					creditsBackgroundTestBtn.disabled = false;
+					if (label) label.textContent = originalLabel;
+				}, 2000);
+			});
+		});
+	}
+
 	if (creditsResetBtn) {
 		creditsResetBtn.addEventListener('click', function() {
 			chrome.runtime.sendMessage({ cmd: "creditsReset" });
 		});
 	}
 
-	// Show/hide credits buttons based on trigger mode
-	if (creditsTriggerMode && creditsActionsDiv) {
-		const updateCreditsButtonsVisibility = () => {
-			creditsActionsDiv.style.display = creditsTriggerMode.value === 'manual' ? 'flex' : 'none';
-		};
-		creditsTriggerMode.addEventListener('change', updateCreditsButtonsVisibility);
-		updateCreditsButtonsVisibility(); // Set initial state
+	if (creditsTriggerMode) {
+		creditsTriggerMode.addEventListener('change', syncCreditsControlUi);
 	}
+	syncCreditsControlUi();
 
 	// Add event listeners for OpenAI custom voice/model dropdowns
 	const setupOpenAICustomInputs = (voiceSelectId, modelSelectId, customVoiceId, customModelId) => {
@@ -9647,10 +11852,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 	if (ssapp){
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
-		const basePath = decodeURIComponent(urlParams.get('basePath'));
- 		if (basePath){
- 			document.getElementById("chathistory").href = basePath  + "/chathistory.html?href="+encodeURIComponent(window.location.href);
- 		}
+		setupSsappChatHistoryPanel();
 	} else {
 		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
 	}
@@ -9665,6 +11867,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		document.head.appendChild(style);
 	}
 
+	
+	
+	
+
+	{}
+
+	{}
+	
+	applyWebStoreConservativeReleaseGates();
 	//document.body.className = "extension-disabled";
 	document.getElementById("disableButton").style.display = "";
 	//chrome.browserAction.setIcon({path: "/icons/off.png"});
@@ -9722,8 +11933,17 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		updateSettings(newCommandEntry, true);
 	});
 	
+	document.getElementById("copy-stream-id").onclick = copyStreamId;
+
 	document.querySelectorAll("[data-copy]").forEach(ele=>{
 		ele.onclick = copyToClipboard;
+	});
+
+	document.querySelectorAll("[data-edit-link]").forEach(function(element) {
+		element.onclick = function(event) {
+			event.preventDefault();
+			openEditGeneratedLinkDialog(element.dataset.editLink);
+		};
 	});
 
 	moveChatOverlayThemeOptions();
@@ -9741,6 +11961,77 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		{ id: 'multi-alert-preview-clear', descriptor: false }
 	]);
 	attachTipJarTestDonationButtons();
+	attachReactionTestButton();
+	for (let index = 1; index <= 3; index++) {
+		const prefix = 'multi-alert-effect' + index;
+		const enabled = document.getElementById(prefix + '-enabled');
+		const savedState = document.getElementById(prefix + '-state');
+		const status = document.getElementById(prefix + '-status');
+		const setField = function(key, value) {
+			const input = document.getElementById(prefix + '-' + key);
+			input.value = value;
+			input.dispatchEvent(new Event('change', { bubbles: true }));
+		};
+		document.getElementById(prefix + '-clear-sound').addEventListener('click', function() {
+			if (window.SSNSoundLibrary) window.SSNSoundLibrary.stop();
+			setField('sound', '');
+			status.textContent = 'Sound cleared. Default alert audio still applies.';
+		});
+		document.getElementById(prefix + '-reset').addEventListener('click', function() {
+			if (window.SSNSoundLibrary) window.SSNSoundLibrary.stop();
+			['media', 'sound', 'min', 'max', 'state'].forEach(key => setField(key, ''));
+			setField('type', 'donation');
+			status.textContent = 'Alert reset. Other alerts are unchanged.';
+		});
+		['type', 'media', 'sound', 'min', 'max', 'state'].forEach(function(key) {
+			document.getElementById(prefix + '-' + key).addEventListener('input', syncAlertEffectSummaries);
+			document.getElementById(prefix + '-' + key).addEventListener('change', syncAlertEffectSummaries);
+		});
+		enabled.addEventListener('change', function() {
+			savedState.value = enabled.checked ? '' : 'false';
+			savedState.dispatchEvent(new Event('change', { bubbles: true }));
+			status.textContent = enabled.checked ? 'Alert enabled.' : 'Alert paused. Settings kept.';
+		});
+		document.getElementById(prefix + '-preset').addEventListener('click', function() {
+			const values = { type: 'donation', min: '100', max: '100', state: '' };
+			if (!document.getElementById(prefix + '-sound').value.trim()) values.sound = './audio/alerts/voice-thank-you.wav';
+			Object.keys(values).forEach(function(key) {
+				const input = document.getElementById(prefix + '-' + key);
+				input.value = values[key];
+				input.dispatchEvent(new Event('change', { bubbles: true }));
+			});
+			const audio = document.querySelector('[data-param25="beep"]');
+			if (!audio.checked) { audio.checked = true; audio.dispatchEvent(new Event('change', { bubbles: true })); }
+			document.getElementById(prefix + '-min').closest('details').open = true;
+			status.textContent = 'Exactly $100 USD. Sound ready; add media if you like.';
+		});
+		document.getElementById(prefix + '-test').addEventListener('click', function() {
+			if (!enabled.checked) { status.textContent = 'Enable this alert before testing.'; enabled.focus(); return; }
+			const category = document.getElementById(prefix + '-type').value || 'donation';
+			const minText = document.getElementById(prefix + '-min').value.trim();
+			const maxText = document.getElementById(prefix + '-max').value.trim();
+			const min = minText ? Number(minText) : null;
+			const max = maxText ? Number(maxText) : null;
+			if ((min !== null && (!Number.isFinite(min) || min < 0)) ||
+				(max !== null && (!Number.isFinite(max) || max < 0)) ||
+				(min !== null && max !== null && min > max) ||
+				((min !== null || max !== null) && category !== 'donation' && category !== 'bits')) {
+				alert('Use a valid amount range for donations/bits, or leave both amount fields blank for other events.');
+				return;
+			}
+			const descriptor = buildMultiAlertPreviewDescriptor(category);
+			if (category === 'donation' || category === 'bits') {
+				const amount = min !== null ? min : (max !== null ? max : 100);
+				descriptor.overrides.hasDonation = category === 'bits' ? String(amount * 100) + ' bits' : '$' + amount + ' USD';
+				descriptor.overrides.donoValue = amount;
+			}
+			document.getElementById('wrapper-multi-alert-preview-options').checked = true;
+			const preview = document.getElementById('multi-alerts-preview-frame');
+			preview.scrollIntoView({ block: 'center' });
+			preview.focus({ preventScroll: true });
+			sendOverlayPreview('multialerts', descriptor);
+		});
+	}
 
 	var previewPlatformSelect = document.getElementById('multi-alert-preview-platform');
 	if (previewPlatformSelect) {
@@ -9782,16 +12073,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			const addContainer = document.createElement('div');
 			addContainer.className = 'add-username-container';
 			
+			const sourceControl = input.dataset.userSourceSelect === 'true'
+				? `<select id="new${id}Type"><option value="" selected>All sources</option></select>`
+				: `<input type="text" id="new${id}Type" placeholder="Source type (optional)" list="popupSourceTypesList">`;
 			addContainer.innerHTML = `
 				<input type="text" id="new${id}" placeholder="Add username">
-				<input type="text" id="new${id}Type" placeholder="Source type (optional)" list="popupSourceTypesList">
+				${sourceControl}
 				<button id="add${id}">Add</button>
 			`;
 			
 			container.parentNode.classList.add("isolate");
 			container.parentNode.insertBefore(listContainer, container.nextSibling);
 			container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
-			setupLazySourceInput(document.getElementById(`new${id}Type`));
+			const sourceInput = document.getElementById(`new${id}Type`);
+			if (input.dataset.userSourceSelect === 'true') {
+				setupLazySourceSelect(sourceInput);
+				ensureLazySourcesLoaded(function() { appendSourceOptions(sourceInput); });
+			} else {
+				setupLazySourceInput(sourceInput);
+			}
 		  }
 		});
 		
@@ -9819,10 +12119,45 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				}
 			  }
 			});
+
+			document.getElementById(`new${type}`).addEventListener('keypress', (e) => {
+			  if (e.key === 'Enter') {
+				e.preventDefault();
+				document.getElementById(`add${type}`).click();
+			  }
+			});
+			updateUsernameList(type);
 		  } catch(e) {
 			console.error(e);
 		  }
 		});
+
+		const userDisplayAliasList = document.getElementById('userDisplayAliasesList');
+		const addUserDisplayAliasButton = document.getElementById('addUserDisplayAlias');
+		const userDisplayAliasSource = document.getElementById('newUserDisplayAliasType');
+		if (userDisplayAliasSource) {
+			setupLazySourceInput(userDisplayAliasSource);
+		}
+		if (userDisplayAliasList) {
+			userDisplayAliasList.addEventListener('click', function(e) {
+				if (!e.target.classList.contains('remove-user-display-alias')) return;
+				const index = parseInt(e.target.dataset.index, 10);
+				if (!Number.isInteger(index) || index < 0 || index >= userDisplayAliases.length) return;
+				userDisplayAliases.splice(index, 1);
+				updateUserDisplayAliasesList();
+				saveUserDisplayAliases();
+			});
+		}
+		if (addUserDisplayAliasButton) {
+			addUserDisplayAliasButton.addEventListener('click', addUserDisplayAlias);
+		}
+		document.getElementById('newUserDisplayAliasDisplayName')?.addEventListener('keypress', function(e) {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				addUserDisplayAlias();
+			}
+		});
+		updateUserDisplayAliasesList();
 		
 	} catch(e){
 		console.error(e);
@@ -9936,14 +12271,39 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	setupLazySystemVoiceDropdowns();
 
 	var popupSearchInput = document.getElementById('searchInput');
+	var popupSearchResults = document.getElementById('popupSearchResults');
 	var popupSearchHiddenClass = 'popup-search-hidden';
 	var popupSearchOpenState = null;
 	var popupSearchLockedWidth = null;
 	var popupSearchIndex = null;
 	var popupSearchTimer = null;
+	var popupSearchUserToggles = null;
+	var popupSearchAnchor = null;
+	var popupSearchScrollY = null;
+	var popupSearchHiddenElements = new Set();
+	var popupSearchMatchedElements = new Set();
+
+	function getPopupScrollElement() {
+		if (document.documentElement.classList.contains('extension-popup-surface') && document.body) {
+			return document.body;
+		}
+		return document.scrollingElement || document.documentElement;
+	}
+
+	function getPopupScrollTop() {
+		return getPopupScrollElement().scrollTop || 0;
+	}
+
+	function restorePopupScrollTop(scrollTop) {
+		var scrollElement = getPopupScrollElement();
+		var previousBehavior = scrollElement.style.scrollBehavior;
+		scrollElement.style.scrollBehavior = 'auto';
+		scrollElement.scrollTop = scrollTop;
+		scrollElement.style.scrollBehavior = previousBehavior || '';
+	}
 
 	function normalizePopupSearchText(value) {
-		return String(value || '').toLowerCase().replace(/[_\-\u2010-\u2015]+/g, ' ').replace(/\s+/g, ' ').trim();
+		return String(value || '').replace(/([a-z0-9])([A-Z])/g, '$1 $2').toLowerCase().replace(/[_\-\u2010-\u2015]+/g, ' ').replace(/\s+/g, ' ').trim();
 	}
 
 	function getPopupSearchTerms(value) {
@@ -9965,7 +12325,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		var walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
 		var node;
 		while ((node = walker.nextNode())) {
-			if (node.parentElement && !shouldSkipPopupSearchText(node.parentElement) && !isPopupSearchNormallyHidden(node.parentElement)) {
+			if (node.parentElement && !shouldSkipPopupSearchText(node.parentElement) && !isPopupSearchExplicitlyHidden(node.parentElement)) {
 				addPopupSearchPart(parts, node.nodeValue);
 			}
 		}
@@ -9993,6 +12353,24 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		if (/\bcolor\b|\bcolour\b|\bhue\b|\bbackground\b|\bpagebg\b|\bchroma\b|\btextcolor\b|\bnamecolor\b|\bstroke\b|\bglow\b/.test(text)) {
 			synonyms.push('color colour hue background foreground fill text page chroma stroke glow');
 		}
+        // Expand specific concepts only, so generic searches do not match every row.
+        var aliases = [
+            [/\btts\b|\btext to speech\b/, 'tts text to speech read aloud read chat speech synthesis'],
+            [/\bfont\b/, 'font typeface typography lettering'],
+            [/\bfont size\b|\bfontsize\b/, 'text size lettering size bigger text smaller text'],
+            [/\bopacity\b|\btransparent\b|\btransparency\b/, 'opacity transparency transparent see through'],
+            [/\bprofanity\b|\bswear\b|\bbad words\b/, 'profanity swear swearing bad words cursing language filter'],
+            [/\bblacklist\b|\bblocklist\b/, 'blacklist blocklist blocked denylist'],
+            [/\bwhitelist\b|\ballowlist\b/, 'whitelist allowlist allowed'],
+            [/\bavatar\b|\bprofile picture\b|\bprofile image\b/, 'avatar profile picture profile image user picture'],
+            [/\btimestamp\b|\btime stamp\b/, 'timestamp time stamp message time'],
+            [/\bemotes?\b|\bemoticons?\b/, 'emote emotes emoticon emoticons']
+        ];
+        aliases.forEach(function(alias) {
+            if (alias[0].test(text)) {
+                synonyms.push(alias[1]);
+            }
+        });
 		if (synonyms.length) {
 			parts.push(synonyms.join(' '));
 		}
@@ -10011,6 +12389,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				addPopupSearchPart(parts, attr.value);
 				continue;
 			}
+			if (/^data-(?:setting(?:-old)?|textsetting|numbersetting|optionsetting|both|param\d+|textparam\d+|numberparam\d+|optionparam\d+)$/.test(attr.name)) {
+				addPopupSearchPart(parts, attr.value);
+				continue;
+			}
 			if (attr.name === 'title' || attr.name === 'aria-label' || attr.name === 'alt' || attr.name === 'placeholder') {
 				if (attr.name === 'title' && /(must first interact|lookup first)/i.test(attr.value || '')) {
 					continue;
@@ -10018,6 +12400,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				addPopupSearchPart(parts, attr.value);
 			}
 		}
+	}
+
+	function addPopupSearchSelectOptions(parts, element) {
+		if (!element || !element.querySelectorAll) {
+			return;
+		}
+		var selects = [];
+		if (element.tagName && element.tagName.toLowerCase() === 'select') {
+			selects.push(element);
+		}
+		element.querySelectorAll('select').forEach(function(select) {
+			selects.push(select);
+		});
+		selects.forEach(function(select) {
+			select.querySelectorAll('option').forEach(function(option) {
+				addPopupSearchPart(parts, option.textContent);
+				addPopupSearchPart(parts, option.value);
+			});
+		});
 	}
 
 	function getPopupSearchText(element) {
@@ -10032,6 +12433,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		searchable.forEach(function(child) {
 			addPopupSearchAttributes(parts, child);
 		});
+		addPopupSearchSelectOptions(parts, element);
 		addPopupSearchSynonyms(parts);
 		return parts.join(' ');
 	}
@@ -10067,9 +12469,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 
 	function clearPopupSearchHidden() {
-		document.querySelectorAll('.' + popupSearchHiddenClass).forEach(function(element) {
+		popupSearchHiddenElements.forEach(function(element) {
 			element.classList.remove(popupSearchHiddenClass);
 		});
+		popupSearchHiddenElements.clear();
 	}
 
 	function setPopupSearchHidden(element, hidden) {
@@ -10078,9 +12481,188 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		if (hidden) {
 			element.classList.add(popupSearchHiddenClass);
+			popupSearchHiddenElements.add(element);
 		} else {
 			element.classList.remove(popupSearchHiddenClass);
+			popupSearchHiddenElements.delete(element);
 		}
+	}
+
+	function clearPopupSearchMatches() {
+		popupSearchMatchedElements.forEach(function(element) {
+			element.classList.remove('popup-search-match');
+		});
+		popupSearchMatchedElements.clear();
+	}
+
+	function setPopupSearchMatch(element) {
+		if (!element) {
+			return;
+		}
+		element.classList.add('popup-search-match');
+		popupSearchMatchedElements.add(element);
+	}
+
+	function clearPopupSearchResults() {
+		if (popupSearchResults) {
+			popupSearchResults.textContent = '';
+		}
+	}
+
+	function getPopupSearchResultLabel(element) {
+		if (!element) {
+			return 'Open matching option';
+		}
+		// Read the complete row: its first span may be an icon or an empty switch slider.
+		var parts = [];
+		var walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
+		var node;
+		while ((node = walker.nextNode())) {
+			var parent = node.parentElement;
+			if (parent && !shouldSkipPopupSearchText(parent) && !parent.closest('.switch, .popup-control-icon, [aria-hidden="true"]') && !isPopupSearchExplicitlyHidden(parent)) {
+				parts.push(node.nodeValue);
+			}
+		}
+		var label = parts.join(' ').replace(/\s+/g, ' ').trim() || element.getAttribute('aria-label') || element.getAttribute('title') || element.getAttribute('placeholder') || '';
+		if (!label && /^(input|select|textarea)$/i.test(element.tagName || '')) {
+			var controlLabel = element.labels && element.labels[0];
+			var previous = element.previousElementSibling;
+			if (!controlLabel && previous && /^(label|span)$/i.test(previous.tagName) && !isPopupSearchExplicitlyHidden(previous)) {
+				controlLabel = previous;
+			}
+			label = controlLabel ? controlLabel.textContent : normalizePopupSearchText(getPopupSearchTargetKeys(element).split('|')[0]);
+		}
+		label = String(label).replace(/\s+/g, ' ').trim();
+		if (!label) {
+			label = 'Open matching option';
+		}
+		return label.length > 180 ? label.slice(0, 177) + '...' : label;
+	}
+
+	function getPopupSearchResultSection(wrapper) {
+		var label = wrapper ? wrapper.querySelector('.collapsible-label') : null;
+		return label ? String(label.textContent || '').replace(/\s+/g, ' ').trim() : '';
+	}
+
+	function getPopupSearchTargetKeys(element) {
+		if (!element) {
+			return '';
+		}
+		var keys = [];
+		var seen = new Set();
+		var controls = [element];
+		if (element.querySelectorAll) {
+			element.querySelectorAll('input, select, textarea, button, [id]').forEach(function(control) {
+				controls.push(control);
+			});
+		}
+		controls.forEach(function(control) {
+			if (control.id && !seen.has(control.id)) {
+				seen.add(control.id);
+				keys.push(control.id);
+			}
+			if (!control.attributes) {
+				return;
+			}
+			for (var i = 0; i < control.attributes.length; i++) {
+				var attr = control.attributes[i];
+				if (attr && /^data-(?:setting|textsetting|numbersetting|optionsetting|both|param\d+|textparam\d+|numberparam\d+|optionparam\d+)$/.test(attr.name) && attr.value && !seen.has(attr.value)) {
+					seen.add(attr.value);
+					keys.push(attr.value);
+				}
+			}
+		});
+		return keys.join('|');
+	}
+
+	function revealPopupSearchResult(record) {
+		var target = record && record.element;
+		var wrapper = record && record.wrapper;
+		closePopupSearch();
+		// Search covers all settings; leave the enabled-only view before revealing one.
+		setPopupEnabledFilter(false);
+		var panelSection = getPopupPanelSection(target);
+		popupPanelPreview = panelSection && !isPopupPanelSectionShown(panelSection) ? panelSection.id : '';
+		applyPopupPanelVisibility();
+		if (wrapper) {
+			openPopupSearchSection(wrapper);
+		}
+		if (!target || !document.contains(target)) {
+			return;
+		}
+		// Reveal optional subsections as well as the outer menu accordion.
+		var section = target;
+		while (section && section !== document.body) {
+			if (section.tagName === 'DETAILS') section.open = true;
+			section = section.parentElement;
+		}
+		setPopupSearchMatch(target);
+		target.scrollIntoView({block: 'center'});
+		setTimeout(function() {
+			target.classList.remove('popup-search-match');
+			popupSearchMatchedElements.delete(target);
+		}, 2500);
+	}
+
+	function renderPopupSearchResults(records, totalMatches) {
+		clearPopupSearchResults();
+        var toolbar = document.getElementById('popupSearchToolbar');
+        if (toolbar && popupSearchResults) {
+            popupSearchResults.style.top = Math.ceil(toolbar.getBoundingClientRect().bottom + 4) + 'px';
+        }
+
+		if (!popupSearchResults) {
+			return;
+		}
+		if (!totalMatches) {
+			var empty = document.createElement('div');
+			empty.className = 'popup-search-result-summary';
+			var emptySource = document.getElementById('popupSearchNoResults');
+			empty.textContent = emptySource ? emptySource.textContent : 'No matching options found';
+			popupSearchResults.appendChild(empty);
+			return;
+		}
+		var summary = document.createElement('div');
+		summary.className = 'popup-search-result-summary';
+		summary.textContent = totalMatches > records.length ? 'Showing ' + records.length + ' of ' + totalMatches + ' matches' : totalMatches + (totalMatches === 1 ? ' match' : ' matches');
+		popupSearchResults.appendChild(summary);
+		records.forEach(function(record) {
+			var button = document.createElement('button');
+			button.type = 'button';
+			button.className = 'popup-search-result';
+			button.setAttribute('role', 'listitem');
+			button.setAttribute('data-search-targets', getPopupSearchTargetKeys(record.element));
+			button.textContent = getPopupSearchResultLabel(record.element);
+			var sectionText = getPopupSearchResultSection(record.wrapper);
+			var panelSection = getPopupPanelSection(record.element);
+			if (panelSection && !isPopupPanelSectionShown(panelSection)) {
+				sectionText += (sectionText ? ' · ' : '') + getTranslation('hidden-section', 'Hidden section');
+			}
+			if (sectionText) {
+				var section = document.createElement('span');
+				section.className = 'popup-search-result-section';
+				section.textContent = sectionText;
+				button.appendChild(section);
+			}
+			button.addEventListener('click', function() {
+				revealPopupSearchResult(record);
+			});
+			popupSearchResults.appendChild(button);
+		});
+	}
+
+	function isPopupSearchControl(element) {
+		if (!element || !element.id) {
+			return false;
+		}
+		return element.id === 'searchInput' ||
+			element.id === 'popupSearchToolbar' ||
+			element.id === 'popupSearchNoResults' ||
+			element.id === 'popupSearchResults' ||
+			element.id === 'panelEditor' ||
+			element.id === 'activeIcon' ||
+			element.id === 'languageIcon' ||
+			element.id === 'language-selector-container';
 	}
 
 	function isPopupSearchNormallyHidden(element) {
@@ -10098,11 +12680,36 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return false;
 	}
 
+	function isPopupSearchExplicitlyHidden(element) {
+		var node = element;
+		var beginnerMode = document.body && document.body.classList.contains('beginner-mode');
+		while (node && node !== document.body) {
+			if ((node.classList && node.classList.contains('hidden')) ||
+				node.hidden ||
+				node.getAttribute('aria-hidden') === 'true' ||
+				(node.style && node.style.display === 'none')) {
+				return true;
+			}
+			if (node.classList && node.classList.contains('popup-panel-hidden')) return true;
+			if (beginnerMode && node.classList &&
+				((node.classList.contains('beginner-advanced') && !node.classList.contains('popup-panel-selected')) ||
+					node.classList.contains('beginner-advanced-option') ||
+					node.classList.contains('beginner-static-advanced-option'))) {
+				return true;
+			}
+			node = node.parentElement;
+		}
+		return false;
+	}
+
 	function savePopupSearchOpenState() {
 		if (popupSearchOpenState) {
 			return;
 		}
 		popupSearchOpenState = [];
+		popupSearchUserToggles = null;
+		popupSearchAnchor = null;
+		popupSearchScrollY = getPopupScrollTop();
 		document.querySelectorAll('input.collapsible-input').forEach(function(input) {
 			popupSearchOpenState.push({
 				input: input,
@@ -10111,10 +12718,38 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
-	function openPopupSearchSections() {
-		document.querySelectorAll('input.collapsible-input').forEach(function(input) {
-			input.checked = true;
+	function recordPopupSearchToggle(input) {
+		if (!popupSearchUserToggles) {
+			popupSearchUserToggles = [];
+		}
+		for (var i = 0; i < popupSearchUserToggles.length; i++) {
+			if (popupSearchUserToggles[i].input === input) {
+				popupSearchUserToggles[i].checked = input.checked;
+				return;
+			}
+		}
+		popupSearchUserToggles.push({
+			input: input,
+			checked: input.checked
 		});
+	}
+
+	function getPopupSearchUserToggle(input, fallback) {
+		if (popupSearchUserToggles) {
+			for (var i = 0; i < popupSearchUserToggles.length; i++) {
+				if (popupSearchUserToggles[i].input === input) {
+					return popupSearchUserToggles[i].checked;
+				}
+			}
+		}
+		return fallback;
+	}
+
+	function openPopupSearchSection(wrapper) {
+		var input = wrapper ? wrapper.querySelector('input.collapsible-input') : null;
+		if (input) {
+			input.checked = true;
+		}
 	}
 
 	function restorePopupSearchOpenState() {
@@ -10123,10 +12758,72 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		popupSearchOpenState.forEach(function(state) {
 			if (state.input) {
-				state.input.checked = state.checked;
+				state.input.checked = getPopupSearchUserToggle(state.input, state.checked);
 			}
 		});
 		popupSearchOpenState = null;
+	}
+
+	function restorePopupSearchScrollContext() {
+		var anchor = popupSearchAnchor;
+		var scrollY = popupSearchScrollY;
+		popupSearchAnchor = null;
+		popupSearchScrollY = null;
+		popupSearchUserToggles = null;
+		if (anchor && document.contains(anchor) && !isPopupSearchNormallyHidden(anchor)) {
+			var sectionInput = anchor.querySelector('input.collapsible-input');
+			if (sectionInput) {
+				sectionInput.checked = true;
+			}
+			var target = anchor.querySelector('.collapsible-label') || anchor;
+			target.scrollIntoView({block: 'start'});
+		} else if (typeof scrollY === 'number') {
+			restorePopupScrollTop(scrollY);
+		}
+	}
+
+	function getPopupSearchFollowingWrapper(startNode) {
+		var node = startNode;
+		while (node && node.nextElementSibling) {
+			node = node.nextElementSibling;
+			if (node.classList && node.classList.contains('wrapper') && !isPopupSearchNormallyHidden(node)) {
+				return node;
+			}
+		}
+		return null;
+	}
+
+	function setPopupSearchAnchorFromEvent(e) {
+		if (!document.body.classList.contains('popup-searching')) {
+			return;
+		}
+		var target = e.target;
+		if (!target || !target.closest) {
+			return;
+		}
+		var optionsLink = target.closest('a.options-link[href^="#"]');
+		if (optionsLink) {
+			var hash = (optionsLink.getAttribute('href') || '').slice(1);
+			var named = hash ? document.getElementById(hash) : null;
+			if (named) {
+				var section = named.closest('.wrapper');
+				if (!section) {
+					section = getPopupSearchFollowingWrapper(named);
+				}
+				if (!section) {
+					var linkContainer = optionsLink.closest('.container > .link, .generic_category_title');
+					section = getPopupSearchFollowingWrapper(linkContainer);
+				}
+				if (section) {
+					popupSearchAnchor = section;
+					return;
+				}
+			}
+		}
+		var container = target.closest('.wrapper, .container > .link');
+		if (container) {
+			popupSearchAnchor = container;
+		}
 	}
 
 	function lockPopupSearchWidth() {
@@ -10178,7 +12875,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		};
 
 		document.querySelectorAll('.link').forEach(function(link) {
-			if (!isPopupSearchNormallyHidden(link)) {
+			if (!isPopupSearchExplicitlyHidden(link)) {
 				index.links.push({
 					element: link,
 					text: getPopupSearchText(link)
@@ -10187,36 +12884,47 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 
 		document.querySelectorAll('.wrapper').forEach(function(wrapper) {
-			if (isPopupSearchNormallyHidden(wrapper)) {
+			if (isPopupSearchExplicitlyHidden(wrapper)) {
 				return;
 			}
 			var rowElements = getPopupSearchRows(wrapper).filter(function(row) {
-				return !isPopupSearchNormallyHidden(row);
+				return !isPopupSearchExplicitlyHidden(row);
+			});
+			var rowElementSet = new Set(rowElements);
+			var containerOnlyElements = new Set();
+			rowElements.forEach(function(row) {
+				var parent = row.parentElement;
+				while (parent && parent !== wrapper) {
+					if (rowElementSet.has(parent)) {
+						containerOnlyElements.add(parent);
+					}
+					parent = parent.parentElement;
+				}
 			});
 			var rows = rowElements.map(function(row) {
+				var containerOnly = containerOnlyElements.has(row);
 				return {
 					element: row,
 					text: getPopupSearchText(row),
-					containerOnly: false
+					containerOnly: containerOnly
 				};
-			});
-			rows.forEach(function(rowRecord) {
-				rowRecord.containerOnly = rows.some(function(otherRecord) {
-					return rowRecord.element !== otherRecord.element && rowRecord.element.contains(otherRecord.element);
-				});
 			});
 			index.wrappers.push({
 				element: wrapper,
 				sectionText: getPopupSectionSearchText(wrapper),
-				rows: rows
+				rows: rows,
+				rowElementSet: rowElementSet
 			});
 		});
 
 		document.querySelectorAll('.container > *').forEach(function(element) {
+			if (isPopupSearchControl(element)) {
+				return;
+			}
 			if (element.classList && (element.classList.contains('wrapper') || element.classList.contains('link'))) {
 				return;
 			}
-			if (!isPopupSearchNormallyHidden(element)) {
+			if (!isPopupSearchExplicitlyHidden(element)) {
 				index.topLevel.push({
 					element: element,
 					text: getPopupSearchText(element)
@@ -10229,21 +12937,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	function popupSearchRecordMatches(record, terms) {
 		return popupSearchTextMatches(record.text || '', terms);
-	}
-
-	function updatePopupSearchGroups(wrapper) {
-		wrapper.querySelectorAll('.options_group').forEach(function(group) {
-			if (isPopupSearchNormallyHidden(group)) {
-				return;
-			}
-			var visibleRows = 0;
-			group.querySelectorAll(':scope > div').forEach(function(row) {
-				if (!isPopupSearchNormallyHidden(row) && !row.classList.contains(popupSearchHiddenClass)) {
-					visibleRows += 1;
-				}
-			});
-			setPopupSearchHidden(group, visibleRows === 0);
-		});
 	}
 
 	function updatePopupSearchTopLevel(terms) {
@@ -10268,68 +12961,68 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	function applyPopupSearchNow(value) {
 		var terms = getPopupSearchTerms(value);
-		clearPopupSearchHidden();
+		clearPopupSearchMatches();
+		clearPopupSearchResults();
 
 		if (!terms.length) {
 			setPopupSearchActive(false, false);
-			restorePopupSearchOpenState();
-			unlockPopupSearchWidth();
 			return;
 		}
 
 		setPopupSearchActive(true, false);
-		savePopupSearchOpenState();
-		lockPopupSearchWidth();
-		openPopupSearchSections();
 		if (!popupSearchIndex) {
 			popupSearchIndex = createPopupSearchIndex();
 		}
 
-		var totalMatches = 0;
-
-		popupSearchIndex.links.forEach(function(record) {
-			var isMatch = popupSearchRecordMatches(record, terms);
-			setPopupSearchHidden(record.element, !isMatch);
-			if (isMatch) {
-				totalMatches += 1;
+		var matches = [];
+		var matchedElements = new Set();
+		var resultLimit = 60;
+		function addResult(element, wrapper) {
+			if (!element || matchedElements.has(element)) {
+				return;
 			}
-		});
+			matchedElements.add(element);
+			if (matches.length < resultLimit) {
+				matches.push({element: element, wrapper: wrapper || null});
+			}
+		}
 
 		popupSearchIndex.wrappers.forEach(function(wrapperRecord) {
 			var wrapper = wrapperRecord.element;
 			var rows = wrapperRecord.rows;
-			var matchedRows = [];
 			var sectionMatches = popupSearchTextMatches(wrapperRecord.sectionText, terms);
 			rows.forEach(function(rowRecord) {
-				if (!rowRecord.containerOnly && popupSearchRecordMatches(rowRecord, terms)) {
-					matchedRows.push(rowRecord);
+				if (popupSearchRecordMatches(rowRecord, terms)) {
+					var matchElement = rowRecord.element;
+					var parent = matchElement.parentElement;
+					while (parent && parent !== wrapper) {
+						if (wrapperRecord.rowElementSet.has(parent)) {
+							matchElement = parent;
+						}
+						parent = parent.parentElement;
+					}
+					addResult(matchElement, wrapper);
 				}
 			});
-			rows.forEach(function(rowRecord) {
-				var keep = matchedRows.indexOf(rowRecord) !== -1;
-				for (var i = 0; !keep && i < matchedRows.length; i++) {
-					keep = rowRecord.element.contains(matchedRows[i].element);
-				}
-				setPopupSearchHidden(rowRecord.element, !keep);
-			});
-			matchedRows.forEach(function(rowRecord) {
-				var parent = rowRecord.element.parentElement;
-				while (parent && parent !== wrapper) {
-					parent.classList.remove(popupSearchHiddenClass);
-					parent = parent.parentElement;
-				}
-			});
-			updatePopupSearchGroups(wrapper);
-
-			var wrapperVisible = !(matchedRows.length === 0 && !(rows.length === 0 && sectionMatches));
-			setPopupSearchHidden(wrapper, !wrapperVisible);
-			if (wrapperVisible) {
-				totalMatches += 1;
+			if (sectionMatches) {
+				addResult(wrapper.querySelector('.collapsible-label') || wrapper, wrapper);
 			}
 		});
-		totalMatches += updatePopupSearchTopLevel(terms);
 
-		setPopupSearchActive(true, totalMatches === 0);
+		popupSearchIndex.links.forEach(function(record) {
+			if (popupSearchRecordMatches(record, terms)) {
+				addResult(record.element, null);
+			}
+		});
+
+		popupSearchIndex.topLevel.forEach(function(record) {
+			if (popupSearchRecordMatches(record, terms)) {
+				addResult(record.element, null);
+			}
+		});
+
+		renderPopupSearchResults(matches, matchedElements.size);
+		setPopupSearchActive(true, matchedElements.size === 0);
 	}
 
 	function applyPopupSearch(value) {
@@ -10339,7 +13032,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		popupSearchTimer = setTimeout(function() {
 			popupSearchTimer = null;
 			applyPopupSearchNow(value);
-		}, 60);
+		}, 200);
 	}
 
 	function closePopupSearch() {
@@ -10349,15 +13042,29 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		if (popupSearchInput) {
 			popupSearchInput.value = '';
-			popupSearchInput.style.display = 'none';
-			popupSearchInput.style.width = '0';
 		}
 		clearPopupSearchHidden();
+		clearPopupSearchMatches();
+		clearPopupSearchResults();
 		setPopupSearchActive(false, false);
 		restorePopupSearchOpenState();
 		unlockPopupSearchWidth();
+		restorePopupSearchScrollContext();
 		popupSearchIndex = null;
 	}
+
+	function refreshPopupSearchIndex() {
+		popupSearchIndex = null;
+		if (popupSearchTimer) {
+			clearTimeout(popupSearchTimer);
+			popupSearchTimer = null;
+		}
+		if (popupSearchInput && popupSearchInput.value.trim()) {
+			applyPopupSearchNow(popupSearchInput.value);
+		}
+	}
+	document.addEventListener('popup-beginner-mode-changed', refreshPopupSearchIndex);
+	document.addEventListener('popup-panel-visibility-changed', refreshPopupSearchIndex);
 
 	if (popupSearchInput) {
 		popupSearchInput.addEventListener('input', function() {
@@ -10369,33 +13076,73 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 		});
 	}
-	
-	document.getElementById('searchIcon').addEventListener('click', function() {
+
+	document.addEventListener('change', function(e) {
+		if (!document.body.classList.contains('popup-searching')) {
+			return;
+		}
+		var input = e.target;
+		if (input && input.classList && input.classList.contains('collapsible-input')) {
+			recordPopupSearchToggle(input);
+		}
+	}, true);
+
+	document.addEventListener('click', setPopupSearchAnchorFromEvent, true);
+
+	function openPopupSearch() {
 		var searchInput = popupSearchInput || document.getElementById('searchInput');
-		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
-			searchInput.style.display = 'block';
-			searchInput.style.width = 'calc(100% - 35px)'; // Match this with your CSS width
-			searchInput.focus(); // Optional: Focus on the input field when it's shown
-		} else {
-			closePopupSearch();
+		if (!searchInput) {
+			return;
+		}
+		searchInput.focus();
+		searchInput.select();
+	}
+
+	document.addEventListener('keydown', function(e) {
+		if (document.getElementById('panelEditor').open) return;
+		if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key === 'f' || e.key === 'F')) {
+			e.preventDefault();
+			openPopupSearch();
+		} else if (e.key === 'Escape') {
+			var searchInput = popupSearchInput || document.getElementById('searchInput');
+			if (searchInput && (document.activeElement === searchInput || document.body.classList.contains('popup-searching'))) {
+				e.preventDefault();
+				closePopupSearch();
+			}
 		}
 	});
-	
+
+
 	var activeToggle = false;
-	document.getElementById('activeIcon').addEventListener('click', function() {
-		activeToggle = !activeToggle;
+	var activeToggleOpenState = null;
+	var activeToggleScrollY = null;
+	function setPopupEnabledFilter(enabled) {
+		if (activeToggle === enabled) {
+			return;
+		}
+		activeToggle = enabled;
+		document.getElementById('activeIcon').setAttribute('aria-pressed', String(enabled));
 		if (activeToggle) {
+			// Remember open sections and scroll position so toggling off restores them
+			activeToggleOpenState = [];
+			document.querySelectorAll('input.collapsible-input').forEach(ele => {
+				activeToggleOpenState.push({
+					input: ele,
+					checked: ele.checked
+				});
+			});
+			activeToggleScrollY = getPopupScrollTop();
 			// Open all collapsible sections
 			document.querySelectorAll('input.collapsible-input').forEach(ele => {
 				ele.checked = true;
 			});
 			
-			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
-				item.style.display = 'none';
+			document.querySelectorAll('button:not(.showalways):not(.popup-search-result)').forEach(function(item) {
+				item.classList.add('popup-enabled-filter-hidden');
 			});
 
 			document.querySelectorAll('.wrapper').forEach(w => {
-				var menuItems = w.querySelectorAll('.options_group > div');
+				var menuItems = w.querySelectorAll('.options_group > div, .options_group > details');
 				var matches = 0;
 				menuItems.forEach(function(item) {
 					var checkbox = item.querySelector('input[type="checkbox"]');
@@ -10416,34 +13163,51 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 					if (isActive) {
 						matches += 1;
-						item.style.display = '';
+						item.classList.remove('popup-enabled-filter-hidden');
 					} else {
-						item.style.display = 'none';
+						item.classList.add('popup-enabled-filter-hidden');
 					}
 				});
 				
 				if (!matches) {
-					w.style.display = "none";
+					w.classList.add('popup-enabled-filter-hidden');
 				} else {
-					w.style.display = "";
+					w.classList.remove('popup-enabled-filter-hidden');
 				}
 			});
 		} else {
 			
-			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
-				item.style.display = '';
+			document.querySelectorAll('button:not(.showalways):not(.popup-search-result)').forEach(function(item) {
+				item.classList.remove('popup-enabled-filter-hidden');
 			});
 			// Reset to original state
-			document.querySelectorAll('input.collapsible-input').forEach(ele => {
-				ele.checked = false;
-			});
+			if (activeToggleOpenState) {
+				activeToggleOpenState.forEach(function(state) {
+					if (state.input) {
+						state.input.checked = state.checked;
+					}
+				});
+				activeToggleOpenState = null;
+			} else {
+				document.querySelectorAll('input.collapsible-input').forEach(ele => {
+					ele.checked = false;
+				});
+			}
 			document.querySelectorAll('.wrapper').forEach(ele => {
-				ele.style.display = "";
+				ele.classList.remove('popup-enabled-filter-hidden');
 			});
-			document.querySelectorAll('.options_group > div').forEach(ele => {
-				ele.style.display = "";
+			document.querySelectorAll('.options_group > div, .options_group > details').forEach(ele => {
+				ele.classList.remove('popup-enabled-filter-hidden');
 			});
+			if (typeof activeToggleScrollY === 'number') {
+				restorePopupScrollTop(activeToggleScrollY);
+				activeToggleScrollY = null;
+			}
 		}
+	}
+
+	document.getElementById('activeIcon').addEventListener('click', function() {
+		setPopupEnabledFilter(!activeToggle);
 	});
 	
 	const uploadBadwordsButton = document.getElementById('uploadBadwordsButton');
@@ -10485,6 +13249,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		manageUserPointsBtn.addEventListener('click', async function() {
 			const username = await prompt("Enter username to manage points for:");
 			if (!username) return;
+			const platform = await prompt("Enter platform/source type (for example: youtube, twitch, or default):");
+			if (!platform || !platform.trim()) return;
+			const type = platform.trim();
 			
 			const action = await prompt("Enter action (add/subtract/set):");
 			if (!action || !['add', 'subtract', 'set'].includes(action.toLowerCase())) {
@@ -10499,17 +13266,18 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				return;
 			}
 			
-				if (confirm(`Are you sure you want to ${action} ${points} points ${action === 'subtract' ? 'from' : 'to'} ${username}?`)) {
+				if (confirm(`Are you sure you want to ${action} ${points} points ${action === 'subtract' ? 'from' : 'to'} ${username} (${type})?`)) {
 					chrome.runtime.sendMessage({
 						cmd: "manageUserPoints",
 						username: username,
+						type: type,
 						action: action.toLowerCase(),
 						points: points
 					}, function(response) {
 						if (response && response.success) {
 							const available = Number.isFinite(response?.available) ? response.available : undefined;
 							const total = Number.isFinite(response?.points) ? response.points : undefined;
-							let summary = `Successfully ${action === 'set' ? 'set' : action + 'ed'} ${points} points ${action === 'subtract' ? 'from' : 'for'} ${username}.`;
+							let summary = `Successfully ${action === 'set' ? 'set' : action + 'ed'} ${points} points ${action === 'subtract' ? 'from' : 'for'} ${username} (${type}).`;
 							if (available !== undefined) summary += ` Available: ${available}`;
 							if (total !== undefined) summary += ` | Total: ${total}`;
 							alert(summary);
@@ -10558,6 +13326,23 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						alert('All user points have been reset.');
 					} else {
 						alert('Failed to reset points. Please try again.');
+					}
+				});
+			}
+		});
+	}
+
+	const resetLeaderboardBtn = document.getElementById('resetLeaderboard');
+	if (resetLeaderboardBtn) {
+		resetLeaderboardBtn.addEventListener('click', function() {
+			if (confirm('Reset leaderboard data in open leaderboard overlays? This cannot be undone.')) {
+				chrome.runtime.sendMessage({
+					cmd: "resetleaderboard"
+				}, function(response) {
+					if (response && response.success) {
+						alert('Leaderboard data reset command sent.');
+					} else {
+						alert('Failed to send leaderboard reset command. Please try again.');
 					}
 				});
 			}
@@ -10889,7 +13674,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 		});
 		
-		// Manual callback helper for hosted and desktop OAuth callbacks.
+		// Manual callback helper (SSAPP primary, extension fallback when chrome.identity is unavailable)
 		const callbackDiv = document.createElement('div');
 		callbackDiv.style.marginTop = '10px';
 		callbackDiv.style.display = 'none';
@@ -10928,7 +13713,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					}).then(response => {
 						console.log("Manual callback result:", response);
 						if (response && response.success) {
-							spotifyAuthButton.disabled = false;
 							spotifyAuthStatus.style.display = 'inline';
 							spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
 						if (spotifySignOutButton) {
@@ -10939,7 +13723,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 							showSpotifyAuthToast('success', 'Spotify Connected', 'Spotify callback completed successfully.');
 							alert('Spotify connected successfully!');
 						} else {
-							spotifyAuthButton.disabled = false;
 							const errorCode = response?.errorCode || 'SPOTIFY_OAUTH_ERROR';
 							const errorMsg = getSpotifyAuthErrorMessage(response);
 							console.error(`Manual Spotify callback failed [${errorCode}]:`, errorMsg, response);
@@ -11281,8 +14064,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 			overlayLink.style.display = '';
 
-			const getGameBaseParams = function(rawUrl) {
-				const keepParams = ['session', 'room', 'password', 'server', 'v'];
+			const getGameBaseParams = function(rawUrl, gamePath) {
+				const keepParams = ['session', 'room', 'password', 'v', 'localserver', 'localserverport'];
 				const cleanParams = new URLSearchParams();
 				if (rawUrl && rawUrl.includes('?')) {
 					const params = new URLSearchParams(rawUrl.split('?')[1]);
@@ -11292,7 +14075,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						});
 					});
 				}
-				return cleanParams.toString();
+				return mergeSupportedServerParamsIntoQuery(cleanParams.toString(), 'games', document.getElementById('dock'), gamePath);
 			};
 
 			const updateGamesLink = function() {
@@ -11315,7 +14098,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				// A game was selected
 				const gameUrl = baseURL + this.value;
 
-				const existingParams = getGameBaseParams(overlayDiv.raw);
+				const existingParams = getGameBaseParams(overlayDiv.raw, this.value);
 
 				// Construct new URL preserving only shared connection/version parameters
 				let newUrl = gameUrl;
@@ -11380,6 +14163,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 
 	var serverFallbackUndoState = null;
+	var serverFallbackHealthCheckTimer = null;
+	var serverFallbackAutoClearTimer = null;
+	var serverFallbackAutoClearUntil = 0;
 
 	function getServerFallbackInputState() {
 		return {
@@ -11432,6 +14218,50 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return banner;
 	}
 
+	function hideServerFallbackBanner() {
+		var banner = getServerFallbackBanner();
+		if (banner) {
+			banner.classList.remove("show");
+			banner.classList.remove("success");
+		}
+		if (serverFallbackAutoClearTimer) {
+			clearTimeout(serverFallbackAutoClearTimer);
+			serverFallbackAutoClearTimer = null;
+		}
+	}
+
+	function requestDockTransportHealth(callback) {
+		if (typeof chrome === "undefined" || !chrome.runtime || typeof chrome.runtime.sendMessage !== "function") {
+			return;
+		}
+		chrome.runtime.sendMessage({ cmd: "getDockTransportHealth" }, function (response) {
+			if (typeof callback === "function") {
+				callback(response);
+			}
+		});
+	}
+
+	function scheduleServerFallbackAutoClear() {
+		if (serverFallbackAutoClearTimer) {
+			clearTimeout(serverFallbackAutoClearTimer);
+		}
+		serverFallbackAutoClearUntil = Date.now() + 30000;
+		serverFallbackAutoClearTimer = setTimeout(function checkDockTransport() {
+			requestDockTransportHealth(function (response) {
+				var health = response && response.dockTransportHealth;
+				if (health && health.fakeMessageTransportReady) {
+					hideServerFallbackBanner();
+					return;
+				}
+				if (Date.now() < serverFallbackAutoClearUntil) {
+					serverFallbackAutoClearTimer = setTimeout(checkDockTransport, 2000);
+				} else {
+					serverFallbackAutoClearTimer = null;
+				}
+			});
+		}, 2000);
+	}
+
 	function showServerFallbackBanner(health, customMessage, success, hideEnableButton, showUndoButton) {
 		var banner = getServerFallbackBanner();
 		if (!banner) {
@@ -11482,9 +14312,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			banner.classList.remove("success");
 		}
 		banner.classList.add("show");
+		if (!success) {
+			scheduleServerFallbackAutoClear();
+		}
 	}
 
-	function maybePromptServerFallbackAfterFakeMessage(response) {
+	function maybePromptServerFallbackAfterFakeMessage(response, afterGrace) {
 		var health = response && response.dockTransportHealth;
 		if (!health) {
 			return;
@@ -11494,6 +14327,18 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			return;
 		}
 		if (health.fakeMessageTransportReady) {
+			hideServerFallbackBanner();
+			return;
+		}
+		if (!afterGrace) {
+			if (serverFallbackHealthCheckTimer) {
+				clearTimeout(serverFallbackHealthCheckTimer);
+			}
+			serverFallbackHealthCheckTimer = setTimeout(function () {
+				requestDockTransportHealth(function (updatedResponse) {
+					maybePromptServerFallbackAfterFakeMessage(updatedResponse, true);
+				});
+			}, 3000);
 			return;
 		}
 		if (health.serverFallbackEnabled) {
@@ -11564,7 +14409,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					});
 				}
 			} else if (msg.cmd == "resettipjar"){
-				var confirmResetTipJar = confirm("Reset the connected Tip Jar/Goal amount to $0?");
+				var confirmResetTipJar = confirm("Reset the connected Tip Jar/Goal to 0?");
 				if (confirmResetTipJar){
 					chrome.runtime.sendMessage(msg, function (response) {
 						log("ignore callback for this action");
@@ -11578,11 +14423,19 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				}
 				var tipjarSourceSelect = document.querySelector('[data-optionparam12="tipjarsource"]');
 				var tipjarTypeSelect = document.querySelector('[data-optionparam12="tipjartype"]');
+				var tipjarMetricSelect = document.querySelector('[data-optionparam12="goalmetric"]');
+				var tipjarEventSelect = document.querySelector('[data-optionparam12="tipjarevent"]');
 				if (tipjarSourceSelect && tipjarSourceSelect.value) {
 					msg.tipjarsource = tipjarSourceSelect.value;
 				}
 				if (tipjarTypeSelect && tipjarTypeSelect.value) {
 					msg.tipjartype = tipjarTypeSelect.value;
+				}
+				if (tipjarMetricSelect && tipjarMetricSelect.value) {
+					msg.goalmetric = tipjarMetricSelect.value;
+				}
+				if (tipjarEventSelect && tipjarEventSelect.value) {
+					msg.tipjarevent = tipjarEventSelect.value;
 				}
 				chrome.runtime.sendMessage(msg, function (response) {
 					log("ignore callback for this action");
@@ -11663,6 +14516,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 
 
+	setupDockBeepPreview();
+
 	// Handle custom beep upload buttons
 	const uploadBeepBtn = document.getElementById('uploadBeepBtn');
 	if (uploadBeepBtn) {
@@ -11698,6 +14553,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		{ btnId: 'uploadHypeSoundBtn', inputId: 'multi-alert-hypesound' }
 	];
 	alertSoundUploads.forEach(({ btnId, inputId }) => {
+		attachMultiAlertSoundLibrary(inputId);
 		const btn = document.getElementById(btnId);
 		if (btn) {
 			btn.onclick = function() {
@@ -11705,6 +14561,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			};
 		}
 	});
+	for (let index = 1; index <= 3; index++) {
+		['Media', 'Sound'].forEach(function(kind) {
+			if (kind === 'Sound') attachMultiAlertSoundLibrary('multi-alert-effect' + index + '-sound');
+			const btnId = 'uploadMultiEffect' + index + kind + 'Btn';
+			document.getElementById(btnId).onclick = function() {
+				openHostedMediaUploadForInput(document.getElementById('multi-alert-effect' + index + '-' + kind.toLowerCase()), btnId);
+			};
+		});
+	}
 
 	const hostedMediaUploads = [
 		{ btnId: 'uploadDefaultAvatarBtn', inputId: 'default_avatar' },
@@ -11733,4 +14598,45 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			});
 		};
 	}
+
+	const clearBotOverlayButton = document.getElementById('clearBotOverlayButton');
+	if (clearBotOverlayButton) {
+		clearBotOverlayButton.onclick = function() {
+			chrome.runtime.sendMessage({ cmd: 'clearBotOverlay' }, function() {});
+		};
+	}
 });
+
+function getLocalTtsSample(provider, kokoroVoice, piperVoice) {
+    const voice = provider === 'kokoro' ? kokoroVoice : provider === 'piper' ? piperVoice : '';
+    if (/^(e[fm]_|es_)/.test(voice || '')) return 'Hola, gracias por participar. ¿Qué jugamos hoy?';
+    if (/^(p[fm]_|pt_BR)/.test(voice || '')) return 'Olá, obrigado por participar. O que vamos jogar hoje?';
+    if (/^pt_PT/.test(voice || '')) return 'Olá, obrigado por participares. O que vamos jogar hoje?';
+    return 'The quick brown fox jumps over the lazy dog';
+}
+function setupLocalTtsLanguageFilters() {
+    document.querySelectorAll('select[id^="kokoroVoiceSelect"], select[id^="piperVoiceSelect"]').forEach(function(voices) {
+        if (document.getElementById(voices.id + 'Language')) return;
+        const filter = document.createElement('select');
+        filter.id = voices.id + 'Language';
+        filter.setAttribute('aria-label', 'Filter voices by language');
+        filter.style.cssText = 'display:block;max-width:100%;margin:6px 0';
+        const choices = [['', 'All languages'], ['en', 'English'], ['es', 'Spanish'], ['pt', 'Portuguese']];
+        choices.forEach(function(choice) { filter.add(new Option(choice[1], choice[0])); });
+        voices.parentNode.insertBefore(filter, voices);
+        voices.addEventListener('change', function() { filter.dispatchEvent(new Event('change')); });
+        filter.addEventListener('change', function() {
+            Array.prototype.forEach.call(voices.options, function(option) {
+                const id = option.value;
+                const language = /^(a[fm]_|b[fm]_|en_)/.test(id) ? 'en' : /^(e[fm]_|es_)/.test(id) ? 'es' : /^(p[fm]_|pt_)/.test(id) ? 'pt' : '';
+                // Preserve the saved voice even if it is outside the current filter.
+                option.hidden = !!filter.value && language !== filter.value && !option.selected;
+            });
+            voices.querySelectorAll('optgroup').forEach(function(group) {
+                group.hidden = Array.prototype.every.call(group.children, function(option) { return option.hidden; });
+            });
+        });
+    });
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', setupLocalTtsLanguageFilters);
+else setupLocalTtsLanguageFilters();

@@ -15,7 +15,7 @@ asks for that specific target.
 - Keep Web Store policy/review Markdown files on this branch only.
 - Do not merge these Web Store-only docs back into `main` or `beta`.
 - Do not let Web Store-specific feature removals bleed into `main` or `beta`.
-- When pulling from `main`, review the diff manually before upload.
+- Use a pinned `beta` commit as the upstream reference and review the differences before upload.
 
 ## What To Remove Or Verify
 
@@ -79,6 +79,265 @@ For each release, write short reviewer instructions:
 ## Current Manual Prep Notes
 
 Add dated notes here as this branch is reviewed.
+
+### 2026-10-02 - 3.50.25 final release validation
+
+Revalidated the current build and upload at Steve's request. All ten focused
+regression suites passed: popup search/link generation, Store settings/runtime
+parity/featured/ad routing, package inventory, YouTube/Kick deletion timing,
+TikFinity gift streaks, and generic capture. A fresh extraction of the release
+ZIP matched all 974 current package files, hashes, paths and CRC checks.
+
+Fresh Chromium profiles passed background startup, extension-to-Dock delivery
+through an isolated local WebSocket relay, history deletion, default versus
+showdeleted behavior, panel persistence and excluded choices, iframe recipients,
+and the existing extension smoke test. Light/dark panel screenshots were
+inspected. There were no page/console errors or unexpected missing package files;
+settings.json, badwords.txt and goodwords.txt are absent optional user overrides.
+Syntax/dependency checks passed for 327 JS files, 127 inline scripts and 25 JSON
+files, with no remote executable references in the checked paths.
+
+The existing social-stream-ninja-webstore-3.50.25.zip matches the tested build
+byte-for-byte and is the release artifact. No rebuild or version change was
+needed. Results are recorded under release_validation in WEBSTORE_VERIFICATION.json
+and the ZIP's paired verification file. Live authenticated providers and Web
+Store submission were not exercised.
+
+
+### 2026-10-02 - 3.50.25 TikFinity gift completion fix
+
+Backported the TikFinity fix from beta `8427009be74cdc1200e1e511d5bdc082e8a2938a`.
+Explicitly streakable gifts with completion flags now forward only the final
+count. This fixes the reproduced duplicate gift when the completion arrives
+after the recent-message deduplication window. Copied the beta regression test
+and updated the TikFinity paragraph in the event reference.
+
+This is a selective backport on the `693641140de3da8323a2c78de195020feb1b1245` baseline,
+recorded in WEBSTORE_PARITY.json. The baseline pin is not advanced to imply
+that newer feature additions have been synchronized. The source matches its
+recorded backport commit byte-for-byte. Inventory: 974 files, with only
+sources/tikfinity.js and the manifest version changed in the upload. Permissions,
+host permissions, resource exposure, content-script matches and CSP match 3.50.24.
+
+Verification passed:
+
+- The gift regression test on the working tree and exact extracted ZIP: final
+  streak counts, 2/3/5-second completion delays with and without group IDs,
+  immediate completion replay, independent groups, non-streak/legacy payloads,
+  and string/numeric flags.
+- Existing package hash/Store compatibility checks and TikFinity syntax check.
+- Fresh-profile Chromium smoke on the extracted ZIP: Featured Chat settings
+  in beginner/full mode, search, OBS tester, Spotify Copy/fallback/callback,
+  and editor link. No runtime or CSP errors from the tested pages.
+- Every ZIP entry and extracted byte matched the reviewed inventory.
+
+Artifact: `social-stream-ninja-webstore-3.50.25.zip` in the beta checkout's
+`webstore/releases/` directory. SHA-256:
+`ce2e7b56676d4197a81e765bace53663c791cdb20e772b2760f1fd78f4d5e0ba`.
+Results are in WEBSTORE_VERIFICATION.json and beside the ZIP. Gift tests use
+the actual source listener with a simulated clock and transport; no live
+TikFinity session or Store submission was tested.
+
+
+### 2026-10-02 - 3.50.24 beta capture fixes and beginner visibility
+
+Updated the upstream reference to beta `693641140de3da8323a2c78de195020feb1b1245`.
+Copied the five reviewed source files verbatim: generic capture, YouTube and
+Kick DOM capture, Kick websocket capture, and the YouTube API page. This brings
+over cancellation of messages moderated during avatar/badge/emoji waits, plus
+generic capture fixes for grouped messages, author attribution, duplicate
+capture, delayed rendering, and text/emotes. Copied the two corresponding beta
+regression tests. Applied only beta's popup HTML delta so Featured Chat sections
+and the four preset settings groups appear in beginner mode.
+
+The package remains 974 files: 895 exact beta copies, 74 Store adaptations and
+five legacy assets. Seven package files changed. The manifest changes only
+version to 3.50.24; permissions, host permissions, resource exposure and CSP
+match 3.50.23. Every upstream path is accounted for in WEBSTORE_PARITY.json.
+
+Verification passed:
+
+- All 12 source-deletion timing cases, including later/unrelated chat delivery.
+- Generic capture fixtures for Vaughn grouped messages, 11 other layouts,
+  Twitch links/emotes, delayed/recycled rows, reinjection, text/HTML mode,
+  shadow DOM and same-origin iframes.
+- Popup search and package hash/Store compatibility checks.
+- Fresh-profile Chromium smoke against the working tree and extracted ZIP:
+  Featured Chat sections and all four preset settings groups in beginner/full
+  mode, search, OBS tester, Spotify Copy/fallback/callback, and editor link.
+  The tested pages emitted no runtime or CSP errors.
+- Static syntax/dependency audit: 327 JS files, 127 inline scripts, 25 JSON
+  files; no missing required references or remote executable references in
+  the checked paths. All ZIP entries and extracted bytes match the inventory.
+
+Artifact: `social-stream-ninja-webstore-3.50.24.zip` in the beta checkout's
+`webstore/releases/` directory. SHA-256:
+`32e67edc644ddbe52b0f82a2d0da39045cbe81f168054b2635a2f31fa9c25431`.
+Current results are in WEBSTORE_VERIFICATION.json and beside the ZIP. Source
+checks use local fixtures and mocked transport/timing; no live provider
+sessions or Web Store submission were tested.
+
+
+### 2026-10-02 - 3.50.23 packaged-page fixes
+
+The packaged OBS WebSocket tester and Spotify setup page had inline scripts
+blocked by the extension CSP. Moved each existing script byte-for-byte into a
+packaged local classic script and referenced it from the same position in its
+page. Restored the OBS guide's Event Flow Editor link to actions/index.html.
+Updated the existing Chromium smoke test to use the current search input and
+exercise these page behaviors.
+
+The manifest comparison with 3.50.22 changes only version to 3.50.23. All
+permissions, host permissions, resource exposure and CSP values are identical.
+Local packaged scripts follow [Chrome's extension CSP documentation](https://developer.chrome.com/docs/extensions/reference/manifest/content-security-policy).
+The upstream pin remains `82b48ff323b8b89fb9e22ef110a9a228b4ba3cf1`.
+
+Verification passed:
+
+- Existing inventory/hash and Store compatibility checks.
+- Chromium smoke test against both the working tree and exact extracted ZIP:
+  popup search; OBS v5 connect, GetVersion request and disconnect using a local
+  transport fixture; every Spotify Copy button's value; clipboard-denied text
+  selection fallback; packaged Spotify error callback; packaged editor link.
+  The tested pages emitted no runtime or CSP errors.
+- All 974 package files matched their recorded hashes and extracted ZIP bytes.
+  The scripts extracted from both HTML pages match their previous contents
+  byte-for-byte. Only four existing package files changed, with two JS additions.
+- Parsed 327 JS files, 127 inline scripts and 25 JSON files. Checked required
+  manifest/script/stylesheet references resolve, with no remote executable
+  script/import references or first-party eval/new Function in this audit.
+
+Inventory: 895 exact beta files, 74 Store adaptations and five legacy assets.
+Artifact: `social-stream-ninja-webstore-3.50.23.zip` in the beta checkout's
+`webstore/releases/` directory. SHA-256:
+`c5173c2aa6a2f85e2c5f4d8e8b425abe6d4a5fe65ab6e2b6c7d1905053b2116d`.
+Current evidence is in WEBSTORE_VERIFICATION.json and the artifact's paired
+verification file. These checks use simulated OBS replies and clipboard calls;
+live OBS, Spotify authentication, OS clipboard and Store submission were not tested.
+
+
+### 2026-10-02 — 3.50.22 current beta update
+
+Updated from beta `82b48ff323b8b89fb9e22ef110a9a228b4ba3cf1`.
+Seven packaged files changed upstream: background.js, dock.html, popup.js,
+popup.html, popup-ui.css, sources/static/twitch_points.js and
+sources/websocket/twitch.js. These changes bring panel section customization,
+the Dock showdeleted option, confirmed-UI Twitch ad detection, pending Twitch
+moderation suppression, source-URL validation and explicit iframe destinations.
+The manifest version is now 3.50.22.
+
+Browser testing found that the new panel editor listed the already-excluded
+Map and Wordcloud pages. The Store adaptation now omits those two choices.
+The existing announcement-routing fixture was updated for one source event per
+confirmed ad transition, and the runtime parity fixture now includes Twitch's
+pending-message state. A regression check exercises deletion, ban and timeout
+during profile lookup, moderation delay and PluralMind processing, including
+unrelated messages that must still be delivered.
+
+The inventory remains 972 files: 897 exact beta copies, 70 documented Store
+adaptations and five retained legacy assets. Package hashes and the complete
+upstream inclusion/exclusion accounting now reference the new commit.
+
+Verification passed:
+
+- Ten focused test files: popup search, popup link generation, Twitch ad
+  announcements, Store ad routing, Dock filtered history, pending Twitch
+  moderation, Store featured routing (35 cases), settings compatibility,
+  runtime parity and inventory/hash checks.
+- The extracted ZIP ran in a fresh isolated Chromium profile. Verified panel
+  choice persistence after reload, Show all sections, exclusion of unavailable
+  Store choices, full-mode search, and light/dark panel appearance. Verified
+  extension-to-Dock chat delivery, default deletion versus showdeleted marking,
+  history deletion and explicit iframe destination/recipient routing.
+- Background startup completed without script failures. No page or console
+  errors or unexpected packaged-resource failures occurred. The three absent
+  optional user override files are settings.json, badwords.txt and goodwords.txt.
+- Parsed 325 JavaScript files, 129 inline scripts and 25 JSON files in the
+  extracted package. Required manifest/script/stylesheet references resolved;
+  the checked executable paths had no remote script/import references or
+  first-party eval/new Function execution.
+- Every ZIP entry and extracted file matched the reviewed SHA-256 inventory.
+  The paired history, Bits, likes and Instagram checks matched current beta;
+  the pending-moderation check also passed against the extracted ZIP.
+
+Artifact: `social-stream-ninja-webstore-3.50.22.zip` in the beta checkout's
+`webstore/releases/` directory. SHA-256:
+`8f5470818f5f435980be191e3f09e0abf46960195e8e91015ac3894395783a93`.
+Machine-readable results are in WEBSTORE_VERIFICATION.json and beside the ZIP.
+Authenticated live-provider sessions and Store submission were not exercised.
+
+### 2026-09-30 — 3.50.21 complete retained-feature synchronization
+
+Reference: committed beta `4cb172d26f85e17bb7c04bb32a56f841eb334f6d`.
+This supersedes the selective-backport candidate and the review findings below.
+The reference does not include uncommitted beta working-tree changes.
+
+The package contains 972 files: 897 byte-identical beta files, 70 files with
+documented Web Store adaptations, and five existing Store assets absent from
+beta. The inventory adds 161 dependencies, feature assets, language files and
+library licenses. `WEBSTORE_PARITY.json` records each packaged file's SHA-256,
+upstream blob/hash and disposition, plus the reasons for upstream exclusions.
+There are no unclassified package differences or upstream omissions.
+
+The background, service worker, popup, Event Flow, source adapters and their
+shared dependencies now come from the same beta snapshot. This brings across
+the missing like-event routing, Instagram inbox coordinator, Twitch IRC Bits
+metadata, and complete history-deletion UI/worker/background path. It includes
+the Twitch ad setting guard and the temporary Dock ad filter with its
+2026-10-07 removal note. Event vocabulary documentation tracks the same beta.
+
+Existing Store exclusions are recorded separately from functional parity:
+adult/RPLAY/Velora integrations, arbitrary custom/URL JavaScript, local browser
+AI/TTS runtimes, sentiment, Map/Wordcloud and the StreamElements importer.
+Hosted docs, standalone applications and development files stay outside the
+upload. Adaptations include complete disabled UI/runtime paths, packaged
+theme dependencies, reviewed manifest permissions/CSP and the existing
+Socket.IO global lookup without dynamic code. No release generator was added.
+
+Verification of the final code and extracted upload:
+
+- All 13 focused test files passed: popup search/link generation, Event Flow
+  workflows and Store custom-code exclusions, points import/query behavior,
+  unlimited history retention, Twitch GIF normalization, Store settings and
+  featured routing, ad announcements, runtime parity, and package inventory.
+- Matching fixtures against beta and the extracted ZIP passed for history
+  deletion with background open/closed and extension on/off; Twitch IRC Bits
+  thresholds; like events at default/off/on; and both Instagram capture paths,
+  including polling, leasing and deduplication. Ad default/off/on, live setting
+  changes, helper/API events and Event Flow routing passed on both versions.
+- The extracted ZIP loaded in a fresh isolated Chromium profile. All background
+  scripts reached ready with no failures. Actual extension runtime messaging
+  delivered a test chat through a real local WebSocket relay to Dock; the
+  history page then deleted the saved message through its confirmation UI.
+  Full-mode popup search found the ad setting. Light/dark screenshots were
+  inspected. No page errors or unexpected packaged-resource failures occurred.
+- Parsed 325 JavaScript files, 129 inline scripts and 25 JSON files; verified
+  manifest and static script/stylesheet dependencies. No missing required local
+  files, remote executable script/import references, or first-party eval/new
+  Function execution were found by these checks. Optional user override files
+  (`settings.json`, `badwords.txt`, `goodwords.txt`) are absent in a clean profile.
+- Every ZIP entry and extracted byte matched the reviewed inventory. The
+  existing selective-update test now checks package hashes and the pinned
+  revision instead of hard-coding an obsolete version. Stale popup and history
+  fixtures were updated to exercise the current code paths.
+
+Artifact: `social-stream-ninja-webstore-3.50.21.zip` in the beta checkout's
+`webstore/releases/` directory. SHA-256:
+`920d40d771a9de455565a683f652c4cfe5ab96ad18b8f9bbd3ba5cd8937e822b`.
+`WEBSTORE_VERIFICATION.json` contains the machine-readable results and artifact
+identity. Tests and review metadata are not included in the upload ZIP.
+
+Limits: source services were represented by fixtures; no authenticated live
+provider session or Chrome Web Store submission was performed. This verifies
+the tested paths and package parity, not every beta feature in live operation.
+The imported beta text retains its existing line endings and whitespace;
+`git diff --check` is not a clean check for this synchronization.
+
+For the next manual update, pin beta again, review each Store adaptation and
+new dependency, update the inventory/hash accounting after review, run the
+affected behavior checks, then verify the actual ZIP against those hashes.
+Do not treat source-file equality or a successful syntax check alone as proof
+that the corresponding worker, background, UI and packaged assets are present.
 
 ### 2026-06-21 Chrome Web Store Prep
 
@@ -730,3 +989,198 @@ search suite and edited JavaScript syntax checks passed. All translation JSON
 parsed, and all 811 upload files matched the candidate inventory. Manifest bytes
 differ only in the version value, including identical YouTube injection ordering.
 Live YouTube traffic, Web Store upload and website deployment were not tested.
+
+
+### 2026-09-30 Ad announcement fix and source/background compatibility review
+
+Reviewed the current Web Store checkout at b21d19ad (3.50.20), the 3.50.16
+update at b681e410 and its predecessor, and the update's recorded beta source
+snapshot cf23f2b3. This review is about functional compatibility of the
+selective update; it is not a new upload certification.
+
+Applied change:
+
+- Restored beta's central Twitch ad announcement check in sendToDestinations.
+  With twichadannounce absent/off, ad_break, ad_request and ad_schedule are
+  stopped before overlay/output delivery. The check remains after the existing
+  Event Flow processing step.
+- Added tests/webstore-ad-announcements.test.cjs outside the upload inventory.
+  It exercises the actual Twitch helper, processIncomingMessage and
+  sendToDestinations with local video events and mocked output transports.
+  Default/off, object and legacy-boolean enabled states, live disabling,
+  repeated start/stop notices, API ad events, Event Flow delivery and unrelated
+  chat/event routing are covered. It failed on the unmodified checkout and
+  passed on the corrected code. Edited background JavaScript syntax passed.
+
+Confirmed additional findings, recorded for the next update decision:
+
+1. Like-event routing is another incomplete source/background backport.
+   sources/tiktok.js dropped its reactionsOnlyLikeEvent/capturelikeevent
+   routing in 3.50.16, while the replacement routeIndividualLikeEvent logic
+   is absent from the packaged background. Packaged MeetMe also sends actor
+   likes through that main pipeline. In local executions of the production
+   background functions, ordinary TikTok and MeetMe liked payloads reached
+   Dock with capturelikeevent absent/off as well as on; Reactions received
+   them too. The popup still advertises the main-feed toggle. This is pending.
+
+2. Instagram account-activity polling has unmet background dependencies.
+   Both sources/instagram.js and sources/instagramlive.js call
+   claimInstagramInboxPoller and filterInstagramInboxStories. Neither command
+   is implemented in the packaged background/service worker. Executing the
+   packaged source helpers against the actual handleRuntimeMessage returned
+   no polling grant and no story keys. pollNotifInbox exited without fetching
+   the inbox. This affects account-activity capture; it does not establish a
+   failure of the separate live-chat DOM parser. This is pending.
+
+3. tests/webstore-selective-update.test.js is stale. Running it on this checkout
+   fails immediately because it asserts manifest version 3.50.7. It cannot
+   currently serve as a passing regression check for 3.50.20. Updating its
+   assumptions requires reviewing the rest of its older feature expectations,
+   rather than only replacing the version string. This is pending.
+
+Review coverage and limits:
+
+- Inspected the release records, complete retained-source inventory and the
+  source/background changes responsible for the failures. Checked literal
+  source and popup command names against background/service-worker handlers,
+  and reviewed source setting references without matching controls/handlers.
+  There are 216 packaged source/provider JS/HTML files. The two Instagram
+  commands were the missing source cmd handlers; popup GIF preview uses the
+  existing generic targeted-command route and is not a missing-handler bug.
+- Reviewed all 811 upload paths: 267 JavaScript files, 133 executable inline
+  scripts and 19 JSON files parsed successfully. Checked 539 literal manifest,
+  script, stylesheet, getURL and dynamic-import dependency references.
+- Missing literal references were the excluded local-browser-model worker and
+  the two previously documented Kokoro bundles. The local model catalog/client
+  are not packaged or loaded, and the popup's Web Store gates disable these
+  providers. No new required static dependency failure was established.
+- Generic-source learning-data commands are also absent in beta, so they are
+  not classified as a regression introduced by this selective store update.
+  Electron-only status messages and optional source settings without a new
+  store control were not treated as verified failures.
+- The functional reproductions used local fixtures and output stubs. No live
+  authenticated provider session, exhaustive feature/UI matrix, hosted-site
+  deployment or Web Store upload was tested. Syntax/dependency checks alone
+  do not establish behavioral compatibility.
+
+Why background.js was not copied wholesale:
+
+The recorded release approach retained the installed 3.50.10 runtime and
+selectively backported fixes while updating all 216 retained source assets.
+The store package has explicit exclusions and disabled features, so copying
+the whole beta background alone would not have been a complete update either.
+The actual process error was failing to carry source-dependent background
+changes with the source updates. The existing validation emphasized parsing,
+rendering and selected chat flows but missed disabled ad/like announcements
+and Instagram source/background coordination.
+
+Recommended next approach, not implemented by this fix:
+
+- Resolve the two confirmed runtime mismatches and the obsolete selective
+  update test before preparing the next upload.
+- Choose one upstream snapshot for the next comprehensive update. Review full
+  current implementations for retained features, including background, popup,
+  worker, providers and shared helpers together. Apply the documented Web Store
+  exclusions explicitly, instead of recreating a current source layer on an
+  older coordinator through unrelated file copies.
+- For each retained feature, follow the full path: control/default and stored
+  setting, source emission, runtime request handlers, Event Flow, output
+  routing and receiver. Check both off and on states where a toggle exists.
+- Run those integration checks against the exact extracted upload package,
+  alongside the store-specific exclusion/dependency checks. Reconcile the
+  package inventory and review notes only after that candidate passes.
+
+This change does not prepare a new version or ZIP. The existing 3.50.20 ZIP
+predates this correction; a future upload must be rebuilt from the corrected
+checkout after the remaining findings are addressed.
+
+### 2026-09-30 Second Review: Beta Parity Evidence
+
+Compared all 811 inventory paths in the current 3.50.20 checkout against the
+recorded initial beta cf23f2b3, last backport beta a3547113, and beta d62b1448.
+The Web Store checkout includes the uncommitted ad-announcement correction
+documented above. These are file comparisons, not a claim of full functional
+equivalence. Line-ending-only differences were counted separately.
+
+| Comparison to recorded last backport a3547113 | Identical | Line endings only | Substantive difference | Absent from beta |
+| --- | ---: | ---: | ---: | ---: |
+| All inventory files | 616 | 6 | 184 | 5 |
+| Source/provider JS and HTML | 213 | 0 | 0 | 3 |
+| All packaged JS and HTML | 253 | 6 | 149 | 3 |
+
+The three retained source files absent from beta are grabvideo.js, trovo.js,
+and xeenon.js. Their presence is not classified as a bug. Against beta
+d62b1448, 152 packaged JS/HTML files differ substantively. A current source
+layer therefore does not demonstrate that its consumers and controls were
+updated. The differing files include intentional store changes and missing
+backports; this review does not classify every differing hunk.
+
+Additional findings:
+
+1. Native Twitch Bits counts: the newer beta fix aa532ce0 is not present.
+   A local fixture executed the actual provider's cheer handler, the full
+   normalized-membership and IRC adapter functions, and the packaged Event
+   Flow evaluator. For a 100-Bit cheer, the store emitted the display amount
+   and USD value but lost the native count. A 50-Bit minimum failed; with the
+   beta adapter it passed. Both versions matched a zero minimum and rejected
+   a 150-Bit minimum. EventSub cheer capture is a separate path and already
+   supplies meta.bits. This is a fix newer than the recorded store baseline,
+   not evidence that the September 27 update omitted a then-existing fix.
+
+2. Saved-history deletion is an incomplete feature port, not a broken visible
+   button. The store's newer chathistory.js contains requestHistoryClear and
+   its optional click handler, but chathistory.html has no clear-history
+   button, background.js has no clearHistory action handler, and the worker
+   lacks the corresponding disabled-state exception. These beta changes date
+   to 3111bd9d (July 23), before the recorded snapshot. Directly invoking the
+   copied request helper through the actual worker/background functions
+   returned only state, never ok, with the extension on or off. Beta invoked
+   a fake database successfully. No real history was deleted. Since the UI
+   does not expose the action, the observed difference is an omitted beta
+   capability requiring a disposition, not a reproduced user click failure.
+
+3. The existing 3.50.20 ZIP still lacks the ad-announcement correction. Its
+   811 paths exactly match the inventory, but its background.js differs from
+   the current checkout; all other inventory files are byte-identical. ZIP
+   SHA-256: bd3ec095749c160a8f3891a8f05a8617dc067a7b422226221a43477dcff99c57.
+   Inventory/path agreement alone would not detect the missing correction.
+
+The previously verified capturelikeevent and Instagram inbox-coordination
+mismatches remain pending. The version-pinned selective-update test remains
+stale. The separate release record's assertion of selected backports does
+not establish complete coverage of beta changes.
+
+Newer beta changes need separate tracking from missed older dependencies.
+Code comparison also finds the newer YouTube membermilestone labeling and
+Dock membership-queue changes absent from the store. These were not tested
+as live behaviors in this review. The source diff also includes SSApp-only
+YouTube status reporting and Rumble direct-fetch selection for file/Electron
+contexts; their absence was not classified as a Chrome capture failure.
+
+Recommended evidence for the next comprehensive update:
+
+- Pin one beta commit as the target. For every substantive package difference
+  and relevant beta-only dependency, record whether it is carried over,
+  intentionally excluded with the existing store rationale, or pending.
+  A snapshot hash by itself does not record which selective changes landed.
+- Review retained features as a connected implementation: manifest/loading,
+  popup/defaults, source/provider, service worker, background, Event Flow,
+  receiver, and packaged assets. Use the pinned beta implementation as the
+  reference and account explicitly for store-specific differences.
+- Reuse targeted functional checks with identical inputs against beta and
+  the store package. Include defaults/off/on for routing controls and source
+  output passed to its actual consumer, rather than supplying an already
+  idealized payload to the consumer test. Repair the stale store test's
+  reviewed assumptions before relying on it.
+- Verify the exact rebuilt upload ZIP: contents/hashes, packaged dependencies,
+  the targeted behavior checks, and a clean Chrome startup/message-delivery
+  check. Track hosted receiver deployment separately where applicable.
+
+Review artifacts are in the beta checkout's ignored temporary directory
+tmp/webstore-parity-review-20260930: comparison.json (all 811 paths),
+verify-boundaries.cjs and boundary-results.json (paired local fixtures), and
+archive-results.json (exact ZIP comparison). The history fixture explicitly
+records the missing store UI to avoid mistaking helper execution for an
+exposed user workflow. Provider transport, browser APIs, DOM display and
+database operations were mocked; no live provider authentication was tested.
+This second review changes only these notes, not the application or ZIP.

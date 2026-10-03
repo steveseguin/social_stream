@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="description" content="Translation Manager. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Translation Manager</title>
     <style>
@@ -16,13 +20,13 @@
             --light-color: #f8f9fa;
             --dark-color: #343a40;
         }
-        
+
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             line-height: 1.6;
@@ -30,7 +34,7 @@
             color: var(--dark-color);
             padding: 20px;
         }
-        
+
         header {
             display: flex;
             justify-content: space-between;
@@ -39,22 +43,22 @@
             padding-bottom: 10px;
             border-bottom: 1px solid var(--border-color);
         }
-        
+
         h1, h2 {
             margin-bottom: 10px;
         }
-        
+
         .container {
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
         }
-        
+
         .input-section, .output-section {
             flex: 1;
             min-width: 300px;
         }
-        
+
         textarea {
             width: 100%;
             min-height: 200px;
@@ -64,7 +68,7 @@
             font-family: monospace;
             margin-bottom: 10px;
         }
-        
+
         .btn {
             padding: 8px 16px;
             background-color: var(--primary-color);
@@ -75,43 +79,43 @@
             margin-right: 5px;
             transition: background-color 0.3s;
         }
-        
+
         .btn:hover {
             background-color: var(--secondary-color);
         }
-        
+
         .btn.danger {
             background-color: var(--danger-color);
         }
-        
+
         .btn.success {
             background-color: var(--success-color);
         }
-        
+
         .btn.warning {
             background-color: var(--warning-color);
             color: var(--dark-color);
         }
-        
+
         .language-selector {
             display: flex;
             align-items: center;
             margin-bottom: 15px;
         }
-        
+
         .language-selector select {
             margin: 0 10px;
             padding: 5px;
         }
-        
+
         .translation-section {
             margin-top: 20px;
         }
-        
+
         .category {
             margin-bottom: 20px;
         }
-        
+
         .category-header {
             padding: 10px;
             background-color: var(--light-color);
@@ -122,7 +126,7 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .category-content {
             border: 1px solid var(--border-color);
             border-top: none;
@@ -131,23 +135,23 @@
             max-height: 500px;
             overflow-y: auto;
         }
-        
+
         .translation-item {
             margin-bottom: 15px;
             border-bottom: 1px dashed var(--border-color);
             padding-bottom: 15px;
         }
-        
+
         .translation-item:last-child {
             border-bottom: none;
             margin-bottom: 0;
         }
-        
+
         .key {
             font-weight: bold;
             margin-bottom: 5px;
         }
-        
+
         .original {
             margin-bottom: 5px;
             font-family: monospace;
@@ -156,18 +160,18 @@
             background-color: rgba(0,0,0,0.05);
             border-radius: 3px;
         }
-        
+
         .translation textarea {
             min-height: 60px;
         }
-        
+
         .html-preview {
             margin-top: 5px;
             border: 1px dashed var(--border-color);
             padding: 5px;
             border-radius: 3px;
         }
-        
+
         .status-bar {
             position: fixed;
             bottom: 0;
@@ -180,32 +184,32 @@
             justify-content: space-between;
             align-items: center;
         }
-        
+
         .progress-container {
             width: 200px;
             background-color: var(--light-color);
             border-radius: 4px;
             overflow: hidden;
         }
-        
+
         .progress-bar {
             height: 10px;
             background-color: var(--success-color);
             width: 0%;
             transition: width 0.3s;
         }
-        
+
         .api-settings {
             margin-top: 20px;
             padding: 15px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
         }
-        
+
         .api-settings h3 {
             margin-bottom: 10px;
         }
-        
+
         .api-settings input {
             width: 100%;
             padding: 8px;
@@ -213,14 +217,14 @@
             border: 1px solid var(--border-color);
             border-radius: 4px;
         }
-        
+
         .file-input-container {
             position: relative;
             overflow: hidden;
             display: inline-block;
             margin-right: 10px;
         }
-        
+
         .file-input-container input[type=file] {
             position: absolute;
             left: 0;
@@ -230,7 +234,7 @@
             width: 100%;
             height: 100%;
         }
-        
+
         .modal {
             display: none;
             position: fixed;
@@ -242,7 +246,7 @@
             overflow: auto;
             background-color: rgba(0,0,0,0.4);
         }
-        
+
         .modal-content {
             background-color: white;
             margin: 10% auto;
@@ -251,7 +255,7 @@
             max-width: 500px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        
+
         .close {
             color: #aaa;
             float: right;
@@ -259,7 +263,7 @@
             font-weight: bold;
             cursor: pointer;
         }
-        
+
         .close:hover {
             color: black;
         }

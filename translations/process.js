@@ -34,9 +34,11 @@ const updateList = [
     "en-us",
     "de",
     "es",
+    "fr",
     "cs",
     "en-uk",
     "pt-br",
+    "ar",
     "tr",
     "uk",
     "th",
@@ -82,7 +84,7 @@ for (const lang of updateList) {
     setTimeout(async () => {
         console.log(`Processing ${lang}...`);
         const [success, data] = await updateTranslation(lang);
-        
+
         if (success) {
             // Create output preserving ALL existing translations
             const outputTrans = {

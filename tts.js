@@ -108,6 +108,7 @@ try {
 		if (window.speechSynthesis.onvoiceschanged !== undefined) {
             window.speechSynthesis.onvoiceschanged = function() {
                 TTS.voices = window.speechSynthesis.getVoices();
+                TTS.voice = false;
                 //console.log("Voices loaded:", TTS.voices.length);
             };
         }
@@ -124,10 +125,170 @@ TTS.voiceGender = false;
 TTS.audio = false;
 TTS.premiumQueueTTS = [];
 TTS.premiumQueueActive = false;
+TTS.premiumSerial = 0;
+TTS.browserKokoroStreamActive = false;
+TTS.browserKokoroSkipRequested = false;
+TTS.resolveCurrentAudioPlayback = null;
 TTS.volume = 1;
 TTS.pitch = 0;
 TTS.rate = 1;
 TTS.voiceLatency = 4;
+
+TTS.normalizeVolume = function(value) {
+    var parsed = parseFloat(value);
+    if (isNaN(parsed)) {
+        return 1;
+    }
+    return Math.max(0, Math.min(1, parsed));
+};
+
+TTS.applyVolume = function(audio) {
+    if (audio) {
+        audio.volume = TTS.normalizeVolume(TTS.volume);
+    }
+};
+
+TTS.normalizeSpeakOptions = function(options) {
+    if (!options || typeof options !== "object" || Array.isArray(options)) {
+        return {};
+    }
+
+    var normalized = {};
+    if (typeof options.voice === "string" && options.voice.trim()) {
+        normalized.voice = options.voice.trim();
+    }
+    return normalized;
+};
+
+TTS.getVoiceOverride = function(options) {
+    return TTS.normalizeSpeakOptions(options).voice || "";
+};
+
+TTS.getDesktopSystemTtsBridge = function() {
+    var bridge = window.ninjafy || window.electronApi;
+    try {
+        bridge = bridge || window.parent?.ninjafy || window.parent?.electronApi;
+    } catch (e) {}
+    return bridge && typeof bridge.systemTts === "function" ? bridge : null;
+};
+
+TTS.normalizeSystemVoiceIdentifier = function(value) {
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .split("")
+        .filter(function(character) {
+            // Only ASCII separators and punctuation get dropped. Stripping every
+            // non-ASCII character collapsed CJK voice names down to a bare "google".
+            return /[a-z0-9]/.test(character) || character.charCodeAt(0) > 127;
+        })
+        .join("");
+};
+
+TTS.foldSystemVoiceIdentifierToAscii = function(value) {
+    // Older popup builds baked accent-stripped identifiers ("Amlie", "Googlefranais")
+    // into saved settings and shared overlay links, so those still have to resolve.
+    // See getLegacyPopupSystemVoiceIdentifiers in popup.js.
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "");
+};
+
+TTS.systemVoiceLanguageRank = function(voice, language) {
+    var requestedLanguage = String(language || "").toLowerCase();
+    if (!requestedLanguage) return 2;
+    var voiceLanguage = String(voice && voice.lang || "").toLowerCase();
+    if (voiceLanguage === requestedLanguage) return 0;
+    var requestedLanguageBase = requestedLanguage.split("-")[0];
+    if (requestedLanguageBase && voiceLanguage.split("-")[0] === requestedLanguageBase) return 1;
+    return 2;
+};
+
+TTS.pickBestSystemVoice = function(voices, language) {
+    if (!voices || !voices.length) return null;
+    return voices.slice().sort(function(a, b) {
+        var aRank = TTS.systemVoiceLanguageRank(a, language);
+        var bRank = TTS.systemVoiceLanguageRank(b, language);
+        if (aRank !== bRank) return aRank - bRank;
+        if (!!a.default !== !!b.default) return a.default ? -1 : 1;
+        if (a.name.length !== b.name.length) return a.name.length - b.name.length;
+        return 0;
+    })[0];
+};
+
+TTS.findSystemVoice = function(voiceName, language) {
+    if (!voiceName || !window.speechSynthesis) return null;
+    if (!TTS.voices || !TTS.voices.length) {
+        TTS.voices = window.speechSynthesis.getVoices();
+    }
+
+    var requestedName = String(voiceName).trim();
+    var requestedLower = requestedName.toLowerCase();
+    var requestedNormalized = TTS.normalizeSystemVoiceIdentifier(requestedName);
+    var voices = (TTS.voices || []).filter(function(voice) {
+        return voice && voice.name;
+    });
+
+    var matches = voices.filter(function(voice) {
+        return voice.name.toLowerCase() === requestedLower || String(voice.voiceURI || "").toLowerCase() === requestedLower;
+    });
+    if (matches.length) return TTS.pickBestSystemVoice(matches, language);
+
+    var normalizedMatches = requestedNormalized ? voices.filter(function(voice) {
+        return TTS.normalizeSystemVoiceIdentifier(voice.name) === requestedNormalized ||
+            TTS.normalizeSystemVoiceIdentifier(voice.voiceURI) === requestedNormalized;
+    }) : [];
+
+    var partialMatches = voices.filter(function(voice) {
+        return voice.name.toLowerCase().includes(requestedLower);
+    });
+
+    var requestedAscii = TTS.foldSystemVoiceIdentifierToAscii(requestedName);
+    var asciiMatches = requestedAscii ? voices.filter(function(voice) {
+        return TTS.foldSystemVoiceIdentifierToAscii(voice.name) === requestedAscii ||
+            TTS.foldSystemVoiceIdentifierToAscii(voice.voiceURI) === requestedAscii;
+    }) : [];
+
+    // These are all fuzzy name matches, so none of them should win by ignoring the
+    // requested language. A weaker match in the right language beats a stronger one
+    // in the wrong language. The accent-folded tier is last because it is the most
+    // collision-prone: it flattens every non-Latin name down to its Latin prefix.
+    var normalizedBest = TTS.pickBestSystemVoice(normalizedMatches, language);
+    if (normalizedBest && TTS.systemVoiceLanguageRank(normalizedBest, language) < 2) return normalizedBest;
+
+    var partialBest = TTS.pickBestSystemVoice(partialMatches, language);
+    if (partialBest && TTS.systemVoiceLanguageRank(partialBest, language) < 2) return partialBest;
+
+    var asciiBest = TTS.pickBestSystemVoice(asciiMatches, language);
+    if (asciiBest && TTS.systemVoiceLanguageRank(asciiBest, language) < 2) return asciiBest;
+
+    return normalizedBest || partialBest || asciiBest;
+};
+
+TTS.findFallbackSystemVoice = function(language) {
+    if (!window.speechSynthesis) return null;
+    if (!TTS.voices || !TTS.voices.length) {
+        TTS.voices = window.speechSynthesis.getVoices();
+    }
+
+    var voices = (TTS.voices || []).filter(function(voice) {
+        return voice && voice.name && !voice.name.includes("Siri");
+    });
+    var requestedLanguage = String(language || "").toLowerCase();
+    var exactLanguageVoice = voices.find(function(voice) {
+        return String(voice.lang || "").toLowerCase() === requestedLanguage;
+    });
+    if (exactLanguageVoice) return exactLanguageVoice;
+
+    var requestedLanguageBase = requestedLanguage.split("-")[0];
+    var baseLanguageVoice = voices.find(function(voice) {
+        return requestedLanguageBase && String(voice.lang || "").toLowerCase().split("-")[0] === requestedLanguageBase;
+    });
+    if (baseLanguageVoice) return baseLanguageVoice;
+
+    return voices.find(function(voice) { return voice.default; }) || voices[0] || null;
+};
 
 // Provider settings
 TTS.googleSettings = {
@@ -148,9 +309,11 @@ TTS.elevenLabsSettings = {
     model: "eleven_flash_v2_5" // Default to fastest model for streaming
 };
 
+TTS.fishSettings = { model: "s2.1-pro-free", voice: "", speed: 1.0, endpoint: "" };
+
 TTS.speechifySettings = {
     speed: 1.0,
-    model: 'simba-english',
+    model: 'simba-3.0',
     voiceName: false
 };
 
@@ -227,7 +390,12 @@ TTS.logKokoroProgress = function(progress) {
     }
 
     if (progress.status === "progress" && progress.progress !== undefined) {
-        console.log("Kokoro download:", (progress.progress * 100).toFixed(1) + "%");
+        var percent = Number(progress.progress);
+        if (!Number.isFinite(percent)) return;
+        if (percent <= 1) {
+            percent *= 100;
+        }
+        console.log("Kokoro download:", percent.toFixed(1) + "%");
     }
 };
 
@@ -311,6 +479,7 @@ TTS.getKokoroDeviceAttempts = function(preferredDevice, webgpuAvailable) {
 
 TTS.piperLoaded = false;
 TTS.piperInstance = null;
+TTS.piperActiveVoice = null;
 TTS.piperSettings = {
     voice: 'en_US-hfc_female-medium',
     speed: 1.0
@@ -327,6 +496,7 @@ TTS.kittenSettings = {
 // TTS providers
 TTS.GoogleAPIKey = false;
 TTS.ElevenLabsKey = false;
+TTS.FishAPIKey = false;
 TTS.SpeechifyAPIKey = false;
 TTS.OpenAIAPIKey = false;
 TTS.GeminiAPIKey = false;
@@ -370,6 +540,7 @@ TTS.newmembertts = false;
 TTS.ttsclicked = false;
 TTS.tiktokFollowerTTS = false;
 TTS.tiktokMemberLevelTTS = false;
+TTS.pendingTikTokGiftSpeech = new Map();
 
 /**
  * Check if the browser is Safari
@@ -406,7 +577,24 @@ TTS.finishedAudio = function(e) {
     TTS.revokeCurrentObjectUrl();
     TTS.premiumQueueActive = false;
     if (TTS.premiumQueueTTS.length) {
-        TTS.speak(TTS.premiumQueueTTS.shift()); // play next
+        TTS.speakQueuedPremiumTTS(); // play next
+    }
+};
+
+TTS.queuePremiumTTS = function(text, allow, options) {
+    TTS.premiumQueueTTS.push({
+        text: text,
+        allow: !!allow,
+        options: TTS.normalizeSpeakOptions(options)
+    });
+};
+
+TTS.speakQueuedPremiumTTS = function() {
+    const next = TTS.premiumQueueTTS.shift();
+    if (next && typeof next === "object" && Object.prototype.hasOwnProperty.call(next, "text")) {
+        TTS.speak(next.text, !!next.allow, next.options);
+    } else {
+        TTS.speak(next);
     }
 };
 
@@ -423,6 +611,104 @@ TTS.setAudioSource = function(src, isObjectUrl) {
     TTS.revokeCurrentObjectUrl();
     TTS.audio.src = src;
     TTS.currentObjectUrl = isObjectUrl ? src : null;
+};
+
+TTS.playAudioBlobAndWait = async function(audioBlob) {
+    if (!TTS.audio) {
+        TTS.audio = document.createElement("audio");
+        TTS.audio.onended = TTS.finishedAudio;
+    }
+
+    const previousOnEnded = TTS.audio.onended;
+    TTS.audio.onended = null;
+    const audioUrl = URL.createObjectURL(audioBlob);
+    TTS.setAudioSource(audioUrl, true);
+    TTS.applyVolume(TTS.audio);
+
+    return await new Promise(async function(resolve) {
+        let settled = false;
+        let timeoutId = null;
+        const audio = TTS.audio;
+
+        function cleanup(success) {
+            if (settled) return;
+            settled = true;
+            if (TTS.resolveCurrentAudioPlayback === cleanup) {
+                TTS.resolveCurrentAudioPlayback = null;
+            }
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            try {
+                audio.removeEventListener("ended", onEnded);
+                audio.removeEventListener("error", onError);
+                audio.removeEventListener("pause", onPause);
+                audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+                // Restore the previous completion handler. This element is reused across providers, and the
+                // onended-driven ones (google/gemini/openai/speechify/kitten/espeak) only set onended when
+                // first creating it -- so without this, switching providers after ElevenLabs (e.g. in
+                // cohost.html) would leave onended null and stall the premium queue.
+                audio.onended = previousOnEnded || TTS.finishedAudio;
+            } catch (e) {}
+            resolve(!!success);
+        }
+
+        TTS.resolveCurrentAudioPlayback = cleanup;
+
+        function armTimeout(timeoutMs) {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            timeoutId = setTimeout(function() {
+                console.warn("TTS audio playback timed out.");
+                cleanup(false);
+            }, timeoutMs);
+        }
+
+        function onLoadedMetadata() {
+            const durationMs = Number.isFinite(audio.duration) && audio.duration > 0
+                ? Math.ceil(audio.duration * 1000) + 10000
+                : 120000;
+            armTimeout(Math.min(180000, Math.max(15000, durationMs)));
+        }
+
+        function onEnded() {
+            cleanup(true);
+        }
+
+        function onError() {
+            cleanup(false);
+        }
+
+        function onPause() {
+            // Chromium fires "pause" immediately before "ended" when playback reaches the end.
+            // Let the ended handler settle natural completion so finishedAudio() only runs once.
+            if (audio.ended || (
+                Number.isFinite(audio.duration) &&
+                audio.duration > 0 &&
+                audio.currentTime >= audio.duration
+            )) {
+                return;
+            }
+            cleanup(false);
+        }
+
+        audio.addEventListener("ended", onEnded);
+        audio.addEventListener("error", onError);
+        audio.addEventListener("pause", onPause);
+        audio.addEventListener("loadedmetadata", onLoadedMetadata);
+        armTimeout(120000);
+
+        try {
+            if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
+                await TTS.audioContext.resume();
+            }
+            await audio.play();
+        } catch (e) {
+            console.error("Audio playback failed:", e);
+            cleanup(false);
+        }
+    });
 };
 
 TTS.parseFloatParam = function(urlParams, name, fallback) {
@@ -627,9 +913,7 @@ document.addEventListener('DOMContentLoaded', function() {
 			TTS.volume = this.value / 100;
 			
 			// Also update any current audio element
-			if (TTS.audio) {
-				TTS.audio.volume = TTS.volume;
-			}
+			TTS.applyVolume(TTS.audio);
 		});
 	}
 	
@@ -658,7 +942,7 @@ TTS.configure = function(urlParams) {
 	
     // Volume
     if (urlParams.has("volume")) {
-        TTS.volume = TTS.parseFloatParam(urlParams, "volume", 1);
+        TTS.volume = TTS.normalizeVolume(TTS.parseFloatParam(urlParams, "volume", 1));
         const volumeSlider = document.getElementById('volumeSlider');
         if (volumeSlider) volumeSlider.value = TTS.volume * 100;
     }
@@ -710,6 +994,8 @@ TTS.configure = function(urlParams) {
     // API Keys
     TTS.GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
     TTS.ElevenLabsKey = urlParams.get("elevenlabskey") || false;
+    TTS.FishAPIKey = (urlParams.get("fishkey") || "").trim() || false;
+    TTS.fishSettings.endpoint = (urlParams.get("fishendpoint") || "").trim();
     TTS.SpeechifyAPIKey = urlParams.get("speechifykey") || false;
     TTS.OpenAIAPIKey = urlParams.get("openaikey") || urlParams.get("customttskey") || urlParams.get("localttskey") || false;
     TTS.GeminiAPIKey = urlParams.get("geminikey") || urlParams.get("geminiapikey") || urlParams.get("geminiApiKey") || false;
@@ -725,10 +1011,10 @@ TTS.configure = function(urlParams) {
     if (TTS.isCustomEndpointProvider(TTS.TTSProvider)) {
         TTS.TTSProvider = "openai";
     }
-    if (TTS.webStoreDisabledTTSProviders.has(TTS.TTSProvider)) {
-        console.warn("This TTS provider is disabled in the Chrome Web Store build. Falling back to system TTS.");
-        TTS.TTSProvider = "system";
-    }
+
+    TTS.configurationWarning = "";
+
+    if (TTS.webStoreDisabledTTSProviders.has(TTS.TTSProvider)) TTS.TTSProvider = "system";
 
     // Validate provider selection
     if (TTS.TTSProvider !== "system") {
@@ -741,25 +1027,40 @@ TTS.configure = function(urlParams) {
         } else if (TTS.TTSProvider === "kitten") {
             TTS.useKitten = true;
         } else if (TTS.TTSProvider === "elevenlabs" && !TTS.ElevenLabsKey) {
-            console.warn("ElevenLabs selected but no API key provided. Falling back to system TTS.");
+            TTS.configurationWarning = "ElevenLabs API key missing. Using System TTS instead; check playback in OBS separately.";
+            console.warn(TTS.configurationWarning);
             TTS.TTSProvider = "system";
         } else if (TTS.TTSProvider === "google" && !TTS.GoogleAPIKey) {
-            console.warn("Google Cloud selected but no API key provided. Falling back to system TTS.");
+            TTS.configurationWarning = "Google Cloud API key missing. Using System TTS instead; check playback in OBS separately.";
+            console.warn(TTS.configurationWarning);
             TTS.TTSProvider = "system";
         } else if (TTS.TTSProvider === "gemini" && !TTS.GeminiAPIKey) {
-            console.warn("Gemini selected but no API key provided. Falling back to system TTS.");
+            TTS.configurationWarning = "Gemini API key missing. Using System TTS instead; check playback in OBS separately.";
+            console.warn(TTS.configurationWarning);
+            TTS.TTSProvider = "system";
+        } else if (TTS.TTSProvider === "fish" && !TTS.FishAPIKey && !TTS.fishSettings.endpoint) {
+            TTS.configurationWarning = "Fish Audio API key missing. Using System TTS instead; check playback in OBS separately.";
+            console.warn(TTS.configurationWarning);
             TTS.TTSProvider = "system";
         } else if (TTS.TTSProvider === "speechify" && !TTS.SpeechifyAPIKey) {
-            console.warn("Speechify selected but no API key provided. Falling back to system TTS.");
+            TTS.configurationWarning = "Speechify API key missing. Using System TTS instead; check playback in OBS separately.";
+            console.warn(TTS.configurationWarning);
             TTS.TTSProvider = "system";
         } else if (TTS.TTSProvider === "openai" && !TTS.OpenAIAPIKey && TTS.isOfficialOpenAIEndpoint(configuredOpenAIEndpoint)) {
-            console.warn("OpenAI selected but no API key provided. Falling back to system TTS.");
+            TTS.configurationWarning = "OpenAI API key missing. Using System TTS instead; check playback in OBS separately.";
+            console.warn(TTS.configurationWarning);
             TTS.TTSProvider = "system";
         }
     } else {
         // Backwards compatibility
-        if (TTS.usePiper) {
+        if (TTS.useEspeak) {
+            TTS.TTSProvider = "espeak";
+        } else if (TTS.useKitten) {
+            TTS.TTSProvider = "kitten";
+        } else if (TTS.usePiper) {
             TTS.TTSProvider = "piper";
+        } else if (TTS.useKokoroTTS) {
+            TTS.TTSProvider = "kokoro";
         } else if (TTS.GeminiAPIKey) {
             TTS.TTSProvider = "gemini";
         } else if (TTS.GoogleAPIKey) {
@@ -838,10 +1139,16 @@ TTS.configure = function(urlParams) {
     TTS.elevenLabsSettings.voiceName = urlParams.get("voice11") || urlParams.get("elevenlabsvoice") || false;
     TTS.elevenLabsSettings.model = urlParams.get("elevenlabsmodel") || "eleven_flash_v2_5";
 
+    // Fish Audio settings (model is sent as a header, voice as reference_id).
+    TTS.fishSettings.model = urlParams.get("fishmodel") || "s2.1-pro-free";
+    TTS.fishSettings.voice = (urlParams.get("voicefish") || "").trim();
+    TTS.fishSettings.speed = Math.min(2, TTS.parseMinFloatParam(urlParams, "fishspeed", TTS.rate, 0.5));
+
     // Speechify settings
-    TTS.speechifySettings.speed = TTS.parseMinFloatParam(urlParams, "speechifyspeed", TTS.rate, 0.1);
-    TTS.speechifySettings.model = urlParams.get("speechifymodel") || 'simba-english';
+    TTS.speechifySettings.speed = TTS.parseMinFloatParam(urlParams, "speechifyspeed", TTS.rate, 0.5);
+    TTS.speechifySettings.model = urlParams.get("speechifymodel") || 'simba-3.0';
     TTS.speechifySettings.voiceName = urlParams.get("voicespeechify") || false;
+    TTS.speechifySettings.language = urlParams.get("speechifylang") || undefined;
 
     // OpenAI settings
     TTS.openAISettings.apiKey = TTS.OpenAIAPIKey;
@@ -884,6 +1191,8 @@ TTS.configure = function(urlParams) {
             TTS.English = false;
         }
     }
+
+    TTS.simpleGiftSpeech = urlParams.has("simpletts") || urlParams.has("simpletts2");
 
     // Simplified TTS
     if (urlParams.has("simpletts")) {
@@ -1140,14 +1449,28 @@ TTS.updateButtonState = function(state) {
             ttsButton.title = "Text-to-speech — 🔊 Start reading incoming messages out-loud with text-to-speech";
             break;
     }
+    if (TTS.configurationWarning) {
+        ttsButton.title = TTS.configurationWarning + "\n" + ttsButton.title;
+        ttsButton.setAttribute("data-tts-warning", "true");
+        if (!document.getElementById("tts-warning-style")) {
+            var style = document.createElement("style");
+            style.id = "tts-warning-style";
+            style.textContent = "#tts[data-tts-warning] { outline: 2px solid #e0a526; outline-offset: 2px; }";
+            document.head.appendChild(style);
+        }
+    } else {
+        ttsButton.removeAttribute("data-tts-warning");
+    }
+    ttsButton.setAttribute("aria-label", ttsButton.title);
 };
 
 /**
  * Speak text using the configured TTS system
  * @param {string} text - Text to speak
  * @param {boolean} allow - Whether to allow speech even if speech is disabled
+ * @param {object} options - Optional per-utterance settings such as a provider voice name or ID
  */
-TTS.speak = function(text, allow = false) {
+TTS.speak = function(text, allow = false, options = {}) {
     //console.log("TTS.speak called with:", text, "Allow:", allow, "TTS.speech:", TTS.speech);
     
     if (!TTS.speech && !allow) {
@@ -1185,47 +1508,58 @@ TTS.speak = function(text, allow = false) {
     //console.log("About to speak:", text);
 	
 	TTS.initAudioContext();
+	options = TTS.normalizeSpeakOptions(options);
+
+	const desktopSystemTts = TTS.getDesktopSystemTtsBridge();
+	if ((!TTS.TTSProvider || TTS.TTSProvider === "system") && desktopSystemTts) {
+		if (!TTS.premiumQueueActive) {
+			TTS.desktopSystemTTS(text, options);
+		} else {
+			TTS.queuePremiumTTS(text, allow, options);
+		}
+		return;
+	}
 
     // Use the selected provider
 	switch (TTS.TTSProvider) {
 		case "piper":
 			if (!TTS.premiumQueueActive) {
-				TTS.piperTTS(text);
+				TTS.piperTTS(text, options);
 			} else {
-				TTS.premiumQueueTTS.push(text);
+				TTS.queuePremiumTTS(text, allow, options);
 			}
 			return;
 		case "espeak":
 			if (!TTS.premiumQueueActive) {
-				TTS.espeakTTS(text);
+				TTS.espeakTTS(text, options);
 			} else {
-				TTS.premiumQueueTTS.push(text);
+				TTS.queuePremiumTTS(text, allow, options);
 			}
 			return;
 		case "kitten":
 			if (!TTS.premiumQueueActive) {
 				// Call async function without awaiting to avoid blocking
-				TTS.kittenTTS(text).catch(error => {
+				TTS.kittenTTS(text, options).catch(error => {
 					console.error("Kitten TTS error:", error);
 					TTS.finishedAudio();
 				});
 			} else {
-				TTS.premiumQueueTTS.push(text);
+				TTS.queuePremiumTTS(text, allow, options);
 			}
 			return;
 		case "kokoro":
 			if (!TTS.premiumQueueActive) {
-				TTS.kokoroTTS(text);
+				TTS.kokoroTTS(text, options);
 			} else {
-				TTS.premiumQueueTTS.push(text);
+				TTS.queuePremiumTTS(text, allow, options);
 			}
 			return;
         case "google":
             if (TTS.GoogleAPIKey) {
                 if (!TTS.premiumQueueActive) {
-                    TTS.googleTTS(text);
+                    TTS.googleTTS(text, options);
                 } else {
-                    TTS.premiumQueueTTS.push(text);
+                    TTS.queuePremiumTTS(text, allow, options);
                 }
                 return;
             }
@@ -1233,9 +1567,9 @@ TTS.speak = function(text, allow = false) {
         case "gemini":
             if (TTS.GeminiAPIKey) {
                 if (!TTS.premiumQueueActive) {
-                    TTS.geminiTTS(text);
+                    TTS.geminiTTS(text, options);
                 } else {
-                    TTS.premiumQueueTTS.push(text);
+                    TTS.queuePremiumTTS(text, allow, options);
                 }
                 return;
             }
@@ -1243,33 +1577,50 @@ TTS.speak = function(text, allow = false) {
         case "elevenlabs":
             if (TTS.ElevenLabsKey) {
                 if (!TTS.premiumQueueActive) {
-                    TTS.ElevenLabsTTS(text);
+                    TTS.ElevenLabsTTS(text, options);
                 } else {
-					TTS.premiumQueueTTS.push(text);
+					TTS.queuePremiumTTS(text, allow, options);
 				}
 				return;
 			}
 			return; // Change from break to return
+        case "fish":
+            if (TTS.FishAPIKey || TTS.fishSettings.endpoint) {
+                if (!TTS.premiumQueueActive) TTS.fishTTS(text, options);
+                else TTS.queuePremiumTTS(text, allow, options);
+            }
+            return;
 		case "speechify":
 			if (TTS.SpeechifyAPIKey) {
 				if (!TTS.premiumQueueActive) {
-					TTS.SpeechifyTTS(text);
+					TTS.SpeechifyTTS(text, options);
 				} else {
-					TTS.premiumQueueTTS.push(text);
+					TTS.queuePremiumTTS(text, allow, options);
 				}
 				return;
 			}
 			return; // Change from break to return
 		case "openai":
 			if (!TTS.premiumQueueActive) {
-				TTS.openAITTS(text);
+				TTS.openAITTS(text, options);
 			} else {
-				TTS.premiumQueueTTS.push(text);
+				TTS.queuePremiumTTS(text, allow, options);
 			}
 			return;
 	}
 
+    TTS.webSystemTTS(text, options);
+};
+
+TTS.webSystemTTS = function(text, options, finishPremiumQueue = false) {
+    let premiumFinished = false;
+    const finishPremium = function() {
+        if (!finishPremiumQueue || premiumFinished) return;
+        premiumFinished = true;
+        TTS.finishedAudio();
+    };
     if (!TTS.voices && TTS.voices === null) {
+        finishPremium();
         return;
     }
     // system tts instead
@@ -1279,43 +1630,27 @@ TTS.speak = function(text, allow = false) {
                 TTS.voices = window.speechSynthesis.getVoices();
             }
         }
-        if (TTS.voices) {
-            TTS.voices.forEach(vce => {
-                if (vce.name && TTS.voiceName && vce.name.toLowerCase().includes(TTS.voiceName.toLowerCase())) {
-                    if (vce.lang && vce.lang.toLowerCase() == TTS.speechLang.toLowerCase()) {
-                        TTS.voice = vce;
-                    } else if (!TTS.voice && vce.lang && vce.lang.split("-")[0].toLowerCase() == TTS.speechLang.split("-")[0].toLowerCase()) {
-                        TTS.voice = vce;
-                    }
-                } else if (vce.name && vce.name.includes("Siri")) {
-                    // SIRI sucks and breaks a lot, so lets skip if possible.
-                    return;
-                } else if (!TTS.voice && vce.lang && vce.lang.toLowerCase() == TTS.speechLang.toLowerCase()) {
-                    TTS.voice = vce;
-                } else if (!TTS.voice && vce.lang && vce.lang.split("-")[0].toLowerCase() == TTS.speechLang.split("-")[0].toLowerCase()) {
-                    TTS.voice = vce;
-                }
-            });
-        }
-        if (!TTS.voice && TTS.voices?.length) {
-            TTS.voice = TTS.voices.shift(); // take the first/default voice
-        }
+        TTS.voice = TTS.findSystemVoice(TTS.voiceName, TTS.speechLang) || TTS.findFallbackSystemVoice(TTS.speechLang);
         if (TTS.voice) {
             if (TTS.voice.lang && TTS.voice.lang.split("-")[0].toLowerCase() != "en") {
                 TTS.English = false;
             }
         }
     }
+
+    const voiceOverride = TTS.getVoiceOverride(options);
+    const speechVoice = (voiceOverride && TTS.findSystemVoice(voiceOverride, TTS.speechLang)) || TTS.voice;
     
     if (!window.SpeechSynthesisUtterance) {
+        finishPremium();
         return;
     }
 
     var speechInput = new SpeechSynthesisUtterance();
-    if (!TTS.voice) {
+    if (!speechVoice) {
         speechInput.lang = TTS.speechLang;
     } else {
-        speechInput.voice = TTS.voice;
+        speechInput.voice = speechVoice;
     }
     speechInput.volume = TTS.volume;
     speechInput.rate = TTS.rate;
@@ -1329,6 +1664,7 @@ TTS.speak = function(text, allow = false) {
 
     try {
         speechInput.addEventListener("end", function (e) {
+            finishPremium();
             if (window.speechSynthesis.pending || window.speechSynthesis.speaking) {
                 TTS.updateButtonState('speaking');
             } else if (!TTS.speech) {
@@ -1337,6 +1673,11 @@ TTS.speak = function(text, allow = false) {
                 TTS.updateButtonState('on');
             }
         });
+        if (finishPremiumQueue) {
+            speechInput.addEventListener("error", function () {
+                finishPremium();
+            }, { once: true });
+        }
     } catch (e) {
         console.error(e);
     }
@@ -1346,6 +1687,13 @@ TTS.speak = function(text, allow = false) {
  * Clear the TTS queue without stopping
  */
 TTS.clearQueue = function() {
+    TTS.pendingTikTokGiftSpeech.forEach(function(pending) {
+        if (pending && pending.timer) {
+            clearTimeout(pending.timer);
+        }
+    });
+    TTS.pendingTikTokGiftSpeech.clear();
+
     // clear but don't stop tts
     if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) {
         window.speechSynthesis.cancel();
@@ -1372,9 +1720,21 @@ TTS.skipCurrent = function() {
     } else if (TTS.premiumQueueActive && TTS.audio) {
         // For premium TTS providers
         try {
+            const waitForBrowserKokoro = TTS.browserKokoroStreamActive;
+            if (waitForBrowserKokoro) {
+                TTS.browserKokoroSkipRequested = true;
+            }
+            // Invalidate the current message: if its audio is still being fetched/generated, the late
+            // completion must neither play over the next queued item nor advance the queue a second time.
+            TTS.premiumSerial++;
             TTS.audio.pause();
             TTS.audio.currentTime = 0;
-            TTS.finishedAudio(); // This will play the next item in queue
+            if (typeof TTS.resolveCurrentAudioPlayback === "function") {
+                // Promise-based playback (browser Kokoro or ElevenLabs via playAudioBlobAndWait): resolving
+                // stops playback; the provider's own completion path is suppressed by the serial bump above.
+                TTS.resolveCurrentAudioPlayback(false);
+            }
+            TTS.finishedAudio(); // Advance the queue exactly once
         } catch (e) {
             console.warn(e);
         }
@@ -1395,6 +1755,10 @@ TTS.toggle = function() {
         TTS.speech = false;
         TTS.premiumQueueTTS = [];
         try {
+            TTS.premiumSerial++; // invalidate any in-flight premium message so it can't play late
+            if (typeof TTS.resolveCurrentAudioPlayback === "function") {
+                TTS.resolveCurrentAudioPlayback(false);
+            }
             if (TTS.audio) {
                 TTS.audio.pause();
             }
@@ -1537,10 +1901,64 @@ TTS.speechMeta = function(data, allow = false) {
         return;
     }
 
-    if (TTS.doNotReadEvents && data.event) {
+    if (TTS.doNotReadEvents && data.event && !isDonation) {
         //console.log("Filter: Events not allowed and this is an event");
         return;
     }
+
+    // Native IDs match across DOM, WebSocket and duplicate source windows.
+    // Never dedupe gifts by display text: identical-looking gifts can be separate purchases.
+    var tikTokGift = data.type === "tiktok" && (data.event === "gift" || (isDonation && meta.tiktokGiftStreakId));
+    var giftSpeechKeys = [];
+    if (tikTokGift) {
+        var nativeMessageId = meta.tiktokGiftMessageId || data.msgId;
+        if (meta.groupId && String(meta.groupId) !== "0" && meta.giftId && meta.tiktokGiftSenderId) {
+            giftSpeechKeys.push("group:" + JSON.stringify([String(meta.tiktokGiftSenderId), String(meta.giftId), String(meta.groupId)]));
+        }
+        if (nativeMessageId) giftSpeechKeys.push("message:" + String(nativeMessageId));
+        if (!giftSpeechKeys.length && meta.tiktokGiftStreakId) giftSpeechKeys.push("legacy:" + String(meta.tiktokGiftStreakId));
+    }
+    var giftSpeechKey = giftSpeechKeys[0];
+    var giftSpeechCount = Number(meta.tiktokGiftCount || meta.count || meta.repeatCount) || 1;
+    if (giftSpeechKey && !allow) {
+        if (!TTS.completedTikTokGiftSpeech) TTS.completedTikTokGiftSpeech = new Map();
+        var giftSpeechNow = Date.now();
+        TTS.completedTikTokGiftSpeech.forEach(function(entry, key) {
+            if (giftSpeechNow - entry.at > 600000) TTS.completedTikTokGiftSpeech.delete(key);
+        });
+        if (giftSpeechKeys.some(function(key) {
+            var previous = TTS.completedTikTokGiftSpeech.get(key);
+            return previous && previous.count >= giftSpeechCount;
+        })) return;
+    }
+    if (giftSpeechKey && !meta.tiktokGiftTtsReady && !allow) {
+        var existingPending = TTS.pendingTikTokGiftSpeech.get(giftSpeechKey);
+        if (existingPending && existingPending.count > giftSpeechCount) return;
+        if (existingPending && existingPending.count === giftSpeechCount && !meta.repeatEnd) return;
+        if (existingPending && existingPending.timer) clearTimeout(existingPending.timer);
+        var configuredQuietMs = Number(meta.tiktokGiftQuietMs);
+        var quietMs = Number.isFinite(configuredQuietMs) ? Math.max(500, Math.min(30000, configuredQuietMs)) : 4500;
+        var settledData = Object.assign({}, data, {
+            meta: Object.assign({}, meta, { tiktokGiftTtsReady: true })
+        });
+        var pending = { count: giftSpeechCount, timer: null };
+        // Explicitly ongoing streaks wait for completion; legacy payloads use the quiet timer.
+        if (!(meta.streakable === true && meta.repeatEnd === false)) {
+            pending.timer = setTimeout(function() {
+                if (TTS.pendingTikTokGiftSpeech.get(giftSpeechKey) !== pending) return;
+                TTS.pendingTikTokGiftSpeech.delete(giftSpeechKey);
+                TTS.speechMeta(settledData, allow);
+            }, quietMs);
+        } else {
+            // Abandon interrupted streaks without announcing a partial total.
+            pending.timer = setTimeout(function() {
+                if (TTS.pendingTikTokGiftSpeech.get(giftSpeechKey) === pending) TTS.pendingTikTokGiftSpeech.delete(giftSpeechKey);
+            }, 120000);
+        }
+        TTS.pendingTikTokGiftSpeech.set(giftSpeechKey, pending);
+        return;
+    }
+
     try {
         var isCommand = false;
         var msgPlainElement = document.getElementById("content_" + data.id);
@@ -1614,6 +2032,59 @@ TTS.speechMeta = function(data, allow = false) {
             chatname = sanitizeSpeechText(data.chatname.toLowerCase());
         }
 
+        if (tikTokGift) {
+            var giftName = typeof meta.giftName === "string" ? meta.giftName : "";
+            var giftCount = Number(meta.tiktokGiftCount || meta.count || meta.repeatCount);
+            var giftMatch = msgPlain.match(/^(?:sent\s+)?(.+?)\s*[x\u00d7]\s*(\d+)$/i);
+            if (!giftName && giftMatch) giftName = giftMatch[1];
+            if (!(giftCount > 0) && giftMatch) giftCount = Number(giftMatch[2]);
+            if (!giftName && typeof data.title === "string") giftName = data.title;
+            if (!giftName && !/^sent\s/i.test(msgPlain)) giftName = msgPlain;
+            if (giftName) {
+                giftName = sanitizeSpeechText(giftName).replace(/\s+/g, " ").trim();
+                if (!(giftCount > 0) || !Number.isFinite(giftCount)) giftCount = 1;
+                if (giftSpeechKey && !allow) {
+                    giftSpeechKeys.forEach(function(key) {
+                        TTS.completedTikTokGiftSpeech.set(key, { at: Date.now(), count: giftSpeechCount });
+                    });
+                    while (TTS.completedTikTokGiftSpeech.size > 2000) {
+                        TTS.completedTikTokGiftSpeech.delete(TTS.completedTikTokGiftSpeech.keys().next().value);
+                    }
+                }
+                // Speech language, not popup/UI language or the stream's country.
+                var giftLanguage = TTS.speechLang || (TTS.English ? "en" : "");
+                var giftProvider = TTS.TTSProvider || "system";
+                if (giftProvider === "system") {
+                    var giftVoice = TTS.voice;
+                    if (!giftVoice && TTS.voiceName && typeof TTS.findSystemVoice === "function") {
+                        giftVoice = TTS.findSystemVoice(TTS.voiceName, TTS.speechLang);
+                    }
+                    if (giftVoice && giftVoice.lang) giftLanguage = giftVoice.lang;
+                } else if (giftProvider === "google" && TTS.googleSettings) {
+                    var googleGiftVoice = String(TTS.googleSettings.voiceName || "").match(/^([a-z]{2,3}-[a-z]{2})-/i);
+                    giftLanguage = TTS.googleSettings.lang || (googleGiftVoice && googleGiftVoice[1]) || giftLanguage;
+                } else if (giftProvider === "gemini" && TTS.geminiSettings) {
+                    giftLanguage = TTS.geminiSettings.lang || giftLanguage;
+                } else if (giftProvider === "speechify" && TTS.speechifySettings) {
+                    giftLanguage = TTS.speechifySettings.language || giftLanguage;
+                } else if (giftProvider === "espeak" && TTS.espeakSettings) {
+                    giftLanguage = TTS.espeakSettings.voice || giftLanguage;
+                }
+                giftLanguage = String(giftLanguage).toLowerCase().split(/[-_]/)[0];
+                var giftVerbs = {
+                    en: "sent", es: "envi\u00f3", pt: "enviou", fr: "a envoy\u00e9",
+                    de: "sendete", it: "ha inviato", nl: "stuurde"
+                };
+                var giftVerb = TTS.simpleGiftSpeech || (giftLanguage === "en" && !TTS.English) ? "" : giftVerbs[giftLanguage];
+                // Keep platform gift names intact; never guess translations from their IDs.
+                var giftSpeech = (chatname ? chatname + (giftVerb ? " " : ". ") : "") +
+                    (giftVerb ? giftVerb + " " : "") + giftCount + " " + giftName;
+                if (!chatname && giftVerb) giftSpeech = giftSpeech.charAt(0).toUpperCase() + giftSpeech.slice(1);
+                TTS.speak(giftSpeech, allow);
+                return;
+            }
+        }
+
         if (data.hasDonation) {
             var donoText = String(data.hasDonation);
             donoText = sanitizeSpeechText(donoText.toLowerCase());
@@ -1627,9 +2098,9 @@ TTS.speechMeta = function(data, allow = false) {
                         TTS.speak(chatname + " has donated " + donoText, allow);
                     }
                 } else if (msgPlain) {
-                    TTS.speak(chatname + "! ! .. " + donoText + "! ! .. " + msgPlain, allow);
+                    TTS.speak(chatname + ". " + donoText + ". " + msgPlain, allow);
                 } else {
-                    TTS.speak(chatname + "! ! .. " + donoText, allow);
+                    TTS.speak(chatname + ". " + donoText, allow);
                 }
             } else if (TTS.English) {
                 // no name but english
@@ -1640,7 +2111,7 @@ TTS.speechMeta = function(data, allow = false) {
                 }
             } else if (msgPlain) {
                 // no name; not english
-                TTS.speak(donoText + "! ! .. " + msgPlain, allow);
+                TTS.speak(donoText + ". " + msgPlain, allow);
             } else {
                 TTS.speak(donoText, allow);
             }
@@ -1649,13 +2120,13 @@ TTS.speechMeta = function(data, allow = false) {
             if (chatname) {
                 // NAME
                 if (TTS.English) {
-                    TTS.speak(chatname + " says! " + msgPlain, allow);
+                    TTS.speak(chatname + " says: " + msgPlain, allow);
                 } else {
-                    TTS.speak(chatname + "! ! .. " + msgPlain, allow);
+                    TTS.speak(chatname + ". " + msgPlain, allow);
                 }
             } else if (TTS.English) {
                 // NO NAME
-                TTS.speak("Someone says! " + msgPlain, allow);
+                TTS.speak("Someone says: " + msgPlain, allow);
             } else {
                 TTS.speak(msgPlain, allow);
             }
@@ -1669,9 +2140,13 @@ TTS.speechMeta = function(data, allow = false) {
  * Initialize the Kokoro TTS system
  * @returns {Promise<boolean>} - Whether initialization was successful
  */
-TTS.initKokoro = async function() {
-    if ((window.ninjafy || window.electronApi)) {
-        return true; // Electron already handles this
+TTS.isNewKokoroVoice = function(voice) {
+    return /^(ef_dora|em_alex|em_santa|pf_dora|pm_alex|pm_santa)$/.test(voice || "");
+};
+
+TTS.initKokoro = async function(voice) {
+    if ((window.ninjafy || window.electronApi) && !TTS.isNewKokoroVoice(voice || TTS.kokoroSettings.voiceName)) {
+        return true; // Electron already handles existing voices
     }
     if (TTS.kokoroDownloadInProgress) return TTS.kokoroDownloadInProgress;
     if (TTS.kokoroTtsInstance) return true;
@@ -1736,10 +2211,11 @@ TTS.initKokoro = async function() {
  * ElevenLabs TTS implementation
  * @param {string} tts - Text to speak
  */
-TTS.ElevenLabsTTS = function(tts) {
+TTS.ElevenLabsTTS = async function(tts, options) {
+    TTS.premiumQueueActive = true;
+    const premiumSerial = ++TTS.premiumSerial;
     try {
-        TTS.premiumQueueActive = true;
-        const voiceid = TTS.elevenLabsSettings.voiceName || "VR6AewLTigWG4xSOukaG";
+        const voiceid = TTS.getVoiceOverride(options) || TTS.elevenLabsSettings.voiceName || "VR6AewLTigWG4xSOukaG";
         const url = "https://api.elevenlabs.io/v1/text-to-speech/" + voiceid + "/stream?optimize_streaming_latency=" + TTS.elevenLabsSettings.latency;
 
         var data = {
@@ -1754,59 +2230,135 @@ TTS.ElevenLabsTTS = function(tts) {
             }
         };
 
-        const otherparam = {
+        const response = await fetch(url, {
             headers: {
                 "content-type": "application/json",
                 "xi-api-key": TTS.ElevenLabsKey,
-                accept: "*/*"
+                accept: "audio/*"
             },
             body: JSON.stringify(data),
             method: "POST"
-        };
+        });
 
-        fetch(url, otherparam)
-            .then(data => data.blob())
-            .then(async res => {
-                const newBlob = new Blob([res]);
-                
-                // Send to NeuroSync in parallel
-                if (TTS.neuroSyncEnabled) {
-                  TTS.sendToNeuroSync(newBlob).then(result => {
-                    if (result && result.blendshapes) {
-                      //console.log(`Received ${result.blendshapes.length} blendshape frames`);
-                    }
-                  }).catch(err => {
-                    console.error("NeuroSync error:", err);
-                  });
-                  return;
-                }
-                
-                const blobUrl = window.URL.createObjectURL(newBlob);
-                if (!TTS.audio) {
-                    TTS.audio = document.createElement("audio");
-                    TTS.audio.onended = TTS.finishedAudio;
-                }
-                TTS.setAudioSource(blobUrl, true);
-                if (TTS.volume) {
-                    TTS.audio.volume = TTS.volume;
-                }
-                
-                try {
-                    if (TTS.audioContext.state === 'suspended') {
-                        await TTS.audioContext.resume();
-                    }
-                    TTS.audio.play();
-                } catch (e) {
-                    TTS.finishedAudio();
-                    console.error("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-                }
-            })
-            .catch(error => {
-                TTS.finishedAudio();
-                console.error(error);
-            });
-    } catch (e) {
-        TTS.finishedAudio();
+        if (!response.ok) {
+            throw new Error("ElevenLabs request failed with HTTP " + response.status);
+        }
+
+        const audioBlob = await response.blob();
+        if (!audioBlob || !audioBlob.size) {
+            throw new Error("ElevenLabs returned an empty audio response");
+        }
+
+        if (premiumSerial !== TTS.premiumSerial) {
+            return; // skipped while the audio was being fetched
+        }
+
+        if (TTS.neuroSyncEnabled) {
+            await TTS.sendToNeuroSync(audioBlob);
+        } else {
+            const played = await TTS.playAudioBlobAndWait(audioBlob);
+            if (!played) {
+                console.warn("ElevenLabs audio could not be played.");
+            }
+        }
+    } catch (error) {
+        console.error("ElevenLabs TTS error:", error);
+    } finally {
+        if (premiumSerial === TTS.premiumSerial) {
+            TTS.finishedAudio();
+        }
+    }
+};
+
+// Fish Audio uses the same queued blob playback and skip guards as ElevenLabs.
+TTS.fishTTS = async function(tts, options) {
+    TTS.premiumQueueActive = true;
+    const premiumSerial = ++TTS.premiumSerial;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    try {
+        const voice = TTS.getVoiceOverride(options) || TTS.fishSettings.voice;
+        const bridge = TTS.fishSettings.endpoint;
+        const data = bridge
+            ? { input: tts, voice: voice || "", model: TTS.fishSettings.model, response_format: "mp3", speed: TTS.fishSettings.speed }
+            : { text: tts, format: "mp3", prosody: { speed: TTS.fishSettings.speed } };
+        if (!bridge && voice) data.reference_id = voice;
+        const headers = { "Content-Type": "application/json", "Accept": "audio/mpeg" };
+        if (TTS.FishAPIKey) headers.Authorization = "Bearer " + TTS.FishAPIKey;
+        if (!bridge) headers.model = TTS.fishSettings.model;
+        const response = await fetch(bridge || "https://api.fish.audio/v1/tts", {
+            method: "POST",
+            headers: headers,
+            body: JSON.stringify(data),
+            signal: controller.signal
+        });
+
+        if (!response.ok) {
+            throw new Error("Fish Audio request failed with HTTP " + response.status);
+        }
+
+        const audioBlob = await response.blob();
+        if (!audioBlob || !audioBlob.size) {
+            throw new Error("Fish Audio returned an empty audio response");
+        }
+
+        if (premiumSerial !== TTS.premiumSerial) {
+            return; // skipped while the audio was being fetched
+        }
+
+        if (TTS.neuroSyncEnabled) {
+            await TTS.sendToNeuroSync(audioBlob);
+        } else {
+            const played = await TTS.playAudioBlobAndWait(audioBlob);
+            if (!played) {
+                console.warn("Fish Audio could not be played.");
+            }
+        }
+    } catch (error) {
+        console.error("Fish Audio TTS error:", error);
+    } finally {
+        clearTimeout(timeout);
+        if (premiumSerial === TTS.premiumSerial) {
+            TTS.finishedAudio();
+        }
+    }
+};
+
+TTS.desktopSystemTTS = async function(text, options) {
+    TTS.premiumQueueActive = true;
+    const premiumSerial = ++TTS.premiumSerial;
+    try {
+        const bridge = TTS.getDesktopSystemTtsBridge();
+        if (!bridge) throw new Error("Desktop System TTS bridge is unavailable");
+        const voiceOverride = TTS.getVoiceOverride(options);
+        const response = await bridge.systemTts(text, {
+            voice: voiceOverride || TTS.voiceName || (TTS.voice && TTS.voice.name) || "",
+            lang: TTS.speechLang,
+            rate: TTS.rate,
+            pitch: TTS.pitch
+        });
+        TTS.lastDesktopSystemTts = {
+            voice: response?.voice || "",
+            lang: response?.lang || ""
+        };
+        if (premiumSerial !== TTS.premiumSerial) return;
+        const wavBuffer = response?.wavBuffer || response;
+        if (TTS.neuroSyncEnabled) {
+            try {
+                await TTS.sendToNeuroSync(new Blob([wavBuffer], { type: "audio/wav" }));
+            } catch (error) {
+                console.error("NeuroSync error:", error);
+            } finally {
+                if (premiumSerial === TTS.premiumSerial) TTS.finishedAudio();
+            }
+            return;
+        }
+        await TTS.playAudioBlob(new Blob([wavBuffer], { type: "audio/wav" }));
+        TTS.updateButtonState("speaking");
+    } catch (error) {
+        if (premiumSerial !== TTS.premiumSerial) return;
+        console.error("Desktop System TTS failed; falling back to Web Speech:", error);
+        TTS.webSystemTTS(text, options, true);
     }
 };
 
@@ -1853,18 +2405,19 @@ TTS.buildGeminiTtsText = function(tts) {
  * Google Cloud TTS implementation
  * @param {string} tts - Text to speak
  */
-TTS.googleTTS = function(tts) {
+TTS.googleTTS = function(tts, options) {
     TTS.premiumQueueActive = true;
+    const premiumSerial = ++TTS.premiumSerial;
 
     try {
         const url = "https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=" + TTS.GoogleAPIKey;
         
         // Smart language code extraction from voice name
         let languageCode = TTS.googleSettings.lang || TTS.speechLang;
-        const voiceName = TTS.googleSettings.voiceName || "en-GB-Standard-A";
+        const voiceName = TTS.getVoiceOverride(options) || TTS.googleSettings.voiceName || "en-GB-Standard-A";
         
         // If no explicit language is set but we have a voice name, extract language from it
-        if (!TTS.googleSettings.lang && TTS.googleSettings.voiceName) {
+        if (!TTS.googleSettings.lang && voiceName) {
             // Voice names follow pattern: languageCode-variantName (e.g., en-GB-Chirp3-HD-Laomedeia)
             const voiceMatch = voiceName.match(/^([a-z]{2}-[A-Z]{2})/);
             if (voiceMatch) {
@@ -1905,7 +2458,10 @@ TTS.googleTTS = function(tts) {
         fetch(url, otherparam)
             .then(data => data.json())
             .then(async res => {
-                
+                if (premiumSerial !== TTS.premiumSerial) {
+                    return; // skipped while the audio was being fetched
+                }
+
                 // Send to NeuroSync in parallel
                 if (TTS.neuroSyncEnabled) {
                   // Convert base64 to blob
@@ -1935,25 +2491,29 @@ TTS.googleTTS = function(tts) {
                 }
                 TTS.audio.src = "data:audio/mp3;base64," + res.audioContent;
                 
-                if (TTS.volume) {
-                    TTS.audio.volume = TTS.volume;
-                }
+                TTS.applyVolume(TTS.audio);
                 try {
                     if (TTS.audioContext.state === 'suspended') {
                         await TTS.audioContext.resume();
                     }
                     TTS.audio.play();
                 } catch (e) {
-                    TTS.finishedAudio();
+                    if (premiumSerial === TTS.premiumSerial) {
+                        TTS.finishedAudio();
+                    }
                     console.error("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
                 }
             })
             .catch(error => {
-                TTS.finishedAudio();
+                if (premiumSerial === TTS.premiumSerial) {
+                    TTS.finishedAudio();
+                }
                 console.error(error);
             });
     } catch (e) {
-        TTS.finishedAudio();
+        if (premiumSerial === TTS.premiumSerial) {
+            TTS.finishedAudio();
+        }
     }
 };
 
@@ -1961,8 +2521,9 @@ TTS.googleTTS = function(tts) {
  * Gemini TTS implementation (Generative Language API)
  * @param {string} tts - Text to speak
  */
-TTS.geminiTTS = async function(tts) {
+TTS.geminiTTS = async function(tts, options) {
     TTS.premiumQueueActive = true;
+    const premiumSerial = ++TTS.premiumSerial;
     const model = TTS.geminiSettings.model || "gemini-2.5-flash-preview-tts";
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
@@ -1975,7 +2536,7 @@ TTS.geminiTTS = async function(tts) {
                 ...(TTS.geminiSettings.lang && { languageCode: TTS.geminiSettings.lang }),
                 voiceConfig: {
                     prebuiltVoiceConfig: {
-                        voiceName: TTS.geminiSettings.voice || "Kore"
+                        voiceName: TTS.getVoiceOverride(options) || TTS.geminiSettings.voice || "Kore"
                     }
                 }
             }
@@ -2009,6 +2570,10 @@ TTS.geminiTTS = async function(tts) {
             ? new Blob([pcmBytes], { type: mimeType })
             : TTS.pcm16ToWav(pcmBytes, TTS.geminiSettings.sampleRate || 24000, 1);
 
+        if (premiumSerial !== TTS.premiumSerial) {
+            return; // skipped while the audio was being fetched
+        }
+
         if (!TTS.audio) {
             TTS.audio = document.createElement("audio");
             TTS.audio.onended = TTS.finishedAudio;
@@ -2016,9 +2581,7 @@ TTS.geminiTTS = async function(tts) {
 
         const audioUrl = URL.createObjectURL(wavBlob);
         TTS.setAudioSource(audioUrl, true);
-        if (TTS.volume) {
-            TTS.audio.volume = TTS.volume;
-        }
+        TTS.applyVolume(TTS.audio);
 
         try {
             if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
@@ -2026,11 +2589,15 @@ TTS.geminiTTS = async function(tts) {
             }
             await TTS.audio.play();
         } catch (e) {
-            TTS.finishedAudio();
+            if (premiumSerial === TTS.premiumSerial) {
+                TTS.finishedAudio();
+            }
             console.error("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
         }
     } catch (error) {
-        TTS.finishedAudio();
+        if (premiumSerial === TTS.premiumSerial) {
+            TTS.finishedAudio();
+        }
         console.error("Gemini TTS error:", error);
     }
 };
@@ -2039,17 +2606,24 @@ TTS.geminiTTS = async function(tts) {
  * Speechify TTS implementation
  * @param {string} tts - Text to speak
  */
-TTS.SpeechifyTTS = function(tts) {
+TTS.SpeechifyTTS = function(tts, options) {
     TTS.premiumQueueActive = true;
+    const premiumSerial = ++TTS.premiumSerial;
     try {
-        const url = "https://api.sws.speechify.com/v1/audio/speech";
+        const url = "https://api.speechify.ai/v1/audio/speech";
+        // Speechify uses SSML percentage adjustments, not a top-level speed field.
+        const speed = Math.max(0.5, Math.min(3, parseFloat(TTS.speechifySettings.speed) || 1));
+        const rate = Math.round((speed - 1) * 100);
+        const escapedText = String(tts).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+        const input = '<speak><prosody rate="' + (rate >= 0 ? '+' : '') + rate + '%">' + escapedText + '</prosody></speak>';
         let model = TTS.speechifySettings.model;
         const data = {
-            input: "<speak>" + tts + "</speak>",
-            voice_id: TTS.speechifySettings.voiceName || "henry",
+            input: input,
+            voice_id: TTS.getVoiceOverride(options) || TTS.speechifySettings.voiceName || "henry",
             model: model,
             audio_format: "mp3",
-            speed: TTS.speechifySettings.speed
+            language: TTS.speechifySettings.language
         };
         
         const otherparam = {
@@ -2069,6 +2643,9 @@ TTS.SpeechifyTTS = function(tts) {
                 return response.json();
             })
             .then(async json => {
+                if (premiumSerial !== TTS.premiumSerial) {
+                    return; // skipped while the audio was being fetched
+                }
                 if (!json.audio_data) {
                     TTS.finishedAudio();
                     throw new Error("No audio data in JSON response");
@@ -2079,28 +2656,34 @@ TTS.SpeechifyTTS = function(tts) {
                         TTS.audio.onended = TTS.finishedAudio;
                     }
                     TTS.audio.src = "data:audio/mp3;base64," + json.audio_data;
-                    if (TTS.volume) {
-                        TTS.audio.volume = TTS.volume;
-                    }
+                    TTS.applyVolume(TTS.audio);
                     if (TTS.audioContext.state === 'suspended') {
                         await TTS.audioContext.resume();
                     }
                     TTS.audio.play().catch(err => {
                         console.error("Audio play failed, user interaction required", err);
-                        TTS.finishedAudio();
+                        if (premiumSerial === TTS.premiumSerial) {
+                            TTS.finishedAudio();
+                        }
                     });
                 } catch (e) {
                     console.error(e);
-                    TTS.finishedAudio();
+                    if (premiumSerial === TTS.premiumSerial) {
+                        TTS.finishedAudio();
+                    }
                     console.error("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
                 }
             })
             .catch(error => {
-                TTS.finishedAudio();
+                if (premiumSerial === TTS.premiumSerial) {
+                    TTS.finishedAudio();
+                }
                 console.error("Error with Speechify TTS:", error);
             });
     } catch (e) {
-        TTS.finishedAudio();
+        if (premiumSerial === TTS.premiumSerial) {
+            TTS.finishedAudio();
+        }
         console.error("Error in SpeechifyTTS function:", e);
     }
 };
@@ -2109,16 +2692,25 @@ TTS.SpeechifyTTS = function(tts) {
  * Kokoro TTS implementation
  * @param {string} text - Text to speak
  */
-TTS.kokoroTTS = async function(text) {
+TTS.kokoroTTS = async function(text, options) {
   TTS.premiumQueueActive = true;
+  const premiumSerial = ++TTS.premiumSerial;
+  const voiceOverride = TTS.getVoiceOverride(options);
   try {
-    if ((window.ninjafy || window.electronApi)) {
+    if ((window.ninjafy || window.electronApi) && !TTS.isNewKokoroVoice(voiceOverride || TTS.kokoroSettings.voiceName)) {
       try {
         // Electron implementation remains the same
-		let ninjafy = window.ninjafy || window.electronApi;
-        const wavBuffer = await ninjafy.tts(text, TTS.kokoroSettings);
+        let ninjafy = window.ninjafy || window.electronApi;
+        const kokoroSettings = voiceOverride
+          ? { ...TTS.kokoroSettings, voiceName: voiceOverride }
+          : TTS.kokoroSettings;
+        const wavBuffer = await ninjafy.tts(text, kokoroSettings);
         const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
-        
+
+        if (premiumSerial !== TTS.premiumSerial) {
+          return; // skipped while the audio was being generated
+        }
+
         if (TTS.neuroSyncEnabled) {
           TTS.sendToNeuroSync(audioBlob, {
             isKokoroAudio: true,
@@ -2132,7 +2724,9 @@ TTS.kokoroTTS = async function(text) {
           }).catch(err => {
             console.error("NeuroSync error:", err);
           }).finally(() => {
-            TTS.finishedAudio();
+            if (premiumSerial === TTS.premiumSerial) {
+              TTS.finishedAudio();
+            }
           });
           return;
         }
@@ -2144,7 +2738,7 @@ TTS.kokoroTTS = async function(text) {
         const audioUrl = URL.createObjectURL(audioBlob);
         TTS.setAudioSource(audioUrl, true);
         
-        if (TTS.volume) TTS.audio.volume = TTS.volume;
+        TTS.applyVolume(TTS.audio);
         
         await TTS.audio.play();
         return;
@@ -2156,10 +2750,12 @@ TTS.kokoroTTS = async function(text) {
 
     // Web implementation with fixes aligned to working version
     if (!TTS.kokoroTtsInstance) {
-      const initialized = await TTS.initKokoro();
+      const initialized = await TTS.initKokoro(voiceOverride);
       if (!initialized || !TTS.kokoroTtsInstance) {
         console.error("Failed to initialize Kokoro TTS");
-        TTS.finishedAudio();
+        if (premiumSerial === TTS.premiumSerial) {
+          TTS.finishedAudio();
+        }
         return;
       }
     }
@@ -2178,7 +2774,7 @@ TTS.kokoroTTS = async function(text) {
     
     // Use the same stream options as the working version
     const speed = TTS.kokoroSettings.speed || 1.0;
-    const selectedVoice = TTS.kokoroSettings.voiceName || "af_aoede"; // Use a specific default
+    const selectedVoice = voiceOverride || TTS.kokoroSettings.voiceName || "af_aoede"; // Use a specific default
     
     try {
       const stream = TTS.kokoroTtsInstance.stream(streamer, { 
@@ -2187,48 +2783,72 @@ TTS.kokoroTTS = async function(text) {
         streamAudio: false
       });
       
-      for await (const { audio } of stream) {
-        if (!audio) continue;
-        
-        if (TTS.neuroSyncEnabled) {
-          TTS.sendToNeuroSync(audio, { 
-            isKokoroAudio: true,
-            onProgress: (progress) => {
-              //console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
-            }
-          }).then(result => {
-            if (result && result.blendshapes) {
-              //console.log(`Received ${result.blendshapes.length} blendshape frames`);
-            }
-          }).catch(err => {
-            console.error("NeuroSync error:", err);
-          });
-          TTS.finishedAudio();
-          return;
+      let playedAnyAudio = false;
+      const previousOnEnded = TTS.audio ? TTS.audio.onended : null;
+      TTS.browserKokoroStreamActive = true;
+      TTS.browserKokoroSkipRequested = false;
+      try {
+        if (TTS.audio) {
+          TTS.audio.onended = null;
         }
-        
-        const audioBlob = audio.toBlob();
-        const audioUrl = URL.createObjectURL(audioBlob);
-        TTS.setAudioSource(audioUrl, true);
-        if (TTS.volume) TTS.audio.volume = TTS.volume;
-        
-        try {
-          if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
-            await TTS.audioContext.resume();
+        for await (const { audio } of stream) {
+          if (TTS.browserKokoroSkipRequested) {
+            break;
           }
-          await TTS.audio.play();
-        } catch (e) {
-          console.error("Audio playback failed:", e);
-          TTS.finishedAudio();
+          if (!audio) continue;
+
+          if (TTS.neuroSyncEnabled) {
+            TTS.sendToNeuroSync(audio, {
+              isKokoroAudio: true,
+              onProgress: (progress) => {
+                //console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
+              }
+            }).then(result => {
+              if (result && result.blendshapes) {
+                //console.log(`Received ${result.blendshapes.length} blendshape frames`);
+              }
+            }).catch(err => {
+              console.error("NeuroSync error:", err);
+            });
+            if (premiumSerial === TTS.premiumSerial) {
+              TTS.finishedAudio();
+            }
+            return;
+          }
+
+          const audioBlob = audio.toBlob();
+          const played = await TTS.playAudioBlobAndWait(audioBlob);
+          if (!played || TTS.browserKokoroSkipRequested) {
+            break;
+          }
+          playedAnyAudio = true;
         }
+      } finally {
+        if (TTS.audio) {
+          TTS.audio.onended = previousOnEnded || TTS.finishedAudio;
+        }
+        TTS.browserKokoroStreamActive = false;
+        TTS.browserKokoroSkipRequested = false;
+        TTS.resolveCurrentAudioPlayback = null;
+      }
+
+      if (!playedAnyAudio) {
+        console.warn("Kokoro TTS produced no playable audio.");
+      }
+      if (premiumSerial === TTS.premiumSerial) {
+        TTS.finishedAudio();
       }
     } catch (err) {
       console.error("Stream processing error:", err);
-      TTS.finishedAudio();
+      if (premiumSerial === TTS.premiumSerial) {
+        TTS.finishedAudio();
+      }
     }
   } catch (e) {
     console.error("Kokoro TTS error:", e);
-    TTS.finishedAudio();
+    if (premiumSerial === TTS.premiumSerial) {
+      TTS.finishedAudio();
+    }
   }
 };
 
@@ -2280,7 +2900,7 @@ TTS.initEspeak = async function() {
  * eSpeak TTS implementation
  * @param {string} text - Text to speak
  */
-TTS.espeakTTS = async function(text) {
+TTS.espeakTTS = async function(text, options) {
     try {
         // Initialize if needed
         if (!TTS.espeakLoaded || !TTS.espeakInstance) {
@@ -2293,22 +2913,27 @@ TTS.espeakTTS = async function(text) {
         }
         
         TTS.premiumQueueActive = true;
-        
+        const premiumSerial = ++TTS.premiumSerial;
+
         // Initialize audio context if needed
         TTS.initAudioContext();
-        
+
         // Generate speech using real eSpeak-NG TTS
         const wavArrayBuffer = await TTS.espeakInstance.speak(text, {
-            voice: TTS.espeakSettings.voice,
+            voice: TTS.getVoiceOverride(options) || TTS.espeakSettings.voice,
             speed: TTS.espeakSettings.speed,
             pitch: TTS.espeakSettings.pitch,
             amplitude: 100,  // Volume 0-200
             variant: TTS.espeakSettings.variant
         });
-        
+
         // The real eSpeak returns WAV data directly
         const audioBlob = new Blob([wavArrayBuffer], { type: 'audio/wav' });
-        
+
+        if (premiumSerial !== TTS.premiumSerial) {
+            return; // skipped while the audio was being generated
+        }
+
         // Send to NeuroSync if enabled
         if (TTS.neuroSyncEnabled) {
             TTS.sendToNeuroSync(audioBlob).then(result => {
@@ -2330,9 +2955,7 @@ TTS.espeakTTS = async function(text) {
         }
         
         TTS.setAudioSource(audioUrl, true);
-        if (TTS.volume) {
-            TTS.audio.volume = TTS.volume;
-        }
+        TTS.applyVolume(TTS.audio);
         
         // Resume audio context if suspended
         if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
@@ -2342,12 +2965,16 @@ TTS.espeakTTS = async function(text) {
         // Play the audio
         TTS.audio.play().catch(err => {
             console.error("Audio play failed, user interaction required", err);
-            TTS.finishedAudio();
+            if (premiumSerial === TTS.premiumSerial) {
+                TTS.finishedAudio();
+            }
         });
-        
+
     } catch (e) {
         console.error('eSpeak TTS error:', e);
-        TTS.finishedAudio();
+        if (premiumSerial === TTS.premiumSerial) {
+            TTS.finishedAudio();
+        }
         if (e.message && e.message.includes('interaction')) {
             console.error("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
         }
@@ -2358,26 +2985,28 @@ TTS.espeakTTS = async function(text) {
  * Initialize Piper TTS
  * @returns {Promise<boolean>} - Whether initialization was successful
  */
-TTS.initPiper = async function() {
-    if (TTS.piperLoaded) return true;
+TTS.initPiper = async function(voiceName) {
+    const requestedVoice = (typeof voiceName === "string" && voiceName.trim()) || TTS.piperSettings.voice;
+    if (TTS.piperLoaded && TTS.piperInstance && TTS.piperActiveVoice === requestedVoice) return true;
     
     try {
         //console.log("Loading Piper TTS module...");
         
         // Load dependencies in order
-        const scripts = [
-            './thirdparty/ort.min.js',
-            './thirdparty/piper/piper-tts-proper.js'
-        ];
-        
-        for (const src of scripts) {
-            await new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = resolve;
-                script.onerror = () => reject(new Error(`Failed to load ${src}`));
-                document.head.appendChild(script);
-            });
+        if (!window.ProperPiperTTS || !window.ort) {
+            const scripts = [];
+            if (!window.ort) scripts.push('./thirdparty/ort.min.js');
+            if (!window.ProperPiperTTS) scripts.push('./thirdparty/piper/piper-tts-proper.js');
+
+            for (const src of scripts) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = src;
+                    script.onload = resolve;
+                    script.onerror = () => reject(new Error(`Failed to load ${src}`));
+                    document.head.appendChild(script);
+                });
+            }
         }
         
         // Wait for ProperPiperTTS to be available
@@ -2386,9 +3015,11 @@ TTS.initPiper = async function() {
         }
         
         // Create Piper instance with selected voice
-        //console.log('Creating Piper instance with voice:', TTS.piperSettings.voice);
-        TTS.piperInstance = new window.ProperPiperTTS(TTS.piperSettings.voice);
-        await TTS.piperInstance.init();
+        //console.log('Creating Piper instance with voice:', requestedVoice);
+        const piperInstance = new window.ProperPiperTTS(requestedVoice);
+        await piperInstance.init();
+        TTS.piperInstance = piperInstance;
+        TTS.piperActiveVoice = requestedVoice;
         
         TTS.piperLoaded = true;
         //console.log("Piper TTS ready!");
@@ -2403,11 +3034,12 @@ TTS.initPiper = async function() {
  * Piper TTS implementation
  * @param {string} text - Text to speak
  */
-TTS.piperTTS = async function(text) {
+TTS.piperTTS = async function(text, options) {
     try {
+        const requestedVoice = TTS.getVoiceOverride(options) || TTS.piperSettings.voice;
         // Initialize if needed
-        if (!TTS.piperLoaded || !TTS.piperInstance) {
-            const initialized = await TTS.initPiper();
+        if (!TTS.piperLoaded || !TTS.piperInstance || TTS.piperActiveVoice !== requestedVoice) {
+            const initialized = await TTS.initPiper(requestedVoice);
             if (!initialized) {
                 console.error("Failed to initialize Piper TTS");
                 TTS.finishedAudio();
@@ -2416,16 +3048,21 @@ TTS.piperTTS = async function(text) {
         }
         
         TTS.premiumQueueActive = true;
-        
+        const premiumSerial = ++TTS.premiumSerial;
+
         // Use Piper TTS with speed setting
         await TTS.piperInstance.speak(text, TTS.piperSettings.speed);
-        
+
         // Finished playing
-        TTS.finishedAudio();
-        
+        if (premiumSerial === TTS.premiumSerial) {
+            TTS.finishedAudio();
+        }
+
     } catch (e) {
         console.error('Piper TTS error:', e);
-        TTS.finishedAudio();
+        if (premiumSerial === TTS.premiumSerial) {
+            TTS.finishedAudio();
+        }
     }
 };
 
@@ -2513,7 +3150,7 @@ TTS.initKitten = async function() {
  * Kitten TTS implementation
  * @param {string} text - Text to speak
  */
-TTS.kittenTTS = async function(text) {
+TTS.kittenTTS = async function(text, options) {
     try {
         // Initialize if needed
         if (!TTS.kittenLoaded || !TTS.kittenInstance) {
@@ -2526,17 +3163,22 @@ TTS.kittenTTS = async function(text) {
         }
         
         TTS.premiumQueueActive = true;
-        
+        const premiumSerial = ++TTS.premiumSerial;
+
         // Initialize audio context if needed
         TTS.initAudioContext();
-        
+
         // Generate speech with selected voice and speed
         const audioBlob = await TTS.kittenInstance.generateSpeech(
-            text, 
-            TTS.kittenSettings.voice,
+            text,
+            TTS.getVoiceOverride(options) || TTS.kittenSettings.voice,
             TTS.kittenSettings.speed || 1.0
         );
-        
+
+        if (premiumSerial !== TTS.premiumSerial) {
+            return; // skipped while the audio was being generated
+        }
+
         // Send to NeuroSync if enabled
         if (TTS.neuroSyncEnabled) {
             TTS.sendToNeuroSync(audioBlob).then(result => {
@@ -2558,9 +3200,7 @@ TTS.kittenTTS = async function(text) {
         }
         
         TTS.setAudioSource(audioUrl, true);
-        if (TTS.volume) {
-            TTS.audio.volume = TTS.volume;
-        }
+        TTS.applyVolume(TTS.audio);
         
         // Resume audio context if suspended
         if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
@@ -2570,12 +3210,16 @@ TTS.kittenTTS = async function(text) {
         // Play the audio
         TTS.audio.play().catch(err => {
             console.error("Audio play failed, user interaction required", err);
-            TTS.finishedAudio();
+            if (premiumSerial === TTS.premiumSerial) {
+                TTS.finishedAudio();
+            }
         });
-        
+
     } catch (e) {
         console.error('Kitten TTS error:', e);
-        TTS.finishedAudio();
+        if (premiumSerial === TTS.premiumSerial) {
+            TTS.finishedAudio();
+        }
         if (e.message && e.message.includes('interaction')) {
             console.error("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
         }
@@ -2677,9 +3321,7 @@ TTS.playAudioBlob = async function(audioBlob) {
     }
     const audioUrl = window.URL.createObjectURL(audioBlob);
     TTS.setAudioSource(audioUrl, true);
-    if (TTS.volume) {
-        TTS.audio.volume = TTS.volume;
-    }
+    TTS.applyVolume(TTS.audio);
 
     try {
         if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
@@ -2692,9 +3334,10 @@ TTS.playAudioBlob = async function(audioBlob) {
     }
 };
 
-TTS.openAITTS = function(text) {
+TTS.openAITTS = function(text, options) {
     try {
         TTS.premiumQueueActive = true;
+        const premiumSerial = ++TTS.premiumSerial;
         const url = TTS.openAISettings.endpoint;
 
         // API key is optional for custom endpoints, required for OpenAI's official API
@@ -2710,7 +3353,7 @@ TTS.openAITTS = function(text) {
         var data = {
             model: TTS.openAISettings.model,
             input: text,
-            voice: TTS.openAISettings.voice,
+            voice: TTS.getVoiceOverride(options) || TTS.openAISettings.voice,
             response_format: TTS.openAISettings.responseFormat,
             speed: TTS.openAISettings.speed
         };
@@ -2769,6 +3412,9 @@ TTS.openAITTS = function(text) {
                 };
             })
             .then(async res => {
+                if (premiumSerial !== TTS.premiumSerial) {
+                    return; // skipped while the audio was being fetched
+                }
                 if (!res || !res.blob) {
                     throw new Error("TTS endpoint did not return playable audio");
                 }
@@ -2776,7 +3422,9 @@ TTS.openAITTS = function(text) {
                 await TTS.playAudioBlob(newBlob);
             })
             .catch(error => {
-                TTS.finishedAudio();
+                if (premiumSerial === TTS.premiumSerial) {
+                    TTS.finishedAudio();
+                }
                 console.error("OpenAI TTS error:", error);
             });
     } catch (e) {
@@ -2784,3 +3432,15 @@ TTS.openAITTS = function(text) {
         console.error("OpenAI TTS error:", e);
     }
 };
+
+// A short renewable lease suppresses host voice commands during managed playback.
+// It expires if this renderer closes; external/OBS playback requires separate integration.
+(function(){
+    if (!window.ninjafy || typeof window.ninjafy.voicePlayback !== 'function') return;
+    var previous = false;
+    setInterval(function(){
+        var active = !!TTS.premiumQueueActive || !!(window.speechSynthesis && window.speechSynthesis.speaking);
+        if (active || previous) window.ninjafy.voicePlayback(active).catch(function(){});
+        previous = active;
+    }, 400);
+})();

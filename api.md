@@ -4,6 +4,10 @@ The API allows real-time, bidirectional communication between your application a
 
 There is an easy to use sandbox to play with some of the common API commands and options [over here](sampleapi.html).
 
+Capability-driven control clients should use the versioned [Social Stream Remote-Control Protocol](docs/remote-control-protocol.md). The legacy commands documented below remain supported.
+
+**Run a custom Event Flow:** add the **Run from Stream Deck / API** trigger to a flow, name it, save and enable it. Send `{"action":"triggerWorkflow","value":{"trigger":"intermission"},"get":"run-1"}` through the same SSN connection. `getWorkflowTriggers` discovers callable flow IDs/names; optional `value.flowId` selects one flow and `value.data` supplies template values such as `{meta.workflow.data.minutes}`. Check the host's advertised capabilities first. A successful callback means the run was accepted; delayed or external actions may finish later. See the [complete Stream Deck and API workflow guide](docs/streamdeck-event-flow.html) for HTTP, WebSocket, P2P, examples, failures, and setup.
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **Table of Contents**
@@ -30,9 +34,7 @@ There is an easy to use sandbox to play with some of the common API commands and
     - [Prerequisites](#prerequisites)
     - [Supported Platforms](#supported-platforms)
     - [Stripe Setup](#stripe-setup)
-    - [Ko-Fi Setup](#ko-fi-setup)
-    - [Buy Me A Coffee Setup](#buy-me-a-coffee-setup)
-    - [Fourthwall Setup](#fourthwall-setup)
+    - [Creator store setup](#creator-store-setup)
     - [Security Note](#security-note)
     - [Donation Message Format](#donation-message-format)
 - [Featured Page (featured.html)](#featured-page-featuredhtml)
@@ -95,6 +97,9 @@ There is an easy to use sandbox to play with some of the common API commands and
   - [Available Actions](#available-actions)
   - [Variables](#variables)
   - [Comparison with StreamDeck](#comparison-with-streamdeck)
+    - [Product showcase controls (Stream Deck / remote API)](#product-showcase-controls-stream-deck--remote-api)
+    - [Read product display state](#read-product-display-state)
+    - [Managed giveaways](#managed-giveaways)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -132,6 +137,7 @@ For controlling SSN from StreamDeck, Bitfocus Companion, or similar tools, you o
 ```
 https://io.socialstream.ninja/SESSION_ID/nextInQueue
 https://io.socialstream.ninja/SESSION_ID/clearOverlay
+https://io.socialstream.ninja/SESSION_ID/clearBotOverlay
 https://io.socialstream.ninja/SESSION_ID/sendEncodedChat/null/Hello%20World
 https://io.socialstream.ninja/SESSION_ID/drawmode/null/toggle
 ```
@@ -143,11 +149,14 @@ ws.onopen = () => {
     // Send a command
     ws.send(JSON.stringify({ action: "nextInQueue" }));
     ws.send(JSON.stringify({ action: "clearOverlay" }));
+    ws.send(JSON.stringify({ action: "clearBotOverlay" }));
     ws.send(JSON.stringify({ action: "sendChat", value: "Hello from API!" }));
 };
 ```
 
 See the [StreamDeck Integration Guide](#streamdeck-integration-guide-for-social-stream-ninja) and [Bitfocus Companion](#using-bitfocus-companion-with-social-stream-ninja) sections below for detailed setup.
+
+For clickable Credits, featured-chat, timer, and waitlist controls inside OBS, add `https://socialstream.ninja/obs-control-dock.html?session=SESSION_ID` as a Custom Browser Dock. See the [OBS Control Dock guide](docs/obs-control-dock-guide.html). The control dock only requires **Enable remote API control of extension**; it does not require `&server` or OBS WebSocket Server.
 
 ---
 
@@ -269,7 +278,7 @@ The channel system allows for more granular control over message routing:
 
 When specifying channels, you're defining which channels to receive messages from (IN_CHANNEL) and which to send messages to (OUT_CHANNEL). This allows different components of your setup to communicate on separate channels, reducing noise and improving organization.
 
-When a message is sent, it goes to the specified output channel. Those who have that channel set as their input channel will recieve the message.
+When a message is sent, it goes to the specified output channel. Those who have that channel set as their input channel will receive the message.
 
 ### Available Commands
 
@@ -290,45 +299,51 @@ When a message is sent, it goes to the specified output channel. Those who have 
    - Example: `{"action": "extContent", "value": "{\"chatname\":\"User\",\"chatmessage\":\"Hello\"}"}`
 
 5. **Waitlist Operations**
-   - Remove: `{"action": "removefromwaitlist", "value": 1}`
-   - Highlight: `{"action": "highlightwaitlist", "value": 2}`
+   - Remove the first active entry: `{"action": "removefromwaitlist", "value": 1}`
+   - Highlight an active entry: `{"action": "highlightwaitlist", "value": 2}`
    - Reset: `{"action": "resetwaitlist"}`
+   - Stop accepting new entries: `{"action": "stopentries"}`
+   - Start accepting new entries again: `{"action": "startentries"}`
+   - Set the waitlist/draw title message: `{"action": "waitlistmessage", "value": "Type !join to enter!"}`
    - Download: `{"action": "downloadwaitlist"}`
-   - Select Winner: `{"action": "selectwinner", "value": 1}`
+   - Select winners: `{"action": "selectwinner", "value": 1}`
 
-6. **Clear Messages**
-   - All: `{"action": "clear"}` or `{"action": "clearAll"}`
+6. **Leaderboard Operations**
+   - Reset open leaderboard overlays: `{"action": "resetleaderboard"}`
+
+7. **Clear Messages**
+   - Dock: `{"action": "clearDock"}` (`clear` and `clearAll` remain supported aliases)
+   - A dock with `&sync` also clears its synced docks. Without `&sync`, only the targeted dock clears.
+   - Target a labeled dock with `{"action": "clearDock", "target": "producer"}` and `&label=producer` on that dock URL.
+   - Permanently delete saved history: `{"action": "clearHistory", "value": {"confirm": true}}`
    - Overlay: `{"action": "clearOverlay"}`
 
-7. **Queue Operations**
+8. **Queue Operations**
    - Next: `{"action": "nextInQueue"}`
    - Get Size: `{"action": "getQueueSize"}`
 
-8. **Auto-show Toggle**
+9. **Auto-show Toggle**
    - `{"action": "autoShow", "value": "toggle"}`
 
-9. **Feature Next Message**
+10. **Feature Next Message**
    - `{"action": "feature"}`
 
-10. **Get Chat Sources**
-    - `{"action": "getChatSources"}`
+11. **Get Chat Sources**
+   - `{"action": "getChatSources"}`
 
-11. **VIP User Operations**
-    - Toggle: `{"action": "toggleVIPUser", "value": {"chatname": "username", "type": "twitch"}}`
+12. **VIP User Operations**
+   - Toggle: `{"action": "toggleVIPUser", "value": {"chatname": "username", "type": "twitch"}}`
 
-12. **Get User History**
-    - `{"action": "getUserHistory", "value": {"chatname": "username", "type": "twitch"}}`
-
-13. **Waitlist Message**
-    - `{"action": "waitlistmessage", "value": "Your custom message"}`
+13. **Get User History**
+   - `{"action": "getUserHistory", "value": {"chatname": "username", "type": "twitch"}}`
 
 14. **Draw Mode**
-    - `{"action": "drawmode", "value": true}`
-    - `{"action": "drawmode", "value": "toggle"}`
+   - `{"action": "drawmode", "value": true}`
+   - `{"action": "drawmode", "value": "toggle"}`
 
 15. **Emote-only Filter**
-    - Toggle or set the global emote-only mode that keeps only emotes/emoji from chat messages. Messages that become empty (and have no donation/content image) after filtering are dropped.
-    - Examples:
+   - Toggle or set the global emote-only mode that keeps only emotes/emoji from chat messages. Messages that become empty (and have no donation/content image) after filtering are dropped.
+   - Examples:
       - `{"action": "emoteonly", "value": "toggle"}`
       - `{"action": "emoteonly", "value": true}`
       - `{"action": "emoteonly", "value": false}`
@@ -340,6 +355,13 @@ When a message is sent, it goes to the specified output channel. Those who have 
     - Set Settings: `{"action": "setpollsettings", "value": {"pollQuestion": "What's your favorite color?", "pollType": "multiple", "multipleChoiceOptions": "Red\nBlue\nGreen"}}`
     - Get Presets: `{"action": "getpollpresets"}`
     - Create New: `{"action": "createpoll", "value": {"settings": {"pollQuestion": "New Poll", "pollType": "freeform"}}}`
+
+17. **Credits Operations**
+    - Start the credits roll: `{"action": "creditsStart"}`
+    - Preview the current credits: `{"action": "creditsPreview"}`
+    - Show test participant, member, and donor entries: `{"action": "creditsTest"}`
+    - Clear the collected credits: `{"action": "creditsReset"}`
+    - Start and Preview include the stored participant snapshot when **Background collection** is selected. A Credits page must be connected for Start, Preview, or Test to display.
 
 ### Channel-Specific Messaging
 
@@ -431,9 +453,35 @@ Note: Not all commands support or require this callback mechanism.
    - Communicates on channel 5
    - Supports actions like selecting winners and managing the waitlist
 
-3. **Queuing and Pinning Messages**
+3. **Custom Actions**
+   - Create custom auto-responding triggers or actions using a `custom.js` file
+   - Example: `auto1` trigger responds "1" to any message that is "1"
+
+4. **Queuing and Pinning Messages**
    - Queue: Hold CTRL (cmd on Mac) and click messages in the dock
    - Pin: Hold ALT and click messages to pin them at the top
+   - API pin existing row: `{"action":"pin","value":"MESSAGE_MID"}`
+   - API pin by full message object: `{"action":"pin","value":{"id":"external-1","chatname":"User","chatmessage":"Pinned note","type":"api"}}`
+   - API unpin row: `{"action":"unpin","value":"MESSAGE_MID"}`
+   - API feature the first pinned row: `{"action":"nextPinned"}`
+   - Existing dock sync payloads are still supported: `{"pin":["MESSAGE_MID"]}` and `{"unpin":["MESSAGE_MID"]}`
+
+   Pinning is handled by `dock.html`, so a dock must be open on the same session. If you have multiple docks, use a dock `label` and target it:
+
+   ```javascript
+   {"action":"pin","target":"moderator-dock","value":"MESSAGE_MID"}
+   {"action":"unpin","target":"moderator-dock","value":"MESSAGE_MID"}
+   {"action":"nextPinned","target":"moderator-dock"}
+   ```
+
+   HTTP GET examples:
+
+   ```text
+   https://io.socialstream.ninja/SESSION_ID/pin/null/MESSAGE_MID
+   https://io.socialstream.ninja/SESSION_ID/unpin/null/MESSAGE_MID
+   https://io.socialstream.ninja/SESSION_ID/nextPinned
+   https://io.socialstream.ninja/SESSION_ID/pin/moderator-dock/MESSAGE_MID
+   ```
 
 5. **MIDI Hotkey Support**
    - Toggle in the extension menu
@@ -484,21 +532,26 @@ Social Stream Ninja can receive donation events from external platforms via webh
 
 ### Prerequisites
 
-1. **Note Your Session ID**: Find it in the extension popup or in your URL after `?session=`
-2. **Choose ONE of these options** (not both):
-   - **Option A**: Add `&server` to your dock.html URL (e.g., `dock.html?session=XXXX&server`)
-   - **Option B**: Enable **"Enable remote API control of extension"** in the extension popup under `Global settings and tools` → `Mechanics`
+1. **Note Your Session ID**: Find it in the extension popup or in your URL after `?session=`.
+2. Keep Social Stream Ninja enabled.
+3. Under `Global settings and tools` → `Mechanics`, enable **remote API control of extension**. This lets `background.js` receive and normalize inbound webhooks before sending them through the normal message path.
+4. Use your normal generated dock and overlay links. Do not manually add `&server`, `&server2`, or `&server3` for donation webhooks.
+5. If the dock was already open when you enabled the setting, reload it once.
 
-> ⚠️ **Warning**: Do not enable both options. If you add `&server` to the dock AND enable remote API control in the extension, webhooks will be received by both, causing duplicate donation alerts.
+This is the only API toggle required for inbound donation webhooks. The other API transport toggles serve different workflows and can remain off.
+
+With this route, each donation is normalized once in the extension and then delivered like a regular Social Stream message to chat, alerts, Event Flow, and the Tip Jar/Goal Meter.
+
+![Enable the remote API control of extension toggle](docs/images/api/enable-remote-api-control.png)
 
 ### Supported Platforms
 
 | Platform | Webhook URL | Event Type |
 |----------|-------------|------------|
 | **Stripe** | `https://io.socialstream.ninja/{sessionID}/stripe` | `checkout.session.completed` |
-| **Ko-Fi** | `https://io.socialstream.ninja/{sessionID}/kofi` | Donations (public only) |
-| **Buy Me A Coffee** | `https://io.socialstream.ninja/{sessionID}/bmac` | `donation.created`, `membership.started` |
-| **Fourthwall** | `https://io.socialstream.ninja/{sessionID}/fourthwall` | `ORDER_PLACED` |
+| **Ko-Fi** | `https://io.socialstream.ninja/{sessionID}/kofi` | Public tips, memberships, shop orders and commissions |
+| **Buy Me A Coffee** | `https://io.socialstream.ninja/{sessionID}/bmac` | `donation.created`, `membership.started`, shop, commission and wishlist payments |
+| **Fourthwall** | `https://io.socialstream.ninja/{sessionID}/fourthwall` | Orders, gifts, donations and new subscriptions |
 
 ### Stripe Setup
 
@@ -513,23 +566,9 @@ Social Stream Ninja can receive donation events from external platforms via webh
 
 **Testing**: Use Stripe's Test Mode with card number `4242 4242 4242 4242`, any future expiry date, and any CVC.
 
-### Ko-Fi Setup
+### Creator store setup
 
-1. Sign in to [Ko-Fi Webhook Settings](https://ko-fi.com/manage/webhooks)
-2. Add webhook URL: `https://io.socialstream.ninja/YOUR_SESSION_ID/kofi`
-3. Only public donations appear (private donations are filtered out)
-
-### Buy Me A Coffee Setup
-
-1. Sign in to Buy Me A Coffee and navigate to Settings → Webhooks
-2. Add webhook URL: `https://io.socialstream.ninja/YOUR_SESSION_ID/bmac`
-3. Both one-time donations (`donation.created`) and new memberships (`membership.started`) are supported
-
-### Fourthwall Setup
-
-1. Go to your Fourthwall admin: Settings → For Developers → Webhooks
-2. Create a webhook with URL: `https://io.socialstream.ninja/YOUR_SESSION_ID/fourthwall`
-3. Subscribe to `ORDER_PLACED` events
+See the [illustrated creator store guide](docs/creator-store-setup.html) for Fourthwall, Ko-fi and Buy Me a Coffee. It covers event selection, receiver status, isolated previews, product import and OBS links. Use SSN's sample preview to check appearance without triggering payments or Event Flow.
 
 ### Security Note
 
@@ -546,13 +585,16 @@ When a donation webhook is received, it is normalized into a standard SSN messag
   "hasDonation": "$50.00 USD",
   "type": "stripe",
   "id": "unique_id",
+  "meta": {
+    "webhookId": "provider_delivery_id"
+  },
   "chatbadges": "",
   "chatimg": "",
   "membership": ""
 }
 ```
 
-The `hasDonation` field contains the formatted amount and currency. This allows donations to be filtered, featured, and displayed using the same mechanisms as platform-native donations (Super Chats, Bits, etc.).
+The `hasDonation` field contains the formatted amount and currency. `meta.webhookId` preserves the provider's stable event identifier for retry and mixed-transport deduplication. This allows donations to be filtered, featured, and displayed using the same mechanisms as platform-native donations (Super Chats, Bits, etc.).
 
 # Featured Page (featured.html)
 
@@ -563,7 +605,7 @@ The featured.html page is designed to display featured content, typically used f
 The featured.html page can be configured to connect to the WebSocket server in three different ways:
 
 1. Default (server): Connects to `wss://io.socialstream.ninja`, joins the room, and sets output to channel 3 and input to channel 2.
-2. Server2: Sets output to channel 3 and input to default channel.
+2. Server2: Sets output to channel 3 and input to channel 4.
 3. Server3: Sets output to channel 3 and input to channel 1.
 
 In all cases, channel 3 is reserved for output from the featured.html page.
@@ -617,7 +659,7 @@ When sending content to be displayed, the content object should have the followi
 ```
 `chatname`, `chatmessage`, and `type` tend to be the most important.
 
-A full break down of different keys though used in SSN are the following:
+A full breakdown of different keys though used in SSN are the following:
 
 key name | value type | description
 --- | --- | ---
@@ -627,8 +669,9 @@ chatimg | string (URL or data URI \<= 55 KB) | Author avatar. Absolute URLs pref
 type | string (lowercase identifier) | Primary source identifier such as `twitch`, `youtube`, `kick`. Also used to resolve the default icon `https://socialstream.ninja/sources/images/{type}.png`.
 sourceImg | string (URL or `./sources/images/...`) | Optional alternate icon representing a sub-source (ex: channel avatar, Restream origin). Should generally differ from the `type` icon. Legacy relative paths are normalised to `./sources/images/{file}` for consistency but remain locally resolved.
 sourceName | string | Channel title, profile name, or host identifier associated with the source feed.
-textonly | boolean | Indicates whether `chatmessage` should be treated as plain text (`true`) or may contain markup (`false`).
-hasDonation | string | Donation amount with units, e.g., `"3 roses"` or `"$50 USD"`.
+textonly | boolean | Applies only to `chatmessage`; indicates whether `chatmessage` should be treated as plain text (`true`) or may contain markup (`false`). Other normal fields are expected to be plain text, except media fields such as `chatimg` and `contentimg`.
+hasDonation | string | Donation display amount with units, e.g., `"3 roses"` or `"$50 USD"`.
+donoValue | number (optional) | Source-supplied USD equivalent, known or estimated. A valid value, including zero, overrides shared conversion of `hasDonation`. The display label remains unchanged. Unpriced TikTok gifts default to one coin per gift.
 chatbadges | Array<string \| BadgeDescriptor> | Badge icons shown beside the author. Strings are image URLs; `BadgeDescriptor` objects can include `{ type, text, src }` for richer badges.
 contentimg | string (URL) | Optional media attachment for the message (image/gif/mp4/webm).
 membership | string | Short description of a membership/subscription state or label (e.g., `"Member"` or `"Tier 3 Upgrade"`).
@@ -742,14 +785,19 @@ The dock page processes incoming WebSocket messages using the `processInput` fun
 
 The dock page responds to various API actions, including:
 
-1. `clear` or `clearAll`: Clears all messages except pinned ones
-2. `clearOverlay`: Clears the overlay without affecting the dock
-3. `nextInQueue`: Moves to the next message in the queue
-4. `getQueueSize`: Returns the current queue size
-5. `autoShow`: Controls automatic message display
-6. `content`: Processes and displays new content
-7. `feature`: Features the next unfeatured message
-8. `toggleTTS` or `tts`: Controls Text-to-Speech functionality
+1. `clearDock` (`clear` and `clearAll` are aliases): Clears dock messages except pinned ones; `&sync` propagates the clear.
+2. `clearHistory`: Permanently deletes the local message database when `value.confirm` is `true` or `value` is `"confirm"`.
+3. `clearOverlay`: Clears the overlay without affecting the dock
+4. `clearBotOverlay`: Clears the Primary Chat Bot's `bot.html` overlay without stopping active TTS
+5. `nextInQueue`: Moves to the next message in the queue
+6. `getQueueSize`: Returns the current queue size
+7. `autoShow`: Controls automatic message display
+8. `content`: Processes and displays new content
+9. `feature`: Features the next unfeatured message
+10. `pin`: Pins an existing dock message by `mid`, or pins a full message object.
+11. `unpin`: Unpins an existing dock message by `mid`.
+12. `nextPinned`: Features the first pinned message.
+13. `toggleTTS` or `tts`: Controls Text-to-Speech functionality
 
 ### Example API Usage
 
@@ -782,8 +830,6 @@ socketserver.send(JSON.stringify({ action: "toggleTTS", value: "toggle" }));
 7. **Documentation**: Maintain detailed inline documentation for complex functions and processes.
 
 # Social Stream Ninja API Documentation
-
-[Previous content remains the same]
 
 # Extension
 
@@ -822,12 +868,15 @@ The extension processes various API actions, including:
 5. `removefromwaitlist`: Removes an entry from the waitlist.
 6. `highlightwaitlist`: Highlights an entry in the waitlist.
 7. `resetwaitlist`: Resets the entire waitlist.
-8. `stopentries`: Stops accepting new entries.
-9. `downloadwaitlist`: Initiates a download of the waitlist.
-10. `selectwinner`: Selects a random winner from the waitlist.
-11. `drawmode`: Toggles draw mode for giveaways/waitlists.
+8. `resetleaderboard`: Resets open leaderboard overlays and clears their saved leaderboard state.
+9. `stopentries`: Stops accepting new entries.
+10. `startentries`, `openentries`, or `resumeentries`: Starts accepting new entries again.
+11. `waitlistmessage` or `setwaitlistmessage`: Sets the waitlist/draw title message.
+12. `downloadwaitlist`: Initiates a download of the waitlist.
+13. `selectwinner`: Selects one or more random winners from the waitlist.
+14. `drawmode`: Toggles draw mode for giveaways/waitlists.
 
-.. and most actions that targets the dock can be sent via the extension API or other overlays.
+.. and most actions that target the dock can be sent via the extension API or other overlays.
 
 The logic in the app lets you target non-Dock overlays via the extension API using the `target` value, where target is the label name of the connected P2P IFRAME.
 
@@ -943,7 +992,22 @@ The waitlist page processes various types of messages:
 
 ### API Actions
 
-The waitlist page responds to various API actions, including:
+The normal remote API command path controls waitlist state in the extension/app. The waitlist page then receives display payloads from that state.
+
+Remote API actions:
+
+```javascript
+{ "action": "removefromwaitlist", "value": 1 }
+{ "action": "highlightwaitlist", "value": 1 }
+{ "action": "resetwaitlist" }
+{ "action": "stopentries" }
+{ "action": "startentries" }
+{ "action": "waitlistmessage", "value": "Type !join to enter!" }
+{ "action": "selectwinner", "value": 1 }
+{ "action": "drawmode", "value": "toggle" }
+```
+
+Display payloads handled by `waitlist.html` include:
 
 1. `waitlistmessage`: Sets a custom message for the waitlist.
    ```javascript
@@ -1011,8 +1075,11 @@ removefromwaitlist
 highlightwaitlist
 resetwaitlist
 stopentries
+startentries
+waitlistmessage
 downloadwaitlist
 selectwinner
+drawmode
 ```
 
 ## Poll Control via API
@@ -1092,11 +1159,11 @@ ws.send(JSON.stringify({
 }));
 ```
 
-Just to touch on the Battle Royal game though,
+Just to touch on the Battle Royale game though,
 
 ## Battle Page (battle.html)
 
-The battle.html page is an interactive game-like features. Currently it doesn't use a WebSocket connection but instead communicates directly with the extension via WebRTC.
+The battle.html page is an interactive game-like feature. Currently it doesn't use a WebSocket connection but instead communicates directly with the extension via WebRTC.
 
 ### Communication Method
 
@@ -1149,8 +1216,6 @@ The battle page relies on the extension for receiving data:
 1. The extension uses `sendDataP2P()` to send data to the battle page
 2. Data can be sent via WebRTC or fallback to WebSocket if available
 3. The extension can trigger game actions like starting the game
-
-I'll create a guide focused on integrating Social Stream Ninja with StreamDeck, specifically for sending custom messages.
 
 
 # StreamDeck Integration Guide for Social Stream Ninja
@@ -1232,8 +1297,6 @@ Channels:
 - 3: Featured content
 - 4-7: Custom channels
 
-I'll add a section about Bitfocus Companion integration with what we can confirm from the provided information:
-
 # Using Bitfocus Companion with Social Stream Ninja
 
 Bitfocus Companion enables the reasonably priced Elgato Streamdeck to be a professional shotbox surface for a huge amount of different presentation switchers, video playback software and broadcast equipment. It supports Social Stream Ninja and VDO.Ninja!
@@ -1287,3 +1350,56 @@ Advantages of using Companion:
 - Can be used alongside StreamDeck for more complex setups
 
 This makes Companion a simpler alternative to the StreamDeck HTTP method described above, especially for basic Social Stream Ninja control.
+
+
+### Product showcase controls (Stream Deck / remote API)
+
+Use the existing P2P or WebSocket API. These commands are advertised in the version 2 capabilities and return correlated success/error responses. SSN and host controls must be enabled. Configure and save Products & support links first.
+
+| Action | Value | Effect |
+| --- | --- | --- |
+| `commerceShow` | Saved public product URL, or omit | Pin that product (or current/first product). |
+| `commerceNext` | Seconds, optional; default 0 | Pin the next product. |
+| `commerceHide` | Seconds, optional; default 0 | Hide promotions; activity alerts continue. |
+| `commerceResume` | Omit | Resume the saved schedule. |
+
+0 seconds means until changed; 1-3600 restores the schedule after that duration. Overrides reset when SSN restarts. `commerceShow` also accepts an object `{ "url": "https://example.com/product", "seconds": 30 }` for a timed product.
+
+```json
+{"protocol":2,"action":"commerceShow","value":"https://example.com/product","get":"product-key-1"}
+```
+
+The existing `commerceControl` action accepts `{ "command": "show", "url": "https://example.com/product", "seconds": 30 }` inside `value`, or the original top-level `command`, `url`, and `seconds` fields. All paths call the same monetization controller. Replies contain only the action, command and live display override; no publishing credentials. Commands do not publish pages, post chat, or create payment events. See [product controls](docs/product-controls.html).
+
+
+### Read product display state
+
+`{"protocol":2,"action":"getCommerceState","get":"product-state-1"}` returns `payload.commerce`: `enabled`, `hostOn`, `mode` (`offline`, `disabled`, `hidden`, `pinned`, `scheduled`), `selected` (name/URL or null), `expiresAt` (epoch milliseconds or 0), `remainingSeconds` (or null), saved `items` (name/URL only), and `publicPage` publishing/synchronization status. The existing host-control/session permissions apply. It returns no publishing key, session key or buyer data.
+
+Commerce control replies also include this state. Local display commands acknowledge immediately after applying the selection; public-page synchronization runs separately, coalesces newer selections, and retries failures. A successful response confirms SSN state only, not OBS recording/streaming, scene visibility, or public-page synchronization. The same read/write contract supports operator controls in Stream Deck, Event Flow, the SSN popup, or a future OBS browser dock; audience overlays need no controls.
+
+
+### Managed giveaways
+
+Managed giveaways persist on the host. Use `giveaway.html?session=YOUR_SESSION&managed&giveaway=default` for synchronized card, reel, or community-wheel displays. Optional `backdrop=panel` enables an opaque themed panel; transparent is the default.
+
+All commands accept `value.giveawayId` (default `default`). Mutations accept `operationId` for retry protection and `roundId` to reject actions against a replaced round. Responses return `{ok, operationId?, giveaway}` or `{ok:false,error}` inside the existing protocol 2 envelope. The callback `get` field is separate from `operationId`.
+
+| Action | Value / behavior |
+| --- | --- |
+| `startgiveaway` | Optional `config`: `keyword`, `match` (`exact`/`word`), `membersOnly`, `removeWinner`, `ticketCost` (0–10000), `maxTickets` (1–10000), `prizePoints` (0–1000000), `winnerCount` (1–20), `kind` (`giveaway`, `coin`, `number`). Legacy top-level keyword configuration remains accepted. |
+| `closegiveaway` | Closes entries, preserving reservations. |
+| `drawgiveaway` | Commits the next winner and point award; consumes ticket reservations. Number Hunt is solved by guessing instead. |
+| `cancelgiveaway` | Refunds outstanding reservations before any result is committed. |
+| `resetgiveaway` | Archives history and creates a new closed round; rejects outstanding reservations. |
+| `getgiveawaystate` | Current audience-safe snapshot. |
+| `listgiveaways` | `{ok,giveaways:[...]}` summaries for the session. |
+| `getgiveawayhistory` | `{ok,history:[...]}` current and archived winner records. |
+| `getgiveawayentries` | Optional `page` (100 rows per page); private operator response `{ok,roundId,page,total,entries}`. |
+| `removegiveawayentry` | `entryId`; removes and refunds an entry before a result. |
+| `entergiveaway` | `actor`; one free entry. |
+| `buygiveawaytickets` | `actor`, integer `count`, optional `side` (`heads`/`tails` for Coin Flip Pot). Atomic reservation and entry. |
+| `grantgiveawaytickets` | `actor`, integer `count`; operator grant without charge, unavailable for a pot game. |
+| `guessgiveaway` | `actor`, integer `guess` in the current range; Number Hunt awards the first correct solver. |
+
+Actors use captured `chatname`, `type`, optional native `userid`/`username`, and membership fields. Do not expose operator API access to arbitrary viewers. Ticket/prize features require SSN points enabled. Balances remain local to a profile; changing sessions does not create another wallet. Recovered open rounds are closed for review. See the [complete giveaway/points guide](docs/giveaway-points-guide.html) for funding, limits, refunds, game rules, Event Flow, Stream Deck, and recovery.

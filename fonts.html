@@ -2,24 +2,36 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:url" content="https://socialstream.ninja/fonts.html">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:url" content="https://socialstream.ninja/fonts.html">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Installed Font Detector — Preview installed fonts and generate ?font links</title>
-    <meta name="description" content="Detect installed fonts in your browser, preview live samples, and copy URL parameter links (?font=) compatible with VDO.Ninja, SocialStream.Ninja, and Caption.Ninja." />
+    <title>Installed Font Detector: Preview installed fonts and generate ?font links</title>
+    <meta name="description" content="Detect installed fonts in your browser, preview live samples, and copy URL parameter links (?font=) compatible with VDO.Ninja, SocialStream.Ninja, and Caption.Ninja.">
+    <link rel="canonical" href="https://socialstream.ninja/fonts.html">
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
     <meta name="author" content="Installed Font Detector" />
     <meta name="keywords" content="fonts, installed fonts, detect fonts, browser fonts, font preview, url parameter, vdo.ninja, socialstream.ninja, caption.ninja" />
     <meta name="theme-color" content="#0f1221" />
 
     <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Installed Font Detector" />
-    <meta property="og:description" content="Preview your system fonts and generate ?font= links compatible with VDO.Ninja, SocialStream.Ninja, and Caption.Ninja." />
-    <meta property="og:locale" content="en_US" />
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Installed Font Detector: Preview installed fonts and generate ?font links">
+    <meta property="og:description" content="Detect installed fonts in your browser, preview live samples, and copy URL parameter links (?font=) compatible with VDO.Ninja, SocialStream.Ninja, and Caption.Ninja.">
+    <meta property="og:locale" content="en_US">
 
     <!-- Twitter Cards -->
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Installed Font Detector" />
-    <meta name="twitter:description" content="Preview installed fonts and copy ?font= links for Ninja apps." />
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Installed Font Detector: Preview installed fonts and generate ?font links">
+    <meta name="twitter:description" content="Detect installed fonts in your browser, preview live samples, and copy URL parameter links (?font=) compatible with VDO.Ninja, SocialStream.Ninja, and Caption.Ninja.">
 
     <!-- Structured data -->
     <script type="application/ld+json">
@@ -221,13 +233,24 @@
         margin-top: 14px;
       }
 
+      @media (max-width: 700px) {
+        .controls {
+          grid-template-columns: minmax(0, 1fr) auto;
+        }
+        .controls input[type="text"], .controls button {
+          grid-column: 1 / -1;
+          box-sizing: border-box;
+          max-width: 100%;
+        }
+      }
+
       @media (min-width: 900px) {
         .results {
           grid-template-columns: 1fr 1fr;
         }
       }
     </style>
-  </head>
+</head>
   <body>
     <div class="wrap">
       <header>
@@ -295,6 +318,7 @@
     </div>
 
     <script>
+      function siteText(value) { return window.SSNSiteTranslate ? window.SSNSiteTranslate(value) : value; }
       // Respect the provided code for applying a font from URL params
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get("font")) {
@@ -395,6 +419,7 @@
 
         const sample = document.createElement('div');
         sample.className = 'sample';
+        sample.setAttribute('translate', 'no');
         sample.style.fontFamily = `"${name}", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`;
         if (isFace) {
           if (item.weight) sample.style.fontWeight = String(item.weight);
@@ -402,7 +427,7 @@
           if (item.stretch) sample.style.fontStretch = item.stretch;
         }
         const faceSuffix = isFace ? ` (${[item.style||'normal', item.weight||'400'].filter(Boolean).join(', ')})` : '';
-        sample.textContent = `${name}${faceSuffix} — The quick brown fox jumps over the lazy dog 0123456789`;
+        sample.textContent = `${name}${faceSuffix}: The quick brown fox jumps over the lazy dog 0123456789`;
         row.appendChild(sample);
 
         const meta = document.createElement('div');
@@ -410,7 +435,7 @@
 
         const fontname = document.createElement('div');
         fontname.className = 'fontname';
-        fontname.textContent = name + (isFace && item.fullName ? ` — ${item.fullName}` : '');
+        fontname.textContent = name + (isFace && item.fullName ? `: ${item.fullName}` : '');
 
         const link = document.createElement('div');
         link.className = 'link';
@@ -428,7 +453,7 @@
             copyBtn.textContent = 'Copied!';
             setTimeout(() => (copyBtn.textContent = 'Copy param'), 1200);
           } catch {
-            window.prompt('Copy param:', param);
+            window.prompt(siteText('Copy param:'), param);
           }
         });
 
@@ -462,7 +487,7 @@
       // Optional: Use Local Fonts API if supported + permitted
       async function tryLocalFontsAPI() {
         if (!('queryLocalFonts' in window)) {
-          alert('Local Fonts API not supported in this browser. Use recent Chromium on HTTPS/localhost.');
+          alert(siteText('Local Fonts API not supported in this browser. Use recent Chromium on HTTPS/localhost.'));
           return [];
         }
         try {
@@ -483,7 +508,7 @@
           return Array.from(families).sort((a,b)=>a.localeCompare(b));
         } catch (err) {
           console.warn('Local Fonts API error:', err);
-          alert('Could not access local fonts. The browser may require HTTPS/localhost and user approval.');
+          alert(siteText('Could not access local fonts. The browser may require HTTPS/localhost and user approval.'));
           return [];
         }
       }

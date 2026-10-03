@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Social Stream API Sandbox. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+  <script type="text/javascript" src="./js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Social Stream API Sandbox</title>
@@ -36,7 +39,7 @@
             color: var(--primary-color);
             margin-bottom: 20px;
 		}
-		
+
 		.request-log {
 			background: rgba(0,0,0,0.3);
 			border-radius: 4px;
@@ -174,7 +177,7 @@
         #testMessageForm label {
             color: var(--text-color);
         }
-		
+
 		.request-log {
 			margin-bottom: 10px;
 		}
@@ -274,7 +277,8 @@
             <h2>General Commands</h2>
             <div class="btn-group" role="group">
                 <button class="btn btn-secondary" onclick="sendCommand('clearOverlay')">Clear Overlay</button>
-                <button class="btn btn-secondary" onclick="sendCommand('clearAll')">Clear All Messages</button>
+                <button class="btn btn-secondary" onclick="sendCommand('clearDock')">Clear Dock Messages</button>
+                <button class="btn btn-danger" onclick="clearSavedHistory(this)">Delete Saved History</button>
                 <button class="btn btn-secondary" onclick="sendCommand('feature')">Feature Next Unfeatured</button>
                 <button class="btn btn-secondary" onclick="sendCommand('autoShow', 'toggle')">Toggle Auto-show</button>
                 <button class="btn btn-secondary" onclick="sendCommand('nextInQueue')">Next in Queue</button>
@@ -419,6 +423,7 @@
                 <button class="btn btn-warning" onclick="sendCommand('drawmode', true)">Enable Draw Mode</button>
                 <button class="btn btn-warning" onclick="sendCommand('drawmode', false)">Disable Draw Mode</button>
                 <button class="btn btn-warning" onclick="sendCommand('stopentries')">Stop Entries</button>
+                <button class="btn btn-warning" onclick="sendCommand('startentries')">Start Entries</button>
                 <button class="btn btn-warning" onclick="sendCommand('waitlistmessage', 'Custom waitlist message')">Set Waitlist Message</button>
             </div>
             <p class="note">These commands manage the waitlist functionality, useful for giveaways or queue management.</p>
@@ -448,6 +453,18 @@
             </div>
             <p class="note">Extended poll controls allow you to load saved presets, create custom polls, and manage poll settings via the API.</p>
         </div>
+        <div class="control-section">
+            <h3>Giveaway</h3>
+            <div class="btn-group" role="group" aria-label="Giveaway controls">
+                <button class="btn btn-warning" onclick="sendCommand('startgiveaway')">Open Entries</button>
+                <button class="btn btn-warning" onclick="sendCommand('closegiveaway')">Close Entries</button>
+                <button class="btn btn-warning" onclick="sendCommand('drawgiveaway')">Draw Winner</button>
+                <button class="btn btn-warning" onclick="sendCommand('resetgiveaway')">Reset Giveaway</button>
+                <button class="btn btn-warning" onclick="sendCommand('getgiveawaystate')">Get State</button>
+            </div>
+            <p class="note">Uses the Giveaway Options entry rules. <a href="https://socialstream.ninja/docs/polls-giveaways-waitlists-guide.html#giveaway">Giveaway guide</a></p>
+        </div>
+
 
         <div class="section">
             <h2>Timer Commands</h2>
@@ -490,6 +507,20 @@
         let quick = true;
 		
 		const urlParams = new URLSearchParams(window.location.search);
+		const localRelayOnly = urlParams.has('localserver');
+		const relayUrl = SocialStreamLocalServer.getRelayUrl(urlParams, 'server', 'wss://io.socialstream.ninja:443');
+		if (localRelayOnly) {
+			var localNote = document.createElement('p');
+			localNote.className = 'note';
+			localNote.textContent = 'Local Server uses WebSocket at ' + relayUrl + '. HTTP GET and POST are unavailable in this mode.';
+			document.getElementById('connectionStatus').parentNode.appendChild(localNote);
+			document.querySelectorAll('button[onclick*="sendCustomMessage"]').forEach(function (button) {
+				if (/true/.test(button.getAttribute('onclick'))) {
+					button.disabled = true;
+					button.title = 'Local Server supports WebSocket only.';
+				}
+			});
+		}
 
         function getSessionIdFromURL() {
             return urlParams.get('session');
@@ -516,7 +547,7 @@
             const channelIn = channelInInput ? parseInt(channelInInput) : 
                              (parseInt(urlParams.get('channelin')) || 2);
             
-            socket = new WebSocket(urlParams.has("localserver") ? "ws://127.0.0.1:3000" : 'wss://io.socialstream.ninja:443');
+            socket = new WebSocket(relayUrl);
             socket.onopen = function() {
                 socket.send(JSON.stringify({
                     join: sessionID,
@@ -556,6 +587,12 @@
             }
         }
 
+		function clearSavedHistory(element) {
+			if (window.confirm('Permanently delete all saved message history? This also resets first-time chatter and last-activity history.')) {
+				sendCommand('clearHistory', { confirm: true }, null, element.closest('.btn-group'));
+			}
+		}
+
 		function sendCommand(action, value = null, channel = null, element = null) {
 			let message = {
 				action,
@@ -578,6 +615,7 @@
 		}
 
         function originalSendCustomMessage(action, isEncodedGet = false, isPost = false) {
+			if (localRelayOnly && (isEncodedGet || isPost)) return;
 		
             const message = document.getElementById('customMessage').value;
             if (!message) {
@@ -605,6 +643,7 @@
         }
 		
 		function sendCustomMessage(action, isEncodedGet = false, isPost = false) {
+			if (localRelayOnly && (isEncodedGet || isPost)) return;
 			const message = document.getElementById('customMessage').value;
 			const selectedChannel = parseInt(document.getElementById('channelSelect').value);
 			
@@ -722,7 +761,7 @@
 		}
 
 		function sendRawPayloadToChannel(currentSessionID, payload, channel, container) {
-			const wsUrl = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : 'wss://io.socialstream.ninja:443';
+			const wsUrl = relayUrl;
 			const tempSocket = new WebSocket(wsUrl);
 			let completed = false;
 			const timeout = setTimeout(function() {
@@ -823,7 +862,7 @@
 			if (socket && socket.readyState === WebSocket.OPEN) {
 				socket.send(JSON.stringify(wsMessage));
 			} else {
-				alert('WebSocket not connected - message not sent. Connect first or use GET/POST methods.');
+				alert(localRelayOnly ? 'Local WebSocket not connected - message not sent. Enable Local Server in SSApp and check the port.' : 'WebSocket not connected - message not sent. Connect first or use GET/POST methods.');
 			}
 		}
 
@@ -931,7 +970,7 @@
 			if (socket && socket.readyState === WebSocket.OPEN) {
 				socket.send(JSON.stringify(wsMessage));
 			} else {
-				alert('WebSocket not connected - message not sent. Connect first or use GET/POST methods.');
+				alert(localRelayOnly ? 'Local WebSocket not connected - message not sent. Enable Local Server in SSApp and check the port.' : 'WebSocket not connected - message not sent. Connect first or use GET/POST methods.');
 			}
 		}
 
@@ -956,11 +995,12 @@ Developer Notes:
 2. Session ID is crucial for connecting to the correct room
 3. Use channel 1 for general communication, channel 2 for dock.html, etc.
 4. The 'extContent' action is used to send simulated messages from various platforms
-5. MIDI hotkey support is available for predefined chat messages
-6. The API supports both WebSocket and HTTP (GET/POST) methods
-7. Use the 'target' field in messages for specific instance targeting
-8. Error handling and reconnection logic is implemented for robustness
-9. Experiment with different message types and actions to understand the full capabilities of the API
+5. Custom actions can be added using a custom.js file in your project
+6. MIDI hotkey support is available for predefined chat messages
+7. The API supports both WebSocket and HTTP (GET/POST) methods
+8. Use the 'target' field in messages for specific instance targeting
+9. Error handling and reconnection logic is implemented for robustness
+10. Experiment with different message types and actions to understand the full capabilities of the API
 		`);
 		
 		document.querySelectorAll('.btn-group').forEach(group => {
@@ -972,6 +1012,8 @@ Developer Notes:
 		var lastLog = null;
 		
 		function logRequest(element, requestData) {
+			if (localRelayOnly && /^HTTP/.test(requestData.type)) return;
+			if (requestData.type === 'WebSocket') requestData = Object.assign({}, requestData, { url: relayUrl });
 			if (!element) return; // Guard against null element
 			let container = element;
 			if (element?.classList.contains('btn')) {
@@ -1012,12 +1054,13 @@ Developer Notes:
 			socket.send(JSON.stringify({
 				action: 'gettimerstate',
 				apiid: sessionID,
-				get: callbackId
+				get: callbackId, replyFormat: "commandResult"
 			}));
 
 			socket.addEventListener('message', function handleTimerState(event) {
 				try {
-					const data = JSON.parse(event.data);
+					let data = JSON.parse(event.data);
+                    if (data && data.type === "commandResult") data = { callback: { get: data.get || (data.result && data.result.request), result: data.result } };
 					if (data.callback && data.callback.get === callbackId) {
 						socket.removeEventListener('message', handleTimerState);
 						const messageDiv = document.createElement('div');
@@ -1045,13 +1088,14 @@ Developer Notes:
 			socket.send(JSON.stringify({
 				action: 'getpollpresets',
 				apiid: sessionID,
-				get: callbackId
+				get: callbackId, replyFormat: "commandResult"
 			}));
 			
 			// Listen for response
 			socket.addEventListener('message', function handlePresets(event) {
 				try {
-					const data = JSON.parse(event.data);
+					let data = JSON.parse(event.data);
+                    if (data && data.type === "commandResult") data = { callback: { get: data.get || (data.result && data.result.request), result: data.result } };
 					if (data.callback && data.callback.get === callbackId) {
 						// Remove this listener
 						socket.removeEventListener('message', handlePresets);

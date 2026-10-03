@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Treasure Hunt: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Treasure Hunt - Social Stream Ninja</title>
@@ -24,7 +28,7 @@
             font-style: normal;
             font-display: swap;
         }
-        
+
         body {
             margin: 0;
             padding: 0;
@@ -33,13 +37,13 @@
             font-family: 'Arial', 'NotoColorEmoji', sans-serif;
             color: white;
         }
-        
+
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
+
         #map {
             position: absolute;
             top: 50%;
@@ -57,7 +61,7 @@
             padding: 10px;
             border-radius: 10px;
         }
-        
+
         .grid-cell {
             background: rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.1);
@@ -69,31 +73,31 @@
             transition: all 0.3s ease;
             position: relative;
         }
-        
+
         .grid-cell:hover {
             background: rgba(255,255,255,0.1);
         }
-        
+
         .revealed {
             background: rgba(255,255,255,0.2);
             animation: reveal 0.5s ease-out;
         }
-        
+
         @keyframes reveal {
             0% { transform: scale(0); }
             50% { transform: scale(1.2); }
             100% { transform: scale(1); }
         }
-        
+
         .treasure {
             animation: shimmer 2s ease-in-out infinite;
         }
-        
+
         @keyframes shimmer {
             0%, 100% { filter: brightness(1); }
             50% { filter: brightness(1.5); }
         }
-        
+
         .dig-animation {
             position: absolute;
             width: 100%;
@@ -102,13 +106,13 @@
             animation: dig 0.5s ease-out forwards;
             pointer-events: none;
         }
-        
+
         @keyframes dig {
             0% { transform: scale(1.5); opacity: 0; }
             50% { opacity: 1; }
             100% { transform: scale(0); opacity: 0; }
         }
-        
+
         #scoreboard {
             position: absolute;
             top: 20px;
@@ -119,13 +123,13 @@
             backdrop-filter: blur(10px);
             min-width: 250px;
         }
-        
+
         #scoreboard h3 {
             margin-top: 0;
             color: #FFD700;
             text-align: center;
         }
-        
+
         .score-entry {
             display: flex;
             justify-content: space-between;
@@ -135,7 +139,7 @@
             background: rgba(255,255,255,0.1);
             border-radius: 8px;
         }
-        
+
         #hint-display {
             position: absolute;
             top: 20px;
@@ -148,12 +152,12 @@
             text-align: center;
             backdrop-filter: blur(10px);
         }
-        
+
         #hint-display .hint-icon {
             font-size: 36px;
             margin-bottom: 10px;
         }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -165,12 +169,12 @@
             text-align: center;
             font-size: 16px;
         }
-        
+
         #instructions strong {
             color: #FFD700;
             font-size: 18px;
         }
-        
+
         .compass {
             position: absolute;
             top: 150px;
@@ -185,22 +189,22 @@
             justify-content: center;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-        
+
         .compass-needle {
             width: 60px;
             height: 4px;
-            background: linear-gradient(to right, red 0%, red 50%, black 50%, black 100%);
+            background: linear-gradient(to right, black 0%, black 50%, red 50%, red 100%);
             position: absolute;
             transition: transform 0.5s ease;
             transform-origin: center;
         }
-        
+
         .treasure-found {
             position: absolute;
             font-size: 72px;
             animation: treasureFound 2s ease-out forwards;
         }
-        
+
         @keyframes treasureFound {
             0% { 
                 transform: translate(-50%, -50%) scale(0) rotate(0deg);
@@ -214,7 +218,7 @@
                 opacity: 0;
             }
         }
-        
+
         .clue-marker {
             position: absolute;
             width: 20px;
@@ -224,12 +228,12 @@
             animation: pulse 1s ease-in-out infinite;
             transform: translate(-50%, -50%);
         }
-        
+
         @keyframes pulse {
             0%, 100% { transform: translate(-50%, -50%) scale(1); }
             50% { transform: translate(-50%, -50%) scale(1.3); }
         }
-        
+
         #round-info {
             position: absolute;
             bottom: 100px;
@@ -284,7 +288,7 @@
     let scores = new Map();
     let revealedCells = new Set();
     let currentHint = '';
-    let recentDigs = [];
+    let lastDig = null;
     
     // Treasure types with different values
     const treasureTypes = [
@@ -297,6 +301,7 @@
     
     // URL parameters
     const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
     const sessionId = urlParams.get('session') || 'test';
     const password = urlParams.get('password') || 'false';
 
@@ -411,7 +416,7 @@
         return 'southeast';
     }
     
-    function dig(username, coordinate) {
+    function dig(username, coordinate, playerKey = username) {
         // Parse coordinate (e.g., "B5" -> row 4, col 1)
         const match = coordinate.match(/^([A-J])(\d|10)$/i);
         if (!match) {
@@ -444,17 +449,14 @@
         cell.appendChild(digEffect);
         setTimeout(() => digEffect.remove(), 500);
         
-        // Update recent digs for compass
-        recentDigs.push({ row, col, time: Date.now() });
-        if (recentDigs.length > 1) {
-            recentDigs.shift();
-        }
+        // Update last dig for compass
+        lastDig = { row, col, time: Date.now() };
         updateCompass();
         
         // Check if treasure found
         const treasure = grid[row][col];
         if (treasure) {
-            foundTreasure(username, treasure, cell);
+            foundTreasure(username, treasure, cell, playerKey);
         } else {
             // Give proximity hint
             const distance = getNearestTreasureDistance(row, col);
@@ -492,14 +494,14 @@
         return minDistance;
     }
     
-    function foundTreasure(username, treasure, cell) {
+    function foundTreasure(username, treasure, cell, playerKey = username) {
         // Show treasure
         cell.textContent = treasure.emoji;
         cell.classList.add('treasure');
         
         // Update score
-        const currentScore = scores.get(username) || 0;
-        scores.set(username, currentScore + treasure.value);
+        const currentScore = (scores.get(playerKey) || {score: 0}).score;
+        scores.set(playerKey, {name: username, score: currentScore + treasure.value});
         updateScoreboard();
         
         // Show found animation
@@ -527,9 +529,8 @@
     }
     
     function updateCompass() {
-        if (recentDigs.length === 0) return;
+        if (!lastDig) return;
         
-        const lastDig = recentDigs[recentDigs.length - 1];
         let nearestTreasure = null;
         let minDistance = Infinity;
         
@@ -551,7 +552,7 @@
             const angle = Math.atan2(
                 nearestTreasure.row - lastDig.row,
                 nearestTreasure.col - lastDig.col
-            ) * 180 / Math.PI + 90;
+            ) * 180 / Math.PI;
             
             document.getElementById('compass-needle').style.transform = `rotate(${angle}deg)`;
         }
@@ -562,11 +563,12 @@
         scoreList.innerHTML = '';
         
         const sortedScores = Array.from(scores.entries())
-            .sort((a, b) => b[1] - a[1])
+            .sort((a, b) => b[1].score - a[1].score)
             .slice(0, 5);
         
-        sortedScores.forEach(([username, score], index) => {
-            const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+        const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+        sortedScores.forEach(([, player], index) => {
+            const username = player.name, score = player.score;
             const entry = document.createElement('div');
             entry.className = 'score-entry';
             entry.innerHTML = `
@@ -587,11 +589,12 @@
         round++;
         initGrid();
         placeTreasures();
-        recentDigs = [];
+        lastDig = null;
         sendResponse(`🗺️ Round ${round} begins! New treasures have been hidden!`);
     }
     
     function sendResponse(message) {
+        if (urlParams.has('demo')) return;
         const response = {
             chatname: 'TreasureBot',
             chatmessage: message,
@@ -610,13 +613,14 @@
     }
     
     function processData(data) {
-        if (data.content) {
+        if (data && data.content) {
             data = data.content;
         }
         
-        if (!data.chatmessage || !data.chatname) return;
+        if (!data || !data.chatmessage || !data.chatname) return;
 
         let rawMessage = data.chatmessage;
+        // Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
         if (!data.textonly) {
             rawMessage = stripHtml(rawMessage);
         }
@@ -624,7 +628,7 @@
 
         if (message.toLowerCase().startsWith('!dig ')) {
             const coordinate = message.substring(5).trim().toUpperCase();
-            dig(stripHtml(data.chatname), coordinate);
+            dig(String(data.chatname), coordinate, JSON.stringify([data.type || '', String(data.userid || data.username || data.chatname)]));
         }
     }
     
@@ -633,8 +637,9 @@
     placeTreasures();
     
     // Setup iframe communication
+    if (!urlParams.has('demo') && !chatRelay.enabled) {
     const iframe = document.createElement("iframe");
-    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
     iframe.style.width = "0px";
     iframe.style.height = "0px";
     iframe.style.position = "fixed";
@@ -653,9 +658,11 @@
         }
     });
     
+    }
+
     // Handle WebSocket if server parameter provided
-    if (urlParams.has('server')) {
-        const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
+    if (!urlParams.has('demo') && chatRelay.enabled) {
+        const serverUrl = chatRelay.url;
         let socketserver = null;
         let reconnectTimeout = null;
 
@@ -665,8 +672,7 @@
             socketserver.onopen = function() {
                 socketserver.send(JSON.stringify({
                     join: sessionId.split(",")[0],
-                    out: 2,
-                    in: 1
+                    out: chatRelay.out, in: chatRelay.in
                 }));
             };
 

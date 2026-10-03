@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="../../js/local-server-url.js"></script>
-<script src="../../shared/utils/chatHtml.js"></script>
-
+    <meta charset="UTF-8">
+    <meta name="description" content="Featured Message - 3D Styles: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
+    <meta name="robots" content="noindex">
 <script src="../../libs/objects.js"></script>
+<script src="../../shared/utils/chatHtml.js"></script>
 <script src="../../shared/utils/chatBadges.js"></script>
 <link rel="stylesheet" href="../../shared/utils/chatBadges.css">
-
+<script src="../../js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Featured Message - 3D Styles</title>
@@ -74,7 +75,7 @@
         .style-cube .face.back { 
             transform: rotateY(180deg) translateZ(150px); 
         }
-        
+
         /* Fix text mirroring on rotated faces */
         .style-cube .face.back .message,
         .style-flip .back .message {
@@ -91,7 +92,7 @@
             50% { transform: rotateX(-10deg) rotateY(0); }
             75% { transform: rotateX(-10deg) rotateY(-15deg); }
         }
-        
+
         /* Hide non-visible faces to prevent text overlap */
         .style-cube .face:not(.front) {
             opacity: 0.1;
@@ -276,7 +277,7 @@
             color: white;
             width: 100%;
         }
-        
+
         /* Ensure messages are visible in all styles */
         .message-wrapper .message {
             position: relative;
@@ -309,7 +310,7 @@
             line-height: 1.5;
             color: #f0f0f0;
         }
-        
+
         /* Inline images/SVGs in chat messages */
         .text img,
         .text svg {
@@ -322,7 +323,7 @@
             margin: 0 2px;
             display: inline-block;
         }
-        
+
         /* Emote-specific sizing */
         .text img.emote,
         .text svg.emote,
@@ -343,7 +344,7 @@
         }
 
         /* Style-specific entrance animations */
-        
+
         /* Cube entrance - Assemble from fragments */
         @keyframes cubeAssemble {
             0% {
@@ -359,12 +360,12 @@
                 transform: rotateX(0) rotateY(0) scale(1);
             }
         }
-        
+
         .style-cube .message-wrapper.show {
             animation: cubeAssemble 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
                       rotateCube 20s infinite linear 1s;
         }
-        
+
         /* Flip entrance - Card deal effect */
         @keyframes cardDeal {
             0% {
@@ -380,11 +381,11 @@
                 transform: rotateY(0) translateX(0) translateZ(0) scale(1);
             }
         }
-        
+
         .style-flip .message-wrapper.show {
             animation: cardDeal 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
         }
-        
+
         /* Float entrance - Materialize from particles */
         @keyframes materialize {
             0% {
@@ -403,12 +404,12 @@
                 filter: blur(0);
             }
         }
-        
+
         .style-float .message-wrapper.show {
             animation: materialize 0.8s ease-out forwards,
                       float 6s ease-in-out infinite 0.8s;
         }
-        
+
         /* Helix entrance - Spiral in */
         @keyframes spiralIn {
             0% {
@@ -424,12 +425,12 @@
                 transform: rotateY(0) translateZ(0) scale(1);
             }
         }
-        
+
         .style-helix .message-wrapper.show {
             animation: spiralIn 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
                       helixRotate 10s linear infinite 1.2s;
         }
-        
+
         /* Iso entrance - Build block by block */
         @keyframes isoBuild {
             0% {
@@ -449,14 +450,14 @@
                 transform: rotateX(30deg) rotateY(-45deg) translateY(0) scale(1);
             }
         }
-        
+
         .style-iso .message-wrapper.show {
             animation: isoBuild 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
                       isoFloat 4s ease-in-out infinite 0.8s;
         }
 
         /* Exit animations */
-        
+
         /* Cube exit - Explode into fragments */
         @keyframes cubeExplode {
             0% {
@@ -469,11 +470,11 @@
                 filter: blur(20px);
             }
         }
-        
+
         .style-cube .message-wrapper.exit {
             animation: cubeExplode 0.8s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
         }
-        
+
         /* Flip exit - Card fly away */
         @keyframes cardFlyAway {
             0% {
@@ -485,11 +486,11 @@
                 transform: rotateY(180deg) translateX(200px) translateZ(-500px) scale(0.3);
             }
         }
-        
+
         .style-flip .message-wrapper.exit {
             animation: cardFlyAway 0.6s ease-in forwards;
         }
-        
+
         /* Float exit - Dematerialize */
         @keyframes dematerialize {
             0% {
@@ -503,11 +504,11 @@
                 filter: blur(20px);
             }
         }
-        
+
         .style-float .message-wrapper.exit {
             animation: dematerialize 0.6s ease-in forwards;
         }
-        
+
         /* Helix exit - Spiral out */
         @keyframes spiralOut {
             0% {
@@ -523,11 +524,11 @@
                 transform: rotateY(-20deg) translateZ(-200px) scale(0);
             }
         }
-        
+
         .style-helix .message-wrapper.exit {
             animation: spiralOut 0.8s ease-in forwards;
         }
-        
+
         /* Iso exit - Collapse */
         @keyframes isoCollapse {
             0% {
@@ -540,7 +541,7 @@
                 filter: brightness(0);
             }
         }
-        
+
         .style-iso .message-wrapper.exit {
             animation: isoCollapse 0.6s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
         }
@@ -554,7 +555,7 @@
         .message-wrapper.show {
             opacity: 1;
         }
-        
+
         /* Additional readability improvements */
         .style-cube .face,
         .style-flip .front,
@@ -562,18 +563,18 @@
             /* Add text shadow for better readability */
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
-        
+
         /* Reduce extreme rotations for better readability */
         .style-float {
             perspective: 1200px;
         }
-        
+
         /* Hide empty elements */
         .badges:empty,
         .donation-info:empty {
             display: none;
         }
-        
+
         @media (prefers-reduced-motion: reduce) {
             /* Disable animations for accessibility */
             .message-wrapper {
@@ -582,6 +583,16 @@
             .style-helix .content {
                 animation: none !important;
             }
+        }
+        .content-image {
+            display: block;
+            max-width: 100%;
+            max-height: 200px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            margin-top: 12px;
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -606,7 +617,7 @@
         function createIframe() {
             if (SocialStreamLocalServer.connectLocalRelay(urlParams, roomID, processMessage, true)) return;
             const iframe = document.createElement('iframe');
-            iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+            iframe.src = `https://vdo.socialstream.ninja/?ln&password=${encodeURIComponent(password)}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
             iframe.style.cssText = 'width:0;height:0;position:fixed;left:-100px;top:-100px;';
             iframe.id = 'vdoninja';
             iframe.allow = 'microphone';
@@ -651,7 +662,7 @@
                 if (data.value) {
                     try {
                         const parsed = JSON.parse(data.value);
-                        if (parsed && "chatmessage" in parsed) {
+                        if (parsed && ("chatmessage" in parsed || "contentimg" in parsed)) {
                             showMessage(parsed);
                         }
                     } catch (e) {
@@ -662,14 +673,14 @@
                 }
             }
             // Direct message format
-            else if (data && "chatmessage" in data) {
+            else if (data && ("chatmessage" in data || "contentimg" in data)) {
                 showMessage(data);
             }
         }
 
         function showMessage(content) {
             console.log('showMessage called with:', content);
-            if (!content.chatmessage && !content.chatname) return;
+            if (!content.chatmessage && !content.chatname && !content.contentimg) return;
 
             hideMessage(() => {
                 const wrapper = document.createElement('div');
@@ -787,9 +798,19 @@
             if (content.chatmessage) {
                 const text = document.createElement('div');
                 text.className = 'text';
+                // textonly=true means literal chatmessage: use textContent or one HTML-template escape, never HTML decoding/filtering. HTML mode checks a display copy before rendering.
                 if (content.textonly === true) text.textContent = content.chatmessage;
-                    else text.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(content.chatmessage) : fallbackEscapeHtml(content.chatmessage));
+                else text.innerHTML = (window.SocialStreamChatHTML ? SocialStreamChatHTML.sanitize(content.chatmessage) : fallbackEscapeHtml(content.chatmessage));
                 div.appendChild(text);
+            }
+
+            if (content.contentimg) {
+                const img = document.createElement('img');
+                img.className = 'content-image';
+                img.src = content.contentimg;
+                img.alt = (content.meta && content.meta.gifLabel) || 'Content image';
+                img.onerror = function () { this.style.display = 'none'; };
+                div.appendChild(img);
             }
 
             message.appendChild(div);

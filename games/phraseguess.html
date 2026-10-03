@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Phrase Guessing Game: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phrase Guessing Game - Social Stream Ninja</title>
     <link rel="icon" href="../favicon.ico" />
     <style>
+        * { box-sizing: border-box; }
         body {
             font-family: Arial, sans-serif;
             background: #1a1a1a;
@@ -58,6 +63,7 @@
 
         .controls {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
             justify-content: center;
             margin-bottom: 20px;
@@ -100,6 +106,17 @@
         .config-section h3 {
             margin-top: 0;
             color: #4CAF50;
+        }
+
+        .config-section summary { cursor: pointer; color: #4CAF50; font-weight: bold; }
+        .config-section[open] summary { margin-bottom: 20px; }
+        .config-item input, .config-item select { min-width: 0; }
+        @media (max-width: 500px) {
+            body { padding: 12px; }
+            .container, .config-section { padding: 14px; }
+            h1 { font-size: 25px; }
+            .config-item { flex-wrap: wrap; }
+            .config-item label { flex-basis: 100%; }
         }
 
         .config-item {
@@ -146,7 +163,7 @@
         .message {
             margin: 5px 0;
             padding: 5px;
-            border-left: 3px solid #4CAF50;
+            border: 1px solid #666;
             padding-left: 10px;
         }
 
@@ -195,8 +212,8 @@
             <button class="btn-secondary" onclick="resetGame()">Reset</button>
         </div>
 
-        <div class="config-section">
-            <h3>⚙️ Game Configuration</h3>
+        <details class="config-section" id="gameConfiguration" open>
+            <summary>Game configuration &amp; phrases</summary>
             
             <h3>📝 Phrases (one per line)</h3>
             <textarea id="phrasesInput" placeholder="Enter phrases here, one per line...">The quick brown fox jumps over the lazy dog
@@ -240,7 +257,7 @@ You can't handle the truth</textarea>
                     <option value="chat">Chat sources (Twitch, YouTube, etc)</option>
                 </select>
             </div>
-        </div>
+        </details>
 
         <div class="message-log" id="messageLog">
             <h4>Recent Activity</h4>
@@ -252,9 +269,10 @@ You can't handle the truth</textarea>
     <script>
         // Configuration and state
         const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
         const sessionId = urlParams.get('session') || '';
         const password = urlParams.get('password') || 'false';
-        const serverUrl = urlParams.has('server') ? (urlParams.get('server') || 'wss://io.socialstream.ninja') : '';
+        const serverUrl = chatRelay.enabled ? (chatRelay.url) : '';
         const demo = urlParams.has('demo');
         
         const config = {
@@ -282,6 +300,7 @@ You can't handle the truth</textarea>
         let socketserver = null;
         let iframe = null;
         let connectedPeers = {};
+        let pendingRoundTimeout = null;
 
         // Save settings to localStorage
         function saveSettings() {
@@ -363,7 +382,7 @@ You can't handle the truth</textarea>
         function setupIframe() {
             iframe = document.createElement("iframe");
             // Use push mode for bidirectional communication (like dock.html)
-            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${sessionId}`;
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${encodeURIComponent(sessionId)}`;
             iframe.style.width = "0px";
             iframe.style.height = "0px";
             iframe.style.position = "fixed";
@@ -414,8 +433,9 @@ You can't handle the truth</textarea>
                 // Join the session - match dock.html pattern
                 socketserver.send(JSON.stringify({ 
                     join: sessionId.split(",")[0], 
-                    in: 2,    // Listen to dock channel
-                    out: 1    // Send to main channel
+                    // Keep legacy API channels; direct server2 chat uses the helper on hosted and local relays.
+                    in: urlParams.has('server2') && (!urlParams.get('server') || urlParams.has('localserver')) ? chatRelay.in : 2,
+                    out: urlParams.has('server2') && (!urlParams.get('server') || urlParams.has('localserver')) ? chatRelay.out : 1
                 }));
             };
 
@@ -445,7 +465,8 @@ You can't handle the truth</textarea>
         // Process incoming data
         function processData(data) {
             if (!data || !gameState.isActive) return;
-            
+            if (data.content && typeof data.content === 'object') data = data.content;
+
             // Check if it's a chat message
             if (data.chatmessage && data.chatname) {
                 // Skip bot messages
@@ -469,24 +490,26 @@ You can't handle the truth</textarea>
                 // WebSocket mode - send as action based on mode
                 if (sendMode === 'chat') {
                     // Send to chat sources (actual chat)
-                    socketserver.send(JSON.stringify({
+                    socketserver.send(JSON.stringify(chatRelay.in === 4 ? {response: message} : {
                         action: 'sendChat',
                         value: message
                     }));
-                    addMessage(`[Bot sent to chat] ${message}`);
+                    addMessage(`[Chat reply requested${chatRelay.in === 4 ? '; host incoming messages must be enabled' : ''}] ${message}`);
                 } else {
                     // Send to dock (display only)
                     const response = {
                         chatname: config.botName,
                         chatmessage: message,
                         type: 'bot',
-                        timestamp: Date.now()
+                        timestamp: Date.now(),
+                        // textonly=true declares a literal chatmessage string, not HTML; preserve its characters and keep display formatting out of the payload.
+                        textonly: true
                     };
                     socketserver.send(JSON.stringify({
-                        action: 'extContent',
-                        value: JSON.stringify(response)
+                        action: chatRelay.in === 4 ? 'phraseGuessResponse' : 'extContent',
+                        value: chatRelay.in === 4 ? response : JSON.stringify(response)
                     }));
-                    addMessage(`[Bot sent to dock] ${message}`);
+                    addMessage(`[Dock reply requested${chatRelay.in === 4 ? '; host incoming messages must be enabled' : ''}] ${message}`);
                 }
             } else if (iframe && window.parent !== window) {
                 // We're embedded in an iframe - send to parent
@@ -542,6 +565,8 @@ You can't handle the truth</textarea>
                     });
                     addMessage(`[Bot sent to dock] ${message}`);
                 }
+            } else {
+                addMessage('[Reply unavailable: disconnected]');
             }
         }
 
@@ -572,7 +597,7 @@ You can't handle the truth</textarea>
             gameState.phrases = input
                 .split('\n')
                 .map(line => line.trim())
-                .filter(line => line.length > 0);
+                .filter(line => line.length > 0 && normalizeText(line).length > 0);
             
             addMessage(`Loaded ${gameState.phrases.length} phrases`);
         }
@@ -609,8 +634,9 @@ You can't handle the truth</textarea>
 
         // Calculate match percentage
         function calculateMatch(guess, target) {
-            const guessWords = guess.split(/\s+/);
-            const targetWords = target.split(/\s+/);
+            const guessWords = guess.split(/\s+/).filter(word => word.length > 0);
+            const targetWords = target.split(/\s+/).filter(word => word.length > 0);
+            if (guessWords.length === 0 || targetWords.length === 0) return 0;
             let matches = 0;
 
             for (const gWord of guessWords) {
@@ -658,6 +684,8 @@ You can't handle the truth</textarea>
 
         // Start new round
         function startRound() {
+            if (!gameState.isActive) return;
+
             const phrase = getNextPhrase();
             if (!phrase) {
                 updateStatus('No phrases available!');
@@ -666,6 +694,10 @@ You can't handle the truth</textarea>
 
             gameState.currentPhrase = phrase;
             gameState.normalizedPhrase = normalizeText(phrase);
+            if (!gameState.normalizedPhrase) {
+                startRound();
+                return;
+            }
             gameState.maskPercent = config.initialMask;
             gameState.winner = null;
             gameState.roundStartTime = Date.now();
@@ -709,7 +741,8 @@ You can't handle the truth</textarea>
                 updateStatus('Round ended - no winner');
             }
 
-            setTimeout(() => {
+            pendingRoundTimeout = setTimeout(() => {
+                pendingRoundTimeout = null;
                 display.classList.remove('winner-announcement');
                 if (gameState.isActive) {
                     startRound();
@@ -784,18 +817,24 @@ You can't handle the truth</textarea>
             }
 
             gameState.isActive = true;
+            // Keep the answer list out of the audience view while playing.
+            document.getElementById('gameConfiguration').open = false;
             gameState.currentIndex = -1;
             document.getElementById('gameToggle').textContent = 'Stop Game';
             
             sendResponse('🎮 Phrase Guessing Game started! Get ready to guess the phrases!');
-            setTimeout(startRound, 2000);
+            pendingRoundTimeout = setTimeout(startRound, 2000);
         }
 
         function stopGame() {
             gameState.isActive = false;
             clearInterval(gameState.revealTimer);
+            clearTimeout(pendingRoundTimeout);
+            pendingRoundTimeout = null;
             document.getElementById('gameToggle').textContent = 'Start Game';
-            document.getElementById('phraseDisplay').textContent = 'Game stopped';
+            const stoppedDisplay = document.getElementById('phraseDisplay');
+            stoppedDisplay.classList.remove('winner-announcement');
+            stoppedDisplay.textContent = 'Game stopped';
             
             sendResponse('🛑 Game stopped. Thanks for playing!');
             updateStatus('Game stopped');
@@ -805,9 +844,11 @@ You can't handle the truth</textarea>
             if (!gameState.isActive) return;
             
             clearInterval(gameState.revealTimer);
+            clearTimeout(pendingRoundTimeout);
+            document.getElementById('phraseDisplay').classList.remove('winner-announcement');
             sendResponse(`⏭️ Skipping phrase. It was: "${gameState.currentPhrase}"`);
             
-            setTimeout(startRound, 2000);
+            pendingRoundTimeout = setTimeout(startRound, 2000);
         }
 
         function resetGame() {

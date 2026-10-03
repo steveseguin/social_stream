@@ -2,6 +2,7 @@ const ALERT_CATEGORIES = Object.freeze({
   FOLLOW: 'follow',
   SUBSCRIPTION: 'subscription',
   DONATION: 'donation',
+  PURCHASE: 'purchase',
   BITS: 'bits',
   RAID: 'raid',
   AUCTION: 'auction',
@@ -10,10 +11,13 @@ const ALERT_CATEGORIES = Object.freeze({
 
 const DEFAULT_ALERT_STYLE = 'twitch';
 
+const ANIMATION_STYLES = new Set(['slidedown', 'slideup', 'pop', 'none']);
+
 const CATEGORY_LABELS = Object.freeze({
   [ALERT_CATEGORIES.FOLLOW]: 'New Follower',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'New Subscriber',
   [ALERT_CATEGORIES.DONATION]: 'New Donation',
+  [ALERT_CATEGORIES.PURCHASE]: 'New Purchase',
   [ALERT_CATEGORIES.BITS]: 'New Cheer',
   [ALERT_CATEGORIES.RAID]: 'Incoming Raid',
   [ALERT_CATEGORIES.AUCTION]: 'Auction Won',
@@ -24,6 +28,7 @@ const CATEGORY_LABEL_KEYS = Object.freeze({
   [ALERT_CATEGORIES.FOLLOW]: 'alert-title-new-follower',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'alert-title-new-subscriber',
   [ALERT_CATEGORIES.DONATION]: 'alert-title-new-donation',
+  [ALERT_CATEGORIES.PURCHASE]: 'alert-title-new-purchase',
   [ALERT_CATEGORIES.BITS]: 'alert-title-new-cheer',
   [ALERT_CATEGORIES.RAID]: 'alert-title-incoming-raid',
   [ALERT_CATEGORIES.AUCTION]: 'alert-title-auction-won',
@@ -34,6 +39,7 @@ const CATEGORY_ACCENTS = Object.freeze({
   [ALERT_CATEGORIES.FOLLOW]: '#ff68b3',
   [ALERT_CATEGORIES.SUBSCRIPTION]: '#8b5cf6',
   [ALERT_CATEGORIES.DONATION]: '#14f195',
+  [ALERT_CATEGORIES.PURCHASE]: '#14b8a6',
   [ALERT_CATEGORIES.BITS]: '#38bdf8',
   [ALERT_CATEGORIES.RAID]: '#f59e0b',
   [ALERT_CATEGORIES.AUCTION]: '#fbbf24',
@@ -81,11 +87,14 @@ const DONATION_EVENTS = new Set([
   'donation',
   'gift',              // TikTok gifts, Kick DOM gifts
   'gift_sent',
+  'giftcontribution',
+  'giftfunded',
   'gift_message',
   'live_gift',
   'tiktok_gift',
   'title_gifter',
   'top_gifter',
+  'superchat',
   'supersticker',
   'thankyou',
   'jeweldonation',
@@ -110,8 +119,8 @@ const EVENT_ALIASES = Object.freeze({
   'subscription_renewal': 'resub',
   'member_milestone': 'membermilestone',
   'membership_milestone': 'membermilestone',
-  'super_chat': 'donation',
-  'superchat': 'donation',
+  'super_chat': 'superchat',
+  'superchat': 'superchat',
   'super_sticker': 'supersticker',
   'gift_send': 'gift_sent',
   'gift_sent_to_user': 'gift_sent',
@@ -175,12 +184,52 @@ const SOURCE_ALIASES = Object.freeze({
 });
 
 const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.has('staticart')) document.body.classList.add('static-art');
+const SERVER_EXCLUSIVE_TRANSPORT_VERSION = '3.52.0';
+// Transport migration guard: only pages with full server parity may skip the legacy bridge.
+var TRANSPORT_CAPABILITIES = {
+	serverFeed: true,
+	serverTargeted: false,
+	upstreamCommands: false,
+	customChannel: false,
+	legacyBridgeRequired: true,
+	legacyBridgeReason: "Alert control commands such as clearAlerts are still sent with sendTargetP2P."
+};
+function versionAtLeast(value, minimum) {
+  const a = String(value || '').split('.');
+  const b = String(minimum || '').split('.');
+  const len = Math.max(a.length, b.length);
+  for (let i = 0; i < len; i += 1) {
+    const av = parseInt(a[i], 10) || 0;
+    const bv = parseInt(b[i], 10) || 0;
+    if (av > bv) return true;
+    if (av < bv) return false;
+  }
+  return true;
+}
+// Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+function hasExclusiveServerTransport(caps) {
+    var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+    return (params.server === true && urlParams.has("server")) ||
+        (params.server2 !== false && urlParams.has("server2")) ||
+        (params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+}
+function useServerOnlyTransport() {
+	var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+	return hasExclusiveServerTransport(caps) &&
+		versionAtLeast(urlParams.get('v'), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+		caps.serverFeed === true &&
+		caps.legacyBridgeRequired !== true &&
+		caps.upstreamCommands !== true &&
+		caps.customChannel !== true;
+}
 let translation = {};
 
 const CATEGORY_STYLE_PARAMS = {
   [ALERT_CATEGORIES.FOLLOW]: 'followstyle',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'substyle',
   [ALERT_CATEGORIES.DONATION]: 'donostyle',
+  [ALERT_CATEGORIES.PURCHASE]: 'purchasestyle',
   [ALERT_CATEGORIES.BITS]: 'bitsstyle',
   [ALERT_CATEGORIES.RAID]: 'raidstyle',
   [ALERT_CATEGORIES.AUCTION]: 'auctionstyle',
@@ -191,6 +240,7 @@ const CATEGORY_DISABLE_PARAMS = {
   [ALERT_CATEGORIES.FOLLOW]: 'disablefollows',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'disablesubs',
   [ALERT_CATEGORIES.DONATION]: 'disabledonos',
+  [ALERT_CATEGORIES.PURCHASE]: 'disablepurchases',
   [ALERT_CATEGORIES.BITS]: 'disablebits',
   [ALERT_CATEGORIES.RAID]: 'disableraids'
 };
@@ -205,10 +255,22 @@ const CATEGORY_SOUND_PARAMS = {
   [ALERT_CATEGORIES.FOLLOW]: 'followsound',
   [ALERT_CATEGORIES.SUBSCRIPTION]: 'subsound',
   [ALERT_CATEGORIES.DONATION]: 'donosound',
+  [ALERT_CATEGORIES.PURCHASE]: 'purchasesound',
   [ALERT_CATEGORIES.BITS]: 'bitssound',
   [ALERT_CATEGORIES.RAID]: 'raidsound',
   [ALERT_CATEGORIES.AUCTION]: 'auctionsound',
   [ALERT_CATEGORIES.HYPE]: 'hypesound'
+};
+
+const CATEGORY_ACCENT_PARAMS = {
+  [ALERT_CATEGORIES.FOLLOW]: 'followaccent',
+  [ALERT_CATEGORIES.SUBSCRIPTION]: 'subaccent',
+  [ALERT_CATEGORIES.DONATION]: 'donoaccent',
+  [ALERT_CATEGORIES.PURCHASE]: 'purchaseaccent',
+  [ALERT_CATEGORIES.BITS]: 'bitsaccent',
+  [ALERT_CATEGORIES.RAID]: 'raidaccent',
+  [ALERT_CATEGORIES.AUCTION]: 'auctionaccent',
+  [ALERT_CATEGORIES.HYPE]: 'hypeaccent'
 };
 
 const SOURCE_ICON_MAP = {
@@ -238,6 +300,7 @@ const state = {
   currentAlert: null,
   currentAlertNode: null,
   alertSequence: 0,
+  soundSequence: 0,
   showTimer: null,
   cleanupTimer: null,
   watchdogTimer: null,
@@ -267,7 +330,10 @@ if (settings.previewOnly) {
 }
 
 if (!settings.previewOnly && settings.roomID) {
-  setupBridgeIframe();
+  SSNOverlayControl.connect(urlParams, settings.roomID, "alerts", handleIncomingPayload);
+  if (!settings.useServerOnlyTransport) {
+    setupBridgeIframe();
+  }
   if (settings.useSocket) {
     setupSocket();
   }
@@ -292,6 +358,10 @@ function normalizeText(value) {
 
 function normalizeKey(value) {
   return normalizeText(value).toLowerCase();
+}
+
+function normalizeCssToken(value) {
+  return normalizeKey(value).replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'unknown';
 }
 
 function pickFirstText(candidates) {
@@ -554,8 +624,29 @@ function pickDonationLabel(payload = {}) {
   return giftCount > 1 ? `${giftName} x${giftCount}` : giftName;
 }
 
+function pickTikTokGiftStreakId(payload = {}) {
+  if (normalizeText(payload.type).toLowerCase() !== 'tiktok') {
+    return '';
+  }
+  return normalizeText(payload.meta?.tiktokGiftStreakId);
+}
+
 function buildRecentPayloadSignature(payload = {}) {
+  const tikTokGiftStreakId = pickTikTokGiftStreakId(payload);
+  if (tikTokGiftStreakId) {
+    return [
+      'tiktok-gift-streak',
+      tikTokGiftStreakId,
+      normalizeText(payload.meta?.tiktokGiftCount),
+      pickDonationLabel(payload)
+    ].join('|');
+  }
+
   const eventKey = pickEventKey(payload);
+  const webhookId = normalizeText(payload.meta?.webhookId);
+  if (webhookId) {
+    return ['webhook', pickSourceKey(payload), webhookId].join('|');
+  }
   if (isGiftEventKey(eventKey)) {
     return [
       'gift',
@@ -811,6 +902,10 @@ function isGiftEventKey(eventKey) {
     eventKey === 'giftpurchase' ||
     eventKey === 'giftredemption' ||
     eventKey === 'subscription_gift';
+}
+
+function isSuperChatEventKey(eventKey) {
+  return eventKey === 'superchat';
 }
 
 function pickActorName(payload = {}) {
@@ -1109,6 +1204,8 @@ function inferCategory(payload = {}) {
     return null;
   }
 
+  if (eventKey === 'purchase') return ALERT_CATEGORIES.PURCHASE;
+
   if (AUCTION_EVENTS.has(eventKey)) {
     return isAuctionWinPayload(payload) ? ALERT_CATEGORIES.AUCTION : null;
   }
@@ -1155,6 +1252,9 @@ function inferCategory(payload = {}) {
 }
 
 function buildHeadline(category, eventKey, actor, amount, viewerCount, payload = {}) {
+  if (eventKey === 'giftcontribution') return { lead: actor, tail: amount ? 'contributed ' + amount + ' toward a gift' : 'contributed toward a gift' };
+  if (eventKey === 'giftfunded') return { lead: actor, tail: 'fully funded a gift' };
+  if (eventKey === 'purchase') return { lead: actor, tail: 'purchased ' + (pickSubtitle(payload) || 'an item') };
   switch (category) {
     case ALERT_CATEGORIES.AUCTION:
       return {
@@ -1228,8 +1328,13 @@ function buildHeadline(category, eventKey, actor, amount, viewerCount, payload =
 }
 
 function buildTitle(category, eventKey) {
+  if (eventKey === 'giftcontribution') return 'Gift Contribution';
+  if (eventKey === 'giftfunded') return 'Gift Fully Funded';
   if (category === ALERT_CATEGORIES.DONATION && isGiftEventKey(eventKey)) {
     return getTranslation('alert-title-new-gift', 'New Gift');
+  }
+  if (category === ALERT_CATEGORIES.DONATION && isSuperChatEventKey(eventKey)) {
+    return getTranslation('alert-title-new-super-chat', 'New Super Chat');
   }
   return getCategoryLabel(category) || getTranslation('alert-title-new-alert', 'New Alert');
 }
@@ -1244,6 +1349,7 @@ function buildBodyText(category, payload, viewerCount, format = {}) {
     return rawMessage;
   }
   const subtitle = pickSubtitle(payload);
+  if (eventKey === 'giftfunded' || eventKey === 'giftcontribution' || eventKey === 'purchase') return rawMessage ? chatBody() : subtitle;
 
   if (category === ALERT_CATEGORIES.AUCTION) {
     const itemTitle = normalizeText(payload.meta?.title);
@@ -1328,7 +1434,7 @@ function buildAlertViewModel(payload = {}) {
   }
   const subtitle = buildAlertSubtitle(category, payload, eventKey, actor);
   const viewerCount = pickViewerCount(payload);
-  const mediaUrl = pickMediaUrl(payload);
+  let mediaUrl = pickMediaUrl(payload);
   const cashValue = pickCashValue(payload, amount, sourceKey);
   if (isValueAlertCategory(category) && settings.minDonationValue > 0 && cashValue < settings.minDonationValue) {
     log('value alert skipped below minimum', { amount, cashValue, minimum: settings.minDonationValue, payload });
@@ -1337,6 +1443,8 @@ function buildAlertViewModel(payload = {}) {
   const headline = buildHeadline(category, eventKey, actor, amount, viewerCount, payload);
   const bodyFormat = {};
   const bodyText = buildBodyText(category, payload, viewerCount, bodyFormat);
+  const effect = matchAlertEffect(category, payload, amount, sourceKey);
+  if (effect && effect.media) mediaUrl = effect.media;
 
   return {
     category,
@@ -1344,10 +1452,11 @@ function buildAlertViewModel(payload = {}) {
     sourceKey,
     sourceLabel,
     title: buildTitle(category, eventKey),
-    accent: CATEGORY_ACCENTS[category] || '#9146ff',
+    accent: resolveAccent(category, sourceKey),
     actor,
     amount,
     cashValue,
+    effectSound: effect ? effect.sound : '',
     subtitle,
     bodyText,
     bodyIsHTML: bodyFormat.isHTML,
@@ -1386,7 +1495,8 @@ function createMockAlertPayload(category, overrides = {}) {
   const mock = pickMockUser(category);
   const baseName = overrides.chatname || mock.name;
   const baseImg = overrides.chatimg || mock.img;
-  const accent = CATEGORY_ACCENTS[category] || '#9146ff';
+  const previewSourceKey = normalizeSourceKey(overrides.platform || overrides.type || 'twitch');
+  const accent = resolveAccent(category, previewSourceKey);
   const common = {
     type: 'twitch',
     platform: 'twitch',
@@ -1411,7 +1521,10 @@ function createMockAlertPayload(category, overrides = {}) {
         event: 'new_subscriber',
         membership: 'Tier 1',
         subtitle: 'Tier 1 subscription',
-        chatmessage: 'Welcome to the squad!'
+        chatmessage: formatTranslation('twitch-subscribed-at-tier-message', '{name} has subscribed at tier {tier}', {
+          name: baseName,
+          tier: '1'
+        })
       };
       break;
     case ALERT_CATEGORIES.DONATION:
@@ -1529,6 +1642,43 @@ function isValueAlertCategory(category) {
   return category === ALERT_CATEGORIES.DONATION || category === ALERT_CATEGORIES.BITS;
 }
 
+// These are overlay settings, never fields added to the incoming event payload.
+function readAlertEffects() {
+  const effects = [];
+  for (let index = 1; index <= 3; index++) {
+    const prefix = 'effect' + index;
+    if (urlParams.get(prefix + 'enabled') === 'false') continue;
+    const media = normalizeText(urlParams.get(prefix + 'media'));
+    const sound = normalizeText(urlParams.get(prefix + 'sound'));
+    if (!media && !sound) continue;
+    const category = normalizeText(urlParams.get(prefix + 'type')) || 'donation';
+    if (!Object.values(ALERT_CATEGORIES).includes(category)) continue;
+    const minText = normalizeText(urlParams.get(prefix + 'min'));
+    const maxText = normalizeText(urlParams.get(prefix + 'max'));
+    const min = minText ? Number(minText) : null;
+    const max = maxText ? Number(maxText) : null;
+    if ((min !== null && (!Number.isFinite(min) || min < 0)) ||
+        (max !== null && (!Number.isFinite(max) || max < 0)) ||
+        (min !== null && max !== null && min > max)) continue;
+    // Bounds only make sense on donation and cheer categories.
+    if ((min !== null || max !== null) && !isValueAlertCategory(category)) continue;
+    effects.push({ category, min, max, media, sound });
+  }
+  return effects;
+}
+
+function matchAlertEffect(category, payload, amount, sourceKey) {
+  const value = pickCashValue(payload, amount, sourceKey);
+  const cents = Math.round(value * 100);
+  return settings.alertEffects.find(effect => {
+    if (effect.category !== category) return false;
+    if (effect.min === null && effect.max === null) return true;
+    if (!(value > 0)) return false;
+    return (effect.min === null || cents >= Math.round(effect.min * 100)) &&
+      (effect.max === null || cents <= Math.round(effect.max * 100));
+  }) || null;
+}
+
 function normalizeColor(value) {
   const trimmed = normalizeText(value).replace(/^#/, '');
   if (!trimmed) return '';
@@ -1536,6 +1686,27 @@ function normalizeColor(value) {
     return `#${trimmed}`;
   }
   return normalizeText(value);
+}
+
+function resolveAccent(category, sourceKey = '') {
+  if (settings.colorByPlatform) {
+    const normalizedSource = normalizeSourceKey(sourceKey);
+    if (KNOWN_SOURCES.has(normalizedSource) && typeof getColorFromType === 'function') {
+      const sourceColor = normalizeColor(getColorFromType(normalizedSource));
+      if (sourceColor) {
+        return sourceColor;
+      }
+    }
+  }
+  return settings.categoryAccents[category] || settings.accent || CATEGORY_ACCENTS[category] || '#9146ff';
+}
+
+function deriveMutedColor(colorValue) {
+  const trimmed = normalizeText(colorValue).replace(/^#/, '');
+  if (/^([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(trimmed)) {
+    return `rgba(${toAccentRgbTriplet(colorValue)}, 0.85)`;
+  }
+  return colorValue;
 }
 
 function readSettings() {
@@ -1560,12 +1731,12 @@ function readSettings() {
     normalizeText(urlParams.get('server')) ||
     normalizeText(urlParams.get('server2')) ||
     normalizeText(urlParams.get('server3'));
-  let serverURL = hasLocalServer ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja';
+  let serverURL = hasLocalServer ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja';
 
   if (hasServer) {
-    serverURL = remoteServerUrl || (hasLocalServer ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja/api');
+    serverURL = remoteServerUrl || (hasLocalServer ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja/api');
   } else if (hasServer2 || hasServer3) {
-    serverURL = remoteServerUrl || (hasLocalServer ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja/extension');
+    serverURL = remoteServerUrl || (hasLocalServer ? SocialStreamLocalServer.getWebSocketUrl() : 'wss://io.socialstream.ninja/extension');
   }
 
   const queueEnabled = urlParams.has('queue')
@@ -1586,6 +1757,7 @@ function readSettings() {
     beep: urlParams.has('beep'),
     beepVolume: Math.max(0, Math.min(1, parseNumberParam('beepvolume', 35) / 100)),
     customBeep: normalizeText(urlParams.get('custombeep')),
+    alertEffects: readAlertEffects(),
     categorySounds: Object.fromEntries(
       Object.entries(CATEGORY_SOUND_PARAMS).map(([cat, param]) => [cat, normalizeText(urlParams.get(param))])
     ),
@@ -1595,6 +1767,9 @@ function readSettings() {
     hideSource: urlParams.has('hidesource'),
     hideAmount: urlParams.has('hideamount'),
     hideSubtitle: urlParams.has('hidesubtitle'),
+    hideTitle: urlParams.has('hidetitle'),
+    hideMessage: urlParams.has('hidemessage'),
+    hideProgress: urlParams.has('hideprogress'),
     includeSources: parseSourceListParam('sources'),
     excludeSources: parseSourceListParam('hidesources'),
     includeSourceMatches: parseSourceMatchListParam('sourceids', ['channels']),
@@ -1611,10 +1786,23 @@ function readSettings() {
     detailScale: Math.max(0.8, Math.min(1.8, parseNumberParam('detailscale', 1))),
     pageBg: normalizeColor(urlParams.get('pagebg')),
     chroma: normalizeColor(urlParams.get('chroma')),
+    flat: urlParams.has('flat'),
+    cardRadius: urlParams.has('radius') ? Math.max(0, Math.min(48, parseNumberParam('radius', 7))) : null,
+    accent: normalizeColor(urlParams.get('accent')),
+    colorByPlatform: urlParams.has('platformcolors'),
+    categoryAccents: Object.fromEntries(
+      Object.entries(CATEGORY_ACCENT_PARAMS).map(([cat, param]) => [cat, normalizeColor(urlParams.get(param))])
+    ),
+    cardBg: normalizeColor(urlParams.get('cardbg')),
+    textColor: normalizeColor(urlParams.get('textcolor')),
+    animation: ANIMATION_STYLES.has(normalizeText(urlParams.get('animation')).toLowerCase())
+      ? normalizeText(urlParams.get('animation')).toLowerCase()
+      : '',
     transparent: urlParams.has('transparent') || urlParams.has('transparency'),
     previewOnly: urlParams.has('preview'),
     showStatus: urlParams.has('showstatus') || urlParams.has('debug') || urlParams.has('preview'),
     debug: urlParams.has('debug'),
+    useServerOnlyTransport: useServerOnlyTransport(),
     useSocket: hasServer || hasServer2 || hasServer3 || hasLocalServer,
     serverURL,
     styles,
@@ -1627,6 +1815,24 @@ function applyPagePresentation() {
   document.documentElement.style.setProperty('--media-scale', String(settings.mediaScale));
   document.documentElement.style.setProperty('--headline-scale', String(settings.headlineScale));
   document.documentElement.style.setProperty('--detail-scale', String(settings.detailScale));
+  if (settings.cardRadius !== null) {
+    document.documentElement.style.setProperty('--card-radius', `${settings.cardRadius}px`);
+  }
+  if (settings.cardBg) {
+    document.documentElement.style.setProperty('--card-bg', settings.cardBg);
+    document.body.classList.add('custom-cardbg');
+  }
+  if (settings.textColor) {
+    document.documentElement.style.setProperty('--text-main', settings.textColor);
+    document.documentElement.style.setProperty('--text-muted', deriveMutedColor(settings.textColor));
+    document.body.classList.add('custom-textcolor');
+  }
+  if (settings.flat) {
+    document.body.classList.add('flat-mode');
+  }
+  if (settings.animation) {
+    document.body.dataset.anim = settings.animation;
+  }
   document.body.dataset.align = settings.align;
   document.body.classList.toggle('show-status', settings.showStatus);
 
@@ -1792,6 +1998,7 @@ function handlePreviewMessage(previewMessage) {
 }
 
 function handleIncomingPayload(payload) {
+  if (!SSNOverlayControl.accept(payload, "alerts")) return;
   if (payload && typeof payload === 'object' && payload.action === 'clearAlerts') {
     clearAlert({ clearQueue: true });
     updateStatus('Alerts cleared');
@@ -1843,6 +2050,23 @@ function flattenPayloads(payload) {
 }
 
 function queueAlert(model) {
+  const tikTokGiftStreakId = pickTikTokGiftStreakId(model?.payload);
+  if (tikTokGiftStreakId) {
+    if (pickTikTokGiftStreakId(state.currentAlert?.payload) === tikTokGiftStreakId) {
+      displayAlert(model, { silent: true });
+      return;
+    }
+
+    const queuedIndex = state.queue.findIndex(
+      (queuedModel) => pickTikTokGiftStreakId(queuedModel?.payload) === tikTokGiftStreakId
+    );
+    if (queuedIndex !== -1) {
+      state.queue[queuedIndex] = model;
+      updateStatus(`Updated queued ${getCategoryLabel(model.category) || 'gift'} alert`);
+      return;
+    }
+  }
+
   const now = Date.now();
   if (state.currentAlert || now < state.blockedUntil) {
     if (settings.queueEnabled) {
@@ -1884,7 +2108,12 @@ function displayAlert(model, options = {}) {
   elements.stage.classList.add('has-alert');
   if (!options.silent) {
     playAlertSound(model).then(() => {
-      if (typeof TTS !== 'undefined' && TTS.speech && model.payload) {
+      if (
+        state.alertSequence === alertToken &&
+        typeof TTS !== 'undefined' &&
+        TTS.speech &&
+        model.payload
+      ) {
         TTS.speechMeta(model.payload);
       }
     });
@@ -1984,7 +2213,23 @@ function renderAlert(model) {
   const article = document.createElement('article');
   const styleKey = settings.styles[model.category] || DEFAULT_ALERT_STYLE;
   const accentRgb = toAccentRgbTriplet(model.accent);
-  article.className = `alert-card theme-${styleKey} category-${model.category}`;
+  const eventClass = normalizeCssToken(model.eventKey);
+  article.className = `alert-card theme-${styleKey} category-${model.category} event-${eventClass}`;
+  if (['cute', 'cozy', 'cats', 'music', 'arcade', 'slate', 'paper', 'micro'].indexOf(styleKey) !== -1) {
+    article.classList.add('collection');
+    if (settings.accent || settings.categoryAccents[model.category] || settings.colorByPlatform) {
+      article.classList.add('custom-accent');
+      article.style.setProperty('--collection-accent', model.accent);
+    }
+  }
+  if (['art-cat', 'art-dog', 'art-halloween', 'art-christmas', 'art-music', 'art-forest', 'art-space', 'art-dragon'].indexOf(styleKey) !== -1) {
+    article.classList.add('collection', 'art-alert', 'style-' + styleKey);
+    if (settings.accent || settings.categoryAccents[model.category] || settings.colorByPlatform) {
+      article.style.setProperty('--collection-accent', model.accent);
+    }
+  }
+  article.dataset.eventKey = model.eventKey || '';
+  article.dataset.alertCategory = model.category || '';
   article.style.setProperty('--alert-accent', model.accent);
   article.style.setProperty('--alert-accent-rgb', accentRgb);
   article.style.setProperty('--progress-duration', `${settings.showTime}ms`);
@@ -1999,7 +2244,9 @@ function renderAlert(model) {
   const titleBadge = document.createElement('div');
   titleBadge.className = 'alert-title';
   titleBadge.textContent = model.title.toUpperCase();
-  header.appendChild(titleBadge);
+  if (!settings.hideTitle) {
+    header.appendChild(titleBadge);
+  }
 
   if (!settings.hideSource) {
     const spacer = document.createElement('div');
@@ -2056,14 +2303,14 @@ function renderAlert(model) {
     copy.appendChild(subtitle);
   }
 
-  if (shouldRenderBodyText(model)) {
+  if (!settings.hideMessage && shouldRenderBodyText(model)) {
     const message = document.createElement('div');
     message.className = 'alert-message';
     if (model.bodyIsHTML && window.SocialStreamChatHTML) {
-      // Only the HTML-mode chat body reaches this branch; retain its upstream-checked formatting.
+      // Check the display copy: direct senders may bypass relay sanitization.
       message.innerHTML = SocialStreamChatHTML.sanitize(model.bodyText);
     } else {
-      // textonly chat and generated metadata labels are literal strings, never HTML to re-sanitize.
+      // Plain bodies stay literal; a missing helper also falls back to text.
       message.textContent = model.bodyText;
     }
     copy.appendChild(message);
@@ -2100,12 +2347,16 @@ function renderAlert(model) {
     }
   }
 
-  article.appendChild(header);
+  if (header.querySelector('.alert-title, .source-badge')) {
+    article.appendChild(header);
+  }
   article.appendChild(shell);
 
   const progress = document.createElement('div');
   progress.className = 'alert-progress';
-  article.appendChild(progress);
+  if (!settings.hideProgress) {
+    article.appendChild(progress);
+  }
 
   return article;
 }
@@ -2232,6 +2483,7 @@ function clearActiveGeneratedSound(oscillator = null, gain = null) {
 }
 
 function stopActiveAlertSound() {
+  state.soundSequence += 1;
   if (elements.audio) {
     try {
       elements.audio.pause();
@@ -2374,7 +2626,8 @@ async function playAlertSound(model) {
   stopActiveAlertSound();
 
   const categorySound = model.category && settings.categorySounds[model.category];
-  const customSrc = categorySound || settings.customBeep;
+  const soundToken = state.soundSequence;
+  const customSrc = model.effectSound || categorySound || settings.customBeep;
 
   if (customSrc && elements.audio) {
     try {
@@ -2394,11 +2647,14 @@ async function playAlertSound(model) {
         elements.audio.addEventListener('error', fail, { once: true });
         elements.audio.load();
       });
+      if (state.soundSequence !== soundToken) return;
       await primeAudioPipeline();
+      if (state.soundSequence !== soundToken) return;
       await elements.audio.play();
       state.lastAudioTime = Date.now();
       return;
     } catch (error) {
+      if (state.soundSequence !== soundToken) return;
       noteBlockedAudio(error);
       log('custom beep failed', error);
     }
@@ -2406,11 +2662,14 @@ async function playAlertSound(model) {
 
   try {
     var ctx = await resumeAudioContext();
+    if (state.soundSequence !== soundToken) return;
     if (!ctx || ctx.state !== 'running') {
       updateStatus('Audio blocked - click the overlay once to enable sound', 5000);
       return;
     }
     await primeAudioPipeline();
+
+    if (state.soundSequence !== soundToken) return;
 
     const oscillator = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -2465,12 +2724,16 @@ window.__multiAlertsOverlay = {
       beepVolume: settings.beepVolume,
       customBeep: settings.customBeep,
       categorySounds: Object.assign({}, settings.categorySounds),
+      alertEffects: settings.alertEffects.map(effect => Object.assign({}, effect)),
       compact: settings.compact,
       hideAvatar: settings.hideAvatar,
       hideMedia: settings.hideMedia,
       hideSource: settings.hideSource,
       hideAmount: settings.hideAmount,
       hideSubtitle: settings.hideSubtitle,
+      hideTitle: settings.hideTitle,
+      hideMessage: settings.hideMessage,
+      hideProgress: settings.hideProgress,
       includeSources: Array.from(settings.includeSources),
       excludeSources: Array.from(settings.excludeSources),
       includeSourceMatches: Array.from(settings.includeSourceMatches),
@@ -2483,6 +2746,14 @@ window.__multiAlertsOverlay = {
       pageBg: settings.pageBg,
       chroma: settings.chroma,
       transparent: settings.transparent,
+      flat: settings.flat,
+      cardRadius: settings.cardRadius,
+      accent: settings.accent,
+      colorByPlatform: settings.colorByPlatform,
+      categoryAccents: Object.assign({}, settings.categoryAccents),
+      cardBg: settings.cardBg,
+      textColor: settings.textColor,
+      animation: settings.animation,
       previewOnly: settings.previewOnly,
       showStatus: settings.showStatus,
       debug: settings.debug,

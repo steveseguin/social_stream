@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Color Symphony: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <meta name="robots" content="noindex">
+<script src="../js/local-server-url.js"></script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Color Symphony - Social Stream Ninja</title>
-    <link rel="icon" href="../favicon.ico" />
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
     <style>
         /* Hide scrollbars */
         ::-webkit-scrollbar {
@@ -24,21 +28,21 @@
             font-family: 'Arial', sans-serif;
             color: white;
         }
-        
+
         body.chroma {
             background: #00ff00;
         }
-        
+
         body.darkmode {
             background: #000000;
         }
-        
+
         #game-container {
             position: relative;
             width: 100vw;
             height: 100vh;
         }
-        
+
         #symphony-stage {
             position: absolute;
             top: 50%;
@@ -52,7 +56,7 @@
             background: rgba(0, 0, 0, 0.3);
             backdrop-filter: blur(10px);
         }
-        
+
         .color-wave {
             position: absolute;
             width: 100%;
@@ -61,7 +65,7 @@
             animation: wave-flow 3s ease-out forwards;
             box-shadow: 0 0 10px currentColor;
         }
-        
+
         @keyframes wave-flow {
             0% {
                 transform: translateX(-100%);
@@ -78,7 +82,7 @@
                 width: 50px;
             }
         }
-        
+
         .color-burst {
             position: absolute;
             width: 20px;
@@ -86,7 +90,7 @@
             border-radius: 50%;
             animation: color-burst 2s ease-out forwards;
         }
-        
+
         @keyframes color-burst {
             0% {
                 transform: scale(0);
@@ -101,14 +105,14 @@
                 opacity: 0;
             }
         }
-        
+
         .color-ripple {
             position: absolute;
             border: 3px solid;
             border-radius: 50%;
             animation: ripple-expand 2.5s ease-out forwards;
         }
-        
+
         @keyframes ripple-expand {
             0% {
                 width: 20px;
@@ -121,7 +125,7 @@
                 opacity: 0;
             }
         }
-        
+
         .color-note {
             position: absolute;
             width: 30px;
@@ -130,14 +134,14 @@
             animation: note-float 4s ease-in-out infinite;
             box-shadow: 0 0 20px currentColor;
         }
-        
+
         @keyframes note-float {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
             25% { transform: translateY(-20px) rotate(90deg); }
             50% { transform: translateY(-10px) rotate(180deg); }
             75% { transform: translateY(-30px) rotate(270deg); }
         }
-        
+
         #color-palette {
             position: absolute;
             top: 20px;
@@ -149,7 +153,7 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
         }
-        
+
         .palette-color {
             display: inline-block;
             width: 30px;
@@ -159,24 +163,24 @@
             border: 2px solid rgba(255, 255, 255, 0.3);
             animation: palette-pulse 2s ease-in-out infinite;
         }
-        
+
         .palette-active {
             border-color: #fff !important;
             box-shadow: 0 0 15px currentColor !important;
             animation: palette-active 0.5s ease-out !important;
         }
-        
+
         @keyframes palette-active {
             0% { transform: scale(1); }
             50% { transform: scale(1.3); }
             100% { transform: scale(1); }
         }
-        
+
         @keyframes palette-pulse {
             0%, 100% { opacity: 0.8; }
             50% { opacity: 1; }
         }
-        
+
         #symphony-stats {
             position: absolute;
             top: 20px;
@@ -188,12 +192,12 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             z-index: 100;
         }
-        
+
         .stat-line {
             margin: 5px 0;
             font-size: 16px;
         }
-        
+
         #harmony-meter {
             position: absolute;
             bottom: 80px;
@@ -207,7 +211,7 @@
             overflow: hidden;
             z-index: 100;
         }
-        
+
         #harmony-fill {
             height: 100%;
             width: 0%;
@@ -215,12 +219,12 @@
             transition: width 0.5s ease;
             animation: harmony-flow 3s linear infinite;
         }
-        
+
         @keyframes harmony-flow {
             0% { background-position: 0% 50%; }
             100% { background-position: 200% 50%; }
         }
-        
+
         #instructions {
             position: absolute;
             bottom: 20px;
@@ -233,12 +237,12 @@
             font-size: 16px;
             z-index: 100;
         }
-        
+
         #instructions strong {
             color: #ff69b4;
             font-size: 18px;
         }
-        
+
         .composer-name {
             position: absolute;
             font-size: 18px;
@@ -249,7 +253,7 @@
             z-index: 50;
             pointer-events: none;
         }
-        
+
         @keyframes composer-fade {
             0% {
                 opacity: 0;
@@ -268,7 +272,7 @@
                 transform: translateY(-30px);
             }
         }
-        
+
         .harmony-explosion {
             position: absolute;
             top: 50%;
@@ -282,7 +286,7 @@
             pointer-events: none;
             animation: harmony-burst 2s ease-out forwards;
         }
-        
+
         @keyframes harmony-burst {
             0% { 
                 opacity: 0; 
@@ -330,6 +334,7 @@
     <script>
         // URL parameters
         const urlParams = new URLSearchParams(window.location.search);
+    var chatRelay = SocialStreamLocalServer.getChatRelayConfig(urlParams);
         const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
         const password = urlParams.get('password') || 'false';
 
@@ -348,7 +353,8 @@
             colorDiversity: 0,
             activeColors: new Map(),
             recentNotes: [],
-            harmonyStreak: 0
+            harmonyStreak: 0,
+            lastColor: null
         };
 
         // Color definitions
@@ -388,16 +394,16 @@
                     foundColors.push(word);
                 }
                 // Color variations
-                else if (word.includes('red') && !foundColors.includes('red')) foundColors.push('red');
-                else if (word.includes('blue') && !foundColors.includes('blue')) foundColors.push('blue');
-                else if (word.includes('green') && !foundColors.includes('green')) foundColors.push('green');
-                else if (word.includes('yellow') && !foundColors.includes('yellow')) foundColors.push('yellow');
-                else if (word.includes('purple') && !foundColors.includes('purple')) foundColors.push('purple');
-                else if (word.includes('orange') && !foundColors.includes('orange')) foundColors.push('orange');
-                else if (word.includes('pink') && !foundColors.includes('pink')) foundColors.push('pink');
-                else if (word.includes('white') && !foundColors.includes('white')) foundColors.push('white');
-                else if (word.includes('black') && !foundColors.includes('black')) foundColors.push('black');
-                else if (word.includes('cyan') && !foundColors.includes('cyan')) foundColors.push('cyan');
+                else if (/^reds?$/.test(word) && !foundColors.includes('red')) foundColors.push('red');
+                else if (/^blues?$/.test(word) && !foundColors.includes('blue')) foundColors.push('blue');
+                else if (/^greens?$/.test(word) && !foundColors.includes('green')) foundColors.push('green');
+                else if (/^yellows?$/.test(word) && !foundColors.includes('yellow')) foundColors.push('yellow');
+                else if (/^purples?$/.test(word) && !foundColors.includes('purple')) foundColors.push('purple');
+                else if (/^oranges?$/.test(word) && !foundColors.includes('orange')) foundColors.push('orange');
+                else if (/^pinks?$/.test(word) && !foundColors.includes('pink')) foundColors.push('pink');
+                else if (/^whites?$/.test(word) && !foundColors.includes('white')) foundColors.push('white');
+                else if (/^blacks?$/.test(word) && !foundColors.includes('black')) foundColors.push('black');
+                else if (/^cyans?$/.test(word) && !foundColors.includes('cyan')) foundColors.push('cyan');
             });
             
             return foundColors;
@@ -532,8 +538,8 @@
                     colorDiv.title = `${color}: ${count} notes`;
                     paletteDisplay.appendChild(colorDiv);
                     
-                    // Brief activation animation
-                    if (count === gameState.activeColors.get(color)) {
+                    // Brief activation animation for the most recently played color
+                    if (color === gameState.lastColor) {
                         colorDiv.classList.add('palette-active');
                         setTimeout(() => colorDiv.classList.remove('palette-active'), 500);
                     }
@@ -603,6 +609,7 @@
                 // Track color usage
                 const currentCount = gameState.activeColors.get(color) || 0;
                 gameState.activeColors.set(color, currentCount + 1);
+                gameState.lastColor = color;
                 
                 // Create visual effects
                 createColorWave(color, username);
@@ -623,30 +630,32 @@
         }
 
         // Setup iframe communication
-        const iframe = document.createElement("iframe");
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.position = "fixed";
-        iframe.style.left = "-100px";
-        iframe.style.top = "-100px";
-        iframe.id = "frame1";
-        document.body.appendChild(iframe);
-        
-        // Listen for messages
-        window.addEventListener("message", function(e) {
-            if (e.source !== iframe.contentWindow) return;
+        if (!urlParams.has('demo') && !chatRelay.enabled) {
+            const iframe = document.createElement("iframe");
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=dock&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
             
-            if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
-                if ("overlayNinja" in e.data.dataReceived) {
-                    processData(e.data.dataReceived.overlayNinja);
+            // Listen for messages
+            window.addEventListener("message", function(e) {
+                if (e.source !== iframe.contentWindow) return;
+                
+                if (e.data && typeof e.data === "object" && e.data.dataReceived && typeof e.data.dataReceived === "object") {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
                 }
-            }
-        });
-        
+            });
+        }
+
         // Handle WebSocket connection
-        if (urlParams.has('server')) {
-            const serverUrl = urlParams.get('server') || 'wss://io.socialstream.ninja';
+        if (!urlParams.has('demo') && chatRelay.enabled) {
+            const serverUrl = chatRelay.url;
             let socketserver = null;
             let reconnectTimeout = null;
 
@@ -656,8 +665,7 @@
                 socketserver.onopen = function() {
                     socketserver.send(JSON.stringify({
                         join: sessionId.split(",")[0],
-                        out: 2,
-                        in: 1
+                        out: chatRelay.out, in: chatRelay.in
                     }));
                 };
 

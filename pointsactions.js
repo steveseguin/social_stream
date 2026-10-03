@@ -35,6 +35,10 @@ function triggerPointsLeaderboardRefresh(reason = 'command') {
     }
 }
 
+function formatPointsMention(username) {
+    return username.startsWith('@') ? username : '@' + username;
+}
+
 class PointsActions {
     constructor(options = {}) {
         this.pointsSystem = options.pointsSystem || (typeof window !== 'undefined' ? window.pointsSystem : null);
@@ -52,6 +56,7 @@ class PointsActions {
         
         // Track command cooldowns
         this.cooldowns = new Map();
+        this.pendingCommands = new Set();
         
         // Initialize database
         this.db = null;
@@ -222,7 +227,7 @@ class PointsActions {
         
         // Cleanup expired cooldowns periodically
         setTimeout(() => {
-            if (now + duration <= Date.now()) {
+            if (this.cooldowns.get(key) === now + duration && now + duration <= Date.now()) {
                 this.cooldowns.delete(key);
             }
         }, duration + 1000);
@@ -254,7 +259,8 @@ class PointsActions {
         }
         
         // Check for cooldown
-        if (this.isOnCooldown(message.chatname, message.type, commandName)) {
+        const commandKey = `${message.chatname}:${message.type}:${commandName}`;
+        if (this.pendingCommands.has(commandKey) || this.isOnCooldown(message.chatname, message.type, commandName)) {
             return { 
                 success: false,
                 message: "This command is on cooldown",
@@ -262,17 +268,22 @@ class PointsActions {
             };
         }
         
-        // Handle special case for !spend meta-command
-        if (commandName === '!spend') {
-            const result = await this.handleSpendCommand(message, args);
-            if (result && result.success) {
-                this.setCooldown(message.chatname, message.type, commandName, command.cooldown);
+        // Admit one invocation while an asynchronous debit is in progress.
+        if (command.cooldown > 0) this.pendingCommands.add(commandKey);
+        try {
+            // Handle special case for !spend meta-command
+            if (commandName === '!spend') {
+                const result = await this.handleSpendCommand(message, args);
+                if (result && result.success) {
+                    this.setCooldown(message.chatname, message.type, commandName, command.cooldown);
+                }
+                return result;
             }
-            return result;
+
+            return await this.executeCommand(message, command, args);
+        } finally {
+            this.pendingCommands.delete(commandKey);
         }
-        
-        // Process standard commands
-        return this.executeCommand(message, command, args);
     }
     
     async executeCommand(message, command, args = []) {
@@ -284,7 +295,7 @@ class PointsActions {
             if (!result.success) {
                 return {
                     success: false,
-                    message: `@${chatname}, you don't have enough points. ${result.available} available, ${command.cost} needed.`,
+                    message: `${formatPointsMention(chatname)}, you don't have enough points. ${result.available} available, ${command.cost} needed.`,
                     commandName: command.commandName
                 };
             }
@@ -313,40 +324,29 @@ class PointsActions {
         if (args.length < 2) {
             return {
                 success: false,
-                message: `@${message.chatname}, usage: !spend [amount] [reward name]`,
+                message: `${formatPointsMention(message.chatname)}, usage: !spend [amount] [reward name]`,
                 commandName: '!spend'
             };
         }
         
-        const amount = parseInt(args[0], 10);
-        if (isNaN(amount) || amount <= 0) {
+        const amount = Number(args[0]);
+        if (!Number.isFinite(amount) || amount <= 0) {
             return {
                 success: false,
-                message: `@${message.chatname}, please provide a valid amount to spend`,
+                message: `${formatPointsMention(message.chatname)}, please provide a valid amount to spend`,
                 commandName: '!spend'
             };
         }
         
         const rewardName = args.slice(1).join(' ');
         
-        // TODO: Implement custom reward handling logic
-        // For now, just spend the points
-        const result = await this.pointsSystem.spendPoints(message.chatname, message.type, amount);
-        if (!result.success) {
-            return {
-                success: false,
-                message: `@${message.chatname}, you don't have enough points. ${result.available} available, ${amount} needed.`,
-                commandName: '!spend'
-            };
+        const targetName = (rewardName.startsWith('!') ? rewardName : '!' + rewardName).toLowerCase();
+        const reward = this.customCommands.get(targetName);
+        if (!reward || reward.isDefault || reward.isMetaCommand || reward.cost !== amount ||
+            !(reward.mediaUrl || reward.responseMessage || reward.webhookUrl)) {
+            return {success:false, commandName:'!spend', type:'chat', message:'No matching configured reward at that price. No points spent. Use !rewards or !ticket GIVEAWAY COUNT.'};
         }
-        triggerPointsLeaderboardRefresh('manual-spend');
-        
-        return {
-            success: true,
-            message: `@${message.chatname} spent ${amount} points on "${rewardName}". ${result.remaining} points remaining.`,
-            commandName: '!spend',
-            type: 'chat'
-        };
+        return this.processCommand(Object.assign({}, message, {chatmessage:targetName}));
     }
     
     async handlePointsCommand(message) {
@@ -356,7 +356,7 @@ class PointsActions {
         
         return {
             success: true,
-            message: `@${chatname}, you have ${availablePoints} points (${userData.points} earned, ${userData.pointsSpent} spent). Current streak: ${userData.currentStreak}x`,
+            message: `${formatPointsMention(chatname)}, you have ${availablePoints} points (${userData.points} earned, ${userData.pointsSpent - (userData.pointsReserved || 0)} spent, ${userData.pointsReserved || 0} reserved). Current streak: ${userData.currentStreak}x`,
             commandName: '!points',
             type: 'chat'
         };
@@ -368,9 +368,9 @@ class PointsActions {
         
         const leaderboard = await this.pointsSystem.getLeaderboard(validLimit, message.type);
         
-        let response = `Top ${validLimit} users by points:\n`;
+        let response = `Top ${validLimit} users by earned points:\n`;
         leaderboard.forEach((user, index) => {
-            response += `${index + 1}. ${user.username}: ${user.points - user.pointsSpent} points (${user.currentStreak}x streak)\n`;
+            response += `${index + 1}. ${user.username}: ${user.points} earned points (${user.currentStreak}x streak)\n`;
         });
         
         return {
@@ -432,7 +432,7 @@ class PointsActions {
             
             return {
                 success: true,
-                message: command.successMessage || `@${message.chatname} used ${command.commandName} for ${command.cost} points!`,
+                message: command.successMessage || `${formatPointsMention(message.chatname)} used ${command.commandName} for ${command.cost} points!`,
                 commandName: command.commandName,
                 type: 'chat',
                 mediaTriggered: true
@@ -477,7 +477,7 @@ class PointsActions {
                 
                 return {
                     success: true,
-                    message: command.successMessage || `@${message.chatname} triggered ${command.commandName}!`,
+                    message: command.successMessage || `${formatPointsMention(message.chatname)} triggered ${command.commandName}!`,
                     commandName: command.commandName,
                     type: 'chat'
                 };
@@ -489,7 +489,7 @@ class PointsActions {
         // Default success response
         return {
             success: true,
-            message: `@${message.chatname} used ${command.commandName} for ${command.cost} points!`,
+            message: `${formatPointsMention(message.chatname)} used ${command.commandName} for ${command.cost} points!`,
             commandName: command.commandName,
             type: 'chat'
         };
@@ -531,7 +531,13 @@ class PointsActions {
     // Method to update an existing command
     async updateCommand(commandName, updates) {
         const normalizedName = commandName.toLowerCase();
-        const existingCommand = this.customCommands.get(normalizedName);
+        const db = await this.ensureDB();
+        const existingCommand = await new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, 'readonly');
+            const request = tx.objectStore(this.storeName).get(normalizedName);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
         
         if (!existingCommand) {
             return { success: false, message: "Command not found" };
@@ -595,21 +601,32 @@ async function initializePointsActions() {
             const result = await originalAddMessage.call(this, message);
             
             // Process any points commands
-            if (message && message.chatmessage && message.chatmessage.startsWith('!')) {
+            if (message && !message.chatbotReflection && message.chatmessage && message.chatmessage.startsWith('!')) {
                 const commandResult = await pointsActions.processCommand(message);
                 
                 // Handle command response if needed
-                if (commandResult && commandResult.success && commandResult.message && commandResult.type === 'chat') {
+                if (commandResult && commandResult.message && (commandResult.type === 'chat' || !commandResult.success)) {
                     // Create a response message
                     const responseMessage = {
                         chatname: 'PointsBot',
                         chatmessage: commandResult.message,
                         type: 'bot',
+                        bot: true,
+                        textonly: true,
                         timestamp: Date.now()
                     };
                     
-                    // Add to message store (which will trigger display)
+                    // Persistence does not publish the reply to the dock or source chat.
                     await originalAddMessage.call(this, responseMessage);
+                    sendDataP2P(responseMessage);
+                    if (message.tid) {
+                        await sendMessageToTabs({
+                            response: commandResult.message,
+                            tid: message.tid,
+                            type: message.type,
+                            bot: true
+                        });
+                    }
                 }
             }
             

@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Scoreboard. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+<script src="js/local-server-url.js"></script>
 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+
 	<meta content="utf-8" http-equiv="encoding">
 	<title>Social Stream - Scoreboard</title>
 	<link rel="icon" href="./favicon.ico">
@@ -414,6 +418,44 @@
 		}
 
 		var urlParams = new URLSearchParams(window.location.search);
+		var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
+		// Transport migration guard: only pages with full server parity may skip the legacy bridge.
+		var TRANSPORT_CAPABILITIES = {
+			serverFeed: true,
+			serverTargeted: false,
+			upstreamCommands: false,
+			customChannel: false,
+			legacyBridgeRequired: false,
+			exclusiveServerParams: { server: false, server2: true, server3: false }
+		};
+		function versionAtLeast(value, minimum) {
+			var a = String(value || "").split(".");
+			var b = String(minimum || "").split(".");
+			var len = Math.max(a.length, b.length);
+			for (var i = 0; i < len; i++) {
+				var av = parseInt(a[i], 10) || 0;
+				var bv = parseInt(b[i], 10) || 0;
+				if (av > bv) return true;
+				if (av < bv) return false;
+			}
+			return true;
+		}
+		// Only feed-carrying server params listed by this page may disable the bridge; server3 alone is command-only.
+		function hasExclusiveServerTransport(caps) {
+			var params = caps && typeof caps.exclusiveServerParams === "object" ? caps.exclusiveServerParams : { server2: true };
+			return (params.server === true && urlParams.has("server")) ||
+				(params.server2 !== false && urlParams.has("server2")) ||
+				(params.server3 === true && urlParams.has("server2") && urlParams.has("server3"));
+		}
+		function useServerOnlyTransport() {
+			var caps = (typeof TRANSPORT_CAPABILITIES === "object" && TRANSPORT_CAPABILITIES) ? TRANSPORT_CAPABILITIES : {};
+			return hasExclusiveServerTransport(caps) &&
+				versionAtLeast(urlParams.get("v"), SERVER_EXCLUSIVE_TRANSPORT_VERSION) &&
+				caps.serverFeed === true &&
+				caps.legacyBridgeRequired !== true &&
+				caps.upstreamCommands !== true &&
+				caps.customChannel !== true;
+		}
 		var roomID = urlParams.get("session") || urlParams.get("s") || urlParams.get("id") || "";
 		var password = urlParams.get("password") || "false";
 		var layout = urlParams.get("layout") || "sidebar";
@@ -516,11 +558,17 @@
 		function updateSubtitle(reason) {
 			var subtitle = getById("scoreboardSubtitle");
 			if (!entries.length) {
-				subtitle.textContent = "Waiting for points";
+				subtitle.textContent = getScoreboardText("waitingtext", "Waiting for points");
 				return;
 			}
-			var label = reason ? reason.replace(/_/g, " ") : "live";
-			subtitle.textContent = entries.length + " ranked viewer" + (entries.length === 1 ? "" : "s") + " - " + label;
+			var ranked = getScoreboardText("rankedtext", "{count} ranked viewer" + (entries.length === 1 ? "" : "s"));
+			ranked = ranked.replace(/\{count\}/g, function () { return String(entries.length); });
+			var label = urlParams.has("hidereason") ? "" : getScoreboardText("reasontext", reason ? reason.replace(/_/g, " ") : "live");
+			subtitle.textContent = ranked + (label ? " - " + label : "");
+		}
+
+		function getScoreboardText(param, fallback) {
+			return urlParams.has(param) ? urlParams.get(param) : fallback;
 		}
 
 		function createAvatar(entry) {
@@ -561,7 +609,7 @@
 			if (!entries.length) {
 				var empty = document.createElement("div");
 				empty.className = "empty-state";
-				empty.textContent = "Enable Points System, then wait for chat activity or manage points from the popup.";
+				empty.textContent = getScoreboardText("emptytext", "Enable Points System, then wait for chat activity or manage points from the popup.");
 				list.appendChild(empty);
 				document.title = "Scoreboard";
 				return;
@@ -589,7 +637,8 @@
 				meta.className = "meta";
 				meta.appendChild(createPlatformIcon(entry));
 				var metaText = document.createElement("span");
-				metaText.textContent = entry.currentStreak ? entry.type + " streak " + entry.currentStreak : entry.type;
+				var streakLabel = getScoreboardText("streaktext", "streak");
+				metaText.textContent = entry.currentStreak ? entry.type + " " + (streakLabel ? streakLabel + " " : "") + entry.currentStreak : entry.type;
 				meta.appendChild(metaText);
 				identity.appendChild(name);
 				identity.appendChild(meta);
@@ -599,7 +648,7 @@
 				points.textContent = Math.round(entry.points).toLocaleString();
 				var label = document.createElement("span");
 				label.className = "points-label";
-				label.textContent = "points";
+				label.textContent = getScoreboardText("pointstext", "points");
 				points.appendChild(label);
 
 				row.appendChild(rank);
@@ -647,7 +696,49 @@
 			}), "local scoring");
 		}
 
+		// Cross-transport dedupe: in server mode the same feed message can arrive over both
+		// the websocket relay and the VDO.Ninja bridge; render only the first copy.
+		var CROSS_TRANSPORT_DEDUPE_TTL_MS = 12000;
+		var recentTransportDeliveries = new Map();
+		function isDuplicateTransportDelivery(data) {
+			if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) {
+				return false;
+			}
+			if (!data || typeof data !== "object") {
+				return false;
+			}
+			if (data.id === undefined || data.id === null) {
+				return false;
+			}
+			if ("action" in data || "get" in data || "callback" in data || "mid" in data) {
+				return false;
+			}
+			if (!(data.chatname || data.chatmessage || data.chatimg || data.hasDonation || data.membership || data.event || data.contentimg)) {
+				return false;
+			}
+			var key =
+				String(data.id) +
+				"|" + (data.type || "") +
+				"|" + (data.chatname || "") +
+				"|" + String(data.chatmessage || "").slice(0, 100) +
+				"|" + (data.hasDonation || "") +
+				"|" + (data.event || "");
+			var now = Date.now();
+			recentTransportDeliveries.forEach(function (seenAt, seenKey) {
+				if (now - seenAt > CROSS_TRANSPORT_DEDUPE_TTL_MS) {
+					recentTransportDeliveries.delete(seenKey);
+				}
+			});
+			if (recentTransportDeliveries.has(key)) {
+				return true;
+			}
+			recentTransportDeliveries.set(key, now);
+			return false;
+		}
 		function processData(data) {
+			if (isDuplicateTransportDelivery(data)) {
+				return;
+			}
 			if (!data) return;
 			if (data.content) data = data.content;
 			if (data.overlayNinja) data = data.overlayNinja;
@@ -667,7 +758,7 @@
 
 		function setupSocket() {
 			if (!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"))) return;
-			var serverURL = urlParams.get("server") || urlParams.get("server2") || urlParams.get("server3") || "wss://io.socialstream.ninja/extension";
+			var serverURL = urlParams.get("server") || urlParams.get("server2") || SocialStreamLocalServer.getRelayUrl(urlParams, "server3", "wss://io.socialstream.ninja/extension");
 			var attempts = 1;
 			var socket = null;
 			function connect() {
@@ -701,7 +792,7 @@
 		}
 
 		function setupIframeBridge() {
-			if (!roomID) return;
+			if (!roomID || useServerOnlyTransport()) return;
 			var lanonly = urlParams.has("lanonly") ? "&lanonly" : "";
 			iframe = document.createElement("iframe");
 			iframe.src =
@@ -721,7 +812,9 @@
 		}
 
 		window.addEventListener("message", function (event) {
-			if (!urlParams.has("preview") && iframe && event.source !== iframe.contentWindow) return;
+			if (!urlParams.has("preview")) {
+				if (!iframe || event.source !== iframe.contentWindow) return;
+			}
 			var payload = event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja;
 			if (typeof payload !== "undefined") {
 				processData(payload);

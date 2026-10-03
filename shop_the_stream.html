@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Shop the Stream Overlay. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="robots" content="noindex">
+    <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
+<script src="js/local-server-url.js"></script>
     <title>Shop the Stream Overlay</title>
     <style>
         :root {
@@ -250,7 +255,8 @@ function connectWebSocket() {
         config.socket.close();
     }
     
-    const wsUrl = `wss://io.socialstream.ninja/join/${config.sessionId}/${config.inChannel}/${config.outChannel}`;
+    const relayBase = SocialStreamLocalServer.getRelayUrl(new URLSearchParams(location.search), 'server', 'wss://io.socialstream.ninja');
+    const wsUrl = `${relayBase.replace(/\/$/, '')}/join/${config.sessionId}/${config.inChannel}/${config.outChannel}`;
     config.socket = new WebSocket(wsUrl);
     
     config.socket.onopen = () => {

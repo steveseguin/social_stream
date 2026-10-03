@@ -1,13 +1,48 @@
 // Predefined flow templates for quick setup
 // Node positions are arranged top-to-bottom to match visual flow direction
 const FLOW_TEMPLATES = {
+    'streamdeck-workflow': {
+        name: 'Stream Deck / API button', active: false,
+        description: 'Starts disabled. Save and enable, then choose Run Workflow in Stream Deck and refresh. Open Flow Actions to see the text. Each press starts a run.',
+        nodes: [
+            { id: 'api_button', type: 'trigger', triggerType: 'apiTrigger', x: 100, y: 50, config: { trigger: 'intermission' } },
+            { id: 'api_text', type: 'action', actionType: 'showText', x: 100, y: 230, config: { text: 'Back in five minutes', duration: 5000 } }
+        ],
+        connections: [{ from: 'api_button', to: 'api_text' }]
+    },
+    'donation-celebration': {
+        name: "Donation: celebration + voice",
+        description: "Output: Flow Actions overlay. Synthetic thank-you voice and celebration. Starts disabled: test, then enable. Disable donation sound in Multi-Alerts if both handle the same event.",
+        active: false,
+        nodes: [
+            {"id": "trigger", "type": "trigger", "triggerType": "hasDonation", "x": 185, "y": 50, "config": {}},
+            {"id": "media", "type": "action", "actionType": "playTenorGiphy", "x": 50, "y": 230, "config": {"mediaUrl": "./media/alerts/celebration.svg", "mediaType": "image", "duration": 5000, "width": 40, "height": 40, "x": 30, "y": 30}},
+            {"id": "sound", "type": "action", "actionType": "playAudioClip", "x": 320, "y": 230, "config": {"audioUrl": "./audio/alerts/voice-thank-you.wav", "volume": 0.35}}
+        ],
+        connections: [{"from": "trigger", "to": "media"}, {"from": "trigger", "to": "sound"}]
+    },
+    'donation-obs-effect': {
+        name: "Donation: animation + sound + OBS filter",
+        description: "Output: Flow Actions overlay and configured OBS connection. Starts disabled. Choose the same source and normally-off filter in both filter actions. Disable duplicate donation audio in Multi-Alerts.",
+        active: false,
+        nodes: [
+            {"id": "trigger", "type": "trigger", "triggerType": "hasDonation", "x": 185, "y": 50, "config": {}},
+            {"id": "media", "type": "action", "actionType": "playTenorGiphy", "x": 50, "y": 230, "config": {"mediaUrl": "./media/alerts/celebration.svg", "mediaType": "image", "duration": 5000, "width": 40, "height": 40, "x": 30, "y": 30}},
+            {"id": "sound", "type": "action", "actionType": "playAudioClip", "x": 320, "y": 230, "config": {"audioUrl": "./audio/alerts/drumroll.wav", "volume": 0.35}},
+            {"id": "delay", "type": "action", "actionType": "delay", "x": 320, "y": 410, "config": {"delayMs": 2000}},
+            {"id": "filter-on", "type": "action", "actionType": "obsSetSourceFilter", "x": 320, "y": 590, "config": {"sourceName": "", "filterName": "", "enabled": "true"}},
+            {"id": "hold", "type": "action", "actionType": "delay", "x": 320, "y": 770, "config": {"delayMs": 2000}},
+            {"id": "filter-off", "type": "action", "actionType": "obsSetSourceFilter", "x": 320, "y": 950, "config": {"sourceName": "", "filterName": "", "enabled": "false"}}
+        ],
+        connections: [{"from": "trigger", "to": "media"}, {"from": "trigger", "to": "sound"}, {"from": "sound", "to": "delay"}, {"from": "delay", "to": "filter-on"}, {"from": "filter-on", "to": "hold"}, {"from": "hold", "to": "filter-off"}]
+    },
     // === SIMPLE TEMPLATES ===
     'chat-relay': {
         name: 'Chat Relay to Discord',
         description: 'Forward chat messages to a Discord webhook',
         nodes: [
             { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 100, y: 50, config: {} },
-            { id: 'action_1', type: 'action', actionType: 'webhook', x: 100, y: 230, config: { url: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN', method: 'POST', body: '{"content": "{username}: {message}"}', includeMessage: false, syncMode: false, blockOnFailure: false } }
+            { id: 'action_1', type: 'action', actionType: 'webhook', x: 100, y: 230, config: { url: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN', method: 'POST', body: '{"content": "{message}", "username": "{username}", "avatar_url": "{chatimg}"}', includeMessage: false, syncMode: false, blockOnFailure: false } }
         ],
         connections: [{ from: 'trigger_1', to: 'action_1' }]
     },
@@ -25,7 +60,7 @@ const FLOW_TEMPLATES = {
         description: 'Play a sound when channel points are redeemed',
         nodes: [
             { id: 'trigger_1', type: 'trigger', triggerType: 'channelPointRedemption', x: 100, y: 50, config: { rewardName: '' } },
-            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 100, y: 230, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } }
+            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 100, y: 230, config: { audioUrl: './audio/chime.wav', volume: 0.35 } }
         ],
         connections: [{ from: 'trigger_1', to: 'action_1' }]
     },
@@ -43,7 +78,7 @@ const FLOW_TEMPLATES = {
         description: 'Play sound and show text when someone donates',
         nodes: [
             { id: 'trigger_1', type: 'trigger', triggerType: 'hasDonation', x: 185, y: 50, config: {} },
-            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 50, y: 230, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } },
+            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 50, y: 230, config: { audioUrl: './audio/chime.wav', volume: 0.35 } },
             { id: 'action_2', type: 'action', actionType: 'showText', x: 320, y: 230, config: { text: '💰 {username} donated!', x: 50, y: 50, width: 50, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FFD700', backgroundColor: 'rgba(0,0,0,0.8)', padding: 20, borderRadius: 10, animation: 'bounceIn', animationDuration: 500, duration: 5000 } }
         ],
         connections: [
@@ -68,6 +103,26 @@ const FLOW_TEMPLATES = {
     },
 
     // === INTERMEDIATE TEMPLATES ===
+    'obs-hourly-message': {
+        name: 'Hourly message while OBS is live',
+        description: 'Starts disabled. Choose your message and chat platform in Send Message, connect Flow Actions to OBS, then enable before starting your stream. Repeats every 3600 seconds while the switch is ON. The schedule does not restart with OBS; the first message may arrive sooner than one hour.',
+        active: false,
+        nodes: [
+            { id: 'obs_started', type: 'trigger', triggerType: 'obsStreamStarted', x: 50, y: 50, config: {} },
+            { id: 'hourly_timer', type: 'trigger', triggerType: 'timeInterval', x: 320, y: 50, config: { interval: 3600 } },
+            { id: 'obs_stopped', type: 'trigger', triggerType: 'obsStreamStopped', x: 590, y: 50, config: {} },
+            { id: 'switch_on', type: 'action', actionType: 'setGateState', label: 'Turn reminders ON', x: 50, y: 230, config: { targetNodeId: 'live_switch', state: 'ALLOW' } },
+            { id: 'live_switch', type: 'state', stateType: 'GATE', x: 320, y: 230, config: { name: 'OBS live reminders', defaultState: 'BLOCK', autoResetMs: 0 } },
+            { id: 'switch_off', type: 'action', actionType: 'setGateState', label: 'Turn reminders OFF', x: 590, y: 230, config: { targetNodeId: 'live_switch', state: 'BLOCK' } },
+            { id: 'send_reminder', type: 'action', actionType: 'sendMessage', x: 320, y: 410, config: { destination: 'twitch', template: 'Enjoying the stream? Remember to follow and stay hydrated!', timeout: 0, sanitizeMode: 'safe' } }
+        ],
+        connections: [
+            { from: 'obs_started', to: 'switch_on' },
+            { from: 'hourly_timer', to: 'live_switch' },
+            { from: 'live_switch', to: 'send_reminder' },
+            { from: 'obs_stopped', to: 'switch_off' }
+        ]
+    },
     'bad-words-filter': {
         name: 'Bad Words Filter',
         description: 'Block messages containing profanity',
@@ -165,7 +220,7 @@ const FLOW_TEMPLATES = {
         description: 'Welcome raiders with sound and overlay',
         nodes: [
             { id: 'trigger_1', type: 'trigger', triggerType: 'eventType', x: 185, y: 50, config: { eventType: 'raid' } },
-            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 50, y: 230, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } },
+            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 50, y: 230, config: { audioUrl: './audio/chime.wav', volume: 0.35 } },
             { id: 'action_2', type: 'action', actionType: 'showText', x: 320, y: 230, config: { text: '🎉 RAID! Welcome {username} and their community!', x: 10, y: 40, width: 80, fontSize: 42, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FF6B6B', backgroundColor: 'rgba(0,0,0,0.9)', padding: 25, borderRadius: 15, animation: 'bounceIn', animationDuration: 500, duration: 10000 } },
             { id: 'action_3', type: 'action', actionType: 'ttsSpeak', x: 185, y: 410, config: { text: 'Welcome raiders from {username}!', voice: '', rate: 1, pitch: 1, volume: 1 } }
         ],
@@ -195,11 +250,11 @@ const FLOW_TEMPLATES = {
         description: 'Special alert for donations over $10',
         nodes: [
             { id: 'trigger_1', type: 'trigger', triggerType: 'hasDonation', x: 50, y: 50, config: {} },
-            { id: 'trigger_2', type: 'trigger', triggerType: 'compareProperty', x: 320, y: 50, config: { property: 'donationAmount', operator: 'gte', value: 10 } },
+            { id: 'trigger_2', type: 'trigger', triggerType: 'compareProperty', x: 320, y: 50, config: { property: 'donoValue', operator: 'gte', value: 10 } },
             { id: 'logic_1', type: 'logic', logicType: 'AND', x: 185, y: 230, config: {} },
-            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 50, y: 410, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } },
-            { id: 'action_2', type: 'action', actionType: 'showText', x: 320, y: 410, config: { text: '🎉 BIG DONATION! {username} donated ${donationAmount}!', x: 20, y: 30, width: 60, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FFD700', backgroundColor: 'rgba(139,0,0,0.9)', padding: 30, borderRadius: 15, animation: 'bounceIn', animationDuration: 500, duration: 10000 } },
-            { id: 'action_3', type: 'action', actionType: 'ttsSpeak', x: 320, y: 590, config: { text: 'Wow! {username} just donated ${donationAmount}! Thank you so much!', voice: '', rate: 1, pitch: 1, volume: 1 } }
+            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 50, y: 410, config: { audioUrl: './audio/chime.wav', volume: 0.35 } },
+            { id: 'action_2', type: 'action', actionType: 'showText', x: 320, y: 410, config: { text: '🎉 BIG DONATION! {username} donated {hasDonation}!', x: 20, y: 30, width: 60, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FFD700', backgroundColor: 'rgba(139,0,0,0.9)', padding: 30, borderRadius: 15, animation: 'bounceIn', animationDuration: 500, duration: 10000 } },
+            { id: 'action_3', type: 'action', actionType: 'ttsSpeak', x: 320, y: 590, config: { text: 'Wow! {username} just donated {hasDonation}! Thank you so much!', voice: '', rate: 1, pitch: 1, volume: 1 } }
         ],
         connections: [
             { from: 'trigger_1', to: 'logic_1' },
@@ -229,6 +284,7 @@ class EventFlowEditor {
         this.draggedConnection = null;
         this.dragOffset = { x: 0, y: 0 };
         this.unsavedChanges = false;
+        this.customCodeEditorState = null;
         try {
             this.noFlowHelpDismissed = window.localStorage.getItem('ssn-eventflow-help-dismissed') === '1';
         } catch (error) {
@@ -240,6 +296,10 @@ class EventFlowEditor {
         // Grouped trigger types for collapsible sections (like actions)
         this.triggerGroups = [
             {
+                id: 'remote-control', name: 'Stream Deck & API', expanded: true,
+                triggers: [{ id: 'apiTrigger', name: '▶ Run from Stream Deck / API' }]
+            },
+            {
                 id: 'stream-events',
                 name: '📣 Stream Events',
                 expanded: true,
@@ -248,7 +308,7 @@ class EventFlowEditor {
                     { id: 'eventNewSubscriber', name: '⭐ New Subscriber' },
                     { id: 'eventResub', name: '🔄 Resub/Renewal' },
                     { id: 'eventGiftSub', name: '🎁 Gift Sub' },
-                    { id: 'eventDonation', name: '💰 Donation/Super Chat' },
+                    { id: 'eventDonation', name: '💰 Donation / Tip' },
                     { id: 'eventRaid', name: '🚀 Raid' },
                     { id: 'eventCheer', name: '💎 Cheer/Bits' },
                     { id: 'eventOther', name: '📋 Other Event...' },
@@ -265,6 +325,7 @@ class EventFlowEditor {
                     { id: 'obsRecordingStarted', name: 'OBS Recording Started' },
                     { id: 'obsRecordingStopped', name: 'OBS Recording Stopped' },
                     { id: 'obsSceneChanged', name: 'OBS Scene Changed' },
+                    { id: 'obsMediaEnded', name: 'OBS Media Ended' },
                     // Matches OBS obs-browser's official replay-buffer event casing.
                     { id: 'obsReplaybufferSaved', name: 'OBS Replay Buffer Saved' }
                 ]
@@ -305,6 +366,7 @@ class EventFlowEditor {
                     { id: 'fromChannelName', name: '📺 From Channel Name' },
                     { id: 'fromUser', name: '👤 From User' },
                     { id: 'userRole', name: '👑 User Role' },
+                    { id: 'userMemoryContains', name: '🧠 User Is Remembered' },
                     { id: 'channelPointRedemption', name: '🎁 Channel Point Redemption' }
                 ]
             },
@@ -315,6 +377,7 @@ class EventFlowEditor {
                 triggers: [
                     { id: 'randomChance', name: '🎲 Random Chance' },
                     { id: 'timeInterval', name: '⏰ Time Interval' },
+                    { id: 'voicePhrase', name: '\uD83C\uDFA4 When I say...' },
                     { id: 'timeOfDay', name: '🕐 Time of Day' }
                 ]
             },
@@ -359,6 +422,7 @@ class EventFlowEditor {
                     { id: 'removeText', name: '✂️ Remove Text' },
                     { id: 'setProperty', name: '🎨 Set Property' },
                     { id: 'featureMessage', name: '🌟 Feature Message' },
+                    { id: 'pinMessage', name: 'Pin Message' },
                     { id: 'sendMessage', name: '💬 Send Message' },
                     { id: 'relay', name: '📢 Relay Chat' },
                     { id: 'reflectionFilter', name: '🪞 Reflection Filter' }
@@ -370,9 +434,11 @@ class EventFlowEditor {
                 expanded: true,
                 actions: [
                     { id: 'customJs', name: 'Execute Custom Code' },
+					{ id: 'printThermal', name: '🖨️ Print Thermal Label' },
                     { id: 'webhook', name: '🌐 Call Webhook' },
                     { id: 'addPoints', name: '⬆️ Add Points' },
-                    { id: 'spendPoints', name: '⬇️ Spend Points' }
+                    { id: 'spendPoints', name: '⬇️ Spend Points' },
+                    { id: 'giveawayControl', name: '🎁 Giveaway / Tickets' }
                 ]
             },
             {
@@ -380,8 +446,10 @@ class EventFlowEditor {
                 name: '🎨 Media & Effects',
                 expanded: true,
                 actions: [
+                    { id: 'showAiEventOverlay', name: '✨ Show AI Event Overlay' },
                     { id: 'playTenorGiphy', name: '🖼️ Display Media Overlay' },
                     { id: 'showAvatar', name: '👤 Show Avatar' },
+                    { id: 'commerceControl', name: '\uD83D\uDECD Products & Support' },
                     { id: 'showText', name: '📝 Show Text' },
                     { id: 'clearLayer', name: '🗑️ Clear Layer' },
                     { id: 'playAudioClip', name: '🔊 Play Audio Clip' },
@@ -395,12 +463,17 @@ class EventFlowEditor {
                 actions: [
                     { id: 'obsChangeScene', name: '🎬 Change Scene' },
                     { id: 'obsToggleSource', name: '👁️ Toggle Source' },
+                    { id: 'obsSetText', name: '📝 Set Text Source' },
+                    { id: 'obsMediaControl', name: '⏯️ Control Media Source' },
+                    { id: 'obsSetVolume', name: '🔊 Set Source Volume' },
+                    { id: 'obsRefreshBrowser', name: '🔄 Refresh Browser Source' },
                     { id: 'obsSetSourceFilter', name: '🎨 Toggle Filter' },
                     { id: 'obsMuteSource', name: '🔇 Mute/Unmute Audio' },
                     { id: 'obsStartRecording', name: '🔴 Start Recording' },
                     { id: 'obsStopRecording', name: '⏹️ Stop Recording' },
                     { id: 'obsStartStreaming', name: '📡 Start Streaming' },
                     { id: 'obsStopStreaming', name: '⏹️ Stop Streaming' },
+                    { id: 'obsReplayBufferControl', name: '⏺️ Control Replay Buffer' },
                     { id: 'obsReplayBuffer', name: '💾 Save Replay Buffer' }
                 ]
             },
@@ -443,6 +516,17 @@ class EventFlowEditor {
                 ]
             },
             {
+                id: 'user-memory',
+                name: '🧠 User Memory',
+                expanded: true,
+                actions: [
+                    { id: 'rememberUser', name: '🧠 Remember User' },
+                    { id: 'forgetUser', name: '👋 Forget User' },
+                    { id: 'clearUserMemory', name: '🧹 Clear All Users' },
+                    { id: 'pickRandomUser', name: '🎟️ Pick Random User' }
+                ]
+            },
+            {
                 id: 'state',
                 name: '🔧 State Control',
                 expanded: false,
@@ -480,10 +564,33 @@ class EventFlowEditor {
         this.stateNodeTypes = [
             { id: 'GATE', name: '🚦 On/Off Switch', type: 'state', stateType: 'GATE' },
             { id: 'COUNTER', name: '🔢 Counter', type: 'state', stateType: 'COUNTER' },
-            { id: 'THROTTLE', name: '⏲️ Rate Limiter', type: 'state', stateType: 'THROTTLE' }
+            { id: 'THROTTLE', name: '⏲️ Rate Limiter', type: 'state', stateType: 'THROTTLE' },
+            { id: 'USER_MEMORY', name: '🧠 User Memory', type: 'state', stateType: 'USER_MEMORY' }
         ];
 
+        this.userMemoryUnsubscribe = this.eventFlowSystem && typeof this.eventFlowSystem.subscribeUserMemory === 'function'
+            ? this.eventFlowSystem.subscribeUserMemory(snapshot => this.handleUserMemoryStateUpdate(snapshot))
+            : null;
+        if (this.eventFlowSystem && typeof this.eventFlowSystem.requestUserMemorySnapshots === 'function') {
+            this.eventFlowSystem.requestUserMemorySnapshots();
+        }
+
         this.init(); // init() will call createEditorLayout()
+    }
+
+    handleUserMemoryStateUpdate(snapshot) {
+        if (!snapshot || !this.currentFlow || !Array.isArray(this.currentFlow.nodes)) return;
+        const currentFlowId = String(this.currentFlow.id || 'draft');
+        if (String(snapshot.flowId || 'draft') !== currentFlowId) return;
+
+        const memoryNode = this.currentFlow.nodes.find(node => node.id === snapshot.nodeId && node.type === 'state' && node.stateType === 'USER_MEMORY');
+        if (!memoryNode) return;
+
+        this.renderNodeOnCanvas(memoryNode.id);
+        const countElement = document.getElementById('user-memory-current-count');
+        if (countElement && this.selectedNode === memoryNode.id) {
+            countElement.textContent = String(snapshot.count || 0);
+        }
     }
 
     // Helper method to escape HTML special characters to prevent XSS
@@ -495,6 +602,99 @@ class EventFlowEditor {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
+    }
+
+    getLocalMediaApi() {
+        if (window.ninjafy && window.ninjafy.localMedia) return window.ninjafy.localMedia;
+        if (window.ssappLocalMedia) return window.ssappLocalMedia;
+        return null;
+    }
+
+    renderLocalMediaSource(node, options) {
+        const config = node.config || {};
+        const isLocal = config.sourceType === 'local' && !!config.localAssetId;
+        const label = options.label;
+        const inputId = options.inputId;
+        const configKey = options.configKey;
+        const uploadButtonId = options.uploadButtonId;
+        const localName = this.escapeHtml(config.localAssetName || 'Selected local file');
+        const localType = this.escapeHtml(config.localMediaType || options.mediaType || 'media');
+
+        if (!isLocal) {
+            return `<div class="property-group">
+                <label class="property-label" for="${inputId}">${label}</label>
+                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <input type="url" class="property-input" id="${inputId}" value="${this.escapeHtml(config[configKey] || '')}" style="flex: 1; min-width: 160px;">
+                    <button type="button" id="${uploadButtonId}" style="padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Upload</button>
+                    <button type="button" id="chooseLocalMediaBtn" style="padding: 5px 10px; border: 1px solid #667eea; border-radius: 4px; cursor: pointer;">Choose Local File</button>
+                </div>
+            </div>`;
+        }
+
+        return `<div class="property-group">
+            <label class="property-label">${label}</label>
+            <div style="border: 1px solid rgba(102,126,234,0.55); border-radius: 6px; padding: 9px;">
+                <div><strong>${localName}</strong> <span style="opacity: 0.7;">(${localType})</span></div>
+                <div id="localMediaStatus" class="property-help" style="margin: 5px 0;">Checking local file…</div>
+                <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                    <button type="button" id="chooseLocalMediaBtn">Relink</button>
+                    <button type="button" id="previewLocalMediaBtn">Preview</button>
+                    <button type="button" id="revealLocalMediaBtn">Reveal in Folder</button>
+                    <button type="button" id="changeLocalMediaPortBtn">Change Server Port</button>
+                    <button type="button" id="useMediaUrlBtn">Use URL Instead</button>
+                </div>
+            </div>
+            <button type="button" id="copyLocalFlowActionsUrlBtn" style="margin-top: 7px; width: 100%;">Copy Local Flow Actions URL for OBS</button>
+        </div>`;
+    }
+
+    getCurrentFlowActionsSearch() {
+        const link = document.getElementById('flowactionslink');
+        try {
+            if (link && link.href) return new URL(link.href, window.location.href).search;
+        } catch (_) { }
+        const search = window.location.search || '';
+        // The embedded editor keeps the active password in the background page,
+        // while its own URL only contains app configuration.
+        if (typeof password === 'string' && password && !new URLSearchParams(search).has('password')) {
+            return search + (search ? '&' : '?') + 'password=' + encodeURIComponent(password);
+        }
+        return search;
+    }
+
+    getCurrentSessionId() {
+        const input = document.getElementById('sessionid');
+        if (input && input.value) return input.value;
+        try {
+            if (typeof lastResponse !== 'undefined' && lastResponse && lastResponse.streamID) return lastResponse.streamID;
+        } catch (_) { }
+        // The embedded background editor stores its active session in streamID,
+        // rather than in the popup's input/response or the background page URL.
+        if (typeof streamID === 'string' && streamID) return streamID;
+        const params = new URLSearchParams(window.location.search);
+        return params.get('session') || params.get('s') || params.get('id') || '';
+    }
+
+    async refreshLocalMediaStatus(node) {
+        const statusElement = document.getElementById('localMediaStatus');
+        if (!statusElement || !node.config || !node.config.localAssetId) return;
+        const api = this.getLocalMediaApi();
+        if (!api) {
+            statusElement.textContent = 'Local files require the Social Stream standalone app or a future Media Bridge.';
+            return;
+        }
+        try {
+            const [asset, server] = await Promise.all([api.get(node.config.localAssetId), api.status()]);
+            if (!asset || asset.status === 'missing') {
+                statusElement.textContent = 'File missing — use Relink to choose its new location.';
+            } else if (!server || !server.running) {
+                statusElement.textContent = `File available; local server is offline${server && server.lastError ? `: ${server.lastError}` : '.'}`;
+            } else {
+                statusElement.textContent = `Available — local server running on port ${server.port}.`;
+            }
+        } catch (error) {
+            statusElement.textContent = `Unable to check local media: ${error && error.message ? error.message : error}`;
+        }
     }
 
     // Helper to render source filter for event triggers
@@ -532,6 +732,21 @@ class EventFlowEditor {
         `;
     }
 
+    renderUserMemoryTargetField(node, helpText = '') {
+        const memories = this.currentFlow?.nodes?.filter(candidate => candidate.type === 'state' && candidate.stateType === 'USER_MEMORY') || [];
+        return `
+            <div class="property-group user-memory-target-field">
+                <label class="property-label">Target User Memory</label>
+                <select class="property-input" id="prop-targetNodeId">
+                    <option value="">Select User Memory...</option>
+                    ${memories.map(memory => `<option value="${this.escapeHtml(memory.id)}" ${node.config?.targetNodeId === memory.id ? 'selected' : ''}>${this.escapeHtml(memory.config?.name || memory.label || 'User Memory')}</option>`).join('')}
+                </select>
+                ${memories.length
+                    ? `<div class="property-help">${this.escapeHtml(helpText || 'Select the shared User Memory state object. The dashed purple link shows this relationship on the canvas.')}</div>`
+                    : '<div class="property-help" style="color: #ff6b6b;">Add a User Memory from State Nodes first.</div>'}
+            </div>`;
+    }
+
     init() {
         this.createEditorLayout(); // Now this.logicNodeTypes will be defined
         this.initEventListeners();
@@ -550,8 +765,13 @@ class EventFlowEditor {
                             <button id="import-flow-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px; white-space: nowrap;">📥 Import</button>
                             <button id="export-all-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px; white-space: nowrap;">📤 Export All</button>
                         </div>
+                        <label for="template-select">Start with a template</label>
                         <select id="template-select" class="btn" style="width: 100%; margin-top: 10px; padding: 8px 12px; font-size: 14px; cursor: pointer;">
                             <option value="">📋 Load Template...</option>
+                            <optgroup label="Alerts (Flow Actions overlay)">
+                                <option value="donation-celebration">Donation: celebration + voice</option>
+                                <option value="donation-obs-effect">Donation: animation + sound + OBS filter</option>
+                            </optgroup>
                             <optgroup label="Simple">
                                 <option value="chat-relay">Chat Relay to Discord</option>
                                 <option value="song-request">Song Request (!sr)</option>
@@ -561,6 +781,8 @@ class EventFlowEditor {
                                 <option value="skip-song">Skip Song Command (Mods)</option>
                             </optgroup>
                             <optgroup label="Intermediate">
+                                <option value="streamdeck-workflow">Stream Deck / API button</option>
+                                <option value="obs-hourly-message">Hourly message while OBS is live</option>
                                 <option value="bad-words-filter">Bad Words Filter</option>
                                 <option value="alert-overlay">Chat Alert Overlay</option>
                                 <option value="vip-highlight">VIP Message Highlight</option>
@@ -589,7 +811,7 @@ class EventFlowEditor {
                                             ${(() => {
                                                 const isDisabled = !this.eventFlowSystem.customJsEvalSupported && trigger.id === 'customJs';
                                                 const label = isDisabled ? `${trigger.name} (Web Store disabled)` : trigger.name;
-                                                return `<div class="node-item trigger ${isDisabled ? 'disabled-node-item' : ''}" data-nodetype="trigger" data-subtype="${trigger.id}" data-disabled="${isDisabled ? 'true' : 'false'}" draggable="${isDisabled ? 'false' : 'true'}" title="${isDisabled ? 'Unavailable in the Chrome Web Store build due MV3 dynamic-code restrictions.' : ''}" style="${isDisabled ? 'opacity:0.55; cursor:not-allowed;' : ''}">
+                                                return `<div class="node-item trigger ${isDisabled ? 'disabled-node-item' : ''}" data-nodetype="trigger" data-subtype="${trigger.id}" data-disabled="${isDisabled ? 'true' : 'false'}" draggable="${isDisabled ? 'false' : 'true'}" title="${isDisabled ? 'Unavailable in extension mode due browser CSP (unsafe-eval blocked).' : ''}" style="${isDisabled ? 'opacity:0.55; cursor:not-allowed;' : ''}">
                                                     ${label}
                                                 </div>`;
                                             })()}
@@ -611,7 +833,7 @@ class EventFlowEditor {
                                             ${(() => {
                                                 const isDisabled = !this.eventFlowSystem.customJsEvalSupported && action.id === 'customJs';
                                                 const label = isDisabled ? `${action.name} (Web Store disabled)` : action.name;
-                                                return `<div class="node-item action ${isDisabled ? 'disabled-node-item' : ''}" data-nodetype="action" data-subtype="${action.id}" data-disabled="${isDisabled ? 'true' : 'false'}" draggable="${isDisabled ? 'false' : 'true'}" title="${isDisabled ? 'Unavailable in the Chrome Web Store build due MV3 dynamic-code restrictions.' : ''}" style="${isDisabled ? 'opacity:0.55; cursor:not-allowed;' : ''}">
+                                                return `<div class="node-item action ${isDisabled ? 'disabled-node-item' : ''}" data-nodetype="action" data-subtype="${action.id}" data-disabled="${isDisabled ? 'true' : 'false'}" draggable="${isDisabled ? 'false' : 'true'}" title="${isDisabled ? 'Unavailable in extension mode due browser CSP (unsafe-eval blocked).' : ''}" style="${isDisabled ? 'opacity:0.55; cursor:not-allowed;' : ''}">
                                                     ${label}
                                                 </div>`;
                                             })()}
@@ -661,6 +883,7 @@ class EventFlowEditor {
                         </div>
                         <button class="flow-help-dismiss" id="flow-help-dismiss" aria-label="Dismiss help banner">×</button>
                     </div>
+                    <p id="flow-output-help" class="property-help" style="padding:8px 16px; margin:0;" role="status"></p>
                     <div class="flow-canvas-container">
                         <div class="flow-canvas" id="flow-canvas"></div>
                     </div>
@@ -669,6 +892,26 @@ class EventFlowEditor {
                     <h3>Node Properties</h3>
                     <div class="node-properties-content" id="node-properties-content">
                         <p>Select a node to view properties</p>
+                    </div>
+                </div>
+            </div>
+            <div class="custom-code-editor-overlay" id="custom-code-editor-overlay" aria-hidden="true">
+                <div class="custom-code-editor-dialog" role="dialog" aria-modal="true" aria-labelledby="custom-code-editor-title">
+                    <div class="custom-code-editor-header">
+                        <div>
+                            <h3 id="custom-code-editor-title">Custom JavaScript</h3>
+                            <div class="custom-code-editor-context" id="custom-code-editor-context"></div>
+                        </div>
+                        <button type="button" class="custom-code-editor-close" id="custom-code-editor-close" aria-label="Close code editor">&times;</button>
+                    </div>
+                    <textarea id="custom-code-editor-input" class="custom-code-editor-input" spellcheck="false" autocomplete="off" aria-label="JavaScript code"></textarea>
+                    <div class="custom-code-editor-status" id="custom-code-editor-status" role="alert" aria-live="polite"></div>
+                    <div class="custom-code-editor-footer">
+                        <span class="custom-code-editor-shortcuts">Tab inserts indentation &middot; Ctrl/Cmd+S saves</span>
+                        <div class="custom-code-editor-actions">
+                            <button type="button" class="btn" id="custom-code-editor-cancel">Cancel</button>
+                            <button type="button" class="btn btn-primary" id="custom-code-editor-save">Save &amp; Close</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -708,6 +951,7 @@ class EventFlowEditor {
         if (helpCreateBtn) {
             helpCreateBtn.addEventListener('click', () => this.createNewFlow());
         }
+        this.initCustomCodeEditor();
 
         document.getElementById('flow-active').addEventListener('change', (e) => {
             if (this.currentFlow) {
@@ -845,6 +1089,7 @@ class EventFlowEditor {
                 <div class="node-help-buttons">
                     <button class="btn btn-ghost" data-guide-link="event-flow">📘 Event Flow Guide</button>
                     <button class="btn btn-ghost" data-guide-link="state-nodes">🎮 State Nodes Guide</button>
+                    <button class="btn btn-ghost" data-guide-link="user-memory">🧠 User Memory Guide</button>
                     <button class="btn btn-ghost" data-guide-link="event-reference">📖 Event Reference</button>
                 </div>
             </div>
@@ -888,6 +1133,11 @@ class EventFlowEditor {
                 rootPath: 'actions/state-nodes-guide.html',
                 actionsPath: 'state-nodes-guide.html'
             },
+            'user-memory': {
+                extensionPath: 'actions/user-memory-guide.html',
+                rootPath: 'actions/user-memory-guide.html',
+                actionsPath: 'user-memory-guide.html'
+            },
             'event-flow-about': {
                 extensionPath: 'actions/event-flow-guide.html',
                 rootPath: 'actions/event-flow-guide.html',
@@ -899,6 +1149,9 @@ class EventFlowEditor {
                 rootPath: 'docs/event-reference.html',
                 actionsPath: '../docs/event-reference.html'
             },
+            'ai-event-overlay': {
+                url: 'https://socialstream.ninja/beta/docs/index.html?file=ai-event-overlay.md'
+            },
             'event-reference-cross-platform': {
                 extensionPath: 'docs/event-reference.html',
                 rootPath: 'docs/event-reference.html',
@@ -909,6 +1162,8 @@ class EventFlowEditor {
 
         const guide = guideMap[guideKey];
         if (!guide) return '';
+        if (guide.url) return guide.url;
+        if (guide.extensionPath && guide.extensionPath.startsWith('docs/')) return 'https://socialstream.ninja/' + guide.extensionPath + (guide.hash || '');
 
         if (this.isExtensionRuntimeAvailable()) {
             const extensionUrl = chrome.runtime.getURL(guide.extensionPath);
@@ -1335,47 +1590,56 @@ class EventFlowEditor {
         }
     }
 
-    async saveCurrentFlow() {
+    async saveCurrentFlow(options = {}) {
+        const suppressErrorAlert = options.suppressErrorAlert === true;
         if (!this.currentFlow) {
-            alert('No flow is currently active to save.'); return;
+            if (!suppressErrorAlert) alert('No flow is currently active to save.');
+            return false;
         }
-
-        // Auto-generate name if current name is empty, whitespace, or the default "New Flow"
-        let currentNameTrimmed = this.currentFlow.name ? this.currentFlow.name.trim() : '';
-        if (currentNameTrimmed === '' || currentNameTrimmed === 'New Flow' || currentNameTrimmed === 'New Flow*') {
-            this.currentFlow.name = await this.generateFlowName();
-            document.getElementById('flow-name').value = this.currentFlow.name; // Update UI immediately
-            // No asterisk needed yet as it's a "new" name until saved
-        } else if (document.getElementById('flow-name').value.trim() === '') { // User manually cleared the name
-            this.currentFlow.name = await this.generateFlowName();
-            document.getElementById('flow-name').value = this.currentFlow.name;
-        }
-
-
-        let flowToSave = JSON.parse(JSON.stringify(this.currentFlow)); // Deep copy
-
 
         try {
+            // Auto-generate name if current name is empty, whitespace, or the default "New Flow"
+            const currentNameTrimmed = this.currentFlow.name ? this.currentFlow.name.trim() : '';
+            const flowNameInput = document.getElementById('flow-name');
+            if (currentNameTrimmed === '' || currentNameTrimmed === 'New Flow' || currentNameTrimmed === 'New Flow*') {
+                this.currentFlow.name = await this.generateFlowName();
+                if (flowNameInput) flowNameInput.value = this.currentFlow.name;
+            } else if (flowNameInput && flowNameInput.value.trim() === '') {
+                this.currentFlow.name = await this.generateFlowName();
+                flowNameInput.value = this.currentFlow.name;
+            }
+
+            const flowToSave = JSON.parse(JSON.stringify(this.currentFlow));
             const savedFlow = await this.eventFlowSystem.saveFlow(flowToSave);
             this.currentFlow.id = savedFlow.id; // Update current flow with ID from DB
             this.currentFlow.name = savedFlow.name; // Reflect cleaned name from DB (e.g. if system modified it)
-            
-            document.getElementById('flow-name').value = this.currentFlow.name; // Update input field without asterisk AFTER save
+
+            if (flowNameInput) flowNameInput.value = this.currentFlow.name; // Update input field without asterisk AFTER save
             this.markUnsavedChanges(false); // Reset flag AFTER successful save
 
+            const savedNodes = this.currentFlow.nodes || [];
+            if (savedNodes.some(n => n.type === 'action') && !savedNodes.some(n => n.type === 'trigger')) {
+                this.showNotification('This flow has no trigger, so it will never run. Add a trigger node (blue) to start it.', 'warning');
+            }
            // alert('Flow saved successfully!');
-            await this.loadFlowList(); // Refresh list
-            
+            try {
+                await this.loadFlowList(); // Refresh list
+            } catch (refreshError) {
+                console.warn('Flow saved, but the flow list could not be refreshed:', refreshError);
+            }
+
             // Notify background instance to reload flows
             this.notifyParentToReloadFlows();
-            
+
             // Re-select the current flow in the list
             document.querySelectorAll('.flow-item').forEach(item => {
                 item.classList.toggle('selected-flow', item.dataset.id === this.currentFlow.id);
             });
+            return true;
         } catch (error) {
             console.error('Error saving flow:', error);
-            alert('Failed to save flow. Check console for details.');
+            if (!suppressErrorAlert) alert('Failed to save flow. Check console for details.');
+            return false;
         }
     }
 
@@ -1641,6 +1905,7 @@ class EventFlowEditor {
             max-width: 300px;
         `;
         notification.textContent = message;
+        notification.setAttribute('role', 'status');
         
         document.body.appendChild(notification);
         
@@ -1654,11 +1919,15 @@ class EventFlowEditor {
     }
 
     renderFlow() {
+        const outputHelp = document.getElementById('flow-output-help');
+        if (outputHelp) outputHelp.textContent = this.currentFlow && this.currentFlow.description || 'Media and sounds appear in the Flow Actions overlay. Listen previews locally. Use a template to start, then Tab to a node and press Enter to edit it.';
         const canvas = document.getElementById('flow-canvas');
         canvas.innerHTML = '';
         if (!this.currentFlow || !this.currentFlow.nodes) return;
         this.currentFlow.nodes.forEach(node => this.renderNode(node));
         this.currentFlow.connections.forEach(connection => this.renderConnection(connection));
+        this.renderStateReferences();
+        this.highlightStateReferenceGroup(this.selectedNode);
     }
 
 	renderNode(node) {
@@ -1684,6 +1953,7 @@ class EventFlowEditor {
 
 		let inputPointsHTML = '';
 		let outputPointsHTML = '';
+		let stateReferencePointsHTML = '';
 
 		if (node.type === 'trigger') {
 			// Triggers that don't have a message get async output
@@ -1726,6 +1996,9 @@ class EventFlowEditor {
 			inputPointsHTML = `<div class="${pointClasses}" data-point-type="input" data-logic-type="${node.logicType}"></div>`;
 			outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
 		} else if (node.type === 'state') {
+			if (node.stateType === 'USER_MEMORY') {
+				stateReferencePointsHTML = '<div class="state-reference-point target" data-state-reference-type="target" title="Link User Memory actions and checks here"></div>';
+			} else {
 			// State nodes have input and output points
 			inputPointsHTML = '<div class="connection-point input" data-point-type="input"></div>';
 			
@@ -1738,6 +2011,11 @@ class EventFlowEditor {
 				// Gate, Semaphore, Latch, Throttle can pass messages through synchronously
 				outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
 			}
+			}
+		}
+
+		if (this.isUserMemoryReferenceNode(node)) {
+			stateReferencePointsHTML += '<div class="state-reference-point source" data-state-reference-type="source" title="Drag to a User Memory state node"></div>';
 		}
 
 		nodeEl.innerHTML = `
@@ -1748,13 +2026,32 @@ class EventFlowEditor {
 			<div class="node-body">${this.escapeHtml(this.getNodeDescription(node))}</div>
 			${inputPointsHTML}
 			${outputPointsHTML}
+			${stateReferencePointsHTML}
 		`;
 		canvas.appendChild(nodeEl);
+		nodeEl.tabIndex = 0;
+		nodeEl.setAttribute('role', 'button');
+		nodeEl.setAttribute('aria-label', this.getNodeTitle(node) + '. Press Enter to edit.');
+		nodeEl.addEventListener('keydown', (event) => {
+			if (event.key === 'Enter' || event.key === ' ') {
+				event.preventDefault();
+				event.stopPropagation();
+				this.selectNode(node.id);
+				const control = document.querySelector('#node-properties-content input, #node-properties-content select, #node-properties-content button');
+				if (control) control.focus();
+			}
+		});
 
 		// Attach event listeners for the new node
 		nodeEl.addEventListener('mousedown', (e) => {
 			if (e.target.classList.contains('node-delete')) {
 				this.deleteNode(node.id);
+				return;
+			}
+			if (e.target.classList.contains('state-reference-point')) {
+				if (e.target.dataset.stateReferenceType === 'source') {
+					this.startStateReference(node.id, e);
+				}
 				return;
 			}
 			if (e.target.classList.contains('connection-point')) {
@@ -1766,7 +2063,7 @@ class EventFlowEditor {
 			}
 			this.selectNode(node.id);
 
-			if (!e.target.classList.contains('connection-point') && !e.target.classList.contains('node-delete')) {
+			if (!e.target.classList.contains('connection-point') && !e.target.classList.contains('state-reference-point') && !e.target.classList.contains('node-delete')) {
 				this.draggedNode = node.id;
 				const rect = nodeEl.getBoundingClientRect();
 				this.dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -1801,6 +2098,26 @@ class EventFlowEditor {
         }
         const typeDef = typesArray.find(t => t.id === node[subtypeField]);
         return typeDef ? typeDef.name : 'Unknown Node';
+    }
+
+    getUserMemoryNodeName(targetNodeId) {
+        if (!targetNodeId || !this.currentFlow || !Array.isArray(this.currentFlow.nodes)) return 'Not linked';
+        const target = this.currentFlow.nodes.find(node => node.id === targetNodeId && node.type === 'state' && node.stateType === 'USER_MEMORY');
+        return target ? (target.config?.name || target.label || 'User Memory') : 'Missing memory';
+    }
+
+    isUserMemoryReferenceNode(node) {
+        if (!node) return false;
+        if (node.type === 'trigger' && node.triggerType === 'userMemoryContains') return true;
+        if (node.type !== 'action') return false;
+        return ['rememberUser', 'forgetUser', 'clearUserMemory', 'pickRandomUser', 'resetStateNode'].includes(node.actionType);
+    }
+
+    getUserMemoryReferenceTargetId(node) {
+        if (!this.isUserMemoryReferenceNode(node)) return '';
+        const targetNodeId = node.config?.targetNodeId || '';
+        const target = this.currentFlow?.nodes?.find(candidate => candidate.id === targetNodeId);
+        return target && target.type === 'state' && target.stateType === 'USER_MEMORY' ? targetNodeId : '';
     }
 
     // Check if a connection comes after a terminal action (message won't be returned)
@@ -1857,7 +2174,11 @@ class EventFlowEditor {
                 case 'fromSource': return `Source: ${node.config.source === '*' ? 'Any' : (node.config.source || 'Any')}`;
                 case 'fromChannelName': return `Channel: ${node.config.channelName || 'Any'}`;
                 case 'fromUser': return `User: ${node.config.username || 'Any'}`;
-                case 'userRole': return `Role: ${node.config.role || 'Any'}`;
+                case 'userRole': {
+                    const roleLabels = { tiktokTeamMember: 'TikTok Team Member' };
+                    return `Role: ${roleLabels[node.config.role] || node.config.role || 'Any'}`;
+                }
+                case 'userMemoryContains': return `Checks: ${this.getUserMemoryNodeName(node.config.targetNodeId)}`;
                 case 'hasDonation': return 'Has donation';
                 case 'channelPointRedemption': {
                     const rewardName = node.config.rewardName || '';
@@ -1870,14 +2191,14 @@ class EventFlowEditor {
                     return 'Any event';
                 }
                 case 'compareProperty': {
-                    const prop = node.config.property || 'donationAmount';
+                    const prop = node.config.property || 'donoValue';
                     const op = node.config.operator || 'gt';
                     const val = node.config.value ?? 0;
                     const opSymbols = { gt: '>', lt: '<', eq: '=', gte: '>=', lte: '<=', ne: '!=' };
                     return `${prop} ${opSymbols[op] || op} ${val}`;
                 }
                 case 'randomChance': {
-                    const prob = Math.round((node.config.probability || 0.1) * 100);
+                    const prob = Math.round((node.config.probability ?? 0.1) * 100);
                     const cooldown = node.config.cooldownMs ? ` (${node.config.cooldownMs/1000}s cooldown)` : '';
                     const rateLimit = node.config.maxPerMinute ? ` max ${node.config.maxPerMinute}/min` : '';
                     return `${prob}% chance${cooldown}${rateLimit}`;
@@ -1922,7 +2243,7 @@ class EventFlowEditor {
                 case 'eventDonation': {
                     const sources = node.config.sources?.length ? node.config.sources.join(', ') : 'All';
                     const minAmt = node.config.minAmount > 0 ? ` ≥$${node.config.minAmount}` : '';
-                    return `Donation${minAmt} (${sources})`;
+                    return `Donation event${minAmt} (${sources})`;
                 }
                 case 'eventRaid': {
                     const sources = node.config.sources?.length ? node.config.sources.join(', ') : 'All';
@@ -1938,6 +2259,7 @@ class EventFlowEditor {
                     const eventType = node.config.eventType || 'Not set';
                     return `Event: ${eventType}`;
                 }
+                case 'apiTrigger': return `API: ${node.config.trigger || 'Set a trigger name'}`;
                 case 'eventCustom': {
                     const eventType = node.config.eventType || 'Custom';
                     return `Custom: ${eventType}`;
@@ -1947,6 +2269,7 @@ class EventFlowEditor {
                 case 'obsRecordingStarted': return 'OBS recording started';
                 case 'obsRecordingStopped': return 'OBS recording stopped';
                 case 'obsSceneChanged': return 'OBS scene changed';
+                case 'obsMediaEnded': return `OBS media ended${node.config.sourceName ? `: ${node.config.sourceName}` : ''}`;
                 case 'obsReplaybufferSaved': return 'OBS replay buffer saved';
                 default: return `${this.getNodeTitle(node)}`;
             }
@@ -1974,9 +2297,19 @@ class EventFlowEditor {
                     const shortValue = value.length > 15 ? value.substring(0, 15) + '...' : value;
                     return `${prop} = ${shortValue}`;
                 }
+                case 'showAiEventOverlay': return `${node.config.profile || 'Choose an overlay'}${node.config.variation ? ': ' + node.config.variation : ''}`;
                 case 'featureMessage': return 'Feature in dock/overlay';
+                case 'pinMessage': {
+                    const modeMap = { pin: 'Pin', unpin: 'Unpin', nextPinned: 'Show next pinned' };
+                    const pinConfig = node.config || {};
+                    return modeMap[pinConfig.mode] || modeMap.pin;
+                }
                 case 'sendMessage': return `Send to: ${node.config.destination || 'All'}`;
                 case 'relay': return `Relay to: ${node.config.destination || 'All'}`;
+				case 'printThermal': {
+					const text = node.config.text || '{username}';
+					return `Print ${node.config.fontSize || 18}pt: "${text.substring(0, 18)}${text.length > 18 ? '...' : ''}"`;
+				}
                 case 'reflectionFilter': {
                     const policyMap = { 'block-all': 'Block All', 'allow-first': 'Allow First', 'allow-all': 'Allow All' };
                     const srcMode = node.config.sourceMode || 'none';
@@ -1985,8 +2318,10 @@ class EventFlowEditor {
                     if (srcMode === 'none') return `Reflections: ${pol}`;
                     return `Reflections: ${pol} (${srcMode}: ${srcList || '—'})`;
                 }
+                case 'showAiEventOverlay': return `AI overlay: ${node.config.profile || 'default'}`;
                 case 'addPoints': return `Add: ${node.config.amount || 100} points`;
                 case 'spendPoints': return `Spend: ${node.config.amount || 100} points`;
+                case 'giveawayControl': return `Giveaway: ${node.config.giveawayId || 'default'}`;
                 case 'delay': return `Delay: ${node.config.delayMs || 1000}ms`;
                 case 'obsChangeScene': return `Scene: ${node.config.sceneName || 'Not set'}`;
                 case 'obsToggleSource': {
@@ -1994,12 +2329,23 @@ class EventFlowEditor {
                     const target = node.config.groupName ? ` in ${node.config.groupName}` : node.config.sceneName ? ` in ${node.config.sceneName}` : '';
                     return `${node.config.sourceName || 'Source'}${target}: ${visibility}`;
                 }
+                case 'obsSetText': {
+                    const text = node.config.text || '';
+                    return `${node.config.sourceName || 'Text source'}: "${text.substring(0, 18)}${text.length > 18 ? '...' : ''}"`;
+                }
+                case 'obsMediaControl': {
+                    const operation = node.config.operation || 'restart';
+                    return `${node.config.sourceName || 'Media source'}: ${operation}`;
+                }
+                case 'obsSetVolume': return `${node.config.sourceName || 'Audio source'}: ${node.config.volumeDb ?? 0} dB`;
+                case 'obsRefreshBrowser': return `Refresh: ${node.config.sourceName || 'Browser source'}`;
                 case 'obsSetSourceFilter': return `Filter: ${node.config.filterName || 'Not set'}`;
                 case 'obsMuteSource': return `${node.config.sourceName || 'Source'}: ${node.config.muted === true ? 'Mute' : node.config.muted === false ? 'Unmute' : 'Toggle'}`;
                 case 'obsStartRecording': return 'Start Recording';
                 case 'obsStopRecording': return 'Stop Recording';
                 case 'obsStartStreaming': return 'Start Streaming';
                 case 'obsStopStreaming': return 'Stop Streaming';
+                case 'obsReplayBufferControl': return `${node.config.operation === 'stop' ? 'Stop' : node.config.operation === 'toggle' ? 'Toggle' : 'Start'} Replay Buffer`;
                 case 'obsReplayBuffer': return 'Save Replay Buffer';
                 // Spotify actions
                 case 'spotifySkip': return 'Skip to next track';
@@ -2034,11 +2380,17 @@ class EventFlowEditor {
                 }
                 // Media & Layer actions
                 case 'playTenorGiphy': {
+					if (node.config.sourceType === 'local' && node.config.localAssetName) {
+						return `${node.config.localAssetName} (${node.config.duration ?? 10000}ms)`;
+					}
                     const url = node.config.mediaUrl || '';
                     const duration = node.config.duration ?? 10000;
                     const shortUrl = url.length > 25 ? url.substring(0, 25) + '...' : url;
                     return `${shortUrl} (${duration}ms)`;
                 }
+				case 'playAudioClip':
+					if (node.config.sourceType === 'local' && node.config.localAssetName) return node.config.localAssetName;
+					return node.config.audioUrl || 'No audio selected';
                 case 'showAvatar': {
                     const duration = node.config.duration || 5000;
                     const pos = `${node.config.x ?? 5}%,${node.config.y ?? 5}%`;
@@ -2070,6 +2422,14 @@ class EventFlowEditor {
                 case 'ttsSkip': return 'Skip current TTS';
                 case 'ttsClear': return 'Clear TTS queue';
                 case 'ttsVolume': return `TTS Volume: ${node.config.volume ?? 100}%`;
+                case 'rememberUser': return `Remember in: ${this.getUserMemoryNodeName(node.config.targetNodeId)}`;
+                case 'forgetUser': return `Forget from: ${this.getUserMemoryNodeName(node.config.targetNodeId)}`;
+                case 'clearUserMemory': return `Clear: ${this.getUserMemoryNodeName(node.config.targetNodeId)}`;
+                case 'pickRandomUser': return `Pick from: ${this.getUserMemoryNodeName(node.config.targetNodeId)}${node.config.removeSelected ? ' (remove winner)' : ''}`;
+                case 'resetStateNode': {
+                    const target = this.currentFlow?.nodes?.find(candidate => candidate.id === node.config.targetNodeId && candidate.type === 'state');
+                    return `Reset: ${target ? (target.config?.name || target.label || target.stateType) : 'Not linked'}`;
+                }
                 default: return `${this.getNodeTitle(node)}`;
             }
         } else if (node.type === 'logic') { // NEW
@@ -2077,7 +2437,7 @@ class EventFlowEditor {
                 case 'AND': return 'All inputs must be true.';
                 case 'OR': return 'Any input can be true.';
                 case 'NOT': return 'Inverts the input signal.';
-                case 'RANDOM': return `${node.config?.probability || 50}% chance`;
+                case 'RANDOM': return `${node.config?.probability ?? 50}% chance`;
                 case 'CHECK_BAD_WORDS': return 'Bad words? → TRUE/FALSE';
                 default: return 'Logic Gate';
             }
@@ -2093,6 +2453,16 @@ class EventFlowEditor {
                     const name = node.config?.name || 'Counter';
                     const target = node.config?.targetCount || 5;
                     return `${name}: Triggers at ${target}`;
+                }
+                case 'USER_MEMORY': {
+                    const name = node.config?.name || 'User Memory';
+                    const summary = this.eventFlowSystem && typeof this.eventFlowSystem.getUserMemorySummary === 'function'
+                        ? this.eventFlowSystem.getUserMemorySummary(node.id, this.currentFlow)
+                        : null;
+                    const count = summary ? summary.count : 0;
+                    const persistence = node.config?.persistence === 'persistent' ? 'Saved' : 'Session';
+                    const reset = node.config?.resetAfterMs > 0 ? `reset after ${Math.round(node.config.resetAfterMs / 1000)}s idle` : 'manual reset';
+                    return `${name} • ${count} user${count === 1 ? '' : 's'} • ${persistence} • ${reset}`;
                 }
                 case 'USERPOOL': {
                     const name = node.config?.poolName || 'default';
@@ -2200,6 +2570,304 @@ class EventFlowEditor {
         canvas.insertBefore(svgEl, canvas.firstChild);
     }
 
+    renderStateReferences() {
+        const canvas = document.getElementById('flow-canvas');
+        if (!canvas || !this.currentFlow || !Array.isArray(this.currentFlow.nodes)) return;
+        canvas.querySelectorAll('svg.state-reference').forEach(reference => reference.remove());
+
+        this.currentFlow.nodes.forEach(node => {
+            const targetNodeId = this.getUserMemoryReferenceTargetId(node);
+            if (targetNodeId) this.renderStateReference(node.id, targetNodeId);
+        });
+    }
+
+    initCustomCodeEditor() {
+        const overlay = document.getElementById('custom-code-editor-overlay');
+        const input = document.getElementById('custom-code-editor-input');
+        const saveButton = document.getElementById('custom-code-editor-save');
+        const cancelButton = document.getElementById('custom-code-editor-cancel');
+        const closeButton = document.getElementById('custom-code-editor-close');
+        if (!overlay || !input || !saveButton || !cancelButton || !closeButton) return;
+
+        saveButton.addEventListener('click', () => this.saveCustomCodeEditor());
+        cancelButton.addEventListener('click', () => this.requestCloseCustomCodeEditor());
+        closeButton.addEventListener('click', () => this.requestCloseCustomCodeEditor());
+        overlay.addEventListener('click', (event) => {
+            if (event.target === overlay) this.requestCloseCustomCodeEditor();
+        });
+        overlay.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                this.requestCloseCustomCodeEditor();
+                return;
+            }
+            if ((event.ctrlKey || event.metaKey) && String(event.key).toLowerCase() === 's') {
+                event.preventDefault();
+                event.stopPropagation();
+                this.saveCustomCodeEditor();
+            }
+        });
+        input.addEventListener('keydown', (event) => {
+            if (event.key !== 'Tab' || event.ctrlKey || event.metaKey || event.altKey) return;
+            event.preventDefault();
+            const start = input.selectionStart;
+            const end = input.selectionEnd;
+            input.setRangeText('\t', start, end, 'end');
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        input.addEventListener('input', () => this.clearCustomCodeEditorStatus());
+        window.addEventListener('beforeunload', (event) => {
+            if (!this.hasUnsavedCustomCodeDraft()) return;
+            event.preventDefault();
+            event.returnValue = '';
+        });
+    }
+
+    isCustomCodeNode(node) {
+        return !!(node && (
+            (node.type === 'trigger' && node.triggerType === 'customJs') ||
+            (node.type === 'action' && node.actionType === 'customJs')
+        ));
+    }
+
+    getDefaultCustomCode(node) {
+        if (node && node.type === 'trigger') {
+            return 'return (message.chatmessage || "").includes("test");';
+        }
+        return 'message.chatmessage += " (edited)";\nreturn { modified: true, message };';
+    }
+
+    getCustomCode(node) {
+        if (node && node.config && Object.prototype.hasOwnProperty.call(node.config, 'code')) {
+            if (node.config.code === null || node.config.code === undefined) return '';
+            return String(node.config.code);
+        }
+        return this.getDefaultCustomCode(node);
+    }
+
+    openCustomCodeEditor(nodeId, opener) {
+        const node = this.currentFlow && this.currentFlow.nodes
+            ? this.currentFlow.nodes.find(candidate => candidate.id === nodeId)
+            : null;
+        if (!this.isCustomCodeNode(node)) {
+            this.showNotification('The selected node is not a Custom Code node.', 'warning');
+            return;
+        }
+
+        const overlay = document.getElementById('custom-code-editor-overlay');
+        const input = document.getElementById('custom-code-editor-input');
+        const title = document.getElementById('custom-code-editor-title');
+        const context = document.getElementById('custom-code-editor-context');
+        if (!overlay || !input || !title || !context) return;
+
+        const code = this.getCustomCode(node);
+        const kind = node.type === 'trigger' ? 'Trigger' : 'Action';
+        title.textContent = `${kind} Custom JavaScript`;
+        context.textContent = node.type === 'trigger'
+            ? 'Available argument: message. Return true or false.'
+            : 'Available arguments: message and result. Return an updated result object.';
+        input.value = code;
+        this.customCodeEditorState = {
+            flow: this.currentFlow,
+            nodeId: node.id,
+            initialCode: code,
+            opener: opener || document.activeElement
+        };
+        this.clearCustomCodeEditorStatus();
+        overlay.style.display = 'flex';
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('custom-code-editor-open');
+        setTimeout(() => {
+            input.focus();
+            input.setSelectionRange(0, 0);
+        }, 0);
+    }
+
+    hasUnsavedCustomCodeDraft() {
+        const input = document.getElementById('custom-code-editor-input');
+        return !!(this.customCodeEditorState && input && input.value !== this.customCodeEditorState.initialCode);
+    }
+
+    requestCloseCustomCodeEditor() {
+        if (!this.customCodeEditorState) return;
+        if (this.hasUnsavedCustomCodeDraft() && !confirm('Discard unsaved code changes?')) return;
+        this.closeCustomCodeEditor();
+    }
+
+    closeCustomCodeEditor() {
+        const overlay = document.getElementById('custom-code-editor-overlay');
+        const opener = this.customCodeEditorState && this.customCodeEditorState.opener;
+        if (overlay) {
+            overlay.style.display = 'none';
+            overlay.setAttribute('aria-hidden', 'true');
+        }
+        document.body.classList.remove('custom-code-editor-open');
+        this.customCodeEditorState = null;
+        this.clearCustomCodeEditorStatus();
+        if (opener && opener.isConnected && typeof opener.focus === 'function') {
+            opener.focus();
+        }
+    }
+
+    setCustomCodeEditorStatus(message, type) {
+        const status = document.getElementById('custom-code-editor-status');
+        if (!status) return;
+        status.textContent = message || '';
+        status.className = `custom-code-editor-status${type ? ` ${type}` : ''}`;
+    }
+
+    clearCustomCodeEditorStatus() {
+        this.setCustomCodeEditorStatus('', '');
+    }
+
+    validateCustomCode(node, code) { return { valid: false, message: 'Custom Code is disabled in the Chrome Web Store build.' }; }
+
+    async saveCustomCodeEditor() {
+        const state = this.customCodeEditorState;
+        const input = document.getElementById('custom-code-editor-input');
+        const saveButton = document.getElementById('custom-code-editor-save');
+        if (!state || !input || !saveButton) return false;
+        if (saveButton.disabled) return false;
+        if (this.currentFlow !== state.flow) {
+            this.setCustomCodeEditorStatus('The active flow changed. Close the editor and reopen this node.', 'error');
+            return false;
+        }
+
+        const node = this.currentFlow.nodes.find(candidate => candidate.id === state.nodeId);
+        if (!this.isCustomCodeNode(node)) {
+            this.setCustomCodeEditorStatus('The Custom Code node is no longer available.', 'error');
+            return false;
+        }
+        const code = input.value;
+        const validation = this.validateCustomCode(node, code);
+        if (!validation.valid) {
+            this.setCustomCodeEditorStatus(`Syntax error: ${validation.message}`, 'error');
+            input.focus();
+            return false;
+        }
+
+        node.config = node.config || {};
+        node.config.code = code;
+        state.initialCode = code;
+        this.markUnsavedChanges(true);
+        this.renderNodeOnCanvas(node.id);
+        const inlineInput = document.getElementById('prop-code');
+        if (inlineInput) inlineInput.value = code;
+
+        saveButton.disabled = true;
+        this.setCustomCodeEditorStatus('Saving flow...', 'info');
+        const saved = await this.saveCurrentFlow({ suppressErrorAlert: true });
+        saveButton.disabled = false;
+        if (!saved) {
+            this.setCustomCodeEditorStatus('The flow could not be saved. Your code remains in the current unsaved flow.', 'error');
+            return false;
+        }
+
+        this.closeCustomCodeEditor();
+        return true;
+    }
+
+    renderStateReference(sourceNodeId, targetNodeId) {
+        const canvas = document.getElementById('flow-canvas');
+        if (!canvas) return;
+        const sourceNodeEl = canvas.querySelector(`.node[data-id="${sourceNodeId}"]`);
+        const targetNodeEl = canvas.querySelector(`.node[data-id="${targetNodeId}"]`);
+        const sourcePoint = sourceNodeEl?.querySelector('.state-reference-point.source');
+        const targetPoint = targetNodeEl?.querySelector('.state-reference-point.target');
+        if (!sourcePoint || !targetPoint) return;
+
+        const canvasRect = canvas.getBoundingClientRect();
+        const sourceRect = sourcePoint.getBoundingClientRect();
+        const targetRect = targetPoint.getBoundingClientRect();
+        const startX = sourceRect.left + sourceRect.width / 2 - canvasRect.left + canvas.scrollLeft;
+        const startY = sourceRect.top + sourceRect.height / 2 - canvasRect.top + canvas.scrollTop;
+        const endX = targetRect.left + targetRect.width / 2 - canvasRect.left + canvas.scrollLeft;
+        const endY = targetRect.top + targetRect.height / 2 - canvasRect.top + canvas.scrollTop;
+        const controlOffset = Math.max(70, Math.abs(endX - startX) * 0.35);
+        const direction = endX >= startX ? 1 : -1;
+        const pathData = `M ${startX},${startY} C ${startX + controlOffset * direction},${startY} ${endX - controlOffset * direction},${endY} ${endX},${endY}`;
+
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.setAttribute('class', 'state-reference');
+        svg.dataset.source = sourceNodeId;
+        svg.dataset.target = targetNodeId;
+        Object.assign(svg.style, {
+            position: 'absolute',
+            left: '0',
+            top: '0',
+            width: `${canvas.scrollWidth}px`,
+            height: `${canvas.scrollHeight}px`,
+            pointerEvents: 'none'
+        });
+
+        const clickPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        clickPath.setAttribute('d', pathData);
+        clickPath.setAttribute('stroke', 'transparent');
+        clickPath.setAttribute('stroke-width', '24');
+        clickPath.setAttribute('fill', 'none');
+        clickPath.style.cursor = 'pointer';
+        clickPath.style.pointerEvents = 'stroke';
+
+        const visiblePath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        visiblePath.setAttribute('d', pathData);
+        visiblePath.setAttribute('stroke', '#c084fc');
+        visiblePath.setAttribute('stroke-width', '3');
+        visiblePath.setAttribute('stroke-dasharray', '7,6');
+        visiblePath.setAttribute('fill', 'none');
+        visiblePath.style.pointerEvents = 'none';
+
+        clickPath.addEventListener('mouseenter', () => {
+            visiblePath.setAttribute('stroke', 'var(--alert-color)');
+            visiblePath.setAttribute('stroke-width', '4');
+        });
+        clickPath.addEventListener('mouseleave', () => {
+            visiblePath.setAttribute('stroke', '#c084fc');
+            visiblePath.setAttribute('stroke-width', '3');
+        });
+        clickPath.addEventListener('click', event => {
+            event.stopPropagation();
+            if (confirm('Unlink this node from the User Memory?')) {
+                this.deleteStateReference(sourceNodeId);
+            }
+        });
+
+        svg.appendChild(clickPath);
+        svg.appendChild(visiblePath);
+        canvas.insertBefore(svg, canvas.firstChild);
+    }
+
+    deleteStateReference(sourceNodeId) {
+        const sourceNode = this.currentFlow?.nodes?.find(node => node.id === sourceNodeId);
+        if (!sourceNode || !sourceNode.config) return;
+        sourceNode.config.targetNodeId = '';
+        this.markUnsavedChanges(true);
+        this.renderFlow();
+        if (this.selectedNode === sourceNodeId) this.showNodeProperties(sourceNode);
+    }
+
+    highlightStateReferenceGroup(nodeId) {
+        const canvas = document.getElementById('flow-canvas');
+        if (!canvas || !this.currentFlow || !Array.isArray(this.currentFlow.nodes)) return;
+        canvas.querySelectorAll('.node.state-related').forEach(node => node.classList.remove('state-related'));
+        canvas.querySelectorAll('svg.state-reference.state-related').forEach(reference => reference.classList.remove('state-related'));
+        if (!nodeId) return;
+
+        const selected = this.currentFlow.nodes.find(node => node.id === nodeId);
+        if (!selected) return;
+        const memoryId = selected.type === 'state' && selected.stateType === 'USER_MEMORY'
+            ? selected.id
+            : this.getUserMemoryReferenceTargetId(selected);
+        if (!memoryId) return;
+
+        canvas.querySelector(`.node[data-id="${memoryId}"]`)?.classList.add('state-related');
+        this.currentFlow.nodes.forEach(node => {
+            if (this.getUserMemoryReferenceTargetId(node) !== memoryId) return;
+            canvas.querySelector(`.node[data-id="${node.id}"]`)?.classList.add('state-related');
+            canvas.querySelector(`svg.state-reference[data-source="${node.id}"][data-target="${memoryId}"]`)?.classList.add('state-related');
+        });
+    }
+
     handleNodeDragStart(e, nodeType, nodeSubtype) { // Added nodeType and nodeSubtype parameters
         e.dataTransfer.setData('text/plain', JSON.stringify({
             type: nodeType, // Use the passed nodeType
@@ -2227,6 +2895,7 @@ class EventFlowEditor {
     }
 	
 	runTestFlow(testMessage) {
+        testMessage = Object.assign({}, testMessage, {meta:Object.assign({}, testMessage.meta || {}, {economyTest:true})});
 		if (!this.currentFlow) {
 			alert('No flow is currently active. Please create or select a flow to test.');
 			return { success: false, message: 'No active flow' };
@@ -2237,6 +2906,10 @@ class EventFlowEditor {
 		
 		// Ensure it's active for testing
 		testFlow.active = true;
+		// A saved disabled flow must not cancel its own preview or share execution state.
+		if (!this.previewFlowId) this.previewFlowId = 'preview_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+		this.eventFlowSystem.cancelFlowExecutions(this.previewFlowId);
+		testFlow.id = this.previewFlowId;
 		
 		let testResult = { success: false, message: 'Test not run' };
 		
@@ -2288,7 +2961,54 @@ class EventFlowEditor {
 		
 		return testResult;
 	}
-	
+
+	parseTestDonationAmount(rawValue, fallback) {
+		const raw = String(rawValue || '').replace(/,/g, '');
+		const match = raw.match(/[+-]?(?:\d+\.?\d*|\.\d+)/);
+		if (!match) return fallback;
+		const parsed = parseFloat(match[0]);
+		return isFinite(parsed) && parsed > 0 ? parsed : fallback;
+	}
+
+	buildTestDonationPayload(source, rawValue) {
+		const platform = String(source || '').toLowerCase();
+
+		if (platform === 'twitch') {
+			const bits = Math.max(1, Math.round(this.parseTestDonationAmount(rawValue, 100)));
+			return { hasDonation: bits + ' bits' };
+		}
+
+		if (platform === 'facebook') {
+			const stars = Math.max(1, Math.round(this.parseTestDonationAmount(rawValue, 100)));
+			return {
+				hasDonation: stars + ' Stars',
+				donoValue: stars / 100
+			};
+		}
+
+		if (platform === 'kick') {
+			const kicks = Math.max(1, Math.round(this.parseTestDonationAmount(rawValue, 10)));
+			return { hasDonation: kicks + (kicks === 1 ? ' KICK' : ' KICKs') };
+		}
+
+		if (platform === 'tiktok') {
+			const coins = Math.max(1, Math.round(this.parseTestDonationAmount(rawValue, 100)));
+			return { hasDonation: coins + ' coins' };
+		}
+
+		const amount = this.parseTestDonationAmount(rawValue, 10);
+		const payload = {
+			hasDonation: '$' + amount.toFixed(2) + ' CAD'
+		};
+
+		if (platform === 'youtube' || platform === 'youtubeshorts') {
+			payload.event = 'superchat';
+			delete payload.donoValue;
+		}
+
+		return payload;
+	}
+
 	initTestPanel() {
 		const testOverlay = document.getElementById('test-overlay');
 		const testPanel = document.getElementById('test-panel');
@@ -2345,22 +3065,27 @@ class EventFlowEditor {
 				this.unsavedChanges ? 'block' : 'none';
 			
 			// Create test message from form inputs
+			const isDonation = document.getElementById('test-donation').checked;
+			const source = document.getElementById('test-source').value;
+			const donationPayload = isDonation ? this.buildTestDonationPayload(source, document.getElementById('test-donation-amount').value) : {};
 			const testMessage = {
-				type: document.getElementById('test-source').value,
+				type: source,
 				chatname: document.getElementById('test-username').value,
 				userid: document.getElementById('test-username').value.toLowerCase(),
 				chatmessage: document.getElementById('test-message').value,
 				mod: document.getElementById('test-mod').checked,
 				vip: document.getElementById('test-vip').checked,
 				admin: document.getElementById('test-admin').checked,
-				hasDonation: document.getElementById('test-donation').checked,
 				// Add other required properties
 				timestamp: Date.now(),
 			};
+			Object.assign(testMessage, donationPayload);
 
 			const eventType = document.getElementById('test-event')?.value || document.getElementById('test-event-custom')?.value?.trim() || '';
 			if (eventType) {
 				testMessage.event = eventType;
+			} else if (donationPayload.event) {
+				testMessage.event = donationPayload.event;
 			}
 
 			// Apply first-time chatter flag
@@ -2377,11 +3102,6 @@ class EventFlowEditor {
 				const ts = Math.max(0, Date.now() - (amount * windowMs));
 				testMessage.lastactivity = ts;
 				testMessage.lastActivity = ts; // support either casing
-			}
-			
-			// Add donation amount if donation checkbox is checked
-			if (testMessage.hasDonation) {
-				testMessage.donationAmount = document.getElementById('test-donation-amount').value;
 			}
 			
 			// Run the test
@@ -2414,7 +3134,7 @@ class EventFlowEditor {
 			eventNewSubscriber: 'new_subscriber',
 			eventResub: 'resub',
 			eventGiftSub: 'subscription_gift',
-			eventDonation: 'donation',
+			eventDonation: 'superchat',
 			eventRaid: 'raid',
 			eventCheer: 'cheer'
 		};
@@ -2495,6 +3215,7 @@ class EventFlowEditor {
                 case 'fromChannelName': node.config = { channelName: '' }; break;
                 case 'fromUser': node.config = { username: 'user' }; break;
                 case 'userRole': node.config = { role: 'mod' }; break;
+                case 'userMemoryContains': node.config = { targetNodeId: '' }; break;
                 case 'hasDonation': node.config = {}; break;
                 case 'channelPointRedemption': node.config = { rewardName: '' }; break;
                 case 'eventType': node.config = { eventType: 'reward' }; break;
@@ -2507,15 +3228,18 @@ class EventFlowEditor {
                 case 'eventRaid': node.config = { sources: [], minViewers: 0 }; break;
                 case 'eventCheer': node.config = { sources: [], minBits: 0 }; break;
                 case 'eventOther': node.config = { eventType: '' }; break;
+                case 'apiTrigger': node.config = { trigger: '' }; break;
                 case 'eventCustom': node.config = { eventType: '', customCondition: '' }; break;
                 case 'obsStreamStarted': node.config = {}; break;
                 case 'obsStreamStopped': node.config = {}; break;
                 case 'obsRecordingStarted': node.config = {}; break;
                 case 'obsRecordingStopped': node.config = {}; break;
                 case 'obsSceneChanged': node.config = {}; break;
+                case 'obsMediaEnded': node.config = { sourceName: '' }; break;
                 case 'obsReplaybufferSaved': node.config = {}; break;
-                case 'compareProperty': node.config = { property: 'donationAmount', operator: 'gt', value: 0 }; break;
+                case 'compareProperty': node.config = { property: 'donoValue', operator: 'gt', value: 0 }; break;
                 case 'randomChance': node.config = { probability: 0.1, cooldownMs: 0, maxPerMinute: 0, requireMessage: true }; break;
+                case 'voicePhrase': node.config = { phrase: 'ninja celebration', cooldown: 5 }; break;
                 case 'timeInterval': node.config = { interval: 60 }; break;
                 case 'timeOfDay': node.config = { times: ['12:00'] }; break;
                 case 'midiNoteOn': node.config = { deviceId: '', note: '', channel: 1 }; break;
@@ -2545,18 +3269,30 @@ class EventFlowEditor {
 					node.config = { removeType: 'removeCommand' }; break;
                 case 'setProperty':
 					node.config = { property: 'nameColor', value: '#FF0000' }; break;
+                case 'showAiEventOverlay':
+                    node.config = { profile: 'default' }; break;
                 case 'featureMessage':
                     node.config = {}; break;
+                case 'pinMessage':
+                    node.config = { mode: 'pin', messageId: '{id}', target: '' }; break;
                 case 'sendMessage':
 					node.config = { destination: 'reply', template: 'Thank you {username}!', timeout: 0, sanitizeMode: 'safe' }; break;
                 case 'relay':
 					node.config = { destination: '', template: '[{source}] {username}: {message}', timeout: 0 }; break;
                 case 'webhook':
 					node.config = { url: 'https://example.com/hook', method: 'POST', body: '{}', includeMessage: true, syncMode: false, blockOnFailure: false }; break;
+				case 'printThermal':
+					node.config = { text: '{username}\n{donation}', fontSize: 18, fontFamily: 'monospace', fontWeight: 'bold', textAlign: 'center', lineHeight: 1.15, copies: 1, printerName: '', labelHeight: 0 }; break;
                 case 'addPoints':
 					node.config = { amount: 100 }; break;
                 case 'spendPoints':
 					node.config = { amount: 100 }; break;
+                case 'spotifyVolume':
+                    node.config = { volume: 50 }; break;
+                case 'ttsVolume':
+                    node.config = { volume: 100 }; break;
+                case 'giveawayControl':
+                    node.config = { command:'entergiveaway', giveawayId:'default', count:1, side:'' }; break;
                 case 'customJs':
 					node.config = { code: 'message.chatmessage += " (edited)";\nreturn { modified: true, message };' }; break;
 				case 'playTenorGiphy':
@@ -2568,6 +3304,8 @@ class EventFlowEditor {
 				case 'showText':
 					node.config = { text: 'Hello {username}!', x: 50, y: 50, width: 80, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#ffffff', backgroundColor: 'rgba(0,0,0,0.5)', padding: 20, borderRadius: 10, outlineWidth: 2, outlineColor: '#000000', animation: 'fadeIn', animationDuration: 500, duration: 5000, clearFirst: false };
 					break;
+				case 'commerceControl':
+                    node.config = { command: 'show', url: '', seconds: 0 }; break;
 				case 'clearLayer':
 					node.config = { layer: 'all' };
 					break;
@@ -2575,7 +3313,7 @@ class EventFlowEditor {
 					node.config = { sceneName: 'Your Scene Name' };
 					break;
 				case 'playAudioClip':
-					node.config = { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 };
+					node.config = { audioUrl: './audio/chime.wav', volume: 0.35 };
 					break;
 				case 'delay':
 					node.config = { delayMs: 1000 };
@@ -2585,6 +3323,18 @@ class EventFlowEditor {
 					break;
 				case 'obsToggleSource':
 					node.config = { sourceName: 'Source 1', sceneName: '', groupName: '', visible: 'toggle' };
+					break;
+				case 'obsSetText':
+					node.config = { sourceName: 'Text (GDI+)', text: '{username}: {message}' };
+					break;
+				case 'obsMediaControl':
+					node.config = { sourceName: 'Media Source', operation: 'restart' };
+					break;
+				case 'obsSetVolume':
+					node.config = { sourceName: 'Audio Source', volumeDb: 0 };
+					break;
+				case 'obsRefreshBrowser':
+					node.config = { sourceName: 'Browser Source' };
 					break;
 				case 'obsSetSourceFilter':
 					node.config = { sourceName: 'Source 1', filterName: 'Filter 1', enabled: 'toggle' };
@@ -2603,6 +3353,9 @@ class EventFlowEditor {
 					break;
 				case 'obsStopStreaming':
 					node.config = {};
+					break;
+				case 'obsReplayBufferControl':
+					node.config = { operation: 'start' };
 					break;
 				case 'obsReplayBuffer':
 					node.config = {};
@@ -2627,6 +3380,18 @@ class EventFlowEditor {
 					break;
 				case 'checkCounter':
 					node.config = { targetNodeId: '' };
+					break;
+				case 'rememberUser':
+					node.config = { targetNodeId: '', reason: '' };
+					break;
+				case 'forgetUser':
+					node.config = { targetNodeId: '' };
+					break;
+				case 'clearUserMemory':
+					node.config = { targetNodeId: '' };
+					break;
+				case 'pickRandomUser':
+					node.config = { targetNodeId: '', removeSelected: false };
 					break;
             }
         } else if (type === 'logic') { // NEW
@@ -2664,6 +3429,9 @@ class EventFlowEditor {
                 case 'COUNTER':
                     node.config = { name: 'Counter 1', initialCount: 0, targetCount: 5, resetOnTarget: true, mode: 'INCREMENT' };
                     break;
+                case 'USER_MEMORY':
+                    node.config = { name: 'User Memory 1', persistence: 'session', resetAfterMs: 0, resetOnStreamStart: false, resetOnStreamStop: false };
+                    break;
                 case 'USERPOOL':
                     node.config = { poolName: 'default', maxUsers: 10, requireEntry: true, entryKeyword: '!enter', resetOnFull: false, resetAfterMs: 0, allowReentry: false, scope: 'global' };
                     break;
@@ -2682,6 +3450,16 @@ class EventFlowEditor {
 
     deleteNode(nodeId) {
         if (!this.currentFlow) return;
+        const nodeToDelete = this.currentFlow.nodes.find(node => node.id === nodeId);
+        if (nodeToDelete && nodeToDelete.type === 'state' && nodeToDelete.stateType === 'USER_MEMORY') {
+            const linkedNodes = this.currentFlow.nodes.filter(node => node.config?.targetNodeId === nodeId);
+            if (linkedNodes.length && !confirm(`This User Memory is linked to ${linkedNodes.length} other node${linkedNodes.length === 1 ? '' : 's'}. Delete it and unlink them?`)) {
+                return;
+            }
+            linkedNodes.forEach(node => {
+                node.config.targetNodeId = '';
+            });
+        }
         this.currentFlow.nodes = this.currentFlow.nodes.filter(node => node.id !== nodeId);
         this.currentFlow.connections = this.currentFlow.connections.filter(
             conn => conn.from !== nodeId && conn.to !== nodeId
@@ -2701,6 +3479,95 @@ class EventFlowEditor {
         this.markUnsavedChanges(true);
         this.renderFlow();
     }
+
+    startStateReference(nodeId, event) {
+        if (!this.currentFlow) return;
+        this.draggedStateReference = { source: nodeId, tempLine: null };
+        const canvas = document.getElementById('flow-canvas');
+        const sourceRect = event.target.getBoundingClientRect();
+        this.draggedStateReference.tempLine = this.createTemporaryStateReferenceLine(
+            canvas,
+            sourceRect.left + sourceRect.width / 2,
+            sourceRect.top + sourceRect.height / 2,
+            event.clientX,
+            event.clientY
+        );
+        document.addEventListener('mousemove', this.handleStateReferenceDragMove);
+        document.addEventListener('mouseup', this.handleStateReferenceDragEnd);
+        event.stopPropagation();
+    }
+
+    createTemporaryStateReferenceLine(canvas, x1, y1, x2, y2) {
+        let svg = canvas.querySelector('svg.temp-state-reference');
+        if (!svg) {
+            svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('class', 'temp-state-reference');
+            Object.assign(svg.style, {
+                position: 'absolute',
+                left: '0',
+                top: '0',
+                width: `${canvas.scrollWidth}px`,
+                height: `${canvas.scrollHeight}px`,
+                pointerEvents: 'none',
+                zIndex: '100'
+            });
+            canvas.appendChild(svg);
+        }
+
+        const canvasRect = canvas.getBoundingClientRect();
+        const startX = x1 - canvasRect.left + canvas.scrollLeft;
+        const startY = y1 - canvasRect.top + canvas.scrollTop;
+        const endX = x2 - canvasRect.left + canvas.scrollLeft;
+        const endY = y2 - canvasRect.top + canvas.scrollTop;
+        const controlOffset = Math.max(60, Math.abs(endX - startX) * 0.35);
+        const direction = endX >= startX ? 1 : -1;
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', `M ${startX},${startY} C ${startX + controlOffset * direction},${startY} ${endX - controlOffset * direction},${endY} ${endX},${endY}`);
+        path.setAttribute('stroke', '#c084fc');
+        path.setAttribute('stroke-width', '3');
+        path.setAttribute('stroke-dasharray', '7,6');
+        path.setAttribute('fill', 'none');
+        svg.innerHTML = '';
+        svg.appendChild(path);
+        return svg;
+    }
+
+    handleStateReferenceDragMove = event => {
+        if (!this.draggedStateReference) return;
+        const canvas = document.getElementById('flow-canvas');
+        const sourcePoint = canvas.querySelector(`.node[data-id="${this.draggedStateReference.source}"] .state-reference-point.source`);
+        if (!sourcePoint) return;
+        const sourceRect = sourcePoint.getBoundingClientRect();
+        this.createTemporaryStateReferenceLine(
+            canvas,
+            sourceRect.left + sourceRect.width / 2,
+            sourceRect.top + sourceRect.height / 2,
+            event.clientX,
+            event.clientY
+        );
+    };
+
+    handleStateReferenceDragEnd = event => {
+        document.removeEventListener('mousemove', this.handleStateReferenceDragMove);
+        document.removeEventListener('mouseup', this.handleStateReferenceDragEnd);
+        if (!this.draggedStateReference) return;
+        if (this.draggedStateReference.tempLine) this.draggedStateReference.tempLine.remove();
+
+        const targetElement = document.elementFromPoint(event.clientX, event.clientY);
+        if (targetElement && targetElement.classList.contains('state-reference-point') && targetElement.dataset.stateReferenceType === 'target') {
+            const targetNodeElement = targetElement.closest('.node');
+            const sourceNode = this.currentFlow.nodes.find(node => node.id === this.draggedStateReference.source);
+            const targetNode = targetNodeElement && this.currentFlow.nodes.find(node => node.id === targetNodeElement.dataset.id);
+            if (sourceNode && targetNode && targetNode.type === 'state' && targetNode.stateType === 'USER_MEMORY') {
+                sourceNode.config = sourceNode.config || {};
+                sourceNode.config.targetNodeId = targetNode.id;
+                this.markUnsavedChanges(true);
+                this.renderFlow();
+                if (this.selectedNode === sourceNode.id) this.showNodeProperties(sourceNode);
+            }
+        }
+        this.draggedStateReference = null;
+    };
 
     startConnection(nodeId, connPointType, event) {
         if (!this.currentFlow || connPointType !== 'output') return; // Only drag from output
@@ -2831,6 +3698,7 @@ class EventFlowEditor {
         }
         const nodeEl = document.querySelector(`.node[data-id="${nodeId}"]`);
         if (nodeEl) nodeEl.classList.add('selected');
+        this.highlightStateReferenceGroup(nodeId);
         const nodeData = this.currentFlow.nodes.find(n => n.id === nodeId);
         if (!nodeData) {
              document.getElementById('node-properties-content').innerHTML = '<p>Error: Node data not found.</p>';
@@ -2840,6 +3708,7 @@ class EventFlowEditor {
     }
 
 	showNodeProperties(node) {
+        if (typeof window !== 'undefined' && window.SSNSoundLibrary) window.SSNSoundLibrary.stop();
 		const propertiesContent = document.getElementById('node-properties-content');
 		const eventReferenceUrl = this.escapeHtml(this.resolveGuideTarget('event-reference') || '#');
 		const eventReferenceCrossPlatformUrl = this.escapeHtml(this.resolveGuideTarget('event-reference-cross-platform') || '#');
@@ -2918,6 +3787,9 @@ class EventFlowEditor {
 			case 'anyMessage':
 				html += `<p class="property-help">Triggers on any message regardless of content.</p>`;
 				break;
+            case 'voicePhrase':
+                html += `<div class="property-group"><label class="property-label">Exact spoken phrase</label><input class="property-input" id="prop-phrase" maxlength="160" value="${this.escapeHtml(node.config.phrase || '')}" placeholder="ninja celebration"></div><div class="property-group"><label class="property-label">Cooldown (seconds)</label><input type="number" class="property-input" id="prop-cooldown" min="1" max="300" value="${Math.max(1, Number(node.config.cooldown) || 5)}"></div><p class="property-help">Requires SSApp local voice control. Test your phrase before arming. No actions run while in Test mode.</p><a href="voice-control.html" target="_blank" rel="noopener">Open Voice Control</a>`;
+                break;
 			case 'timeInterval':
 				html += `<div class="property-group">
 					<label class="property-label">Interval (seconds)</label>
@@ -2981,9 +3853,9 @@ class EventFlowEditor {
   'peertube', 'picarto', 'piczel', 'pilled', 'quakenet', 'quickchannel', 'restream', 'riverside', 'rokfin',
   'roll20', 'rooter', 'rumble', 'rutube', 'sessions', 'shareplay', 'slack', 'slido', 'sooplive',
   'soulbound', 'stageten', 'steam', 'substack', 'teams', 'telegram', 'telegramk', 'tellonym', 'tiktok',
-  'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
+  'tradingview', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
    'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
-  'wix', 'wix2', 'workplace', 'x', 'xeenon', 'younow', 'youtube', 'youtubeshorts', 'youtube_comments', 'zapstream', 'zoom',
+  'wix', 'wix2', 'workplace', 'x', 'xeenon', 'xpsync', 'younow', 'youtube', 'youtubeshorts', 'youtube_comments', 'zapstream', 'zoom',
   'bmac', 'fourthwall', 'stripe', 'other'].includes(node.config.source);
 				
 				html += `<div class="property-group"><label class="property-label">Source Platform</label><select class="property-input" id="prop-source">
@@ -2998,9 +3870,9 @@ class EventFlowEditor {
   'peertube', 'picarto', 'piczel', 'pilled', 'quakenet', 'quickchannel', 'restream', 'riverside', 'rokfin',
   'roll20', 'rooter', 'rumble', 'rutube', 'sessions', 'shareplay', 'slack', 'slido', 'sooplive',
   'soulbound', 'stageten', 'steam', 'substack', 'teams', 'telegram', 'telegramk', 'tellonym', 'tiktok',
-  'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
+  'tradingview', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
    'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
-  'wix', 'wix2', 'workplace', 'x', 'xeenon', 'younow', 'youtube', 'youtubeshorts', 'youtube_comments', 'zapstream', 'zoom',
+  'wix', 'wix2', 'workplace', 'x', 'xeenon', 'xpsync', 'younow', 'youtube', 'youtubeshorts', 'youtube_comments', 'zapstream', 'zoom',
   'bmac', 'fourthwall', 'stripe', 'other'].map(s => `<option value="${s}" ${node.config.source === s ? 'selected' : ''}>${s.charAt(0).toUpperCase()
    + s.slice(1).replace(/_/g, ' ')}</option>`).join('')}
    						<option value="custom" ${isCustomSource ? 'selected' : ''}>🔧 Custom...</option>
@@ -3018,9 +3890,23 @@ class EventFlowEditor {
 				html += `<div class="property-group"><label class="property-label">Username</label><input type="text" class="property-input" id="prop-username" value="${node.config.username || ''}"></div>`;
 				break;
 			case 'userRole':
+				const userRoles = [
+					{ value: 'mod', label: 'Moderator' },
+					{ value: 'vip', label: 'VIP' },
+					{ value: 'admin', label: 'Admin' },
+					{ value: 'subscriber', label: 'Subscriber' },
+					{ value: 'member', label: 'Member' },
+					{ value: 'follower', label: 'Follower' },
+					{ value: 'tiktokTeamMember', label: 'TikTok Team Member' }
+				];
 				html += `<div class="property-group"><label class="property-label">User Role</label><select class="property-input" id="prop-role">
-						   ${['mod', 'vip', 'admin', 'subscriber', 'member', 'follower'].map(r => `<option value="${r}" ${node.config.role === r ? 'selected' : ''}>${r.charAt(0).toUpperCase() + r.slice(1)}</option>`).join('')}
-						 </select></div>`;
+						   ${userRoles.map(role => `<option value="${role.value}" ${node.config.role === role.value ? 'selected' : ''}>${role.label}</option>`).join('')}
+						 </select></div>
+						 <div class="property-help">TikTok Team Member matches Fan Club/team levels and badges supplied with a TikTok message.</div>`;
+				break;
+			case 'userMemoryContains':
+				html += this.renderUserMemoryTargetField(node, 'Outputs true when the current event belongs to a user stored in this memory.');
+				html += `<div class="property-help">Use this like any other trigger: connect it to AND/OR gates or directly to an action.</div>`;
 				break;
 			case 'hasDonation': // Trigger type
 				html += `<p class="property-help">Fires if the message includes donation information.</p>`;
@@ -3048,6 +3934,10 @@ class EventFlowEditor {
 					{ value: 'reward', label: 'Channel Point Redemption' },
 					{ value: 'newmember', label: 'New Member/Subscriber' },
 					{ value: 'giftpurchase', label: 'Gift Sub Purchase' },
+					{ value: 'gift', label: 'Gift' },
+					{ value: 'giftcontribution', label: 'Gift Contribution' },
+					{ value: 'giftfunded', label: 'Gift Fully Funded' },
+					{ value: 'purchase', label: 'Product Purchase' },
 					{ value: 'raid', label: 'Raid' },
 					{ value: 'follow', label: 'Follow' },
 					{ value: 'host', label: 'Host' },
@@ -3142,25 +4032,24 @@ class EventFlowEditor {
 				break;
 
 			case 'eventDonation':
-				html += this.renderEventSourceFilter(node, 'donation,cheer,supersticker');
+				html += this.renderEventSourceFilter(node, 'superchat,donation,cheer,supersticker,jeweldonation');
 				html += `
 					<div class="property-group">
 						<label class="property-label">Minimum Amount (optional)</label>
 						<input type="number" class="property-input" id="prop-minAmount"
 							value="${node.config.minAmount || 0}" min="0" step="0.01">
-						<div class="property-help">Set to 0 to trigger on any donation amount</div>
+						<div class="property-help">Set to 0 to trigger on any matched event amount</div>
 					</div>
 					<div class="property-group" style="background: #fff8e1; color: #333; padding: 10px; border-radius: 4px;">
-						<strong>💰 Donation / Super Chat</strong><br>
-						Triggers on donations, Super Chats, Super Stickers, etc.<br><br>
+						<strong>💰 Donation / Tip</strong><br>
+						Matches any row with <code>hasDonation</code>, plus named <code>superchat</code>, legacy <code>donation</code>, <code>cheer</code>, <code>supersticker</code>, and <code>jeweldonation</code> events.<br><br>
 						<strong>⚡ Supported platforms:</strong><br>
-						• <strong>YouTube:</strong> Super Chat, Super Stickers (WebSocket mode)<br>
+						• <strong>YouTube:</strong> Super Chat, Super Stickers, Jewels/Gifts<br>
 						• <strong>Twitch:</strong> Cheers/Bits (WebSocket mode)<br>
-						• <strong>TikTok:</strong> Coin gifts (many events)<br>
 						• <strong>Kick:</strong> Donations (WebSocket mode)<br>
 						• <strong>Many others:</strong> Streamlabs, Ko-fi integrations, etc.<br><br>
 						<div style="background: #ffecb3; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
-							⚠️ <strong>YouTube/Twitch/Kick require WebSocket mode</strong> for monetary events.
+								⚠️ <strong>Twitch/Kick require WebSocket mode</strong> for monetary events.
 						</div>
 								<a href="${eventReferenceCrossPlatformUrl}" data-guide-link="event-reference-cross-platform" style="color: #f57f17;">📖 Event Reference Documentation</a>
 					</div>`;
@@ -3248,6 +4137,21 @@ class EventFlowEditor {
 				</div>`;
 				break;
 
+			case 'obsMediaEnded':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Media Source Name (optional)</label>
+						<input type="text" class="property-input" id="prop-sourceName"
+							value="${this.escapeHtml(node.config.sourceName || '')}" placeholder="Leave blank for any media source">
+						<div class="property-help">Match the exact OBS media input name, or leave blank to trigger for every media source.</div>
+					</div>
+					<div class="property-group" style="background: #e3f2fd; color: #333; padding: 10px; border-radius: 4px;">
+						<strong>OBS Media Ended</strong><br>
+						Triggers when OBS reports that a media input has finished playback. The source name is available as <code>meta.inputName</code>.<br><br>
+						Requires the Flow Actions page connected through OBS WebSocket v5.
+					</div>`;
+				break;
+
 			case 'obsReplaybufferSaved':
 				html += `<div class="property-group" style="background: #fff3e0; color: #333; padding: 10px; border-radius: 4px;">
 					<strong>OBS Replay Buffer Saved</strong><br>
@@ -3259,12 +4163,17 @@ class EventFlowEditor {
 			case 'eventOther':
 				const otherEventTypes = [
 					{ value: '', label: '-- Select Event --' },
+					{ value: 'gift', label: 'Gift' },
+					{ value: 'giftcontribution', label: 'Gift Contribution' },
+					{ value: 'giftfunded', label: 'Gift Fully Funded' },
+					{ value: 'purchase', label: 'Product Purchase' },
 					{ value: 'channel_points', label: 'Channel Points (Twitch)' },
 					{ value: 'membermilestone', label: 'Member Milestone (YouTube)' },
 					{ value: 'giftredemption', label: 'Gift Received (YouTube)' },
 					{ value: 'stream_online', label: 'Stream Online' },
 					{ value: 'stream_offline', label: 'Stream Offline' },
 					{ value: 'viewer_update', label: 'Viewer Count Update' },
+					{ value: 'likes_update', label: 'Platform Like Count Update' },
 					{ value: 'follower_update', label: 'Follower Count Update' },
 					{ value: 'subscriber_update', label: 'Subscriber Count Update' },
 					{ value: 'ad_break', label: 'Ad Break (Twitch)' }
@@ -3287,6 +4196,20 @@ class EventFlowEditor {
 					</div>`;
 				break;
 
+			case 'apiTrigger':
+                html += `
+                    <div class="property-group">
+                        <label class="property-label" for="prop-trigger">Trigger name</label>
+                        <input type="text" class="property-input" id="prop-trigger" maxlength="100" value="${this.escapeHtml(node.config.trigger || '')}" placeholder="e.g., intermission">
+                        <div class="property-help">Use an exact, case-sensitive name. Save and enable this flow, then select <strong>Run Workflow</strong> in Stream Deck. Only flows with this trigger can be called.</div>
+                    </div>
+                    <div class="property-group">
+                        <label class="property-label">API request</label>
+                        <pre class="property-help" style="white-space:pre-wrap;overflow-wrap:anywhere">${this.escapeHtml(JSON.stringify({ action: 'triggerWorkflow', value: { trigger: node.config.trigger || 'intermission' } }, null, 2))}</pre>
+                        <div class="property-help">Optional JSON data is available as <code>{meta.workflow.data.name}</code>. Each press starts a run; use a Rate Limiter node for a cooldown. The API acknowledges acceptance, not completion of delayed or external actions.</div>
+                        <a href="https://socialstream.ninja/docs/streamdeck-event-flow.html" target="_blank" rel="noopener">Workflow setup and API guide</a>
+                    </div>`;
+                break;
 			case 'eventCustom':
 				html += `
 					<div class="property-group">
@@ -3295,18 +4218,12 @@ class EventFlowEditor {
 							value="${this.escapeHtml(node.config.eventType || '')}" placeholder="e.g., custom_event">
 						<div class="property-help">Enter the exact <code>data.event</code> value to match</div>
 					</div>
-					${this.eventFlowSystem.customJsEvalSupported ? `
-						<div class="property-group">
-							<label class="property-label">Additional Condition (optional)</label>
-							<input type="text" class="property-input" id="prop-customCondition"
-								value="${this.escapeHtml(node.config.customCondition || '')}" placeholder="e.g., data.type === 'youtube'">
-							<div class="property-help">JavaScript expression for additional filtering (advanced)</div>
-						</div>
-					` : `
-						<div class="property-group">
-							<div class="property-help" style="color:#f0ad4e;">Additional JavaScript conditions are disabled in the Chrome Web Store build due MV3 dynamic-code restrictions.</div>
-						</div>
-					`}
+					<div class="property-group">
+						<label class="property-label">Additional Condition (optional)</label>
+						<input type="text" class="property-input" id="prop-customCondition"
+							value="${this.escapeHtml(node.config.customCondition || '')}" placeholder="e.g., data.type === 'youtube'">
+						<div class="property-help">JavaScript expression for additional filtering (advanced)</div>
+					</div>
 					<div class="property-group" style="background: #f3e5f5; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>✏️ Custom Event</strong><br>
 						Create a custom trigger for any event type. Use the Event Reference to find available event names.<br><br>
@@ -3324,7 +4241,8 @@ class EventFlowEditor {
 
 			case 'compareProperty':
 				const commonProperties = [
-					{ value: 'donationAmount', label: 'Donation Amount' },
+					{ value: 'donoValue', label: 'Donation Value' },
+					{ value: 'donationAmount', label: 'Donation Amount (legacy)' },
 					{ value: 'type', label: 'Source Type' },
 					{ value: 'event', label: 'Event Name' },
 					{ value: 'sourceName', label: 'Channel Name' },
@@ -3358,7 +4276,7 @@ class EventFlowEditor {
 					<div class="property-group" id="custom-property-group" style="${isCustomProp ? '' : 'display: none;'}">
 						<label class="property-label">Custom Property Name</label>
 						<input type="text" class="property-input" id="prop-property" value="${isCustomProp ? (node.config.property || '') : ''}" placeholder="e.g., customField">
-						<div class="property-help">Enter the exact property name from the message object</div>
+						<div class="property-help">Enter a field or nested path, such as meta.commerce.recipient or meta.commerce.quantity</div>
 					</div>
 					<div class="property-group">
 						<label class="property-label">Operator</label>
@@ -3373,13 +4291,13 @@ class EventFlowEditor {
 					</div>
 					<div class="property-group" style="background: #e3f2fd; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>💡 Examples:</strong><br>
-						• donationAmount > 50 (tips over $50)<br>
+						• donoValue > 50 (tips over $50)<br>
 						• karma < 0.3 (low karma users)<br>
 						• memberMonths >= 12 (1 year+ members)
 					</div>`;
 				break;
 			case 'randomChance': // Random trigger
-				const probability = (node.config.probability || 0.1) * 100; // Convert to percentage for display
+				const probability = (node.config.probability ?? 0.1) * 100; // Convert to percentage for display
 				html += `
 					<div class="property-group">
 						<label class="property-label">Trigger Probability</label>
@@ -3409,7 +4327,7 @@ class EventFlowEditor {
 					
 					<div class="property-group">
 						<label class="property-label">
-							<input type="checkbox" id="prop-requireMessage" 
+							<input type="checkbox" class="property-input" id="prop-requireMessage"
 								${node.config.requireMessage !== false ? 'checked' : ''}>
 							Require Chat Message
 						</label>
@@ -3690,7 +4608,7 @@ class EventFlowEditor {
 					
 					<div class="property-group">
 						<label class="property-label">
-							<input type="checkbox" id="prop-resetOnFull" 
+							<input type="checkbox" class="property-input" id="prop-resetOnFull"
 								${node.config.resetOnFull ? 'checked' : ''}>
 							Auto-reset when full
 						</label>
@@ -3748,7 +4666,7 @@ class EventFlowEditor {
 					<div class="property-group">
 						<label class="property-label">Property Name</label>
 						<input type="text" class="property-input" id="prop-propertyName" 
-							value="${node.config.propertyName || 'amount'}" placeholder="e.g., amount, donationAmount">
+							value="${node.config.propertyName || 'amount'}" placeholder="e.g., amount, donoValue">
 						<div class="property-help">Message property to accumulate</div>
 					</div>
 					
@@ -3779,7 +4697,7 @@ class EventFlowEditor {
 					
 					<div class="property-group">
 						<label class="property-label">
-							<input type="checkbox" id="prop-autoReset" 
+							<input type="checkbox" class="property-input" id="prop-autoReset"
 								${node.config.autoReset ? 'checked' : ''}>
 							Auto-reset after trigger
 						</label>
@@ -3807,14 +4725,16 @@ class EventFlowEditor {
 			// --- Custom JS Trigger ---
 			case 'customJs': // Assuming 'customJs' can be a trigger, action, or logic type based on context
 				if (!this.eventFlowSystem.customJsEvalSupported) {
-					html += `<div class="property-group"><div class="property-help" style="color:#f0ad4e;">Custom Code execution is disabled in the Chrome Web Store build due MV3 dynamic-code restrictions.</div></div>`;
+					html += `<div class="property-group"><div class="property-help" style="color:#f0ad4e;">Custom Code execution is disabled in extension mode due browser CSP restrictions. Use SSApp desktop.</div></div>`;
 				}
 				if (node.type === 'trigger') {
-					 html += `<div class="property-group"><label class="property-label">JavaScript Code</label><textarea class="property-input" id="prop-code" rows="10" spellcheck="false">${node.config.code || 'return message.chatmessage.includes("test");'}</textarea>
-							 <div class="property-help">Return true/false. \`message\` object is available.</div></div>`;
+					 html += `<div class="property-group"><label class="property-label" for="prop-code">JavaScript Code</label><textarea class="property-input" id="prop-code" rows="10" spellcheck="false"></textarea>
+							 <button type="button" class="btn btn-primary custom-code-editor-launch" id="open-custom-code-editor-btn">Open Code Editor</button>
+							 <div class="property-help">Return true/false. \`message\` and \`convertCurrency(value, target, source)\` are available.</div></div>`;
 				} else if (node.type === 'action') { // Custom JS Action
-					 html += `<div class="property-group"><label class="property-label">JavaScript Code</label><textarea class="property-input" id="prop-code" rows="10" spellcheck="false">${node.config.code || 'message.chatmessage += " (edited)";\nreturn { modified: true, message };'}</textarea>
-							 <div class="property-help">\`message\` and \`result\` objects are available. Return an object like \`{ modified: boolean, message: object, blocked: boolean }\`.</div></div>`;
+					 html += `<div class="property-group"><label class="property-label" for="prop-code">JavaScript Code</label><textarea class="property-input" id="prop-code" rows="10" spellcheck="false"></textarea>
+							 <button type="button" class="btn btn-primary custom-code-editor-launch" id="open-custom-code-editor-btn">Open Code Editor</button>
+							 <div class="property-help">\`message\`, \`result\`, and \`convertCurrency(value, target, source)\` are available. Return an object like \`{ modified: boolean, message: object, blocked: boolean }\`.</div></div>`;
 				}
 				// Potentially add a case for customJs if it were a logic node type
 				break;
@@ -4011,6 +4931,30 @@ class EventFlowEditor {
                     <div class="property-help">Use with a trigger like “Message Starts With” or “Channel Points” to auto-feature specific messages.</div>
                 </div>`;
                 break;
+            case 'pinMessage': {
+                const pinConfig = node.config || {};
+                const pinMode = pinConfig.mode || 'pin';
+                html += `<div class="property-group">
+                            <label class="property-label">Dock Pin Action</label>
+                            <select class="property-input" id="prop-mode">
+                                <option value="pin" ${pinMode === 'pin' ? 'selected' : ''}>Pin triggering message</option>
+                                <option value="unpin" ${pinMode === 'unpin' ? 'selected' : ''}>Unpin message by ID</option>
+                                <option value="nextPinned" ${pinMode === 'nextPinned' ? 'selected' : ''}>Feature next pinned message</option>
+                            </select>
+                            <div class="property-help">Pins the incoming dock row, unpins an existing dock row, or shows the next pinned row.</div>
+                        </div>
+                        <div class="property-group" id="pin-message-id-group" style="${pinMode === 'nextPinned' ? 'display:none;' : ''}">
+                            <label class="property-label">Message ID</label>
+                            <input type="text" class="property-input" id="prop-messageId" value="${this.escapeHtml(pinConfig.messageId || '{id}')}">
+                            <div class="property-help">Use <code>{id}</code> for the triggering message, or a template/custom ID for delayed actions.</div>
+                        </div>
+                        <div class="property-group">
+                            <label class="property-label">Dock Label (optional)</label>
+                            <input type="text" class="property-input" id="prop-target" value="${this.escapeHtml(pinConfig.target || '')}" placeholder="moderator-dock">
+                            <div class="property-help">Leave blank for all docks. Set this only for a custom-labeled dock.</div>
+                        </div>`;
+                break;
+            }
             case 'sendMessage':
 				// Send Message allows sending generated messages (e.g., thank you messages, announcements)
 				const sendDestinations = [
@@ -4030,7 +4974,6 @@ class EventFlowEditor {
 					{ value: 'rumble', label: 'Rumble' },
 					{ value: 'odysee', label: 'Odysee' },
 					{ value: 'dlive', label: 'DLive' },
-					{ value: 'trovo', label: 'Trovo' },
 					{ value: 'telegram', label: 'Telegram' },
 					{ value: 'whatsapp', label: 'WhatsApp' },
 					{ value: 'zoom', label: 'Zoom' },
@@ -4093,7 +5036,6 @@ class EventFlowEditor {
 					{ value: 'rumble', label: 'Rumble' },
 					{ value: 'odysee', label: 'Odysee' },
 					{ value: 'dlive', label: 'DLive' },
-					{ value: 'trovo', label: 'Trovo' },
 					{ value: 'telegram', label: 'Telegram' },
 					{ value: 'whatsapp', label: 'WhatsApp' },
 					{ value: 'zoom', label: 'Zoom' },
@@ -4165,17 +5107,59 @@ class EventFlowEditor {
                         </div>`;
                 }
                 break;
+			case 'printThermal':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Label text</label>
+						<textarea class="property-input" id="prop-text" rows="4" placeholder="{username}\n{donation}">${this.escapeHtml(node.config.text ?? '{username}\n{donation}')}</textarea>
+						<div class="property-help">Use single braces: {username}, {message}, or fields from earlier nodes. New lines print on new lines.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Text appearance</label>
+						<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
+							<label>Size (pt)<input type="number" class="property-input" id="prop-fontSize" value="${node.config.fontSize ?? 18}" min="6" max="96" step="1"></label>
+							<label>Line spacing<input type="number" class="property-input" id="prop-lineHeight" value="${node.config.lineHeight ?? 1.15}" min="0.8" max="3" step="0.05"></label>
+							<label>Font<input type="text" class="property-input" id="prop-fontFamily" value="${this.escapeHtml(node.config.fontFamily || 'monospace')}"></label>
+							<label>Weight<select class="property-input" id="prop-fontWeight"><option value="bold" ${!['normal', 'selected'].includes(node.config.fontWeight) ? 'selected' : ''}>All bold</option><option value="normal" ${node.config.fontWeight === 'normal' ? 'selected' : ''}>Normal</option><option value="selected" ${node.config.fontWeight === 'selected' ? 'selected' : ''}>Selected text</option></select></label>
+							<label>Alignment<select class="property-input" id="prop-textAlign"><option value="left" ${node.config.textAlign === 'left' ? 'selected' : ''}>Left</option><option value="center" ${node.config.textAlign !== 'left' && node.config.textAlign !== 'right' ? 'selected' : ''}>Center</option><option value="right" ${node.config.textAlign === 'right' ? 'selected' : ''}>Right</option></select></label>
+							<label>Copies<input type="number" class="property-input" id="prop-copies" value="${node.config.copies ?? 1}" min="1" max="99" step="1"></label>
+						</div>
+						<div class="property-help">To bold just the supporter, choose Selected text and enter <code>**{username}**</code> above <code>{subtitle}</code>. Commerce events use {subtitle} for product names; {meta.commerce.quantity} prints a known quantity.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Printer override (optional)</label>
+						<input type="text" class="property-input" id="prop-printerName" list="eventflow-thermal-printers" value="${this.escapeHtml(node.config.printerName || '')}" placeholder="Use Printer Control setting">
+						<datalist id="eventflow-thermal-printers"></datalist>
+						<div class="property-help">Leave blank to use Printer Control during live flows, or the Windows default while testing directly in the editor.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Fixed label length override (mm)</label>
+						<input type="number" class="property-input" id="prop-labelHeight" value="${node.config.labelHeight ?? 0}" min="0" max="4000" step="0.1">
+						<div class="property-help">0 uses the global setting or content-sized receipt paper. For die-cut labels, enter their exact feed-direction length; fixed labels do not add extra feed.</div>
+					</div>
+					<div class="property-help">Use <strong>Donation / Tip</strong> for tips and paid gifts, or <strong>Event Type: Purchase</strong> for sales. Check <code>meta.thermalPrintResult.success</code> in later nodes. Test Flow sends a physical label. <a href="https://socialstream.ninja/docs/thermal-printer-guide.html" target="_blank" rel="noopener">Printer guide</a></div>`;
+				break;
 			case 'webhook':
 				html += `<div class="property-group"><label class="property-label">URL</label><input type="url" class="property-input" id="prop-url" value="${node.config.url || ''}"></div>
 						 <div class="property-group"><label class="property-label">Method</label><select class="property-input" id="prop-method">${['POST', 'GET', 'PUT', 'DELETE', 'PATCH'].map(m => `<option value="${m}" ${node.config.method === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div>
 						 <div class="property-group"><label class="property-label"><input type="checkbox" class="property-input" id="prop-includeMessage" ${node.config.includeMessage !== false ? 'checked' : ''}> Include full message object as JSON body</label></div>
-						 <div class="property-group" id="webhook-body-group" style="${node.config.includeMessage !== false ? 'display: none;' : ''};"><label class="property-label">Custom Body (JSON)</label><textarea class="property-input" id="prop-body" rows="5">${node.config.body || '{}'}</textarea><div class="property-help">Used if "Include full message" is unchecked.</div></div>
+						 <div class="property-group" id="webhook-body-group" style="${node.config.includeMessage !== false ? 'display: none;' : ''};"><label class="property-label">Custom Body (JSON)</label><textarea class="property-input" id="prop-body" rows="5">${node.config.body || '{}'}</textarea><div class="property-help">Used if "Include full message" is unchecked. Event Flow template variables work in JSON string values, such as <code>{username}</code>, <code>{message}</code>, <code>{source}</code>, and <code>{chatimg}</code>.</div></div>
 						 <div class="property-group"><label class="property-label"><input type="checkbox" class="property-input" id="prop-syncMode" ${node.config.syncMode ? 'checked' : ''}> Synchronous mode (await webhook)</label><div class="property-help">When enabled, the flow waits for the webhook to finish. With "Block on error" enabled, a non-2xx or network error blocks this message; otherwise it proceeds and attaches any response.</div></div>
 						 <div class="property-group"><label class="property-label"><input type="checkbox" class="property-input" id="prop-blockOnFailure" ${node.config.blockOnFailure ? 'checked' : ''}> Block on error (4xx/5xx or network)</label><div class="property-help">If "Synchronous mode" is OFF, the message is never blocked by webhook results. If ON, failures block the message when this is enabled.</div></div>`;
 				break;
+            case 'giveawayControl':
+                html += `<div class="property-group"><label class="property-label" for="prop-command">Giveaway action</label><select id="prop-command" class="property-input">${[['entergiveaway','Enter free giveaway'],['buygiveawaytickets','Buy tickets (spend and enter)'],['grantgiveawaytickets','Grant free tickets'],['closegiveaway','Close entries'],['drawgiveaway','Draw winner'],['cancelgiveaway','Cancel and refund'],['getgiveawaystate','Query state']].map(([v,l])=>`<option value="${v}" ${node.config.command===v?'selected':''}>${l}</option>`).join('')}</select></div>
+                <div class="property-group"><label class="property-label" for="prop-giveawayId">Giveaway ID</label><input class="property-input" id="prop-giveawayId" value="${this.escapeHtml(node.config.giveawayId || 'default')}" maxlength="64"></div>
+                <div class="property-group"><label class="property-label" for="prop-count">Tickets</label><input class="property-input" id="prop-count" type="number" min="1" max="10000" value="${Number(node.config.count)||1}"></div>
+                <div class="property-group"><label class="property-label" for="prop-side">Coin Flip Pot side</label><select class="property-input" id="prop-side"><option value="">Not a pot game</option><option value="heads" ${node.config.side==='heads'?'selected':''}>Heads</option><option value="tails" ${node.config.side==='tails'?'selected':''}>Tails</option></select></div>
+                <p class="property-help">Uses the captured viewer. Failure stops dependent actions without hiding chat. Test runs do not charge or enter real rounds. <a href="https://socialstream.ninja/docs/giveaway-points-guide.html" target="_blank" rel="noopener">Guide</a></p>`;
+                break;
 			case 'addPoints':
 				html += `<div class="property-group"><label class="property-label">Amount to Add</label><input type="number" class="property-input" id="prop-amount" value="${node.config.amount || 100}" min="0"></div>`;
 				break;
+			case 'showAiEventOverlay':
+                html += `<div class="property-group"><label class="property-label" for="prop-profile">Saved overlay</label><input class="property-input" id="prop-profile" value="${this.escapeHtml(node.config.profile || 'default')}" placeholder="Overlay ID"></div><div class="property-group"><label class="property-label" for="prop-variation">Variation (optional)</label><input class="property-input" id="prop-variation" value="${this.escapeHtml(node.config.variation || '')}" placeholder="Approved phrase"></div><p id="ai-event-flow-status" class="property-help" role="status">Loading saved overlays…</p><p class="property-help"><a href="${this.escapeHtml(this.resolveGuideTarget('ai-event-overlay'))}" target="_blank" rel="noopener">AI overlay setup and rewards guide</a></p>`;
+                break;
 			case 'spendPoints':
 				html += `<div class="property-group"><label class="property-label">Amount to Spend</label><input type="number" class="property-input" id="prop-amount" value="${node.config.amount || 100}" min="0"></div>`;
 				break;
@@ -4195,7 +5179,7 @@ class EventFlowEditor {
 			case 'RANDOM':
 				html += `<div class="property-group">
 					<label class="property-label">Probability (%)</label>
-					<input type="number" class="property-input" id="prop-probability" value="${node.config?.probability || 50}" min="0" max="100">
+					<input type="number" class="property-input" id="prop-probability" value="${node.config?.probability ?? 50}" min="0" max="100">
 				</div>
 				<p class="property-help">This gate randomly passes or blocks the input signal based on the probability. For example, 25% means the signal will pass through roughly 1 in 4 times.</p>`;
 				break;
@@ -4341,20 +5325,58 @@ class EventFlowEditor {
 				</div>
 				<p class="property-help">💡 <strong>Simple counter:</strong> Counts up by 1 each time a message passes. Triggers at your target number. Example: "Every 5th !hello"</p>`;
 				break;
+
+			case 'USER_MEMORY': {
+				const memorySummary = this.eventFlowSystem && typeof this.eventFlowSystem.getUserMemorySummary === 'function'
+					? this.eventFlowSystem.getUserMemorySummary(node.id, this.currentFlow)
+					: null;
+				const memoryCount = memorySummary ? memorySummary.count : 0;
+				html += `
+					<div class="property-group user-memory-summary">
+						<strong>Current users: <span id="user-memory-current-count">${memoryCount}</span></strong>
+						<div class="property-help">This node is the shared state object. Dashed purple links show every check or action that uses it.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Memory Name</label>
+						<input type="text" class="property-input" id="prop-name" value="${this.escapeHtml(node.config?.name || 'User Memory 1')}" placeholder="e.g., Heart Me Eligible">
+					</div>
+					<div class="property-group">
+						<label class="property-label">Persistence</label>
+						<select class="property-input" id="prop-persistence">
+							<option value="session" ${node.config?.persistence !== 'persistent' ? 'selected' : ''}>This app session</option>
+							<option value="persistent" ${node.config?.persistence === 'persistent' ? 'selected' : ''}>Save across restarts</option>
+						</select>
+						<div class="property-help">Session memory starts empty after Social Stream restarts. Saved memory remains until cleared.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Clear After Inactivity (seconds)</label>
+						<input type="number" class="property-input" id="prop-resetAfterMs" value="${Math.max(0, Number(node.config?.resetAfterMs) || 0) / 1000}" min="0" step="1">
+						<div class="property-help">0 keeps users until another reset rule or action clears this memory.</div>
+					</div>
+					<div class="property-group">
+						<label><input type="checkbox" class="property-input" id="prop-resetOnStreamStart" ${node.config?.resetOnStreamStart ? 'checked' : ''}> Clear on stream start</label>
+					</div>
+					<div class="property-group">
+						<label><input type="checkbox" class="property-input" id="prop-resetOnStreamStop" ${node.config?.resetOnStreamStop ? 'checked' : ''}> Clear on stream stop</label>
+					</div>
+					<button type="button" class="btn" id="clear-user-memory-now" style="width: 100%; margin-top: 6px;">Clear All Users Now</button>
+					<div class="property-help" style="margin-top: 8px;">Remembered identities use platform + user ID, with the displayed username as a fallback.</div>
+					<button type="button" class="btn btn-ghost" data-guide-link="user-memory" style="width: 100%; margin-top: 12px;">Open User Memory Guide</button>`;
+				break;
+			}
 				case 'playTenorGiphy': // This is node.actionType if node.type is 'action'
-					html += `<div class="property-group">
-							 <label class="property-label">Media URL (TENOR/GIPHY)</label>
-							 <div style="display: flex; gap: 5px;">
-								 <input type="url" class="property-input" id="prop-mediaUrl" value="${node.config.mediaUrl || ''}" style="flex: 1;">
-								 <button type="button" id="uploadMediaBtn" style="padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Upload</button>
-							 </div>
-							 <div class="property-help">Direct URL to the GIF or video. For GIPHY, use the embed link or direct GIF link.</div>
-						 </div>
+					html += `${this.renderLocalMediaSource(node, {
+						label: 'Media URL or Local File',
+						inputId: 'prop-mediaUrl',
+						configKey: 'mediaUrl',
+						uploadButtonId: 'uploadMediaBtn'
+					})}
 						 <div class="property-group">
 							 <label class="property-label">Media Type</label>
 							 <select class="property-input" id="prop-mediaType">
 								 <option value="iframe" ${node.config.mediaType === 'iframe' ? 'selected' : ''}>Video/Embed (iframe)</option>
 								 <option value="image" ${node.config.mediaType === 'image' ? 'selected' : ''}>Image (direct GIF/image link)</option>
+								 <option value="video" ${node.config.mediaType === 'video' ? 'selected' : ''}>Local/direct video</option>
 							 </select>
 						 </div>
 						 <div class="property-group">
@@ -4473,7 +5495,7 @@ class EventFlowEditor {
 					</div>
 					<div class="property-group">
 						<label class="property-label">Duration (ms, 0 = stay until cleared)</label>
-						<input type="number" class="property-input" id="prop-duration" value="${node.config.duration || 5000}" min="0" step="100">
+						<input type="number" class="property-input" id="prop-duration" value="${node.config.duration ?? 5000}" min="0" step="100">
 					</div>
 					<div class="property-group">
 						<label style="display:flex; align-items:center; gap:6px;">
@@ -4598,7 +5620,7 @@ class EventFlowEditor {
 					</div>
 					<div class="property-group">
 						<label class="property-label">Duration (ms, 0 = stay until cleared)</label>
-						<input type="number" class="property-input" id="prop-duration" value="${node.config.duration || 5000}" min="0" step="100">
+						<input type="number" class="property-input" id="prop-duration" value="${node.config.duration ?? 5000}" min="0" step="100">
 					</div>
 					<div class="property-group">
 						<label style="display:flex; align-items:center; gap:6px;">
@@ -4607,6 +5629,13 @@ class EventFlowEditor {
 						</label>
 					</div>`;
 				break;
+
+            case 'commerceControl':
+                html += `<div class="property-group"><label class="property-label" for="prop-command">Commerce control</label><select class="property-input" id="prop-command">${['show', 'next', 'hide', 'resume','boardSave','boardSpot','boardVisibility','saleAdd','saleRemove','salesClear','salesSettings'].map(command => `<option value="${command}" ${node.config.command === command ? 'selected' : ''}>${{show:'Show now',next:'Next product',hide:'Hide products',resume:'Resume schedule',boardSave:'Create / replace board',boardSpot:'Change spot state',boardVisibility:'Show / hide board',saleAdd:'Record confirmed sale',saleRemove:'Remove sale',salesClear:'Clear recent sales',salesSettings:'Sales display options'}[command]}</option>`).join('')}</select></div>
+                <div id="commerce-product-fields"><div class="property-group"><label class="property-label" for="prop-url">Saved product URL (optional for Show)</label><input class="property-input" id="prop-url" type="url" value="${this.escapeHtml(node.config.url || '')}"></div>
+                <div class="property-group"><label class="property-label" for="prop-seconds">Seconds (0 = until changed)</label><input class="property-input" id="prop-seconds" type="number" min="0" max="3600" value="${Number(node.config.seconds) || 0}"><div class="property-help">Uses saved Products &amp; support links. Hide keeps activity alerts running. Waits for SSN; failure stops this chain. Confirmed selection is in <code>meta.commerceControlResult.commerce</code>; OBS visibility is unknown. <a href="https://socialstream.ninja/docs/product-controls.html" target="_blank" rel="noopener">Guide</a></div></div>`;
+                html += `</div><details id="commerce-board-fields"><summary>Board / sales fields</summary><div class="property-group"><label class="property-label" for="prop-data">Fields (JSON object)</label><textarea class="property-input" id="prop-data" rows="5" placeholder='{"id":"12","status":"claimed"}'>${this.escapeHtml(typeof node.config.data === 'string' ? node.config.data : JSON.stringify(node.config.data || {}, null, 2))}</textarea><div class="property-help">String values accept event variables such as {subtitle}. Use confirmed purchase events for sale actions; auction updates do not confirm payment. <a href="https://socialstream.ninja/docs/commerce-boards.html#automation" target="_blank" rel="noopener">Commands and fields</a></div></div></details>`;
+                break;
 
 			case 'clearLayer':
 				html += `<div class="property-group">
@@ -4700,7 +5729,87 @@ class EventFlowEditor {
 						Example: <code>actions.html?session=test&obsws=ws://127.0.0.1:4455</code>
 					</div>`;
 				break;
-				
+
+			case 'obsSetText':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Text Source Name</label>
+						<input type="text" class="property-input" id="prop-sourceName"
+							value="${this.escapeHtml(node.config.sourceName || '')}" placeholder="e.g., Counter Text">
+						<div class="property-help">The exact name of an OBS Text (GDI+) or Text (FreeType 2) source</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Text</label>
+						<textarea class="property-input" id="prop-text" rows="4" placeholder="{username}: {message}">${this.escapeHtml(node.config.text ?? '')}</textarea>
+						<div class="property-help">Supports message fields and flow-added placeholders, including {counterValue}, {counterTarget}, and {counterRemaining}.</div>
+					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Requires OBS WebSocket:</strong><br>
+						Enable OBS WebSocket v5 in OBS 28+ and keep the Flow Actions overlay open. The default server URL is <code>ws://127.0.0.1:4455</code>.<br>
+						Tester: <a href="../obs-websocket-test.html" target="_blank" rel="noopener" style="color: #fff; text-decoration: underline;">OBS WebSocket Tester</a>
+					</div>`;
+				break;
+
+			case 'obsMediaControl':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Media Source Name</label>
+						<input type="text" class="property-input" id="prop-sourceName"
+							value="${this.escapeHtml(node.config.sourceName || '')}" placeholder="e.g., Intro Video">
+						<div class="property-help">The exact name of an OBS Media Source or VLC Video Source</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Playback Action</label>
+						<select class="property-input" id="prop-operation">
+							<option value="play" ${node.config.operation === 'play' ? 'selected' : ''}>Play / Resume</option>
+							<option value="pause" ${node.config.operation === 'pause' ? 'selected' : ''}>Pause</option>
+							<option value="restart" ${!node.config.operation || node.config.operation === 'restart' ? 'selected' : ''}>Restart</option>
+							<option value="stop" ${node.config.operation === 'stop' ? 'selected' : ''}>Stop</option>
+							<option value="next" ${node.config.operation === 'next' ? 'selected' : ''}>Next playlist item</option>
+							<option value="previous" ${node.config.operation === 'previous' ? 'selected' : ''}>Previous playlist item</option>
+						</select>
+						<div class="property-help">Next and Previous apply to playlist-capable media inputs such as VLC Video Source.</div>
+					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Requires OBS WebSocket v5:</strong><br>
+						Keep the Flow Actions page open and connected to OBS 28+ on port <code>4455</code>.
+					</div>`;
+				break;
+
+			case 'obsSetVolume':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Audio Source Name</label>
+						<input type="text" class="property-input" id="prop-sourceName"
+							value="${this.escapeHtml(node.config.sourceName || '')}" placeholder="e.g., Music">
+						<div class="property-help">The exact name of the OBS input whose volume should change</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Volume (dB)</label>
+						<input type="number" class="property-input" id="prop-volumeDb"
+							value="${node.config.volumeDb ?? 0}" min="-100" max="26" step="0.1">
+						<div class="property-help">OBS accepts -100 dB (silent) through +26 dB. 0 dB is unchanged gain.</div>
+					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Requires OBS WebSocket v5:</strong><br>
+						Keep the Flow Actions page open and connected to OBS 28+ on port <code>4455</code>.
+					</div>`;
+				break;
+
+			case 'obsRefreshBrowser':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Browser Source Name</label>
+						<input type="text" class="property-input" id="prop-sourceName"
+							value="${this.escapeHtml(node.config.sourceName || '')}" placeholder="e.g., Alerts">
+						<div class="property-help">The exact name of the OBS Browser Source to reload without cache</div>
+					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Requires OBS WebSocket v5:</strong><br>
+						This presses the Browser Source <em>Refresh cache of current page</em> action through OBS.
+					</div>`;
+				break;
+
 			case 'obsSetSourceFilter':
 				html += `
 					<div class="property-group">
@@ -4827,6 +5936,23 @@ class EventFlowEditor {
 					</div>`;
 				break;
 				
+			case 'obsReplayBufferControl':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Replay Buffer Action</label>
+						<select class="property-input" id="prop-operation">
+							<option value="start" ${!node.config.operation || node.config.operation === 'start' ? 'selected' : ''}>Start</option>
+							<option value="stop" ${node.config.operation === 'stop' ? 'selected' : ''}>Stop</option>
+							<option value="toggle" ${node.config.operation === 'toggle' ? 'selected' : ''}>Toggle</option>
+						</select>
+						<div class="property-help">Replay Buffer must first be enabled in OBS Settings → Output.</div>
+					</div>
+					<div class="property-group" style="background: #0d47a1; color: #fff; padding: 10px; border-radius: 4px;">
+						<strong>Requires OBS WebSocket v5:</strong><br>
+						Keep the Flow Actions page open and connected to OBS 28+ on port <code>4455</code>.
+					</div>`;
+				break;
+
 			case 'obsReplayBuffer':
 				html += `
 					<div class="property-group">
@@ -4904,10 +6030,10 @@ class EventFlowEditor {
 					<div class="property-group">
 						<label class="property-label">Volume Level</label>
 						<input type="range" class="property-input" id="prop-volume"
-							value="${node.config.volume || 50}" min="0" max="100" step="5"
+							value="${node.config.volume ?? 50}" min="0" max="100" step="5"
 							oninput="document.getElementById('volume-display').textContent = this.value + '%'">
 						<div style="text-align: center; margin-top: 5px;">
-							<span id="volume-display">${node.config.volume || 50}%</span>
+							<span id="volume-display">${node.config.volume ?? 50}%</span>
 						</div>
 						<div class="property-help">Set the playback volume (0-100%)</div>
 					</div>
@@ -5037,6 +6163,12 @@ class EventFlowEditor {
 						<div class="property-help">The text that will be spoken aloud</div>
 					</div>
 					<div class="property-group">
+						<label class="property-label">Voice Override (optional)</label>
+						<input type="text" class="property-input" id="prop-voice"
+							value="${this.escapeHtml(node.config.voice || '')}" placeholder="Use Flow Actions default voice">
+						<div class="property-help">Enter a voice name or ID supported by the active Flow Actions TTS provider. Leave blank to use its configured default.</div>
+					</div>
+					<div class="property-group">
 						<label class="property-label">
 							<input type="checkbox" class="property-input" id="prop-useMessageText"
 								${node.config.useMessageText ? 'checked' : ''}>
@@ -5159,6 +6291,33 @@ class EventFlowEditor {
 				<p class="property-help">Sends a MIDI Control Change message to the selected output device.</p>`;
 				this.populateMIDIOutputDevices('prop-deviceId', node.config.deviceId);
 				break;
+
+			case 'rememberUser':
+				html += this.renderUserMemoryTargetField(node, 'Adds the current event user if they are not already present; repeat participation updates their count.');
+				html += `
+					<div class="property-group">
+						<label class="property-label">Reason or Activity (optional)</label>
+						<input type="text" class="property-input" id="prop-reason" value="${this.escapeHtml(node.config.reason || '')}" placeholder="e.g., Heart Me gift, liked stream">
+						<div class="property-help">Supports template variables such as {event}, {message}, and {donation}.</div>
+					</div>`;
+				break;
+
+			case 'forgetUser':
+				html += this.renderUserMemoryTargetField(node, 'Removes only the current event user from the selected memory.');
+				break;
+
+			case 'clearUserMemory':
+				html += this.renderUserMemoryTargetField(node, 'Clears every user from this memory object without affecting other memories or state nodes.');
+				break;
+
+			case 'pickRandomUser':
+				html += this.renderUserMemoryTargetField(node, 'Selects one unique remembered user using secure randomness when available.');
+				html += `
+					<div class="property-group">
+						<label><input type="checkbox" class="property-input" id="prop-removeSelected" ${node.config.removeSelected ? 'checked' : ''}> Remove selected user after the draw</label>
+					</div>
+					<div class="property-help">Downstream templates can use {selectedUser}, {selectedUserId}, {selectedUserSource}, {selectedUserParticipationCount}, and {userMemoryCount}.</div>`;
+				break;
 				
 			case 'setGateState':
 				html += `
@@ -5273,17 +6432,17 @@ class EventFlowEditor {
 				break;
 				
 			case 'playAudioClip':
-				html += `<div class="property-group">
-							 <label class="property-label">Audio File URL</label>
-							 <div style="display: flex; gap: 5px;">
-								 <input type="url" class="property-input" id="prop-audioUrl" value="${node.config.audioUrl || ''}" style="flex: 1;">
-								 <button type="button" id="uploadAudioBtn" style="padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Upload</button>
-							 </div>
-						 </div>
+				html += `${this.renderLocalMediaSource(node, {
+						label: 'Audio URL or Local File',
+						inputId: 'prop-audioUrl',
+						configKey: 'audioUrl',
+						uploadButtonId: 'uploadAudioBtn',
+						mediaType: 'audio'
+					})}
 						 <div class="property-group">
-							<label class="property-label">Volume (0.0 to 1.0)</label>
+							<label class="property-label" for="prop-volume">Volume (0 = silent, 1 = full volume)</label>
 							<input type="number" class="property-input" id="prop-volume" value="${node.config.volume ?? 1.0}" min="0" max="1" step="0.1">
-						</div>`;
+						</div><div class="property-help">Live sound plays through your Flow Actions browser source. Use sound in only one overlay for the same event to avoid doubling it. <a href="event-flow-guide.html" target="_blank" rel="noopener">Setup guide</a></div>`;
 				break;
 
 			default:
@@ -5291,12 +6450,78 @@ class EventFlowEditor {
 		}
 
 		propertiesContent.innerHTML = html;
+		if (node.type === 'action' && node.actionType === 'printThermal' && window.ninjafy?.listThermalPrinters) {
+			window.ninjafy.listThermalPrinters().then(printers => {
+				const datalist = document.getElementById('eventflow-thermal-printers');
+				if (!datalist || !Array.isArray(printers)) return;
+				datalist.replaceChildren(...printers.map(printer => {
+					const option = document.createElement('option');
+					option.value = printer.name;
+					option.label = `${printer.displayName || printer.name}${printer.isDefault ? ' (default)' : ''}`;
+					return option;
+				}));
+			}).catch(error => console.warn('[EventFlowEditor] Printer discovery failed:', error?.message || error));
+		}
+		if (this.isCustomCodeNode(node)) {
+			const codeInput = document.getElementById('prop-code');
+			if (codeInput) codeInput.value = this.getCustomCode(node);
+		}
 		this.addPropertiesEventListeners(node.id); // Pass node.id to correctly re-attach listeners
+		if (node.actionType === 'showAiEventOverlay') this.loadAiEventChoices(node);
 	}
+
+    async loadAiEventChoices(node) {
+        const status = document.getElementById('ai-event-flow-status');
+        try {
+            let choices;
+            if (window.SSNAiEventBackground) choices = await window.SSNAiEventBackground.choices();
+            else if (this.isExtensionRuntimeAvailable()) {
+                choices = await new Promise((resolve, reject) => {
+                    chrome.runtime.sendMessage({ cmd: 'aiEventFlow', action: 'list' }, response => {
+                        if (chrome.runtime.lastError || !response || response.error) reject(new Error('Open SSN to load saved overlays.'));
+                        else resolve(response.value);
+                    });
+                });
+            } else throw new Error('Open the local SSN editor to choose saved overlays.');
+            if (status !== document.getElementById('ai-event-flow-status')) return;
+            if (!choices.length) { status.textContent = 'Create an overlay in SSN’s AI Event Overlay settings first.'; return; }
+            const profile = document.createElement('select');
+            profile.id = 'prop-profile'; profile.className = 'property-input';
+            const option = (select, value, label) => { const item = document.createElement('option'); item.value = value; item.textContent = label; select.appendChild(item); };
+            option(profile, '', 'Choose an overlay');
+            choices.forEach(p => option(profile, p.id, p.name + (p.mode === 'flow' ? '' : ' (change trigger to Event Flow)')));
+            if (node.config.profile && !choices.some(p => p.id === node.config.profile)) option(profile, node.config.profile, node.config.profile + ' (not found)');
+            profile.value = node.config.profile || '';
+            document.getElementById('prop-profile').replaceWith(profile);
+            const variation = document.createElement('select');
+            variation.id = 'prop-variation'; variation.className = 'property-input';
+            document.getElementById('prop-variation').replaceWith(variation);
+            const update = () => {
+                const saved = choices.find(p => p.id === profile.value);
+                variation.textContent = ''; option(variation, '', 'No variation');
+                if (saved) saved.variations.forEach(value => option(variation, value, value));
+                if (node.config.variation && (!saved || saved.variations.indexOf(node.config.variation) < 0)) option(variation, node.config.variation, node.config.variation + ' (not approved)');
+                variation.value = node.config.variation || '';
+                status.textContent = !saved ? 'Choose a saved overlay.' : saved.mode !== 'flow' ? 'Change its trigger to Event Flow in overlay settings.' : node.config.variation && saved.variations.indexOf(node.config.variation) < 0 ? 'Choose an approved variation.' : 'Keep this overlay’s Browser Source open in OBS.';
+            };
+            profile.addEventListener('change', () => { node.config.profile = profile.value; node.config.variation = ''; update(); this.markUnsavedChanges(true); this.renderNodeOnCanvas(node.id); });
+            variation.addEventListener('change', () => { node.config.variation = variation.value; update(); this.markUnsavedChanges(true); this.renderNodeOnCanvas(node.id); });
+            update();
+        } catch (error) {
+            if (status === document.getElementById('ai-event-flow-status')) status.textContent = error.message;
+        }
+    }
 
     addPropertiesEventListeners(nodeId) {
         const nodeData = this.currentFlow.nodes.find(n => n.id === nodeId);
         if (!nodeData) return;
+
+        const openCustomCodeEditorButton = document.getElementById('open-custom-code-editor-btn');
+        if (openCustomCodeEditorButton) {
+            openCustomCodeEditorButton.addEventListener('click', () => {
+                this.openCustomCodeEditor(nodeData.id, openCustomCodeEditorButton);
+            });
+        }
 
         const subtypeSelect = document.getElementById('node-subtype-prop');
         if (subtypeSelect) {
@@ -5307,12 +6532,18 @@ class EventFlowEditor {
                 if (nodeType === 'trigger') nodeData.triggerType = newSubtype;
                 else if (nodeType === 'action') nodeData.actionType = newSubtype;
                 else if (nodeType === 'logic') nodeData.logicType = newSubtype;
+                else if (nodeType === 'state') nodeData.stateType = newSubtype;
                 
                 nodeData.config = {}; // Reset config when subtype changes
-                // TODO: Populate with default config for newSubtype if applicable
+                if (nodeType === 'state') {
+                    if (newSubtype === 'GATE') nodeData.config = { name: 'Gate 1', defaultState: 'ALLOW', autoResetMs: 0 };
+                    else if (newSubtype === 'COUNTER') nodeData.config = { name: 'Counter 1', initialCount: 0, targetCount: 5, resetOnTarget: true, mode: 'INCREMENT' };
+                    else if (newSubtype === 'THROTTLE') nodeData.config = { messagesPerSecond: 1, burstSize: 1, dropStrategy: 'DROP_NEWEST' };
+                    else if (newSubtype === 'USER_MEMORY') nodeData.config = { name: 'User Memory 1', persistence: 'session', resetAfterMs: 0, resetOnStreamStart: false, resetOnStreamStop: false };
+                }
                 this.markUnsavedChanges(true);
                 this.showNodeProperties(nodeData); // Rerender properties for the new subtype
-                this.renderNodeOnCanvas(nodeData.id); // Rerender the node itself on canvas
+                this.renderFlow();
             });
         }
 
@@ -5358,6 +6589,15 @@ class EventFlowEditor {
             }
         });
 
+        if (nodeData.actionType === 'commerceControl') {
+            const select = document.getElementById('prop-command');
+            const products = document.getElementById('commerce-product-fields'), boards = document.getElementById('commerce-board-fields');
+            if (select && products && boards) {
+                const updateCommerceFields = () => { const isBoard = !['show','next','hide','resume'].includes(select.value); products.hidden = isBoard; boards.hidden = !isBoard; boards.open = isBoard; };
+                select.addEventListener('change', updateCommerceFields); updateCommerceFields();
+            }
+        }
+
         // Special handling for relay destination dropdown
         const destinationSelect = document.getElementById('prop-destination-select');
         const destinationCustom = document.getElementById('prop-destination-custom');
@@ -5391,6 +6631,19 @@ class EventFlowEditor {
                 // ensure config refresh
                 if (nodeData && nodeData.config) {
                     nodeData.config.policy = e.target.value;
+                }
+                this.markUnsavedChanges(true);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
+
+        const pinModeSelect = document.getElementById('prop-mode');
+        const pinMessageIdGroup = document.getElementById('pin-message-id-group');
+        if (pinModeSelect && pinMessageIdGroup && nodeData.actionType === 'pinMessage') {
+            pinModeSelect.addEventListener('change', (e) => {
+                pinMessageIdGroup.style.display = e.target.value === 'nextPinned' ? 'none' : '';
+                if (nodeData && nodeData.config) {
+                    nodeData.config.mode = e.target.value;
                 }
                 this.markUnsavedChanges(true);
                 this.renderNodeOnCanvas(nodeData.id);
@@ -5709,6 +6962,36 @@ class EventFlowEditor {
             updateMutualExclusion();
         }
 
+        // Special handling for User Memory state nodes
+        if (nodeData.type === 'state' && nodeData.stateType === 'USER_MEMORY') {
+            const resetAfterInput = document.getElementById('prop-resetAfterMs');
+            if (resetAfterInput) {
+                resetAfterInput.addEventListener('input', event => {
+                    const seconds = Math.max(0, parseFloat(event.target.value) || 0);
+                    nodeData.config.resetAfterMs = seconds * 1000;
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+
+            const clearButton = document.getElementById('clear-user-memory-now');
+            if (clearButton) {
+                clearButton.addEventListener('click', async event => {
+                    event.preventDefault();
+                    const memoryName = nodeData.config?.name || 'this User Memory';
+                    if (!confirm(`Clear every remembered user from "${memoryName}"?`)) return;
+                    if (!this.eventFlowSystem || typeof this.eventFlowSystem.clearUserMemory !== 'function') return;
+                    const clearResult = await this.eventFlowSystem.clearUserMemory(nodeData.id, this.currentFlow, 'editor');
+                    if (clearResult && clearResult.success) {
+                        this.showNotification(`Cleared ${clearResult.clearedCount} user${clearResult.clearedCount === 1 ? '' : 's'} from ${memoryName}.`, 'success');
+                        this.renderNodeOnCanvas(nodeData.id);
+                    } else {
+                        this.showNotification(clearResult?.error || 'Unable to clear User Memory.', 'error');
+                    }
+                });
+            }
+        }
+
         // Special handling for counter trigger
         if (nodeData.triggerType === 'counter' || nodeData.type === 'trigger' && this.selectedNode?.triggerType === 'counter') {
             const countTypeSelect = document.getElementById('prop-countType');
@@ -5953,11 +7236,159 @@ class EventFlowEditor {
         }
 
         const uploadAudioBtn = document.getElementById('uploadAudioBtn');
+        if (nodeData.actionType === 'playAudioClip' && window.SSNSoundLibrary) {
+            const host = document.createElement('div');
+            const properties = document.getElementById('node-properties-content');
+            properties.prepend(host);
+            const input = document.getElementById('prop-audioUrl');
+            window.SSNSoundLibrary.attach({
+                container: host, input, id: 'eventflow-audio', label: 'Play this sound — Flow Actions overlay',
+                getValue: () => nodeData.config.sourceType === 'local' ? '' : (nodeData.config.audioUrl || ''),
+                getVolume: () => nodeData.config.volume === undefined ? 0.35 : nodeData.config.volume,
+                setValue: value => {
+                    nodeData.config.sourceType = 'url';
+                    nodeData.config.audioUrl = value;
+                    delete nodeData.config.localAssetId;
+                    delete nodeData.config.localAssetName;
+                    delete nodeData.config.localMediaType;
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                    if (input) {input.value = value;} else {
+                        this.showNodeProperties(nodeData);
+                        document.getElementById('eventflow-audio-library').focus();
+                    }
+                }
+            });
+            const help = document.createElement('p');
+            help.className = 'property-help';
+            help.textContent = 'Listen plays locally. This action plays in the Flow Actions OBS browser source. If Multi-Alerts also handles this event, use sound in only one overlay to avoid doubling it. For a local file, use its Preview button below.';
+            host.appendChild(help);
+        }
         if (uploadAudioBtn) {
             uploadAudioBtn.addEventListener('click', () => {
                 openNodeMediaUpload('uploadAudio', 'prop-audioUrl', 'audioUrl');
             });
         }
+
+        const localMediaApi = this.getLocalMediaApi();
+        const chooseLocalMediaBtn = document.getElementById('chooseLocalMediaBtn');
+        if (chooseLocalMediaBtn) {
+            chooseLocalMediaBtn.addEventListener('click', async () => {
+                if (!localMediaApi) {
+                    this.showNotification('Local files require the Social Stream standalone app or Media Bridge.', 'warning');
+                    return;
+                }
+                const isAudio = nodeData.actionType === 'playAudioClip';
+                try {
+                    const result = await localMediaApi.select({
+                        assetId: nodeData.config.sourceType === 'local' ? nodeData.config.localAssetId : '',
+                        mediaType: isAudio ? 'audio' : '',
+                        allowedMediaTypes: isAudio ? ['audio'] : ['image', 'video']
+                    });
+                    if (!result || !result.success || !result.asset) return;
+                    nodeData.config.sourceType = 'local';
+                    nodeData.config.localAssetId = result.asset.id;
+                    nodeData.config.localAssetName = result.asset.displayName || result.asset.fileName;
+                    nodeData.config.localMediaType = result.asset.mediaType;
+                    if (!isAudio) nodeData.config.mediaType = result.asset.mediaType;
+                    this.markUnsavedChanges(true);
+                    this.showNodeProperties(nodeData);
+                    this.renderNodeOnCanvas(nodeData.id);
+                } catch (error) {
+                    this.showNotification(`Unable to select local media: ${error && error.message ? error.message : error}`, 'error');
+                }
+            });
+        }
+
+        const useMediaUrlBtn = document.getElementById('useMediaUrlBtn');
+        if (useMediaUrlBtn) {
+            useMediaUrlBtn.addEventListener('click', () => {
+                nodeData.config.sourceType = 'url';
+                delete nodeData.config.localAssetId;
+                delete nodeData.config.localAssetName;
+                delete nodeData.config.localMediaType;
+                this.markUnsavedChanges(true);
+                this.showNodeProperties(nodeData);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
+
+        const previewLocalMediaBtn = document.getElementById('previewLocalMediaBtn');
+        if (previewLocalMediaBtn) {
+            previewLocalMediaBtn.addEventListener('click', async () => {
+                if (!localMediaApi || !nodeData.config.localAssetId) return;
+                try {
+                    await localMediaApi.start();
+                    const result = await localMediaApi.getMediaUrl(nodeData.config.localAssetId);
+                    // Media previews can contain active SVG content; keep them separate from the editor's app bridge.
+                    if (result && result.url) window.open(result.url, '_blank', 'noopener');
+                } catch (error) {
+                    this.showNotification(`Unable to preview local media: ${error && error.message ? error.message : error}`, 'error');
+                }
+            });
+        }
+
+        const revealLocalMediaBtn = document.getElementById('revealLocalMediaBtn');
+        if (revealLocalMediaBtn) {
+            revealLocalMediaBtn.addEventListener('click', async () => {
+                if (!localMediaApi || !nodeData.config.localAssetId) return;
+                try {
+                    await localMediaApi.reveal(nodeData.config.localAssetId);
+                } catch (error) {
+                    this.showNotification(`Unable to reveal local media: ${error && error.message ? error.message : error}`, 'error');
+                }
+            });
+        }
+
+        const copyLocalFlowActionsUrlBtn = document.getElementById('copyLocalFlowActionsUrlBtn');
+        if (copyLocalFlowActionsUrlBtn) {
+            copyLocalFlowActionsUrlBtn.addEventListener('click', async () => {
+                if (!localMediaApi) return;
+                try {
+                    await localMediaApi.start();
+                    const flowUrlParams = new URLSearchParams(window.location.search);
+                    const result = await localMediaApi.getFlowActionsUrl({
+                        sessionId: this.getCurrentSessionId(),
+                        search: this.getCurrentFlowActionsSearch(),
+                        localserver: flowUrlParams.has('localserver'),
+                        localserverport: flowUrlParams.get('localserverport')
+                    });
+                    if (!result || !result.url) throw new Error('The local Flow Actions URL was unavailable.');
+                    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                        await navigator.clipboard.writeText(result.url);
+                        this.showNotification('Local Flow Actions URL copied. Paste it into an OBS Browser Source.', 'success');
+                    } else {
+                        window.prompt('Copy this Local Flow Actions URL into OBS:', result.url);
+                    }
+                } catch (error) {
+                    this.showNotification(`Unable to copy the local Flow Actions URL: ${error && error.message ? error.message : error}`, 'error');
+                }
+            });
+        }
+
+        const changeLocalMediaPortBtn = document.getElementById('changeLocalMediaPortBtn');
+        if (changeLocalMediaPortBtn) {
+            changeLocalMediaPortBtn.addEventListener('click', async () => {
+                if (!localMediaApi || typeof localMediaApi.setPort !== 'function') return;
+                try {
+                    const status = await localMediaApi.status();
+                    const rawPort = window.prompt('Local media server port (1024–65535):', String(status && status.port ? status.port : 3001));
+                    if (rawPort === null) return;
+                    const port = Number.parseInt(rawPort, 10);
+                    if (!Number.isInteger(port) || port < 1024 || port > 65535) {
+                        this.showNotification('Choose a port from 1024 through 65535.', 'warning');
+                        return;
+                    }
+                    await localMediaApi.setPort(port);
+                    this.showNotification('Local media port updated. Copy the Local Flow Actions URL into OBS again.', 'success');
+                    this.refreshLocalMediaStatus(nodeData);
+                } catch (error) {
+                    this.showNotification(`Unable to change the local media port: ${error && error.message ? error.message : error}`, 'error');
+                }
+            });
+        }
+
+        this.refreshLocalMediaStatus(nodeData);
     }
     
     renderNodeOnCanvas(nodeId) {
@@ -5968,7 +7399,7 @@ class EventFlowEditor {
             const titleEl = existingNodeEl.querySelector('.node-title');
             if (titleEl) titleEl.textContent = this.getNodeTitle(nodeData);
             const bodyEl = existingNodeEl.querySelector('.node-body');
-            if (bodyEl) bodyEl.innerHTML = this.getNodeDescription(nodeData);
+            if (bodyEl) bodyEl.textContent = this.getNodeDescription(nodeData);
         }
     }
 
@@ -6007,6 +7438,8 @@ class EventFlowEditor {
                 this.renderConnection(conn);
             }
         });
+        this.renderStateReferences();
+        this.highlightStateReferenceGroup(this.selectedNode);
     }
 
     handleNodeDragEnd = () => {

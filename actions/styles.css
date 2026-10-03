@@ -1,8 +1,5 @@
 /* style.css */
 
-/* Import Fonts from Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap');
-
 /* --- CSS Custom Properties (Variables) --- */
 :root {
     /* Base colors */
@@ -69,8 +66,8 @@
     --state-bg: rgba(147, 51, 234, 0.2); /* State node background */
 
     /* Fonts */
-    --font-primary: 'Inter', sans-serif;
-    --font-monospace: 'Fira Code', monospace;
+    --font-primary: "Segoe UI", Tahoma, Arial, sans-serif;
+    --font-monospace: "Cascadia Code", Consolas, "Courier New", monospace;
 }
 
 /* --- Base & Global Styles --- */
@@ -896,6 +893,44 @@ input:checked + .slider:before {
     border-color: #9b59b6;
 }
 
+/* Shared state references use side ports so they cannot be mistaken for event flow. */
+.state-reference-point {
+    position: absolute;
+    top: 50%;
+    width: 14px;
+    height: 14px;
+    margin-top: -7px;
+    background-color: var(--background-base);
+    border: 2px solid #c084fc;
+    border-radius: 3px;
+    cursor: crosshair;
+    z-index: 13;
+    transform: rotate(45deg);
+    transition: background-color var(--transition-speed-fast) ease, box-shadow var(--transition-speed-fast) ease;
+}
+
+.state-reference-point.source {
+    right: -8px;
+}
+
+.state-reference-point.target {
+    left: -8px;
+}
+
+.state-reference-point:hover {
+    background-color: #c084fc;
+    box-shadow: 0 0 0 4px rgba(192, 132, 252, 0.2);
+}
+
+.node.state-related {
+    border-color: #c084fc;
+    box-shadow: 0 0 0 2px rgba(192, 132, 252, 0.75), var(--shadow-lg);
+}
+
+.node.selected.state-related {
+    box-shadow: 0 0 0 2px var(--primary-color), 0 0 0 5px rgba(192, 132, 252, 0.45), var(--shadow-lg);
+}
+
 /* Specific logic input point styles from HTML */
 .connection-point.input.logic-input-single {
     border: 2px solid var(--logic-color);
@@ -929,6 +964,40 @@ input:checked + .slider:before {
 .connection path {
     stroke-width: 2.5px; /* Slightly thicker */
     transition: stroke var(--transition-speed-fast) ease, stroke-width var(--transition-speed-fast) ease;
+}
+
+.state-reference,
+.temp-state-reference {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.state-reference path,
+.temp-state-reference path {
+    fill: none;
+    stroke: #c084fc;
+    stroke-width: 2.5px;
+    stroke-dasharray: 7 6;
+    transition: stroke var(--transition-speed-fast) ease, stroke-width var(--transition-speed-fast) ease;
+}
+
+.state-reference path:last-child {
+    pointer-events: stroke;
+    cursor: pointer;
+}
+
+.state-reference.state-related path {
+    stroke: #f0abfc;
+    stroke-width: 4px;
+}
+
+.temp-state-reference {
+    z-index: 1000;
 }
 /* Hover effect for connections can be tricky as they are pointer-events: none.
    If interaction is needed, it usually involves invisible shapes or JS. */
@@ -993,6 +1062,18 @@ input:checked + .slider:before {
     margin-bottom: 18px;
 }
 
+.user-memory-summary {
+    padding: 12px 14px;
+    border: 1px solid rgba(192, 132, 252, 0.45);
+    border-radius: var(--radius-md);
+    background: rgba(192, 132, 252, 0.1);
+    color: var(--text-primary);
+}
+
+.user-memory-summary strong {
+    color: #d8b4fe;
+}
+
 .property-label { /* For labels above inputs */
     font-weight: 500;
     margin-bottom: 6px;
@@ -1020,6 +1101,164 @@ textarea.property-input {
     font-family: var(--font-monospace); /* Good for code inputs */
 }
 
+body.custom-code-editor-open {
+    overflow: hidden;
+}
+
+.custom-code-editor-launch {
+    width: 100%;
+    margin-top: 10px;
+}
+
+.custom-code-editor-overlay {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 11000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.78);
+}
+
+.custom-code-editor-dialog {
+    width: calc(100% - 48px);
+    max-width: 1200px;
+    height: calc(100% - 48px);
+    max-height: 900px;
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--background-dialog);
+    border: 1px solid var(--border-interactive);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+.custom-code-editor-header,
+.custom-code-editor-footer {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--background-surface);
+}
+
+.custom-code-editor-header {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.custom-code-editor-header h3 {
+    margin: 0 0 2px;
+    color: var(--primary-light);
+}
+
+.custom-code-editor-context,
+.custom-code-editor-shortcuts {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+}
+
+.custom-code-editor-close {
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.custom-code-editor-close:hover,
+.custom-code-editor-close:focus {
+    outline: none;
+    background: var(--background-hover);
+    color: var(--text-primary);
+}
+
+textarea.custom-code-editor-input {
+    flex: 1 1 auto;
+    width: auto;
+    min-height: 240px;
+    margin: 16px 20px 0;
+    resize: none;
+    overflow: auto;
+    white-space: pre;
+    tab-size: 4;
+    font-family: var(--font-monospace);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    user-select: text;
+    -webkit-user-select: text;
+}
+
+.custom-code-editor-status {
+    flex: 0 0 auto;
+    min-height: 30px;
+    padding: 5px 20px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.custom-code-editor-status.error {
+    color: var(--error-color);
+}
+
+.custom-code-editor-status.info {
+    color: var(--info-color);
+}
+
+.custom-code-editor-footer {
+    border-top: 1px solid var(--border-color);
+}
+
+.custom-code-editor-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.custom-code-editor-actions .btn:disabled {
+    cursor: wait;
+    opacity: 0.6;
+}
+
+@media (max-width: 700px), (max-height: 550px) {
+    .custom-code-editor-overlay {
+        padding: 8px;
+    }
+
+    .custom-code-editor-dialog {
+        width: 100%;
+        height: 100%;
+        min-height: 0;
+        border-radius: var(--radius-sm);
+    }
+
+    .custom-code-editor-header,
+    .custom-code-editor-footer {
+        padding: 10px 12px;
+    }
+
+    textarea.custom-code-editor-input {
+        margin: 10px 12px 0;
+        min-height: 150px;
+    }
+
+    .custom-code-editor-shortcuts {
+        display: none;
+    }
+}
+
 select.property-input {
     /* appearance, background-image, etc. inherited from global select styles */
 }
@@ -1029,6 +1268,11 @@ select.property-input {
     color: var(--text-secondary);
     margin-top: 6px;
     line-height: 1.5;
+}
+
+.property-help a {
+    color: var(--text-primary);
+    text-decoration: underline;
 }
 
 
@@ -1294,3 +1538,6 @@ select.property-input {
     }
 }
 
+
+/* Keyboard access to alert setup and existing flow controls. */
+.node:focus, #template-select:focus, #node-properties-content input:focus, #node-properties-content select:focus, #node-properties-content button:focus, #node-properties-content summary:focus { outline: 3px solid #71c9ff; outline-offset: 3px; }
