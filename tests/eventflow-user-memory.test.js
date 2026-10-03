@@ -33,7 +33,10 @@ function makeWindow(overrides = {}) {
 
 function loadEventFlowSystem({ windowOverrides = {}, globals = {} } = {}) {
     const document = {
-        createElement() {
+        createElement(tagName) {
+            if (tagName === 'template') {
+                return { content: { appendChild: child => child } };
+            }
             let html = '';
             const getText = () => String(html).replace(/<[^>]*>/g, '');
             return {
