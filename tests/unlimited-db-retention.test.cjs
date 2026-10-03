@@ -366,6 +366,12 @@ async function main() {
   assert.ok(backgroundSource.includes("messageStoreDB.isMessageExpired(cursor.value"), "Replay must use the shared retention rule");
 
   const server = http.createServer((request, response) => {
+    const asset = new URL(request.url, "http://127.0.0.1").pathname;
+    if (asset === "/libs/objects.js" || asset === "/shared/utils/chatHtml.js") {
+      response.writeHead(200, { "Content-Type": "text/javascript; charset=utf-8" });
+      response.end(fs.readFileSync(path.join(repoRoot, asset.slice(1)), "utf8"));
+      return;
+    }
     if (request.url === "/db.js") {
       response.writeHead(200, { "Content-Type": "text/javascript; charset=utf-8" });
       response.end(dbSource);

@@ -102,7 +102,6 @@ class MessageStoreDB {
         this.db = null;
         this.cache = {
             recent: [],
-            userMessages: new Map(),
             lastUpdate: 0,
             retentionMode: null
         };
@@ -198,7 +197,6 @@ class MessageStoreDB {
         const unlimited = isUnlimitedDBEnabled();
         if (this.cache.retentionMode !== null && this.cache.retentionMode !== unlimited) {
             this.cache.recent = [];
-            this.cache.userMessages.clear();
             this.cache.lastUpdate = 0;
             this.clearExistenceCache();
         }
@@ -335,18 +333,10 @@ class MessageStoreDB {
 		});
 	}
     updateCache(message) {
-        const { recent, userMessages } = this.cache;
+        const { recent } = this.cache;
         
         recent.unshift(message);
         if (recent.length > this.cacheSize) recent.pop();
-        
-        if (!userMessages.has(message.userid || message.chatname)) {
-            userMessages.set(message.userid || message.chatname, []);
-        }
-        
-        const userCache = userMessages.get(message.userid || message.chatname);
-        userCache.unshift(message);
-        if (userCache.length > this.cacheSize) userCache.pop();
         
         this.cache.lastUpdate = Date.now();
     }
@@ -540,7 +530,6 @@ class MessageStoreDB {
                     cursor.continue();
                 } else {
                     if (page === 0) {
-                        this.cache.userMessages.set(chatname, messages);
                         this.cache.lastUpdate = now;
                     }
                     resolve(messages);
@@ -671,7 +660,6 @@ class MessageStoreDB {
 
     async clearCache() {
         this.cache.recent = [];
-        this.cache.userMessages.clear();
         this.cache.lastUpdate = 0;
         this.cache.retentionMode = isUnlimitedDBEnabled();
     }
