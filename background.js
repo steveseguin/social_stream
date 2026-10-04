@@ -907,6 +907,25 @@ if (typeof chrome.runtime == "undefined") {
 				return;
 			}
 			const sender = args[1] || { tab: { id: null } };
+			const captureReply = args[2];
+			if (captureReply && args[0] && args[0].message) {
+				sender.ssappCaptureReply = true;
+				let response;
+				// Complete capture before releasing its callback: a source can delete
+				// the row immediately on receiving its MID.
+				handleRuntimeMessage(args[0], sender, function (value) {
+					response = value;
+					ipcRenderer.send("fromBackgroundResponse", value);
+				}).then(function () {
+					if (response && response.id === undefined && args[0].message.id !== undefined) {
+						response.id = args[0].message.id;
+					}
+					ipcRenderer.send("fromBackgroundResponse", response, captureReply);
+				}).catch(function (error) {
+					ipcRenderer.send("fromBackgroundResponse", { error: error.message }, captureReply);
+				});
+				return;
+			}
 			onMessageCallback(args[0], sender, function (response) {
 				if (event.returnValue) {
 					event.returnValue = response;
@@ -6442,7 +6461,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			// Reply after processing so a held deletion cannot overtake the message.
 			if ((request.message.type === "youtube" || request.message.type === "youtubeshorts") &&
 				typeof request.youtubeMessageRequestId === "string" && request.youtubeMessageRequestId.length <= 100 &&
-				sender && sender.tab && sender.tab.id !== undefined && Number.isSafeInteger(request.message.id)) {
+				sender && !sender.ssappCaptureReply && sender.tab && sender.tab.id !== undefined && Number.isSafeInteger(request.message.id)) {
 				Promise.resolve(chrome.tabs.sendMessage(sender.tab.id, {
 					youtubeMessageResponse: { requestId: request.youtubeMessageRequestId, id: request.message.id }
 				}, function () { chrome.runtime.lastError; })).catch(function (error) {
