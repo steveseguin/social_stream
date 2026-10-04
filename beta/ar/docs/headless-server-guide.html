@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="ar" data-site-root="../../" data-site-language="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ar/docs/headless-server-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ar_AR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ar/docs/headless-server-guide.html">
+    <meta property="og:title" content="تشغيل Social Stream Ninja دون واجهة مرئية - Social Stream Ninja">
+    <meta property="og:description" content="شغّل تطبيق سطح المكتب Social Stream Ninja على خادم منزلي أو VPS بنظام Ubuntu أو Debian مع Xvfb وإعدادات دائمة وتحكم عن بُعد وأتمتة محلية اختيارية بالذكاء الاصطناعي.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="شعار Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ar/docs/headless-server-guide.html">
+    <meta name="twitter:title" content="تشغيل Social Stream Ninja دون واجهة مرئية - Social Stream Ninja">
+    <meta name="twitter:description" content="شغّل تطبيق سطح المكتب Social Stream Ninja على خادم منزلي أو VPS بنظام Ubuntu أو Debian مع Xvfb وإعدادات دائمة وتحكم عن بُعد وأتمتة محلية اختيارية بالذكاء الاصطناعي.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="شعار Social Stream Ninja">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>تشغيل Social Stream Ninja دون واجهة مرئية - Social Stream Ninja</title>
+	<meta name="description" content="شغّل تطبيق سطح المكتب Social Stream Ninja على خادم منزلي أو VPS بنظام Ubuntu أو Debian مع Xvfb وإعدادات دائمة وتحكم عن بُعد وأتمتة محلية اختيارية بالذكاء الاصطناعي.">
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ar">
+<script id="ssn-site-language" type="application/json">{"language":"ar","page":"docs/headless-server-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"التبديل إلى السمة الفاتحة","Switch to dark theme":"التبديل إلى السمة الداكنة","Light mode":"الوضع الفاتح","Dark mode":"الوضع الداكن","Open navigation menu":"فتح قائمة التنقل","Close navigation menu":"إغلاق قائمة التنقل","Copy this document as Markdown to the clipboard":"نسخ هذا المستند بصيغة Markdown إلى الحافظة","Copy Markdown":"نسخ Markdown","Copying…":"جارٍ النسخ…","Markdown copied":"تم نسخ Markdown","Copy failed":"تعذّر النسخ","Copy comprehensive Markdown for an AI assistant":"نسخ Markdown شامل لمساعد ذكاء اصطناعي","Copy this documentation page as Markdown for an AI assistant":"نسخ صفحة التوثيق هذه بصيغة Markdown لمساعد ذكاء اصطناعي"},"strings":{"), then replace":")، ثم استبدل",", and the supported platforms in capabilities first. For example, if Twitch is supported, add a source (replace":"، والمنصات المدعومة ضمن capabilities أولًا. مثلًا، إذا كان Twitch مدعومًا، فأضف مصدرًا (استبدل",", not Chromium's":"، وليس خيار Chromium",", or":"، أو",", replace the AppImage at the same path, and start the service again. Retain the previous executable until the new version passes the message checks.":"، واستبدل ملف AppImage في المسار نفسه، ثم شغّل الخدمة مجددًا. احتفظ بالملف التنفيذي السابق حتى تنجح النسخة الجديدة في اختبارات الرسائل.",", then confirm the same session and sources return and auto-activated sources receive new messages.":"، ثم تأكد من عودة الجلسة والمصادر نفسها ومن وصول رسائل جديدة إلى المصادر المفعّلة تلقائيًا.",". Choose the download matching your server architecture (":". اختر التنزيل المناسب لمعمارية خادمك (",". Complete sign-ins on the VPS; browser cookies copied from another OS may not decrypt.":". أكمل تسجيل الدخول على VPS؛ فقد يتعذر فك تشفير ملفات تعريف ارتباط المتصفح المنسوخة من نظام تشغيل آخر.",". Read state after a change. If a request times out, check state before retrying it. Stop a source before changing its connection fields. Reload, removal, and shutdown commands require":". اقرأ الحالة بعد أي تغيير. إذا انتهت مهلة طلب، فتحقق من الحالة قبل تكراره. أوقف المصدر قبل تغيير حقول اتصاله. تتطلب أوامر إعادة التحميل والإزالة والإغلاق",". Replace the AppImage path in setup, service, and MCP commands with":". استبدل مسار AppImage في أوامر الإعداد والخدمة وMCP بـ",". SSApp is not that video broadcaster.":". لا يؤدي SSApp دور برنامج بث الفيديو هذا.",". Set the Social Stream session ID and optional password, add sources, and complete any sign-ins. Enable":". عيّن معرّف جلسة Social Stream وكلمة المرور الاختيارية، وأضف المصادر وأكمل تسجيل الدخول عند الحاجة. فعّل",". The API intentionally has no token and binds only to":". واجهة API بلا رمز مصادقة عمدًا ولا تستمع إلا على","1. Install Xvfb and the AppImage":"1. تثبيت Xvfb وAppImage","2. Prepare the Profile and Sign In Once":"2. تجهيز الملف الشخصي وتسجيل الدخول مرة واحدة","3. Start the App Headlessly":"3. تشغيل التطبيق دون واجهة مرئية","4. Control It from Another Computer":"4. التحكم فيه من جهاز كمبيوتر آخر","; it is separate from your Owncast or Rocket.Chat web server. Keep it local.":"؛ وهي منفصلة عن خادم الويب الخاص بـOwncast أو Rocket.Chat. أبقها محلية.","A controller on another computer uses the same Social Stream session and normal WebRTC or hosted WebSocket transport as other remote-control workflows.":"تستخدم وحدة التحكم الموجودة على جهاز آخر جلسة Social Stream نفسها ونقل WebRTC المعتاد أو WebSocket المستضاف، كما في مسارات التحكم عن بُعد الأخرى.","API and MCP guide":"دليل API وMCP","Allow at least 2 GB of memory for a small setup and more for several source windows.":"خصص ذاكرة لا تقل عن 2 GB للإعداد البسيط، وزدها عند استخدام نوافذ مصادر متعددة.","An overlay positioned over an embedded player on your website is a different option: it appears on that page, rather than being part of the video received by other players or recordings. Owncast documents":"وضع تراكب فوق مشغّل مضمّن في موقعك خيار مختلف: يظهر على تلك الصفحة ولا يصبح جزءًا من الفيديو الذي تستقبله المشغلات الأخرى أو التسجيلات. يشرح Owncast","Auto-activate":"التفعيل التلقائي (Auto-activate)","Before You Start":"قبل البدء","Check":"تحقق من","Check the Complete Workflow Before Leaving It Unattended":"تحقق من سير العمل الكامل قبل تركه دون مراقبة","Choose a persistent profile directory for settings, sources, sessions, and browser data.":"اختر مجلد ملف شخصي دائمًا للإعدادات والمصادر والجلسات وبيانات المتصفح.","Commands & API":"الأوامر وAPI","Confirm both sides use the same session and password and that WebRTC or the hosted WebSocket mode is connected.":"تأكد من استخدام الطرفين الجلسة وكلمة المرور نفسيهما، ومن اتصال WebRTC أو وضع WebSocket المستضاف.","Connect your VNC viewer to":"وصّل عارض VNC بـ","Copy the source's stable":"انسخ المعرّف الثابت للمصدر","Disconnect VNC and SSH, then send more messages over several minutes. Capture should continue.":"افصل VNC وSSH، ثم أرسل مزيدًا من الرسائل على مدى عدة دقائق. يجب أن يستمر الالتقاط.","Download":"تنزيل","Download the current Linux AppImage from the":"نزّل ملف AppImage الحالي لنظام Linux من","Download the usual Linux app and make it executable. On a VPS without a desktop, launching the AppImage alone is not enough: use a virtual display and the":"نزّل تطبيق Linux المعتاد وامنحه صلاحية التنفيذ. على VPS بلا سطح مكتب، لا يكفي تشغيل AppImage وحده: استخدم شاشة افتراضية وخيار","During a maintenance window, reboot the VPS and repeat the message check. A running process or successful API response alone does not prove chat capture works.":"أثناء فترة صيانة، أعد تشغيل VPS وكرر اختبار الرسائل. وجود عملية قيد التشغيل أو استجابة API ناجحة وحده لا يثبت أن التقاط الدردشة يعمل.","Extract with":"استخرج باستخدام","Feature that message and confirm the featured overlay changes. For Owncast, verify it in the actual viewer video too.":"أبرز تلك الرسالة وتأكد من تغيّر تراكب الرسالة المميزة. في Owncast، تحقق منه أيضًا داخل الفيديو الفعلي الذي يشاهده الجمهور.","Features":"الميزات","For a manual launch, add":"للتشغيل اليدوي، أضف","For updates, stop the service, back up":"للتحديث، أوقف الخدمة واحتفظ بنسخة احتياطية من","Give every instance a different":"خصص لكل نسخة قيمة مختلفة لـ","Guides":"الأدلة","HTTP API":"واجهة HTTP API","Headless mode does not create a public control API.":"لا ينشئ وضع التشغيل دون واجهة مرئية واجهة تحكم API عامة.","Headless mode does not enable the control API. To enable it for your service, run":"لا يفعّل وضع التشغيل دون واجهة مرئية واجهة التحكم API. لتفعيلها لخدمتك، شغّل","Headless mode keeps SSApp's Electron windows hidden, but the source pages are still real browser windows. Linux therefore needs a virtual display such as Xvfb. This is not a small background-only chat daemon.":"يُخفي وضع التشغيل دون واجهة مرئية نوافذ Electron الخاصة بـSSApp، لكن صفحات المصادر تظل نوافذ متصفح حقيقية. لذلك يحتاج Linux إلى شاشة افتراضية مثل Xvfb. هذا ليس برنامج دردشة خلفيًا صغيرًا فقط.","Hire":"الاستعانة بخدمات المطوّر","Home":"الرئيسية","In a third SSH terminal, start temporary VNC access, restricted to the server itself:":"في طرفية SSH ثالثة، شغّل وصول VNC مؤقتًا ومقيدًا بالخادم نفسه:","Inspiration":"أفكار ملهمة","Jump to":"انتقل إلى","Keep":"أبقِ","Keep It Running with systemd":"إبقاء التطبيق قيد التشغيل باستخدام systemd","Keep the full desktop app capturing on an Ubuntu or Debian home server or VPS without a physical monitor.":"أبقِ تطبيق سطح المكتب الكامل يلتقط الدردشة على خادم منزلي أو VPS بنظام Ubuntu أو Debian دون شاشة فعلية.","Launch through":"شغّل عبر","Leave that terminal running. In a second SSH terminal, open SSApp visibly on that virtual display:":"اترك تلك الطرفية قيد التشغيل. في طرفية SSH ثانية، افتح SSApp بصورة مرئية على تلك الشاشة الافتراضية:","Local Control API and MCP":"واجهة التحكم المحلية API وMCP","Local Control API and MCP guide":"دليل واجهة التحكم المحلية API وMCP","Local Servers and Services Explained":"شرح الخوادم والخدمات المحلية","MCP":"MCP","MCP lets a compatible AI client call SSApp controls as tools. Enable the API above and keep the main app service running. Register this configuration in a client running":"يتيح MCP لعميل ذكاء اصطناعي متوافق استدعاء عناصر تحكم SSApp كأدوات. فعّل واجهة API المذكورة أعلاه وأبقِ خدمة التطبيق الرئيسية قيد التشغيل. سجّل هذا التكوين في عميل يعمل","Main navigation":"التنقل الرئيسي","On your own computer, open an SSH tunnel:":"على جهازك، افتح نفق SSH:","Open navigation menu":"فتح قائمة التنقل","Optional HTTP API for Scripts on the VPS":"واجهة HTTP API اختيارية للبرامج النصية على VPS","Optional MCP for an AI Client on the VPS":"MCP اختياري لعميل ذكاء اصطناعي على VPS","Overlay Gallery":"معرض التراكبات","Owncast and Rocket.Chat":"Owncast وRocket.Chat","Owncast's broadcasting instructions":"تعليمات البث في Owncast","Owncast, Rocket.Chat, and Featured Messages":"Owncast وRocket.Chat والرسائل المميزة","Plan a one-time desktop or VNC session for sign-ins and other private setup.":"خطط لجلسة سطح مكتب أو VNC لمرة واحدة لتسجيل الدخول وإتمام الإعدادات الخاصة الأخرى.","Problem":"المشكلة","Public source URLs that do not require sign-in are the easiest to operate remotely. OAuth, CAPTCHA, passwords, cookies, and account setup still require a person.":"عناوين URL العامة للمصادر التي لا تتطلب تسجيل الدخول هي الأسهل للتشغيل عن بُعد. لا تزال OAuth وCAPTCHA وكلمات المرور وملفات تعريف الارتباط وإعداد الحساب تتطلب تدخل شخص.","Quit SSApp after setup, then stop VNC, the tunnel, and Xvfb with Ctrl+C in their terminals. Do not run setup and the service against the same profile at the same time. VNC attached to an already-headless instance will normally show an empty display because its windows are hidden.":"أغلق SSApp بعد الإعداد، ثم أوقف VNC والنفق وXvfb باستخدام Ctrl+C في طرفياتها. لا تشغّل الإعداد والخدمة باستخدام الملف الشخصي نفسه في الوقت نفسه. عادةً ما يعرض VNC المتصل بنسخة تعمل أصلًا دون واجهة مرئية شاشة فارغة لأن نوافذها مخفية.","Read":"اقرأ","Related Guides":"أدلة ذات صلة","Remote commands do not arrive":"أوامر التحكم عن بُعد لا تصل","Run":"شغّل","Run Social Stream Ninja Headlessly":"تشغيل Social Stream Ninja دون واجهة مرئية","Run Social Stream Ninja Headlessly - Social Stream Ninja":"تشغيل Social Stream Ninja دون واجهة مرئية - Social Stream Ninja","Run the Social Stream Ninja desktop app on an Ubuntu or Debian home server or VPS with Xvfb, persistent settings, remote control, and optional local AI automation.":"شغّل تطبيق سطح المكتب Social Stream Ninja على خادم منزلي أو VPS بنظام Ubuntu أو Debian مع Xvfb وإعدادات دائمة وتحكم عن بُعد وأتمتة محلية اختيارية بالذكاء الاصطناعي.","See":"راجع","See the":"راجع","Send a real message in a connected chat and confirm it arrives in your Social Stream dock.":"أرسل رسالة حقيقية في دردشة متصلة وتأكد من وصولها إلى لوحة إرساء Social Stream.","Sessions, Passwords, Relay, and Server Modes":"الجلسات وكلمات المرور والمرحّل وأوضاع الخادم","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja download page":"صفحة تنزيل Social Stream Ninja","Social Stream Ninja logo":"شعار Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. ترخيص GPLv3.0.","Social Stream commands":"أوامر Social Stream","Sources or settings mix between instances":"اختلاط المصادر أو الإعدادات بين النسخ","Standalone App Modes":"أوضاع التطبيق المستقل","Stop the foreground app with Ctrl+C first. Create":"أوقف أولًا التطبيق العامل في الواجهة باستخدام Ctrl+C. أنشئ","Support":"الدعم","Supported Sites":"المواقع المدعومة","Supported remote controls can add, start, stop, restart, mute, and hide public sources. They do not remotely complete sign-in, OAuth, CAPTCHA, cookies, credentials, or other private account setup.":"يمكن لعناصر التحكم عن بُعد المدعومة إضافة المصادر العامة وتشغيلها وإيقافها وإعادة تشغيلها وكتمها وإخفائها. لكنها لا تُكمل عن بُعد تسجيل الدخول أو OAuth أو CAPTCHA أو ملفات تعريف الارتباط أو بيانات الاعتماد أو أي إعداد خاص آخر للحساب.","Switch theme":"تبديل السمة","The":"إن","The AppImage will not mount":"يتعذر تركيب AppImage","The configuration location depends on the client. This launches a separate adapter over standard input/output; it does not start the main capture app. A client on your home computer would point at its own localhost, not your VPS. Use Social Stream's normal remote controls from another computer.":"يعتمد موقع التكوين على العميل. يشغّل هذا محوّلًا منفصلًا عبر الإدخال والإخراج القياسيين؛ ولا يشغّل تطبيق الالتقاط الرئيسي. سيشير العميل على جهازك المنزلي إلى localhost الخاص به، وليس VPS. استخدم عناصر التحكم عن بُعد المعتادة في Social Stream من جهاز آخر.","The packaged adapter is available from SSApp 0.4.7; 0.4.14 and newer advertise the complete tool set even before the app is available. Live capabilities still decide which calls work. No separate Node installation is needed. The headless Ozone flag here applies only to the MCP adapter; keep Xvfb for the main app.":"يتوفر المحوّل المضمّن منذ SSApp 0.4.7؛ وتعلن الإصدارات 0.4.14 والأحدث مجموعة الأدوات الكاملة حتى قبل إتاحة التطبيق. تظل الإمكانات الفعلية هي التي تحدد الاستدعاءات العاملة. لا يلزم تثبيت Node منفصلًا. ينطبق خيار Ozone للتشغيل دون واجهة مرئية هنا على محوّل MCP فقط؛ احتفظ بـXvfb للتطبيق الرئيسي.","The service uses the account and profile created in step 2. It starts at boot and restarts after an app failure. If you changed the installation path, update":"تستخدم الخدمة الحساب والملف الشخصي اللذين أُنشئا في الخطوة 2. تبدأ عند إقلاع النظام وتعيد التشغيل عند تعطل التطبيق. إذا غيّرت مسار التثبيت، فحدّث","There is no built-in Rocket.Chat connector in the source trees checked for this guide. A separate integration is needed to bring those messages into Social Stream. Prove that messages reach the dock before configuring the video overlay.":"لا يوجد موصل Rocket.Chat مدمج في شجرات المصدر التي جرى فحصها لإعداد هذا الدليل. يلزم تكامل منفصل لإدخال تلك الرسائل إلى Social Stream. تأكد من وصول الرسائل إلى لوحة الإرساء قبل إعداد تراكب الفيديو.","To switch off your home computer, the video source, broadcaster, chat capture, and any Rocket.Chat integration must all keep running independently of it. Budget for video rendering and encoding separately from SSApp's chat-capture memory.":"لكي تتمكن من إيقاف جهازك المنزلي، يجب أن يظل مصدر الفيديو وبرنامج البث والتقاط الدردشة وأي تكامل مع Rocket.Chat يعملون جميعًا بصورة مستقلة عنه. احسب موارد عرض الفيديو وترميزه بصورة منفصلة عن ذاكرة التقاط الدردشة في SSApp.","Tools also cover source start/stop, diagnostics, captured events, screenshots, and approved app-window interactions. Private sign-ins and CAPTCHA still need a person.":"تشمل الأدوات أيضًا تشغيل المصادر وإيقافها والتشخيص والأحداث الملتقطة ولقطات الشاشة والتفاعلات المصرح بها مع نوافذ التطبيق. لا تزال عمليات تسجيل الدخول الخاصة وCAPTCHA تتطلب تدخل شخص.","Troubleshooting":"استكشاف المشكلات وإصلاحها","Try:":"جرّب:","Use":"استخدم","Use Ubuntu 22.04+, Debian 12+, or a similar Linux distribution.":"استخدم Ubuntu 22.04+ أو Debian 12+ أو توزيعة Linux مشابهة.","Use the dock and featured overlay URLs copied during setup, with the same session/password and transport. Select a captured message in the dock to feature it. Your server broadcaster needs browser-source rendering to place these pages over video before sending the combined stream to Owncast. See":"استخدم رابطَي لوحة الإرساء وتراكب الرسالة المميزة اللذين نسختهما أثناء الإعداد، مع الجلسة وكلمة المرور وطريقة النقل نفسها. حدد رسالة ملتقطة في لوحة الإرساء لإبرازها. يحتاج برنامج البث على خادمك إلى عرض مصادر المتصفح لوضع هذه الصفحات فوق الفيديو قبل إرسال البث المدمج إلى Owncast. راجع","Use the same Social Stream session ID and optional password on the headless app and the remote controller. WebRTC is the normal transport. If it is unsuitable for the environment, use Social Stream's hosted WebSocket server mode.":"استخدم معرّف جلسة Social Stream وكلمة المرور الاختيارية نفسيهما في التطبيق الذي يعمل دون واجهة مرئية وفي وحدة التحكم البعيدة. WebRTC هو النقل المعتاد. إذا لم يناسب البيئة، فاستخدم وضع خادم WebSocket المستضاف في Social Stream.","Use the same account and data directory for setup and the background service. Create a dedicated account:":"استخدم الحساب ومجلد البيانات نفسيهما للإعداد وللخدمة الخلفية. أنشئ حسابًا مخصصًا:","What To Check":"ما يجب التحقق منه","Xvfb exits immediately":"يتوقف Xvfb فورًا","Yes. Use the Normal Linux AppImage":"نعم — استخدم AppImage المعتاد لنظام Linux","You can run SSApp on the same VPS as Owncast and Rocket.Chat if it has enough resources. Installing SSApp does not by itself connect Rocket.Chat or put overlays into the video.":"يمكنك تشغيل SSApp على VPS نفسه الذي يشغّل Owncast وRocket.Chat إذا كانت موارده كافية. لا يؤدي تثبيت SSApp وحده إلى توصيل Rocket.Chat أو إدخال التراكبات في الفيديو.","above with its exact filename. A source checkout and separate Node installation are not required.":"أعلاه باسم الملف الدقيق. لا يلزم تنزيل الشفرة المصدرية أو تثبيت Node منفصلًا.","and":"و","and paste this unit:":"والصق وحدة الخدمة هذه:","and save this override:":"واحفظ هذا التجاوز للإعدادات:","and virtual display.":"والشاشة الافتراضية.","below. Adding a source leaves it inactive;":"أدناه. تترك إضافة المصدر إياه غير نشط؛","checking capture":"التحقق من الالتقاط","controls future app launches.":"يتحكم في عمليات تشغيل التطبيق اللاحقة.","embedding video and chat":"تضمين الفيديو والدردشة","flag keeps the app windows hidden. This foreground command stops when you stop it; use the systemd service below for unattended operation. The main application still needs Xvfb;":"يبقي نوافذ التطبيق مخفية. يتوقف أمر الواجهة هذا عندما توقفه؛ استخدم خدمة systemd أدناه للتشغيل دون مراقبة. لا يزال التطبيق الرئيسي يحتاج إلى Xvfb؛","flag. The steps below keep chat capture running after you disconnect from SSH and after a server reboot.":". تُبقي الخطوات أدناه التقاط الدردشة قيد التشغيل بعد فصل SSH وبعد إعادة تشغيل الخادم.","follows the Server-Sent Events feed until Ctrl+C. See the":"يتابع تدفق Server-Sent Events حتى الضغط على Ctrl+C. راجع","for service status and recent logs. To stop deliberately, use":"لمعرفة حالة الخدمة والسجلات الحديثة. للإيقاف المتعمد، استخدم","for the complete reference. These are app/source controls; overlay actions such as featuring a chat message use the Social Stream dock and":"للاطلاع على المرجع الكامل. هذه عناصر تحكم بالتطبيق والمصادر؛ أما إجراءات التراكب مثل إبراز رسالة دردشة فتستخدم لوحة إرساء Social Stream و","for the optional agent skill, version compatibility, and more controls.":"لمهارة الوكيل الاختيارية وتوافق الإصدارات ومزيد من عناصر التحكم.","from the returned source list and replace":"من قائمة المصادر المُعادة واستبدل","in a writable directory, then put the extracted folder in":"في مجلد قابل للكتابة، ثم ضع المجلد المستخرج في","in each response; failures return":"في كل استجابة؛ تعيد حالات الفشل","in the Xvfb arguments; some installed GPU drivers break its GLX startup.":"في معاملات Xvfb؛ إذ تتسبب بعض برامج تشغيل GPU المثبتة في تعطل بدء GLX.","initial setup":"الإعداد الأولي","is not a replacement for the virtual display.":"لا يحل محل الشاشة الافتراضية.","on the VPS":"على VPS","on the sources you want to start when SSApp starts. Copy your chat dock and featured overlay links for later use.":"في المصادر التي تريد بدءها عند تشغيل SSApp. انسخ روابط لوحة إرساء الدردشة وتراكب الرسالة المميزة لاستخدامها لاحقًا.","or start Xvfb and set":"أو شغّل Xvfb واضبط","to match.":"ليتطابق.","to the app command instead. Run the following commands in an SSH shell":"إلى أمر التطبيق بدلًا من ذلك. نفّذ الأوامر التالية في صدفة SSH","when the remote controller connects but messages or commands do not arrive.":"عندما تتصل وحدة التحكم البعيدة لكن الرسائل أو الأوامر لا تصل.","with":"مع","“Call ssapp_get_capabilities, then ssapp_get_status and ssapp_list_sources. Tell me which sources are capturing and whether any report errors.”":"«استدعِ ssapp_get_capabilities، ثم ssapp_get_status وssapp_list_sources. أخبرني بالمصادر التي تلتقط حاليًا وما إذا كان أي منها يبلغ عن أخطاء.»"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/headless-server-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/headless-server-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="guides-page">
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="التنقل الرئيسي"><a href="../index.html">الرئيسية</a><a href="features.html">الميزات</a><a href="inspiration.html" class="site-priority-inspiration">أفكار ملهمة</a><a href="download.html">تنزيل</a><a href="guides.html">الأدلة</a><a href="commands.html">الأوامر وAPI</a><a href="supported-sites.html">المواقع المدعومة</a><a href="overlay-gallery.html" class="site-priority-gallery">معرض التراكبات</a><a href="services.html" class="site-priority-hire">الاستعانة بخدمات المطوّر</a><a href="support.html">الدعم</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="العربية"><span aria-hidden="true">🌐 </span><span lang="ar">العربية</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/headless-server-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/headless-server-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/headless-server-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/headless-server-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/headless-server-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/headless-server-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/headless-server-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/headless-server-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/headless-server-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/headless-server-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/headless-server-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/headless-server-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/headless-server-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="headless-server-guide.html" lang="ar" hreflang="ar" aria-current="true">العربية</a><a class="site-language-link" href="../../tr/docs/headless-server-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/headless-server-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/headless-server-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="تبديل السمة"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="فتح قائمة التنقل" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+	<section class="page-hero">
+		<div class="container">
+			<h1>تشغيل Social Stream Ninja دون واجهة مرئية</h1>
+			<p>أبقِ تطبيق سطح المكتب الكامل يلتقط الدردشة على خادم منزلي أو VPS بنظام Ubuntu أو Debian دون شاشة فعلية.</p>
+		</div>
+	</section>
+
+	<main class="guide-section">
+		<div class="container">
+<p>انتقل إلى <a href="#setup">الإعداد الأولي</a>, <a href="#http-api">واجهة HTTP API</a>, <a href="#mcp">MCP</a>, <a href="#owncast">Owncast وRocket.Chat</a>، أو <a href="#verify">التحقق من الالتقاط</a>.</p>
+			<div class="guide-card">
+				<h2>نعم — استخدم AppImage المعتاد لنظام Linux</h2>
+<p>نزّل تطبيق Linux المعتاد وامنحه صلاحية التنفيذ. على VPS بلا سطح مكتب، لا يكفي تشغيل AppImage وحده: استخدم شاشة افتراضية وخيار <code>--ssapp-headless-control</code> . تُبقي الخطوات أدناه التقاط الدردشة قيد التشغيل بعد فصل SSH وبعد إعادة تشغيل الخادم.</p>
+				<p>يُخفي وضع التشغيل دون واجهة مرئية نوافذ Electron الخاصة بـSSApp، لكن صفحات المصادر تظل نوافذ متصفح حقيقية. لذلك يحتاج Linux إلى شاشة افتراضية مثل Xvfb. هذا ليس برنامج دردشة خلفيًا صغيرًا فقط.</p>
+				<div class="guide-note">
+					<p><strong>لا ينشئ وضع التشغيل دون واجهة مرئية واجهة تحكم API عامة.</strong> تستخدم وحدة التحكم الموجودة على جهاز آخر جلسة Social Stream نفسها ونقل WebRTC المعتاد أو WebSocket المستضاف، كما في مسارات التحكم عن بُعد الأخرى.</p>
+				</div>
+			</div>
+
+			<div class="guide-card">
+				<h2>قبل البدء</h2>
+				<ul class="guide-list">
+					<li>استخدم Ubuntu 22.04+ أو Debian 12+ أو توزيعة Linux مشابهة.</li>
+					<li>خصص ذاكرة لا تقل عن 2 GB للإعداد البسيط، وزدها عند استخدام نوافذ مصادر متعددة.</li>
+					<li>اختر مجلد ملف شخصي دائمًا للإعدادات والمصادر والجلسات وبيانات المتصفح.</li>
+					<li>خطط لجلسة سطح مكتب أو VNC لمرة واحدة لتسجيل الدخول وإتمام الإعدادات الخاصة الأخرى.</li>
+				</ul>
+				<p>عناوين URL العامة للمصادر التي لا تتطلب تسجيل الدخول هي الأسهل للتشغيل عن بُعد. لا تزال OAuth وCAPTCHA وكلمات المرور وملفات تعريف الارتباط وإعداد الحساب تتطلب تدخل شخص.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>1. تثبيت Xvfb وAppImage</h2>
+				<pre><code>sudo apt-get update
+sudo apt-get install -y xvfb x11-utils xauth curl
+sudo mkdir -p /opt/socialstream
+sudo mv ./YOUR_DOWNLOADED_FILE.AppImage /opt/socialstream/socialstreamninja.AppImage
+sudo chmod 755 /opt/socialstream/socialstreamninja.AppImage</code></pre>
+				<p>نزّل ملف AppImage الحالي لنظام Linux من <a href="download.html#standalone">صفحة تنزيل Social Stream Ninja</a>. اختر التنزيل المناسب لمعمارية خادمك (<code>uname -m</code>)، ثم استبدل <code>YOUR_DOWNLOADED_FILE.AppImage</code> أعلاه باسم الملف الدقيق. لا يلزم تنزيل الشفرة المصدرية أو تثبيت Node منفصلًا.</p>
+			</div>
+
+
+			<div class="guide-card" id="setup">
+				<h2>2. تجهيز الملف الشخصي وتسجيل الدخول مرة واحدة</h2>
+<p>استخدم الحساب ومجلد البيانات نفسيهما للإعداد وللخدمة الخلفية. أنشئ حسابًا مخصصًا:</p><pre><code>id ssapp &gt;/dev/null 2&gt;&amp;1 || sudo useradd --system --create-home --home-dir /var/lib/ssapp --shell /usr/sbin/nologin ssapp
+sudo install -d -o ssapp -g ssapp -m 700 /var/lib/ssapp
+sudo apt-get install -y x11vnc
+sudo -u ssapp Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp -extension GLX</code></pre>
+<p>اترك تلك الطرفية قيد التشغيل. في طرفية SSH ثانية، افتح SSApp بصورة مرئية على تلك الشاشة الافتراضية:</p><pre><code>sudo -u ssapp env DISPLAY=:99 SSAPP_USER_DATA_DIR=/var/lib/ssapp SSAPP_HEADLESS_CONTROL=0 \
+  /opt/socialstream/socialstreamninja.AppImage --ozone-platform=x11 --no-hwa</code></pre>
+<p>في طرفية SSH ثالثة، شغّل وصول VNC مؤقتًا ومقيدًا بالخادم نفسه:</p><pre><code>sudo -u ssapp x11vnc -display :99 -localhost -rfbport 5900 -nopw -forever</code></pre>
+<p>على جهازك، افتح نفق SSH:</p><pre><code>ssh -N -L 5900:127.0.0.1:5900 you@your-server</code></pre>
+<p>وصّل عارض VNC بـ <code>localhost:5900</code>. عيّن معرّف جلسة Social Stream وكلمة المرور الاختيارية، وأضف المصادر وأكمل تسجيل الدخول عند الحاجة. فعّل <strong>التفعيل التلقائي (Auto-activate)</strong> في المصادر التي تريد بدءها عند تشغيل SSApp. انسخ روابط لوحة إرساء الدردشة وتراكب الرسالة المميزة لاستخدامها لاحقًا.</p>
+<p>أغلق SSApp بعد الإعداد، ثم أوقف VNC والنفق وXvfb باستخدام Ctrl+C في طرفياتها. لا تشغّل الإعداد والخدمة باستخدام الملف الشخصي نفسه في الوقت نفسه. عادةً ما يعرض VNC المتصل بنسخة تعمل أصلًا دون واجهة مرئية شاشة فارغة لأن نوافذها مخفية.</p>
+<p>استخدم <code>SSAPP_USER_DATA_DIR</code>، وليس خيار Chromium <code>--user-data-dir</code>. أكمل تسجيل الدخول على VPS؛ فقد يتعذر فك تشفير ملفات تعريف ارتباط المتصفح المنسوخة من نظام تشغيل آخر.</p>
+			</div>
+			<div class="guide-card">
+				<h2>3. تشغيل التطبيق دون واجهة مرئية</h2>
+				<pre><code>sudo -u ssapp env SSAPP_USER_DATA_DIR=/var/lib/ssapp xvfb-run -a -s "-screen 0 1920x1080x24 -nolisten tcp -extension GLX" \
+  /opt/socialstream/socialstreamninja.AppImage \
+  --ozone-platform=x11 --ssapp-headless-control --no-hwa</code></pre>
+				<p>إن <code>--ssapp-headless-control</code> يبقي نوافذ التطبيق مخفية. يتوقف أمر الواجهة هذا عندما توقفه؛ استخدم خدمة systemd أدناه للتشغيل دون مراقبة. لا يزال التطبيق الرئيسي يحتاج إلى Xvfb؛ <code>--ozone-platform=headless</code> لا يحل محل الشاشة الافتراضية.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>4. التحكم فيه من جهاز كمبيوتر آخر</h2>
+				<p>استخدم معرّف جلسة Social Stream وكلمة المرور الاختيارية نفسيهما في التطبيق الذي يعمل دون واجهة مرئية وفي وحدة التحكم البعيدة. WebRTC هو النقل المعتاد. إذا لم يناسب البيئة، فاستخدم وضع خادم WebSocket المستضاف في Social Stream.</p>
+				<p>يمكن لعناصر التحكم عن بُعد المدعومة إضافة المصادر العامة وتشغيلها وإيقافها وإعادة تشغيلها وكتمها وإخفائها. لكنها لا تُكمل عن بُعد تسجيل الدخول أو OAuth أو CAPTCHA أو ملفات تعريف الارتباط أو بيانات الاعتماد أو أي إعداد خاص آخر للحساب.</p>
+				<p>راجع <a href="sessions-passwords-relay-modes.html">الجلسات وكلمات المرور والمرحّل وأوضاع الخادم</a> عندما تتصل وحدة التحكم البعيدة لكن الرسائل أو الأوامر لا تصل.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>إبقاء التطبيق قيد التشغيل باستخدام systemd</h2>
+<p>أوقف أولًا التطبيق العامل في الواجهة باستخدام Ctrl+C. أنشئ <code>/etc/systemd/system/ssapp.service</code> مع <code>sudo nano /etc/systemd/system/ssapp.service</code> والصق وحدة الخدمة هذه:</p>
+				<pre><code>[Unit]
+Description=Social Stream Ninja (headless)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ssapp
+StateDirectory=ssapp
+WorkingDirectory=/opt/socialstream
+Environment=SSAPP_USER_DATA_DIR=/var/lib/ssapp
+ExecStart=/usr/bin/xvfb-run -a -s "-screen 0 1920x1080x24 -nolisten tcp -extension GLX" /opt/socialstream/socialstreamninja.AppImage --ozone-platform=x11 --ssapp-headless-control --no-hwa
+Restart=on-failure
+RestartSec=10
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+				<pre><code>sudo systemctl daemon-reload
+sudo systemctl enable --now ssapp
+journalctl -u ssapp -f</code></pre>
+				<p>تستخدم الخدمة الحساب والملف الشخصي اللذين أُنشئا في الخطوة 2. تبدأ عند إقلاع النظام وتعيد التشغيل عند تعطل التطبيق. إذا غيّرت مسار التثبيت، فحدّث <code>ExecStart</code> ليتطابق.</p>
+			</div>
+
+
+			<div class="guide-card" id="http-api">
+				<h2>واجهة HTTP API اختيارية للبرامج النصية على VPS</h2>
+<p>لا يفعّل وضع التشغيل دون واجهة مرئية واجهة التحكم API. لتفعيلها لخدمتك، شغّل <code>sudo systemctl edit ssapp</code> واحفظ هذا التجاوز للإعدادات:</p><pre><code>[Service]
+Environment=SSAPP_CONTROL_API=1</code></pre><pre><code>sudo systemctl daemon-reload
+sudo systemctl restart ssapp
+curl -sS http://127.0.0.1:17777/api/v1/capabilities
+curl -sS http://127.0.0.1:17777/api/v1/status</code></pre>
+<p>للتشغيل اليدوي، أضف <code>--ssapp-control-api</code> إلى أمر التطبيق بدلًا من ذلك. نفّذ الأوامر التالية في صدفة SSH <strong>على VPS</strong>. واجهة API بلا رمز مصادقة عمدًا ولا تستمع إلا على <code>127.0.0.1</code>؛ وهي منفصلة عن خادم الويب الخاص بـOwncast أو Rocket.Chat. أبقها محلية.</p>
+<p>اقرأ <code>ssappVersion</code>, <code>apiVersion</code>، والمنصات المدعومة ضمن capabilities أولًا. مثلًا، إذا كان Twitch مدعومًا، فأضف مصدرًا (استبدل <code>CHANNEL_NAME</code>):</p><pre><code>curl -sS http://127.0.0.1:17777/api/v1/command \
+  -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;action&quot;:&quot;addSource&quot;,&quot;value&quot;:{&quot;target&quot;:&quot;twitch&quot;,&quot;username&quot;:&quot;CHANNEL_NAME&quot;,&quot;autoActivate&quot;:true}}&#x27;
+
+curl -sS http://127.0.0.1:17777/api/v1/command \
+  -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;action&quot;:&quot;getSources&quot;,&quot;value&quot;:{}}&#x27; </code></pre>
+<p>انسخ المعرّف الثابت للمصدر <code>id</code> من قائمة المصادر المُعادة واستبدل <code>SOURCE_ID</code> أدناه. تترك إضافة المصدر إياه غير نشط؛ <code>autoActivate</code> يتحكم في عمليات تشغيل التطبيق اللاحقة.</p><pre><code>curl -sS http://127.0.0.1:17777/api/v1/command \
+  -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;action&quot;:&quot;startSource&quot;,&quot;value&quot;:{&quot;sourceId&quot;:&quot;SOURCE_ID&quot;}}&#x27;
+
+curl -sS http://127.0.0.1:17777/api/v1/command \
+  -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;action&quot;:&quot;getSourceDiagnostics&quot;,&quot;value&quot;:{&quot;sourceId&quot;:&quot;SOURCE_ID&quot;}}&#x27;
+
+curl -sS http://127.0.0.1:17777/api/v1/command \
+  -H &#x27;Content-Type: application/json&#x27; \
+  -d &#x27;{&quot;action&quot;:&quot;stopSource&quot;,&quot;value&quot;:{&quot;sourceId&quot;:&quot;SOURCE_ID&quot;}}&#x27; </code></pre>
+<p>تحقق من <code>ok</code> و <code>payload</code> في كل استجابة؛ تعيد حالات الفشل <code>error</code>. اقرأ الحالة بعد أي تغيير. إذا انتهت مهلة طلب، فتحقق من الحالة قبل تكراره. أوقف المصدر قبل تغيير حقول اتصاله. تتطلب أوامر إعادة التحميل والإزالة والإغلاق <code>confirm: true</code>.</p>
+<p><code>curl -N http://127.0.0.1:17777/api/v1/events</code> يتابع تدفق Server-Sent Events حتى الضغط على Ctrl+C. راجع <a href="llm-control-guide.html">دليل API وMCP</a> للاطلاع على المرجع الكامل. هذه عناصر تحكم بالتطبيق والمصادر؛ أما إجراءات التراكب مثل إبراز رسالة دردشة فتستخدم لوحة إرساء Social Stream و <a href="commands.html">أوامر Social Stream</a>.</p>
+			</div>
+
+			<div class="guide-card" id="mcp">
+				<h2>MCP اختياري لعميل ذكاء اصطناعي على VPS</h2>
+<p>يتيح MCP لعميل ذكاء اصطناعي متوافق استدعاء عناصر تحكم SSApp كأدوات. فعّل واجهة API المذكورة أعلاه وأبقِ خدمة التطبيق الرئيسية قيد التشغيل. سجّل هذا التكوين في عميل يعمل <strong>على VPS</strong>:</p><pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;social-stream&quot;: {
+      &quot;command&quot;: &quot;/opt/socialstream/socialstreamninja.AppImage&quot;,
+      &quot;args&quot;: [&quot;--ssapp-mcp&quot;, &quot;--ozone-platform=headless&quot;],
+      &quot;env&quot;: {
+        &quot;SSAPP_CONTROL_URL&quot;: &quot;http://127.0.0.1:17777&quot;
+      }
+    }
+  }
+}</code></pre>
+<p>يعتمد موقع التكوين على العميل. يشغّل هذا محوّلًا منفصلًا عبر الإدخال والإخراج القياسيين؛ ولا يشغّل تطبيق الالتقاط الرئيسي. سيشير العميل على جهازك المنزلي إلى localhost الخاص به، وليس VPS. استخدم عناصر التحكم عن بُعد المعتادة في Social Stream من جهاز آخر.</p>
+<p>يتوفر المحوّل المضمّن منذ SSApp 0.4.7؛ وتعلن الإصدارات 0.4.14 والأحدث مجموعة الأدوات الكاملة حتى قبل إتاحة التطبيق. تظل الإمكانات الفعلية هي التي تحدد الاستدعاءات العاملة. لا يلزم تثبيت Node منفصلًا. ينطبق خيار Ozone للتشغيل دون واجهة مرئية هنا على محوّل MCP فقط؛ احتفظ بـXvfb للتطبيق الرئيسي.</p>
+<p>جرّب: <em>«استدعِ ssapp_get_capabilities، ثم ssapp_get_status وssapp_list_sources. أخبرني بالمصادر التي تلتقط حاليًا وما إذا كان أي منها يبلغ عن أخطاء.»</em> تشمل الأدوات أيضًا تشغيل المصادر وإيقافها والتشخيص والأحداث الملتقطة ولقطات الشاشة والتفاعلات المصرح بها مع نوافذ التطبيق. لا تزال عمليات تسجيل الدخول الخاصة وCAPTCHA تتطلب تدخل شخص.</p>
+<p>راجع <a href="llm-control-guide.html">دليل واجهة التحكم المحلية API وMCP</a> لمهارة الوكيل الاختيارية وتوافق الإصدارات ومزيد من عناصر التحكم.</p>
+			</div>
+
+			<div class="guide-card" id="owncast">
+				<h2>Owncast وRocket.Chat والرسائل المميزة</h2>
+<p>يمكنك تشغيل SSApp على VPS نفسه الذي يشغّل Owncast وRocket.Chat إذا كانت موارده كافية. لا يؤدي تثبيت SSApp وحده إلى توصيل Rocket.Chat أو إدخال التراكبات في الفيديو.</p>
+<pre><code>Supported chat source → SSApp → Social Stream dock / featured overlay
+                                           ↓
+Video input → server broadcaster renders overlays → Owncast → viewers</code></pre>
+<p>لا يوجد موصل Rocket.Chat مدمج في شجرات المصدر التي جرى فحصها لإعداد هذا الدليل. يلزم تكامل منفصل لإدخال تلك الرسائل إلى Social Stream. تأكد من وصول الرسائل إلى لوحة الإرساء قبل إعداد تراكب الفيديو.</p>
+<p>استخدم رابطَي لوحة الإرساء وتراكب الرسالة المميزة اللذين نسختهما أثناء الإعداد، مع الجلسة وكلمة المرور وطريقة النقل نفسها. حدد رسالة ملتقطة في لوحة الإرساء لإبرازها. يحتاج برنامج البث على خادمك إلى عرض مصادر المتصفح لوضع هذه الصفحات فوق الفيديو قبل إرسال البث المدمج إلى Owncast. راجع <a href="https://owncast.online/docs/broadcasting/">تعليمات البث في Owncast</a>. لا يؤدي SSApp دور برنامج بث الفيديو هذا.</p>
+<p>وضع تراكب فوق مشغّل مضمّن في موقعك خيار مختلف: يظهر على تلك الصفحة ولا يصبح جزءًا من الفيديو الذي تستقبله المشغلات الأخرى أو التسجيلات. يشرح Owncast <a href="https://owncast.online/docs/embed/">تضمين الفيديو والدردشة</a>.</p>
+<p>لكي تتمكن من إيقاف جهازك المنزلي، يجب أن يظل مصدر الفيديو وبرنامج البث والتقاط الدردشة وأي تكامل مع Rocket.Chat يعملون جميعًا بصورة مستقلة عنه. احسب موارد عرض الفيديو وترميزه بصورة منفصلة عن ذاكرة التقاط الدردشة في SSApp.</p>
+			</div>
+
+			<div class="guide-card" id="verify">
+				<h2>تحقق من سير العمل الكامل قبل تركه دون مراقبة</h2>
+<ol class="guide-steps">
+<li>أرسل رسالة حقيقية في دردشة متصلة وتأكد من وصولها إلى لوحة إرساء Social Stream.</li>
+<li>أبرز تلك الرسالة وتأكد من تغيّر تراكب الرسالة المميزة. في Owncast، تحقق منه أيضًا داخل الفيديو الفعلي الذي يشاهده الجمهور.</li>
+<li>افصل VNC وSSH، ثم أرسل مزيدًا من الرسائل على مدى عدة دقائق. يجب أن يستمر الالتقاط.</li>
+<li>شغّل <code>sudo systemctl restart ssapp</code>، ثم تأكد من عودة الجلسة والمصادر نفسها ومن وصول رسائل جديدة إلى المصادر المفعّلة تلقائيًا.</li>
+<li>أثناء فترة صيانة، أعد تشغيل VPS وكرر اختبار الرسائل. وجود عملية قيد التشغيل أو استجابة API ناجحة وحده لا يثبت أن التقاط الدردشة يعمل.</li>
+</ol>
+<p>استخدم <code>sudo systemctl status ssapp</code> و <code>sudo journalctl -u ssapp -n 100 --no-pager</code> لمعرفة حالة الخدمة والسجلات الحديثة. للإيقاف المتعمد، استخدم <code>sudo systemctl stop ssapp</code>.</p>
+<p>للتحديث، أوقف الخدمة واحتفظ بنسخة احتياطية من <code>/var/lib/ssapp</code>، واستبدل ملف AppImage في المسار نفسه، ثم شغّل الخدمة مجددًا. احتفظ بالملف التنفيذي السابق حتى تنجح النسخة الجديدة في اختبارات الرسائل.</p>
+			</div>
+			<div class="guide-card">
+				<h2>استكشاف المشكلات وإصلاحها</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>المشكلة</th><th>ما يجب التحقق منه</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Problem"><span><code>Missing X server or $DISPLAY</code></span></td><td data-label="What To Check"><span>شغّل عبر <code>xvfb-run</code> أو شغّل Xvfb واضبط <code>DISPLAY</code>.</span></td></tr>
+						<tr><td data-label="Problem"><span>يتوقف Xvfb فورًا</span></td><td data-label="What To Check"><span>أبقِ <code>-extension GLX</code> في معاملات Xvfb؛ إذ تتسبب بعض برامج تشغيل GPU المثبتة في تعطل بدء GLX.</span></td></tr>
+						<tr><td data-label="Problem"><span>يتعذر تركيب AppImage</span></td><td data-label="What To Check"><span>استخرج باستخدام <code>./socialstreamninja.AppImage --appimage-extract</code> في مجلد قابل للكتابة، ثم ضع المجلد المستخرج في <code>/opt/socialstream/squashfs-root</code>. استبدل مسار AppImage في أوامر الإعداد والخدمة وMCP بـ <code>/opt/socialstream/squashfs-root/socialstreamninja</code>.</span></td></tr>
+						<tr><td data-label="Problem"><span>أوامر التحكم عن بُعد لا تصل</span></td><td data-label="What To Check"><span>تأكد من استخدام الطرفين الجلسة وكلمة المرور نفسيهما، ومن اتصال WebRTC أو وضع WebSocket المستضاف.</span></td></tr>
+						<tr><td data-label="Problem"><span>اختلاط المصادر أو الإعدادات بين النسخ</span></td><td data-label="What To Check"><span>خصص لكل نسخة قيمة مختلفة لـ <code>SSAPP_USER_DATA_DIR</code> والشاشة الافتراضية.</span></td></tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card">
+				<h2>أدلة ذات صلة</h2>
+				<ul class="guide-list">
+					<li><a href="local-services-guide.html">شرح الخوادم والخدمات المحلية</a></li>
+					<li><a href="llm-control-guide.html">واجهة التحكم المحلية API وMCP</a></li>
+					<li><a href="standalone-app-modes.html">أوضاع التطبيق المستقل</a></li>
+				</ul>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. ترخيص GPLv3.0.</p></div></div></footer>
+	<script data-copy-markdown src="../../docs/js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+	<head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-cn/docs/source-types-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/zh-cn/docs/source-types-guide.html">
+    <meta property="og:title" content="来源类型 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja 来源类型名称在载荷、筛选器、Event Flow、桌面应用来源、自定义捕获和回复中的工作方式。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-cn/docs/source-types-guide.html">
+    <meta name="twitter:title" content="来源类型 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja 来源类型名称在载荷、筛选器、Event Flow、桌面应用来源、自定义捕获和回复中的工作方式。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem("darkMode");
+				var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+				if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+					document.documentElement.classList.add("dark-mode");
+				}
+			})();
+		</script>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>来源类型 - Social Stream Ninja</title>
+		<link rel="stylesheet" href="../../docs/css/styles.css" />
+		<link rel="stylesheet" href="../../docs/css/guides.css" />
+		<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon" />
+		<meta name="description" content="Social Stream Ninja 来源类型名称在载荷、筛选器、Event Flow、桌面应用来源、自定义捕获和回复中的工作方式。">
+	<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/source-types-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{", and":"，以及",", chooses one or more":"，选择一个或多个",", opens a source window, and injects shared capture scripts from this project. A Chrome-runtime compatibility bridge carries captured messages and reply commands between the page and app.":"，打开来源窗口，并注入本项目的共享捕获脚本。Chrome 运行时兼容桥负责在页面与应用之间传递捕获的消息和回复命令。",", or":"，或",", or legacy":"，或旧版的",", or that capture mode cannot send chat.":"，或该捕获模式无法发送聊天。",", then normally derives a lowercase type from a known platform or the page hostname.":"，然后通常从已知平台或页面主机名派生小写类型。",", which emits":"，它发出",", while payloads are normalized.":"，同时将载荷标准化。",". That usually separates incoming matching, outbound routing, and capture duplication.":"。这通常能区分传入匹配、传出路由和重复捕获问题。",". Use":"。使用",". Use the exact lowercase payload value.":"。使用载荷中准确的小写值。",": canonical fields and platform event names.":"：规范字段和平台事件名称。",": fallback and external capture.":"：回退和外部捕获。",": platform names and setup requirements.":"：平台名称和设置要求。",": source contracts, injection helpers, manifests, and docs.":"：来源约定、注入助手、清单和文档。",": source-window and connection-mode behavior.":"：来源窗口和连接模式行为。",": target, script, bridge, and reply-only internals.":"：目标、脚本、桥接和仅回复模式的内部机制。",": triggers, actions, templates, reflection handling, and tests.":"：触发器、操作、模板、回传处理和测试。","A display label, connection mode, or event name.":"显示标签、连接模式或事件名称。","A guarantee that every emitted payload has the same string.":"保证每个发出的载荷都具有相同字符串。","A hostname-derived type is convenient, but not a permanent public contract. Confirm the emitted payload before building filters around it.":"从主机名派生的类型很方便，但并不是永久的公开约定。围绕它构建筛选器前，请确认实际发出的载荷。","A platform type.":"平台类型。","A source cannot accept automated input, or a reflection is captured again.":"来源无法接受自动输入，或回传消息被再次捕获。","A source script's":"来源脚本的","A target and script filename need not match the payload type. The":"目标和脚本文件名不必与载荷类型匹配。","API/WebSocket modes may send through platform APIs instead of typing into the visible page.":"API／WebSocket 模式可能通过平台 API 发送，而不是在可见页面中输入。","Action":"操作","Adding a Source":"添加来源","An optional channel, room, or source display name.":"可选的频道、房间或来源显示名称。","Asks open sources whether they support that outbound destination.":"询问已打开的来源是否支持该传出目标。","Bilibili regional choices":"Bilibili 地区选项","Bilibili targets similarly map to shared/regional scripts while emitting":"Bilibili 目标也类似地映射到共享／地区脚本，同时发出","Bot reply-only (no capture)":"机器人仅回复（不捕获）","Both:":"两者：","Broadcasts to routeable sources and excludes the originating":"广播到可路由的来源，并排除原始的","Capture or UI Name":"捕获或界面名称","Commands & API":"命令与 API","Common Failure":"常见故障","Common and Confusing Types":"常见和易混淆的类型","Common and confusing names":"常见和易混淆的名称","Continue with the":"继续参阅","DOM, API polling, and WebSocket/streaming describe transport, not separate types.":"DOM、API 轮询和 WebSocket／流式传输描述的是传输方式，不是不同类型。","Desktop App Script Injection":"桌面应用脚本注入","Desktop App Source Windows":"桌面应用来源窗口","Desktop app":"桌面应用","Desktop app script injection":"桌面应用脚本注入","Desktop targets and scripts may say":"桌面目标和脚本可能写作","Destination":"目标","Do Not Confuse It With":"不要与其混淆","Do not expect reliable event, moderation, deletion, virtualized-list, or closed shadow-DOM support.":"不要预期能可靠支持事件、审核、删除、虚拟化列表或封闭的 shadow DOM。","Download":"下载","Each desktop source keeps its own target, URL, connection mode, and capture script.":"每个桌面来源保留自己的目标、URL、连接模式和捕获脚本。","Event Flow Guide":"Event Flow 指南","Event Flow's":"Event Flow 的","Event Reference":"事件参考","Existing filters may intentionally preserve the older name.":"现有筛选器可能有意保留旧名称。","Features":"功能","From Source":"来自来源（From Source）","From Source =":"来源为 =","From Source reads the incoming payload type; Relay Chat selects outbound source windows.":"来源触发器读取传入载荷类型；聊天中继选择传出的来源窗口。","Generic and Custom Sources":"通用和自定义来源","Generic capture can find and focus likely inputs, but that does not guarantee the site will accept an automated send.":"通用捕获可以查找并聚焦可能的输入框，但这不保证网站会接受自动发送。","Generic, Custom, and Unnamed Sources":"通用、自定义和未命名来源","Generic, custom, and unnamed sources":"通用、自定义和未命名来源","Guides":"指南","Hire":"雇用","Home":"首页","How It Chooses":"如何选择","How Social Stream Ninja source type names work in payloads, filters, Event Flow, desktop app sources, custom capture, and replies.":"Social Stream Ninja 来源类型名称在载荷、筛选器、Event Flow、桌面应用来源、自定义捕获和回复中的工作方式。","If a source has no established platform name, choose one stable lowercase":"如果来源没有既定平台名称，请选择一个稳定的小写","If no stable identity exists yet,":"如果尚无稳定标识，","Important:":"重要：","In the desktop app,":"在桌面应用中，","Incoming identity and outbound capability are related, but they are not the same contract.":"传入标识与传出能力有关，但两者并不是同一约定。","Incoming matching is exact:":"传入匹配是精确匹配：","Inspiration":"灵感","Instagram Live / InstaFeed live":"Instagram Live／InstaFeed 直播","Instagram Live and Instagram comments":"Instagram 直播与 Instagram 评论","Instagram Live vs Instagram Comments":"Instagram 直播与 Instagram 评论的区别","Instagram post and feed comments use":"Instagram 帖子和动态评论使用","It is distinct for incoming filters and Event Flow relay destinations, while shared YouTube controls still treat both variants as one family where needed.":"在传入筛选器和 Event Flow 中继目标中，它是独立类型；共享 YouTube 控件仍会在需要时将两个变体视为同一系列。","Live chat flow:":"直播聊天流程：","Main navigation":"主导航","Maintainers can trace setup in the desktop app's":"维护者可在桌面应用的以下位置追踪设置：","Meaning":"含义","Name":"名称","No":"否","OBS system events":"OBS 系统事件","Older versions grouped both relay destinations, so two actions could send twice to each YouTube window. Update Social Stream Ninja if that happens. A Reflection Filter prevents relay loops, but it does not correct overlapping destination matching in those older versions.":"旧版本将两个中继目标归在一起，因此两个操作可能向每个 YouTube 窗口各发送两次。出现此情况时，请更新 Social Stream Ninja。回传筛选器可防止中继循环，但不能修复旧版本中目标匹配重叠的问题。","On This Page":"本页内容","Once users, overlays, or flows depend on a new type, document it in the":"用户、叠加层或流程一旦依赖新类型，请将其记录在","Open navigation menu":"打开导航菜单","Other YouTube-wide controls may intentionally handle both types as one platform family. This does not change the exact Event Flow matching above.":"其他 YouTube 通用控件可能有意将两个类型视为同一平台系列。这不会改变上方精确的 Event Flow 匹配。","Outgoing matching is also exact:":"传出匹配也是精确匹配：","Overlay Gallery":"叠加层图库","Payload Type":"载荷类型","Post/comment flow:":"帖子／评论流程：","Relay Chat treats them as separate destinations.":"聊天中继将它们视为独立目标。","Relay to a platform":"中继到平台","Relay to all except source":"中继到除来源外的所有平台","Reply to source":"回复来源","Replying and Relaying to Sources":"向来源回复和中继","Replying and relaying to sources":"向来源回复和中继","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja Event Flow editor with connected trigger, filter, and action nodes":"Social Stream Ninja Event Flow 编辑器，显示已连接的触发器、筛选器和操作节点","Social Stream Ninja desktop app source entries showing connection modes":"Social Stream Ninja 桌面应用来源条目，显示连接模式","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 许可证。","Source Types":"来源类型","Source Types - Social Stream Ninja":"来源类型 - Social Stream Ninja","Source capture changes belong in this repository's":"来源捕获更改应位于本仓库的","Standalone App Modes":"独立应用模式","Support":"支持","Supported Sites":"支持的网站","Switch theme":"切换主题","Test reply support with one source window before building a multi-platform relay.":"构建多平台中继前，先用一个来源窗口测试回复支持。","The desktop app saves a source":"桌面应用保存来源的","The incoming payload source, such as":"传入载荷来源，例如","The originating tab or desktop source-window ID used for reply and source exclusion.":"原始标签页或桌面来源窗口 ID，用于回复和排除来源。","The platform that produced it.":"产生它的平台。","The saved category used to choose a URL, mode, and capture script.":"保存的分类，用于选择 URL、模式和捕获脚本。","The selected variant has no matching open source window, or the source cannot send chat.":"所选变体没有匹配的已打开来源窗口，或来源无法发送聊天。","The stable value used by a From Source trigger.":"来源触发器使用的稳定值。","The visible Instagram brand is not enough to choose the type; the content context separates the two.":"仅凭可见的 Instagram 品牌不足以确定类型；需根据内容上下文区分两者。","They are not chat sources, but can enter Event Flow with events such as":"它们不是聊天来源，但可以通过以下事件进入 Event Flow：","TikFinity":"TikFinity","TikFinity is the connector; the normalized platform remains TikTok.":"TikFinity 是连接器；标准化后的平台仍为 TikTok。","To reach both, add one action for each destination or relay to all platforms excluding the source.":"要同时发送给两者，请为各目标添加一个操作，或中继到除来源外的所有平台。","Troubleshooting Older Versions":"旧版本故障排查","Use":"使用","Use it to prove that an ordinary DOM chat can be captured before writing a dedicated source.":"编写专用来源前，先用它验证普通 DOM 聊天可被捕获。","Use the":"使用","Use the payload's exact source name for incoming filters, and understand the destination family before sending chat back out.":"传入筛选器应使用载荷中准确的来源名称；向外发送聊天前，应了解目标系列。","Uses":"使用","What Is a":"什么是","What a type is":"类型是什么","What happened, such as":"发生了什么，例如","When debugging, inspect one raw payload and record its":"调试时，检查一个原始载荷并记录其","When several scripts are injected, avoid making every helper claim the same outbound destination. Capture identity and reply capability are separate concerns.":"注入多个脚本时，不要让每个助手都声明相同的传出目标。捕获标识与回复能力是两个不同方面。","Where to Find Exact Details":"在哪里查找准确详情","Where to find exact details":"在哪里查找准确详情","Why It May Be Surprising":"为什么可能令人意外","X":"X","YouTube Setup Guide":"YouTube 设置指南","YouTube Shorts and Event Flow":"YouTube Shorts 与 Event Flow","YouTube Shorts live chat":"YouTube Shorts 直播聊天","YouTube live chat":"YouTube 直播聊天","and":"和","files are page-context helpers for sockets or page variables. The source wrapper remains responsible for the canonical payload.":"文件是页面上下文中的套接字或页面变量助手。来源包装器仍负责规范载荷。","files. The desktop app consumes them; its packaged fallback copy is not the source of truth.":"文件中。桌面应用使用这些文件；其打包的备用副本不是权威来源。","for injection and bridging.":"进行注入和桥接。","for live-room chat captured by the Instagram Live or InstaFeed live source. Use":"用于 Instagram Live 或 InstaFeed 直播来源捕获的直播间聊天。使用","for non-live feed, post, or static comments.":"用于非直播动态、帖子或静态评论。","for public platform setup names.":"了解公开的平台设置名称。","for regular YouTube live chat.":"用于常规 YouTube 直播聊天。","for the field contract and":"了解字段约定，并参见","for the human-facing room or channel label.":"用于面向用户的房间或频道标签。","from page context.":"，来自页面上下文。","in a From Source trigger for Shorts messages, and":"用于 Shorts 消息的来源触发器，而","is a broad DOM-capture fallback. It looks for common chat rows, names, messages, avatars, and inputs. It starts with":"是通用 DOM 捕获回退。它寻找常见聊天行、名称、消息、头像和输入框。它以以下类型开始：","is safer than changing type per message. External integrations commonly use a deliberate value such as":"比每条消息都更改类型更安全。外部集成通常使用明确选定的值，例如","is the canonical source identifier on an incoming Social Stream payload. Overlays, URL filters, APIs, and Event Flow use it to tell platforms and source variants apart.":"是传入 Social Stream 载荷中的规范来源标识符。叠加层、URL 筛选器、API 和 Event Flow 用它区分平台和来源变体。","keeps a source available for replies/status while suppressing its normal captured messages.":"使来源仍可用于回复／状态，同时抑制其正常捕获的消息。","or":"或","rather than silently renaming it.":"，不要悄悄将其重命名。","response is an outbound-routeability signal. Shared YouTube controls may group both variants, while Relay Chat adds exact Shorts URL context for destination matching.":"响应表明传出可路由性。共享 YouTube 控件可能将两个变体归为一组，而聊天中继会添加准确的 Shorts URL 上下文来匹配目标。","sends only to YouTube Shorts live-chat windows.":"仅发送到 YouTube Shorts 直播聊天窗口。","sends only to regular YouTube live-chat windows.":"仅发送到常规 YouTube 直播聊天窗口。","source-window creation, then":"来源窗口创建，然后","target loads":"目标加载","to address the exact originating tab/window.":"以准确寻址原始标签页／窗口。","trigger compares its configured value directly with":"触发器直接将配置值与以下字段比较：","use":"使用","use two triggers feeding one shared action, or an Any Source trigger followed by a type-aware filter.":"使用两个触发器连接同一个共享操作，或使用任意来源触发器并接上能识别类型的筛选器。","with the Twitter-branding option":"，配合 Twitter 品牌选项"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/source-types-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/source-types-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/source-types-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/source-types-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/source-types-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/source-types-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/source-types-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/source-types-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/source-types-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/source-types-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/source-types-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/source-types-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/source-types-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/source-types-guide.html">
+<!-- ssn-languages:end --></head>
+	<body>
+		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/source-types-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/source-types-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/source-types-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/source-types-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/source-types-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/source-types-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/source-types-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="source-types-guide.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/source-types-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/source-types-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/source-types-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/source-types-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/source-types-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/source-types-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/source-types-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/source-types-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/source-types-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+		<section class="page-hero">
+			<div class="container">
+				<h1>来源类型</h1>
+				<p>传入筛选器应使用载荷中准确的来源名称；向外发送聊天前，应了解目标系列。</p>
+			</div>
+		</section>
+		<main class="guide-section">
+			<div class="container">
+				<div class="guide-card">
+					<h2>本页内容</h2>
+					<ul class="guide-list">
+						<li><a href="#what-is-a-type">类型是什么</a></li>
+						<li><a href="#common-and-confusing-types">常见和易混淆的名称</a></li>
+						<li><a href="#youtube-shorts-event-flow">YouTube Shorts 与 Event Flow</a></li>
+						<li><a href="#instagram-live">Instagram 直播与 Instagram 评论</a></li>
+						<li><a href="#generic-and-unnamed-sources">通用、自定义和未命名来源</a></li>
+						<li><a href="#desktop-app-injection">桌面应用脚本注入</a></li>
+						<li><a href="#replying-to-sources">向来源回复和中继</a></li>
+						<li><a href="#where-to-find-details">在哪里查找准确详情</a></li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="what-is-a-type">
+					<h2>什么是 <code>type</code>?</h2>
+					<p><code>type</code> 是传入 Social Stream 载荷中的规范来源标识符。叠加层、URL 筛选器、API 和 Event Flow 用它区分平台和来源变体。</p>
+					<pre><code>{
+  "type": "youtubeshorts",
+  "chatname": "Ava",
+  "chatmessage": "Hello from Shorts"
+}</code></pre>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>名称</th>
+								<th>含义</th>
+								<th>不要与其混淆</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Name"><code>type</code></td>
+								<td data-label="Meaning">传入载荷来源，例如 <code>youtube</code> 或 <code>instagramlive</code>.</td>
+								<td data-label="Do Not Confuse It With">显示标签、连接模式或事件名称。</td>
+							</tr>
+							<tr>
+								<td data-label="Name"><code>event</code></td>
+								<td data-label="Meaning">发生了什么，例如 <code>superchat</code>, <code>gift</code>，或 <code>viewer_update</code>.</td>
+								<td data-label="Do Not Confuse It With">产生它的平台。</td>
+							</tr>
+							<tr>
+								<td data-label="Name"><code>sourceName</code></td>
+								<td data-label="Meaning">可选的频道、房间或来源显示名称。</td>
+								<td data-label="Do Not Confuse It With">来源触发器使用的稳定值。</td>
+							</tr>
+							<tr>
+								<td data-label="Name"><code>tid</code></td>
+								<td data-label="Meaning">原始标签页或桌面来源窗口 ID，用于回复和排除来源。</td>
+								<td data-label="Do Not Confuse It With">平台类型。</td>
+							</tr>
+							<tr>
+								<td data-label="Name">桌面应用 <code>target</code></td>
+								<td data-label="Meaning">保存的分类，用于选择 URL、模式和捕获脚本。</td>
+								<td data-label="Do Not Confuse It With">保证每个发出的载荷都具有相同字符串。</td>
+							</tr>
+						</tbody>
+					</table>
+					<p><strong>重要：</strong> Event Flow 的 <em>来自来源（From Source）</em> 触发器直接将配置值与以下字段比较： <code>message.type</code>。使用载荷中准确的小写值。</p>
+				</div>
+
+				<div class="guide-card" id="common-and-confusing-types">
+					<h2>常见和易混淆的类型</h2>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>捕获或界面名称</th>
+								<th>载荷类型</th>
+								<th>为什么可能令人意外</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Capture or UI Name">YouTube 直播聊天</td>
+								<td data-label="Payload Type"><code>youtube</code></td>
+								<td data-label="Why It May Be Surprising">DOM、API 轮询和 WebSocket／流式传输描述的是传输方式，不是不同类型。</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">YouTube Shorts 直播聊天</td>
+								<td data-label="Payload Type"><code>youtubeshorts</code></td>
+								<td data-label="Why It May Be Surprising">在传入筛选器和 Event Flow 中继目标中，它是独立类型；共享 YouTube 控件仍会在需要时将两个变体视为同一系列。</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">Instagram Live／InstaFeed 直播</td>
+								<td data-label="Payload Type"><code>instagramlive</code></td>
+								<td data-label="Why It May Be Surprising">Instagram 帖子和动态评论使用 <code>instagram</code>.</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">TikFinity</td>
+								<td data-label="Payload Type"><code>tiktok</code></td>
+								<td data-label="Why It May Be Surprising">TikFinity 是连接器；标准化后的平台仍为 TikTok。</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">X</td>
+								<td data-label="Payload Type"><code>x</code>，或旧版的 <code>twitter</code> ，配合 Twitter 品牌选项</td>
+								<td data-label="Why It May Be Surprising">现有筛选器可能有意保留旧名称。</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">Bilibili 地区选项</td>
+								<td data-label="Payload Type"><code>bilibili</code></td>
+								<td data-label="Why It May Be Surprising">桌面目标和脚本可能写作 <code>bilibilicom</code> 或 <code>bilibilitv</code>，同时将载荷标准化。</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">OBS 系统事件</td>
+								<td data-label="Payload Type"><code>obs</code></td>
+								<td data-label="Why It May Be Surprising">它们不是聊天来源，但可以通过以下事件进入 Event Flow： <code>scene_changed</code>.</td>
+							</tr>
+						</tbody>
+					</table>
+					<p>使用 <a href="event-reference.html">事件参考</a> 了解字段约定，并参见 <a href="supported-sites.html">支持的网站</a> 了解公开的平台设置名称。</p>
+				</div>
+
+				<div class="guide-card" id="youtube-shorts-event-flow">
+					<h2>YouTube Shorts 与 Event Flow</h2>
+					<p><strong>传入匹配是精确匹配：</strong> 使用 <code>youtubeshorts</code> 用于 Shorts 消息的来源触发器，而 <code>youtube</code> 用于常规 YouTube 直播聊天。</p>
+					<p><strong>传出匹配也是精确匹配：</strong> 聊天中继将它们视为独立目标。</p>
+					<ul class="guide-list">
+						<li>目标 <code>youtube</code> 仅发送到常规 YouTube 直播聊天窗口。</li>
+						<li>目标 <code>youtubeshorts</code> 仅发送到 YouTube Shorts 直播聊天窗口。</li>
+						<li>要同时发送给两者，请为各目标添加一个操作，或中继到除来源外的所有平台。</li>
+					</ul>
+					<p>其他 YouTube 通用控件可能有意将两个类型视为同一平台系列。这不会改变上方精确的 Event Flow 匹配。</p>
+					<h3>旧版本故障排查</h3>
+					<p>旧版本将两个中继目标归在一起，因此两个操作可能向每个 YouTube 窗口各发送两次。出现此情况时，请更新 Social Stream Ninja。回传筛选器可防止中继循环，但不能修复旧版本中目标匹配重叠的问题。</p>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/guide-event-flow-overview.png" alt="Social Stream Ninja Event Flow 编辑器，显示已连接的触发器、筛选器和操作节点" class="guide-image" />
+						<figcaption>来源触发器读取传入载荷类型；聊天中继选择传出的来源窗口。</figcaption>
+					</figure>
+					<p>继续参阅 <a href="../actions/event-flow-guide.html">Event Flow 指南</a> 或 <a href="youtube-setup-guide.html">YouTube 设置指南</a>.</p>
+				</div>
+
+				<div class="guide-card" id="instagram-live">
+					<h2>Instagram 直播与 Instagram 评论的区别</h2>
+					<p>使用 <code>instagramlive</code> 用于 Instagram Live 或 InstaFeed 直播来源捕获的直播间聊天。使用 <code>instagram</code> 用于非直播动态、帖子或静态评论。</p>
+					<ul class="guide-list">
+						<li><strong>直播聊天流程：</strong> 来源为 = <code>instagramlive</code>.</li>
+						<li><strong>帖子／评论流程：</strong> 来源为 = <code>instagram</code>.</li>
+						<li><strong>两者：</strong> 使用两个触发器连接同一个共享操作，或使用任意来源触发器并接上能识别类型的筛选器。</li>
+					</ul>
+					<p>仅凭可见的 Instagram 品牌不足以确定类型；需根据内容上下文区分两者。</p>
+				</div>
+
+				<div class="guide-card" id="generic-and-unnamed-sources">
+					<h2>通用、自定义和未命名来源</h2>
+					<p><code>sources/generic.js</code> 是通用 DOM 捕获回退。它寻找常见聊天行、名称、消息、头像和输入框。它以以下类型开始： <code>generic</code>，然后通常从已知平台或页面主机名派生小写类型。</p>
+					<ul class="guide-list">
+						<li>编写专用来源前，先用它验证普通 DOM 聊天可被捕获。</li>
+						<li>不要预期能可靠支持事件、审核、删除、虚拟化列表或封闭的 shadow DOM。</li>
+						<li>从主机名派生的类型很方便，但并不是永久的公开约定。围绕它构建筛选器前，请确认实际发出的载荷。</li>
+						<li>如果来源没有既定平台名称，请选择一个稳定的小写 <code>type</code>。使用 <code>sourceName</code> 用于面向用户的房间或频道标签。</li>
+						<li>如果尚无稳定标识， <code>generic</code> 比每条消息都更改类型更安全。外部集成通常使用明确选定的值，例如 <code>external</code>.</li>
+					</ul>
+					<p>用户、叠加层或流程一旦依赖新类型，请将其记录在 <a href="event-reference.html">事件参考</a> ，不要悄悄将其重命名。</p>
+				</div>
+
+				<div class="guide-card" id="desktop-app-injection">
+					<h2>桌面应用脚本注入</h2>
+					<p>桌面应用保存来源的 <code>target</code>，选择一个或多个 <code>sourceFile</code>/<code>sourceFiles</code>，打开来源窗口，并注入本项目的共享捕获脚本。Chrome 运行时兼容桥负责在页面与应用之间传递捕获的消息和回复命令。</p>
+					<ul class="guide-list">
+						<li>目标和脚本文件名不必与载荷类型匹配。 <code>youtubeshorts</code> 目标加载 <code>sources/youtube.js</code>，它发出 <code>youtube</code> 或 <code>youtubeshorts</code> ，来自页面上下文。</li>
+						<li>Bilibili 目标也类似地映射到共享／地区脚本，同时发出 <code>bilibili</code>.</li>
+						<li><code>sources/inject/*.js</code> 文件是页面上下文中的套接字或页面变量助手。来源包装器仍负责规范载荷。</li>
+						<li>注入多个脚本时，不要让每个助手都声明相同的传出目标。捕获标识与回复能力是两个不同方面。</li>
+						<li>来源捕获更改应位于本仓库的 <code>sources/</code> 文件中。桌面应用使用这些文件；其打包的备用副本不是权威来源。</li>
+					</ul>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/guide-standalone-source-modes.png" alt="Social Stream Ninja 桌面应用来源条目，显示连接模式" class="guide-image" />
+						<figcaption>每个桌面来源保留自己的目标、URL、连接模式和捕获脚本。</figcaption>
+					</figure>
+					<p>维护者可在桌面应用的以下位置追踪设置： <code>index.html</code> 来源窗口创建，然后 <code>main.js</code> 和 <code>preload.js</code> 进行注入和桥接。</p>
+				</div>
+
+				<div class="guide-card" id="replying-to-sources">
+					<h2>向来源回复和中继</h2>
+					<p>传入标识与传出能力有关，但两者并不是同一约定。</p>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>操作</th>
+								<th>如何选择</th>
+								<th>常见故障</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Action">回复来源</td>
+								<td data-label="How It Chooses">使用 <code>tid</code> 以准确寻址原始标签页／窗口。</td>
+								<td data-label="Common Failure">否 <code>tid</code>，或该捕获模式无法发送聊天。</td>
+							</tr>
+							<tr>
+								<td data-label="Action">中继到平台</td>
+								<td data-label="How It Chooses">询问已打开的来源是否支持该传出目标。</td>
+								<td data-label="Common Failure">所选变体没有匹配的已打开来源窗口，或来源无法发送聊天。</td>
+							</tr>
+							<tr>
+								<td data-label="Action">中继到除来源外的所有平台</td>
+								<td data-label="How It Chooses">广播到可路由的来源，并排除原始的 <code>tid</code>.</td>
+								<td data-label="Common Failure">来源无法接受自动输入，或回传消息被再次捕获。</td>
+							</tr>
+						</tbody>
+					</table>
+					<ul class="guide-list">
+						<li>来源脚本的 <code>getSource</code> 响应表明传出可路由性。共享 YouTube 控件可能将两个变体归为一组，而聊天中继会添加准确的 Shorts URL 上下文来匹配目标。</li>
+						<li>通用捕获可以查找并聚焦可能的输入框，但这不保证网站会接受自动发送。</li>
+						<li>API／WebSocket 模式可能通过平台 API 发送，而不是在可见页面中输入。</li>
+						<li>在桌面应用中， <em>机器人仅回复（不捕获）</em> 使来源仍可用于回复／状态，同时抑制其正常捕获的消息。</li>
+						<li>构建多平台中继前，先用一个来源窗口测试回复支持。</li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="where-to-find-details">
+					<h2>在哪里查找准确详情</h2>
+					<ul class="guide-list">
+						<li><a href="event-reference.html">事件参考</a>：规范字段和平台事件名称。</li>
+						<li><a href="../actions/event-flow-guide.html">Event Flow 指南</a>：触发器、操作、模板、回传处理和测试。</li>
+						<li><a href="standalone-app-modes.html">独立应用模式</a>：来源窗口和连接模式行为。</li>
+						<li><a href="supported-sites.html">支持的网站</a>：平台名称和设置要求。</li>
+						<li><a href="../../docs/index.html?file=agents/08-platform-sources/generic-and-custom-sources.md">通用和自定义来源</a>：回退和外部捕获。</li>
+						<li><a href="../../docs/index.html?file=agents/04-standalone-app-source-windows.md">桌面应用来源窗口</a>：目标、脚本、桥接和仅回复模式的内部机制。</li>
+						<li><a href="../../docs/index.html?file=agents/12-development/adding-a-source.md">添加来源</a>：来源约定、注入助手、清单和文档。</li>
+					</ul>
+					<p>调试时，检查一个原始载荷并记录其 <code>type</code>, <code>event</code>, <code>sourceName</code>，以及 <code>tid</code>。这通常能区分传入匹配、传出路由和重复捕获问题。</p>
+				</div>
+			</div>
+		</main>
+		<footer>
+			<div class="container">
+				<div class="footer-bottom">
+					<p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 许可证。</p>
+				</div>
+			</div>
+		</footer>
+		<script data-copy-markdown src="../../docs/js/main.js"></script>
+		<script>
+			document.getElementById("current-year").textContent = new Date().getFullYear();
+		</script>
+	</body>
+</html>

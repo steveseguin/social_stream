@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+	<head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/th/docs/source-types-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/th/docs/source-types-guide.html">
+    <meta property="og:title" content="ประเภทแหล่งข้อมูล - Social Stream Ninja">
+    <meta property="og:description" content="วิธีทำงานของชื่อประเภทแหล่งข้อมูล Social Stream Ninja ในเพย์โหลด ตัวกรอง Event Flow แหล่งข้อมูลแอปเดสก์ท็อป การเก็บข้อมูลกำหนดเอง และการตอบกลับ">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/th/docs/source-types-guide.html">
+    <meta name="twitter:title" content="ประเภทแหล่งข้อมูล - Social Stream Ninja">
+    <meta name="twitter:description" content="วิธีทำงานของชื่อประเภทแหล่งข้อมูล Social Stream Ninja ในเพย์โหลด ตัวกรอง Event Flow แหล่งข้อมูลแอปเดสก์ท็อป การเก็บข้อมูลกำหนดเอง และการตอบกลับ">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem("darkMode");
+				var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+				if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+					document.documentElement.classList.add("dark-mode");
+				}
+			})();
+		</script>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>ประเภทแหล่งข้อมูล - Social Stream Ninja</title>
+		<link rel="stylesheet" href="../../docs/css/styles.css" />
+		<link rel="stylesheet" href="../../docs/css/guides.css" />
+		<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon" />
+		<meta name="description" content="วิธีทำงานของชื่อประเภทแหล่งข้อมูล Social Stream Ninja ในเพย์โหลด ตัวกรอง Event Flow แหล่งข้อมูลแอปเดสก์ท็อป การเก็บข้อมูลกำหนดเอง และการตอบกลับ">
+	<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/source-types-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{", and":", และ",", chooses one or more":" เลือกหนึ่งหรือหลาย",", opens a source window, and injects shared capture scripts from this project. A Chrome-runtime compatibility bridge carries captured messages and reply commands between the page and app.":" เปิดหน้าต่างแหล่งข้อมูล และแทรกสคริปต์เก็บข้อมูลร่วมจากโปรเจ็กต์นี้ บริดจ์ความเข้ากันได้กับ Chrome runtime ส่งข้อความที่เก็บและคำสั่งตอบกลับระหว่างหน้ากับแอป",", or":", หรือ",", or legacy":" หรือแบบเก่า",", or that capture mode cannot send chat.":" หรือโหมดเก็บข้อมูลนั้นส่งแชตไม่ได้",", then normally derives a lowercase type from a known platform or the page hostname.":" แล้วโดยปกติจะสร้างประเภทตัวพิมพ์เล็กจากแพลตฟอร์มที่รู้จักหรือชื่อโฮสต์ของหน้า",", which emits":" ซึ่งส่งค่า",", while payloads are normalized.":" ขณะที่เพย์โหลดถูกปรับเป็นรูปแบบมาตรฐาน",". That usually separates incoming matching, outbound routing, and capture duplication.":" โดยทั่วไปวิธีนี้จะแยกปัญหาการจับคู่ขาเข้า เส้นทางขาออก และการเก็บข้อมูลซ้ำได้",". Use":" ใช้",". Use the exact lowercase payload value.":" ใช้ค่าเพย์โหลดตัวพิมพ์เล็กให้ตรงทุกตัว",": canonical fields and platform event names.":": ฟิลด์มาตรฐานและชื่อเหตุการณ์ของแพลตฟอร์ม",": fallback and external capture.":": การเก็บข้อมูลสำรองและภายนอก",": platform names and setup requirements.":": ชื่อแพลตฟอร์มและข้อกำหนดการตั้งค่า",": source contracts, injection helpers, manifests, and docs.":": รูปแบบแหล่งข้อมูล ตัวช่วยแทรกสคริปต์ manifest และเอกสาร",": source-window and connection-mode behavior.":": พฤติกรรมหน้าต่างแหล่งข้อมูลและโหมดเชื่อมต่อ",": target, script, bridge, and reply-only internals.":": รายละเอียดภายในของ target สคริปต์ บริดจ์ และโหมดตอบอย่างเดียว",": triggers, actions, templates, reflection handling, and tests.":": ทริกเกอร์ แอ็กชัน เทมเพลต การจัดการข้อความสะท้อน และการทดสอบ","A display label, connection mode, or event name.":"ป้ายที่แสดง โหมดการเชื่อมต่อ หรือชื่อเหตุการณ์","A guarantee that every emitted payload has the same string.":"การรับประกันว่าเพย์โหลดทุกอันที่ส่งมีข้อความค่าเดียวกัน","A hostname-derived type is convenient, but not a permanent public contract. Confirm the emitted payload before building filters around it.":"ประเภทที่สร้างจากชื่อโฮสต์สะดวก แต่ไม่ใช่ข้อกำหนดสาธารณะถาวร ยืนยันเพย์โหลดที่ส่งจริงก่อนสร้างตัวกรองตามค่านั้น","A platform type.":"ประเภทแพลตฟอร์ม","A source cannot accept automated input, or a reflection is captured again.":"แหล่งข้อมูลไม่รับการป้อนอัตโนมัติ หรือข้อความสะท้อนถูกเก็บกลับมา","A source script's":"ค่าของสคริปต์แหล่งข้อมูล","A target and script filename need not match the payload type. The":"target และชื่อไฟล์สคริปต์ไม่จำเป็นต้องตรงกับประเภทเพย์โหลด ตัวอย่าง","API/WebSocket modes may send through platform APIs instead of typing into the visible page.":"โหมด API/WebSocket อาจส่งผ่าน API ของแพลตฟอร์มแทนการพิมพ์ลงหน้าที่มองเห็น","Action":"การดำเนินการ","Adding a Source":"เพิ่มแหล่งข้อมูล","An optional channel, room, or source display name.":"ชื่อช่อง ห้อง หรือชื่อแหล่งข้อมูลที่แสดงแบบไม่บังคับ","Asks open sources whether they support that outbound destination.":"ถามแหล่งข้อมูลที่เปิดอยู่ว่ารองรับปลายทางขาออกนั้นหรือไม่","Bilibili regional choices":"ตัวเลือกภูมิภาคของ Bilibili","Bilibili targets similarly map to shared/regional scripts while emitting":"target ของ Bilibili ก็จับคู่กับสคริปต์ร่วม/ภูมิภาคขณะส่งค่า","Bot reply-only (no capture)":"บอตตอบอย่างเดียว (ไม่เก็บข้อมูล)","Both:":"ทั้งสองแบบ:","Broadcasts to routeable sources and excludes the originating":"ส่งไปยังแหล่งข้อมูลที่กำหนดเส้นทางได้ โดยยกเว้นต้นทาง","Capture or UI Name":"ชื่อในการเก็บข้อมูลหรือ UI","Commands & API":"คำสั่งและ API","Common Failure":"ปัญหาที่พบบ่อย","Common and Confusing Types":"ประเภทที่พบบ่อยและชวนสับสน","Common and confusing names":"ชื่อที่พบบ่อยและชวนสับสน","Continue with the":"ทำต่อด้วย","DOM, API polling, and WebSocket/streaming describe transport, not separate types.":"DOM, การดึง API เป็นระยะ และ WebSocket/สตรีมมิงอธิบายวิธีรับส่ง ไม่ใช่คนละประเภท","Desktop App Script Injection":"การแทรกสคริปต์ของแอปเดสก์ท็อป","Desktop App Source Windows":"หน้าต่างแหล่งข้อมูลแอปเดสก์ท็อป","Desktop app":"แอปเดสก์ท็อป","Desktop app script injection":"การแทรกสคริปต์ของแอปเดสก์ท็อป","Desktop targets and scripts may say":"target และสคริปต์เดสก์ท็อปอาจใช้ชื่อ","Destination":"ปลายทาง","Do Not Confuse It With":"อย่าสับสนกับ","Do not expect reliable event, moderation, deletion, virtualized-list, or closed shadow-DOM support.":"อย่าคาดหวังการรองรับเหตุการณ์ การดูแลแชต การลบ รายการเสมือน หรือ shadow DOM แบบปิดอย่างเชื่อถือได้","Download":"ดาวน์โหลด","Each desktop source keeps its own target, URL, connection mode, and capture script.":"แต่ละแหล่งข้อมูลเดสก์ท็อปเก็บ target, URL, โหมดเชื่อมต่อ และสคริปต์เก็บข้อมูลของตัวเอง","Event Flow Guide":"คู่มือ Event Flow","Event Flow's":"โหนดของ Event Flow","Event Reference":"เอกสารอ้างอิงอีเวนต์","Existing filters may intentionally preserve the older name.":"ตัวกรองเดิมอาจตั้งใจเก็บชื่อเก่าไว้","Features":"ฟีเจอร์","From Source":"จากแหล่งข้อมูล (From Source)","From Source =":"From Source =","From Source reads the incoming payload type; Relay Chat selects outbound source windows.":"From Source อ่านประเภทเพย์โหลดขาเข้า ส่วน Relay Chat เลือกหน้าต่างแหล่งข้อมูลขาออก","Generic and Custom Sources":"แหล่งข้อมูลทั่วไปและกำหนดเอง","Generic capture can find and focus likely inputs, but that does not guarantee the site will accept an automated send.":"การเก็บข้อมูลทั่วไปค้นหาและโฟกัสช่องป้อนที่น่าจะใช่ได้ แต่ไม่รับประกันว่าเว็บไซต์จะยอมรับการส่งอัตโนมัติ","Generic, Custom, and Unnamed Sources":"แหล่งข้อมูลทั่วไป กำหนดเอง และไม่มีชื่อ","Generic, custom, and unnamed sources":"แหล่งข้อมูลทั่วไป กำหนดเอง และไม่มีชื่อ","Guides":"คู่มือ","Hire":"จ้างงาน","Home":"หน้าแรก","How It Chooses":"วิธีเลือก","How Social Stream Ninja source type names work in payloads, filters, Event Flow, desktop app sources, custom capture, and replies.":"วิธีทำงานของชื่อประเภทแหล่งข้อมูล Social Stream Ninja ในเพย์โหลด ตัวกรอง Event Flow แหล่งข้อมูลแอปเดสก์ท็อป การเก็บข้อมูลกำหนดเอง และการตอบกลับ","If a source has no established platform name, choose one stable lowercase":"หากแหล่งข้อมูลไม่มีชื่อแพลตฟอร์มที่กำหนดไว้ ให้เลือกค่าตัวพิมพ์เล็กคงที่หนึ่งค่าเป็น","If no stable identity exists yet,":"หากยังไม่มีตัวตนคงที่","Important:":"สำคัญ:","In the desktop app,":"ในแอปเดสก์ท็อป","Incoming identity and outbound capability are related, but they are not the same contract.":"ตัวตนขาเข้าและความสามารถขาออกเกี่ยวข้องกัน แต่ไม่ใช่ข้อกำหนดเดียวกัน","Incoming matching is exact:":"การจับคู่ขาเข้าต้องตรงทุกตัว:","Inspiration":"ไอเดียสร้างสรรค์","Instagram Live / InstaFeed live":"Instagram Live / InstaFeed live","Instagram Live and Instagram comments":"Instagram Live และความคิดเห็น Instagram","Instagram Live vs Instagram Comments":"Instagram Live เทียบกับความคิดเห็น Instagram","Instagram post and feed comments use":"ความคิดเห็นโพสต์และฟีด Instagram ใช้","It is distinct for incoming filters and Event Flow relay destinations, while shared YouTube controls still treat both variants as one family where needed.":"เป็นคนละค่าในตัวกรองขาเข้าและปลายทางส่งต่อ Event Flow ส่วนตัวควบคุม YouTube ร่วมยังมองทั้งสองแบบเป็นกลุ่มเดียวกันเมื่อจำเป็น","Live chat flow:":"โฟลว์แชตสด:","Main navigation":"เมนูหลัก","Maintainers can trace setup in the desktop app's":"ผู้ดูแลไล่ดูการตั้งค่าได้ในส่วนของแอปเดสก์ท็อป","Meaning":"ความหมาย","Name":"ชื่อ","No":"ไม่มี","OBS system events":"เหตุการณ์ระบบ OBS","Older versions grouped both relay destinations, so two actions could send twice to each YouTube window. Update Social Stream Ninja if that happens. A Reflection Filter prevents relay loops, but it does not correct overlapping destination matching in those older versions.":"รุ่นเก่ารวมปลายทางส่งต่อทั้งสองแบบ แอ็กชันสองรายการจึงอาจส่งซ้ำสองครั้งไปทุกหน้าต่าง YouTube หากเกิดเช่นนี้ให้อัปเดต Social Stream Ninja Reflection Filter ป้องกันการส่งต่อวนกลับ แต่ไม่แก้การจับคู่ปลายทางทับซ้อนในรุ่นเก่าเหล่านั้น","On This Page":"ในหน้านี้","Once users, overlays, or flows depend on a new type, document it in the":"เมื่อผู้ใช้ โอเวอร์เลย์ หรือโฟลว์พึ่งพาประเภทใหม่แล้ว ให้บันทึกไว้ใน","Open navigation menu":"เปิดเมนูนำทาง","Other YouTube-wide controls may intentionally handle both types as one platform family. This does not change the exact Event Flow matching above.":"ตัวควบคุม YouTube แบบรวมอื่นอาจตั้งใจจัดทั้งสองประเภทเป็นแพลตฟอร์มกลุ่มเดียวกัน โดยไม่เปลี่ยนการจับคู่ Event Flow แบบตรงทุกตัวด้านบน","Outgoing matching is also exact:":"การจับคู่ขาออกต้องตรงทุกตัวเช่นกัน:","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Payload Type":"ประเภทเพย์โหลด","Post/comment flow:":"โฟลว์โพสต์/ความคิดเห็น:","Relay Chat treats them as separate destinations.":"Relay Chat ถือเป็นคนละปลายทาง","Relay to a platform":"ส่งต่อไปแพลตฟอร์ม","Relay to all except source":"ส่งต่อไปทั้งหมด ยกเว้นต้นทาง","Reply to source":"ตอบกลับต้นทาง","Replying and Relaying to Sources":"ตอบกลับและส่งต่อไปยังแหล่งข้อมูล","Replying and relaying to sources":"ตอบกลับและส่งต่อไปยังแหล่งข้อมูล","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja Event Flow editor with connected trigger, filter, and action nodes":"ตัวแก้ไข Event Flow ของ Social Stream Ninja ที่มีโหนดทริกเกอร์ ตัวกรอง และแอ็กชันเชื่อมกัน","Social Stream Ninja desktop app source entries showing connection modes":"รายการแหล่งข้อมูลในแอป Social Stream Ninja เดสก์ท็อปที่แสดงโหมดเชื่อมต่อ","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja สัญญาอนุญาต GPLv3.0","Source Types":"ประเภทแหล่งข้อมูล","Source Types - Social Stream Ninja":"ประเภทแหล่งข้อมูล - Social Stream Ninja","Source capture changes belong in this repository's":"การเปลี่ยนการเก็บข้อมูลต้นทางควรอยู่ในไฟล์ของที่เก็บโค้ดนี้","Standalone App Modes":"โหมดแอปแยก","Support":"การสนับสนุน","Supported Sites":"เว็บไซต์ที่รองรับ","Switch theme":"เปลี่ยนธีม","Test reply support with one source window before building a multi-platform relay.":"ทดสอบการตอบกลับกับหน้าต่างแหล่งข้อมูลเดียว ก่อนสร้างการส่งต่อหลายแพลตฟอร์ม","The desktop app saves a source":"แอปเดสก์ท็อปบันทึกค่าของแหล่งข้อมูล","The incoming payload source, such as":"แหล่งของเพย์โหลดขาเข้า เช่น","The originating tab or desktop source-window ID used for reply and source exclusion.":"รหัสแท็บต้นทางหรือหน้าต่างแหล่งข้อมูลเดสก์ท็อป ใช้สำหรับตอบกลับและยกเว้นต้นทาง","The platform that produced it.":"แพลตฟอร์มที่สร้างเหตุการณ์","The saved category used to choose a URL, mode, and capture script.":"หมวดหมู่ที่บันทึกไว้เพื่อเลือก URL โหมด และสคริปต์เก็บข้อมูล","The selected variant has no matching open source window, or the source cannot send chat.":"ไม่มีหน้าต่างแหล่งข้อมูลที่เปิดและตรงกับแบบที่เลือก หรือแหล่งข้อมูลส่งแชตไม่ได้","The stable value used by a From Source trigger.":"ค่าคงที่ที่ทริกเกอร์ From Source ใช้","The visible Instagram brand is not enough to choose the type; the content context separates the two.":"แบรนด์ Instagram ที่มองเห็นไม่เพียงพอที่จะเลือกประเภท ต้องใช้บริบทเนื้อหาแยกสองแบบ","They are not chat sources, but can enter Event Flow with events such as":"ไม่ใช่แหล่งแชต แต่เข้า Event Flow ด้วยเหตุการณ์ เช่น","TikFinity":"TikFinity","TikFinity is the connector; the normalized platform remains TikTok.":"TikFinity เป็นตัวเชื่อมต่อ ส่วนแพลตฟอร์มที่ปรับเป็นมาตรฐานยังเป็น TikTok","To reach both, add one action for each destination or relay to all platforms excluding the source.":"หากต้องการส่งถึงทั้งสอง ให้เพิ่มหนึ่งแอ็กชันต่อปลายทาง หรือส่งต่อทุกแพลตฟอร์มยกเว้นต้นทาง","Troubleshooting Older Versions":"แก้ปัญหารุ่นเก่า","Use":"ใช้","Use it to prove that an ordinary DOM chat can be captured before writing a dedicated source.":"ใช้เพื่อพิสูจน์ว่าเก็บแชต DOM ปกติได้ ก่อนเขียนแหล่งข้อมูลเฉพาะ","Use the":"ใช้","Use the payload's exact source name for incoming filters, and understand the destination family before sending chat back out.":"ใช้ชื่อแหล่งข้อมูลในเพย์โหลดให้ตรงสำหรับตัวกรองขาเข้า และเข้าใจกลุ่มปลายทางก่อนส่งแชตกลับออกไป","Uses":"ใช้","What Is a":"อะไรคือ","What a type is":"ประเภทคืออะไร","What happened, such as":"สิ่งที่เกิดขึ้น เช่น","When debugging, inspect one raw payload and record its":"เมื่อแก้ปัญหา ให้ตรวจเพย์โหลดดิบหนึ่งอันและจดค่า","When several scripts are injected, avoid making every helper claim the same outbound destination. Capture identity and reply capability are separate concerns.":"เมื่อแทรกหลายสคริปต์ อย่าให้ตัวช่วยทุกตัวอ้างสิทธิ์ปลายทางขาออกเดียวกัน ตัวตนการเก็บข้อมูลและความสามารถตอบกลับเป็นคนละเรื่อง","Where to Find Exact Details":"หาข้อมูลที่แน่นอนได้ที่ใด","Where to find exact details":"หาข้อมูลที่แน่นอนได้ที่ใด","Why It May Be Surprising":"เหตุใดจึงอาจชวนแปลกใจ","X":"X","YouTube Setup Guide":"คู่มือตั้งค่า YouTube","YouTube Shorts and Event Flow":"YouTube Shorts และ Event Flow","YouTube Shorts live chat":"แชตสด YouTube Shorts","YouTube live chat":"แชตสด YouTube","and":"และ","files are page-context helpers for sockets or page variables. The source wrapper remains responsible for the canonical payload.":"เป็นไฟล์ตัวช่วยในบริบทหน้าเว็บสำหรับซ็อกเก็ตหรือตัวแปรหน้า ตัวครอบแหล่งข้อมูลยังรับผิดชอบเพย์โหลดมาตรฐาน","files. The desktop app consumes them; its packaged fallback copy is not the source of truth.":" แอปเดสก์ท็อปนำไฟล์เหล่านั้นไปใช้ สำเนาสำรองที่แพ็กมาด้วยไม่ใช่แหล่งข้อมูลหลัก","for injection and bridging.":"สำหรับการแทรกสคริปต์และทำบริดจ์","for live-room chat captured by the Instagram Live or InstaFeed live source. Use":"สำหรับแชตห้องสดที่เก็บด้วยแหล่ง Instagram Live หรือ InstaFeed live ใช้","for non-live feed, post, or static comments.":"สำหรับความคิดเห็นฟีด โพสต์ หรือความคิดเห็นคงที่ที่ไม่ใช่ไลฟ์","for public platform setup names.":"สำหรับชื่อการตั้งค่าแพลตฟอร์มที่ผู้ใช้เห็น","for regular YouTube live chat.":"สำหรับแชตสด YouTube ปกติ","for the field contract and":"สำหรับข้อกำหนดฟิลด์ และ","for the human-facing room or channel label.":"สำหรับป้ายชื่อห้องหรือช่องที่ผู้ใช้เห็น","from page context.":"จากบริบทหน้าเว็บ","in a From Source trigger for Shorts messages, and":"ในทริกเกอร์ From Source สำหรับข้อความ Shorts และ","is a broad DOM-capture fallback. It looks for common chat rows, names, messages, avatars, and inputs. It starts with":"เป็นตัวสำรองเก็บ DOM ทั่วไป โดยหาแถวแชต ชื่อ ข้อความ อวาตาร์ และช่องป้อนที่พบบ่อย เริ่มด้วย","is safer than changing type per message. External integrations commonly use a deliberate value such as":"ปลอดภัยกว่าการเปลี่ยนประเภททุกข้อความ การเชื่อมต่อภายนอกมักใช้ค่าที่เลือกไว้อย่างตั้งใจ เช่น","is the canonical source identifier on an incoming Social Stream payload. Overlays, URL filters, APIs, and Event Flow use it to tell platforms and source variants apart.":"คือตัวระบุแหล่งข้อมูลมาตรฐานในเพย์โหลด Social Stream ขาเข้า โอเวอร์เลย์ ตัวกรอง URL, API และ Event Flow ใช้แยกแพลตฟอร์มและรูปแบบแหล่งข้อมูล","keeps a source available for replies/status while suppressing its normal captured messages.":"คงแหล่งข้อมูลไว้สำหรับตอบกลับ/สถานะ ขณะที่ไม่ส่งข้อความที่เก็บปกติ","or":"หรือ","rather than silently renaming it.":"แทนการเปลี่ยนชื่อเงียบ ๆ","response is an outbound-routeability signal. Shared YouTube controls may group both variants, while Relay Chat adds exact Shorts URL context for destination matching.":"เป็นคำตอบที่ส่งสัญญาณว่ากำหนดเส้นทางขาออกได้ ตัวควบคุม YouTube ร่วมอาจรวมทั้งสองแบบ ส่วน Relay Chat เพิ่มบริบท URL Shorts ที่ตรงสำหรับจับคู่ปลายทาง","sends only to YouTube Shorts live-chat windows.":"ส่งเฉพาะหน้าต่างแชตสด YouTube Shorts","sends only to regular YouTube live-chat windows.":"ส่งเฉพาะหน้าต่างแชตสด YouTube ปกติ","source-window creation, then":"การสร้างหน้าต่างแหล่งข้อมูล แล้ว","target loads":"target โหลด","to address the exact originating tab/window.":"เพื่อระบุแท็บ/หน้าต่างต้นทางให้ตรง","trigger compares its configured value directly with":"เปรียบเทียบค่าที่ตั้งไว้โดยตรงกับ","use":"ใช้","use two triggers feeding one shared action, or an Any Source trigger followed by a type-aware filter.":"ใช้ทริกเกอร์สองตัวป้อนเข้าแอ็กชันร่วมเดียว หรือใช้ Any Source แล้วตามด้วยตัวกรองที่ดูประเภท","with the Twitter-branding option":"พร้อมตัวเลือกแสดงแบรนด์ Twitter"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/source-types-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/source-types-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/source-types-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/source-types-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/source-types-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/source-types-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/source-types-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/source-types-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/source-types-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/source-types-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/source-types-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/source-types-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/source-types-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/source-types-guide.html">
+<!-- ssn-languages:end --></head>
+	<body>
+		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก"><a href="../index.html">หน้าแรก</a><a href="features.html">ฟีเจอร์</a><a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a><a href="download.html">ดาวน์โหลด</a><a href="guides.html">คู่มือ</a><a href="commands.html">คำสั่งและ API</a><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a><a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a><a href="services.html" class="site-priority-hire">จ้างงาน</a><a href="support.html">การสนับสนุน</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/source-types-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/source-types-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/source-types-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/source-types-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/source-types-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/source-types-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/source-types-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/source-types-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/source-types-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/source-types-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/source-types-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/source-types-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/source-types-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/source-types-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/source-types-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/source-types-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="source-types-guide.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="เปลี่ยนธีม"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+		<section class="page-hero">
+			<div class="container">
+				<h1>ประเภทแหล่งข้อมูล</h1>
+				<p>ใช้ชื่อแหล่งข้อมูลในเพย์โหลดให้ตรงสำหรับตัวกรองขาเข้า และเข้าใจกลุ่มปลายทางก่อนส่งแชตกลับออกไป</p>
+			</div>
+		</section>
+		<main class="guide-section">
+			<div class="container">
+				<div class="guide-card">
+					<h2>ในหน้านี้</h2>
+					<ul class="guide-list">
+						<li><a href="#what-is-a-type">ประเภทคืออะไร</a></li>
+						<li><a href="#common-and-confusing-types">ชื่อที่พบบ่อยและชวนสับสน</a></li>
+						<li><a href="#youtube-shorts-event-flow">YouTube Shorts และ Event Flow</a></li>
+						<li><a href="#instagram-live">Instagram Live และความคิดเห็น Instagram</a></li>
+						<li><a href="#generic-and-unnamed-sources">แหล่งข้อมูลทั่วไป กำหนดเอง และไม่มีชื่อ</a></li>
+						<li><a href="#desktop-app-injection">การแทรกสคริปต์ของแอปเดสก์ท็อป</a></li>
+						<li><a href="#replying-to-sources">ตอบกลับและส่งต่อไปยังแหล่งข้อมูล</a></li>
+						<li><a href="#where-to-find-details">หาข้อมูลที่แน่นอนได้ที่ใด</a></li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="what-is-a-type">
+					<h2>อะไรคือ <code>type</code>?</h2>
+					<p><code>type</code> คือตัวระบุแหล่งข้อมูลมาตรฐานในเพย์โหลด Social Stream ขาเข้า โอเวอร์เลย์ ตัวกรอง URL, API และ Event Flow ใช้แยกแพลตฟอร์มและรูปแบบแหล่งข้อมูล</p>
+					<pre><code>{
+  "type": "youtubeshorts",
+  "chatname": "Ava",
+  "chatmessage": "Hello from Shorts"
+}</code></pre>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>ชื่อ</th>
+								<th>ความหมาย</th>
+								<th>อย่าสับสนกับ</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Name"><code>type</code></td>
+								<td data-label="Meaning">แหล่งของเพย์โหลดขาเข้า เช่น <code>youtube</code> หรือ <code>instagramlive</code>.</td>
+								<td data-label="Do Not Confuse It With">ป้ายที่แสดง โหมดการเชื่อมต่อ หรือชื่อเหตุการณ์</td>
+							</tr>
+							<tr>
+								<td data-label="Name"><code>event</code></td>
+								<td data-label="Meaning">สิ่งที่เกิดขึ้น เช่น <code>superchat</code>, <code>gift</code>, หรือ <code>viewer_update</code>.</td>
+								<td data-label="Do Not Confuse It With">แพลตฟอร์มที่สร้างเหตุการณ์</td>
+							</tr>
+							<tr>
+								<td data-label="Name"><code>sourceName</code></td>
+								<td data-label="Meaning">ชื่อช่อง ห้อง หรือชื่อแหล่งข้อมูลที่แสดงแบบไม่บังคับ</td>
+								<td data-label="Do Not Confuse It With">ค่าคงที่ที่ทริกเกอร์ From Source ใช้</td>
+							</tr>
+							<tr>
+								<td data-label="Name"><code>tid</code></td>
+								<td data-label="Meaning">รหัสแท็บต้นทางหรือหน้าต่างแหล่งข้อมูลเดสก์ท็อป ใช้สำหรับตอบกลับและยกเว้นต้นทาง</td>
+								<td data-label="Do Not Confuse It With">ประเภทแพลตฟอร์ม</td>
+							</tr>
+							<tr>
+								<td data-label="Name">แอปเดสก์ท็อป <code>target</code></td>
+								<td data-label="Meaning">หมวดหมู่ที่บันทึกไว้เพื่อเลือก URL โหมด และสคริปต์เก็บข้อมูล</td>
+								<td data-label="Do Not Confuse It With">การรับประกันว่าเพย์โหลดทุกอันที่ส่งมีข้อความค่าเดียวกัน</td>
+							</tr>
+						</tbody>
+					</table>
+					<p><strong>สำคัญ:</strong> โหนดของ Event Flow <em>จากแหล่งข้อมูล (From Source)</em> เปรียบเทียบค่าที่ตั้งไว้โดยตรงกับ <code>message.type</code> ใช้ค่าเพย์โหลดตัวพิมพ์เล็กให้ตรงทุกตัว</p>
+				</div>
+
+				<div class="guide-card" id="common-and-confusing-types">
+					<h2>ประเภทที่พบบ่อยและชวนสับสน</h2>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>ชื่อในการเก็บข้อมูลหรือ UI</th>
+								<th>ประเภทเพย์โหลด</th>
+								<th>เหตุใดจึงอาจชวนแปลกใจ</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Capture or UI Name">แชตสด YouTube</td>
+								<td data-label="Payload Type"><code>youtube</code></td>
+								<td data-label="Why It May Be Surprising">DOM, การดึง API เป็นระยะ และ WebSocket/สตรีมมิงอธิบายวิธีรับส่ง ไม่ใช่คนละประเภท</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">แชตสด YouTube Shorts</td>
+								<td data-label="Payload Type"><code>youtubeshorts</code></td>
+								<td data-label="Why It May Be Surprising">เป็นคนละค่าในตัวกรองขาเข้าและปลายทางส่งต่อ Event Flow ส่วนตัวควบคุม YouTube ร่วมยังมองทั้งสองแบบเป็นกลุ่มเดียวกันเมื่อจำเป็น</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">Instagram Live / InstaFeed live</td>
+								<td data-label="Payload Type"><code>instagramlive</code></td>
+								<td data-label="Why It May Be Surprising">ความคิดเห็นโพสต์และฟีด Instagram ใช้ <code>instagram</code>.</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">TikFinity</td>
+								<td data-label="Payload Type"><code>tiktok</code></td>
+								<td data-label="Why It May Be Surprising">TikFinity เป็นตัวเชื่อมต่อ ส่วนแพลตฟอร์มที่ปรับเป็นมาตรฐานยังเป็น TikTok</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">X</td>
+								<td data-label="Payload Type"><code>x</code> หรือแบบเก่า <code>twitter</code> พร้อมตัวเลือกแสดงแบรนด์ Twitter</td>
+								<td data-label="Why It May Be Surprising">ตัวกรองเดิมอาจตั้งใจเก็บชื่อเก่าไว้</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">ตัวเลือกภูมิภาคของ Bilibili</td>
+								<td data-label="Payload Type"><code>bilibili</code></td>
+								<td data-label="Why It May Be Surprising">target และสคริปต์เดสก์ท็อปอาจใช้ชื่อ <code>bilibilicom</code> หรือ <code>bilibilitv</code> ขณะที่เพย์โหลดถูกปรับเป็นรูปแบบมาตรฐาน</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">เหตุการณ์ระบบ OBS</td>
+								<td data-label="Payload Type"><code>obs</code></td>
+								<td data-label="Why It May Be Surprising">ไม่ใช่แหล่งแชต แต่เข้า Event Flow ด้วยเหตุการณ์ เช่น <code>scene_changed</code>.</td>
+							</tr>
+						</tbody>
+					</table>
+					<p>ใช้ <a href="event-reference.html">เอกสารอ้างอิงอีเวนต์</a> สำหรับข้อกำหนดฟิลด์ และ <a href="supported-sites.html">เว็บไซต์ที่รองรับ</a> สำหรับชื่อการตั้งค่าแพลตฟอร์มที่ผู้ใช้เห็น</p>
+				</div>
+
+				<div class="guide-card" id="youtube-shorts-event-flow">
+					<h2>YouTube Shorts และ Event Flow</h2>
+					<p><strong>การจับคู่ขาเข้าต้องตรงทุกตัว:</strong> ใช้ <code>youtubeshorts</code> ในทริกเกอร์ From Source สำหรับข้อความ Shorts และ <code>youtube</code> สำหรับแชตสด YouTube ปกติ</p>
+					<p><strong>การจับคู่ขาออกต้องตรงทุกตัวเช่นกัน:</strong> Relay Chat ถือเป็นคนละปลายทาง</p>
+					<ul class="guide-list">
+						<li>ปลายทาง <code>youtube</code> ส่งเฉพาะหน้าต่างแชตสด YouTube ปกติ</li>
+						<li>ปลายทาง <code>youtubeshorts</code> ส่งเฉพาะหน้าต่างแชตสด YouTube Shorts</li>
+						<li>หากต้องการส่งถึงทั้งสอง ให้เพิ่มหนึ่งแอ็กชันต่อปลายทาง หรือส่งต่อทุกแพลตฟอร์มยกเว้นต้นทาง</li>
+					</ul>
+					<p>ตัวควบคุม YouTube แบบรวมอื่นอาจตั้งใจจัดทั้งสองประเภทเป็นแพลตฟอร์มกลุ่มเดียวกัน โดยไม่เปลี่ยนการจับคู่ Event Flow แบบตรงทุกตัวด้านบน</p>
+					<h3>แก้ปัญหารุ่นเก่า</h3>
+					<p>รุ่นเก่ารวมปลายทางส่งต่อทั้งสองแบบ แอ็กชันสองรายการจึงอาจส่งซ้ำสองครั้งไปทุกหน้าต่าง YouTube หากเกิดเช่นนี้ให้อัปเดต Social Stream Ninja Reflection Filter ป้องกันการส่งต่อวนกลับ แต่ไม่แก้การจับคู่ปลายทางทับซ้อนในรุ่นเก่าเหล่านั้น</p>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/guide-event-flow-overview.png" alt="ตัวแก้ไข Event Flow ของ Social Stream Ninja ที่มีโหนดทริกเกอร์ ตัวกรอง และแอ็กชันเชื่อมกัน" class="guide-image" />
+						<figcaption>From Source อ่านประเภทเพย์โหลดขาเข้า ส่วน Relay Chat เลือกหน้าต่างแหล่งข้อมูลขาออก</figcaption>
+					</figure>
+					<p>ทำต่อด้วย <a href="../actions/event-flow-guide.html">คู่มือ Event Flow</a> หรือ <a href="youtube-setup-guide.html">คู่มือตั้งค่า YouTube</a>.</p>
+				</div>
+
+				<div class="guide-card" id="instagram-live">
+					<h2>Instagram Live เทียบกับความคิดเห็น Instagram</h2>
+					<p>ใช้ <code>instagramlive</code> สำหรับแชตห้องสดที่เก็บด้วยแหล่ง Instagram Live หรือ InstaFeed live ใช้ <code>instagram</code> สำหรับความคิดเห็นฟีด โพสต์ หรือความคิดเห็นคงที่ที่ไม่ใช่ไลฟ์</p>
+					<ul class="guide-list">
+						<li><strong>โฟลว์แชตสด:</strong> From Source = <code>instagramlive</code>.</li>
+						<li><strong>โฟลว์โพสต์/ความคิดเห็น:</strong> From Source = <code>instagram</code>.</li>
+						<li><strong>ทั้งสองแบบ:</strong> ใช้ทริกเกอร์สองตัวป้อนเข้าแอ็กชันร่วมเดียว หรือใช้ Any Source แล้วตามด้วยตัวกรองที่ดูประเภท</li>
+					</ul>
+					<p>แบรนด์ Instagram ที่มองเห็นไม่เพียงพอที่จะเลือกประเภท ต้องใช้บริบทเนื้อหาแยกสองแบบ</p>
+				</div>
+
+				<div class="guide-card" id="generic-and-unnamed-sources">
+					<h2>แหล่งข้อมูลทั่วไป กำหนดเอง และไม่มีชื่อ</h2>
+					<p><code>sources/generic.js</code> เป็นตัวสำรองเก็บ DOM ทั่วไป โดยหาแถวแชต ชื่อ ข้อความ อวาตาร์ และช่องป้อนที่พบบ่อย เริ่มด้วย <code>generic</code> แล้วโดยปกติจะสร้างประเภทตัวพิมพ์เล็กจากแพลตฟอร์มที่รู้จักหรือชื่อโฮสต์ของหน้า</p>
+					<ul class="guide-list">
+						<li>ใช้เพื่อพิสูจน์ว่าเก็บแชต DOM ปกติได้ ก่อนเขียนแหล่งข้อมูลเฉพาะ</li>
+						<li>อย่าคาดหวังการรองรับเหตุการณ์ การดูแลแชต การลบ รายการเสมือน หรือ shadow DOM แบบปิดอย่างเชื่อถือได้</li>
+						<li>ประเภทที่สร้างจากชื่อโฮสต์สะดวก แต่ไม่ใช่ข้อกำหนดสาธารณะถาวร ยืนยันเพย์โหลดที่ส่งจริงก่อนสร้างตัวกรองตามค่านั้น</li>
+						<li>หากแหล่งข้อมูลไม่มีชื่อแพลตฟอร์มที่กำหนดไว้ ให้เลือกค่าตัวพิมพ์เล็กคงที่หนึ่งค่าเป็น <code>type</code> ใช้ <code>sourceName</code> สำหรับป้ายชื่อห้องหรือช่องที่ผู้ใช้เห็น</li>
+						<li>หากยังไม่มีตัวตนคงที่ <code>generic</code> ปลอดภัยกว่าการเปลี่ยนประเภททุกข้อความ การเชื่อมต่อภายนอกมักใช้ค่าที่เลือกไว้อย่างตั้งใจ เช่น <code>external</code>.</li>
+					</ul>
+					<p>เมื่อผู้ใช้ โอเวอร์เลย์ หรือโฟลว์พึ่งพาประเภทใหม่แล้ว ให้บันทึกไว้ใน <a href="event-reference.html">เอกสารอ้างอิงอีเวนต์</a> แทนการเปลี่ยนชื่อเงียบ ๆ</p>
+				</div>
+
+				<div class="guide-card" id="desktop-app-injection">
+					<h2>การแทรกสคริปต์ของแอปเดสก์ท็อป</h2>
+					<p>แอปเดสก์ท็อปบันทึกค่าของแหล่งข้อมูล <code>target</code> เลือกหนึ่งหรือหลาย <code>sourceFile</code>/<code>sourceFiles</code> เปิดหน้าต่างแหล่งข้อมูล และแทรกสคริปต์เก็บข้อมูลร่วมจากโปรเจ็กต์นี้ บริดจ์ความเข้ากันได้กับ Chrome runtime ส่งข้อความที่เก็บและคำสั่งตอบกลับระหว่างหน้ากับแอป</p>
+					<ul class="guide-list">
+						<li>target และชื่อไฟล์สคริปต์ไม่จำเป็นต้องตรงกับประเภทเพย์โหลด ตัวอย่าง <code>youtubeshorts</code> target โหลด <code>sources/youtube.js</code> ซึ่งส่งค่า <code>youtube</code> หรือ <code>youtubeshorts</code> จากบริบทหน้าเว็บ</li>
+						<li>target ของ Bilibili ก็จับคู่กับสคริปต์ร่วม/ภูมิภาคขณะส่งค่า <code>bilibili</code>.</li>
+						<li><code>sources/inject/*.js</code> เป็นไฟล์ตัวช่วยในบริบทหน้าเว็บสำหรับซ็อกเก็ตหรือตัวแปรหน้า ตัวครอบแหล่งข้อมูลยังรับผิดชอบเพย์โหลดมาตรฐาน</li>
+						<li>เมื่อแทรกหลายสคริปต์ อย่าให้ตัวช่วยทุกตัวอ้างสิทธิ์ปลายทางขาออกเดียวกัน ตัวตนการเก็บข้อมูลและความสามารถตอบกลับเป็นคนละเรื่อง</li>
+						<li>การเปลี่ยนการเก็บข้อมูลต้นทางควรอยู่ในไฟล์ของที่เก็บโค้ดนี้ <code>sources/</code>  แอปเดสก์ท็อปนำไฟล์เหล่านั้นไปใช้ สำเนาสำรองที่แพ็กมาด้วยไม่ใช่แหล่งข้อมูลหลัก</li>
+					</ul>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/guide-standalone-source-modes.png" alt="รายการแหล่งข้อมูลในแอป Social Stream Ninja เดสก์ท็อปที่แสดงโหมดเชื่อมต่อ" class="guide-image" />
+						<figcaption>แต่ละแหล่งข้อมูลเดสก์ท็อปเก็บ target, URL, โหมดเชื่อมต่อ และสคริปต์เก็บข้อมูลของตัวเอง</figcaption>
+					</figure>
+					<p>ผู้ดูแลไล่ดูการตั้งค่าได้ในส่วนของแอปเดสก์ท็อป <code>index.html</code> การสร้างหน้าต่างแหล่งข้อมูล แล้ว <code>main.js</code> และ <code>preload.js</code> สำหรับการแทรกสคริปต์และทำบริดจ์</p>
+				</div>
+
+				<div class="guide-card" id="replying-to-sources">
+					<h2>ตอบกลับและส่งต่อไปยังแหล่งข้อมูล</h2>
+					<p>ตัวตนขาเข้าและความสามารถขาออกเกี่ยวข้องกัน แต่ไม่ใช่ข้อกำหนดเดียวกัน</p>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>การดำเนินการ</th>
+								<th>วิธีเลือก</th>
+								<th>ปัญหาที่พบบ่อย</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Action">ตอบกลับต้นทาง</td>
+								<td data-label="How It Chooses">ใช้ <code>tid</code> เพื่อระบุแท็บ/หน้าต่างต้นทางให้ตรง</td>
+								<td data-label="Common Failure">ไม่มี <code>tid</code> หรือโหมดเก็บข้อมูลนั้นส่งแชตไม่ได้</td>
+							</tr>
+							<tr>
+								<td data-label="Action">ส่งต่อไปแพลตฟอร์ม</td>
+								<td data-label="How It Chooses">ถามแหล่งข้อมูลที่เปิดอยู่ว่ารองรับปลายทางขาออกนั้นหรือไม่</td>
+								<td data-label="Common Failure">ไม่มีหน้าต่างแหล่งข้อมูลที่เปิดและตรงกับแบบที่เลือก หรือแหล่งข้อมูลส่งแชตไม่ได้</td>
+							</tr>
+							<tr>
+								<td data-label="Action">ส่งต่อไปทั้งหมด ยกเว้นต้นทาง</td>
+								<td data-label="How It Chooses">ส่งไปยังแหล่งข้อมูลที่กำหนดเส้นทางได้ โดยยกเว้นต้นทาง <code>tid</code>.</td>
+								<td data-label="Common Failure">แหล่งข้อมูลไม่รับการป้อนอัตโนมัติ หรือข้อความสะท้อนถูกเก็บกลับมา</td>
+							</tr>
+						</tbody>
+					</table>
+					<ul class="guide-list">
+						<li>ค่าของสคริปต์แหล่งข้อมูล <code>getSource</code> เป็นคำตอบที่ส่งสัญญาณว่ากำหนดเส้นทางขาออกได้ ตัวควบคุม YouTube ร่วมอาจรวมทั้งสองแบบ ส่วน Relay Chat เพิ่มบริบท URL Shorts ที่ตรงสำหรับจับคู่ปลายทาง</li>
+						<li>การเก็บข้อมูลทั่วไปค้นหาและโฟกัสช่องป้อนที่น่าจะใช่ได้ แต่ไม่รับประกันว่าเว็บไซต์จะยอมรับการส่งอัตโนมัติ</li>
+						<li>โหมด API/WebSocket อาจส่งผ่าน API ของแพลตฟอร์มแทนการพิมพ์ลงหน้าที่มองเห็น</li>
+						<li>ในแอปเดสก์ท็อป <em>บอตตอบอย่างเดียว (ไม่เก็บข้อมูล)</em> คงแหล่งข้อมูลไว้สำหรับตอบกลับ/สถานะ ขณะที่ไม่ส่งข้อความที่เก็บปกติ</li>
+						<li>ทดสอบการตอบกลับกับหน้าต่างแหล่งข้อมูลเดียว ก่อนสร้างการส่งต่อหลายแพลตฟอร์ม</li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="where-to-find-details">
+					<h2>หาข้อมูลที่แน่นอนได้ที่ใด</h2>
+					<ul class="guide-list">
+						<li><a href="event-reference.html">เอกสารอ้างอิงอีเวนต์</a>: ฟิลด์มาตรฐานและชื่อเหตุการณ์ของแพลตฟอร์ม</li>
+						<li><a href="../actions/event-flow-guide.html">คู่มือ Event Flow</a>: ทริกเกอร์ แอ็กชัน เทมเพลต การจัดการข้อความสะท้อน และการทดสอบ</li>
+						<li><a href="standalone-app-modes.html">โหมดแอปแยก</a>: พฤติกรรมหน้าต่างแหล่งข้อมูลและโหมดเชื่อมต่อ</li>
+						<li><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a>: ชื่อแพลตฟอร์มและข้อกำหนดการตั้งค่า</li>
+						<li><a href="../../docs/index.html?file=agents/08-platform-sources/generic-and-custom-sources.md">แหล่งข้อมูลทั่วไปและกำหนดเอง</a>: การเก็บข้อมูลสำรองและภายนอก</li>
+						<li><a href="../../docs/index.html?file=agents/04-standalone-app-source-windows.md">หน้าต่างแหล่งข้อมูลแอปเดสก์ท็อป</a>: รายละเอียดภายในของ target สคริปต์ บริดจ์ และโหมดตอบอย่างเดียว</li>
+						<li><a href="../../docs/index.html?file=agents/12-development/adding-a-source.md">เพิ่มแหล่งข้อมูล</a>: รูปแบบแหล่งข้อมูล ตัวช่วยแทรกสคริปต์ manifest และเอกสาร</li>
+					</ul>
+					<p>เมื่อแก้ปัญหา ให้ตรวจเพย์โหลดดิบหนึ่งอันและจดค่า <code>type</code>, <code>event</code>, <code>sourceName</code>, และ <code>tid</code> โดยทั่วไปวิธีนี้จะแยกปัญหาการจับคู่ขาเข้า เส้นทางขาออก และการเก็บข้อมูลซ้ำได้</p>
+				</div>
+			</div>
+		</main>
+		<footer>
+			<div class="container">
+				<div class="footer-bottom">
+					<p>&copy; <span id="current-year">2025</span> Social Stream Ninja สัญญาอนุญาต GPLv3.0</p>
+				</div>
+			</div>
+		</footer>
+		<script data-copy-markdown src="../../docs/js/main.js"></script>
+		<script>
+			document.getElementById("current-year").textContent = new Date().getFullYear();
+		</script>
+	</body>
+</html>

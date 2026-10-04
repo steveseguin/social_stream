@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="de" data-site-root="../../" data-site-language="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/de/docs/twitch-eventsub-setup.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="de_DE">
+    <meta property="og:url" content="https://socialstream.ninja/beta/de/docs/twitch-eventsub-setup.html">
+    <meta property="og:title" content="Twitch-Einrichtung und EventSub – Social Stream Ninja">
+    <meta property="og:description" content="Verbinde Twitch-Chat über normale Seitenerfassung oder die umfangreichere EventSub-WebSocket-Quelle mit Social Stream Ninja, mit Hinweisen zu OAuth, Berechtigungsbereichen, Ereignissen und Fehlerbehebung.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja-Logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/de/docs/twitch-eventsub-setup.html">
+    <meta name="twitter:title" content="Twitch-Einrichtung und EventSub – Social Stream Ninja">
+    <meta name="twitter:description" content="Verbinde Twitch-Chat über normale Seitenerfassung oder die umfangreichere EventSub-WebSocket-Quelle mit Social Stream Ninja, mit Hinweisen zu OAuth, Berechtigungsbereichen, Ereignissen und Fehlerbehebung.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja-Logo">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch-Einrichtung und EventSub – Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Verbinde Twitch-Chat über normale Seitenerfassung oder die umfangreichere EventSub-WebSocket-Quelle mit Social Stream Ninja, mit Hinweisen zu OAuth, Berechtigungsbereichen, Ereignissen und Fehlerbehebung.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="de">
+<script id="ssn-site-language" type="application/json">{"language":"de","page":"docs/twitch-eventsub-setup.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Zum hellen Design wechseln","Switch to dark theme":"Zum dunklen Design wechseln","Light mode":"Heller Modus","Dark mode":"Dunkler Modus","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Copy this document as Markdown to the clipboard":"Dieses Dokument als Markdown in die Zwischenablage kopieren","Copy Markdown":"Markdown kopieren","Copying…":"Wird kopiert…","Markdown copied":"Markdown kopiert","Copy failed":"Kopieren fehlgeschlagen","Copy comprehensive Markdown for an AI assistant":"Umfassende Markdown-Dokumentation für einen KI-Assistenten kopieren","Copy this documentation page as Markdown for an AI assistant":"Diese Dokumentationsseite als Markdown für einen KI-Assistenten kopieren"},"strings":{"## Verified maintainer context Current Twitch OAuth scopes requested by `sources/websocket/twitch.js`: `chat:read`, `chat:edit`, `user:write:chat`, `bits:read`, `moderator:read:followers`, `moderator:read:chatters`, `channel:read:subscriptions`, `channel:read:hype_train`, `channel:moderate`, `moderator:manage:banned_users`, `moderator:manage:chat_messages`, `channel:manage:broadcast`, `channel:read:ads`, `channel:manage:ads`, `channel:read:redemptions`. Current EventSub subscription attempts, gated by role/scope/channel eligibility: `channel.follow` v2; `channel.subscribe`; `channel.subscription.gift`; `channel.subscription.message`; `channel.cheer`; `channel.ban`; `channel.channel_points_custom_reward_redemption.add`; `channel.raid`; `stream.online`; `stream.offline`; `channel.ad_break.begin`; and `channel.hype_train.begin`, `.progress`, `.end` v2. The current transport endpoint is Twitch EventSub WebSocket. Twitch requires a user access token when creating WebSocket subscriptions. The Twitch chat-client subscription-gift normalization regression test passed during this documentation review.":"## Verifizierter Maintainer-Kontext\n\nAktuell von `sources/websocket/twitch.js` angeforderte Twitch-OAuth-Berechtigungsbereiche: `chat:read`, `chat:edit`, `user:write:chat`, `bits:read`, `moderator:read:followers`, `moderator:read:chatters`, `channel:read:subscriptions`, `channel:read:hype_train`, `channel:moderate`, `moderator:manage:banned_users`, `moderator:manage:chat_messages`, `channel:manage:broadcast`, `channel:read:ads`, `channel:manage:ads`, `channel:read:redemptions`.\n\nAktuelle EventSub-Abonnementversuche, abhängig von Rolle/Berechtigungsbereich/Kanalberechtigung: `channel.follow` v2; `channel.subscribe`; `channel.subscription.gift`; `channel.subscription.message`; `channel.cheer`; `channel.ban`; `channel.channel_points_custom_reward_redemption.add`; `channel.raid`; `stream.online`; `stream.offline`; `channel.ad_break.begin`; sowie `channel.hype_train.begin`, `.progress`, `.end` v2.\n\nDer aktuelle Transportendpunkt ist Twitch EventSub WebSocket. Twitch verlangt beim Erstellen von WebSocket-Abonnements ein Benutzer-Zugriffstoken.\n\nDer Regressionstest zur Normalisierung von Geschenkabonnements im Twitch-Chatclient bestand während dieser Dokumentationsprüfung.",", and":", und",", enter":", gib Folgendes ein:",", then":", dann","Activate source":"Quelle aktivieren (Activate source)","Add source → Twitch":"Quelle hinzufügen → Twitch","Authorize the requested permissions and keep the Twitch source window open.":"Erlaube die angeforderten Berechtigungen und lasse das Twitch-Quellfenster geöffnet.","Basic public chat capture from a Twitch chat or popout page.":"Einfache öffentliche Chaterfassung aus einer Twitch-Chat- oder Popout-Seite.","Best For":"Am besten für","Bits, rewards, and Hype Trains":"Bits, Belohnungen und Hype Trains","Bits:":"Bits:","Browser Extension EventSub Setup":"EventSub mit Browser-Erweiterung einrichten","Channel":"Kanal","Channel Points:":"Kanalpunkte:","Channel management":"Kanalverwaltung","Chat":"Chat","Check that the dock and alert overlay use the same Social Stream session ID.":"Prüfe, ob Dock und Benachrichtigungs-Overlay dieselbe Social-Stream-Sitzungs-ID verwenden.","Cheers, custom Channel Points redemptions, and Hype Train status.":"Cheers, eingelöste benutzerdefinierte Kanalpunkt-Belohnungen und Hype-Train-Status.","Choose A Twitch Source Mode":"Twitch-Quellmodus auswählen","Commands & API":"Befehle und API","Confirm the source page says the correct":"Prüfe auf der Quellseite, ob diese Angaben korrekt sind:","Connect Twitch chat to Social Stream Ninja using normal page capture or the richer EventSub WebSocket source, with OAuth, scope, event, and troubleshooting notes.":"Verbinde Twitch-Chat über normale Seitenerfassung oder die umfangreichere EventSub-WebSocket-Quelle mit Social Stream Ninja, mit Hinweisen zu OAuth, Berechtigungsbereichen, Ereignissen und Fehlerbehebung.","Desktop App Setup":"Einrichtung in der Desktop-App","Download":"Herunterladen","Enter the Twitch channel login used in its URL. For":"Gib den Twitch-Kanal-Loginnamen aus seiner URL ein. Für","Event Reference":"Ereignisreferenz","EventSub can deliver a notification more than once.":"EventSub kann eine Benachrichtigung mehrmals zustellen.","EventSub overview":"EventSub-Übersicht","EventSub subscription types":"EventSub-Abonnementtypen","Events The Current Source Handles":"Von der aktuellen Quelle verarbeitete Ereignisse","Events and Alerts Compatibility guide":"Leitfaden zur Kompatibilität von Ereignissen und Meldungen","Features":"Funktionen","First Checks When An Event Is Missing":"Erste Prüfungen bei fehlenden Ereignissen","Follow events, subscriber events, gifted subscriptions, and resub messages.":"Follower-Ereignisse, Abonnentenereignisse, verschenkte Abonnements und Verlängerungsnachrichten.","Followers and subscribers":"Follower und Abonnenten","Follows, subscriptions, bits, rewards, raids, stream status, Hype Trains, moderation sync, sending chat, and channel details.":"Follows, Abonnements, Bits, Belohnungen, Raids, Stream-Status, Hype Trains, Moderationssynchronisierung, Chatversand und Kanaldetails.","Follows:":"Follows:","For basic Standard capture instead, open the normal Twitch chat or popout chat page and keep chat visible.":"Öffne für einfache Standard-Erfassung stattdessen die normale Twitch-Chat- oder Popout-Chat-Seite und halte den Chat sichtbar.","For downstream alert names and payload fields, use the":"Namen nachgelagerter Benachrichtigungen und Nutzdatenfelder findest du in folgenden Dokumenten:","Guides":"Anleitungen","Hire":"Beauftragen","Home":"Startseite","Hype Train:":"Hype Train:","If chat works but follows/subs/rewards do not, sign out and authorize again so the current scopes are granted.":"Wenn Chat funktioniert, Follows/Abonnements/Belohnungen aber nicht, melde dich ab und autorisiere erneut, damit die aktuellen Berechtigungsbereiche erteilt werden.","Important Difference":"Wichtiger Unterschied","Inspiration":"Inspiration","Install and enable the current Social Stream Ninja extension.":"Installiere und aktiviere die aktuelle Social Stream Ninja Erweiterung.","Keep that page open. Confirm that its User and Channel fields are correct before testing alerts.":"Lasse diese Seite geöffnet. Prüfe vor dem Testen von Benachrichtigungen, ob die Felder User und Channel korrekt sind.","Keep the source page/window open and confirm its chat connection is active.":"Lasse die Quellseite bzw. das Quellfenster geöffnet und prüfe, ob die Chatverbindung aktiv ist.","Leave":"Lass","Main navigation":"Hauptnavigation","Message deletion, bans/timeouts, and block synchronization when the account may moderate the channel.":"Nachrichtenlöschung, Sperren/Timeouts und Blockiersynchronisierung, wenn das Konto den Kanal moderieren darf.","Mode":"Modus","Moderation":"Moderation","Moderation:":"Moderation:","Open navigation menu":"Navigationsmenü öffnen","Open the":"Öffne","Overlay Gallery":"Overlay-Galerie","Permission Group":"Berechtigungsgruppe","Raids:":"Raids:","Read chat, send chat, and list chatters.":"Chat lesen, Chat senden und Chatter auflisten.","Read/update title and category, read/manage ads, and display channel metrics.":"Titel und Kategorie lesen/ändern, Werbung lesen/verwalten und Kanalmetriken anzeigen.","Reads what the page exposes. It is simple, but does not provide the full EventSub event set.":"Liest, was die Seite bereitstellt. Das ist einfach, bietet aber nicht alle EventSub-Ereignisse.","Replace":"Ersetze","Requires Twitch OAuth. Events are enabled only when the signed-in account, channel role, channel eligibility, and granted scope allow them.":"Erfordert Twitch OAuth. Ereignisse werden nur aktiviert, wenn angemeldetes Konto, Kanalrolle, Kanalberechtigung und erteilter Berechtigungsbereich dies erlauben.","See Twitch's official":"Siehe Twitchs offizielle","Select":"Auswählen","Sign in to Twitch":"Bei Twitch anmelden","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja-Logo","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0-Lizenz.","Social Stream asks for a user token with permissions needed by the controls and subscriptions it supports. Granting a scope does not make an account a broadcaster or moderator; Twitch still checks the account's role for the selected channel.":"Social Stream fordert ein Benutzertoken mit den Berechtigungen an, die für die unterstützten Steuerungen und Abonnements erforderlich sind. Ein erteilter Berechtigungsbereich macht ein Konto nicht zum Sender oder Moderator; Twitch prüft weiterhin die Rolle des Kontos für den gewählten Kanal.","Standard":"Standard","Stream and ad status:":"Stream- und Werbestatus:","Subscriptions:":"Abonnements:","Support":"Hilfe","Supported Sites":"Unterstützte Websites","Switch theme":"Design wechseln","The desktop source offers an external-browser OAuth flow and a local-app flow. External browser is usually the easiest when Twitch already works in your normal browser.":"Die Desktop-Quelle bietet einen OAuth-Ablauf im externen Browser und einen innerhalb der lokalen App. Der externe Browser ist meist am einfachsten, wenn Twitch bereits in deinem normalen Browser funktioniert.","Twitch EventSub source page":"Twitch-EventSub-Quellseite","Twitch Setup and EventSub":"Twitch-Einrichtung und EventSub","Twitch Setup and EventSub - Social Stream Ninja":"Twitch-Einrichtung und EventSub – Social Stream Ninja","Twitch documents at-least-once delivery. Social Stream includes duplicate protection, but custom API consumers should still deduplicate by event/message identity where possible. See the official":"Twitch dokumentiert eine mindestens einmalige Zustellung. Social Stream enthält einen Schutz vor Duplikaten, aber eigene API-Verbraucher sollten nach Möglichkeit trotzdem anhand der Ereignis-/Nachrichtenidentität deduplizieren. Siehe die offizielle","Twitch source sign-in screen with External browser and Local app sign-in methods":"Anmeldebildschirm der Twitch-Quelle mit den Anmeldemethoden External browser und Local app","Twitch subscriber events require an eligible Affiliate/Partner channel and broadcaster access. Follow and moderation subscriptions require the signed-in user to be the broadcaster or an authorized moderator, depending on the event.":"Twitch-Abonnentenereignisse erfordern einen berechtigten Affiliate-/Partner-Kanal und Senderzugriff. Für Follow- und Moderationsabonnements muss der angemeldete Nutzer je nach Ereignis der Sender oder ein berechtigter Moderator sein.","Use normal page capture for simple chat, or EventSub/WebSocket mode for follows, subs, bits, rewards, raids, Hype Trains, and channel controls.":"Nutze normale Seitenerfassung für einfachen Chat oder den EventSub-/WebSocket-Modus für Follows, Abonnements, Bits, Belohnungen, Raids, Hype Trains und Kanalsteuerungen.","Use the popup's fake test message or Multi Alerts preview to separate capture problems from overlay problems.":"Verwende die simulierte Testnachricht im Popup oder die Multi-Alerts-Vorschau, um Erfassungsprobleme von Overlay-Problemen zu unterscheiden.","Used For":"Verwendet für","User":"Benutzer","Verify that the signed-in account is the broadcaster or a permitted moderator for that channel.":"Prüfe, ob das angemeldete Konto der Sender oder ein berechtigter Moderator dieses Kanals ist.","WebSocket":"WebSocket","WebSocket / EventSub":"WebSocket / EventSub","What Twitch Requests":"Was Twitch anfordert","and":"und","and approve the requested access.":"und genehmige den angeforderten Zugriff.","ban and message-deletion updates when permitted.":"Updates zu Sperren und Nachrichtenlöschungen, sofern erlaubt.","begin, progress, and end updates.":"Updates zu Beginn, Fortschritt und Ende.","in the URL with the channel login you want to monitor.":"in der URL durch den Kanal-Loginnamen, den du überwachen möchtest.","scope reference":"Referenz der Berechtigungsbereiche","selected for the richer EventSub source. Twitch currently defaults to this mode in the app.":"für die umfangreichere EventSub-Quelle ausgewählt. Twitch verwendet diesen Modus derzeit standardmäßig in der App.","with a donation value.":"mit einem Spendenwert."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/twitch-eventsub-setup.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hauptnavigation"><a href="../index.html">Startseite</a><a href="features.html">Funktionen</a><a href="inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="download.html">Herunterladen</a><a href="guides.html">Anleitungen</a><a href="commands.html">Befehle und API</a><a href="supported-sites.html">Unterstützte Websites</a><a href="overlay-gallery.html" class="site-priority-gallery">Overlay-Galerie</a><a href="services.html" class="site-priority-hire">Beauftragen</a><a href="support.html">Hilfe</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Deutsch"><span aria-hidden="true">🌐 </span><span lang="de">Deutsch</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/twitch-eventsub-setup.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/twitch-eventsub-setup.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/twitch-eventsub-setup.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/twitch-eventsub-setup.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/twitch-eventsub-setup.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="twitch-eventsub-setup.html" lang="de" hreflang="de" aria-current="true">Deutsch</a><a class="site-language-link" href="../../ja/docs/twitch-eventsub-setup.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/twitch-eventsub-setup.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/twitch-eventsub-setup.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/twitch-eventsub-setup.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/twitch-eventsub-setup.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/twitch-eventsub-setup.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/twitch-eventsub-setup.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/twitch-eventsub-setup.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/twitch-eventsub-setup.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/twitch-eventsub-setup.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/twitch-eventsub-setup.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Design wechseln"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Navigationsmenü öffnen" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Twitch-Einrichtung und EventSub</h1>
+            <p>Nutze normale Seitenerfassung für einfachen Chat oder den EventSub-/WebSocket-Modus für Follows, Abonnements, Bits, Belohnungen, Raids, Hype Trains und Kanalsteuerungen.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Twitch-Quellmodus auswählen</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Modus</th><th>Am besten für</th><th>Wichtiger Unterschied</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Mode">Standard</td>
+                            <td data-label="Best For">Einfache öffentliche Chaterfassung aus einer Twitch-Chat- oder Popout-Seite.</td>
+                            <td data-label="Important Difference">Liest, was die Seite bereitstellt. Das ist einfach, bietet aber nicht alle EventSub-Ereignisse.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Mode">WebSocket / EventSub</td>
+                            <td data-label="Best For">Follows, Abonnements, Bits, Belohnungen, Raids, Stream-Status, Hype Trains, Moderationssynchronisierung, Chatversand und Kanaldetails.</td>
+                            <td data-label="Important Difference">Erfordert Twitch OAuth. Ereignisse werden nur aktiviert, wenn angemeldetes Konto, Kanalrolle, Kanalberechtigung und erteilter Berechtigungsbereich dies erlauben.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Einrichtung in der Desktop-App</h2>
+                <ol class="guide-steps">
+                    <li>Auswählen <strong>Quelle hinzufügen → Twitch</strong>.</li>
+                    <li>Gib den Twitch-Kanal-Loginnamen aus seiner URL ein. Für <code>twitch.tv/examplechannel</code>, gib Folgendes ein: <code>examplechannel</code>.</li>
+                    <li>Lass <strong>WebSocket</strong> für die umfangreichere EventSub-Quelle ausgewählt. Twitch verwendet diesen Modus derzeit standardmäßig in der App.</li>
+                    <li>Auswählen <strong>Quelle aktivieren (Activate source)</strong>, dann <strong>Bei Twitch anmelden</strong>.</li>
+                    <li>Erlaube die angeforderten Berechtigungen und lasse das Twitch-Quellfenster geöffnet.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/twitch-eventsub-sign-in.png" alt="Anmeldebildschirm der Twitch-Quelle mit den Anmeldemethoden External browser und Local app" class="guide-image guide-image-narrow">
+                    <figcaption>Die Desktop-Quelle bietet einen OAuth-Ablauf im externen Browser und einen innerhalb der lokalen App. Der externe Browser ist meist am einfachsten, wenn Twitch bereits in deinem normalen Browser funktioniert.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>EventSub mit Browser-Erweiterung einrichten</h2>
+                <ol class="guide-steps">
+                    <li>Installiere und aktiviere die aktuelle Social Stream Ninja Erweiterung.</li>
+                    <li>Öffne <a href="https://socialstream.ninja/sources/websocket/twitch.html?channel=examplechannel" target="_blank" rel="noopener">Twitch-EventSub-Quellseite</a>.</li>
+                    <li>Ersetze <code>examplechannel</code> in der URL durch den Kanal-Loginnamen, den du überwachen möchtest.</li>
+                    <li>Auswählen <strong>Bei Twitch anmelden</strong> und genehmige den angeforderten Zugriff.</li>
+                    <li>Lasse diese Seite geöffnet. Prüfe vor dem Testen von Benachrichtigungen, ob die Felder User und Channel korrekt sind.</li>
+                </ol>
+                <pre><code>https://socialstream.ninja/sources/websocket/twitch.html?channel=CHANNEL_LOGIN</code></pre>
+                <p>Öffne für einfache Standard-Erfassung stattdessen die normale Twitch-Chat- oder Popout-Chat-Seite und halte den Chat sichtbar.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Was Twitch anfordert</h2>
+                <p>Social Stream fordert ein Benutzertoken mit den Berechtigungen an, die für die unterstützten Steuerungen und Abonnements erforderlich sind. Ein erteilter Berechtigungsbereich macht ein Konto nicht zum Sender oder Moderator; Twitch prüft weiterhin die Rolle des Kontos für den gewählten Kanal.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Berechtigungsgruppe</th><th>Verwendet für</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Permission Group">Chat</td><td data-label="Used For">Chat lesen, Chat senden und Chatter auflisten.</td></tr>
+                        <tr><td data-label="Permission Group">Follower und Abonnenten</td><td data-label="Used For">Follower-Ereignisse, Abonnentenereignisse, verschenkte Abonnements und Verlängerungsnachrichten.</td></tr>
+                        <tr><td data-label="Permission Group">Bits, Belohnungen und Hype Trains</td><td data-label="Used For">Cheers, eingelöste benutzerdefinierte Kanalpunkt-Belohnungen und Hype-Train-Status.</td></tr>
+                        <tr><td data-label="Permission Group">Moderation</td><td data-label="Used For">Nachrichtenlöschung, Sperren/Timeouts und Blockiersynchronisierung, wenn das Konto den Kanal moderieren darf.</td></tr>
+                        <tr><td data-label="Permission Group">Kanalverwaltung</td><td data-label="Used For">Titel und Kategorie lesen/ändern, Werbung lesen/verwalten und Kanalmetriken anzeigen.</td></tr>
+                    </tbody>
+                </table>
+                <p>Siehe Twitchs offizielle <a href="https://dev.twitch.tv/docs/authentication/scopes/" target="_blank" rel="noopener">Referenz der Berechtigungsbereiche</a> und <a href="https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/" target="_blank" rel="noopener">EventSub-Abonnementtypen</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Von der aktuellen Quelle verarbeitete Ereignisse</h2>
+                <ul class="guide-list">
+                    <li><strong>Follows:</strong> <code>new_follower</code>.</li>
+                    <li><strong>Abonnements:</strong> <code>new_subscriber</code>, <code>resub</code>, und <code>subscription_gift</code>.</li>
+                    <li><strong>Bits:</strong> <code>cheer</code> mit einem Spendenwert.</li>
+                    <li><strong>Kanalpunkte:</strong> <code>reward</code>.</li>
+                    <li><strong>Raids:</strong> <code>raid</code>.</li>
+                    <li><strong>Stream- und Werbestatus:</strong> <code>stream_online</code>, <code>stream_offline</code>, und <code>ad_break</code>.</li>
+                    <li><strong>Hype Train:</strong> <code>hype_train</code> Updates zu Beginn, Fortschritt und Ende.</li>
+                    <li><strong>Moderation:</strong> Updates zu Sperren und Nachrichtenlöschungen, sofern erlaubt.</li>
+                </ul>
+                <p>Twitch-Abonnentenereignisse erfordern einen berechtigten Affiliate-/Partner-Kanal und Senderzugriff. Für Follow- und Moderationsabonnements muss der angemeldete Nutzer je nach Ereignis der Sender oder ein berechtigter Moderator sein.</p>
+                <p>Namen nachgelagerter Benachrichtigungen und Nutzdatenfelder findest du in folgenden Dokumenten: <a href="events-alerts-compatibility.html">Leitfaden zur Kompatibilität von Ereignissen und Meldungen</a> und <a href="event-reference.html">Ereignisreferenz</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Erste Prüfungen bei fehlenden Ereignissen</h2>
+                <ol class="guide-steps">
+                    <li>Prüfe auf der Quellseite, ob diese Angaben korrekt sind: <strong>Benutzer</strong> und <strong>Kanal</strong>.</li>
+                    <li>Lasse die Quellseite bzw. das Quellfenster geöffnet und prüfe, ob die Chatverbindung aktiv ist.</li>
+                    <li>Wenn Chat funktioniert, Follows/Abonnements/Belohnungen aber nicht, melde dich ab und autorisiere erneut, damit die aktuellen Berechtigungsbereiche erteilt werden.</li>
+                    <li>Prüfe, ob das angemeldete Konto der Sender oder ein berechtigter Moderator dieses Kanals ist.</li>
+                    <li>Prüfe, ob Dock und Benachrichtigungs-Overlay dieselbe Social-Stream-Sitzungs-ID verwenden.</li>
+                    <li>Verwende die simulierte Testnachricht im Popup oder die Multi-Alerts-Vorschau, um Erfassungsprobleme von Overlay-Problemen zu unterscheiden.</li>
+                </ol>
+                <div class="guide-note">
+                    <p><strong>EventSub kann eine Benachrichtigung mehrmals zustellen.</strong> Twitch dokumentiert eine mindestens einmalige Zustellung. Social Stream enthält einen Schutz vor Duplikaten, aber eigene API-Verbraucher sollten nach Möglichkeit trotzdem anhand der Ereignis-/Nachrichtenidentität deduplizieren. Siehe die offizielle <a href="https://dev.twitch.tv/docs/eventsub/" target="_blank" rel="noopener">EventSub-Übersicht</a>.</p>
+                </div>
+            </div>
+
+            <template data-copy-markdown-extra>
+## Verifizierter Maintainer-Kontext
+
+Aktuell von `sources/websocket/twitch.js` angeforderte Twitch-OAuth-Berechtigungsbereiche: `chat:read`, `chat:edit`, `user:write:chat`, `bits:read`, `moderator:read:followers`, `moderator:read:chatters`, `channel:read:subscriptions`, `channel:read:hype_train`, `channel:moderate`, `moderator:manage:banned_users`, `moderator:manage:chat_messages`, `channel:manage:broadcast`, `channel:read:ads`, `channel:manage:ads`, `channel:read:redemptions`.
+
+Aktuelle EventSub-Abonnementversuche, abhängig von Rolle/Berechtigungsbereich/Kanalberechtigung: `channel.follow` v2; `channel.subscribe`; `channel.subscription.gift`; `channel.subscription.message`; `channel.cheer`; `channel.ban`; `channel.channel_points_custom_reward_redemption.add`; `channel.raid`; `stream.online`; `stream.offline`; `channel.ad_break.begin`; sowie `channel.hype_train.begin`, `.progress`, `.end` v2.
+
+Der aktuelle Transportendpunkt ist Twitch EventSub WebSocket. Twitch verlangt beim Erstellen von WebSocket-Abonnements ein Benutzer-Zugriffstoken.
+
+Der Regressionstest zur Normalisierung von Geschenkabonnements im Twitch-Chatclient bestand während dieser Dokumentationsprüfung.
+            </template>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0-Lizenz.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

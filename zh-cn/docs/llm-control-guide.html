@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-cn/docs/llm-control-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/zh-cn/docs/llm-control-guide.html">
+    <meta property="og:title" content="本地控制 API 与 MCP - Social Stream Ninja">
+    <meta property="og:description" content="通过本地 AI 工具或同机自动化脚本，使用 Social Stream Ninja 可选启用的 localhost 控制 API 和随附 MCP 适配器。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-cn/docs/llm-control-guide.html">
+    <meta name="twitter:title" content="本地控制 API 与 MCP - Social Stream Ninja">
+    <meta name="twitter:description" content="通过本地 AI 工具或同机自动化脚本，使用 Social Stream Ninja 可选启用的 localhost 控制 API 和随附 MCP 适配器。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本地控制 API 与 MCP - Social Stream Ninja</title>
+    <meta name="description" content="通过本地 AI 工具或同机自动化脚本，使用 Social Stream Ninja 可选启用的 localhost 控制 API 和随附 MCP 适配器。">
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="alternate" type="text/plain" href="../../llms.txt" title="LLM 设置索引">
+    <link rel="alternate" type="text/markdown" href="../../docs/skills/control-social-stream/SKILL.md" title="Control Social Stream 技能">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/llm-control-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{", which starts a WebSocket relay for Social Stream pages. See":"，后者会为 Social Stream 页面启动 WebSocket 中继。参阅",", with the":"，其中包含",". MCP support is included in the downloaded app. You do not need the source repository, Node, Python, or a separate MCP package.":"。下载的应用已包含 MCP 支持。无需源代码仓库、Node、Python 或单独的 MCP 软件包。",". The skill adds workflow guidance but is not needed for MCP connectivity.":"。该技能提供工作流程指导，但 MCP 连接本身不需要它。",". You can also":"。你也可以","1. Download the normal desktop app":"1. 下载常规桌面应用","2. Enable local AI control":"2. 启用本地 AI 控制","3. Let MCP perform discovery":"3. 让 MCP 自动发现能力","API reference":"API 参考","Agents that support installable skills can":"支持可安装技能的代理可以","Available local controls":"可用的本地控制","Capture and safely inspect supported source pages and SSApp-owned windows.":"捕获并安全检查受支持的来源页面和 SSApp 自有窗口。","Change source visibility, mute state, and connection mode.":"更改来源可见性、静音状态和连接模式。","Choose This Service When":"何时选择此服务","Commands & API":"命令与 API","Control Social Stream skill":"Control Social Stream 技能","Copy MCP Setup":"复制 MCP 配置","Direct HTTP access for local scripts":"本地脚本的直接 HTTP 访问","Download":"下载","Enable":"启用","Features":"功能","File > Enable Local Server":"文件 > 启用本地服务器","File > Local AI / Automation":"文件 > 本地 AI / 自动化","Follow":"关注","Follow bounded captured-source events and resumable operation or status events.":"跟踪有界的已捕获来源事件，以及可恢复的操作或状态事件。","For the complete endpoints, command schemas, version discovery, and security boundaries, see the":"完整的端点、命令结构、版本发现和安全边界，请参阅","Guides":"指南","Hire":"雇用","Home":"首页","Inspiration":"灵感","Install the current Social Stream Ninja release from the":"从以下位置安装当前 Social Stream Ninja 版本：","LLM setup index":"LLM 设置索引","Let an AI tool or script on the same computer inspect and control the Social Stream Ninja desktop app.":"让同一台电脑上的 AI 工具或脚本检查和控制 Social Stream Ninja 桌面应用。","Linux AppImage MCP configuration":"Linux AppImage MCP 配置","List, inspect, add, update, and remove sources.":"列出、检查、添加、更新和移除来源。","Local AI on an Ubuntu VPS":"Ubuntu VPS 上的本地 AI","Local Control API":"本地控制 API","Local Control API and MCP":"本地控制API和MCP","Local Control API and MCP - Social Stream Ninja":"本地控制 API 与 MCP - Social Stream Ninja","Local Servers and Services Explained":"本地服务器和服务说明","Local only":"仅限本地","Machine-readable discovery links are also listed in":"机器可读的发现链接也列在","Main navigation":"主导航","No website scraping or skill installation is required for normal MCP use. A user can simply ask the connected agent to inspect or control Social Stream Ninja.":"常规 MCP 使用无需抓取网站或安装技能。用户只需让已连接的代理检查或控制 Social Stream Ninja。","Once connected, the MCP client automatically asks Social Stream Ninja for its tools. The adapter reads the running app's live capabilities and gives the LLM the supported tool schemas, app/API versions, and operating instructions. The agent should call capabilities first, then status, and use the stable source IDs returned by the app.":"连接后，MCP 客户端会自动向 Social Stream Ninja 查询工具。适配器读取运行中应用的实时能力，并向 LLM 提供受支持的工具结构、应用/API 版本和操作说明。代理应先调用 capabilities，再调用 status，并使用应用返回的稳定来源 ID。","Open":"打开","Open navigation menu":"打开导航菜单","Optional agent skill":"可选的代理技能","Overlay Gallery":"叠加层图库","Paste the copied JSON into the MCP settings used by the AI tool, then restart that tool.":"将复制的 JSON 粘贴到 AI 工具使用的 MCP 设置中，然后重启该工具。","Perform approved page, window, and dialog interactions with confirmation.":"经确认后，执行获准的页面、窗口和对话框交互。","Read and update the supported global settings returned by capability discovery.":"读取和更新能力发现返回的受支持全局设置。","Read app, session, source, process, capture, and local-media status.":"读取应用、会话、来源、进程、捕获和本地媒体状态。","Reload or gracefully shut down the app with explicit confirmation.":"明确确认后，重新加载或正常关闭应用。","Return to the same menu and choose":"返回同一菜单并选择","Run Social Stream Ninja Headlessly":"以无头模式运行 Social Stream Ninja","Scripts on the same computer can use the loopback API without MCP. It listens only on":"同一台电脑上的脚本可不经 MCP 使用回环 API。它仅监听","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 许可证。","Start, stop, or reload one source or a filtered set.":"启动、停止或重新加载一个来源，或筛选出的一组来源。","Support":"支持","Supported Sites":"支持的网站","Switch theme":"切换主题","The API can also serve an AI tool running on the same Linux server as a headless SSApp instance. Keep it bound to loopback and use the downloaded AppImage as the MCP command.":"此 API 也可服务于与无头 SSApp 实例运行在同一台 Linux 服务器上的 AI 工具。请保持绑定到回环地址，并使用下载的 AppImage 作为 MCP 命令。","The copied setup contains the exact installed executable path, port, and platform-specific arguments. The downloaded Social Stream Ninja executable starts its own lightweight MCP adapter when the AI client launches it with":"复制的配置包含实际安装的可执行文件路径、端口和平台专用参数。AI 客户端使用以下参数启动下载的 Social Stream Ninja 可执行文件时，它会启动自身的轻量 MCP 适配器：","The running app's capabilities are authoritative. Older versions may expose fewer controls.":"以运行中应用报告的能力为准。旧版本可能提供较少的控制项。","This interface is for AI and automation running on the same computer as SSApp. Do not expose or tunnel it as a cloud remote-control API. Remote users and Stream Deck should use Social Stream's existing WebRTC or WebSocket connection. The local API does not provide arbitrary JavaScript execution, cookies, sign-in secrets, unrestricted settings, or raw filesystem access.":"此接口供与 SSApp 运行在同一台电脑上的 AI 和自动化使用。不要将其暴露或通过隧道用作云端远程控制 API。远程用户和 Stream Deck 应使用 Social Stream 现有的 WebRTC 或 WebSocket 连接。本地 API 不提供任意 JavaScript 执行、Cookie、登录机密、不受限的设置或原始文件系统访问。","This is separate from":"这与以下功能不同：","Use Social Stream Ninja's opt-in localhost control API and bundled MCP adapter from a local AI tool or same-machine automation script.":"通过本地 AI 工具或同机自动化脚本，使用 Social Stream Ninja 可选启用的 localhost 控制 API 和随附 MCP 适配器。","Use the Local Control API when software on the SSApp computer needs approved app and source controls. Use the bundled MCP adapter when a compatible AI client should receive those controls as tools.":"当 SSApp 电脑上的软件需要获准的应用和来源控制时，使用本地控制 API。当兼容的 AI 客户端需要将这些控制作为工具使用时，使用随附的 MCP 适配器。","Use the advertised capabilities instead of assuming every app version has the same controls. For copy-and-paste":"请使用应用公布的能力，不要假定所有版本都有相同控件。可复制粘贴的","Windows, macOS, or Linux downloads":"Windows、macOS 或 Linux 下载","and":"和","and does not require a token.":"，无需令牌。","and let the app restart.":"，并让应用重启。","download the complete Control Social Stream skill":"下载完整的 Control Social Stream 技能","examples that add, list, start, inspect, and stop a source, see the":"示例涵盖添加、列出、启动、检查和停止来源，请参阅","for Xvfb, persistent profiles, startup commands, systemd, and the separate remote-control path. It also includes a":"，了解 Xvfb、持久配置文件、启动命令、systemd 和独立的远程控制路径。其中还包含","if you are not sure which service you need.":"，帮助你确定需要哪种服务。","llms.txt":"llms.txt","read its instructions online":"在线阅读其说明","server HTTP API walkthrough":"服务器 HTTP API 操作指南","technical automation reference":"技术自动化参考","version log":"版本日志","you can paste into a client running on the VPS.":"，可粘贴到 VPS 上运行的客户端中。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/llm-control-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/llm-control-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="guides-page">
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/llm-control-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/llm-control-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/llm-control-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/llm-control-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/llm-control-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/llm-control-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/llm-control-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="llm-control-guide.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/llm-control-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/llm-control-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/llm-control-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/llm-control-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/llm-control-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/llm-control-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/llm-control-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/llm-control-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/llm-control-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>本地控制API和MCP</h1>
+            <p>让同一台电脑上的 AI 工具或脚本检查和控制 Social Stream Ninja 桌面应用。</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>何时选择此服务</h2>
+                <p>当 SSApp 电脑上的软件需要获准的应用和来源控制时，使用本地控制 API。当兼容的 AI 客户端需要将这些控制作为工具使用时，使用随附的 MCP 适配器。</p>
+                <p>这与以下功能不同： <strong>文件 &gt; 启用本地服务器</strong>，后者会为 Social Stream 页面启动 WebSocket 中继。参阅 <a href="local-services-guide.html">本地服务器和服务说明</a> ，帮助你确定需要哪种服务。</p>
+            </div>
+            <div class="guide-card">
+                <h2>1. 下载常规桌面应用</h2>
+                <p>从以下位置安装当前 Social Stream Ninja 版本： <a href="download.html#standalone">Windows、macOS 或 Linux 下载</a>。下载的应用已包含 MCP 支持。无需源代码仓库、Node、Python 或单独的 MCP 软件包。</p>
+            </div>
+            <div class="guide-card">
+                <h2>2. 启用本地 AI 控制</h2>
+                <ol class="guide-list">
+                    <li>打开 <strong>文件 &gt; 本地 AI / 自动化</strong>.</li>
+                    <li>启用 <strong>本地控制 API</strong> ，并让应用重启。</li>
+                    <li>返回同一菜单并选择 <strong>复制 MCP 配置</strong>.</li>
+                    <li>将复制的 JSON 粘贴到 AI 工具使用的 MCP 设置中，然后重启该工具。</li>
+                </ol>
+                <p>复制的配置包含实际安装的可执行文件路径、端口和平台专用参数。AI 客户端使用以下参数启动下载的 Social Stream Ninja 可执行文件时，它会启动自身的轻量 MCP 适配器： <code>--ssapp-mcp</code>.</p>
+            </div>
+            <div class="guide-card">
+                <h2>3. 让 MCP 自动发现能力</h2>
+                <p>连接后，MCP 客户端会自动向 Social Stream Ninja 查询工具。适配器读取运行中应用的实时能力，并向 LLM 提供受支持的工具结构、应用/API 版本和操作说明。代理应先调用 capabilities，再调用 status，并使用应用返回的稳定来源 ID。</p>
+                <p>常规 MCP 使用无需抓取网站或安装技能。用户只需让已连接的代理检查或控制 Social Stream Ninja。</p>
+            </div>
+            <div class="guide-card">
+                <h2>可用的本地控制</h2>
+                <ul class="guide-list">
+                    <li>列出、检查、添加、更新和移除来源。</li>
+                    <li>启动、停止或重新加载一个来源，或筛选出的一组来源。</li>
+                    <li>更改来源可见性、静音状态和连接模式。</li>
+                    <li>读取和更新能力发现返回的受支持全局设置。</li>
+                    <li>读取应用、会话、来源、进程、捕获和本地媒体状态。</li>
+                    <li>跟踪有界的已捕获来源事件，以及可恢复的操作或状态事件。</li>
+                    <li>捕获并安全检查受支持的来源页面和 SSApp 自有窗口。</li>
+                    <li>经确认后，执行获准的页面、窗口和对话框交互。</li>
+                    <li>明确确认后，重新加载或正常关闭应用。</li>
+                </ul>
+                <p>以运行中应用报告的能力为准。旧版本可能提供较少的控制项。</p>
+            </div>
+            <div class="guide-card">
+                <h2>本地脚本的直接 HTTP 访问</h2>
+                <p>同一台电脑上的脚本可不经 MCP 使用回环 API。它仅监听 <code>127.0.0.1</code> ，无需令牌。</p>
+                <pre><code>GET http://127.0.0.1:17777/api/v1/capabilities
+GET http://127.0.0.1:17777/api/v1/status
+GET http://127.0.0.1:17777/api/v1/events
+POST http://127.0.0.1:17777/api/v1/command</code></pre>
+                <p>请使用应用公布的能力，不要假定所有版本都有相同控件。可复制粘贴的 <code>curl</code> 示例涵盖添加、列出、启动、检查和停止来源，请参阅 <a href="headless-server-guide.html#http-api">服务器 HTTP API 操作指南</a>.</p>
+            </div>
+            <div class="guide-card">
+                <h2>Ubuntu VPS 上的本地 AI</h2>
+                <p>此 API 也可服务于与无头 SSApp 实例运行在同一台 Linux 服务器上的 AI 工具。请保持绑定到回环地址，并使用下载的 AppImage 作为 MCP 命令。</p>
+                <p>关注 <a href="headless-server-guide.html">以无头模式运行 Social Stream Ninja</a> ，了解 Xvfb、持久配置文件、启动命令、systemd 和独立的远程控制路径。其中还包含 <a href="headless-server-guide.html#mcp">Linux AppImage MCP 配置</a> ，可粘贴到 VPS 上运行的客户端中。</p>
+            </div>
+            <div class="guide-card">
+                <h2>可选的代理技能</h2>
+                <p>支持可安装技能的代理可以 <a href="../../docs/skills/control-social-stream.zip">下载完整的 Control Social Stream 技能</a>。你也可以 <a href="../../docs/index.html?file=skills/control-social-stream/SKILL.md">在线阅读其说明</a>，其中包含 <a href="../../docs/skills/control-social-stream/references/control-api.md">API 参考</a> 和 <a href="../../docs/skills/control-social-stream/references/version-log.md">版本日志</a>。该技能提供工作流程指导，但 MCP 连接本身不需要它。</p>
+                <p>机器可读的发现链接也列在 <a href="../../llms.txt">llms.txt</a>.</p>
+            </div>
+            <div class="guide-card">
+                <h2>仅限本地</h2>
+                <p>此接口供与 SSApp 运行在同一台电脑上的 AI 和自动化使用。不要将其暴露或通过隧道用作云端远程控制 API。远程用户和 Stream Deck 应使用 Social Stream 现有的 WebRTC 或 WebSocket 连接。本地 API 不提供任意 JavaScript 执行、Cookie、登录机密、不受限的设置或原始文件系统访问。</p>
+                <p>完整的端点、命令结构、版本发现和安全边界，请参阅 <a href="https://github.com/steveseguin/ssn_app/blob/main/docs/AUTOMATION.md">技术自动化参考</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 许可证。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

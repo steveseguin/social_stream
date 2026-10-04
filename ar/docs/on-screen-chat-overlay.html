@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ar" data-site-root="../../" data-site-language="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ar/docs/on-screen-chat-overlay.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ar_AR">
+    <meta property="og:url" content="https://socialstream.ninja/ar/docs/on-screen-chat-overlay.html">
+    <meta property="og:title" content="تراكب دردشة على الشاشة أثناء اللعب - Social Stream Ninja">
+    <meta property="og:description" content="اعرض تراكب دردشة خاصًا من Social Stream Ninja فوق لعبة باستخدام تطبيق سطح المكتب المستقل أو Electron Capture، مع الشفافية ومفاتيح مرور النقرات السريعة وأمثلة سطر الأوامر وملاحظات التقاط OBS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="شعار Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ar/docs/on-screen-chat-overlay.html">
+    <meta name="twitter:title" content="تراكب دردشة على الشاشة أثناء اللعب - Social Stream Ninja">
+    <meta name="twitter:description" content="اعرض تراكب دردشة خاصًا من Social Stream Ninja فوق لعبة باستخدام تطبيق سطح المكتب المستقل أو Electron Capture، مع الشفافية ومفاتيح مرور النقرات السريعة وأمثلة سطر الأوامر وملاحظات التقاط OBS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="شعار Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تراكب دردشة على الشاشة أثناء اللعب - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="اعرض تراكب دردشة خاصًا من Social Stream Ninja فوق لعبة باستخدام تطبيق سطح المكتب المستقل أو Electron Capture، مع الشفافية ومفاتيح مرور النقرات السريعة وأمثلة سطر الأوامر وملاحظات التقاط OBS.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ar">
+<script id="ssn-site-language" type="application/json">{"language":"ar","page":"docs/on-screen-chat-overlay.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"التبديل إلى السمة الفاتحة","Switch to dark theme":"التبديل إلى السمة الداكنة","Light mode":"الوضع الفاتح","Dark mode":"الوضع الداكن","Open navigation menu":"فتح قائمة التنقل","Close navigation menu":"إغلاق قائمة التنقل","Copy this document as Markdown to the clipboard":"نسخ هذا المستند بصيغة Markdown إلى الحافظة","Copy Markdown":"نسخ Markdown","Copying…":"جارٍ النسخ…","Markdown copied":"تم نسخ Markdown","Copy failed":"تعذّر النسخ","Copy comprehensive Markdown for an AI assistant":"نسخ Markdown شامل لمساعد ذكاء اصطناعي","Copy this documentation page as Markdown for an AI assistant":"نسخ صفحة التوثيق هذه بصيغة Markdown لمساعد ذكاء اصطناعي"},"strings":{"(or":"(أو",". Activate your chat sources normally.":". فعّل مصادر الدردشة بالطريقة المعتادة.",". If the URL has no question mark yet, use":". إذا لم يحتوِ الرابط على علامة استفهام بعد، فاستخدم",". Mouse clicks will pass through to the game.":". ستمر نقرات الفأرة إلى اللعبة.",". SSApp opens it as its own overlay window.":". يفتحه SSApp كنافذة تراكب مستقلة.",". The browser extension and an OBS Browser Source cannot create a system-wide click-through window by themselves.":". لا تستطيع إضافة المتصفح ولا مصدر متصفح OBS إنشاء نافذة تسمح بمرور النقرات على مستوى النظام بمفردهما.",". The generated URL should contain":". ينبغي أن يحتوي الرابط المُنشأ على","A Dock or Featured URL with the wrong session ID will remain empty.":"سيبقى رابط Dock أو Featured ذو معرّف الجلسة الخاطئ فارغًا.","A test recording confirms viewers cannot see the private overlay.":"يؤكد تسجيل اختباري أن المشاهدين لا يرون التراكب الخاص.","Action":"الإجراء","Alternative transparent background mode; useful when the Dock's normal":"وضع بديل للخلفية الشفافة؛ مفيد عندما يخفي وضع","Always on top":"دائمًا في المقدمة (Always on top)","An exclusive fullscreen game may cover all normal desktop windows, including an always-on-top overlay.":"قد تغطي لعبة في وضع ملء الشاشة الحصري جميع نوافذ سطح المكتب العادية، بما فيها تراكب مضبوط ليبقى في المقدمة.","Avoid":"تجنب","Best When":"الأنسب عندما","Borderless or windowed fullscreen is the reliable game mode.":"ملء الشاشة بلا حدود أو داخل نافذة هو وضع اللعب الموثوق.","Capture third-party overlays (such as Steam)":"التقاط تراكبات الجهات الخارجية، مثل Steam ‏(Capture third-party overlays (such as Steam))","Chat is arriving in Social Stream.":"تصل الدردشة إلى Social Stream.","Choose The Chat View":"اختيار عرض الدردشة","Choose a zero-based monitor when a monitor index is easier than desktop coordinates.":"اختر شاشة بترقيم يبدأ من الصفر عندما يكون فهرس الشاشة أسهل من إحداثيات سطح المكتب.","Click the generated Dock or Featured link":"انقر على رابط Dock أو Featured المُنشأ","Click-through disables mouse interaction.":"يعطّل مرور النقرات التفاعل بالفأرة.","Click-through is enabled only after positioning.":"يُفعَّل مرور النقرات بعد ضبط الموضع فقط.","Closing SSApp or Electron Capture closes the local overlay.":"يؤدي إغلاق SSApp أو Electron Capture إلى إغلاق التراكب المحلي.","Commands & API":"الأوامر وAPI","Continuous Chat Dock":"لوحة إرساء للدردشة المستمرة","Copy your generated Social Stream Dock, Featured, template, or custom overlay URL.":"انسخ رابط لوحة إرساء Social Stream أو Featured أو القالب أو التراكب المخصص الذي أُنشئ لك.","Display Capture":"التقاط الشاشة (Display Capture)","Display capture includes what you see.":"يشمل التقاط الشاشة ما تراه.","Do not add this overlay URL as an OBS Browser Source":"لا تضف رابط هذا التراكب كمصدر متصفح OBS","Do not attempt to bypass a game's security controls.":"لا تحاول تجاوز عناصر الأمان في اللعبة.","Download":"تنزيل","Electron Capture":"Electron Capture","Electron Capture Command-Line Launch":"تشغيل Electron Capture من سطر الأوامر","Electron Capture feature cards for Pin on Top, Frameless Window, Transparency Support, Click-Through Mode, Auto Screen Capture, and Game and App Capture":"بطاقات ميزات Electron Capture للتثبيت في المقدمة والنافذة بلا إطار ودعم الشفافية ووضع مرور النقرات والتقاط الشاشة التلقائي والتقاط الألعاب والتطبيقات","Electron Capture provides the pin, frameless transparency, and click-through controls needed for a private on-screen overlay.":"يوفر Electron Capture عناصر تحكم التثبيت والشفافية بلا إطار ومرور النقرات اللازمة لتراكب خاص على الشاشة.","Example placement using the real SSApp Featured Chat overlay over a simulated gameplay scene. A Dock URL can show the full running chat instead.":"مثال موضع باستخدام تراكب Featured Chat الفعلي في SSApp فوق مشهد لعب مُحاكى. يمكن لرابط Dock عرض الدردشة المستمرة كاملة بدلًا منه.","Featured Chat Only":"الدردشة المميزة فقط","Featured Chat Overlay":"تراكب الدردشة المميزة","Featured Chat Overlay:":"تراكب الدردشة المميزة:","Featured Chat is not the full feed.":"Featured Chat ليس الموجز الكامل.","Features":"الميزات","For templates, custom CSS, fonts, and more URL controls, see the":"للقوالب وCSS المخصص والخطوط ومزيد من عناصر تحكم URL، راجع","Force transparent background":"فرض خلفية شفافة (Force transparent background)","Frameless transparency, pinning, click-through, monitor selection, and command-line control.":"شفافية بلا إطار وتثبيت ومرور نقرات واختيار الشاشة وتحكم من سطر الأوامر.","Game Capture":"التقاط اللعبة (Game Capture)","Guides":"الأدلة","Hide platform source labels or icons in the Dock.":"إخفاء تسميات منصات المصادر أو أيقوناتها في لوحة الإرساء.","Hide the Dock toolbar after setup.":"إخفاء شريط أدوات لوحة الإرساء بعد الإعداد.","Hire":"الاستعانة بخدمات المطوّر","Home":"الرئيسية","If you cannot isolate the game from the monitor in your capture software, this overlay cannot be guaranteed private.":"إذا لم تستطع عزل اللعبة عن الشاشة في برنامج الالتقاط، فلا يمكن ضمان خصوصية هذا التراكب.","Important Limitations":"قيود مهمة","In the Social Stream settings panel, find":"في لوحة إعدادات Social Stream، ابحث عن","Initial position in the virtual desktop. Negative coordinates may be valid for monitors placed left or above the primary monitor.":"الموضع الأولي على سطح المكتب الافتراضي. قد تكون الإحداثيات السالبة صالحة للشاشات الموجودة إلى يسار الشاشة الرئيسية أو فوقها.","Initial window size in pixels.":"الحجم الأولي للنافذة بالبكسل.","Inject a local CSS file for advanced styling.":"حقن ملف CSS محلي للتنسيق المتقدم.","Inspiration":"أفكار ملهمة","Install and open the":"ثبّت وافتح","It only shows a message after you select one in the Dock.":"لا يعرض رسالة إلا بعد تحديدها في لوحة الإرساء.","Keep It On Your Monitor, Not On The Stream":"إبقاؤه على شاشتك دون عرضه في البث","Keep Social Stream chat visible on your monitor without automatically putting it on the stream.":"أبقِ دردشة Social Stream ظاهرة على شاشتك دون إدراجها تلقائيًا في البث.","Leave OBS's":"اترك خيار OBS","Leave it off unless a page specifically needs screen capture or another elevated Electron feature.":"اتركه معطلًا ما لم تحتج صفحة تحديدًا إلى التقاط الشاشة أو ميزة أخرى ذات صلاحيات مرتفعة في Electron.","Limit the number of retained messages on supported pages.":"تحديد عدد الرسائل المحتفظ بها في الصفحات المدعومة.","Main navigation":"التنقل الرئيسي","Make UnClickable":"جعل النافذة غير قابلة للنقر (Make UnClickable)","Make a short local recording and watch it back before going live. Capture methods and games differ.":"سجّل مقطعًا محليًا قصيرًا وشاهده قبل بدء البث. تختلف طرق الالتقاط والألعاب.","Make sure it includes":"تأكد من أنه يتضمن","Method 1: Social Stream Standalone App":"الطريقة 1: تطبيق Social Stream المستقل","Method 2: Electron Capture":"الطريقة 2: Electron Capture","Move and resize it, then enable":"حرّكه وغيّر حجمه، ثم فعّل","Move and size the window before locking it. Right-click the overlay for size presets and select":"حرّك النافذة واضبط حجمها قبل قفلها. انقر بزر الفأرة الأيمن على التراكب لإعدادات الأحجام المسبقة واختر","No reliable system-wide transparency or mouse click-through.":"لا تتوفر شفافية أو إمكانية مرور نقرات الفأرة موثوقة على مستوى النظام.","Normal browser or OBS only":"متصفح عادي أو OBS فقط","OBS Game Capture is Windows-only. If your setup must capture the entire display, the on-screen overlay will also be captured. Use a separate monitor or a window/application capture method that excludes the overlay, then verify with a recording.":"ميزة Game Capture في OBS خاصة بـWindows. إذا كان إعدادك يتطلب التقاط الشاشة كلها، فسيُلتقَط التراكب المعروض عليها أيضًا. استخدم شاشة منفصلة أو طريقة التقاط نافذة أو تطبيق تستبعد التراكب، ثم تحقق بتسجيل.","OBS captures the game/window, not the entire display.":"يلتقط OBS اللعبة أو النافذة، وليس الشاشة كلها.","On Windows, prefer an OBS":"على Windows، فضّل مصدر OBS من نوع","On-Screen Chat Overlay While Gaming - Social Stream Ninja":"تراكب دردشة على الشاشة أثناء اللعب - Social Stream Ninja","On-Screen Chat While Gaming":"دردشة على الشاشة أثناء اللعب","Open its options and enable":"افتح خياراته وفعّل","Open navigation menu":"فتح قائمة التنقل","Open the URL in Electron Capture.":"افتح الرابط في Electron Capture.","Option":"الخيار","Overlay Customization guide":"دليل تخصيص التراكبات","Overlay Gallery":"معرض التراكبات","Positioning tip:":"نصيحة لضبط الموضع:","Purpose":"الغرض","Quick Checklist":"قائمة تحقق سريعة","Reload the focused overlay window.":"إعادة تحميل نافذة التراكب التي تملك التركيز.","Remove the page background and request a transparent desktop window.":"إزالة خلفية الصفحة وطلب نافذة سطح مكتب شفافة.","Right-click an SSApp overlay window to resize, pin, or make it click-through. Set click-through last so you do not lock yourself out while positioning it.":"انقر بزر الفأرة الأيمن على نافذة تراكب SSApp لتغيير حجمها أو تثبيتها أو السماح بمرور النقرات. اضبط مرور النقرات أخيرًا حتى لا تفقد القدرة على التفاعل أثناء ضبط الموضع.","Right-click its window and enable":"انقر بزر الفأرة الأيمن على نافذته وفعّل","Run a separate Electron Capture process when you need more than one independent overlay.":"شغّل عملية Electron Capture منفصلة عندما تحتاج إلى أكثر من تراكب مستقل.","SSApp Hotkeys":"مفاتيح SSApp السريعة","SSApp overlay right-click menu showing Resize window, Always on top, and Make UnClickable until in-focus with the Ctrl Shift Alt X hotkey":"قائمة النقر بالزر الأيمن لتراكب SSApp تعرض Resize window وAlways on top وMake UnClickable until in-focus مع المفتاح السريع Ctrl Shift Alt X","Scale supported overlays down without changing window size.":"تصغير التراكبات المدعومة دون تغيير حجم النافذة.","See Electron Capture's":"راجع","See Live Chat While Gaming! Transparent Overlay Guide":"شاهد الدردشة المباشرة أثناء اللعب! دليل التراكب الشفاف","Show a private Social Stream Ninja chat overlay over a game using the standalone desktop app or Electron Capture, with transparency, click-through hotkeys, command-line examples, and OBS capture notes.":"اعرض تراكب دردشة خاصًا من Social Stream Ninja فوق لعبة باستخدام تطبيق سطح المكتب المستقل أو Electron Capture، مع الشفافية ومفاتيح مرور النقرات السريعة وأمثلة سطر الأوامر وملاحظات التقاط OBS.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja featured chat message positioned over a simulated gameplay scene":"رسالة دردشة مميزة من Social Stream Ninja موضوعة فوق مشهد لعب مُحاكى","Social Stream Ninja logo":"شعار Social Stream Ninja","Social Stream Ninja standalone app":"تطبيق Social Stream Ninja المستقل","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. ترخيص GPLv3.0.","Social Stream can sit above a game as a transparent, always-on-top window. This is a separate desktop window, not a game HUD injection.":"يمكن أن يظهر Social Stream فوق لعبة كنافذة شفافة تبقى في المقدمة. هذه نافذة سطح مكتب منفصلة، وليست حقنًا لواجهة داخل اللعبة.","Social Stream standalone app":"تطبيق Social Stream المستقل","Some games and anti-cheat systems restrict overlays.":"تفرض بعض الألعاب وأنظمة مكافحة الغش قيودًا على التراكبات.","Start always-on-top.":"البدء بوضع البقاء في المقدمة.","Start in click-through mode. Remember the recovery hotkey before using it.":"البدء بوضع مرور النقرات. تذكّر مفتاح الاستعادة السريع قبل استخدامه.","Streaming Chat":"دردشة البث (Streaming Chat)","Streaming Chat / Dock:":"دردشة البث / لوحة الإرساء:","Support":"الدعم","Supported Sites":"المواقع المدعومة","Switch theme":"تبديل السمة","Template or custom overlay:":"قالب أو تراكب مخصص:","The URL contains":"يتضمن الرابط","The chat should appear on the broadcast rather than privately on your monitor.":"ينبغي أن تظهر الدردشة في البث بدلًا من عرضها بشكل خاص على شاشتك.","The complete Social Stream overlay URL. Quote it because it contains":"رابط تراكب Social Stream الكامل. ضعه بين علامتي اقتباس لأنه يحتوي على المحرف","The desktop app must stay open.":"يجب أن يبقى تطبيق سطح المكتب مفتوحًا.","The desktop wrapper is pinned above the game.":"حاوية سطح المكتب مثبتة فوق اللعبة.","The game uses borderless or windowed fullscreen if exclusive fullscreen hides the overlay.":"تستخدم اللعبة وضع ملء الشاشة بلا حدود أو داخل نافذة إذا أخفى ملء الشاشة الحصري التراكب.","The overlay URL uses the correct session ID.":"يستخدم رابط التراكب معرّف الجلسة الصحيح.","The overlay stays private only when your streaming software captures the game or game window rather than the whole monitor.":"يبقى التراكب خاصًا فقط عندما يلتقط برنامج البث اللعبة أو نافذتها بدلًا من الشاشة كاملة.","The portable Windows build is the simplest version to automate. Replace":"نسخة Windows المحمولة هي الأسهل للأتمتة. استبدل","The session must match.":"يجب أن تتطابق الجلسة.","This older video shows the transparent, always-on-top, click-through chat setup. The app interface may look different in current versions.":"يعرض هذا الفيديو الأقدم إعداد الدردشة الشفافة التي تبقى في المقدمة وتسمح بمرور النقرات. قد تختلف واجهة التطبيق في الإصدارات الحالية.","Toggle mouse click-through so you can interact with the overlay again.":"تبديل مرور نقرات الفأرة لتتمكن من التفاعل مع التراكب مجددًا.","Transparency varies by operating system and graphics setup.":"تختلف الشفافية حسب نظام التشغيل وإعداد الرسوميات.","Transparent popup windows, always-on-top, resizing, and click-through.":"نوافذ منبثقة شفافة وبقاء في المقدمة وتغيير الحجم ومرور النقرات.","URL Option":"خيار URL","Update the desktop app and graphics driver if a transparent area appears white or black.":"حدّث تطبيق سطح المكتب وبرنامج تشغيل الرسوميات إذا ظهرت منطقة شفافة باللون الأبيض أو الأسود.","Use":"استخدم","Use a denser Dock layout.":"استخدام تخطيط أكثر كثافة للوحة الإرساء.","Use the":"استخدم","Use the recovery hotkey before trying to right-click the window again.":"استخدم مفتاح الاستعادة السريع قبل محاولة النقر بزر الفأرة الأيمن على النافذة مجددًا.","Use the same session ID as your active Social Stream setup. In the Social Stream settings panel, open the options for the view you chose and enable":"استخدم معرّف الجلسة نفسه لإعداد Social Stream النشط. في لوحة إعدادات Social Stream، افتح خيارات العرض الذي اخترته وفعّل","Useful Overlay URL Options":"خيارات URL مفيدة للتراكبات","Video Walkthrough":"شرح بالفيديو","What It Adds":"ما يضيفه","When placement is finished, right-click it again and select":"عند الانتهاء من ضبط الموضع، انقر عليه بزر الفأرة الأيمن مجددًا واختر","Windows / Linux":"Windows / Linux","Yes, With A Desktop Overlay Window":"نعم، باستخدام نافذة تراكب على سطح المكتب","You already capture chat in SSApp and want the shortest setup.":"تلتقط الدردشة بالفعل في SSApp وتريد أقصر إعداد.","You need a desktop wrapper.":"تحتاج إلى تطبيق يحتضن التراكب على سطح المكتب.","You want exact size and position, reusable launch commands, or a dedicated overlay wrapper.":"تريد حجمًا وموضعًا دقيقين أو أوامر تشغيل قابلة لإعادة الاستخدام أو حاوية مخصصة للتراكب.","and":"و","and adjust the size and position for your display.":"واضبط الحجم والموضع لشاشتك.","characters.":".","complete command-line reference":"مرجع سطر الأوامر الكامل في Electron Capture","for additional parameters.":"لمعاملات إضافية.","for this workflow. It captures the entire monitor, including the chat overlay.":"لهذا الاستخدام. فهو يلتقط الشاشة كلها، بما فيها تراكب الدردشة.","from inside the standalone app":"من داخل التطبيق المستقل","if viewers should not see it.":"إذا كنت لا تريد أن يراه المشاهدون.","is a separate free, open-source app that can wrap a Social Stream URL in a transparent desktop window. It is often the easier option when you only want a dedicated overlay window.":"هو تطبيق منفصل مجاني ومفتوح المصدر يستطيع فتح رابط Social Stream داخل نافذة سطح مكتب شفافة. غالبًا ما يكون الخيار الأسهل عندما تريد نافذة تراكب مخصصة فقط.","is not needed for a normal Social Stream overlay.":"غير مطلوب لتراكب Social Stream عادي.","macOS":"macOS","macOS And Linux":"macOS وLinux","macOS and Linux limitation:":"قيد macOS وLinux:","mode hides its scrollbar.":"العادي في لوحة الإرساء شريط التمرير.","on macOS) to toggle click-through later.":"على macOS) لتبديل مرور النقرات لاحقًا.","option off unless you have tested that it does not include this window.":"معطلًا ما لم تختبر أنه لا يتضمن هذه النافذة.","options for exact placement.":"لضبط الموضع بدقة.","or":"أو","shows one message selected from the Dock. Use this when you only want highlighted messages.":"يعرض رسالة واحدة محددة من لوحة الإرساء. استخدمه عندما تريد الرسائل المميزة فقط.","shows the ongoing combined chat. This is usually the best choice while gaming.":"يعرض الدردشة المجمعة المستمرة. وهو عادةً الخيار الأفضل أثناء اللعب.","source targeting the game.":"يستهدف اللعبة.","standalone desktop app":"تطبيق سطح المكتب المستقل","transparent areas can be hard to grab. Keep the Dock menu visible while positioning it, use your operating system's window movement shortcuts, or use Electron Capture's":"قد يصعب الإمساك بالمناطق الشفافة. أبقِ قائمة لوحة الإرساء ظاهرة أثناء ضبط الموضع، أو استخدم اختصارات تحريك النوافذ في نظام التشغيل، أو استخدم خيارات Electron Capture","works too, as long as the page supports a transparent background.":"يعمل أيضًا ما دامت الصفحة تدعم خلفية شفافة."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/on-screen-chat-overlay.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="التنقل الرئيسي"><a href="../index.html">الرئيسية</a><a href="features.html">الميزات</a><a href="inspiration.html" class="site-priority-inspiration">أفكار ملهمة</a><a href="download.html">تنزيل</a><a href="guides.html">الأدلة</a><a href="commands.html">الأوامر وAPI</a><a href="supported-sites.html">المواقع المدعومة</a><a href="overlay-gallery.html" class="site-priority-gallery">معرض التراكبات</a><a href="services.html" class="site-priority-hire">الاستعانة بخدمات المطوّر</a><a href="support.html">الدعم</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="العربية"><span aria-hidden="true">🌐 </span><span lang="ar">العربية</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/on-screen-chat-overlay.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/on-screen-chat-overlay.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/on-screen-chat-overlay.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/on-screen-chat-overlay.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/on-screen-chat-overlay.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/on-screen-chat-overlay.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/on-screen-chat-overlay.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/on-screen-chat-overlay.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/on-screen-chat-overlay.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/on-screen-chat-overlay.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/on-screen-chat-overlay.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/on-screen-chat-overlay.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/on-screen-chat-overlay.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="on-screen-chat-overlay.html" lang="ar" hreflang="ar" aria-current="true">العربية</a><a class="site-language-link" href="../../tr/docs/on-screen-chat-overlay.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/on-screen-chat-overlay.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/on-screen-chat-overlay.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="تبديل السمة"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="فتح قائمة التنقل" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>دردشة على الشاشة أثناء اللعب</h1>
+            <p>أبقِ دردشة Social Stream ظاهرة على شاشتك دون إدراجها تلقائيًا في البث.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>نعم، باستخدام نافذة تراكب على سطح المكتب</h2>
+                <p>يمكن أن يظهر Social Stream فوق لعبة كنافذة شفافة تبقى في المقدمة. هذه نافذة سطح مكتب منفصلة، وليست حقنًا لواجهة داخل اللعبة.</p>
+                <div class="guide-note">
+                    <p><strong>تحتاج إلى تطبيق يحتضن التراكب على سطح المكتب.</strong> استخدم <a href="download.html">تطبيق Social Stream Ninja المستقل</a> أو <a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a>. لا تستطيع إضافة المتصفح ولا مصدر متصفح OBS إنشاء نافذة تسمح بمرور النقرات على مستوى النظام بمفردهما.</p>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>الخيار</th><th>الأنسب عندما</th><th>ما يضيفه</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Option">تطبيق Social Stream المستقل</td>
+                            <td data-label="Best When">تلتقط الدردشة بالفعل في SSApp وتريد أقصر إعداد.</td>
+                            <td data-label="What It Adds">نوافذ منبثقة شفافة وبقاء في المقدمة وتغيير الحجم ومرور النقرات.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Option">Electron Capture</td>
+                            <td data-label="Best When">تريد حجمًا وموضعًا دقيقين أو أوامر تشغيل قابلة لإعادة الاستخدام أو حاوية مخصصة للتراكب.</td>
+                            <td data-label="What It Adds">شفافية بلا إطار وتثبيت ومرور نقرات واختيار الشاشة وتحكم من سطر الأوامر.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Option">متصفح عادي أو OBS فقط</td>
+                            <td data-label="Best When">ينبغي أن تظهر الدردشة في البث بدلًا من عرضها بشكل خاص على شاشتك.</td>
+                            <td data-label="What It Adds">لا تتوفر شفافية أو إمكانية مرور نقرات الفأرة موثوقة على مستوى النظام.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>شرح بالفيديو</h2>
+                <p>يعرض هذا الفيديو الأقدم إعداد الدردشة الشفافة التي تبقى في المقدمة وتسمح بمرور النقرات. قد تختلف واجهة التطبيق في الإصدارات الحالية.</p>
+                <div class="video-container">
+                    <iframe
+                        src="https://www.youtube.com/embed/bMVVof_L0sI"
+                        title="شاهد الدردشة المباشرة أثناء اللعب! دليل التراكب الشفاف"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>اختيار عرض الدردشة</h2>
+                <ul class="guide-list">
+                    <li><strong>دردشة البث / لوحة الإرساء:</strong> يعرض الدردشة المجمعة المستمرة. وهو عادةً الخيار الأفضل أثناء اللعب.</li>
+                    <li><strong>تراكب الدردشة المميزة:</strong> يعرض رسالة واحدة محددة من لوحة الإرساء. استخدمه عندما تريد الرسائل المميزة فقط.</li>
+                    <li><strong>قالب أو تراكب مخصص:</strong> يعمل أيضًا ما دامت الصفحة تدعم خلفية شفافة.</li>
+                </ul>
+                <p>استخدم معرّف الجلسة نفسه لإعداد Social Stream النشط. في لوحة إعدادات Social Stream، افتح خيارات العرض الذي اخترته وفعّل <strong>فرض خلفية شفافة (Force transparent background)</strong>. ينبغي أن يحتوي الرابط المُنشأ على <code>transparent</code>.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/on-screen-overlay-preview.png" alt="رسالة دردشة مميزة من Social Stream Ninja موضوعة فوق مشهد لعب مُحاكى" class="guide-image">
+                    <figcaption>مثال موضع باستخدام تراكب Featured Chat الفعلي في SSApp فوق مشهد لعب مُحاكى. يمكن لرابط Dock عرض الدردشة المستمرة كاملة بدلًا منه.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>الطريقة 1: تطبيق Social Stream المستقل</h2>
+                <ol class="guide-steps">
+                    <li>ثبّت وافتح <a href="download.html">تطبيق سطح المكتب المستقل</a>. فعّل مصادر الدردشة بالطريقة المعتادة.</li>
+                    <li>في لوحة إعدادات Social Stream، ابحث عن <strong>دردشة البث (Streaming Chat)</strong> أو <strong>تراكب الدردشة المميزة</strong>.</li>
+                    <li>افتح خياراته وفعّل <strong>فرض خلفية شفافة (Force transparent background)</strong>.</li>
+                    <li>انقر على رابط Dock أو Featured المُنشأ <strong>من داخل التطبيق المستقل</strong>. يفتحه SSApp كنافذة تراكب مستقلة.</li>
+                    <li>حرّك النافذة واضبط حجمها قبل قفلها. انقر بزر الفأرة الأيمن على التراكب لإعدادات الأحجام المسبقة واختر <strong>دائمًا في المقدمة (Always on top)</strong>.</li>
+                    <li>عند الانتهاء من ضبط الموضع، انقر عليه بزر الفأرة الأيمن مجددًا واختر <strong>جعل النافذة غير قابلة للنقر (Make UnClickable)</strong>. ستمر نقرات الفأرة إلى اللعبة.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/ssapp-on-screen-overlay-menu.png" alt="قائمة النقر بالزر الأيمن لتراكب SSApp تعرض Resize window وAlways on top وMake UnClickable until in-focus مع المفتاح السريع Ctrl Shift Alt X" class="guide-image">
+                    <figcaption>انقر بزر الفأرة الأيمن على نافذة تراكب SSApp لتغيير حجمها أو تثبيتها أو السماح بمرور النقرات. اضبط مرور النقرات أخيرًا حتى لا تفقد القدرة على التفاعل أثناء ضبط الموضع.</figcaption>
+                </figure>
+                <h3>مفاتيح SSApp السريعة</h3>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Windows / Linux</th><th>macOS</th><th>الإجراء</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+X</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+X</code></td>
+                            <td data-label="Action">تبديل مرور نقرات الفأرة لتتمكن من التفاعل مع التراكب مجددًا.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+R</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+R</code></td>
+                            <td data-label="Action">إعادة تحميل نافذة التراكب التي تملك التركيز.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="guide-note">
+                    <p><strong>نصيحة لضبط الموضع:</strong> قد يصعب الإمساك بالمناطق الشفافة. أبقِ قائمة لوحة الإرساء ظاهرة أثناء ضبط الموضع، أو استخدم اختصارات تحريك النوافذ في نظام التشغيل، أو استخدم خيارات Electron Capture <code>--x</code> و <code>--y</code> لضبط الموضع بدقة.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>الطريقة 2: Electron Capture</h2>
+                <p><a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a> هو تطبيق منفصل مجاني ومفتوح المصدر يستطيع فتح رابط Social Stream داخل نافذة سطح مكتب شفافة. غالبًا ما يكون الخيار الأسهل عندما تريد نافذة تراكب مخصصة فقط.</p>
+                <ol class="guide-steps">
+                    <li>انسخ رابط لوحة إرساء Social Stream أو Featured أو القالب أو التراكب المخصص الذي أُنشئ لك.</li>
+                    <li>تأكد من أنه يتضمن <code>&amp;transparent</code>. إذا لم يحتوِ الرابط على علامة استفهام بعد، فاستخدم <code>?transparent</code>.</li>
+                    <li>افتح الرابط في Electron Capture.</li>
+                    <li>انقر بزر الفأرة الأيمن على نافذته وفعّل <strong>دائمًا في المقدمة (Always on top)</strong>.</li>
+                    <li>حرّكه وغيّر حجمه، ثم فعّل <strong>جعل النافذة غير قابلة للنقر (Make UnClickable)</strong>.</li>
+                    <li>استخدم <code>Ctrl+Shift+Alt+X</code> (أو <code>Command+Shift+Option+X</code> على macOS) لتبديل مرور النقرات لاحقًا.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/electron-capture-overlay-features.png" alt="بطاقات ميزات Electron Capture للتثبيت في المقدمة والنافذة بلا إطار ودعم الشفافية ووضع مرور النقرات والتقاط الشاشة التلقائي والتقاط الألعاب والتطبيقات" class="guide-image">
+                    <figcaption>يوفر Electron Capture عناصر تحكم التثبيت والشفافية بلا إطار ومرور النقرات اللازمة لتراكب خاص على الشاشة.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>تشغيل Electron Capture من سطر الأوامر</h2>
+                <p>نسخة Windows المحمولة هي الأسهل للأتمتة. استبدل <code>YOUR_SESSION_ID</code> واضبط الحجم والموضع لشاشتك.</p>
+
+                <h3>لوحة إرساء للدردشة المستمرة</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;transparent&amp;compact&amp;hidemenu" --width=520 --height=760 --x=1380 --y=80 --pin --unclickable --title="SSN Chat"</code></pre>
+
+                <h3>الدردشة المميزة فقط</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID&amp;transparent" --width=700 --height=500 --x=1160 --y=80 --pin --unclickable --title="SSN Featured"</code></pre>
+
+                <h3>macOS وLinux</h3>
+                <pre><code># macOS
+"/Applications/elecap.app/Contents/MacOS/elecap" --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable
+
+# Linux AppImage; replace the filename with the version you downloaded
+./elecap-VERSION-x86_64.AppImage --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable</code></pre>
+
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>الخيار</th><th>الغرض</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Option"><code>--url</code></td><td data-label="Purpose">رابط تراكب Social Stream الكامل. ضعه بين علامتي اقتباس لأنه يحتوي على المحرف <code>&amp;</code> .</td></tr>
+                        <tr><td data-label="Option"><code>--width</code>, <code>--height</code></td><td data-label="Purpose">الحجم الأولي للنافذة بالبكسل.</td></tr>
+                        <tr><td data-label="Option"><code>--x</code>, <code>--y</code></td><td data-label="Purpose">الموضع الأولي على سطح المكتب الافتراضي. قد تكون الإحداثيات السالبة صالحة للشاشات الموجودة إلى يسار الشاشة الرئيسية أو فوقها.</td></tr>
+                        <tr><td data-label="Option"><code>--monitor=0</code></td><td data-label="Purpose">اختر شاشة بترقيم يبدأ من الصفر عندما يكون فهرس الشاشة أسهل من إحداثيات سطح المكتب.</td></tr>
+                        <tr><td data-label="Option"><code>--pin</code></td><td data-label="Purpose">البدء بوضع البقاء في المقدمة.</td></tr>
+                        <tr><td data-label="Option"><code>--unclickable</code></td><td data-label="Purpose">البدء بوضع مرور النقرات. تذكّر مفتاح الاستعادة السريع قبل استخدامه.</td></tr>
+                        <tr><td data-label="Option"><code>--css="C:\path\chat.css"</code></td><td data-label="Purpose">حقن ملف CSS محلي للتنسيق المتقدم.</td></tr>
+                        <tr><td data-label="Option"><code>--multiinstance</code></td><td data-label="Purpose">شغّل عملية Electron Capture منفصلة عندما تحتاج إلى أكثر من تراكب مستقل.</td></tr>
+                    </tbody>
+                </table>
+                <p>راجع <a href="https://electroncapture.app/command-line.html" target="_blank" rel="noopener">مرجع سطر الأوامر الكامل في Electron Capture</a> لمعاملات إضافية.</p>
+                <div class="guide-note">
+                    <p><strong><code>--node</code> غير مطلوب لتراكب Social Stream عادي.</strong> اتركه معطلًا ما لم تحتج صفحة تحديدًا إلى التقاط الشاشة أو ميزة أخرى ذات صلاحيات مرتفعة في Electron.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>خيارات URL مفيدة للتراكبات</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>خيار URL</th><th>استخدم</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="URL Option"><code>transparent</code></td><td data-label="Use">إزالة خلفية الصفحة وطلب نافذة سطح مكتب شفافة.</td></tr>
+                        <tr><td data-label="URL Option"><code>compact</code></td><td data-label="Use">استخدام تخطيط أكثر كثافة للوحة الإرساء.</td></tr>
+                        <tr><td data-label="URL Option"><code>hidemenu</code></td><td data-label="Use">إخفاء شريط أدوات لوحة الإرساء بعد الإعداد.</td></tr>
+                        <tr><td data-label="URL Option"><code>scale=0.85</code></td><td data-label="Use">تصغير التراكبات المدعومة دون تغيير حجم النافذة.</td></tr>
+                        <tr><td data-label="URL Option"><code>limit=15</code></td><td data-label="Use">تحديد عدد الرسائل المحتفظ بها في الصفحات المدعومة.</td></tr>
+                        <tr><td data-label="URL Option"><code>hidesource</code></td><td data-label="Use">إخفاء تسميات منصات المصادر أو أيقوناتها في لوحة الإرساء.</td></tr>
+                        <tr><td data-label="URL Option"><code>chroma=0000</code></td><td data-label="Use">وضع بديل للخلفية الشفافة؛ مفيد عندما يخفي وضع <code>transparent</code> العادي في لوحة الإرساء شريط التمرير.</td></tr>
+                    </tbody>
+                </table>
+                <p>للقوالب وCSS المخصص والخطوط ومزيد من عناصر تحكم URL، راجع <a href="overlay-customization-guide.html">دليل تخصيص التراكبات</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>إبقاؤه على شاشتك دون عرضه في البث</h2>
+                <p>يبقى التراكب خاصًا فقط عندما يلتقط برنامج البث اللعبة أو نافذتها بدلًا من الشاشة كاملة.</p>
+                <ol class="guide-steps">
+                    <li><strong>لا تضف رابط هذا التراكب كمصدر متصفح OBS</strong> إذا كنت لا تريد أن يراه المشاهدون.</li>
+                    <li>على Windows، فضّل مصدر OBS من نوع <a href="https://obsproject.com/kb/game-capture-source" target="_blank" rel="noopener">التقاط اللعبة (Game Capture)</a> يستهدف اللعبة.</li>
+                    <li>اترك خيار OBS <strong>التقاط تراكبات الجهات الخارجية، مثل Steam ‏(Capture third-party overlays (such as Steam))</strong> معطلًا ما لم تختبر أنه لا يتضمن هذه النافذة.</li>
+                    <li>تجنب <a href="https://obsproject.com/kb/display-capture-sources" target="_blank" rel="noopener">التقاط الشاشة (Display Capture)</a> لهذا الاستخدام. فهو يلتقط الشاشة كلها، بما فيها تراكب الدردشة.</li>
+                    <li>سجّل مقطعًا محليًا قصيرًا وشاهده قبل بدء البث. تختلف طرق الالتقاط والألعاب.</li>
+                </ol>
+                <div class="warning-note">
+                    <p><strong>قيد macOS وLinux:</strong> ميزة Game Capture في OBS خاصة بـWindows. إذا كان إعدادك يتطلب التقاط الشاشة كلها، فسيُلتقَط التراكب المعروض عليها أيضًا. استخدم شاشة منفصلة أو طريقة التقاط نافذة أو تطبيق تستبعد التراكب، ثم تحقق بتسجيل.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>قيود مهمة</h2>
+                <ul class="guide-list">
+                    <li><strong>ملء الشاشة بلا حدود أو داخل نافذة هو وضع اللعب الموثوق.</strong> قد تغطي لعبة في وضع ملء الشاشة الحصري جميع نوافذ سطح المكتب العادية، بما فيها تراكب مضبوط ليبقى في المقدمة.</li>
+                    <li><strong>يجب أن يبقى تطبيق سطح المكتب مفتوحًا.</strong> يؤدي إغلاق SSApp أو Electron Capture إلى إغلاق التراكب المحلي.</li>
+                    <li><strong>يجب أن تتطابق الجلسة.</strong> سيبقى رابط Dock أو Featured ذو معرّف الجلسة الخاطئ فارغًا.</li>
+                    <li><strong>Featured Chat ليس الموجز الكامل.</strong> لا يعرض رسالة إلا بعد تحديدها في لوحة الإرساء.</li>
+                    <li><strong>يعطّل مرور النقرات التفاعل بالفأرة.</strong> استخدم مفتاح الاستعادة السريع قبل محاولة النقر بزر الفأرة الأيمن على النافذة مجددًا.</li>
+                    <li><strong>تفرض بعض الألعاب وأنظمة مكافحة الغش قيودًا على التراكبات.</strong> لا تحاول تجاوز عناصر الأمان في اللعبة.</li>
+                    <li><strong>تختلف الشفافية حسب نظام التشغيل وإعداد الرسوميات.</strong> حدّث تطبيق سطح المكتب وبرنامج تشغيل الرسوميات إذا ظهرت منطقة شفافة باللون الأبيض أو الأسود.</li>
+                    <li><strong>يشمل التقاط الشاشة ما تراه.</strong> إذا لم تستطع عزل اللعبة عن الشاشة في برنامج الالتقاط، فلا يمكن ضمان خصوصية هذا التراكب.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>قائمة تحقق سريعة</h2>
+                <ol class="guide-steps">
+                    <li>تصل الدردشة إلى Social Stream.</li>
+                    <li>يستخدم رابط التراكب معرّف الجلسة الصحيح.</li>
+                    <li>يتضمن الرابط <code>transparent</code>.</li>
+                    <li>حاوية سطح المكتب مثبتة فوق اللعبة.</li>
+                    <li>يُفعَّل مرور النقرات بعد ضبط الموضع فقط.</li>
+                    <li>تستخدم اللعبة وضع ملء الشاشة بلا حدود أو داخل نافذة إذا أخفى ملء الشاشة الحصري التراكب.</li>
+                    <li>يلتقط OBS اللعبة أو النافذة، وليس الشاشة كلها.</li>
+                    <li>يؤكد تسجيل اختباري أن المشاهدين لا يرون التراكب الخاص.</li>
+                </ol>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. ترخيص GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

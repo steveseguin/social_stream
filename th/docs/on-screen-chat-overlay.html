@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/th/docs/on-screen-chat-overlay.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/th/docs/on-screen-chat-overlay.html">
+    <meta property="og:title" content="โอเวอร์เลย์แชตบนหน้าจอขณะเล่นเกม - Social Stream Ninja">
+    <meta property="og:description" content="แสดงโอเวอร์เลย์แชต Social Stream Ninja ส่วนตัวเหนือเกมด้วยแอปเดสก์ท็อปแบบแยกหรือ Electron Capture พร้อมความโปร่งใส ปุ่มลัดคลิกทะลุ ตัวอย่างบรรทัดคำสั่ง และหมายเหตุการจับภาพ OBS">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/th/docs/on-screen-chat-overlay.html">
+    <meta name="twitter:title" content="โอเวอร์เลย์แชตบนหน้าจอขณะเล่นเกม - Social Stream Ninja">
+    <meta name="twitter:description" content="แสดงโอเวอร์เลย์แชต Social Stream Ninja ส่วนตัวเหนือเกมด้วยแอปเดสก์ท็อปแบบแยกหรือ Electron Capture พร้อมความโปร่งใส ปุ่มลัดคลิกทะลุ ตัวอย่างบรรทัดคำสั่ง และหมายเหตุการจับภาพ OBS">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โอเวอร์เลย์แชตบนหน้าจอขณะเล่นเกม - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="แสดงโอเวอร์เลย์แชต Social Stream Ninja ส่วนตัวเหนือเกมด้วยแอปเดสก์ท็อปแบบแยกหรือ Electron Capture พร้อมความโปร่งใส ปุ่มลัดคลิกทะลุ ตัวอย่างบรรทัดคำสั่ง และหมายเหตุการจับภาพ OBS">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/on-screen-chat-overlay.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{"(or":"(หรือ",". Activate your chat sources normally.":" เปิดใช้แหล่งแชตตามปกติ",". If the URL has no question mark yet, use":" หาก URL ยังไม่มีเครื่องหมายคำถาม ให้ใช้",". Mouse clicks will pass through to the game.":" คลิกเมาส์จะทะลุไปถึงเกม",". SSApp opens it as its own overlay window.":" SSApp เปิดเป็นหน้าต่างโอเวอร์เลย์แยกของตัวเอง",". The browser extension and an OBS Browser Source cannot create a system-wide click-through window by themselves.":" ส่วนขยายเบราว์เซอร์และแหล่งเบราว์เซอร์ OBS ไม่สามารถสร้างหน้าต่างคลิกทะลุทั่วทั้งระบบได้เอง",". The generated URL should contain":" URL ที่สร้างควรมี","A Dock or Featured URL with the wrong session ID will remain empty.":"URL ของแผงด็อกหรือ Featured ที่ใช้รหัสเซสชันผิดจะว่าง","A test recording confirms viewers cannot see the private overlay.":"วิดีโอทดสอบยืนยันว่าผู้ชมไม่เห็นโอเวอร์เลย์ส่วนตัว","Action":"การดำเนินการ","Alternative transparent background mode; useful when the Dock's normal":"โหมดพื้นหลังโปร่งใสทางเลือก มีประโยชน์เมื่อโหมดปกติของแผงด็อก","Always on top":"อยู่ด้านบนเสมอ (Always on top)","An exclusive fullscreen game may cover all normal desktop windows, including an always-on-top overlay.":"เกมแบบเต็มหน้าจอเฉพาะอาจบังหน้าต่างเดสก์ท็อปปกติทั้งหมด รวมถึงโอเวอร์เลย์ที่ตั้งให้อยู่ด้านบนเสมอ","Avoid":"หลีกเลี่ยง","Best When":"เหมาะเมื่อ","Borderless or windowed fullscreen is the reliable game mode.":"โหมดไร้ขอบหรือเต็มหน้าจอแบบหน้าต่างเป็นโหมดเกมที่เชื่อถือได้สำหรับงานนี้","Capture third-party overlays (such as Steam)":"จับภาพโอเวอร์เลย์ของบุคคลที่สาม เช่น Steam (Capture third-party overlays)","Chat is arriving in Social Stream.":"แชตกำลังเข้าถึง Social Stream","Choose The Chat View":"เลือกมุมมองแชต","Choose a zero-based monitor when a monitor index is easier than desktop coordinates.":"เลือกจอด้วยดัชนีเริ่มที่ศูนย์ เมื่อใช้หมายเลขจอง่ายกว่าพิกัดเดสก์ท็อป","Click the generated Dock or Featured link":"คลิกลิงก์ Dock หรือ Featured ที่สร้าง","Click-through disables mouse interaction.":"โหมดคลิกทะลุปิดการโต้ตอบด้วยเมาส์","Click-through is enabled only after positioning.":"เปิดโหมดคลิกทะลุหลังจัดตำแหน่งเสร็จเท่านั้น","Closing SSApp or Electron Capture closes the local overlay.":"การปิด SSApp หรือ Electron Capture จะปิดโอเวอร์เลย์ในเครื่อง","Commands & API":"คำสั่งและ API","Continuous Chat Dock":"แผงด็อกแชตต่อเนื่อง","Copy your generated Social Stream Dock, Featured, template, or custom overlay URL.":"คัดลอก URL แผงด็อก Featured เทมเพลต หรือโอเวอร์เลย์กำหนดเองของ Social Stream ที่สร้างไว้","Display Capture":"จับภาพจอ (Display Capture)","Display capture includes what you see.":"การจับภาพจอรวมสิ่งที่คุณมองเห็น","Do not add this overlay URL as an OBS Browser Source":"อย่าเพิ่ม URL โอเวอร์เลย์นี้เป็นแหล่งเบราว์เซอร์ OBS","Do not attempt to bypass a game's security controls.":"อย่าพยายามข้ามระบบรักษาความปลอดภัยของเกม","Download":"ดาวน์โหลด","Electron Capture":"Electron Capture","Electron Capture Command-Line Launch":"เรียก Electron Capture ผ่านบรรทัดคำสั่ง","Electron Capture feature cards for Pin on Top, Frameless Window, Transparency Support, Click-Through Mode, Auto Screen Capture, and Game and App Capture":"การ์ดฟีเจอร์ Electron Capture สำหรับ Pin on Top, Frameless Window, Transparency Support, Click-Through Mode, Auto Screen Capture และ Game and App Capture","Electron Capture provides the pin, frameless transparency, and click-through controls needed for a private on-screen overlay.":"Electron Capture มีตัวควบคุมปักไว้ด้านบน ความโปร่งใสแบบไร้กรอบ และคลิกทะลุ ซึ่งจำเป็นสำหรับโอเวอร์เลย์ส่วนตัวบนหน้าจอ","Example placement using the real SSApp Featured Chat overlay over a simulated gameplay scene. A Dock URL can show the full running chat instead.":"ตัวอย่างตำแหน่งที่ใช้โอเวอร์เลย์ Featured Chat ของ SSApp จริงวางบนฉากเกมจำลอง URL แผงด็อกใช้แสดงแชตต่อเนื่องทั้งหมดแทนได้","Featured Chat Only":"เฉพาะแชตเด่น","Featured Chat Overlay":"โอเวอร์เลย์แชตไฮไลต์","Featured Chat Overlay:":"โอเวอร์เลย์ Featured Chat:","Featured Chat is not the full feed.":"Featured Chat ไม่ใช่ฟีดทั้งหมด","Features":"ฟีเจอร์","For templates, custom CSS, fonts, and more URL controls, see the":"สำหรับเทมเพลต CSS กำหนดเอง ฟอนต์ และตัวควบคุม URL เพิ่มเติม ดู","Force transparent background":"บังคับพื้นหลังโปร่งใส","Frameless transparency, pinning, click-through, monitor selection, and command-line control.":"ความโปร่งใสไร้กรอบ ปักด้านบน คลิกทะลุ เลือกจอ และควบคุมด้วยบรรทัดคำสั่ง","Game Capture":"จับภาพเกม (Game Capture)","Guides":"คู่มือ","Hide platform source labels or icons in the Dock.":"ซ่อนป้ายหรือไอคอนแพลตฟอร์มต้นทางในแผงด็อก","Hide the Dock toolbar after setup.":"ซ่อนแถบเครื่องมือแผงด็อกหลังตั้งค่า","Hire":"จ้างงาน","Home":"หน้าแรก","If you cannot isolate the game from the monitor in your capture software, this overlay cannot be guaranteed private.":"หากซอฟต์แวร์จับภาพของคุณแยกเกมออกจากทั้งจอไม่ได้ ก็ไม่สามารถรับประกันว่าโอเวอร์เลย์นี้จะเป็นส่วนตัว","Important Limitations":"ข้อจำกัดสำคัญ","In the Social Stream settings panel, find":"ในแผงการตั้งค่า Social Stream หา","Initial position in the virtual desktop. Negative coordinates may be valid for monitors placed left or above the primary monitor.":"ตำแหน่งเริ่มต้นในเดสก์ท็อปเสมือน พิกัดติดลบอาจใช้ได้กับจอที่วางทางซ้ายหรือเหนือจอหลัก","Initial window size in pixels.":"ขนาดหน้าต่างเริ่มต้นเป็นพิกเซล","Inject a local CSS file for advanced styling.":"แทรกไฟล์ CSS ในเครื่องเพื่อปรับแต่งขั้นสูง","Inspiration":"ไอเดียสร้างสรรค์","Install and open the":"ติดตั้งและเปิด","It only shows a message after you select one in the Dock.":"จะแสดงข้อความต่อเมื่อคุณเลือกข้อความในแผงด็อก","Keep It On Your Monitor, Not On The Stream":"แสดงบนจอของคุณ โดยไม่ออกสตรีม","Keep Social Stream chat visible on your monitor without automatically putting it on the stream.":"มองเห็นแชต Social Stream บนจอของคุณ โดยไม่ส่งขึ้นสตรีมอัตโนมัติ","Leave OBS's":"ให้ตัวเลือกของ OBS","Leave it off unless a page specifically needs screen capture or another elevated Electron feature.":"ปิดไว้ เว้นแต่หน้านั้นจำเป็นต้องจับภาพหน้าจอหรือใช้ฟีเจอร์ Electron ที่มีสิทธิ์สูงอื่นโดยเฉพาะ","Limit the number of retained messages on supported pages.":"จำกัดจำนวนข้อความที่เก็บไว้ในหน้าที่รองรับ","Main navigation":"เมนูหลัก","Make UnClickable":"ทำให้คลิกไม่ได้ (Make UnClickable)","Make a short local recording and watch it back before going live. Capture methods and games differ.":"บันทึกวิดีโอสั้น ๆ ในเครื่องและเปิดดูซ้ำก่อนเริ่มไลฟ์ วิธีจับภาพและเกมแต่ละแบบต่างกัน","Make sure it includes":"ตรวจสอบว่ามี","Method 1: Social Stream Standalone App":"วิธีที่ 1: แอป Social Stream แบบแยก","Method 2: Electron Capture":"วิธีที่ 2: Electron Capture","Move and resize it, then enable":"ย้ายและปรับขนาด แล้วเปิด","Move and size the window before locking it. Right-click the overlay for size presets and select":"ย้ายและปรับขนาดหน้าต่างก่อนล็อก คลิกขวาโอเวอร์เลย์เพื่อเลือกขนาดที่ตั้งไว้ แล้วเลือก","No reliable system-wide transparency or mouse click-through.":"ไม่มีความโปร่งใสหรือการคลิกเมาส์ทะลุทั่วทั้งระบบที่เชื่อถือได้","Normal browser or OBS only":"เบราว์เซอร์ปกติหรือ OBS เท่านั้น","OBS Game Capture is Windows-only. If your setup must capture the entire display, the on-screen overlay will also be captured. Use a separate monitor or a window/application capture method that excludes the overlay, then verify with a recording.":"OBS Game Capture ใช้ได้เฉพาะ Windows หากการตั้งค่าของคุณต้องจับภาพทั้งจอ โอเวอร์เลย์บนจอจะถูกจับด้วย ใช้จอแยกหรือวิธีจับภาพหน้าต่าง/แอปที่ไม่รวมโอเวอร์เลย์ แล้วตรวจสอบด้วยการบันทึกวิดีโอ","OBS captures the game/window, not the entire display.":"OBS จับภาพเกม/หน้าต่าง ไม่ใช่ทั้งจอ","On Windows, prefer an OBS":"บน Windows แนะนำให้ใช้แหล่ง OBS","On-Screen Chat Overlay While Gaming - Social Stream Ninja":"โอเวอร์เลย์แชตบนหน้าจอขณะเล่นเกม - Social Stream Ninja","On-Screen Chat While Gaming":"แชตบนหน้าจอขณะเล่นเกม","Open its options and enable":"เปิดตัวเลือกแล้วเปิดใช้","Open navigation menu":"เปิดเมนูนำทาง","Open the URL in Electron Capture.":"เปิด URL ใน Electron Capture","Option":"ตัวเลือก","Overlay Customization guide":"คู่มือการปรับแต่งโอเวอร์เลย์","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Positioning tip:":"เคล็ดลับจัดตำแหน่ง:","Purpose":"วัตถุประสงค์","Quick Checklist":"รายการตรวจสอบอย่างรวดเร็ว","Reload the focused overlay window.":"โหลดหน้าต่างโอเวอร์เลย์ที่มีโฟกัสใหม่","Remove the page background and request a transparent desktop window.":"เอาพื้นหลังหน้าออกและขอหน้าต่างเดสก์ท็อปโปร่งใส","Right-click an SSApp overlay window to resize, pin, or make it click-through. Set click-through last so you do not lock yourself out while positioning it.":"คลิกขวาหน้าต่างโอเวอร์เลย์ SSApp เพื่อปรับขนาด ปักด้านบน หรือเปิดคลิกทะลุ ตั้งคลิกทะลุเป็นขั้นสุดท้าย เพื่อไม่ให้โต้ตอบไม่ได้ระหว่างจัดตำแหน่ง","Right-click its window and enable":"คลิกขวาที่หน้าต่างแล้วเปิด","Run a separate Electron Capture process when you need more than one independent overlay.":"รัน Electron Capture เป็นโปรเซสแยก เมื่อต้องการโอเวอร์เลย์อิสระมากกว่าหนึ่งอัน","SSApp Hotkeys":"ปุ่มลัด SSApp","SSApp overlay right-click menu showing Resize window, Always on top, and Make UnClickable until in-focus with the Ctrl Shift Alt X hotkey":"เมนูคลิกขวาโอเวอร์เลย์ SSApp ที่แสดง Resize window, Always on top และ Make UnClickable until in-focus พร้อมปุ่มลัด Ctrl Shift Alt X","Scale supported overlays down without changing window size.":"ย่อโอเวอร์เลย์ที่รองรับโดยไม่เปลี่ยนขนาดหน้าต่าง","See Electron Capture's":"ดูเอกสารของ Electron Capture","See Live Chat While Gaming! Transparent Overlay Guide":"ดูแชตสดขณะเล่นเกม! คู่มือโอเวอร์เลย์โปร่งใส","Show a private Social Stream Ninja chat overlay over a game using the standalone desktop app or Electron Capture, with transparency, click-through hotkeys, command-line examples, and OBS capture notes.":"แสดงโอเวอร์เลย์แชต Social Stream Ninja ส่วนตัวเหนือเกมด้วยแอปเดสก์ท็อปแบบแยกหรือ Electron Capture พร้อมความโปร่งใส ปุ่มลัดคลิกทะลุ ตัวอย่างบรรทัดคำสั่ง และหมายเหตุการจับภาพ OBS","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja featured chat message positioned over a simulated gameplay scene":"ข้อความแชตเด่น Social Stream Ninja ที่วางบนฉากเกมจำลอง","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja standalone app":"แอป Social Stream Ninja แบบแยก","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja สัญญาอนุญาต GPLv3.0","Social Stream can sit above a game as a transparent, always-on-top window. This is a separate desktop window, not a game HUD injection.":"Social Stream วางเหนือเกมเป็นหน้าต่างโปร่งใสที่อยู่ด้านบนเสมอได้ นี่เป็นหน้าต่างเดสก์ท็อปแยก ไม่ใช่การแทรก HUD เข้าเกม","Social Stream standalone app":"แอป Social Stream แบบแยก","Some games and anti-cheat systems restrict overlays.":"บางเกมและระบบป้องกันการโกงจำกัดโอเวอร์เลย์","Start always-on-top.":"เริ่มโดยอยู่ด้านบนเสมอ","Start in click-through mode. Remember the recovery hotkey before using it.":"เริ่มในโหมดคลิกทะลุ จำปุ่มลัดกู้การโต้ตอบไว้ก่อนใช้","Streaming Chat":"แชตสตรีม (Streaming Chat)","Streaming Chat / Dock:":"Streaming Chat / แผงด็อก:","Support":"การสนับสนุน","Supported Sites":"เว็บไซต์ที่รองรับ","Switch theme":"เปลี่ยนธีม","Template or custom overlay:":"เทมเพลตหรือโอเวอร์เลย์กำหนดเอง:","The URL contains":"URL มี","The chat should appear on the broadcast rather than privately on your monitor.":"ต้องการให้แชตปรากฏในการถ่ายทอดสดแทนการแสดงส่วนตัวบนจอ","The complete Social Stream overlay URL. Quote it because it contains":"URL โอเวอร์เลย์ Social Stream แบบเต็ม ใส่อัญประกาศครอบเพราะมี","The desktop app must stay open.":"ต้องเปิดแอปเดสก์ท็อปค้างไว้","The desktop wrapper is pinned above the game.":"หน้าต่างแอปเดสก์ท็อปที่ครอบหน้าเว็บถูกปักไว้เหนือเกม","The game uses borderless or windowed fullscreen if exclusive fullscreen hides the overlay.":"เกมใช้โหมดไร้ขอบหรือเต็มหน้าจอแบบหน้าต่าง หากเต็มหน้าจอเฉพาะซ่อนโอเวอร์เลย์","The overlay URL uses the correct session ID.":"URL โอเวอร์เลย์ใช้รหัสเซสชันถูกต้อง","The overlay stays private only when your streaming software captures the game or game window rather than the whole monitor.":"โอเวอร์เลย์จะเป็นส่วนตัวเฉพาะเมื่อซอฟต์แวร์สตรีมจับภาพเกมหรือหน้าต่างเกม แทนการจับภาพทั้งจอ","The portable Windows build is the simplest version to automate. Replace":"รุ่นพกพาสำหรับ Windows ทำระบบอัตโนมัติได้ง่ายที่สุด แทนที่","The session must match.":"เซสชันต้องตรงกัน","This older video shows the transparent, always-on-top, click-through chat setup. The app interface may look different in current versions.":"วิดีโอเก่านี้แสดงวิธีตั้งค่าแชตโปร่งใส อยู่ด้านบนเสมอ และคลิกทะลุ หน้าตาแอปในรุ่นปัจจุบันอาจต่างออกไป","Toggle mouse click-through so you can interact with the overlay again.":"สลับการคลิกเมาส์ทะลุเพื่อให้โต้ตอบกับโอเวอร์เลย์ได้อีกครั้ง","Transparency varies by operating system and graphics setup.":"ความโปร่งใสขึ้นอยู่กับระบบปฏิบัติการและการตั้งค่ากราฟิก","Transparent popup windows, always-on-top, resizing, and click-through.":"หน้าต่างป๊อปอัปโปร่งใส อยู่ด้านบนเสมอ ปรับขนาด และคลิกทะลุ","URL Option":"ตัวเลือก URL","Update the desktop app and graphics driver if a transparent area appears white or black.":"อัปเดตแอปเดสก์ท็อปและไดรเวอร์กราฟิก หากพื้นที่โปร่งใสแสดงเป็นสีขาวหรือดำ","Use":"ใช้","Use a denser Dock layout.":"ใช้เลย์เอาต์แผงด็อกที่กระชับขึ้น","Use the":"ใช้","Use the recovery hotkey before trying to right-click the window again.":"ใช้ปุ่มลัดกู้การโต้ตอบก่อนลองคลิกขวาหน้าต่างอีกครั้ง","Use the same session ID as your active Social Stream setup. In the Social Stream settings panel, open the options for the view you chose and enable":"ใช้รหัสเซสชันเดียวกับ Social Stream ที่กำลังทำงาน ในแผงการตั้งค่า Social Stream เปิดตัวเลือกของมุมมองที่เลือกแล้วเปิด","Useful Overlay URL Options":"ตัวเลือก URL โอเวอร์เลย์ที่มีประโยชน์","Video Walkthrough":"วิดีโอสาธิต","What It Adds":"สิ่งที่เพิ่มเข้ามา","When placement is finished, right-click it again and select":"เมื่อจัดตำแหน่งเสร็จ คลิกขวาอีกครั้งแล้วเลือก","Windows / Linux":"Windows / Linux","Yes, With A Desktop Overlay Window":"ทำได้ ด้วยหน้าต่างโอเวอร์เลย์เดสก์ท็อป","You already capture chat in SSApp and want the shortest setup.":"คุณเก็บแชตใน SSApp อยู่แล้วและต้องการตั้งค่าให้น้อยที่สุด","You need a desktop wrapper.":"คุณต้องมีแอปเดสก์ท็อปครอบหน้าเว็บ","You want exact size and position, reusable launch commands, or a dedicated overlay wrapper.":"คุณต้องการขนาดและตำแหน่งที่แน่นอน คำสั่งเปิดที่ใช้ซ้ำได้ หรือแอปครอบโอเวอร์เลย์โดยเฉพาะ","and":"และ","and adjust the size and position for your display.":"แล้วปรับขนาดและตำแหน่งให้เหมาะกับจอ","characters.":"อักขระ","complete command-line reference":"เอกสารอ้างอิงบรรทัดคำสั่งฉบับเต็ม","for additional parameters.":"สำหรับพารามิเตอร์เพิ่มเติม","for this workflow. It captures the entire monitor, including the chat overlay.":"สำหรับขั้นตอนนี้ เพราะจะจับภาพทั้งจอ รวมโอเวอร์เลย์แชตด้วย","from inside the standalone app":"จากภายในแอปแบบแยก","if viewers should not see it.":"หากไม่ต้องการให้ผู้ชมเห็น","is a separate free, open-source app that can wrap a Social Stream URL in a transparent desktop window. It is often the easier option when you only want a dedicated overlay window.":"เป็นแอปโอเพนซอร์สฟรีแยกต่างหากที่ครอบ URL Social Stream ในหน้าต่างเดสก์ท็อปโปร่งใสได้ มักเป็นตัวเลือกที่ง่ายกว่าเมื่อต้องการแค่หน้าต่างโอเวอร์เลย์โดยเฉพาะ","is not needed for a normal Social Stream overlay.":"ไม่จำเป็นสำหรับโอเวอร์เลย์ Social Stream ปกติ","macOS":"macOS","macOS And Linux":"macOS และ Linux","macOS and Linux limitation:":"ข้อจำกัดของ macOS และ Linux:","mode hides its scrollbar.":"ซ่อนแถบเลื่อน","on macOS) to toggle click-through later.":"บน macOS) เพื่อสลับคลิกทะลุภายหลัง","option off unless you have tested that it does not include this window.":"ปิดอยู่ เว้นแต่ทดสอบแล้วว่าไม่รวมหน้าต่างนี้","options for exact placement.":"เพื่อตั้งตำแหน่งอย่างแม่นยำ","or":"หรือ","shows one message selected from the Dock. Use this when you only want highlighted messages.":"แสดงหนึ่งข้อความที่เลือกจากแผงด็อก ใช้เมื่อต้องการเฉพาะข้อความที่เน้น","shows the ongoing combined chat. This is usually the best choice while gaming.":"แสดงแชตรวมต่อเนื่อง โดยทั่วไปเป็นตัวเลือกที่ดีที่สุดขณะเล่นเกม","source targeting the game.":"ที่ตั้งเป้าไปยังเกม","standalone desktop app":"แอปเดสก์ท็อปแบบแยก","transparent areas can be hard to grab. Keep the Dock menu visible while positioning it, use your operating system's window movement shortcuts, or use Electron Capture's":"พื้นที่โปร่งใสอาจลากได้ยาก เปิดเมนูแผงด็อกไว้ขณะจัดตำแหน่ง ใช้ปุ่มลัดย้ายหน้าต่างของระบบปฏิบัติการ หรือใช้ตัวเลือก Electron Capture","works too, as long as the page supports a transparent background.":"ก็ใช้ได้ ตราบใดที่หน้ารองรับพื้นหลังโปร่งใส"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/on-screen-chat-overlay.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก"><a href="../index.html">หน้าแรก</a><a href="features.html">ฟีเจอร์</a><a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a><a href="download.html">ดาวน์โหลด</a><a href="guides.html">คู่มือ</a><a href="commands.html">คำสั่งและ API</a><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a><a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a><a href="services.html" class="site-priority-hire">จ้างงาน</a><a href="support.html">การสนับสนุน</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/on-screen-chat-overlay.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/on-screen-chat-overlay.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/on-screen-chat-overlay.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/on-screen-chat-overlay.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/on-screen-chat-overlay.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/on-screen-chat-overlay.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/on-screen-chat-overlay.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/on-screen-chat-overlay.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/on-screen-chat-overlay.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/on-screen-chat-overlay.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/on-screen-chat-overlay.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/on-screen-chat-overlay.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/on-screen-chat-overlay.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/on-screen-chat-overlay.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/on-screen-chat-overlay.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/on-screen-chat-overlay.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="on-screen-chat-overlay.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="เปลี่ยนธีม"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>แชตบนหน้าจอขณะเล่นเกม</h1>
+            <p>มองเห็นแชต Social Stream บนจอของคุณ โดยไม่ส่งขึ้นสตรีมอัตโนมัติ</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>ทำได้ ด้วยหน้าต่างโอเวอร์เลย์เดสก์ท็อป</h2>
+                <p>Social Stream วางเหนือเกมเป็นหน้าต่างโปร่งใสที่อยู่ด้านบนเสมอได้ นี่เป็นหน้าต่างเดสก์ท็อปแยก ไม่ใช่การแทรก HUD เข้าเกม</p>
+                <div class="guide-note">
+                    <p><strong>คุณต้องมีแอปเดสก์ท็อปครอบหน้าเว็บ</strong> ใช้ <a href="download.html">แอป Social Stream Ninja แบบแยก</a> หรือ <a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a> ส่วนขยายเบราว์เซอร์และแหล่งเบราว์เซอร์ OBS ไม่สามารถสร้างหน้าต่างคลิกทะลุทั่วทั้งระบบได้เอง</p>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>ตัวเลือก</th><th>เหมาะเมื่อ</th><th>สิ่งที่เพิ่มเข้ามา</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Option">แอป Social Stream แบบแยก</td>
+                            <td data-label="Best When">คุณเก็บแชตใน SSApp อยู่แล้วและต้องการตั้งค่าให้น้อยที่สุด</td>
+                            <td data-label="What It Adds">หน้าต่างป๊อปอัปโปร่งใส อยู่ด้านบนเสมอ ปรับขนาด และคลิกทะลุ</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Option">Electron Capture</td>
+                            <td data-label="Best When">คุณต้องการขนาดและตำแหน่งที่แน่นอน คำสั่งเปิดที่ใช้ซ้ำได้ หรือแอปครอบโอเวอร์เลย์โดยเฉพาะ</td>
+                            <td data-label="What It Adds">ความโปร่งใสไร้กรอบ ปักด้านบน คลิกทะลุ เลือกจอ และควบคุมด้วยบรรทัดคำสั่ง</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Option">เบราว์เซอร์ปกติหรือ OBS เท่านั้น</td>
+                            <td data-label="Best When">ต้องการให้แชตปรากฏในการถ่ายทอดสดแทนการแสดงส่วนตัวบนจอ</td>
+                            <td data-label="What It Adds">ไม่มีความโปร่งใสหรือการคลิกเมาส์ทะลุทั่วทั้งระบบที่เชื่อถือได้</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>วิดีโอสาธิต</h2>
+                <p>วิดีโอเก่านี้แสดงวิธีตั้งค่าแชตโปร่งใส อยู่ด้านบนเสมอ และคลิกทะลุ หน้าตาแอปในรุ่นปัจจุบันอาจต่างออกไป</p>
+                <div class="video-container">
+                    <iframe
+                        src="https://www.youtube.com/embed/bMVVof_L0sI"
+                        title="ดูแชตสดขณะเล่นเกม! คู่มือโอเวอร์เลย์โปร่งใส"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>เลือกมุมมองแชต</h2>
+                <ul class="guide-list">
+                    <li><strong>Streaming Chat / แผงด็อก:</strong> แสดงแชตรวมต่อเนื่อง โดยทั่วไปเป็นตัวเลือกที่ดีที่สุดขณะเล่นเกม</li>
+                    <li><strong>โอเวอร์เลย์ Featured Chat:</strong> แสดงหนึ่งข้อความที่เลือกจากแผงด็อก ใช้เมื่อต้องการเฉพาะข้อความที่เน้น</li>
+                    <li><strong>เทมเพลตหรือโอเวอร์เลย์กำหนดเอง:</strong> ก็ใช้ได้ ตราบใดที่หน้ารองรับพื้นหลังโปร่งใส</li>
+                </ul>
+                <p>ใช้รหัสเซสชันเดียวกับ Social Stream ที่กำลังทำงาน ในแผงการตั้งค่า Social Stream เปิดตัวเลือกของมุมมองที่เลือกแล้วเปิด <strong>บังคับพื้นหลังโปร่งใส</strong> URL ที่สร้างควรมี <code>transparent</code>.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/on-screen-overlay-preview.png" alt="ข้อความแชตเด่น Social Stream Ninja ที่วางบนฉากเกมจำลอง" class="guide-image">
+                    <figcaption>ตัวอย่างตำแหน่งที่ใช้โอเวอร์เลย์ Featured Chat ของ SSApp จริงวางบนฉากเกมจำลอง URL แผงด็อกใช้แสดงแชตต่อเนื่องทั้งหมดแทนได้</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>วิธีที่ 1: แอป Social Stream แบบแยก</h2>
+                <ol class="guide-steps">
+                    <li>ติดตั้งและเปิด <a href="download.html">แอปเดสก์ท็อปแบบแยก</a> เปิดใช้แหล่งแชตตามปกติ</li>
+                    <li>ในแผงการตั้งค่า Social Stream หา <strong>แชตสตรีม (Streaming Chat)</strong> หรือ <strong>โอเวอร์เลย์แชตไฮไลต์</strong>.</li>
+                    <li>เปิดตัวเลือกแล้วเปิดใช้ <strong>บังคับพื้นหลังโปร่งใส</strong>.</li>
+                    <li>คลิกลิงก์ Dock หรือ Featured ที่สร้าง <strong>จากภายในแอปแบบแยก</strong> SSApp เปิดเป็นหน้าต่างโอเวอร์เลย์แยกของตัวเอง</li>
+                    <li>ย้ายและปรับขนาดหน้าต่างก่อนล็อก คลิกขวาโอเวอร์เลย์เพื่อเลือกขนาดที่ตั้งไว้ แล้วเลือก <strong>อยู่ด้านบนเสมอ (Always on top)</strong>.</li>
+                    <li>เมื่อจัดตำแหน่งเสร็จ คลิกขวาอีกครั้งแล้วเลือก <strong>ทำให้คลิกไม่ได้ (Make UnClickable)</strong> คลิกเมาส์จะทะลุไปถึงเกม</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/ssapp-on-screen-overlay-menu.png" alt="เมนูคลิกขวาโอเวอร์เลย์ SSApp ที่แสดง Resize window, Always on top และ Make UnClickable until in-focus พร้อมปุ่มลัด Ctrl Shift Alt X" class="guide-image">
+                    <figcaption>คลิกขวาหน้าต่างโอเวอร์เลย์ SSApp เพื่อปรับขนาด ปักด้านบน หรือเปิดคลิกทะลุ ตั้งคลิกทะลุเป็นขั้นสุดท้าย เพื่อไม่ให้โต้ตอบไม่ได้ระหว่างจัดตำแหน่ง</figcaption>
+                </figure>
+                <h3>ปุ่มลัด SSApp</h3>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Windows / Linux</th><th>macOS</th><th>การดำเนินการ</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+X</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+X</code></td>
+                            <td data-label="Action">สลับการคลิกเมาส์ทะลุเพื่อให้โต้ตอบกับโอเวอร์เลย์ได้อีกครั้ง</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+R</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+R</code></td>
+                            <td data-label="Action">โหลดหน้าต่างโอเวอร์เลย์ที่มีโฟกัสใหม่</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="guide-note">
+                    <p><strong>เคล็ดลับจัดตำแหน่ง:</strong> พื้นที่โปร่งใสอาจลากได้ยาก เปิดเมนูแผงด็อกไว้ขณะจัดตำแหน่ง ใช้ปุ่มลัดย้ายหน้าต่างของระบบปฏิบัติการ หรือใช้ตัวเลือก Electron Capture <code>--x</code> และ <code>--y</code> เพื่อตั้งตำแหน่งอย่างแม่นยำ</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>วิธีที่ 2: Electron Capture</h2>
+                <p><a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a> เป็นแอปโอเพนซอร์สฟรีแยกต่างหากที่ครอบ URL Social Stream ในหน้าต่างเดสก์ท็อปโปร่งใสได้ มักเป็นตัวเลือกที่ง่ายกว่าเมื่อต้องการแค่หน้าต่างโอเวอร์เลย์โดยเฉพาะ</p>
+                <ol class="guide-steps">
+                    <li>คัดลอก URL แผงด็อก Featured เทมเพลต หรือโอเวอร์เลย์กำหนดเองของ Social Stream ที่สร้างไว้</li>
+                    <li>ตรวจสอบว่ามี <code>&amp;transparent</code> หาก URL ยังไม่มีเครื่องหมายคำถาม ให้ใช้ <code>?transparent</code>.</li>
+                    <li>เปิด URL ใน Electron Capture</li>
+                    <li>คลิกขวาที่หน้าต่างแล้วเปิด <strong>อยู่ด้านบนเสมอ (Always on top)</strong>.</li>
+                    <li>ย้ายและปรับขนาด แล้วเปิด <strong>ทำให้คลิกไม่ได้ (Make UnClickable)</strong>.</li>
+                    <li>ใช้ <code>Ctrl+Shift+Alt+X</code> (หรือ <code>Command+Shift+Option+X</code> บน macOS) เพื่อสลับคลิกทะลุภายหลัง</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/electron-capture-overlay-features.png" alt="การ์ดฟีเจอร์ Electron Capture สำหรับ Pin on Top, Frameless Window, Transparency Support, Click-Through Mode, Auto Screen Capture และ Game and App Capture" class="guide-image">
+                    <figcaption>Electron Capture มีตัวควบคุมปักไว้ด้านบน ความโปร่งใสแบบไร้กรอบ และคลิกทะลุ ซึ่งจำเป็นสำหรับโอเวอร์เลย์ส่วนตัวบนหน้าจอ</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>เรียก Electron Capture ผ่านบรรทัดคำสั่ง</h2>
+                <p>รุ่นพกพาสำหรับ Windows ทำระบบอัตโนมัติได้ง่ายที่สุด แทนที่ <code>YOUR_SESSION_ID</code> แล้วปรับขนาดและตำแหน่งให้เหมาะกับจอ</p>
+
+                <h3>แผงด็อกแชตต่อเนื่อง</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;transparent&amp;compact&amp;hidemenu" --width=520 --height=760 --x=1380 --y=80 --pin --unclickable --title="SSN Chat"</code></pre>
+
+                <h3>เฉพาะแชตเด่น</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID&amp;transparent" --width=700 --height=500 --x=1160 --y=80 --pin --unclickable --title="SSN Featured"</code></pre>
+
+                <h3>macOS และ Linux</h3>
+                <pre><code># macOS
+"/Applications/elecap.app/Contents/MacOS/elecap" --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable
+
+# Linux AppImage; replace the filename with the version you downloaded
+./elecap-VERSION-x86_64.AppImage --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable</code></pre>
+
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>ตัวเลือก</th><th>วัตถุประสงค์</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Option"><code>--url</code></td><td data-label="Purpose">URL โอเวอร์เลย์ Social Stream แบบเต็ม ใส่อัญประกาศครอบเพราะมี <code>&amp;</code> อักขระ</td></tr>
+                        <tr><td data-label="Option"><code>--width</code>, <code>--height</code></td><td data-label="Purpose">ขนาดหน้าต่างเริ่มต้นเป็นพิกเซล</td></tr>
+                        <tr><td data-label="Option"><code>--x</code>, <code>--y</code></td><td data-label="Purpose">ตำแหน่งเริ่มต้นในเดสก์ท็อปเสมือน พิกัดติดลบอาจใช้ได้กับจอที่วางทางซ้ายหรือเหนือจอหลัก</td></tr>
+                        <tr><td data-label="Option"><code>--monitor=0</code></td><td data-label="Purpose">เลือกจอด้วยดัชนีเริ่มที่ศูนย์ เมื่อใช้หมายเลขจอง่ายกว่าพิกัดเดสก์ท็อป</td></tr>
+                        <tr><td data-label="Option"><code>--pin</code></td><td data-label="Purpose">เริ่มโดยอยู่ด้านบนเสมอ</td></tr>
+                        <tr><td data-label="Option"><code>--unclickable</code></td><td data-label="Purpose">เริ่มในโหมดคลิกทะลุ จำปุ่มลัดกู้การโต้ตอบไว้ก่อนใช้</td></tr>
+                        <tr><td data-label="Option"><code>--css="C:\path\chat.css"</code></td><td data-label="Purpose">แทรกไฟล์ CSS ในเครื่องเพื่อปรับแต่งขั้นสูง</td></tr>
+                        <tr><td data-label="Option"><code>--multiinstance</code></td><td data-label="Purpose">รัน Electron Capture เป็นโปรเซสแยก เมื่อต้องการโอเวอร์เลย์อิสระมากกว่าหนึ่งอัน</td></tr>
+                    </tbody>
+                </table>
+                <p>ดูเอกสารของ Electron Capture <a href="https://electroncapture.app/command-line.html" target="_blank" rel="noopener">เอกสารอ้างอิงบรรทัดคำสั่งฉบับเต็ม</a> สำหรับพารามิเตอร์เพิ่มเติม</p>
+                <div class="guide-note">
+                    <p><strong><code>--node</code> ไม่จำเป็นสำหรับโอเวอร์เลย์ Social Stream ปกติ</strong> ปิดไว้ เว้นแต่หน้านั้นจำเป็นต้องจับภาพหน้าจอหรือใช้ฟีเจอร์ Electron ที่มีสิทธิ์สูงอื่นโดยเฉพาะ</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>ตัวเลือก URL โอเวอร์เลย์ที่มีประโยชน์</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>ตัวเลือก URL</th><th>ใช้</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="URL Option"><code>transparent</code></td><td data-label="Use">เอาพื้นหลังหน้าออกและขอหน้าต่างเดสก์ท็อปโปร่งใส</td></tr>
+                        <tr><td data-label="URL Option"><code>compact</code></td><td data-label="Use">ใช้เลย์เอาต์แผงด็อกที่กระชับขึ้น</td></tr>
+                        <tr><td data-label="URL Option"><code>hidemenu</code></td><td data-label="Use">ซ่อนแถบเครื่องมือแผงด็อกหลังตั้งค่า</td></tr>
+                        <tr><td data-label="URL Option"><code>scale=0.85</code></td><td data-label="Use">ย่อโอเวอร์เลย์ที่รองรับโดยไม่เปลี่ยนขนาดหน้าต่าง</td></tr>
+                        <tr><td data-label="URL Option"><code>limit=15</code></td><td data-label="Use">จำกัดจำนวนข้อความที่เก็บไว้ในหน้าที่รองรับ</td></tr>
+                        <tr><td data-label="URL Option"><code>hidesource</code></td><td data-label="Use">ซ่อนป้ายหรือไอคอนแพลตฟอร์มต้นทางในแผงด็อก</td></tr>
+                        <tr><td data-label="URL Option"><code>chroma=0000</code></td><td data-label="Use">โหมดพื้นหลังโปร่งใสทางเลือก มีประโยชน์เมื่อโหมดปกติของแผงด็อก <code>transparent</code> ซ่อนแถบเลื่อน</td></tr>
+                    </tbody>
+                </table>
+                <p>สำหรับเทมเพลต CSS กำหนดเอง ฟอนต์ และตัวควบคุม URL เพิ่มเติม ดู <a href="overlay-customization-guide.html">คู่มือการปรับแต่งโอเวอร์เลย์</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>แสดงบนจอของคุณ โดยไม่ออกสตรีม</h2>
+                <p>โอเวอร์เลย์จะเป็นส่วนตัวเฉพาะเมื่อซอฟต์แวร์สตรีมจับภาพเกมหรือหน้าต่างเกม แทนการจับภาพทั้งจอ</p>
+                <ol class="guide-steps">
+                    <li><strong>อย่าเพิ่ม URL โอเวอร์เลย์นี้เป็นแหล่งเบราว์เซอร์ OBS</strong> หากไม่ต้องการให้ผู้ชมเห็น</li>
+                    <li>บน Windows แนะนำให้ใช้แหล่ง OBS <a href="https://obsproject.com/kb/game-capture-source" target="_blank" rel="noopener">จับภาพเกม (Game Capture)</a> ที่ตั้งเป้าไปยังเกม</li>
+                    <li>ให้ตัวเลือกของ OBS <strong>จับภาพโอเวอร์เลย์ของบุคคลที่สาม เช่น Steam (Capture third-party overlays)</strong> ปิดอยู่ เว้นแต่ทดสอบแล้วว่าไม่รวมหน้าต่างนี้</li>
+                    <li>หลีกเลี่ยง <a href="https://obsproject.com/kb/display-capture-sources" target="_blank" rel="noopener">จับภาพจอ (Display Capture)</a> สำหรับขั้นตอนนี้ เพราะจะจับภาพทั้งจอ รวมโอเวอร์เลย์แชตด้วย</li>
+                    <li>บันทึกวิดีโอสั้น ๆ ในเครื่องและเปิดดูซ้ำก่อนเริ่มไลฟ์ วิธีจับภาพและเกมแต่ละแบบต่างกัน</li>
+                </ol>
+                <div class="warning-note">
+                    <p><strong>ข้อจำกัดของ macOS และ Linux:</strong> OBS Game Capture ใช้ได้เฉพาะ Windows หากการตั้งค่าของคุณต้องจับภาพทั้งจอ โอเวอร์เลย์บนจอจะถูกจับด้วย ใช้จอแยกหรือวิธีจับภาพหน้าต่าง/แอปที่ไม่รวมโอเวอร์เลย์ แล้วตรวจสอบด้วยการบันทึกวิดีโอ</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>ข้อจำกัดสำคัญ</h2>
+                <ul class="guide-list">
+                    <li><strong>โหมดไร้ขอบหรือเต็มหน้าจอแบบหน้าต่างเป็นโหมดเกมที่เชื่อถือได้สำหรับงานนี้</strong> เกมแบบเต็มหน้าจอเฉพาะอาจบังหน้าต่างเดสก์ท็อปปกติทั้งหมด รวมถึงโอเวอร์เลย์ที่ตั้งให้อยู่ด้านบนเสมอ</li>
+                    <li><strong>ต้องเปิดแอปเดสก์ท็อปค้างไว้</strong> การปิด SSApp หรือ Electron Capture จะปิดโอเวอร์เลย์ในเครื่อง</li>
+                    <li><strong>เซสชันต้องตรงกัน</strong> URL ของแผงด็อกหรือ Featured ที่ใช้รหัสเซสชันผิดจะว่าง</li>
+                    <li><strong>Featured Chat ไม่ใช่ฟีดทั้งหมด</strong> จะแสดงข้อความต่อเมื่อคุณเลือกข้อความในแผงด็อก</li>
+                    <li><strong>โหมดคลิกทะลุปิดการโต้ตอบด้วยเมาส์</strong> ใช้ปุ่มลัดกู้การโต้ตอบก่อนลองคลิกขวาหน้าต่างอีกครั้ง</li>
+                    <li><strong>บางเกมและระบบป้องกันการโกงจำกัดโอเวอร์เลย์</strong> อย่าพยายามข้ามระบบรักษาความปลอดภัยของเกม</li>
+                    <li><strong>ความโปร่งใสขึ้นอยู่กับระบบปฏิบัติการและการตั้งค่ากราฟิก</strong> อัปเดตแอปเดสก์ท็อปและไดรเวอร์กราฟิก หากพื้นที่โปร่งใสแสดงเป็นสีขาวหรือดำ</li>
+                    <li><strong>การจับภาพจอรวมสิ่งที่คุณมองเห็น</strong> หากซอฟต์แวร์จับภาพของคุณแยกเกมออกจากทั้งจอไม่ได้ ก็ไม่สามารถรับประกันว่าโอเวอร์เลย์นี้จะเป็นส่วนตัว</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>รายการตรวจสอบอย่างรวดเร็ว</h2>
+                <ol class="guide-steps">
+                    <li>แชตกำลังเข้าถึง Social Stream</li>
+                    <li>URL โอเวอร์เลย์ใช้รหัสเซสชันถูกต้อง</li>
+                    <li>URL มี <code>transparent</code>.</li>
+                    <li>หน้าต่างแอปเดสก์ท็อปที่ครอบหน้าเว็บถูกปักไว้เหนือเกม</li>
+                    <li>เปิดโหมดคลิกทะลุหลังจัดตำแหน่งเสร็จเท่านั้น</li>
+                    <li>เกมใช้โหมดไร้ขอบหรือเต็มหน้าจอแบบหน้าต่าง หากเต็มหน้าจอเฉพาะซ่อนโอเวอร์เลย์</li>
+                    <li>OBS จับภาพเกม/หน้าต่าง ไม่ใช่ทั้งจอ</li>
+                    <li>วิดีโอทดสอบยืนยันว่าผู้ชมไม่เห็นโอเวอร์เลย์ส่วนตัว</li>
+                </ol>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja สัญญาอนุญาต GPLv3.0</p>
+            </div>
+        </div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

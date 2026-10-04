@@ -1,0 +1,1860 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/th/docs/guides.html">
+    <meta property="og:title" content="คู่มือตั้งค่าแชต OBS และสตรีม - Social Stream Ninja">
+    <meta property="og:description" content="ตั้งค่า Social Stream Ninja ทีละขั้น ดูคู่มือแหล่งแชต โอเวอร์เลย์ OBS การแปลงข้อความเป็นเสียงพูด เครื่องมือ AI เกม และระบบอัตโนมัติสตรีม">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/th/docs/guides.html">
+    <meta name="twitter:title" content="คู่มือตั้งค่าแชต OBS และสตรีม - Social Stream Ninja">
+    <meta name="twitter:description" content="ตั้งค่า Social Stream Ninja ทีละขั้น ดูคู่มือแหล่งแชต โอเวอร์เลย์ OBS การแปลงข้อความเป็นเสียงพูด เครื่องมือ AI เกม และระบบอัตโนมัติสตรีม">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คู่มือตั้งค่าแชต OBS และสตรีม - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <meta name="description" content="ตั้งค่า Social Stream Ninja ทีละขั้น ดูคู่มือแหล่งแชต โอเวอร์เลย์ OBS การแปลงข้อความเป็นเสียงพูด เครื่องมือ AI เกม และระบบอัตโนมัติสตรีม">
+    <link rel="canonical" href="https://socialstream.ninja/th/docs/guides.html">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/guides.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{"\"Capture Stream Events\"":"\"จับอีเวนต์สตรีม (Capture Stream Events)\"","(optional) - allows donors to leave a message":"(ไม่บังคับ) - ให้ผู้บริจาคฝากข้อความได้","(required) - without this field, donations will be rejected":"(จำเป็น) - หากไม่มีช่องนี้ การบริจาคจะถูกปฏิเสธ",", any future expiry, any CVC.":", วันหมดอายุใดก็ได้ในอนาคต และ CVC ใดก็ได้",", enable":", เปิดใช้",", or":", หรือ",", while Spanish can use Piper":", ส่วนภาษาสเปนใช้ Piper ได้","- Allows viewers to change OBS scenes (with permission)":"- ให้ผู้ชมเปลี่ยนฉาก OBS (เมื่อมีสิทธิ์)","- Auto-features messages as they appear":"- นำข้อความมาแสดงเด่นอัตโนมัติเมื่อเข้ามา","- Auto-features messages as they appear (about 2 per 3 seconds)":"- นำข้อความมาแสดงเด่นอัตโนมัติเมื่อเข้ามา (ประมาณ 2 ข้อความต่อ 3 วินาที)","- Auto-greets viewers":"- ทักทายผู้ชมอัตโนมัติ","- Auto-hides selected messages after 20 seconds":"- ซ่อนข้อความที่เลือกอัตโนมัติหลัง 20 วินาที","- Centers featured messages on screen":"- จัดข้อความเด่นไว้กึ่งกลางจอ","- Doubles the size/resolution of all elements":"- เพิ่มขนาด/ความละเอียดทุกองค์ประกอบเป็นสองเท่า","- Enables dark mode for the dashboard":"- เปิดโหมดมืดสำหรับแดชบอร์ด","- Flows the message beside the name while keeping normal spacing":"- วางข้อความต่อข้างชื่อโดยคงระยะห่างปกติ","- Hides platform icons (YouTube, Twitch, etc.)":"- ซ่อนไอคอนแพลตฟอร์ม (YouTube, Twitch ฯลฯ)","- Makes featured messages fade in instead of popping up":"- ทำให้ข้อความเด่นค่อย ๆ ปรากฏแทนโผล่ทันที","- Makes featured messages swipe in from the left":"- ทำให้ข้อความเด่นเลื่อนเข้าจากซ้าย","- Removes spacing between name and message":"- ลบช่องว่างระหว่างชื่อกับข้อความ","- Sends a random geeky dad joke":"- ส่งมุกพ่อสายเนิร์ดแบบสุ่ม","- Shows the platform icons next to usernames":"- แสดงไอคอนแพลตฟอร์มข้างชื่อผู้ใช้",". For Kick reward sounds or media, use the":" สำหรับเสียงหรือสื่อรางวัล Kick ใช้",". It also explains which sources require the “Capture Stream Events” toggle, login permissions, or additional scopes to receive data.":" ยังอธิบายว่าแหล่งใดต้องเปิด “Capture Stream Events” มีสิทธิ์เข้าสู่ระบบ หรือขอบเขตสิทธิ์เพิ่มเติมเพื่อรับข้อมูล",". You can also report issues on the":" คุณรายงานปัญหาได้ที่","1. Installation":"1. ติดตั้ง","126 ideas for gaming, music, teaching, making, live sales, and community events.":"126 ไอเดียสำหรับเกม ดนตรี การสอน งานสร้างสรรค์ การขายสด และกิจกรรมชุมชน","2. Basic Setup":"2. ตั้งค่าพื้นฐาน","3. Connecting to Different Platforms":"3. เชื่อมต่อแพลตฟอร์มต่าง ๆ","4. Video Tutorial":"4. วิดีโอสอน","A blue debugging bar appears or automated responses don't work when trying to use bot commands or auto-responses.":"มีแถบดีบักสีน้ำเงิน หรือคำตอบอัตโนมัติไม่ทำงานเมื่อใช้คำสั่งบอตหรือระบบตอบอัตโนมัติ","AI And TTS":"AI และ TTS","AI Cohosts, Chat Bots, and Browser Companions":"ผู้ช่วยดำเนินรายการ AI แชตบอต และเพื่อนร่วมสนทนาในเบราว์เซอร์","AI chat bot setup":"ตั้งค่าแชตบอต AI","AI overlay builder":"ตัวสร้างโอเวอร์เลย์ AI","AI processing:":"การประมวลผล AI:","API key, voice selection, reading speed, and viewer volume in OBS.":"คีย์ API การเลือกเสียง ความเร็วอ่าน และระดับเสียงผู้ชมใน OBS","API project and OAuth setup.":"การตั้งค่าโปรเจกต์ API และ OAuth","API, commands, Event Flow, webhooks":"API คำสั่ง Event Flow และ webhook","Absolutely! Social Stream Ninja is designed to work perfectly with OBS Studio and other streaming software. Simply add the overlay URL as a browser source in your streaming software. You can customize the appearance using CSS directly in OBS or via URL parameters.":"ได้แน่นอน! Social Stream Ninja ออกแบบให้ใช้กับ OBS Studio และซอฟต์แวร์สตรีมอื่นได้ เพียงเพิ่ม URL โอเวอร์เลย์เป็นแหล่งเบราว์เซอร์ในซอฟต์แวร์สตรีม ปรับหน้าตาด้วย CSS โดยตรงใน OBS หรือผ่านพารามิเตอร์ URL ได้","Add":"เพิ่ม","Add CSS directly through the app's menu:":"เพิ่ม CSS โดยตรงผ่านเมนูแอป:","Add CSS directly through the extension menu:":"เพิ่ม CSS โดยตรงผ่านเมนูส่วนขยาย:","Add a \"Contains Keyword\" node to detect your command (e.g., \"!social\")":"เพิ่มโหนด \"Contains Keyword\" เพื่อตรวจคำสั่งของคุณ (เช่น \"!social\")","Add action nodes to respond (Send Chat, Play Audio, Display Overlay)":"เพิ่มโหนดการกระทำเพื่อตอบสนอง (Send Chat, Play Audio, Display Overlay)","Add custom fields to your payment link:":"เพิ่มช่องกำหนดเองลงในลิงก์ชำระเงิน:","Add it as a Browser Source in OBS (1920×1080 recommended)":"เพิ่มเป็นแหล่งเบราว์เซอร์ใน OBS (แนะนำ 1920×1080)","Add it to your donation platform's webhook configuration":"เพิ่มในการตั้งค่า webhook ของแพลตฟอร์มบริจาค","Add logic nodes to filter (Contains Keyword, User Role, etc.)":"เพิ่มโหนดตรรกะเพื่อกรอง (Contains Keyword, User Role ฯลฯ)","Add the Flow Actions URL as a browser source in OBS for audio/overlay actions to work. Find the URL in the app's \"Flow Actions\" section.":"เพิ่ม URL ของ Flow Actions เป็นแหล่งเบราว์เซอร์ใน OBS เพื่อให้การกระทำเสียง/โอเวอร์เลย์ทำงาน หา URL ได้ในส่วน \"Flow Actions\" ของแอป","Add the app's overlay URL as a Browser Source in OBS":"เพิ่ม URL โอเวอร์เลย์ของแอปเป็นแหล่งเบราว์เซอร์ใน OBS","Add the template URL as a browser source in OBS":"เพิ่ม URL เทมเพลตเป็นแหล่งเบราว์เซอร์ใน OBS","Add your overlay as a Browser Source in OBS":"เพิ่มโอเวอร์เลย์เป็นแหล่งเบราว์เซอร์ใน OBS","Adjust window transparency for overlay effects":"ปรับความโปร่งใสหน้าต่างเพื่อเอฟเฟกต์โอเวอร์เลย์","Advanced Features":"ฟีเจอร์ขั้นสูง","Advanced Features (Browser Extension)":"ฟีเจอร์ขั้นสูง (ส่วนขยายเบราว์เซอร์)","Advanced Features (Standalone App)":"ฟีเจอร์ขั้นสูง (แอปแยก)","Advanced support index":"ดัชนีความช่วยเหลือขั้นสูง","All overlay URLs, dock APIs, WebSocket commands, and automation hooks are documented in the":"URL โอเวอร์เลย์ API แผงด็อก คำสั่ง WebSocket และจุดเชื่อมระบบอัตโนมัติทั้งหมดอธิบายไว้ใน","All provider parameters and audio routing notes.":"พารามิเตอร์ผู้ให้บริการทั้งหมดและหมายเหตุการกำหนดเส้นทางเสียง","All public platform setup notes.":"หมายเหตุตั้งค่าแพลตฟอร์มสาธารณะทั้งหมด","Also disable":"ปิดเพิ่มด้วยสำหรับ","Alternative Approaches":"แนวทางอื่น","Any HTTP POST service":"บริการ HTTP POST ใดก็ได้","App-Specific Features":"ฟีเจอร์เฉพาะแอป","Apply CSS via OBS custom CSS or URL params like":"ใช้ CSS ผ่าน CSS กำหนดเองของ OBS หรือพารามิเตอร์ URL เช่น","Arrange windows so they're not minimized; even a small visible portion can prevent throttling.":"จัดหน้าต่างไม่ให้ย่อ แม้เห็นเพียงส่วนเล็ก ๆ ก็ช่วยป้องกันการลดการทำงานได้","Authentication Problems":"ปัญหาการยืนยันตัวตน","Auto, Standard, signer, polling, proxy modes.":"โหมด Auto, Standard, signer, polling และ proxy","Auto-Update:":"อัปเดตอัตโนมัติ:","Auto-responder works best with Chromium-based browsers (Chrome, Edge, Brave)":"ระบบตอบอัตโนมัติทำงานดีที่สุดกับเบราว์เซอร์ Chromium (Chrome, Edge, Brave)","Auto-responses work best with Chromium-based browsers. Chat windows must remain visible, and you must have permission to post on the platform.":"คำตอบอัตโนมัติทำงานดีที่สุดกับเบราว์เซอร์ Chromium หน้าต่างแชตต้องมองเห็นและคุณต้องมีสิทธิ์โพสต์บนแพลตฟอร์ม","Automatically receive the latest features and fixes":"รับฟีเจอร์และการแก้ไขล่าสุดอัตโนมัติ","Automation And Integrations":"ระบบอัตโนมัติและการเชื่อมต่อ","Available Actions:":"การกระทำที่ใช้ได้:","Avoids browser throttling issues":"หลีกเลี่ยงปัญหาเบราว์เซอร์ลดการทำงาน","Back up settings, update safely, and recover a session.":"สำรองการตั้งค่า อัปเดตอย่างปลอดภัย และกู้เซสชัน","Background Transparency:":"ความโปร่งใสพื้นหลัง:","Before you can use Social Stream Ninja, you'll need to install it first. There are multiple ways to install the browser extension:":"ก่อนใช้ Social Stream Ninja ต้องติดตั้งก่อน มีหลายวิธีติดตั้งส่วนขยายเบราว์เซอร์:","Better Performance:":"ประสิทธิภาพดีขึ้น:","Bits/Cheers and channel point redemptions":"Bits/Cheers และการแลกแต้มช่อง","Blue Bar Appears / Auto-Responder Not Working":"มีแถบสีน้ำเงิน / ระบบตอบอัตโนมัติไม่ทำงาน","Bluesky":"Bluesky","Bot Commands & Auto-Response":"คำสั่งบอตและตอบกลับอัตโนมัติ","Bot accounts for replies":"บัญชีบอตสำหรับตอบกลับ","Bring your own fonts to":"นำฟอนต์ของคุณเองมาใช้กับ","Browse our":"ดู","Browse the game gallery":"ดูแกลเลอรีเกม","Browser Compatibility":"ความเข้ากันได้กับเบราว์เซอร์","Browser Extension":"ส่วนขยายเบราว์เซอร์","Browser extension setup":"ตั้งค่าส่วนขยายเบราว์เซอร์","Browser extension troubleshooting":"แก้ปัญหาส่วนขยายเบราว์เซอร์","Build custom commands":"สร้างคำสั่งกำหนดเอง","Build powerful automations with the node-based Event Flow Editor.":"สร้างระบบอัตโนมัติที่ครบครันด้วยตัวแก้ไข Event Flow แบบโหนด","Built-in Commands:":"คำสั่งในตัว:","Built-in browser AI, excellent quality:":"AI ในเบราว์เซอร์ คุณภาพยอดเยี่ยม —","Buy Me A Coffee":"Buy Me A Coffee","Buy Me A Coffee:":"Buy Me A Coffee:","CSS Customization":"การปรับแต่ง CSS","Can I send messages back to multiple platforms at once?":"ส่งข้อความกลับไปหลายแพลตฟอร์มพร้อมกันได้หรือไม่?","Capture non-chat events like new followers, subscriptions, raids, and donations from your streaming platforms.":"จับอีเวนต์ที่ไม่ใช่แชต เช่น ผู้ติดตามใหม่ สมัครสมาชิก เรด และการบริจาคจากแพลตฟอร์มสตรีม","Capture non-chat events like new followers, subscriptions, raids, and donations.":"จับอีเวนต์ที่ไม่ใช่แชต เช่น ผู้ติดตามใหม่ สมัครสมาชิก เรด และการบริจาค","Capture or experimentally relay live chat into an open ChatGPT tab without an API key.":"จับหรือทดลองส่งต่อแชตสดเข้าแท็บ ChatGPT ที่เปิดอยู่โดยไม่ใช้คีย์ API","Capture supported chats from a browser or OBS without installing the full app.":"จับแชตที่รองรับจากเบราว์เซอร์หรือ OBS โดยไม่ติดตั้งแอปเต็ม","Channel slug, OAuth scopes, official events, and common failures.":"slug ช่อง ขอบเขต OAuth อีเวนต์อย่างเป็นทางการ และปัญหาที่พบบ่อย","Chat Stops When Background/Minimized":"แชตหยุดเมื่ออยู่เบื้องหลัง/ย่อหน้าต่าง","Chat messages are sent as POST requests with JSON payload":"ส่งข้อความแชตเป็นคำขอ POST พร้อมข้อมูล JSON","Chat messages stop appearing when browser windows are in the background or minimized. This happens because browsers throttle background tabs to save resources.":"ข้อความแชตหยุดปรากฏเมื่อหน้าต่างเบราว์เซอร์อยู่เบื้องหลังหรือย่อ เพราะเบราว์เซอร์ลดการทำงานของแท็บเบื้องหลังเพื่อประหยัดทรัพยากร","Chat sources":"แหล่งแชต","ChatGPT browser companion":"เพื่อนร่วมสนทนา ChatGPT ในเบราว์เซอร์","ChatGPT browser companion:":"เพื่อนร่วมสนทนา ChatGPT ในเบราว์เซอร์:","Check Chat Window Visibility":"ตรวจการมองเห็นหน้าต่างแชต","Check if you need to grant additional permissions to the app":"ตรวจว่าต้องให้สิทธิ์แอปเพิ่มหรือไม่","Check if your antivirus is blocking file writes":"ตรวจว่าโปรแกรมป้องกันไวรัสบล็อกการเขียนไฟล์หรือไม่","Check the \"Custom CSS\" option":"เลือกตัวเลือก \"Custom CSS\"","Check your internet connection":"ตรวจการเชื่อมต่ออินเทอร์เน็ต","Choose a voice cohost, ChatGPT browser companion, chat bot, moderation, RAG, translation, or overlay builder.":"เลือกผู้ช่วยดำเนินรายการด้วยเสียง เพื่อนร่วมสนทนา ChatGPT ในเบราว์เซอร์ แชตบอต การดูแลแชต RAG การแปล หรือตัวสร้างโอเวอร์เลย์","Choose an AI Setup":"เลือกการตั้งค่า AI","Choose browser, popout, app, or source page.":"เลือกเบราว์เซอร์ ป๊อปเอาต์ แอป หรือหน้าแหล่งข้อมูล","Choose from pre-styled templates that include CSS built-in:":"เลือกเทมเพลตตกแต่งสำเร็จที่มี CSS ในตัว:","Choose the highlight, badge, and beep options that match your overlay.":"เลือกไฮไลต์ ตรา และเสียงเตือนให้เหมาะกับโอเวอร์เลย์","Choose the local relay, automation API, headless hosting, or media service.":"เลือกรีเลย์ในเครื่อง API ระบบอัตโนมัติ การโฮสต์ไร้หน้าจอ หรือบริการสื่อ","Chrome Web Store:":"Chrome Web Store:","Chrome/Edge/Brave:":"Chrome/Edge/Brave:","Clear":"ล้าง","Click \"Activate source\" or \"Select Live Sources\" to connect":"คลิก \"Activate source\" หรือ \"Select Live Sources\" เพื่อเชื่อมต่อ","Click \"Activate source\" to connect":"คลิก \"Activate source\" เพื่อเชื่อมต่อ","Click \"Auto-find & Activate\" for live streams":"คลิก \"Auto-find & Activate\" สำหรับสตรีมสด","Click \"Enable Extension\" to turn it on (the icon should turn green)":"คลิก \"Enable Extension\" เพื่อเปิด (ไอคอนควรเป็นสีเขียว)","Click \"Twitch Username\" in the left sidebar":"คลิก \"Twitch Username\" ในแถบด้านซ้าย","Click \"YouTube Username\" in the left sidebar":"คลิก \"YouTube Username\" ในแถบด้านซ้าย","Click the \"Next in Queue\" button to display them one by one":"คลิกปุ่ม \"Next in Queue\" เพื่อแสดงทีละข้อความ","Click the \"Pop out chat\" button in the top-right corner":"คลิกปุ่ม \"Pop out chat\" มุมขวาบน","Click the Social Stream Ninja extension icon":"คลิกไอคอนส่วนขยาย Social Stream Ninja","Click the Social Stream Ninja extension icon in your browser toolbar":"คลิกไอคอนส่วนขยาย Social Stream Ninja ในแถบเครื่องมือเบราว์เซอร์","Click the button corresponding to the platform you want to add in the left sidebar":"คลิกปุ่มแพลตฟอร์มที่ต้องการเพิ่มในแถบด้านซ้าย","Click the gear icon and select \"Pop out chat\"":"คลิกไอคอนเฟืองแล้วเลือก \"Pop out chat\"","Click the respective platform button":"คลิกปุ่มของแพลตฟอร์มนั้น","Collect chat entries, draw a winner, and show the result in OBS.":"รวบรวมผู้เข้าร่วมจากแชต จับผู้ชนะ และแสดงผลใน OBS","Collect participants and supporters, configure OBS, and trigger the ending roll.":"รวบรวมผู้ร่วมกิจกรรมและผู้สนับสนุน ตั้งค่า OBS และเรียกเครดิตตอนจบ","Commands & API":"คำสั่งและ API","Commands and API":"คำสั่งและ API","Commerce & monetization overlays":"โอเวอร์เลย์การค้าและสร้างรายได้","Common fixes for auth windows closing, missed chat, duplicate chat, and throttling":"วิธีแก้ปัญหาพบบ่อยเมื่อหน้าต่างยืนยันตัวตนปิด แชตตกหล่น แชตซ้ำ และการลดการทำงาน","Community":"ชุมชน","Compare the Twitch WebSocket and reply-only source methods.":"เปรียบเทียบวิธีใช้แหล่ง Twitch WebSocket กับแหล่งตอบกลับอย่างเดียว","Complete AI guide":"คู่มือ AI ฉบับสมบูรณ์","Configure an outbound webhook URL in settings":"ตั้ง URL ของ webhook ขาออกในการตั้งค่า","Connect TikTok, choose dock activity, and capture it in SSN.":"เชื่อมต่อ TikTok เลือกกิจกรรมแผงด็อก และจับข้อมูลใน SSN","Connect a \"Send Chat\" action with your response":"เชื่อมการกระทำ \"Send Chat\" พร้อมคำตอบของคุณ","Connect action nodes (Send Chat, Play Audio, Display Overlay)":"เชื่อมโหนดการกระทำ (Send Chat, Play Audio, Display Overlay)","Connect external donation platforms and services.":"เชื่อมแพลตฟอร์มบริจาคและบริการภายนอก","Connect external donation platforms to display tips and purchases in your stream overlay.":"เชื่อมแพลตฟอร์มบริจาคภายนอกเพื่อแสดงทิปและการซื้อในโอเวอร์เลย์สตรีม","Connect logic nodes to filter messages (Contains Keyword, User Role, etc.)":"เชื่อมโหนดตรรกะเพื่อกรองข้อความ (Contains Keyword, User Role ฯลฯ)","Connect the desktop app to a local AI tool or same-machine script.":"เชื่อมแอปเดสก์ท็อปกับเครื่องมือ AI ในเครื่องหรือสคริปต์บนเครื่องเดียวกัน","Connect your MIDI device":"เชื่อมต่ออุปกรณ์ MIDI","Connect your MIDI device (Stream Deck, MIDI controller, etc.)":"เชื่อมต่ออุปกรณ์ MIDI (Stream Deck คอนโทรลเลอร์ MIDI ฯลฯ)","Connection Issues":"ปัญหาการเชื่อมต่อ","Connection modes and common failures.":"โหมดเชื่อมต่อและปัญหาที่พบบ่อย","Consolidates your live social messaging streams and more. Free and open source.":"รวมข้อความโซเชียลสดและอีกมากมาย ฟรีและเป็นโอเพนซอร์ส","Contribute":"ร่วมพัฒนา","Control OBS":"ควบคุม OBS","Control Social Stream Ninja directly from Stream Deck, MIDI controllers, or keyboard hotkeys.":"ควบคุม Social Stream Ninja โดยตรงจาก Stream Deck คอนโทรลเลอร์ MIDI หรือปุ่มลัดแป้นพิมพ์","Control the app directly from Stream Deck, MIDI controllers, or keyboard shortcuts.":"ควบคุมแอปโดยตรงจาก Stream Deck คอนโทรลเลอร์ MIDI หรือแป้นพิมพ์ลัด","Copy the \"Streaming Chat\" link and add it as a Browser Source in OBS":"คัดลอกลิงก์ \"Streaming Chat\" และเพิ่มเป็นแหล่งเบราว์เซอร์ใน OBS","Copy the Hype Train Top Bar URL from the popup.":"คัดลอก URL ของ Hype Train Top Bar จากป๊อปอัป","Copy the dedicated Hype Train Top Bar link from the popup.":"คัดลอกลิงก์ Hype Train Top Bar โดยเฉพาะจากป๊อปอัป","Create a":"สร้าง","Create a flow with source nodes (Message, Timer, Manual Trigger)":"สร้างโฟลว์พร้อมโหนดต้นทาง (Message, Timer, Manual Trigger)","Create a new flow and add source nodes (e.g., \"Twitch Message\")":"สร้างโฟลว์ใหม่และเพิ่มโหนดต้นทาง (เช่น \"Twitch Message\")","Create a new flow with a Message source":"สร้างโฟลว์ใหม่ด้วยแหล่ง Message","Create interactive bot commands and automated responses for your chat.":"สร้างคำสั่งบอตโต้ตอบและคำตอบอัตโนมัติสำหรับแชต","Create raffles and games":"สร้างการจับรางวัลและเกม","Create raffles and giveaways":"สร้างการจับและแจกของรางวัล","Create test messages":"สร้างข้อความทดสอบ","Creating Custom Commands:":"การสร้างคำสั่งกำหนดเอง:","Creator store setup":"ตั้งค่าร้านค้าครีเอเตอร์","Credits roll":"เครดิตเลื่อน","Credits, featured chat, timer, and waitlist buttons in OBS.":"ปุ่มเครดิต แชตเด่น ตัวจับเวลา และรายชื่อรอใน OBS","Current Relay Chat actions skip recognized reflections automatically. Use a":"การกระทำ Relay Chat ปัจจุบันข้ามข้อความสะท้อนกลับที่ตรวจพบอัตโนมัติ ใช้","Custom Webhooks:":"Webhook กำหนดเอง:","Custom fonts":"ฟอนต์กำหนดเอง","Customization":"การปรับแต่ง","Customization (Browser Extension)":"การปรับแต่ง (ส่วนขยายเบราว์เซอร์)","Customization (Standalone App)":"การปรับแต่ง (แอปแยก)","Customization Guide":"คู่มือการปรับแต่ง","Customize alignment, scale, opacity, and background settings.":"ปรับการจัดแนว สเกล ความทึบ และพื้นหลัง","Customize voice settings with parameters like":"ปรับเสียงด้วยพารามิเตอร์ เช่น","Customize your graphical poll":"Customize your graphical poll","Dashboard Parameters:":"พารามิเตอร์แดชบอร์ด:","Debug Bar Issue":"ปัญหาแถบดีบัก","Dedicated Twitch hype train overlay.":"โอเวอร์เลย์ Twitch hype train โดยเฉพาะ","Dedicated setup help for TikTok, including replies, mode selection, and TikFinity fallback.":"ความช่วยเหลือตั้งค่า TikTok โดยเฉพาะ รวมการตอบ เลือกโหมด และทางสำรอง TikFinity","Design your own overlays":"Design your own overlays","Desktop app setup":"ตั้งค่าแอปเดสก์ท็อป","Desktop app troubleshooting":"แก้ปัญหาแอปเดสก์ท็อป","Desktop app walkthrough":"แนะนำการใช้แอปเดสก์ท็อป","Desktop app will not open":"เปิดแอปเดสก์ท็อปไม่ได้","Detailed Event Flow guide":"คู่มือ Event Flow แบบละเอียด","Detailed guide sections":"ส่วนคู่มือแบบละเอียด","Different chat name colors":"สีชื่อแชตต่างกัน","Different colors for chat names":"ใช้สีต่างกันสำหรับชื่อแชต","Disable \"Throttle Javascript timers in background\"":"ปิด \"Throttle Javascript timers in background\"","Disable Browser Throttling":"ปิดการลดการทำงานของเบราว์เซอร์","Disable Performance Throttling:":"ปิดการจำกัดประสิทธิภาพ:","Disable VPN if it's interfering with connections":"ปิด VPN หากรบกวนการเชื่อมต่อ","Discord":"Discord","Discord StreamKit and TikFinity":"Discord StreamKit และ TikFinity","Discord, GitHub issues, contribution paths.":"Discord, ปัญหาบน GitHub และช่องทางร่วมพัฒนา","Discord, Slack, WhatsApp, etc.":"Discord, Slack, WhatsApp ฯลฯ","Display Name":"ชื่อที่แสดง","Do I need an API key or login credentials for each platform?":"ต้องใช้คีย์ API หรือข้อมูลเข้าสู่ระบบแต่ละแพลตฟอร์มหรือไม่?","Do not uninstall":"อย่าถอนการติดตั้ง","Dock":"แผงด็อก","Dock controls, moderation, relays, and participation":"การควบคุมแผงด็อก การดูแลแชต การส่งต่อ และการมีส่วนร่วม","Does it work with OBS and other streaming software?":"ใช้กับ OBS และซอฟต์แวร์สตรีมอื่นได้หรือไม่?","Donate":"บริจาค","Donation alerts":"การแจ้งเตือนบริจาค","Donation goals, Hype scoring, memberships, and gifted memberships.":"เป้าหมายบริจาค คะแนน Hype สมาชิก และสมาชิกแบบของขวัญ","Donation-style events (Super Chats, Bits, Tips) forward automatically regardless of this toggle. The toggle is primarily for follower/subscriber alerts.":"อีเวนต์แบบบริจาค (Super Chats, Bits, Tips) ส่งต่ออัตโนมัติไม่ว่าสวิตช์นี้เป็นค่าใด สวิตช์มีไว้หลัก ๆ สำหรับแจ้งเตือนผู้ติดตาม/สมาชิก","Donations (Super Chats, Bits, Tips) forward automatically. The toggle is primarily for follower/subscriber alerts.":"การบริจาค (Super Chats, Bits, Tips) ส่งต่ออัตโนมัติ สวิตช์มีไว้หลัก ๆ สำหรับแจ้งเตือนผู้ติดตาม/สมาชิก","Download":"ดาวน์โหลด","Download and run the installer for Windows 10/11 (x64)":"ดาวน์โหลดและเรียกตัวติดตั้งสำหรับ Windows 10/11 (x64)","Download and run the macOS application":"ดาวน์โหลดและเรียกแอป macOS","Download page":"หน้าดาวน์โหลด","Earning, balances, sticker redemptions, and points backups.":"การสะสม ยอดคงเหลือ การแลกสติกเกอร์ และสำรองแต้ม","ElevenLabs:":"ElevenLabs:","Enable hosted server routes for chat and replies, or use SSApp's advanced local relay.":"เปิดเส้นทางเซิร์ฟเวอร์ที่โฮสต์ไว้สำหรับแชตและคำตอบ หรือใช้รีเลย์ในเครื่องขั้นสูงของ SSApp","Enable it to start receiving alerts":"เปิดเพื่อเริ่มรับการแจ้งเตือน","Enable the commands you want to use":"เปิดคำสั่งที่ต้องการใช้","Ensure the Social Stream Ninja extension is enabled (green icon)":"ตรวจว่าส่วนขยาย Social Stream Ninja เปิดอยู่ (ไอคอนเขียว)","Ensure the app has write permissions in its installation directory":"ตรวจว่าแอปมีสิทธิ์เขียนในโฟลเดอร์ติดตั้ง","Ensure you're connected to WiFi or Ethernet (not mobile data)":"ตรวจว่าเชื่อมต่อ WiFi หรือ Ethernet (ไม่ใช่เน็ตมือถือ)","Ensure you're logged into the platform with posting permissions":"ตรวจว่าเข้าสู่ระบบแพลตฟอร์มพร้อมสิทธิ์โพสต์","Ensure you're using the same login credentials as your browser":"ตรวจว่าใช้ข้อมูลเข้าสู่ระบบเดียวกับเบราว์เซอร์","Enter your Twitch username":"ป้อนชื่อผู้ใช้ Twitch","Enter your channel name or Video ID":"ป้อนชื่อช่องหรือ Video ID","Enter your custom CSS in the text box":"ป้อน CSS กำหนดเองในช่องข้อความ","Enter your custom CSS or JavaScript":"ป้อน CSS หรือ JavaScript กำหนดเอง","Enter your username, Video ID, or URL as prompted":"ป้อนชื่อผู้ใช้ Video ID หรือ URL ตามที่ขอ","Event Flow Editor":"ตัวแก้ไข Event Flow","Event Flow Guide":"คู่มือ Event Flow","Event Flow media hosting":"การโฮสต์สื่อ Event Flow","Event Flow overview":"ภาพรวม Event Flow","Event Flow recipes":"ตัวอย่าง Event Flow","Event Reference":"เอกสารอ้างอิงอีเวนต์","Event Type":"ประเภทอีเวนต์","Event reference":"เอกสารอ้างอิงอีเวนต์","Events Captured by Platform:":"อีเวนต์ที่จับได้ตามแพลตฟอร์ม:","Events Captured:":"อีเวนต์ที่จับได้:","Events and alerts compatibility":"ความเข้ากันได้ของอีเวนต์และการแจ้งเตือน","Events appear automatically in your dashboard and flows":"อีเวนต์ปรากฏอัตโนมัติในแดชบอร์ดและโฟลว์","Example:":"ตัวอย่าง:","Execute Event Flow triggers":"เรียกตัวเรียก Event Flow","Export Settings":"ส่งออกการตั้งค่า","Export Social Stream Ninja and OBS settings for review.":"ส่งออกการตั้งค่า Social Stream Ninja และ OBS เพื่อตรวจสอบ","Export settings for support":"ส่งออกการตั้งค่าเพื่อขอความช่วยเหลือ","Exporting Chat via Webhook:":"การส่งออกแชตผ่าน Webhook:","Extension and desktop app downloads.":"ดาวน์โหลดส่วนขยายและแอปเดสก์ท็อป","FAQ":"คำถามที่พบบ่อย","Facebook":"Facebook","Facebook, TikTok, Instagram":"Facebook, TikTok, Instagram","Fast, lightweight neural TTS:":"นิวรัล TTS ที่เร็วและเบา —","Feature, clear, queue, pin, reply, and manage busy chat.":"แสดงเด่น ล้าง เข้าคิว ปักหมุด ตอบ และจัดการแชตคึกคัก","Featured chat and alerts on stream":"แชตเด่นและการแจ้งเตือนบนสตรีม","Features":"ฟีเจอร์","Filter":"กรอง","Find A Guide":"ค้นหาคู่มือ","Find ideas for your stream":"หาไอเดียสำหรับสตรีม","Find the":"หา","Find the CSS/JavaScript settings section":"หาส่วนตั้งค่า CSS/JavaScript","Find the MIDI settings section":"หาส่วนตั้งค่า MIDI","Find your webhook relay URL in the app settings":"หา URL รีเลย์ webhook ในการตั้งค่าแอป","Firefox has limited support for extension features":"Firefox รองรับฟีเจอร์ส่วนขยายได้จำกัด","First, enable these platforms in the extension settings (toggle switch)":"ก่อนอื่น เปิดแพลตฟอร์มเหล่านี้ในการตั้งค่าส่วนขยาย (สวิตช์)","First-Time Chatters":"ผู้แชตครั้งแรก","First-time chatters":"ผู้แชตครั้งแรก","Flow Actions Overlay:":"โอเวอร์เลย์ Flow Actions:","Followers and follower count":"ผู้ติดตามและจำนวนผู้ติดตาม","Followers and gifts (TikTok)":"ผู้ติดตามและของขวัญ (TikTok)","Followers, gifts, viewer counts":"ผู้ติดตาม ของขวัญ จำนวนผู้ชม","For Facebook, TikTok, and Instagram, use the \"Sign in\" button first":"สำหรับ Facebook, TikTok และ Instagram ใช้ปุ่ม \"Sign in\" ก่อน","For TikTok connection modes, replies, and TikFinity fallback, jump to the":"สำหรับโหมดเชื่อมต่อ TikTok การตอบ และทางสำรอง TikFinity ข้ามไปที่","For a complete list of event payloads and data fields, see the":"ดูรายการข้อมูลอีเวนต์และช่องข้อมูลทั้งหมดได้ใน","For audio, media overlays, and OBS actions to work, you need to add the Flow Actions page as a browser source in OBS:":"เพื่อให้เสียง โอเวอร์เลย์สื่อ และการกระทำ OBS ทำงาน ต้องเพิ่มหน้า Flow Actions เป็นแหล่งเบราว์เซอร์ใน OBS:","For detailed documentation, see the":"สำหรับเอกสารแบบละเอียด ดู","For detailed installation instructions, please visit the":"สำหรับวิธีติดตั้งแบบละเอียด ดู","For easier URL management, try our":"เพื่อจัดการ URL ง่ายขึ้น ลอง","For more complex commands, use the Event Flow Editor:":"สำหรับคำสั่งซับซ้อนขึ้น ใช้ตัวแก้ไข Event Flow:","For other languages, use a provider and voice that supports that language. For example, Portuguese can use Piper":"สำหรับภาษาอื่น ใช้ผู้ให้บริการและเสียงที่รองรับภาษานั้น เช่น ภาษาโปรตุเกสใช้ Piper ได้","For some platforms, you may need to keep the main window open alongside the pop-out":"บางแพลตฟอร์มอาจต้องเปิดหน้าต่างหลักไว้พร้อมป๊อปเอาต์","For the best experience, keep chat windows visible (not minimized) when using the browser extension.":"เพื่อประสบการณ์ดีที่สุด ให้หน้าต่างแชตมองเห็นอยู่ (ไม่ย่อ) เมื่อใช้ส่วนขยายเบราว์เซอร์","For the browser extension:":"สำหรับส่วนขยายเบราว์เซอร์:","For the most up-to-date version, install manually in developer mode.":"หากต้องการเวอร์ชันล่าสุด ให้ติดตั้งด้วยตนเองในโหมดนักพัฒนา","For the standalone app:":"สำหรับแอปแยก:","Fourthwall":"Fourthwall","Free Local TTS Options (no API key):":"ตัวเลือก TTS ในเครื่องฟรี (ไม่ต้องใช้คีย์ API):","Frequently Asked Questions":"คำถามที่พบบ่อย","Full TTS reference":"เอกสารอ้างอิง TTS ฉบับเต็ม","Full editor and action-flow reference.":"เอกสารอ้างอิงตัวแก้ไขและโฟลว์การกระทำฉบับเต็ม","Full step-by-step guide body. Collapse this if you only want the directory.":"เนื้อหาคู่มือทีละขั้นฉบับเต็ม ยุบส่วนนี้หากต้องการเฉพาะสารบัญ","Getting Started":"เริ่มต้นใช้งาน","Getting Started (Browser Extension)":"เริ่มต้นใช้งาน (ส่วนขยายเบราว์เซอร์)","Getting Started (Standalone App)":"เริ่มต้นใช้งาน (แอปแยก)","Getting Started:":"เริ่มต้นใช้งาน:","GitHub":"GitHub","GitHub Repository":"ที่เก็บโค้ด GitHub","GitHub repository":"คลังโค้ด GitHub","Go to":"ไปที่","Go to settings and find":"ไปการตั้งค่าแล้วหา","Google Cloud TTS:":"Google Cloud TTS:","Guides":"คู่มือ","Guides by type, downloads, session IDs, local OBS setup, and safe AI prompts.":"Guides by type, downloads, session IDs, local OBS setup, and safe AI prompts.","Has better performance and stability":"มีประสิทธิภาพและความเสถียรดีกว่า","Having trouble connecting to specific platforms in the standalone app.":"มีปัญหาเชื่อมต่อบางแพลตฟอร์มในแอปแยก","Headless home server or VPS":"เซิร์ฟเวอร์ที่บ้านหรือ VPS แบบไร้หน้าจอ","Highlight brand-new chatters, add the optional leaf badge, or use a first-time-only dock beep.":"ไฮไลต์ผู้แชตใหม่ เพิ่มตราใบไม้ได้ หรือใช้เสียงแผงด็อกเฉพาะครั้งแรก","Highlight new viewers in chat.":"ไฮไลต์ผู้ชมใหม่ในแชต","Hire":"จ้างงาน","Hold ALT while clicking a message in the dashboard":"กด ALT ค้างขณะคลิกข้อความในแดชบอร์ด","Hold CTRL (or Cmd on Mac) while clicking messages in the dashboard":"กด CTRL (หรือ Cmd บน Mac) ค้างขณะคลิกข้อความในแดชบอร์ด","Home":"หน้าแรก","Host your .woff2/.ttf/.otf files and load them with":"โฮสต์ไฟล์ .woff2/.ttf/.otf และโหลดด้วย","Hosted WebSocket and Local Server modes":"โหมด WebSocket ที่โฮสต์ไว้และ Local Server","How Social Stream Ninja fits together":"ส่วนต่าง ๆ ของ Social Stream Ninja ทำงานร่วมกันอย่างไร","How do I update Social Stream Ninja?":"อัปเดต Social Stream Ninja อย่างไร?","How to Enable:":"วิธีเปิดใช้:","How to reply to TikTok chat from SSN":"วิธีตอบแชต TikTok จาก SSN","How to send replies to TikTok chat from SSN":"วิธีส่งคำตอบเข้าแชต TikTok จาก SSN","How to use TikFinity OBS Dock as a fallback through Other chat sites":"วิธีใช้ TikFinity OBS Dock เป็นทางสำรองผ่าน Other chat sites","How to use TikFinity OBS Dock through":"วิธีใช้ TikFinity OBS Dock ผ่าน","Hype Train Top Bar":"แถบด้านบน Hype Train","Hype train top bar":"แถบด้านบน Hype train","If you want the desktop app to use your own YouTube API quota, use the dedicated setup guide. It covers Google Cloud setup, exact redirect URLs, API key restrictions, and basic security guidance.":"หากต้องการให้แอปเดสก์ท็อปใช้โควตา YouTube API ของคุณเอง ให้ใช้คู่มือตั้งค่าเฉพาะ ครอบคลุมการตั้งค่า Google Cloud, URL เปลี่ยนเส้นทางที่ตรงทุกตัว ข้อจำกัดคีย์ API และคำแนะนำความปลอดภัยพื้นฐาน","Import a custom chat theme, preview it, and download an OBS overlay.":"นำเข้าธีมแชตกำหนดเอง ดูตัวอย่าง และดาวน์โหลดโอเวอร์เลย์ OBS","Import settings if they're lost after an update":"นำเข้าการตั้งค่าหากสูญหายหลังอัปเดต","Important:":"สำคัญ:","In OBS, you can add custom CSS to the browser source:":"ใน OBS คุณเพิ่ม CSS กำหนดเองให้แหล่งเบราว์เซอร์ได้:","In the popup, find the \"Flow Actions\" section and copy the URL":"ในป๊อปอัป หาส่วน \"Flow Actions\" แล้วคัดลอก URL","Inspiration":"ไอเดียสร้างสรรค์","Install or update":"ติดตั้งหรืออัปเดต","Install the plugin, connect your session, and test a control.":"ติดตั้งปลั๊กอิน เชื่อมต่อเซสชัน และทดสอบการควบคุม","Install via Chrome Web Store for the easiest setup experience.":"ติดตั้งผ่าน Chrome Web Store เพื่อการตั้งค่าที่ง่ายที่สุด","Install, connect a source, open the dock, then add TTS and OBS audio.":"ติดตั้ง เชื่อมแหล่งข้อมูล เปิดแผงด็อก แล้วเพิ่ม TTS และเสียง OBS","Install, connect chat, add OBS overlays":"ติดตั้ง เชื่อมแชต เพิ่มโอเวอร์เลย์ OBS","Installation Guide":"คู่มือการติดตั้ง","Is Social Stream Ninja really free?":"Social Stream Ninja ฟรีจริงหรือไม่?","Join Discord Community":"เข้าร่วมชุมชน Discord","Join our Discord":"เข้าร่วม Discord ของเรา","Join our community Discord server where the developer and other users can help you troubleshoot issues.":"เข้าร่วมเซิร์ฟเวอร์ Discord ชุมชนของเรา ผู้พัฒนาและผู้ใช้อื่นช่วยแก้ปัญหาได้","Keep Social Stream Ninja enabled":"เปิด Social Stream Ninja ทิ้งไว้","Keep Windows Visible:":"ให้หน้าต่างมองเห็นอยู่:","Keep source, Dock, overlay, read, and reply routing aligned.":"ให้เส้นทางแหล่งข้อมูล แผงด็อก โอเวอร์เลย์ การอ่าน และการตอบตรงกัน","Keep the app window always on top":"ให้หน้าต่างแอปอยู่บนสุดเสมอ","Keep the local message database enabled.":"เปิดฐานข้อมูลข้อความในเครื่องไว้","Keep the overlay open (hidden is fine, but don't close it)":"เปิดโอเวอร์เลย์ทิ้งไว้ (ซ่อนได้ แต่อย่าปิด)","Keep your chat window visible (not minimized) for responses to work":"ให้หน้าต่างแชตมองเห็นอยู่ (ไม่ย่อ) เพื่อให้คำตอบทำงาน","Keep your session ID private. Anyone with your session ID can send fake donation events to your overlay.":"เก็บรหัสเซสชันเป็นความลับ ใครก็ตามที่มีรหัสส่งอีเวนต์บริจาคปลอมเข้าโอเวอร์เลย์ได้","Kick Channel Points / Rewards guide":"คู่มือแต้มช่อง / รางวัล Kick","Kick rewards sounds/media":"เสียง/สื่อรางวัล Kick","Kick setup and authentication":"การตั้งค่าและยืนยันตัวตน Kick","Kick:":"Kick:","Kitten TTS:":"Kitten TTS:","Knowledge base":"ฐานความรู้","Ko-Fi":"Ko-Fi","Ko-Fi:":"Ko-Fi:","Kokoro TTS:":"Kokoro TTS:","LLM Integration":"การเชื่อมต่อ LLM","Launch the Social Stream Ninja application":"เปิดแอป Social Stream Ninja","Learn how to set up, customize, and get the most out of Social Stream Ninja":"เรียนรู้การตั้งค่า ปรับแต่ง และใช้ Social Stream Ninja ให้เต็มประสิทธิภาพ","Lightweight language fallback, including Portuguese":"ทางสำรองภาษาที่เบา รวมภาษาโปรตุเกส","Linux:":"Linux:","Lite setup":"ตั้งค่า Lite","Live chat, static comments, API/OAuth choices.":"แชตสด ความคิดเห็นคงที่ และตัวเลือก API/OAuth","Local AI TTS":"AI TTS ในเครื่อง","Local AI TTS Guide":"คู่มือ AI TTS ในเครื่อง","Local Control API and MCP":"Local Control API และ MCP","Local servers and services":"เซิร์ฟเวอร์และบริการในเครื่อง","Loyalty points and rewards":"แต้มสะสมและรางวัล","MIDI":"MIDI","MIDI & Hotkey Control":"การควบคุมด้วย MIDI และปุ่มลัด","MIDI is perfect for hands-free stream control. Use a foot pedal to trigger alerts or a knob to adjust volume levels.":"MIDI เหมาะสำหรับควบคุมสตรีมโดยไม่ใช้มือ ใช้แป้นเหยียบเรียกการแจ้งเตือนหรือปุ่มหมุนปรับระดับเสียง","Main navigation":"เมนูหลัก","Managed source windows instead of tabs.":"หน้าต่างแหล่งข้อมูลที่จัดการได้แทนแท็บ","Manual Installation (recommended):":"ติดตั้งด้วยตนเอง (แนะนำ):","Map MIDI notes to actions":"จับคู่โน้ต MIDI กับการกระทำ","Map MIDI notes to specific actions":"จับคู่โน้ต MIDI กับการกระทำเฉพาะ","Membership upgrades and milestones":"อัปเกรดสมาชิกและเหตุการณ์สำคัญ","Memberships, Super Chats, subscriber counts":"สมาชิก Super Chats และจำนวนผู้ติดตาม","Message":"ข้อความ","Message - Styling":"ข้อความ - รูปแบบ (Message - Styling)","Message - Visibility":"ข้อความ - การมองเห็น (Message - Visibility)","Messages appear simultaneously across all connected platforms":"ข้อความปรากฏพร้อมกันบนทุกแพลตฟอร์มที่เชื่อมต่อ","Messages will appear in your overlay in the order they were queued":"ข้อความจะปรากฏในโอเวอร์เลย์ตามลำดับเข้าคิว","Method 1: OBS Browser Source CSS":"วิธีที่ 1: CSS แหล่งเบราว์เซอร์ OBS","Method 2: App Menu Settings":"วิธีที่ 2: การตั้งค่าเมนูแอป","Method 2: Extension Menu Settings":"วิธีที่ 2: การตั้งค่าเมนูส่วนขยาย","Method 3: Use Custom Templates":"วิธีที่ 3: ใช้เทมเพลตกำหนดเอง","Microphone conversation, live-chat questions, spoken replies, and stage overlay.":"สนทนาผ่านไมโครโฟน คำถามแชตสด คำตอบเสียง และโอเวอร์เลย์เวที","Minimized Window Issue":"ปัญหาหน้าต่างย่อ","Missing chat, blank overlays, deeper support docs":"แชตหาย โอเวอร์เลย์ว่าง และเอกสารช่วยเหลือเชิงลึก","Missing chat, permissions, throttling, toggles.":"แชตหาย สิทธิ์ การลดการทำงาน และสวิตช์","Mode picker help: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy, and Euler Signing":"ความช่วยเหลือเลือกโหมด: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy และ Euler Signing","Moderate, feature, and reply":"ดูแล แสดงเด่น และตอบ","Moderation and message filtering":"การดูแลและกรองข้อความ","Multiple channels and separate overlays":"หลายช่องและโอเวอร์เลย์แยก","Name colors need two settings: a general color source under":"สีชื่อต้องตั้งสองส่วน: แหล่งสีทั่วไปใน","Natural-sounding premium voices":"เสียงพรีเมียมเป็นธรรมชาติ","Navigate to your live stream within the app window":"ไปยังสตรีมสดของคุณภายในหน้าต่างแอป","Need help with TikTok setup, replies, connection modes, or TikFinity fallback? Use the dedicated TikTok guide.":"ต้องการความช่วยเหลือตั้งค่า TikTok ตอบกลับ โหมดเชื่อมต่อ หรือทางสำรอง TikFinity? ใช้คู่มือ TikTok โดยเฉพาะ","Need to use it on multiple computers":"ต้องใช้บนคอมพิวเตอร์หลายเครื่อง","Network Issues":"ปัญหาเครือข่าย","New memberships and membership gifts":"สมาชิกใหม่และของขวัญสมาชิก","New subscribers, resubs, and gift subs":"สมาชิกใหม่ สมัครซ้ำ และสมาชิกแบบของขวัญ","No matching guides found.":"ไม่พบคู่มือที่ตรงกัน","No signature verification needed (keep your session ID private instead)":"ไม่ต้องตรวจลายเซ็น (เก็บรหัสเซสชันเป็นความลับแทน)","No! One of the biggest advantages of Social Stream Ninja is that it doesn't require API keys or login credentials for most platforms. It works by capturing the chat data directly from the browser window or app interface. However, you do need to be logged into each platform to see the chat normally.":"ไม่ต้อง! ข้อดีสำคัญของ Social Stream Ninja คือแพลตฟอร์มส่วนใหญ่ไม่ต้องใช้คีย์ API หรือข้อมูลเข้าสู่ระบบ ระบบจับข้อมูลแชตโดยตรงจากหน้าต่างเบราว์เซอร์หรือหน้าแอป อย่างไรก็ตาม คุณต้องเข้าสู่ระบบแต่ละแพลตฟอร์มเพื่อดูแชตตามปกติ","Note your Session ID from the extension popup":"จด Session ID จากป๊อปอัปส่วนขยาย","Note:":"หมายเหตุ:","OBS CSS, AI design prompts, and editing poll.html locally.":"OBS CSS, AI design prompts, and editing poll.html locally.","OBS control dock":"แผงด็อกควบคุม OBS","OBS overlay":"โอเวอร์เลย์ OBS","OBS quick start":"เริ่มใช้ OBS อย่างรวดเร็ว","OBS troubleshooting":"การแก้ปัญหา OBS","OBS, TikTok, TTS, API...":"OBS, TikTok, TTS, API...","Offers window pinning and transparency features":"มีฟีเจอร์ตรึงหน้าต่างและความโปร่งใส","On Windows, use Win+Tab to create two virtual desktops, with chat windows on one and OBS on the other.":"บน Windows ใช้ Win+Tab สร้างเดสก์ท็อปเสมือนสองชุด วางหน้าต่างแชตชุดหนึ่งและ OBS อีกชุด","On-screen chat while gaming":"แชตบนหน้าจอขณะเล่นเกม","Once installed, follow these steps to start using Social Stream Ninja:":"เมื่อติดตั้งแล้ว ทำตามขั้นตอนเพื่อเริ่มใช้ Social Stream Ninja:","Once installed, follow these steps to start using the Social Stream Ninja standalone app:":"เมื่อติดตั้งแล้ว ทำตามขั้นตอนเพื่อเริ่มใช้แอปแยก Social Stream Ninja:","One operator Dock with separate platform and source views.":"แผงด็อกผู้ดำเนินการเดียวพร้อมมุมมองแยกตามแพลตฟอร์มและแหล่งข้อมูล","One session ID connects everything: use the same":"รหัสเซสชันเดียวเชื่อมทุกอย่าง ใช้ค่าเดียวกันสำหรับ","Only for a confirmed OBS and Social Stream privilege mismatch.":"เฉพาะเมื่อยืนยันแล้วว่าระดับสิทธิ์ OBS กับ Social Stream ไม่ตรงกัน","Only one API toggle is needed:":"ต้องใช้สวิตช์ API เพียงตัวเดียว:","Open":"เปิด","Open Twitch chat for your channel":"เปิดแชต Twitch ของช่องคุณ","Open YouTube Live chat":"เปิดแชต YouTube Live","Open chat, dock, and overlay links.":"เปิดลิงก์แชต แผงด็อก และโอเวอร์เลย์","Open navigation menu":"เปิดเมนูนำทาง","Open settings and find the MIDI section":"เปิดการตั้งค่าแล้วหาส่วน MIDI","Open the \"Dashboard Link\" provided in the extension popup":"เปิด \"Dashboard Link\" ที่ให้ในป๊อปอัปส่วนขยาย","Open the \"Overlay Link\" in OBS as a browser source":"เปิด \"Overlay Link\" ใน OBS เป็นแหล่งเบราว์เซอร์","Open the Complete AI Guide":"เปิดคู่มือ AI ฉบับสมบูรณ์","Open the Event Flow editor from the app's menu":"เปิดตัวแก้ไข Event Flow จากเมนูแอป","Open the Event Flow editor from the main dashboard menu":"เปิดตัวแก้ไข Event Flow จากเมนูแดชบอร์ดหลัก","Open the First-Time Chatters Guide":"เปิดคู่มือผู้แชตครั้งแรก","Open the Hype Train Top Bar Guide":"เปิดคู่มือแถบด้านบน Hype Train","Open the Social Stream Ninja app":"เปิดแอป Social Stream Ninja","Open the Social Stream Ninja popup":"เปิดป๊อปอัป Social Stream Ninja","Open the TikTok Guide":"เปิดคู่มือ TikTok","Open the YouTube Project Setup Guide":"เปิดคู่มือตั้งค่าโปรเจกต์ YouTube","Open the app's settings menu":"เปิดเมนูตั้งค่าแอป","Open the chat name colors guide":"เปิดคู่มือสีชื่อแชต","Open the extension popup and find the Bot/Auto-Response section":"เปิดป๊อปอัปส่วนขยายแล้วหาส่วน Bot/Auto-Response","Open the full TikTok guide":"เปิดคู่มือ TikTok ฉบับเต็ม","Open the self-hosted fonts guide":"เปิดคู่มือฟอนต์ที่โฮสต์เอง","Open the web versions of these platforms in your browser":"เปิดเวอร์ชันเว็บของแพลตฟอร์มเหล่านี้ในเบราว์เซอร์","Open your Facebook Live broadcast (as a viewer or publisher)":"เปิด Facebook Live ของคุณ (เป็นผู้ชมหรือผู้เผยแพร่)","Open your streaming platform's chat in a browser (or use the pop-out chat feature if available)":"เปิดแชตแพลตฟอร์มสตรีมในเบราว์เซอร์ (หรือใช้แชตป๊อปเอาต์หากมี)","Optionally add User Role filters for mod-only commands":"เพิ่มตัวกรอง User Role ได้หากต้องการคำสั่งเฉพาะผู้ดูแล","Orders, gifts, donations and new subscriptions":"คำสั่งซื้อ ของขวัญ การบริจาค และการสมัครสมาชิกใหม่","Organize how messages appear in your overlay:":"จัดรูปแบบการปรากฏของข้อความในโอเวอร์เลย์:","Other chat sites":"เว็บไซต์แชตอื่น","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Overlay Parameters:":"พารามิเตอร์โอเวอร์เลย์:","Overlays And Customization":"โอเวอร์เลย์และการปรับแต่ง","Participation lists, eligibility checks, prize draws, persistence, and targeted resets.":"รายชื่อเข้าร่วม การตรวจสิทธิ์ จับรางวัล การเก็บข้อมูล และการล้างเฉพาะเป้าหมาย","Passwords, fresh links, and server read/reply fallback.":"รหัสผ่าน ลิงก์ใหม่ และทางสำรองอ่าน/ตอบผ่านเซิร์ฟเวอร์","Payload fields for alerts and overlays.":"ช่องข้อมูลสำหรับการแจ้งเตือนและโอเวอร์เลย์","Payload names, YouTube Shorts, Instagram Live, generic capture, and replies.":"ชื่อข้อมูล YouTube Shorts, Instagram Live การจับทั่วไป และการตอบ","Payment events":"อีเวนต์ชำระเงิน","Permission Issues":"ปัญหาสิทธิ์","Pick a template and add it to OBS.":"เลือกเทมเพลตแล้วเพิ่มใน OBS","Pinning Messages:":"การปักหมุดข้อความ:","Piper TTS:":"Piper TTS:","Platform":"แพลตฟอร์ม","Platform Connection Issues":"ปัญหาเชื่อมต่อแพลตฟอร์ม","Platform Guides":"คู่มือแพลตฟอร์ม","Platform setup picker":"ตัวช่วยเลือกการตั้งค่าแพลตฟอร์ม","Play audio clips":"เล่นคลิปเสียง","Play audio clips or TTS":"เล่นคลิปเสียงหรือ TTS","Poll SRT, RTMP, or media-server stats and show bitrate in the Dock.":"ตรวจสถิติ SRT, RTMP หรือเซิร์ฟเวอร์สื่อเป็นระยะและแสดงบิตเรตในแผงด็อก","Polls, giveaways, and waitlists":"แบบสำรวจ การแจกของรางวัล และรายชื่อรอ","Prefer not to install additional software":"ไม่ต้องการติดตั้งซอฟต์แวร์เพิ่ม","Premium Cloud TTS Options:":"ตัวเลือก TTS คลาวด์พรีเมียม:","Prerequisites:":"สิ่งที่ต้องเตรียม:","Preview six packs; set point prices, cooldowns, custom images, and GIPHY GIF rewards.":"ดูตัวอย่างหกแพ็ก ตั้งราคาแต้ม คูลดาวน์ ภาพกำหนดเอง และรางวัล GIPHY GIF","Primary and private bots:":"บอตหลักและส่วนตัว:","Primary chat bot:":"แชตบอตหลัก:","Print names, donations, purchases, receipts, and fixed-size stickers from Event Flow.":"พิมพ์ชื่อ การบริจาค การซื้อ ใบรับ และสติกเกอร์ขนาดคงที่จาก Event Flow","Privacy Policy":"นโยบายความเป็นส่วนตัว","Private browser and server voice options.":"ตัวเลือกเสียงส่วนตัวในเบราว์เซอร์และเซิร์ฟเวอร์","Private monitor overlay, pinning, transparency, hotkeys, and launch commands.":"โอเวอร์เลย์มอนิเตอร์ส่วนตัว การตรึง ความโปร่งใส ปุ่มลัด และคำสั่งเปิด","Processing tools:":"เครื่องมือประมวลผล:","Professional-quality voices (requires Google API key)":"เสียงคุณภาพมืออาชีพ (ต้องใช้คีย์ Google API)","Prompt, preview, and add generated overlays.":"เขียนพรอมป์ต์ ดูตัวอย่าง และเพิ่มโอเวอร์เลย์ที่สร้าง","Provider choice:":"การเลือกผู้ให้บริการ:","Providers, Primary bot controls, safe testing, and missing replies.":"ผู้ให้บริการ การควบคุมบอตหลัก การทดสอบปลอดภัย และปัญหาไม่มีคำตอบ","Provides automatic updates":"มีการอัปเดตอัตโนมัติ","Public tips, memberships, shop orders and commissions":"ทิปสาธารณะ สมาชิก คำสั่งซื้อร้านค้า และงานคอมมิชชัน","Queuing Messages:":"การเข้าคิวข้อความ:","Queuing and Pinning Messages":"การเข้าคิวและปักหมุดข้อความ","Quick Links":"ลิงก์ด่วน","Raids with viewer count":"เรดพร้อมจำนวนผู้ชม","Ready-made overlay layouts.":"เลย์เอาต์โอเวอร์เลย์สำเร็จรูป","Reflection Filter":"ตัวกรองข้อความสะท้อนกลับ (Reflection Filter)","Relay chat":"ส่งต่อแชต","Relay chat between platforms":"ส่งต่อแชตระหว่างแพลตฟอร์ม","Reload the dock once if it was already open":"โหลดแผงด็อกใหม่หนึ่งครั้งหากเปิดอยู่แล้ว","Remote API control enabled while the other API transport toggles remain off":"เปิด Remote API control โดยปิดสวิตช์ช่องทาง API อื่นไว้","Remove the grey Dock background":"นำพื้นหลังสีเทาของแผงด็อกออก","Replace":"แทนที่","Replace saved URLs, refresh cache, and fix blank overlays.":"เปลี่ยน URL ที่บันทึก รีเฟรชแคช และแก้โอเวอร์เลย์ว่าง","Report an Issue":"รายงานปัญหา","Required settings, color modes, screenshots, and CSS.":"การตั้งค่าที่จำเป็น โหมดสี ภาพหน้าจอ และ CSS","Requirements:":"ข้อกำหนด:","Resources":"แหล่งข้อมูลอ้างอิง","Restart your browser":"เริ่มเบราว์เซอร์ใหม่","Reward-triggered action flow setup.":"ตั้งค่าโฟลว์การกระทำที่เรียกด้วยรางวัล","Run Kokoro-FastAPI or openedai-speech locally via Docker:":"เรียก Kokoro-FastAPI หรือ openedai-speech ในเครื่องผ่าน Docker —","Run a vote, draw a winner, or advance a viewer queue.":"จัดโหวต จับผู้ชนะ หรือเลื่อนคิวผู้ชม","Run the app as administrator (Windows) if needed":"เรียกแอปในฐานะผู้ดูแลระบบ (Windows) หากจำเป็น","Run the complete desktop app on Linux with Xvfb and remote control.":"เรียกแอปเดสก์ท็อปเต็มบน Linux ด้วย Xvfb และการควบคุมระยะไกล","Running Your Stream":"ดำเนินสตรีมของคุณ","Safe updates and recovery":"อัปเดตและกู้คืนอย่างปลอดภัย","Save the exported file to a secure location":"บันทึกไฟล์ส่งออกไว้ในที่ปลอดภัย","Screenshots and quick previews of every game and chat interaction.":"ภาพหน้าจอและตัวอย่างด่วนของทุกเกมและกิจกรรมแชต","Search settings, URL options, defaults, and supported pages.":"ค้นการตั้งค่า ตัวเลือก URL ค่าเริ่มต้น และหน้าที่รองรับ","Search, or open one category. Start with OBS if you just need chat on screen.":"ค้นหาหรือเปิดหนึ่งหมวด เริ่มด้วย OBS หากต้องการเพียงแชตบนหน้าจอ","Security Note:":"หมายเหตุด้านความปลอดภัย:","See the":"ดู","Select a template that matches your stream's style":"เลือกเทมเพลตที่เข้ากับสไตล์สตรีม","Select event:":"เลือกอีเวนต์:","Select your MIDI device from the dropdown":"เลือกอุปกรณ์ MIDI จากรายการแบบเลื่อนลง","Select your device from the dropdown":"เลือกอุปกรณ์จากรายการแบบเลื่อนลง","Self-hosted fonts & styling":"ฟอนต์ที่โฮสต์เองและการตกแต่ง","Self-hosted fonts and CSS examples.":"ฟอนต์ที่โฮสต์เองและตัวอย่าง CSS","Self-hosted server:":"เซิร์ฟเวอร์ที่โฮสต์เอง:","Send SSN chat into the VDO.Ninja mobile app.":"ส่งแชต SSN เข้าแอป VDO.Ninja บนมือถือ","Send chat messages":"ส่งข้อความแชต","Send fake chat, donation, membership, raid, reward, and other event payloads.":"ส่งข้อมูลจำลองของแชต บริจาค สมาชิก เรด รางวัล และอีเวนต์อื่น","Send messages directly from the dashboard":"ส่งข้อความโดยตรงจากแดชบอร์ด","Send predefined chat messages":"ส่งข้อความแชตที่ตั้งไว้ล่วงหน้า","Session and routing troubleshooting":"แก้ปัญหาเซสชันและเส้นทางข้อมูล","Session, dock, overlay, browser source.":"เซสชัน แผงด็อก โอเวอร์เลย์ แหล่งเบราว์เซอร์","Sessions, passwords, and server fallback":"เซสชัน รหัสผ่าน และทางสำรองเซิร์ฟเวอร์","Set URL to:":"ตั้ง URL เป็น:","Set to \"Disabled\"":"ตั้งเป็น \"Disabled\"","Set up Social Stream Ninja step by step. Browse guides for chat sources, OBS overlays, text-to-speech, AI tools, games and stream automation.":"ตั้งค่า Social Stream Ninja ทีละขั้น ดูคู่มือแหล่งแชต โอเวอร์เลย์ OBS การแปลงข้อความเป็นเสียงพูด เครื่องมือ AI เกม และระบบอัตโนมัติสตรีม","Setting Up Auto-Response:":"ตั้งค่าตอบอัตโนมัติ:","Setting Up MIDI:":"ตั้งค่า MIDI:","Setting Up TTS:":"ตั้งค่า TTS:","Setting Up:":"ตั้งค่า:","Settings Issue":"ปัญหาการตั้งค่า","Settings Not Saving":"การตั้งค่าไม่บันทึก","Settings and URL reference":"เอกสารอ้างอิงการตั้งค่าและ URL","Setup Guides for Chat, OBS and Streaming - Social Stream Ninja":"คู่มือตั้งค่าแชต OBS และสตรีม - Social Stream Ninja","Setup:":"การตั้งค่า:","Short fixes for common problems.":"วิธีแก้สั้น ๆ สำหรับปัญหาพบบ่อย","Should I use the browser extension or standalone app?":"ควรใช้ส่วนขยายเบราว์เซอร์หรือแอปแยก?","Show Twitch Hype Train and Treasure Train progress as a Twitch-style top bar in OBS.":"แสดงความคืบหน้า Twitch Hype Train และ Treasure Train เป็นแถบด้านบนสไตล์ Twitch ใน OBS","Sign server errors, rate limits, Euler API keys.":"ข้อผิดพลาดเซิร์ฟเวอร์ลงลายเซ็น ขีดจำกัดอัตรา และคีย์ Euler API","Simple OBS-safe voice setup with screenshots.":"ตั้งค่าเสียงแบบง่ายที่เหมาะกับ OBS พร้อมภาพหน้าจอ","Simple live setup with screenshots.":"ตั้งค่าสดแบบง่ายพร้อมภาพหน้าจอ","Smallest footprint, CPU-only:":"ใช้ทรัพยากรน้อยที่สุด เฉพาะ CPU —","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja can read chat messages aloud using Text-to-Speech technology:":"Social Stream Ninja อ่านข้อความแชตออกเสียงได้ด้วยเทคโนโลยี Text-to-Speech:","Social Stream Ninja can use AI in several different ways. Choose the workflow before choosing a provider.":"Social Stream Ninja ใช้ AI ได้หลายแบบ เลือกขั้นตอนงานก่อนเลือกผู้ให้บริการ","Social Stream Ninja has an active community on Discord where you can get help directly from the developer and other users. Join at":"Social Stream Ninja มีชุมชน Discord ที่มีการพูดคุยต่อเนื่อง คุณขอความช่วยเหลือตรงจากผู้พัฒนาและผู้ใช้อื่นได้ เข้าร่วมที่","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja supports 100+ platforms including YouTube, Twitch, Facebook, Instagram, TikTok, Discord, Zoom, Google Meet, X (Twitter), WhatsApp, Telegram, and many more. For a complete list, see the":"Social Stream Ninja รองรับกว่า 100 แพลตฟอร์ม เช่น YouTube, Twitch, Facebook, Instagram, TikTok, Discord, Zoom, Google Meet, X (Twitter), WhatsApp, Telegram และอีกมาก ดูรายการทั้งหมดได้ที่","Social Stream Ninja works with 100+ platforms. Here's how to connect to the most popular ones:":"Social Stream Ninja ใช้กับกว่า 100 แพลตฟอร์มได้ วิธีเชื่อมต่อแพลตฟอร์มยอดนิยมมีดังนี้:","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja สัญญาอนุญาต GPLv3.0 สร้างโดย","Solutions for common issues with the browser extension":"วิธีแก้ปัญหาพบบ่อยของส่วนขยายเบราว์เซอร์","Solutions for common issues with the standalone application":"วิธีแก้ปัญหาพบบ่อยของแอปแยก","Sounds, rewards, media, webhooks, OBS actions.":"เสียง รางวัล สื่อ webhook และการกระทำ OBS","Source types":"ประเภทแหล่งข้อมูล","Source windows, updates, setup checks.":"หน้าต่างแหล่งข้อมูล การอัปเดต และการตรวจตั้งค่า","Speechify setup guide":"คู่มือตั้งค่า Speechify","Speechify:":"Speechify:","Standalone App":"แอปแบบสแตนด์อโลน","Standalone app TikTok mode notes.":"หมายเหตุโหมด TikTok ในแอปแยก","Standalone app modes":"โหมดแอปแยก","Standard, WebSocket, TikTok presets, source windows.":"Standard, WebSocket, ค่าที่ตั้งไว้ของ TikTok และหน้าต่างแหล่งข้อมูล","Start Here":"เริ่มที่นี่","Start here: your first chat in SSN":"เริ่มที่นี่: แชตแรกของคุณใน SSN","Steve Seguin":"Steve Seguin","Sticker packs and loyalty rewards":"แพ็กสติกเกอร์และรางวัลแต้มสะสม","Still Need Help?":"ยังต้องการความช่วยเหลือ?","Stream Deck setup":"ตั้งค่า Stream Deck","Stream Events Capture":"การจับอีเวนต์สตรีม","StreamElements / Streamlabs chat skins":"สกินแชต StreamElements / Streamlabs","Stripe":"Stripe","Stripe Payment Link":"ลิงก์ชำระเงิน Stripe","Stripe Setup:":"ตั้งค่า Stripe:","Stripe Webhooks":"Stripe Webhooks","Stripe, Ko-fi, Fourthwall, and more.":"Stripe, Ko-fi, Fourthwall และอื่น ๆ","Stripe:":"Stripe:","Subscriber and viewer counts":"จำนวนผู้ติดตามและผู้ชม","Subscribers, followers, bits, raids, channel points":"สมาชิก ผู้ติดตาม บิต เรด แต้มช่อง","Subscriptions and tips (Kick)":"การสมัครสมาชิกและทิป (Kick)","Subscriptions, tips, follow alerts":"การสมัครสมาชิก ทิป การแจ้งเตือนติดตาม","Super Chat and Super Sticker donations":"การบริจาค Super Chat และ Super Sticker","Support":"การสนับสนุน","Support page":"หน้าช่วยเหลือ","Support workflows and AI agents.":"ขั้นตอนขอความช่วยเหลือและเอเจนต์ AI","Supported Integrations:":"การเชื่อมต่อที่รองรับ:","Supported Platforms":"แพลตฟอร์มที่รองรับ","Supported Platforms:":"แพลตฟอร์มที่รองรับ:","Supported Sites":"เว็บไซต์ที่รองรับ","Supported sites list":"รายชื่อเว็บไซต์ที่รองรับ","Switch OBS scenes":"สลับฉาก OBS","Switch theme":"เปลี่ยนธีม","TTS setup guide":"คู่มือตั้งค่า TTS","Template quick start":"เริ่มใช้เทมเพลตอย่างรวดเร็ว","Templates":"เทมเพลต","Templates Gallery":"แกลเลอรีเทมเพลต","Templates gallery":"แกลเลอรีเทมเพลต","Templates, style options, fonts, events":"เทมเพลต ตัวเลือกสไตล์ ฟอนต์ อีเวนต์","Terms of Service":"ข้อกำหนดการให้บริการ","Test it with the Fake Hype Train button before going live.":"ทดสอบด้วยปุ่ม Fake Hype Train ก่อนถ่ายทอดสด","Test or persist matching privileges for OBS and Social Stream.":"ทดสอบหรือตั้งระดับสิทธิ์ที่ตรงกันสำหรับ OBS และ Social Stream ให้คงอยู่","Test with the built-in simulator before going live":"ทดสอบด้วยตัวจำลองในตัวก่อนถ่ายทอดสด","Test with the simulator before going live":"ทดสอบด้วยตัวจำลองก่อนถ่ายทอดสด","Testing:":"การทดสอบ:","Text-to-Speech":"การแปลงข้อความเป็นเสียงพูด","The CSS will be appended to the URL as base64 encoded data":"CSS จะถูกต่อท้าย URL เป็นข้อมูลเข้ารหัส base64","The Event Flow Editor is a powerful node-based automation system for building custom workflows. It's the \"advanced automation\" layer that lets you script your own routing logic.":"ตัวแก้ไข Event Flow เป็นระบบอัตโนมัติแบบโหนดสำหรับสร้างขั้นตอนงานกำหนดเอง เป็นชั้น \"ระบบอัตโนมัติขั้นสูง\" ที่ให้คุณเขียนตรรกะกำหนดเส้นทางเอง","The Social Stream Ninja desktop app avoids many browser throttling issues.":"แอปเดสก์ท็อป Social Stream Ninja หลีกเลี่ยงปัญหาเบราว์เซอร์ลดการทำงานได้หลายอย่าง","The app will update automatically when you restart it. You can also check for updates manually from the app's menu.":"แอปอัปเดตอัตโนมัติเมื่อเริ่มใหม่ คุณตรวจอัปเดตด้วยตนเองจากเมนูแอปได้เช่นกัน","The browser extension is better if you:":"ส่วนขยายเบราว์เซอร์เหมาะกว่าหากคุณ:","The desktop app supports the same provider-backed AI tools, including:":"แอปเดสก์ท็อปรองรับเครื่องมือ AI ที่ใช้ผู้ให้บริการชุดเดียวกัน ได้แก่:","The extension or desktop app merges every chat into one session":"ส่วนขยายหรือแอปเดสก์ท็อปรวมทุกแชตในเซสชันเดียว","The message will stay pinned at the top of the dashboard":"ข้อความจะปักหมุดอยู่ด้านบนแดชบอร์ด","The normalized donation is shared with chat, alerts, Event Flow, and the Tip Jar/Goal Meter.":"ข้อมูลบริจาคที่ปรับรูปแบบแล้วใช้ร่วมกับแชต การแจ้งเตือน Event Flow และโหลทิป/มาตรวัดเป้าหมาย","The standalone app avoids many browser limitations like throttling and provides additional features like window pinning.":"แอปแยกหลีกเลี่ยงข้อจำกัดเบราว์เซอร์หลายอย่าง เช่น การลดการทำงาน และมีฟีเจอร์เพิ่ม เช่น ตรึงหน้าต่าง","The standalone app has the most TikTok options in SSN, so the guide lives on its own page now.":"แอปแยกมีตัวเลือก TikTok มากที่สุดใน SSN คู่มือจึงย้ายไปหน้าเฉพาะแล้ว","The standalone app includes additional features not available in the browser extension:":"แอปแยกมีฟีเจอร์เพิ่มเติมที่ไม่มีในส่วนขยายเบราว์เซอร์:","The standalone app is recommended for most users as it:":"แนะนำแอปแยกสำหรับผู้ใช้ส่วนใหญ่ เพราะ:","The standalone app provides a simpler installation process compared to the browser extension:":"แอปแยกติดตั้งง่ายกว่าส่วนขยายเบราว์เซอร์:","The standalone app simplifies connection to various platforms:":"แอปแยกช่วยให้เชื่อมต่อแพลตฟอร์มต่าง ๆ ง่ายขึ้น:","The standalone app supports the same CSS customization methods as the extension:":"แอปแยกรองรับการปรับ CSS แบบเดียวกับส่วนขยาย:","The standalone app supports the same URL parameters as the browser extension. You can customize both the dashboard and overlay:":"แอปแยกรองรับพารามิเตอร์ URL เดียวกับส่วนขยายเบราว์เซอร์ ปรับได้ทั้งแดชบอร์ดและโอเวอร์เลย์:","The standalone app supports two-way chat messaging for supported platforms:":"แอปแยกรองรับรับส่งแชตสองทางในแพลตฟอร์มที่รองรับ:","There are several ways to customize the appearance with CSS:":"ปรับหน้าตาด้วย CSS ได้หลายวิธี:","Thermal printers and stream labels":"เครื่องพิมพ์เทอร์มอลและป้ายสตรีม","TikFinity fallback setup":"ตั้งค่าทางสำรอง TikFinity","TikTok":"TikTok","TikTok (Standalone App)":"TikTok (แอปแยก)","TikTok Guide":"คู่มือ TikTok","TikTok app modes":"โหมด TikTok ในแอป","TikTok guide":"คู่มือ TikTok","TikTok in the desktop app":"TikTok ในแอปเดสก์ท็อป","TikTok quick start":"เริ่มใช้ TikTok อย่างรวดเร็ว","TikTok signing":"การลงลายเซ็น TikTok","TikTok, Kick, & Others":"TikTok, Kick และอื่น ๆ","TikTok, YouTube, Twitch, Kick, supported sites":"TikTok, YouTube, Twitch, Kick และเว็บไซต์ที่รองรับ","TikTok:":"TikTok:","Tip Jar and Goal Meter":"โหลทิปและมาตรวัดเป้าหมาย","Tip:":"เคล็ดลับ:","Tips":"เคล็ดลับ","Tips, memberships, shop orders, commissions and wishlist funding":"ทิป สมาชิก คำสั่งซื้อร้านค้า งานคอมมิชชัน และระดมทุนรายการอยากได้","To unpin, hold ALT and click the pinned message again":"หากต้องการเลิกปักหมุด กด ALT ค้างแล้วคลิกข้อความที่ปักหมุดอีกครั้ง","To update the manually installed extension, download the latest version, replace the old files with the new ones, and then reload the extension or restart your browser.":"อัปเดตส่วนขยายที่ติดตั้งเองโดยดาวน์โหลดเวอร์ชันล่าสุด แทนไฟล์เก่าด้วยไฟล์ใหม่ แล้วโหลดส่วนขยายหรือเริ่มเบราว์เซอร์ใหม่","Transparency and hidden-menu settings for MELD and other non-OBS apps.":"การตั้งค่าความโปร่งใสและซ่อนเมนูสำหรับ MELD กับแอปอื่นที่ไม่ใช่ OBS","Trigger custom overlays and media":"เรียกโอเวอร์เลย์และสื่อกำหนดเอง","Trigger local MIDI actions from chat.":"เรียกการกระทำ MIDI ในเครื่องจากแชต","Trigger overlays and audio":"เรียกโอเวอร์เลย์และเสียง","Trigger overlays and media":"เรียกโอเวอร์เลย์และสื่อ","Troubleshooting":"การแก้ปัญหา","Troubleshooting (Browser Extension)":"การแก้ปัญหา (ส่วนขยายเบราว์เซอร์)","Troubleshooting (Standalone App)":"การแก้ปัญหา (แอปแยก)","Troubleshooting And Support":"การแก้ปัญหาและความช่วยเหลือ","Try the Standalone App:":"ลองแอปแยก:","Try using a different DNS provider":"ลองเปลี่ยนผู้ให้บริการ DNS","Turn on First-time chatter detection.":"เปิด First-time chatter detection","Twitch":"Twitch","Twitch and YouTube flows, sender accounts, and echo troubleshooting.":"โฟลว์ Twitch และ YouTube บัญชีผู้ส่ง และแก้ข้อความสะท้อนซ้ำ","Twitch setup and EventSub":"การตั้งค่า Twitch และ EventSub","Twitch:":"Twitch:","Two-Way Chat":"แชตสองทาง","URL Parameter Editor Tool":"เครื่องมือแก้ไขพารามิเตอร์ URL","URL Parameters":"พารามิเตอร์ URL","Ultra-realistic voices with custom voice training":"เสียงสมจริงสูงพร้อมฝึกเสียงกำหนดเอง","Under":"ใน","Understand which SSApp local service matches your goal.":"ทำความเข้าใจบริการในเครื่องของ SSApp ที่ตรงกับเป้าหมาย","Upload, local files, or larger cloud libraries.":"อัปโหลด ไฟล์ในเครื่อง หรือคลังคลาวด์ขนาดใหญ่","Use Stripe's Test Mode with card":"ใช้ Test Mode ของ Stripe พร้อมบัตร","Use Virtual Desktops:":"ใช้เดสก์ท็อปเสมือน:","Use bot commands and automated responses":"ใช้คำสั่งบอตและคำตอบอัตโนมัติ","Use first-time chatter detection to highlight new viewers, show the leaf badge, or trigger first-time-only beeps.":"ใช้การตรวจผู้แชตครั้งแรกเพื่อไฮไลต์ผู้ชมใหม่ แสดงตราใบไม้ หรือเรียกเสียงเฉพาะครั้งแรก","Use the":"ใช้","Use the \"Sign in\" button to authenticate if needed":"ใช้ปุ่ม \"Sign in\" เพื่อยืนยันตัวตนหากจำเป็น","Use the AppImage file for most Linux distributions":"ใช้ไฟล์ AppImage สำหรับ Linux ส่วนใหญ่","Use the Fake Hype Train button to test it.":"ใช้ปุ่ม Fake Hype Train เพื่อทดสอบ","Use the dedicated Hype Train Top Bar link to show Twitch Hype Train and Treasure Train progress in OBS.":"ใช้ลิงก์ Hype Train Top Bar โดยเฉพาะเพื่อแสดงความคืบหน้า Twitch Hype Train และ Treasure Train ใน OBS","Use the export feature to save your settings":"ใช้ฟีเจอร์ส่งออกเพื่อบันทึกการตั้งค่า","Use the guide for setup steps, screenshots, and troubleshooting.":"ใช้คู่มือเพื่อดูขั้นตอนตั้งค่า ภาพหน้าจอ และการแก้ปัญหา","Use third-party overlay links as read-only chat sources.":"ใช้ลิงก์โอเวอร์เลย์ภายนอกเป็นแหล่งแชตแบบอ่านอย่างเดียว","Use this to log chats, trigger external automations, or sync with other tools":"ใช้บันทึกแชต เรียกระบบอัตโนมัติภายนอก หรือซิงก์กับเครื่องมืออื่น","Use your normal generated dock and overlay links; do not add":"ใช้ลิงก์แผงด็อกและโอเวอร์เลย์ปกติที่สร้างให้ อย่าเพิ่ม","User Memory guide":"คู่มือ User Memory","Username":"ชื่อผู้ใช้","Users, words, bots, commands, and global versus page filters.":"ผู้ใช้ คำ บอต คำสั่ง และตัวกรองส่วนกลางเทียบกับตัวกรองในหน้า","Using the Dock during a stream":"ใช้แผงด็อกระหว่างสตรีม","VDO native app + SSN":"แอป VDO ดั้งเดิม + SSN","Video guide, first source, key features, and help.":"วิดีโอสอน แหล่งข้อมูลแรก ฟีเจอร์หลัก และความช่วยเหลือ","Video stats and bitrate":"สถิติวิดีโอและบิตเรต","View Troubleshooting Guide":"ดูคู่มือแก้ปัญหา","Viewer counts across most platforms":"จำนวนผู้ชมในแพลตฟอร์มส่วนใหญ่","Visual guides: products, spot boards, recent sales, gifts and tips.":"คู่มือภาพ: สินค้า กระดานช่อง การขายล่าสุด ของขวัญ และทิป","Voice AI cohost":"ผู้ช่วยดำเนินรายการ AI ด้วยเสียง","Voice cohost:":"ผู้ช่วยดำเนินรายการด้วยเสียง:","Voice cohosts, browser companions, bots, local models, TTS":"ผู้ช่วยดำเนินรายการด้วยเสียง เพื่อนร่วมสนทนาในเบราว์เซอร์ บอต โมเดลในเครื่อง และ TTS","Want the latest updates immediately (manual installation)":"ต้องการอัปเดตล่าสุดทันที (ติดตั้งเอง)","Want to keep it local and private?":"ต้องการให้ทำงานในเครื่องและเป็นส่วนตัวหรือไม่?","Watch this video for a visual walkthrough of the standalone app:":"ดูวิดีโอนี้เพื่อเรียนรู้การใช้แอปแยกแบบเห็นภาพ:","We maintain a canonical list of every event payload (followers, memberships, raids, viewer counts, donations, and more) in the":"เราดูแลรายการมาตรฐานของข้อมูลอีเวนต์ทั้งหมด (ผู้ติดตาม สมาชิก เรด จำนวนผู้ชม บริจาค และอื่น ๆ) ใน","WebSocket actions and examples.":"การกระทำ WebSocket และตัวอย่าง","WebSocket source, OAuth, scopes, and event checks.":"แหล่ง WebSocket, OAuth, ขอบเขตสิทธิ์ และการตรวจอีเวนต์","Webhook URL":"URL ของ Webhook","Webhooks":"Webhooks","Webhooks & Integrations":"Webhook และการเชื่อมต่อ","What You Can Do:":"สิ่งที่ทำได้:","What platforms does Social Stream Ninja support?":"Social Stream Ninja รองรับแพลตฟอร์มใดบ้าง?","What stream event data, like new followers, is supported?":"รองรับข้อมูลอีเวนต์สตรีมอะไรบ้าง เช่น ผู้ติดตามใหม่?","What the node editor can do, at a glance.":"สิ่งที่ตัวแก้ไขโหนดทำได้โดยย่อ","What to try when TikTok says you are offline, misses messages, duplicates chat, or closes auth windows":"สิ่งที่ควรลองเมื่อ TikTok บอกว่าออฟไลน์ ข้อความตกหล่น แชตซ้ำ หรือหน้าต่างยืนยันตัวตนปิด","When using YouTube or Twitch, make sure the pop-out chat window is open and visible":"เมื่อใช้ YouTube หรือ Twitch ตรวจว่าเปิดหน้าต่างแชตป๊อปเอาต์และมองเห็นอยู่","When using the app's overlay URL in OBS:":"เมื่อใช้ URL โอเวอร์เลย์แอปใน OBS:","Where can I find the API and automation documentation?":"หาเอกสาร API และระบบอัตโนมัติได้ที่ไหน?","Where can I get help if I'm having problems?":"ขอความช่วยเหลือได้ที่ไหนหากมีปัญหา?","Which mode to use: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy, or Euler Signing":"ใช้โหมดใด: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy หรือ Euler Signing","Window Pinning:":"การตรึงหน้าต่าง:","Windows administrator mode":"โหมดผู้ดูแลระบบ Windows","Windows, macOS, and Linux security warnings.":"คำเตือนความปลอดภัย Windows, macOS และ Linux","Windows:":"Windows:","Works the same in the Chrome extension, Electron app, and hosted pages.":"ทำงานเหมือนกันในส่วนขยาย Chrome แอป Electron และหน้าที่โฮสต์ไว้","X.com":"X.com","Yes! Social Stream Ninja supports two-way chat functionality for most platforms. When you're logged into a platform and have the appropriate permissions, you can send messages from the dashboard or via API commands that will appear in all connected chats simultaneously.":"ได้! Social Stream Ninja รองรับแชตสองทางในแพลตฟอร์มส่วนใหญ่ เมื่อเข้าสู่ระบบแพลตฟอร์มและมีสิทธิ์ที่เหมาะสม คุณส่งข้อความจากแดชบอร์ดหรือคำสั่ง API ให้ปรากฏในทุกแชตที่เชื่อมต่อพร้อมกันได้","Yes, Social Stream Ninja is completely free and open source under the GPLv3.0 License. There are no subscriptions, no hidden fees, and no feature limitations. The project is maintained by Steve Seguin with contributions from the community.":"ใช่ Social Stream Ninja ฟรีทั้งหมดและเป็นโอเพนซอร์สภายใต้ GPLv3.0 ไม่มีค่าสมัคร ค่าธรรมเนียมแอบแฝง หรือข้อจำกัดฟีเจอร์ โครงการดูแลโดย Steve Seguin พร้อมการร่วมพัฒนาจากชุมชน","You can also export chat data to external services:":"คุณส่งออกข้อมูลแชตไปบริการภายนอกได้ด้วย:","You can customize both the dashboard and overlay by adding parameters to their URL. Some examples:":"ปรับได้ทั้งแดชบอร์ดและโอเวอร์เลย์ด้วยการเพิ่มพารามิเตอร์ใน URL ตัวอย่าง:","YouTube":"YouTube","YouTube Custom Project Setup":"ตั้งค่าโปรเจกต์ YouTube กำหนดเอง","YouTube project setup":"ตั้งค่าโปรเจกต์ YouTube","YouTube setup guide":"คู่มือตั้งค่า YouTube","YouTube video player":"ตัวเล่นวิดีโอ YouTube","YouTube, Twitch, TikTok, and 100+ more platforms":"YouTube, Twitch, TikTok และอีกกว่า 100 แพลตฟอร์ม","YouTube, Twitch, and Kick events across alerts, TTS, goals, and Event Flow.":"อีเวนต์ YouTube, Twitch และ Kick ในการแจ้งเตือน TTS เป้าหมาย และ Event Flow","YouTube:":"YouTube:","Your configuration or settings aren't being saved between sessions.":"การกำหนดค่าหรือการตั้งค่าไม่ถูกบันทึกข้ามเซสชัน","Your first giveaway":"การแจกของรางวัลครั้งแรก","and Spanish":"และภาษาสเปน","and create a new endpoint":"และสร้าง endpoint ใหม่","and the Dock display toggle under":"และสวิตช์แสดงผลแผงด็อกใน","answer selected viewers in an overlay, through TTS, or back into supported chats.":"ตอบผู้ชมที่เลือกในโอเวอร์เลย์ ผ่าน TTS หรือกลับเข้าแชตที่รองรับ","based on events or keywords":"ตามอีเวนต์หรือคำสำคัญ","based on specific events or keywords":"ตามอีเวนต์หรือคำสำคัญที่ระบุ","between platforms with smart filters":"ระหว่างแพลตฟอร์มพร้อมตัวกรองอัจฉริยะ","capture or experimentally relay chat into an open":"จับหรือทดลองส่งต่อแชตเข้า","chat relay walkthrough":"คำแนะนำส่งต่อแชต","combine microphone conversation, live-chat questions, and spoken responses.":"รวมบทสนทนาไมโครโฟน คำถามแชตสด และคำตอบเสียง","discord.socialstream.ninja":"discord.socialstream.ninja","documentation.":"เอกสาร","eSpeak-NG:":"eSpeak-NG:","for Fourthwall, Ko-fi and Buy Me a Coffee, including receiver status, isolated previews and product import.":"สำหรับ Fourthwall, Ko-fi และ Buy Me a Coffee รวมสถานะตัวรับ ตัวอย่างแยก และนำเข้าสินค้า","for complete event payload documentation.":"สำหรับเอกสารข้อมูลอีเวนต์ฉบับสมบูรณ์","for donation webhooks":"สำหรับ webhook บริจาค","for full setup instructions including self-hosted server options and OBS audio capture.":"สำหรับวิธีตั้งค่าครบถ้วน รวมเซิร์ฟเวอร์ที่โฮสต์เองและการจับเสียง OBS","for screenshots, color choices, troubleshooting, and CSS examples.":"สำหรับภาพหน้าจอ ตัวเลือกสี การแก้ปัญหา และตัวอย่าง CSS","for setup. For detailed documentation, see the":"สำหรับตั้งค่า ดูเอกสารแบบละเอียดได้ใน","for step-by-step hosting and CSS examples.":"สำหรับวิธีโฮสต์ทีละขั้นและตัวอย่าง CSS","illustrated setup guide":"คู่มือตั้งค่าพร้อมภาพ","in the template URL with your session ID":"ใน URL เทมเพลตด้วยรหัสเซสชันของคุณ","local models, self-hosted endpoints, or supported cloud APIs.":"โมเดลในเครื่อง endpoint ที่โฮสต์เอง หรือ API คลาวด์ที่รองรับ","macOS:":"macOS:","moderation, translation, summaries, RAG knowledge search, and AI-built overlays.":"การดูแลแชต การแปล การสรุป ค้นความรู้ RAG และโอเวอร์เลย์สร้างด้วย AI","moderation, translation, summaries, and RAG knowledge search.":"การดูแลแชต การแปล การสรุป และค้นความรู้ RAG","node to control whether captured echoes appear in the Dock and overlays. See the":"โหนดเพื่อควบคุมว่าข้อความสะท้อนที่จับกลับมาจะแสดงในแผงด็อกและโอเวอร์เลย์หรือไม่ ดู","or":"หรือ","or eSpeak":"หรือ eSpeak","page.":"หน้า","page. It's the best starting point when you want to script custom behaviors or integrate Social Stream Ninja with other tools.":"หน้า เป็นจุดเริ่มต้นที่เหมาะที่สุดเมื่อคุณต้องการเขียนพฤติกรรมกำหนดเองหรือเชื่อม Social Stream Ninja กับเครื่องมืออื่น","public chat replies or a separate one-on-one helper.":"คำตอบแชตสาธารณะหรือผู้ช่วยตัวต่อตัวแยก","remote API control lets the background script normalize donation webhooks and deliver them like normal messages. The other API transport toggles can remain off.":"remote API control ให้สคริปต์เบื้องหลังปรับรูปแบบ webhook บริจาคและส่งเหมือนข้อความปกติ สวิตช์ช่องทาง API อื่นปิดไว้ได้","remote API control of extension":"การควบคุมส่วนขยายจากระยะไกลผ่าน API","scenes and sources automatically":"ฉากและแหล่งข้อมูลอัตโนมัติ","tab without an API key.":"แท็บที่เปิดอยู่โดยไม่ใช้คีย์ API","talk by microphone while live-chat questions enter the same cohost session.":"พูดผ่านไมโครโฟนขณะที่คำถามแชตสดเข้าสู่เซสชันผู้ช่วยดำเนินรายการเดียวกัน","the extension if you want to keep your settings. If using the Chrome Web Store version, it will update automatically but less frequently.":"ส่วนขยายหากต้องการเก็บการตั้งค่า หากใช้เวอร์ชัน Chrome Web Store จะอัปเดตอัตโนมัติแต่ไม่บ่อยเท่า","to your featured.html or dock.html URL":"ลงใน URL featured.html หรือ dock.html","toggle in settings":"สวิตช์ในการตั้งค่า","value in your dock and overlay URLs.":"ค่าใน URL แผงด็อกและโอเวอร์เลย์ของคุณ","with AND/OR/NOT logic gates":"ด้วยเกตตรรกะ AND/OR/NOT","with contributions from the community.":"ร่วมพัฒนาโดยชุมชน","with logic gates (AND/OR/NOT)":"ด้วยเกตตรรกะ (AND/OR/NOT)","with queue management":"พร้อมจัดการคิว","with smart filters (e.g., mirror Twitch to Discord but block commands)":"พร้อมตัวกรองอัจฉริยะ (เช่น ส่ง Twitch ไป Discord แต่บล็อกคำสั่ง)","without relying on Google/System fonts.":"โดยไม่พึ่งฟอนต์ Google/ระบบ"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/guides.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/guides.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/guides.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/guides.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/guides.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/guides.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/guides.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/guides.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/guides.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/guides.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/guides.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/guides.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/guides.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/guides.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/guides.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/guides.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/guides.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/guides.html">
+<!-- ssn-languages:end --></head>
+<body class="guides-page">
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก"><a href="../index.html">หน้าแรก</a><a href="features.html">ฟีเจอร์</a><a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a><a href="download.html">ดาวน์โหลด</a><a href="guides.html" aria-current="page">คู่มือ</a><a href="commands.html">คำสั่งและ API</a><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a><a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a><a href="services.html" class="site-priority-hire">จ้างงาน</a><a href="support.html">การสนับสนุน</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/guides.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/guides.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/guides.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/guides.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/guides.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/guides.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/guides.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/guides.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/guides.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/guides.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/guides.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/guides.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/guides.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/guides.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/guides.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/guides.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="guides.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="เปลี่ยนธีม"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>คู่มือ</h1>
+            <p>เรียนรู้การตั้งค่า ปรับแต่ง และใช้ Social Stream Ninja ให้เต็มประสิทธิภาพ</p>
+        </div>
+    </section>
+
+    <section class="guide-flow-section" aria-label="ส่วนต่าง ๆ ของ Social Stream Ninja ทำงานร่วมกันอย่างไร">
+        <div class="container">
+            <div class="guide-flow">
+                <div class="guide-flow-step">
+                    <div class="guide-flow-icons">
+                        <i class="fab fa-youtube" aria-hidden="true"></i>
+                        <i class="fab fa-twitch" aria-hidden="true"></i>
+                        <i class="fab fa-tiktok" aria-hidden="true"></i>
+                        <i class="fas fa-comment-dots" aria-hidden="true"></i>
+                    </div>
+                    <strong>แหล่งแชต</strong>
+                    <small>YouTube, Twitch, TikTok และอีกกว่า 100 แพลตฟอร์ม</small>
+                </div>
+                <div class="guide-flow-arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
+                <div class="guide-flow-step">
+                    <div class="guide-flow-icons">
+                        <i class="fas fa-user-ninja" aria-hidden="true"></i>
+                    </div>
+                    <strong>Social Stream Ninja</strong>
+                    <small>ส่วนขยายหรือแอปเดสก์ท็อปรวมทุกแชตในเซสชันเดียว</small>
+                </div>
+                <div class="guide-flow-arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
+                <div class="guide-flow-outputs">
+                    <div class="guide-flow-step guide-flow-step-mini">
+                        <div class="guide-flow-icons"><i class="fas fa-columns" aria-hidden="true"></i></div>
+                        <strong>แผงด็อก</strong>
+                        <small>ดูแล แสดงเด่น และตอบ</small>
+                    </div>
+                    <div class="guide-flow-step guide-flow-step-mini">
+                        <div class="guide-flow-icons"><i class="fas fa-tv" aria-hidden="true"></i></div>
+                        <strong>โอเวอร์เลย์ OBS</strong>
+                        <small>แชตเด่นและการแจ้งเตือนบนสตรีม</small>
+                    </div>
+                </div>
+            </div>
+            <p class="guide-flow-caption">รหัสเซสชันเดียวเชื่อมทุกอย่าง ใช้ค่าเดียวกันสำหรับ <code>?session=</code> ค่าใน URL แผงด็อกและโอเวอร์เลย์ของคุณ</p>
+        </div>
+    </section>
+
+	<section id="guide-directory" class="guide-directory">
+		<div class="container">
+			<div class="guide-directory-header">
+				<div>
+					<h2>ค้นหาคู่มือ</h2>
+					<p class="section-subtitle">ค้นหาหรือเปิดหนึ่งหมวด เริ่มด้วย OBS หากต้องการเพียงแชตบนหน้าจอ</p>
+				</div>
+				<div class="guide-filter">
+					<label for="guide-filter-input">กรอง</label>
+					<input id="guide-filter-input" type="search" placeholder="OBS, TikTok, TTS, API..." autocomplete="off">
+					<button id="guide-filter-clear" type="button">ล้าง</button>
+				</div>
+			</div>
+			<div class="guide-tree">
+				<details class="guide-tree-group" open>
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-rocket" aria-hidden="true"></i> เริ่มที่นี่</span>
+						<small>ติดตั้ง เชื่อมแชต เพิ่มโอเวอร์เลย์ OBS</small>
+					</summary>
+					<ul>
+						<li><a href="getting-started.html"><i class="fas fa-play-circle" aria-hidden="true"></i><span><strong>เริ่มที่นี่: แชตแรกของคุณใน SSN</strong><small>ติดตั้ง เชื่อมแหล่งข้อมูล เปิดแผงด็อก แล้วเพิ่ม TTS และเสียง OBS</small></span></a></li>
+						<li><a href="download.html"><i class="fas fa-download" aria-hidden="true"></i><span><strong>ติดตั้งหรืออัปเดต</strong><small>ดาวน์โหลดส่วนขยายและแอปเดสก์ท็อป</small></span></a></li>
+						<li><a href="monetization.html"><i class="fas fa-gift" aria-hidden="true"></i><span><strong>โอเวอร์เลย์การค้าและสร้างรายได้</strong><small>คู่มือภาพ: สินค้า กระดานช่อง การขายล่าสุด ของขวัญ และทิป</small></span></a></li>
+<li><a href="games-gallery.html"><i class="fas fa-gamepad" aria-hidden="true"></i><span><strong>ดูแกลเลอรีเกม</strong><small>ภาพหน้าจอและตัวอย่างด่วนของทุกเกมและกิจกรรมแชต</small></span></a></li>
+<li><a href="inspiration.html"><i class="fas fa-lightbulb" aria-hidden="true"></i><span><strong>หาไอเดียสำหรับสตรีม</strong><small>126 ไอเดียสำหรับเกม ดนตรี การสอน งานสร้างสรรค์ การขายสด และกิจกรรมชุมชน</small></span></a></li>
+						<li><a href="desktop-app-wont-open.html"><i class="fas fa-shield-alt" aria-hidden="true"></i><span><strong>เปิดแอปเดสก์ท็อปไม่ได้</strong><small>คำเตือนความปลอดภัย Windows, macOS และ Linux</small></span></a></li>
+						<li><a href="windows-administrator-mode.html"><i class="fas fa-user-shield" aria-hidden="true"></i><span><strong>โหมดผู้ดูแลระบบ Windows</strong><small>ทดสอบหรือตั้งระดับสิทธิ์ที่ตรงกันสำหรับ OBS และ Social Stream ให้คงอยู่</small></span></a></li>
+						<li><a href="safe-updates-backups.html"><i class="fas fa-shield-alt" aria-hidden="true"></i><span><strong>อัปเดตและกู้คืนอย่างปลอดภัย</strong><small>สำรองการตั้งค่า อัปเดตอย่างปลอดภัย และกู้เซสชัน</small></span></a></li>
+						<li><a href="obs-quick-start.html"><i class="fas fa-desktop" aria-hidden="true"></i><span><strong>เริ่มใช้ OBS อย่างรวดเร็ว</strong><small>เซสชัน แผงด็อก โอเวอร์เลย์ แหล่งเบราว์เซอร์</small></span></a></li>
+						<li><a href="sessions-passwords-relay-modes.html"><i class="fas fa-key" aria-hidden="true"></i><span><strong>เซสชัน รหัสผ่าน และทางสำรองเซิร์ฟเวอร์</strong><small>ให้เส้นทางแหล่งข้อมูล แผงด็อก โอเวอร์เลย์ การอ่าน และการตอบตรงกัน</small></span></a></li>
+						<li><a href="platform-setup-picker.html"><i class="fas fa-map-signs" aria-hidden="true"></i><span><strong>ตัวช่วยเลือกการตั้งค่าแพลตฟอร์ม</strong><small>เลือกเบราว์เซอร์ ป๊อปเอาต์ แอป หรือหน้าแหล่งข้อมูล</small></span></a></li>
+						<li><a href="../lite/guide.html"><i class="fas fa-feather" aria-hidden="true"></i><span><strong>ตั้งค่า Lite</strong><small>จับแชตที่รองรับจากเบราว์เซอร์หรือ OBS โดยไม่ติดตั้งแอปเต็ม</small></span></a></li>
+						<li><a href="standalone-app-modes.html"><i class="fas fa-window-restore" aria-hidden="true"></i><span><strong>โหมดแอปแยก</strong><small>Standard, WebSocket, ค่าที่ตั้งไว้ของ TikTok และหน้าต่างแหล่งข้อมูล</small></span></a></li>
+						<li><a href="local-services-guide.html"><i class="fas fa-network-wired" aria-hidden="true"></i><span><strong>เซิร์ฟเวอร์และบริการในเครื่อง</strong><small>เลือกรีเลย์ในเครื่อง API ระบบอัตโนมัติ การโฮสต์ไร้หน้าจอ หรือบริการสื่อ</small></span></a></li>
+						<li><a href="ssapp.html"><i class="fas fa-book-open" aria-hidden="true"></i><span><strong>แนะนำการใช้แอปเดสก์ท็อป</strong><small>วิดีโอสอน แหล่งข้อมูลแรก ฟีเจอร์หลัก และความช่วยเหลือ</small></span></a></li>
+						<li><a href="settings.html"><i class="fas fa-sliders-h" aria-hidden="true"></i><span><strong>เอกสารอ้างอิงการตั้งค่าและ URL</strong><small>ค้นการตั้งค่า ตัวเลือก URL ค่าเริ่มต้น และหน้าที่รองรับ</small></span></a></li>
+						<li><a href="vdo-native-social-stream-guide.html"><i class="fas fa-mobile-alt" aria-hidden="true"></i><span><strong>แอป VDO ดั้งเดิม + SSN</strong><small>ส่งแชต SSN เข้าแอป VDO.Ninja บนมือถือ</small></span></a></li>
+						<li><a href="#extension-getting-started"><i class="fas fa-puzzle-piece" aria-hidden="true"></i><span><strong>ตั้งค่าส่วนขยายเบราว์เซอร์</strong><small>เปิดลิงก์แชต แผงด็อก และโอเวอร์เลย์</small></span></a></li>
+						<li><a href="#standalone-getting-started"><i class="fas fa-window-restore" aria-hidden="true"></i><span><strong>ตั้งค่าแอปเดสก์ท็อป</strong><small>หน้าต่างแหล่งข้อมูลที่จัดการได้แทนแท็บ</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary><span class="guide-tree-title"><i class="fas fa-broadcast-tower" aria-hidden="true"></i> ดำเนินสตรีมของคุณ</span><small>การควบคุมแผงด็อก การดูแลแชต การส่งต่อ และการมีส่วนร่วม</small></summary>
+					<ul>
+						<li><a href="dock-live-guide.html"><i class="fas fa-columns" aria-hidden="true"></i><span><strong>ใช้แผงด็อกระหว่างสตรีม</strong><small>แสดงเด่น ล้าง เข้าคิว ปักหมุด ตอบ และจัดการแชตคึกคัก</small></span></a></li>
+						<li><a href="moderation-filtering-guide.html"><i class="fas fa-shield-alt" aria-hidden="true"></i><span><strong>การดูแลและกรองข้อความ</strong><small>ผู้ใช้ คำ บอต คำสั่ง และตัวกรองส่วนกลางเทียบกับตัวกรองในหน้า</small></span></a></li>
+						<li><a href="chat-relay-guide.html"><i class="fas fa-exchange-alt" aria-hidden="true"></i><span><strong>ส่งต่อแชตระหว่างแพลตฟอร์ม</strong><small>โฟลว์ Twitch และ YouTube บัญชีผู้ส่ง และแก้ข้อความสะท้อนซ้ำ</small></span></a></li>
+						<li><a href="polls-giveaways-waitlists-guide.html"><i class="fas fa-vote-yea" aria-hidden="true"></i><span><strong>แบบสำรวจ การแจกของรางวัล และรายชื่อรอ</strong><small>จัดโหวต จับผู้ชนะ หรือเลื่อนคิวผู้ชม</small></span></a></li>
+						<li><a href="giveaway-guide.html"><i class="fas fa-gift" aria-hidden="true"></i><span><strong>การแจกของรางวัลครั้งแรก</strong><small>รวบรวมผู้เข้าร่วมจากแชต จับผู้ชนะ และแสดงผลใน OBS</small></span></a></li>
+						<li><a href="loyalty-points-guide.html"><i class="fas fa-coins" aria-hidden="true"></i><span><strong>แต้มสะสมและรางวัล</strong><small>การสะสม ยอดคงเหลือ การแลกสติกเกอร์ และสำรองแต้ม</small></span></a></li>
+						<li><a href="multiple-overlays-guide.html"><i class="fas fa-layer-group" aria-hidden="true"></i><span><strong>หลายช่องและโอเวอร์เลย์แยก</strong><small>แผงด็อกผู้ดำเนินการเดียวพร้อมมุมมองแยกตามแพลตฟอร์มและแหล่งข้อมูล</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-layer-group" aria-hidden="true"></i> โอเวอร์เลย์และการปรับแต่ง</span>
+						<small>เทมเพลต ตัวเลือกสไตล์ ฟอนต์ อีเวนต์</small>
+					</summary>
+					<ul>
+						<li><a href="templates.html"><i class="fas fa-th-large" aria-hidden="true"></i><span><strong>แกลเลอรีเทมเพลต</strong><small>เลย์เอาต์โอเวอร์เลย์สำเร็จรูป</small></span></a></li>
+						<li><a href="streamelements-chat-guide.html"><i class="fas fa-file-import" aria-hidden="true"></i><span><strong>สกินแชต StreamElements / Streamlabs</strong><small>นำเข้าธีมแชตกำหนดเอง ดูตัวอย่าง และดาวน์โหลดโอเวอร์เลย์ OBS</small></span></a></li>
+						<li><a href="overlay-template-quick-start.html"><i class="fas fa-images" aria-hidden="true"></i><span><strong>เริ่มใช้เทมเพลตอย่างรวดเร็ว</strong><small>เลือกเทมเพลตแล้วเพิ่มใน OBS</small></span></a></li>
+						<li><a href="on-screen-chat-overlay.html"><i class="fas fa-gamepad" aria-hidden="true"></i><span><strong>แชตบนหน้าจอขณะเล่นเกม</strong><small>โอเวอร์เลย์มอนิเตอร์ส่วนตัว การตรึง ความโปร่งใส ปุ่มลัด และคำสั่งเปิด</small></span></a></li>
+						<li><a href="transparent-dock-non-obs.html"><i class="fas fa-adjust" aria-hidden="true"></i><span><strong>นำพื้นหลังสีเทาของแผงด็อกออก</strong><small>การตั้งค่าความโปร่งใสและซ่อนเมนูสำหรับ MELD กับแอปอื่นที่ไม่ใช่ OBS</small></span></a></li>
+						<li><a href="overlay-customization-guide.html"><i class="fas fa-paint-brush" aria-hidden="true"></i><span><strong>Design your own overlays</strong><small>Guides by type, downloads, session IDs, local OBS setup, and safe AI prompts.</small></span></a></li>
+						<li><a href="poll-customization-guide.html"><i class="fas fa-vote-yea" aria-hidden="true"></i><span><strong>Customize your graphical poll</strong><small>OBS CSS, AI design prompts, and editing poll.html locally.</small></span></a></li>
+						<li><a href="name-colors.html"><i class="fas fa-palette" aria-hidden="true"></i><span><strong>สีชื่อแชตต่างกัน</strong><small>การตั้งค่าที่จำเป็น โหมดสี ภาพหน้าจอ และ CSS</small></span></a></li>
+						<li><a href="tip-jar-goal-meter.html"><i class="fas fa-donate" aria-hidden="true"></i><span><strong>โหลทิปและมาตรวัดเป้าหมาย</strong><small>เป้าหมายบริจาค คะแนน Hype สมาชิก และสมาชิกแบบของขวัญ</small></span></a></li>
+						<li><a href="credits-roll-guide.html"><i class="fas fa-film" aria-hidden="true"></i><span><strong>เครดิตเลื่อน</strong><small>รวบรวมผู้ร่วมกิจกรรมและผู้สนับสนุน ตั้งค่า OBS และเรียกเครดิตตอนจบ</small></span></a></li>
+						<li><a href="custom-fonts.html"><i class="fas fa-font" aria-hidden="true"></i><span><strong>ฟอนต์กำหนดเอง</strong><small>ฟอนต์ที่โฮสต์เองและตัวอย่าง CSS</small></span></a></li>
+						<li><a href="events-alerts-compatibility.html"><i class="fas fa-bell" aria-hidden="true"></i><span><strong>ความเข้ากันได้ของอีเวนต์และการแจ้งเตือน</strong><small>อีเวนต์ YouTube, Twitch และ Kick ในการแจ้งเตือน TTS เป้าหมาย และ Event Flow</small></span></a></li>
+						<li><a href="event-reference.html"><i class="fas fa-list-alt" aria-hidden="true"></i><span><strong>เอกสารอ้างอิงอีเวนต์</strong><small>ช่องข้อมูลสำหรับการแจ้งเตือนและโอเวอร์เลย์</small></span></a></li>
+						<li><a href="#extension-hype-train-top-bar"><i class="fas fa-fire" aria-hidden="true"></i><span><strong>แถบด้านบน Hype train</strong><small>โอเวอร์เลย์ Twitch hype train โดยเฉพาะ</small></span></a></li>
+						<li><a href="#extension-first-time-chatters"><i class="fas fa-user-plus" aria-hidden="true"></i><span><strong>ผู้แชตครั้งแรก</strong><small>ไฮไลต์ผู้ชมใหม่ในแชต</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-cogs" aria-hidden="true"></i> ระบบอัตโนมัติและการเชื่อมต่อ</span>
+						<small>API คำสั่ง Event Flow และ webhook</small>
+					</summary>
+					<ul>
+						<li><a href="../streamdeck/index.html"><i class="fas fa-th" aria-hidden="true"></i><span><strong>ตั้งค่า Stream Deck</strong><small>ติดตั้งปลั๊กอิน เชื่อมต่อเซสชัน และทดสอบการควบคุม</small></span></a></li>
+						<li><a href="thermal-printer-guide.html"><i class="fas fa-print" aria-hidden="true"></i><span><strong>เครื่องพิมพ์เทอร์มอลและป้ายสตรีม</strong><small>พิมพ์ชื่อ การบริจาค การซื้อ ใบรับ และสติกเกอร์ขนาดคงที่จาก Event Flow</small></span></a></li>
+						<li><a href="sticker-gallery.html"><i class="fas fa-star" aria-hidden="true"></i><span><strong>แพ็กสติกเกอร์และรางวัลแต้มสะสม</strong><small>ดูตัวอย่างหกแพ็ก ตั้งราคาแต้ม คูลดาวน์ ภาพกำหนดเอง และรางวัล GIPHY GIF</small></span></a></li>
+						<li><a href="local-services-guide.html"><i class="fas fa-network-wired" aria-hidden="true"></i><span><strong>เซิร์ฟเวอร์และบริการในเครื่อง</strong><small>ทำความเข้าใจบริการในเครื่องของ SSApp ที่ตรงกับเป้าหมาย</small></span></a></li>
+						<li><a href="local-websocket-server-guide.html"><i class="fas fa-exchange-alt" aria-hidden="true"></i><span><strong>โหมด WebSocket ที่โฮสต์ไว้และ Local Server</strong><small>เปิดเส้นทางเซิร์ฟเวอร์ที่โฮสต์ไว้สำหรับแชตและคำตอบ หรือใช้รีเลย์ในเครื่องขั้นสูงของ SSApp</small></span></a></li>
+						<li><a href="llm-control-guide.html"><i class="fas fa-robot" aria-hidden="true"></i><span><strong>Local Control API และ MCP</strong><small>เชื่อมแอปเดสก์ท็อปกับเครื่องมือ AI ในเครื่องหรือสคริปต์บนเครื่องเดียวกัน</small></span></a></li>
+						<li><a href="headless-server-guide.html"><i class="fas fa-server" aria-hidden="true"></i><span><strong>เซิร์ฟเวอร์ที่บ้านหรือ VPS แบบไร้หน้าจอ</strong><small>เรียกแอปเดสก์ท็อปเต็มบน Linux ด้วย Xvfb และการควบคุมระยะไกล</small></span></a></li>
+						<li><a href="test-message-guide.html"><i class="fas fa-vial" aria-hidden="true"></i><span><strong>สร้างข้อความทดสอบ</strong><small>ส่งข้อมูลจำลองของแชต บริจาค สมาชิก เรด รางวัล และอีเวนต์อื่น</small></span></a></li>
+						<li><a href="commands.html"><i class="fas fa-terminal" aria-hidden="true"></i><span><strong>คำสั่งและ API</strong><small>การกระทำ WebSocket และตัวอย่าง</small></span></a></li>
+						<li><a href="obs-control-dock-guide.html"><i class="fas fa-sliders-h" aria-hidden="true"></i><span><strong>แผงด็อกควบคุม OBS</strong><small>ปุ่มเครดิต แชตเด่น ตัวจับเวลา และรายชื่อรอใน OBS</small></span></a></li>
+						<li><a href="event-flow-recipes.html"><i class="fas fa-project-diagram" aria-hidden="true"></i><span><strong>ตัวอย่าง Event Flow</strong><small>เสียง รางวัล สื่อ webhook และการกระทำ OBS</small></span></a></li>
+						<li><a href="media-hosting-event-flow.html"><i class="fas fa-photo-video" aria-hidden="true"></i><span><strong>การโฮสต์สื่อ Event Flow</strong><small>อัปโหลด ไฟล์ในเครื่อง หรือคลังคลาวด์ขนาดใหญ่</small></span></a></li>
+						<li><a href="video-stats-bitrate.html"><i class="fas fa-tachometer-alt" aria-hidden="true"></i><span><strong>สถิติวิดีโอและบิตเรต</strong><small>ตรวจสถิติ SRT, RTMP หรือเซิร์ฟเวอร์สื่อเป็นระยะและแสดงบิตเรตในแผงด็อก</small></span></a></li>
+						<li><a href="#extension-event-flow"><i class="fas fa-project-diagram" aria-hidden="true"></i><span><strong>ภาพรวม Event Flow</strong><small>สิ่งที่ตัวแก้ไขโหนดทำได้โดยย่อ</small></span></a></li>
+						<li><a href="../actions/event-flow-guide.html"><i class="fas fa-sitemap" aria-hidden="true"></i><span><strong>คู่มือ Event Flow แบบละเอียด</strong><small>เอกสารอ้างอิงตัวแก้ไขและโฟลว์การกระทำฉบับเต็ม</small></span></a></li>
+						<li><a href="../actions/user-memory-guide.html"><i class="fas fa-users" aria-hidden="true"></i><span><strong>คู่มือ User Memory</strong><small>รายชื่อเข้าร่วม การตรวจสิทธิ์ จับรางวัล การเก็บข้อมูล และการล้างเฉพาะเป้าหมาย</small></span></a></li>
+						<li><a href="../../docs/index.html?file=kick-channel-points-event-flow.md"><i class="fas fa-gift" aria-hidden="true"></i><span><strong>เสียง/สื่อรางวัล Kick</strong><small>ตั้งค่าโฟลว์การกระทำที่เรียกด้วยรางวัล</small></span></a></li>
+						<li><a href="#extension-webhooks"><i class="fas fa-link" aria-hidden="true"></i><span><strong>Webhooks</strong><small>Stripe, Ko-fi, Fourthwall และอื่น ๆ</small></span></a></li>
+						<li><a href="#extension-midi"><i class="fas fa-sliders-h" aria-hidden="true"></i><span><strong>MIDI</strong><small>เรียกการกระทำ MIDI ในเครื่องจากแชต</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-robot" aria-hidden="true"></i> AI และ TTS</span>
+						<small>ผู้ช่วยดำเนินรายการด้วยเสียง เพื่อนร่วมสนทนาในเบราว์เซอร์ บอต โมเดลในเครื่อง และ TTS</small>
+					</summary>
+					<ul>
+						<li><a href="ai-modes-guide.html"><i class="fas fa-robot" aria-hidden="true"></i><span><strong>คู่มือ AI ฉบับสมบูรณ์</strong><small>เลือกผู้ช่วยดำเนินรายการด้วยเสียง เพื่อนร่วมสนทนา ChatGPT ในเบราว์เซอร์ แชตบอต การดูแลแชต RAG การแปล หรือตัวสร้างโอเวอร์เลย์</small></span></a></li>
+						<li><a href="ai-modes-guide.html#browser-companion"><i class="fas fa-window-restore" aria-hidden="true"></i><span><strong>เพื่อนร่วมสนทนา ChatGPT ในเบราว์เซอร์</strong><small>จับหรือทดลองส่งต่อแชตสดเข้าแท็บ ChatGPT ที่เปิดอยู่โดยไม่ใช้คีย์ API</small></span></a></li>
+						<li><a href="tts-setup-guide.html"><i class="fas fa-volume-up" aria-hidden="true"></i><span><strong>คู่มือตั้งค่า TTS</strong><small>ตั้งค่าเสียงแบบง่ายที่เหมาะกับ OBS พร้อมภาพหน้าจอ</small></span></a></li>
+						<li><a href="speechify-setup-guide.html"><i class="fas fa-volume-up" aria-hidden="true"></i><span><strong>คู่มือตั้งค่า Speechify</strong><small>คีย์ API การเลือกเสียง ความเร็วอ่าน และระดับเสียงผู้ชมใน OBS</small></span></a></li>
+						<li><a href="tts.html"><i class="fas fa-book" aria-hidden="true"></i><span><strong>เอกสารอ้างอิง TTS ฉบับเต็ม</strong><small>พารามิเตอร์ผู้ให้บริการทั้งหมดและหมายเหตุการกำหนดเส้นทางเสียง</small></span></a></li>
+						<li><a href="local-tts.html"><i class="fas fa-microphone-alt" aria-hidden="true"></i><span><strong>AI TTS ในเครื่อง</strong><small>ตัวเลือกเสียงส่วนตัวในเบราว์เซอร์และเซิร์ฟเวอร์</small></span></a></li>
+						<li><a href="chatbot-basics-guide.html"><i class="fas fa-comments" aria-hidden="true"></i><span><strong>ตั้งค่าแชตบอต AI</strong><small>ผู้ให้บริการ การควบคุมบอตหลัก การทดสอบปลอดภัย และปัญหาไม่มีคำตอบ</small></span></a></li>
+						<li><a href="ai-cohost-guide.html"><i class="fas fa-brain" aria-hidden="true"></i><span><strong>ผู้ช่วยดำเนินรายการ AI ด้วยเสียง</strong><small>สนทนาผ่านไมโครโฟน คำถามแชตสด คำตอบเสียง และโอเวอร์เลย์เวที</small></span></a></li>
+						<li><a href="ai-overlay-builder-guide.html"><i class="fas fa-magic" aria-hidden="true"></i><span><strong>ตัวสร้างโอเวอร์เลย์ AI</strong><small>เขียนพรอมป์ต์ ดูตัวอย่าง และเพิ่มโอเวอร์เลย์ที่สร้าง</small></span></a></li>
+						<li><a href="twitch-bot-account-chatbot.html"><i class="fas fa-user-astronaut" aria-hidden="true"></i><span><strong>บัญชีบอตสำหรับตอบกลับ</strong><small>เปรียบเทียบวิธีใช้แหล่ง Twitch WebSocket กับแหล่งตอบกลับอย่างเดียว</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-broadcast-tower" aria-hidden="true"></i> คู่มือแพลตฟอร์ม</span>
+						<small>TikTok, YouTube, Twitch, Kick และเว็บไซต์ที่รองรับ</small>
+					</summary>
+					<ul>
+						<li><a href="source-types-guide.html"><i class="fas fa-tags" aria-hidden="true"></i><span><strong>ประเภทแหล่งข้อมูล</strong><small>ชื่อข้อมูล YouTube Shorts, Instagram Live การจับทั่วไป และการตอบ</small></span></a></li>
+						<li><a href="external-overlay-sources.html"><i class="fas fa-link" aria-hidden="true"></i><span><strong>Discord StreamKit และ TikFinity</strong><small>ใช้ลิงก์โอเวอร์เลย์ภายนอกเป็นแหล่งแชตแบบอ่านอย่างเดียว</small></span></a></li>
+						<li><a href="tiktok-quick-start.html"><i class="fab fa-tiktok" aria-hidden="true"></i><span><strong>เริ่มใช้ TikTok อย่างรวดเร็ว</strong><small>ตั้งค่าสดแบบง่ายพร้อมภาพหน้าจอ</small></span></a></li>
+						<li><a href="tikfinity-setup.html"><i class="fab fa-tiktok" aria-hidden="true"></i><span><strong>ตั้งค่าทางสำรอง TikFinity</strong><small>เชื่อมต่อ TikTok เลือกกิจกรรมแผงด็อก และจับข้อมูลใน SSN</small></span></a></li>
+						<li><a href="tiktok-guide.html"><i class="fas fa-comment-dots" aria-hidden="true"></i><span><strong>คู่มือ TikTok</strong><small>โหมดเชื่อมต่อและปัญหาที่พบบ่อย</small></span></a></li>
+						<li><a href="tiktok-app-modes-guide.html"><i class="fas fa-mobile-alt" aria-hidden="true"></i><span><strong>โหมด TikTok ในแอป</strong><small>โหมด Auto, Standard, signer, polling และ proxy</small></span></a></li>
+						<li><a href="tiktok-signing.html"><i class="fas fa-signature" aria-hidden="true"></i><span><strong>การลงลายเซ็น TikTok</strong><small>ข้อผิดพลาดเซิร์ฟเวอร์ลงลายเซ็น ขีดจำกัดอัตรา และคีย์ Euler API</small></span></a></li>
+						<li><a href="standalone-app-modes.html#tiktok-in-the-app"><i class="fas fa-mobile-alt" aria-hidden="true"></i><span><strong>TikTok ในแอปเดสก์ท็อป</strong><small>หมายเหตุโหมด TikTok ในแอปแยก</small></span></a></li>
+						<li><a href="youtube-setup-guide.html"><i class="fab fa-youtube" aria-hidden="true"></i><span><strong>คู่มือตั้งค่า YouTube</strong><small>แชตสด ความคิดเห็นคงที่ และตัวเลือก API/OAuth</small></span></a></li>
+						<li><a href="youtube-project-setup.html"><i class="fab fa-youtube" aria-hidden="true"></i><span><strong>ตั้งค่าโปรเจกต์ YouTube</strong><small>การตั้งค่าโปรเจกต์ API และ OAuth</small></span></a></li>
+						<li><a href="twitch-eventsub-setup.html"><i class="fab fa-twitch" aria-hidden="true"></i><span><strong>การตั้งค่า Twitch และ EventSub</strong><small>แหล่ง WebSocket, OAuth, ขอบเขตสิทธิ์ และการตรวจอีเวนต์</small></span></a></li>
+						<li><a href="kick-setup-authentication.html"><i class="fas fa-bolt" aria-hidden="true"></i><span><strong>การตั้งค่าและยืนยันตัวตน Kick</strong><small>slug ช่อง ขอบเขต OAuth อีเวนต์อย่างเป็นทางการ และปัญหาที่พบบ่อย</small></span></a></li>
+						<li><a href="supported-sites.html"><i class="fas fa-globe" aria-hidden="true"></i><span><strong>รายชื่อเว็บไซต์ที่รองรับ</strong><small>หมายเหตุตั้งค่าแพลตฟอร์มสาธารณะทั้งหมด</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-life-ring" aria-hidden="true"></i> การแก้ปัญหาและความช่วยเหลือ</span>
+						<small>แชตหาย โอเวอร์เลย์ว่าง และเอกสารช่วยเหลือเชิงลึก</small>
+					</summary>
+					<ul>
+						<li><a href="knowledge-base.html"><i class="fas fa-life-ring" aria-hidden="true"></i><span><strong>ฐานความรู้</strong><small>วิธีแก้สั้น ๆ สำหรับปัญหาพบบ่อย</small></span></a></li>
+						<li><a href="obs-troubleshooting.html"><i class="fas fa-tools" aria-hidden="true"></i><span><strong>การแก้ปัญหา OBS</strong><small>เปลี่ยน URL ที่บันทึก รีเฟรชแคช และแก้โอเวอร์เลย์ว่าง</small></span></a></li>
+						<li><a href="sessions-passwords-relay-modes.html"><i class="fas fa-key" aria-hidden="true"></i><span><strong>แก้ปัญหาเซสชันและเส้นทางข้อมูล</strong><small>รหัสผ่าน ลิงก์ใหม่ และทางสำรองอ่าน/ตอบผ่านเซิร์ฟเวอร์</small></span></a></li>
+						<li><a href="windows-administrator-mode.html"><i class="fas fa-user-shield" aria-hidden="true"></i><span><strong>โหมดผู้ดูแลระบบ Windows</strong><small>เฉพาะเมื่อยืนยันแล้วว่าระดับสิทธิ์ OBS กับ Social Stream ไม่ตรงกัน</small></span></a></li>
+						<li><a href="export-settings-for-support.html"><i class="fas fa-file-export" aria-hidden="true"></i><span><strong>ส่งออกการตั้งค่าเพื่อขอความช่วยเหลือ</strong><small>ส่งออกการตั้งค่า Social Stream Ninja และ OBS เพื่อตรวจสอบ</small></span></a></li>
+						<li><a href="#extension-troubleshooting"><i class="fas fa-tools" aria-hidden="true"></i><span><strong>แก้ปัญหาส่วนขยายเบราว์เซอร์</strong><small>แชตหาย สิทธิ์ การลดการทำงาน และสวิตช์</small></span></a></li>
+						<li><a href="#standalone-troubleshooting"><i class="fas fa-wrench" aria-hidden="true"></i><span><strong>แก้ปัญหาแอปเดสก์ท็อป</strong><small>หน้าต่างแหล่งข้อมูล การอัปเดต และการตรวจตั้งค่า</small></span></a></li>
+						<li><a href="support.html"><i class="fas fa-headset" aria-hidden="true"></i><span><strong>หน้าช่วยเหลือ</strong><small>Discord, ปัญหาบน GitHub และช่องทางร่วมพัฒนา</small></span></a></li>
+						<li><a href="../../docs/index.html?file=agents/common-guides.md"><i class="fas fa-book-open" aria-hidden="true"></i><span><strong>ดัชนีความช่วยเหลือขั้นสูง</strong><small>ขั้นตอนขอความช่วยเหลือและเอเจนต์ AI</small></span></a></li>
+					</ul>
+				</details>
+			</div>
+			<p class="guide-filter-empty" id="guide-filter-empty">ไม่พบคู่มือที่ตรงกัน</p>
+		</div>
+	</section>
+
+	<details class="guide-details" id="detailed-guides">
+		<summary>
+			<span><i class="fas fa-book" aria-hidden="true"></i> ส่วนคู่มือแบบละเอียด</span>
+			<small>เนื้อหาคู่มือทีละขั้นฉบับเต็ม ยุบส่วนนี้หากต้องการเฉพาะสารบัญ</small>
+		</summary>
+
+	<section class="navigation" id="guides-nav">
+		<div class="container">
+			<div class="guide-tabs">
+				<button class="tab-btn active" data-tab="extension-guides">ส่วนขยายเบราว์เซอร์</button>
+				<button class="tab-btn" data-tab="standalone-guides">แอปแบบสแตนด์อโลน</button>
+			</div>
+			<div class="nav-links" id="extension-nav" data-section="extension">
+				<a href="#extension-getting-started" class="nav-link active">
+					<i class="fas fa-rocket"></i> เริ่มต้นใช้งาน
+				</a>
+				<a href="#extension-customization" class="nav-link">
+					<i class="fas fa-paint-brush"></i> การปรับแต่ง
+				</a>
+				<a href="#extension-advanced" class="nav-link">
+					<i class="fas fa-sliders-h"></i> ฟีเจอร์ขั้นสูง
+				</a>
+				<a href="#extension-troubleshooting" class="nav-link">
+					<i class="fas fa-tools"></i> การแก้ปัญหา
+				</a>
+				<a href="#faq" class="nav-link">
+					<i class="fas fa-question-circle"></i> คำถามที่พบบ่อย
+				</a>
+			</div>
+			<div class="nav-links" id="standalone-nav" data-section="standalone" style="display: none;">
+				<a href="#standalone-getting-started" class="nav-link active">
+					<i class="fas fa-rocket"></i> เริ่มต้นใช้งาน
+				</a>
+				<a href="#standalone-tiktok" class="nav-link">
+					<i class="fas fa-comment-dots"></i> TikTok
+				</a>
+				<a href="#standalone-customization" class="nav-link">
+					<i class="fas fa-paint-brush"></i> การปรับแต่ง
+				</a>
+				<a href="#standalone-advanced" class="nav-link">
+					<i class="fas fa-sliders-h"></i> ฟีเจอร์ขั้นสูง
+				</a>
+				<a href="#standalone-troubleshooting" class="nav-link">
+					<i class="fas fa-tools"></i> การแก้ปัญหา
+				</a>
+				<a href="#faq" class="nav-link">
+					<i class="fas fa-question-circle"></i> คำถามที่พบบ่อย
+				</a>
+			</div>
+		</div>
+	</section>
+
+	<!-- Extension Guides -->
+	<div id="extension-guides" class="guide-section-wrapper">
+		<section id="extension-getting-started" class="guide-section">
+			<div class="container">
+				<h2>เริ่มต้นใช้งาน (ส่วนขยายเบราว์เซอร์)</h2>
+				
+				<div class="guide-card">
+					<h3>1. ติดตั้ง</h3>
+					<p>ก่อนใช้ Social Stream Ninja ต้องติดตั้งก่อน มีหลายวิธีติดตั้งส่วนขยายเบราว์เซอร์:</p>
+					<ul class="guide-list">
+						<li><strong>ติดตั้งด้วยตนเอง (แนะนำ):</strong> หากต้องการเวอร์ชันล่าสุด ให้ติดตั้งด้วยตนเองในโหมดนักพัฒนา</li>
+						<li><strong>Chrome Web Store:</strong> ติดตั้งผ่าน Chrome Web Store เพื่อการตั้งค่าที่ง่ายที่สุด</li>
+					</ul>
+					<p>สำหรับวิธีติดตั้งแบบละเอียด ดู <a href="download.html">หน้าดาวน์โหลด</a>.</p>
+				</div>
+				
+				<div class="guide-card">
+					<h3>2. ตั้งค่าพื้นฐาน</h3>
+					<p>เมื่อติดตั้งแล้ว ทำตามขั้นตอนเพื่อเริ่มใช้ Social Stream Ninja:</p>
+					<ol class="guide-steps">
+						<li>เปิดแชตแพลตฟอร์มสตรีมในเบราว์เซอร์ (หรือใช้แชตป๊อปเอาต์หากมี)</li>
+						<li>คลิกไอคอนส่วนขยาย Social Stream Ninja ในแถบเครื่องมือเบราว์เซอร์</li>
+						<li>คลิก "Enable Extension" เพื่อเปิด (ไอคอนควรเป็นสีเขียว)</li>
+						<li>เปิด "Dashboard Link" ที่ให้ในป๊อปอัปส่วนขยาย</li>
+						<li>เปิด "Overlay Link" ใน OBS เป็นแหล่งเบราว์เซอร์</li>
+					</ol>
+					<div class="guide-note">
+						<p><strong>หมายเหตุ:</strong> เพื่อประสบการณ์ดีที่สุด ให้หน้าต่างแชตมองเห็นอยู่ (ไม่ย่อ) เมื่อใช้ส่วนขยายเบราว์เซอร์</p>
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>3. เชื่อมต่อแพลตฟอร์มต่าง ๆ</h3>
+					<p>Social Stream Ninja ใช้กับกว่า 100 แพลตฟอร์มได้ วิธีเชื่อมต่อแพลตฟอร์มยอดนิยมมีดังนี้:</p>
+					
+					<div class="platform-guide">
+						<h4>YouTube</h4>
+						<ul class="guide-list">
+							<li>เปิดแชต YouTube Live</li>
+							<li>คลิกปุ่ม "Pop out chat" มุมขวาบน</li>
+							<li>ตรวจว่าส่วนขยาย Social Stream Ninja เปิดอยู่ (ไอคอนเขียว)</li>
+						</ul>
+					</div>
+					
+					<div class="platform-guide">
+						<h4>Twitch</h4>
+						<ul class="guide-list">
+							<li>เปิดแชต Twitch ของช่องคุณ</li>
+							<li>คลิกไอคอนเฟืองแล้วเลือก "Pop out chat"</li>
+							<li>ตรวจว่าส่วนขยาย Social Stream Ninja เปิดอยู่ (ไอคอนเขียว)</li>
+						</ul>
+					</div>
+					
+					<div class="platform-guide">
+						<h4>Facebook</h4>
+						<ul class="guide-list">
+							<li>เปิด Facebook Live ของคุณ (เป็นผู้ชมหรือผู้เผยแพร่)</li>
+							<li>ตรวจว่าเชื่อมต่อ WiFi หรือ Ethernet (ไม่ใช่เน็ตมือถือ)</li>
+							<li>ตรวจว่าส่วนขยาย Social Stream Ninja เปิดอยู่ (ไอคอนเขียว)</li>
+						</ul>
+					</div>
+					
+					<div class="platform-guide">
+						<h4>Discord, Slack, WhatsApp ฯลฯ</h4>
+						<ul class="guide-list">
+							<li>ก่อนอื่น เปิดแพลตฟอร์มเหล่านี้ในการตั้งค่าส่วนขยาย (สวิตช์)</li>
+							<li>เปิดเวอร์ชันเว็บของแพลตฟอร์มเหล่านี้ในเบราว์เซอร์</li>
+							<li>ตรวจว่าส่วนขยาย Social Stream Ninja เปิดอยู่ (ไอคอนเขียว)</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section id="extension-customization" class="guide-section alt">
+			<div class="container">
+				<h2>การปรับแต่ง (ส่วนขยายเบราว์เซอร์)</h2>
+				
+				<div class="guide-card">
+					<h3>พารามิเตอร์ URL</h3>
+					<p>ปรับได้ทั้งแดชบอร์ดและโอเวอร์เลย์ด้วยการเพิ่มพารามิเตอร์ใน URL ตัวอย่าง:</p>
+					
+					<h4>พารามิเตอร์แดชบอร์ด:</h4>
+					<div class="code-block">
+						<code>&darkmode</code> - เปิดโหมดมืดสำหรับแดชบอร์ด<br>
+						<code>&scale=2</code> - เพิ่มขนาด/ความละเอียดทุกองค์ประกอบเป็นสองเท่า<br>
+						<code>&hidesource</code> - ซ่อนไอคอนแพลตฟอร์ม (YouTube, Twitch ฯลฯ)<br>
+						<code>&compact</code> - ลบช่องว่างระหว่างชื่อกับข้อความ<br>
+						<code>&inline</code> - วางข้อความต่อข้างชื่อโดยคงระยะห่างปกติ<br>
+						<code>&autoshow</code> - นำข้อความมาแสดงเด่นอัตโนมัติเมื่อเข้ามา (ประมาณ 2 ข้อความต่อ 3 วินาที)
+					</div>
+					
+					<h4>พารามิเตอร์โอเวอร์เลย์:</h4>
+					<div class="code-block">
+						<code>&showtime=20000</code> - ซ่อนข้อความที่เลือกอัตโนมัติหลัง 20 วินาที<br>
+						<code>&showsource</code> - แสดงไอคอนแพลตฟอร์มข้างชื่อผู้ใช้<br>
+						<code>&fade</code> - ทำให้ข้อความเด่นค่อย ๆ ปรากฏแทนโผล่ทันที<br>
+						<code>&swipe</code> - ทำให้ข้อความเด่นเลื่อนเข้าจากซ้าย<br>
+						<code>&center</code> - จัดข้อความเด่นไว้กึ่งกลางจอ
+					</div>
+					
+					<p>เพื่อจัดการ URL ง่ายขึ้น ลอง <a href="https://socialstream.ninja/urleditor.html" target="_blank">เครื่องมือแก้ไขพารามิเตอร์ URL</a>.</p>
+				</div>
+				
+				<div class="guide-card">
+					<h3>การปรับแต่ง CSS</h3>
+					<p>ปรับหน้าตาด้วย CSS ได้หลายวิธี:</p>
+					
+					<h4>วิธีที่ 1: CSS แหล่งเบราว์เซอร์ OBS</h4>
+					<p>ใน OBS คุณเพิ่ม CSS กำหนดเองให้แหล่งเบราว์เซอร์ได้:</p>
+					<ol class="guide-steps">
+						<li>เพิ่มโอเวอร์เลย์เป็นแหล่งเบราว์เซอร์ใน OBS</li>
+						<li>เลือกตัวเลือก "Custom CSS"</li>
+						<li>ป้อน CSS กำหนดเองในช่องข้อความ</li>
+					</ol>
+					
+					<div class="code-block">
+						<pre>body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
+
+:root {
+    --comment-color: #090;
+    --comment-bg-color: #DDD;
+    --comment-border-radius: 10px;
+    --comment-font-size: 30px;
+    --author-border-radius: 10px;
+    --author-bg-color: #FF0000;
+    --author-avatar-border-color: #FF0000;
+    --author-font-size: 32px;
+    --author-color: blue;
+    --font-family: "Arial", sans-serif;
+}
+
+.hl-name {
+    padding: 2px 10px !important;
+}</pre>
+					</div>
+					
+					<h4>วิธีที่ 2: การตั้งค่าเมนูส่วนขยาย</h4>
+					<p>เพิ่ม CSS โดยตรงผ่านเมนูส่วนขยาย:</p>
+					<ol class="guide-steps">
+						<li>คลิกไอคอนส่วนขยาย Social Stream Ninja</li>
+						<li>หาส่วนตั้งค่า CSS/JavaScript</li>
+						<li>ป้อน CSS หรือ JavaScript กำหนดเอง</li>
+						<li>CSS จะถูกต่อท้าย URL เป็นข้อมูลเข้ารหัส base64</li>
+					</ol>
+					
+					<h4>วิธีที่ 3: ใช้เทมเพลตกำหนดเอง</h4>
+					<p>เลือกเทมเพลตตกแต่งสำเร็จที่มี CSS ในตัว:</p>
+					<ul class="guide-list">
+						<li>ดู <a href="templates.html">แกลเลอรีเทมเพลต</a></li>
+						<li>เลือกเทมเพลตที่เข้ากับสไตล์สตรีม</li>
+						<li>แทนที่ <code>YOURSESSIONID</code> ใน URL เทมเพลตด้วยรหัสเซสชันของคุณ</li>
+						<li>เพิ่ม URL เทมเพลตเป็นแหล่งเบราว์เซอร์ใน OBS</li>
+					</ul>
+					<div class="guide-note">
+						<p><strong>ตัวอย่าง:</strong> <code>https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID</code></p>
+					</div>
+				</div>
+
+				<div class="guide-card">
+					<h3>ใช้สีต่างกันสำหรับชื่อแชต</h3>
+					<p>สีชื่อต้องตั้งสองส่วน: แหล่งสีทั่วไปใน <strong>ข้อความ - รูปแบบ (Message - Styling)</strong> และสวิตช์แสดงผลแผงด็อกใน <strong>ข้อความ - การมองเห็น (Message - Visibility)</strong>.</p>
+					<div class="guide-note">
+						<p><a href="name-colors.html">เปิดคู่มือสีชื่อแชต</a> สำหรับภาพหน้าจอ ตัวเลือกสี การแก้ปัญหา และตัวอย่าง CSS</p>
+					</div>
+				</div>
+
+				<div class="guide-card">
+					<h3>ฟอนต์ที่โฮสต์เองและการตกแต่ง</h3>
+					<p>นำฟอนต์ของคุณเองมาใช้กับ <code>dock.html</code> หรือ <code>featured.html</code> โดยไม่พึ่งฟอนต์ Google/ระบบ</p>
+					<ul class="guide-list">
+						<li>โฮสต์ไฟล์ .woff2/.ttf/.otf และโหลดด้วย <code>@font-face</code>.</li>
+						<li>ใช้ CSS ผ่าน CSS กำหนดเองของ OBS หรือพารามิเตอร์ URL เช่น <code>&amp;css=</code>, <code>&amp;b64css=</code>, <code>&amp;font=</code>, หรือ <code>&amp;googlefont=</code>.</li>
+						<li>ทำงานเหมือนกันในส่วนขยาย Chrome แอป Electron และหน้าที่โฮสต์ไว้</li>
+					</ul>
+					<div class="guide-note">
+						<p><a href="custom-fonts.html">เปิดคู่มือฟอนต์ที่โฮสต์เอง</a> สำหรับวิธีโฮสต์ทีละขั้นและตัวอย่าง CSS</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section id="extension-advanced" class="guide-section">
+			<div class="container">
+				<h2>ฟีเจอร์ขั้นสูง (ส่วนขยายเบราว์เซอร์)</h2>
+
+				<div class="guide-card">
+					<h3>การแปลงข้อความเป็นเสียงพูด</h3>
+					<p>Social Stream Ninja อ่านข้อความแชตออกเสียงได้ด้วยเทคโนโลยี Text-to-Speech:</p>
+
+					<h4>ตั้งค่า TTS:</h4>
+					<ol class="guide-steps">
+						<li>เพิ่ม <code>&speech=en-US</code> ลงใน URL featured.html หรือ dock.html</li>
+						<li>สำหรับภาษาอื่น ใช้ผู้ให้บริการและเสียงที่รองรับภาษานั้น เช่น ภาษาโปรตุเกสใช้ Piper ได้ <code>&pipervoice=pt_BR-faber-medium</code> หรือ eSpeak <code>&espeakvoice=pt-br</code>, ส่วนภาษาสเปนใช้ Piper ได้ <code>&pipervoice=es_ES-davefx-medium</code> หรือ eSpeak <code>&espeakvoice=es</code>.</li>
+						<li>ปรับเสียงด้วยพารามิเตอร์ เช่น <code>&pitch=1&volume=1&rate=1</code></li>
+					</ol>
+
+					<h4>ตัวเลือก TTS ในเครื่องฟรี (ไม่ต้องใช้คีย์ API):</h4>
+					<ul class="guide-list">
+						<li><strong>Kokoro TTS:</strong> AI ในเบราว์เซอร์ คุณภาพยอดเยี่ยม — <code>&ttsprovider=kokoro</code></li>
+						<li><strong>Piper TTS:</strong> นิวรัล TTS ที่เร็วและเบา — <code>&ttsprovider=piper</code></li>
+						<li><strong>eSpeak-NG:</strong> ทางสำรองภาษาที่เบา รวมภาษาโปรตุเกส <code>&espeakvoice=pt-br</code> และภาษาสเปน <code>&espeakvoice=es</code></li>
+						<li><strong>Kitten TTS:</strong> ใช้ทรัพยากรน้อยที่สุด เฉพาะ CPU — <code>&ttsprovider=kitten</code></li>
+						<li><strong>เซิร์ฟเวอร์ที่โฮสต์เอง:</strong> เรียก Kokoro-FastAPI หรือ openedai-speech ในเครื่องผ่าน Docker — <code>&ttsprovider=openai&openaiendpoint=http://localhost:8880/v1/audio/speech</code></li>
+					</ul>
+
+					<h4>ตัวเลือก TTS คลาวด์พรีเมียม:</h4>
+					<ul class="guide-list">
+						<li><strong>Google Cloud TTS:</strong> เสียงคุณภาพมืออาชีพ (ต้องใช้คีย์ Google API)</li>
+						<li><strong>ElevenLabs:</strong> เสียงสมจริงสูงพร้อมฝึกเสียงกำหนดเอง</li>
+						<li><strong>Speechify:</strong> เสียงพรีเมียมเป็นธรรมชาติ</li>
+					</ul>
+
+					<div class="guide-note">
+						<p><strong>ต้องการให้ทำงานในเครื่องและเป็นส่วนตัวหรือไม่?</strong> ดู <a href="local-tts.html"><strong>คู่มือ AI TTS ในเครื่อง</strong></a> สำหรับวิธีตั้งค่าครบถ้วน รวมเซิร์ฟเวอร์ที่โฮสต์เองและการจับเสียง OBS</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="extension-ai">
+					<h3>ผู้ช่วยดำเนินรายการ AI แชตบอต และเพื่อนร่วมสนทนาในเบราว์เซอร์</h3>
+					<p>Social Stream Ninja ใช้ AI ได้หลายแบบ เลือกขั้นตอนงานก่อนเลือกผู้ให้บริการ</p>
+					<ul class="guide-list">
+						<li><strong>ผู้ช่วยดำเนินรายการด้วยเสียง:</strong> พูดผ่านไมโครโฟนขณะที่คำถามแชตสดเข้าสู่เซสชันผู้ช่วยดำเนินรายการเดียวกัน</li>
+						<li><strong>เพื่อนร่วมสนทนา ChatGPT ในเบราว์เซอร์:</strong> จับหรือทดลองส่งต่อแชตเข้า <code>chatgpt.com</code> แท็บที่เปิดอยู่โดยไม่ใช้คีย์ API</li>
+						<li><strong>แชตบอตหลัก:</strong> ตอบผู้ชมที่เลือกในโอเวอร์เลย์ ผ่าน TTS หรือกลับเข้าแชตที่รองรับ</li>
+						<li><strong>เครื่องมือประมวลผล:</strong> การดูแลแชต การแปล การสรุป ค้นความรู้ RAG และโอเวอร์เลย์สร้างด้วย AI</li>
+					</ul>
+					<p><a href="ai-modes-guide.html" class="btn btn-primary">เลือกการตั้งค่า AI</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h3>การเข้าคิวและปักหมุดข้อความ</h3>
+					<p>จัดรูปแบบการปรากฏของข้อความในโอเวอร์เลย์:</p>
+
+					<h4>การเข้าคิวข้อความ:</h4>
+					<ol class="guide-steps">
+						<li>กด CTRL (หรือ Cmd บน Mac) ค้างขณะคลิกข้อความในแดชบอร์ด</li>
+						<li>คลิกปุ่ม "Next in Queue" เพื่อแสดงทีละข้อความ</li>
+						<li>ข้อความจะปรากฏในโอเวอร์เลย์ตามลำดับเข้าคิว</li>
+					</ol>
+
+					<h4>การปักหมุดข้อความ:</h4>
+					<ol class="guide-steps">
+						<li>กด ALT ค้างขณะคลิกข้อความในแดชบอร์ด</li>
+						<li>ข้อความจะปักหมุดอยู่ด้านบนแดชบอร์ด</li>
+						<li>หากต้องการเลิกปักหมุด กด ALT ค้างแล้วคลิกข้อความที่ปักหมุดอีกครั้ง</li>
+					</ol>
+				</div>
+
+				<div class="guide-card" id="extension-stream-events">
+					<h3>การจับอีเวนต์สตรีม</h3>
+					<p>จับอีเวนต์ที่ไม่ใช่แชต เช่น ผู้ติดตามใหม่ สมัครสมาชิก เรด และการบริจาคจากแพลตฟอร์มสตรีม</p>
+
+					<h4>วิธีเปิดใช้:</h4>
+					<ol class="guide-steps">
+						<li>คลิกไอคอนส่วนขยาย Social Stream Ninja</li>
+						<li>หา <strong>"จับอีเวนต์สตรีม (Capture Stream Events)"</strong> สวิตช์ในการตั้งค่า</li>
+						<li>เปิดเพื่อเริ่มรับการแจ้งเตือน</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>หมายเหตุ:</strong> อีเวนต์แบบบริจาค (Super Chats, Bits, Tips) ส่งต่ออัตโนมัติไม่ว่าสวิตช์นี้เป็นค่าใด สวิตช์มีไว้หลัก ๆ สำหรับแจ้งเตือนผู้ติดตาม/สมาชิก</p>
+					</div>
+
+					<h4>อีเวนต์ที่จับได้ตามแพลตฟอร์ม:</h4>
+					<div class="platform-guide">
+						<h4>YouTube</h4>
+						<ul class="guide-list">
+							<li>สมาชิกใหม่และของขวัญสมาชิก</li>
+							<li>อัปเกรดสมาชิกและเหตุการณ์สำคัญ</li>
+							<li>การบริจาค Super Chat และ Super Sticker</li>
+							<li>จำนวนผู้ติดตามและผู้ชม</li>
+						</ul>
+					</div>
+
+					<div class="platform-guide">
+						<h4>Twitch</h4>
+						<ul class="guide-list">
+							<li>สมาชิกใหม่ สมัครซ้ำ และสมาชิกแบบของขวัญ</li>
+							<li>ผู้ติดตามและจำนวนผู้ติดตาม</li>
+							<li>Bits/Cheers และการแลกแต้มช่อง</li>
+							<li>เรดพร้อมจำนวนผู้ชม</li>
+						</ul>
+					</div>
+
+					<div class="platform-guide">
+						<h4>TikTok, Kick และอื่น ๆ</h4>
+						<ul class="guide-list">
+							<li>ผู้ติดตามและของขวัญ (TikTok)</li>
+							<li>การสมัครสมาชิกและทิป (Kick)</li>
+							<li>จำนวนผู้ชมในแพลตฟอร์มส่วนใหญ่</li>
+						</ul>
+					</div>
+
+					<p>ดูรายการข้อมูลอีเวนต์และช่องข้อมูลทั้งหมดได้ใน <a href="event-reference.html">เอกสารอ้างอิงอีเวนต์</a> เอกสาร</p>
+				</div>
+
+				<div class="guide-card" id="extension-hype-train-top-bar">
+					<h3>แถบด้านบน Hype Train</h3>
+					<p>แสดงความคืบหน้า Twitch Hype Train และ Treasure Train เป็นแถบด้านบนสไตล์ Twitch ใน OBS</p>
+					<ul class="guide-list">
+						<li>คัดลอกลิงก์ Hype Train Top Bar โดยเฉพาะจากป๊อปอัป</li>
+						<li>ทดสอบด้วยปุ่ม Fake Hype Train ก่อนถ่ายทอดสด</li>
+						<li>ใช้คู่มือเพื่อดูขั้นตอนตั้งค่า ภาพหน้าจอ และการแก้ปัญหา</li>
+					</ul>
+					<p><a href="hype-train-top-bar.html" class="btn btn-primary">เปิดคู่มือแถบด้านบน Hype Train</a></p>
+				</div>
+
+				<div class="guide-card" id="extension-first-time-chatters">
+					<h3>ผู้แชตครั้งแรก</h3>
+					<p>ไฮไลต์ผู้แชตใหม่ เพิ่มตราใบไม้ได้ หรือใช้เสียงแผงด็อกเฉพาะครั้งแรก</p>
+					<ul class="guide-list">
+						<li>เปิดฐานข้อมูลข้อความในเครื่องไว้</li>
+						<li>เปิด First-time chatter detection</li>
+						<li>เลือกไฮไลต์ ตรา และเสียงเตือนให้เหมาะกับโอเวอร์เลย์</li>
+					</ul>
+					<p><a href="first-time-chatters.html" class="btn btn-primary">เปิดคู่มือผู้แชตครั้งแรก</a></p>
+				</div>
+
+				<div class="guide-card" id="extension-event-flow">
+					<h3>ตัวแก้ไข Event Flow</h3>
+					<p>ตัวแก้ไข Event Flow เป็นระบบอัตโนมัติแบบโหนดสำหรับสร้างขั้นตอนงานกำหนดเอง เป็นชั้น "ระบบอัตโนมัติขั้นสูง" ที่ให้คุณเขียนตรรกะกำหนดเส้นทางเอง</p>
+
+					<h4>สิ่งที่ทำได้:</h4>
+					<ul class="guide-list">
+						<li><strong>ส่งต่อแชตระหว่างแพลตฟอร์ม</strong> พร้อมตัวกรองอัจฉริยะ (เช่น ส่ง Twitch ไป Discord แต่บล็อกคำสั่ง)</li>
+						<li><strong>สร้างคำสั่งกำหนดเอง</strong> ด้วยเกตตรรกะ AND/OR/NOT</li>
+						<li><strong>เรียกโอเวอร์เลย์และเสียง</strong> ตามอีเวนต์หรือคำสำคัญที่ระบุ</li>
+						<li><strong>ควบคุม OBS</strong> ฉากและแหล่งข้อมูลอัตโนมัติ</li>
+						<li><strong>สร้างการจับและแจกของรางวัล</strong> พร้อมจัดการคิว</li>
+					</ul>
+
+					<h4>เริ่มต้นใช้งาน:</h4>
+					<ol class="guide-steps">
+						<li>เปิดตัวแก้ไข Event Flow จากเมนูแดชบอร์ดหลัก</li>
+						<li>สร้างโฟลว์ใหม่และเพิ่มโหนดต้นทาง (เช่น "Twitch Message")</li>
+						<li>เชื่อมโหนดตรรกะเพื่อกรองข้อความ (Contains Keyword, User Role ฯลฯ)</li>
+						<li>เพิ่มโหนดการกระทำเพื่อตอบสนอง (Send Chat, Play Audio, Display Overlay)</li>
+						<li>ทดสอบด้วยตัวจำลองในตัวก่อนถ่ายทอดสด</li>
+					</ol>
+
+					<h4>โอเวอร์เลย์ Flow Actions:</h4>
+					<p>เพื่อให้เสียง โอเวอร์เลย์สื่อ และการกระทำ OBS ทำงาน ต้องเพิ่มหน้า Flow Actions เป็นแหล่งเบราว์เซอร์ใน OBS:</p>
+					<ol class="guide-steps">
+						<li>ในป๊อปอัป หาส่วน "Flow Actions" แล้วคัดลอก URL</li>
+						<li>เพิ่มเป็นแหล่งเบราว์เซอร์ใน OBS (แนะนำ 1920×1080)</li>
+						<li>เปิดโอเวอร์เลย์ทิ้งไว้ (ซ่อนได้ แต่อย่าปิด)</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>สำคัญ:</strong> การกระทำ Relay Chat ปัจจุบันข้ามข้อความสะท้อนกลับที่ตรวจพบอัตโนมัติ ใช้ <strong>ตัวกรองข้อความสะท้อนกลับ (Reflection Filter)</strong> โหนดเพื่อควบคุมว่าข้อความสะท้อนที่จับกลับมาจะแสดงในแผงด็อกและโอเวอร์เลย์หรือไม่ ดู <a href="chat-relay-guide.html">คำแนะนำส่งต่อแชต</a> สำหรับตั้งค่า ดูเอกสารแบบละเอียดได้ใน <a href="../actions/event-flow-guide.html">คู่มือ Event Flow</a> สำหรับเสียงหรือสื่อรางวัล Kick ใช้ <a href="../../docs/index.html?file=kick-channel-points-event-flow.md">คู่มือแต้มช่อง / รางวัล Kick</a>.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="extension-midi">
+					<h3>การควบคุมด้วย MIDI และปุ่มลัด</h3>
+					<p>ควบคุม Social Stream Ninja โดยตรงจาก Stream Deck คอนโทรลเลอร์ MIDI หรือปุ่มลัดแป้นพิมพ์</p>
+
+					<h4>ตั้งค่า MIDI:</h4>
+					<ol class="guide-steps">
+						<li>เชื่อมต่ออุปกรณ์ MIDI (Stream Deck คอนโทรลเลอร์ MIDI ฯลฯ)</li>
+						<li>เปิดป๊อปอัป Social Stream Ninja</li>
+						<li>หาส่วนตั้งค่า MIDI</li>
+						<li>เลือกอุปกรณ์ MIDI จากรายการแบบเลื่อนลง</li>
+						<li>จับคู่โน้ต MIDI กับการกระทำเฉพาะ</li>
+					</ol>
+
+					<h4>การกระทำที่ใช้ได้:</h4>
+					<ul class="guide-list">
+						<li>เรียกโอเวอร์เลย์และสื่อกำหนดเอง</li>
+						<li>ส่งข้อความแชตที่ตั้งไว้ล่วงหน้า</li>
+						<li>สลับฉาก OBS</li>
+						<li>เล่นคลิปเสียงหรือ TTS</li>
+						<li>เรียกตัวเรียก Event Flow</li>
+					</ul>
+
+					<div class="guide-note">
+						<p><strong>เคล็ดลับ:</strong> MIDI เหมาะสำหรับควบคุมสตรีมโดยไม่ใช้มือ ใช้แป้นเหยียบเรียกการแจ้งเตือนหรือปุ่มหมุนปรับระดับเสียง</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="extension-bot-commands">
+					<h3>คำสั่งบอตและตอบกลับอัตโนมัติ</h3>
+					<p>สร้างคำสั่งบอตโต้ตอบและคำตอบอัตโนมัติสำหรับแชต</p>
+
+					<h4>คำสั่งในตัว:</h4>
+					<ul class="guide-list">
+						<li><code>!joke</code> - ส่งมุกพ่อสายเนิร์ดแบบสุ่ม</li>
+						<li><code>!hi</code> - ทักทายผู้ชมอัตโนมัติ</li>
+						<li><code>!cycle</code> - ให้ผู้ชมเปลี่ยนฉาก OBS (เมื่อมีสิทธิ์)</li>
+					</ul>
+
+					<h4>ตั้งค่าตอบอัตโนมัติ:</h4>
+					<ol class="guide-steps">
+						<li>เปิดป๊อปอัปส่วนขยายแล้วหาส่วน Bot/Auto-Response</li>
+						<li>เปิดคำสั่งที่ต้องการใช้</li>
+						<li>ให้หน้าต่างแชตมองเห็นอยู่ (ไม่ย่อ) เพื่อให้คำตอบทำงาน</li>
+						<li>ตรวจว่าเข้าสู่ระบบแพลตฟอร์มพร้อมสิทธิ์โพสต์</li>
+					</ol>
+
+					<h4>การสร้างคำสั่งกำหนดเอง:</h4>
+					<p>สำหรับคำสั่งซับซ้อนขึ้น ใช้ตัวแก้ไข Event Flow:</p>
+					<ol class="guide-steps">
+						<li>สร้างโฟลว์ใหม่ด้วยแหล่ง Message</li>
+						<li>เพิ่มโหนด "Contains Keyword" เพื่อตรวจคำสั่งของคุณ (เช่น "!social")</li>
+						<li>เชื่อมการกระทำ "Send Chat" พร้อมคำตอบของคุณ</li>
+						<li>เพิ่มตัวกรอง User Role ได้หากต้องการคำสั่งเฉพาะผู้ดูแล</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>ข้อกำหนด:</strong> คำตอบอัตโนมัติทำงานดีที่สุดกับเบราว์เซอร์ Chromium หน้าต่างแชตต้องมองเห็นและคุณต้องมีสิทธิ์โพสต์บนแพลตฟอร์ม</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="extension-webhooks">
+					<h3>Webhook และการเชื่อมต่อ</h3>
+					<p>เชื่อมแพลตฟอร์มบริจาคภายนอกเพื่อแสดงทิปและการซื้อในโอเวอร์เลย์สตรีม</p>
+
+					<h4>สิ่งที่ต้องเตรียม:</h4>
+					<ol class="guide-steps">
+						<li>จด Session ID จากป๊อปอัปส่วนขยาย</li>
+						<li>เปิด Social Stream Ninja ทิ้งไว้</li>
+						<li>ใน <code>Global settings and tools</code> &rarr; <code>Mechanics</code>, เปิดใช้ <strong>การควบคุมส่วนขยายจากระยะไกลผ่าน API</strong></li>
+						<li>ใช้ลิงก์แผงด็อกและโอเวอร์เลย์ปกติที่สร้างให้ อย่าเพิ่ม <code>&server</code>, <code>&server2</code>, หรือ <code>&server3</code> สำหรับ webhook บริจาค</li>
+						<li>โหลดแผงด็อกใหม่หนึ่งครั้งหากเปิดอยู่แล้ว</li>
+					</ol>
+					<div class="guide-note">
+						<strong>ต้องใช้สวิตช์ API เพียงตัวเดียว:</strong> remote API control ให้สคริปต์เบื้องหลังปรับรูปแบบ webhook บริจาคและส่งเหมือนข้อความปกติ สวิตช์ช่องทาง API อื่นปิดไว้ได้
+						<p>ข้อมูลบริจาคที่ปรับรูปแบบแล้วใช้ร่วมกับแชต การแจ้งเตือน Event Flow และโหลทิป/มาตรวัดเป้าหมาย</p>
+						<figure class="guide-figure">
+							<img src="../../docs/images/api/enable-remote-api-control.png" alt="เปิด Remote API control โดยปิดสวิตช์ช่องทาง API อื่นไว้" class="guide-image guide-image-narrow">
+						</figure>
+					</div>
+
+					<h4>แพลตฟอร์มที่รองรับ:</h4>
+					<table class="guide-table">
+						<thead>
+							<tr>
+								<th>แพลตฟอร์ม</th>
+								<th>URL ของ Webhook</th>
+								<th>ประเภทอีเวนต์</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><strong>Stripe</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/stripe</code></td>
+								<td><code>checkout.session.completed</code></td>
+							</tr>
+							<tr>
+								<td><strong>Ko-Fi</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/kofi</code></td>
+								<td>ทิปสาธารณะ สมาชิก คำสั่งซื้อร้านค้า และงานคอมมิชชัน</td>
+							</tr>
+							<tr>
+								<td><strong>Buy Me A Coffee</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/bmac</code></td>
+								<td>ทิป สมาชิก คำสั่งซื้อร้านค้า งานคอมมิชชัน และระดมทุนรายการอยากได้</td>
+							</tr>
+							<tr>
+								<td><strong>Fourthwall</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/fourthwall</code></td>
+								<td>คำสั่งซื้อ ของขวัญ การบริจาค และการสมัครสมาชิกใหม่</td>
+							</tr>
+						</tbody>
+					</table>
+
+					<h4>ตั้งค่า Stripe:</h4>
+					<ol class="guide-steps">
+						<li>สร้าง <a href="https://dashboard.stripe.com/payment-links" target="_blank">ลิงก์ชำระเงิน Stripe</a></li>
+						<li><strong>สำคัญ:</strong> เพิ่มช่องกำหนดเองลงในลิงก์ชำระเงิน:
+							<ul>
+								<li><strong>ชื่อที่แสดง</strong> หรือ <strong>ชื่อผู้ใช้</strong> (จำเป็น) - หากไม่มีช่องนี้ การบริจาคจะถูกปฏิเสธ</li>
+								<li><strong>ข้อความ</strong> (ไม่บังคับ) - ให้ผู้บริจาคฝากข้อความได้</li>
+							</ul>
+						</li>
+						<li>ไปที่ <a href="https://dashboard.stripe.com/webhooks" target="_blank">Stripe Webhooks</a> และสร้าง endpoint ใหม่</li>
+						<li>ตั้ง URL เป็น: <code>https://io.socialstream.ninja/YOUR_SESSION_ID/stripe</code></li>
+						<li>เลือกอีเวนต์: <code>checkout.session.completed</code></li>
+						<li>ไม่ต้องตรวจลายเซ็น (เก็บรหัสเซสชันเป็นความลับแทน)</li>
+					</ol>
+					<p><strong>การทดสอบ:</strong> ใช้ Test Mode ของ Stripe พร้อมบัตร <code>4242 4242 4242 4242</code>, วันหมดอายุใดก็ได้ในอนาคต และ CVC ใดก็ได้</p>
+
+                    <h4>ตั้งค่าร้านค้าครีเอเตอร์</h4><p>ใช้ <a href="creator-store-setup.html">คู่มือตั้งค่าพร้อมภาพ</a> สำหรับ Fourthwall, Ko-fi และ Buy Me a Coffee รวมสถานะตัวรับ ตัวอย่างแยก และนำเข้าสินค้า</p>
+					<div class="warning-note">
+						<strong>หมายเหตุด้านความปลอดภัย:</strong> เก็บรหัสเซสชันเป็นความลับ ใครก็ตามที่มีรหัสส่งอีเวนต์บริจาคปลอมเข้าโอเวอร์เลย์ได้
+					</div>
+
+					<h4>การส่งออกแชตผ่าน Webhook:</h4>
+					<p>คุณส่งออกข้อมูลแชตไปบริการภายนอกได้ด้วย:</p>
+					<ul class="guide-list">
+						<li>ตั้ง URL ของ webhook ขาออกในการตั้งค่า</li>
+						<li>ส่งข้อความแชตเป็นคำขอ POST พร้อมข้อมูล JSON</li>
+						<li>ใช้บันทึกแชต เรียกระบบอัตโนมัติภายนอก หรือซิงก์กับเครื่องมืออื่น</li>
+					</ul>
+				</div>
+			</div>
+		</section>
+		
+
+		<section id="extension-troubleshooting" class="guide-section alt">
+			<div class="container">
+				<h2>การแก้ปัญหา (ส่วนขยายเบราว์เซอร์)</h2>
+				<p class="section-subtitle">วิธีแก้ปัญหาพบบ่อยของส่วนขยายเบราว์เซอร์</p>
+				
+				<div class="troubleshooting-grid">
+					<div class="troubleshooting-card">
+						<div class="issue-header">
+							<div class="issue-icon">
+								<img src="../../icons/minimized.svg" alt="ปัญหาหน้าต่างย่อ">
+							</div>
+							<h3>แชตหยุดเมื่ออยู่เบื้องหลัง/ย่อหน้าต่าง</h3>
+						</div>
+						<div class="issue-content">
+							<p class="issue-description">ข้อความแชตหยุดปรากฏเมื่อหน้าต่างเบราว์เซอร์อยู่เบื้องหลังหรือย่อ เพราะเบราว์เซอร์ลดการทำงานของแท็บเบื้องหลังเพื่อประหยัดทรัพยากร</p>
+							
+							<div class="solutions">
+								<div class="solution">
+									<h5>ปิดการลดการทำงานของเบราว์เซอร์</h5>
+									<ul class="solution-steps">
+										<li>
+											<strong>Chrome/Edge/Brave:</strong> 
+											<ol>
+												<li>เปิด <code>chrome://flags/#enable-throttle-display-none-and-visibility-hidden-cross-origin-iframes</code></li>
+												<li>ตั้งเป็น "Disabled"</li>
+												<li>ปิดเพิ่มด้วยสำหรับ <code>chrome://flags/#calculate-native-win-occlusion</code></li>
+												<li>เริ่มเบราว์เซอร์ใหม่</li>
+											</ol>
+										</li>
+										<li>
+											<strong>ปิดการจำกัดประสิทธิภาพ:</strong>
+											<ol>
+												<li>ไปที่ <code>chrome://settings/performance</code></li>
+												<li>ปิด "Throttle Javascript timers in background"</li>
+											</ol>
+										</li>
+									</ul>
+								</div>
+								
+								<div class="solution">
+									<h5>แนวทางอื่น</h5>
+									<ul class="solution-steps">
+										<li>
+											<strong>ให้หน้าต่างมองเห็นอยู่:</strong> จัดหน้าต่างไม่ให้ย่อ แม้เห็นเพียงส่วนเล็ก ๆ ก็ช่วยป้องกันการลดการทำงานได้
+										</li>
+										<li>
+											<strong>ใช้เดสก์ท็อปเสมือน:</strong> บน Windows ใช้ Win+Tab สร้างเดสก์ท็อปเสมือนสองชุด วางหน้าต่างแชตชุดหนึ่งและ OBS อีกชุด
+										</li>
+										<li>
+											<strong>ลองแอปแยก:</strong> แอปเดสก์ท็อป Social Stream Ninja หลีกเลี่ยงปัญหาเบราว์เซอร์ลดการทำงานได้หลายอย่าง
+										</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					
+					<div class="troubleshooting-card">
+						<div class="issue-header">
+							<div class="issue-icon">
+								<img src="../../icons/debug.svg" alt="ปัญหาแถบดีบัก">
+							</div>
+							<h3>มีแถบสีน้ำเงิน / ระบบตอบอัตโนมัติไม่ทำงาน</h3>
+						</div>
+						<div class="issue-content">
+							<p class="issue-description">มีแถบดีบักสีน้ำเงิน หรือคำตอบอัตโนมัติไม่ทำงานเมื่อใช้คำสั่งบอตหรือระบบตอบอัตโนมัติ</p>
+							
+							<div class="solutions">
+								<div class="solution">
+									<h5>ตรวจการมองเห็นหน้าต่างแชต</h5>
+									<ul class="solution-steps">
+										<li>เมื่อใช้ YouTube หรือ Twitch ตรวจว่าเปิดหน้าต่างแชตป๊อปเอาต์และมองเห็นอยู่</li>
+										<li>บางแพลตฟอร์มอาจต้องเปิดหน้าต่างหลักไว้พร้อมป๊อปเอาต์</li>
+									</ul>
+								</div>
+								
+								<div class="solution">
+									<h5>ความเข้ากันได้กับเบราว์เซอร์</h5>
+									<ul class="solution-steps">
+										<li>ระบบตอบอัตโนมัติทำงานดีที่สุดกับเบราว์เซอร์ Chromium (Chrome, Edge, Brave)</li>
+										<li>Firefox รองรับฟีเจอร์ส่วนขยายได้จำกัด</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</div>
+
+	<!-- Standalone App Guides -->
+	<div id="standalone-guides" class="guide-section-wrapper" style="display: none;">
+		<section id="standalone-getting-started" class="guide-section">
+			<div class="container">
+				<h2>เริ่มต้นใช้งาน (แอปแยก)</h2>
+				
+				<div class="guide-card">
+					<h3>1. ติดตั้ง</h3>
+					<p>แอปแยกติดตั้งง่ายกว่าส่วนขยายเบราว์เซอร์:</p>
+					<ul class="guide-list">
+						<li><strong>Windows:</strong> ดาวน์โหลดและเรียกตัวติดตั้งสำหรับ Windows 10/11 (x64)</li>
+						<li><strong>macOS:</strong> ดาวน์โหลดและเรียกแอป macOS</li>
+						<li><strong>Linux:</strong> ใช้ไฟล์ AppImage สำหรับ Linux ส่วนใหญ่</li>
+					</ul>
+					<p>สำหรับวิธีติดตั้งแบบละเอียด ดู <a href="download.html#standalone">หน้าดาวน์โหลด</a>.</p>
+				</div>
+				
+				<div class="guide-card">
+					<h3>2. ตั้งค่าพื้นฐาน</h3>
+					<p>เมื่อติดตั้งแล้ว ทำตามขั้นตอนเพื่อเริ่มใช้แอปแยก Social Stream Ninja:</p>
+					<ol class="guide-steps">
+						<li>เปิดแอป Social Stream Ninja</li>
+						<li>คลิกปุ่มแพลตฟอร์มที่ต้องการเพิ่มในแถบด้านซ้าย</li>
+						<li>ป้อนชื่อผู้ใช้ Video ID หรือ URL ตามที่ขอ</li>
+						<li>คลิก "Activate source" หรือ "Select Live Sources" เพื่อเชื่อมต่อ</li>
+						<li>คัดลอกลิงก์ "Streaming Chat" และเพิ่มเป็นแหล่งเบราว์เซอร์ใน OBS</li>
+					</ol>
+					<div class="guide-note">
+						<p><strong>หมายเหตุ:</strong> แอปแยกหลีกเลี่ยงข้อจำกัดเบราว์เซอร์หลายอย่าง เช่น การลดการทำงาน และมีฟีเจอร์เพิ่ม เช่น ตรึงหน้าต่าง</p>
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>3. เชื่อมต่อแพลตฟอร์มต่าง ๆ</h3>
+					<p>แอปแยกช่วยให้เชื่อมต่อแพลตฟอร์มต่าง ๆ ง่ายขึ้น:</p>
+					
+					<div class="platform-guide">
+						<h4>YouTube</h4>
+						<ul class="guide-list">
+							<li>คลิก "YouTube Username" ในแถบด้านซ้าย</li>
+							<li>ป้อนชื่อช่องหรือ Video ID</li>
+							<li>คลิก "Auto-find &amp; Activate" สำหรับสตรีมสด</li>
+						</ul>
+					</div>
+					
+					<div class="platform-guide">
+						<h4>Twitch</h4>
+						<ul class="guide-list">
+							<li>คลิก "Twitch Username" ในแถบด้านซ้าย</li>
+							<li>ป้อนชื่อผู้ใช้ Twitch</li>
+							<li>คลิก "Activate source" เพื่อเชื่อมต่อ</li>
+						</ul>
+					</div>
+					
+					<div class="platform-guide">
+						<h4>Facebook, TikTok, Instagram</h4>
+						<ul class="guide-list">
+							<li>คลิกปุ่มของแพลตฟอร์มนั้น</li>
+							<li>ใช้ปุ่ม "Sign in" เพื่อยืนยันตัวตนหากจำเป็น</li>
+							<li>ไปยังสตรีมสดของคุณภายในหน้าต่างแอป</li>
+							<li>สำหรับโหมดเชื่อมต่อ TikTok การตอบ และทางสำรอง TikFinity ข้ามไปที่ <a href="#standalone-tiktok">คู่มือ TikTok</a></li>
+						</ul>
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>4. วิดีโอสอน</h3>
+					<p>ดูวิดีโอนี้เพื่อเรียนรู้การใช้แอปแยกแบบเห็นภาพ:</p>
+					<div class="video-container">
+						<iframe 
+							src="https://www.youtube.com/embed/VpD2pnZVYF0" 
+							title="ตัวเล่นวิดีโอ YouTube" 
+							frameborder="0" 
+							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+							allowfullscreen>
+						</iframe>
+					</div>
+				</div>
+
+				<div class="guide-card">
+					<h3>คู่มือ TikTok</h3>
+					<p>ต้องการความช่วยเหลือตั้งค่า TikTok ตอบกลับ โหมดเชื่อมต่อ หรือทางสำรอง TikFinity? ใช้คู่มือ TikTok โดยเฉพาะ</p>
+					<ul class="guide-list">
+						<li>ใช้โหมดใด: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy หรือ Euler Signing</li>
+						<li>วิธีตอบแชต TikTok จาก SSN</li>
+						<li>วิธีใช้ TikFinity OBS Dock เป็นทางสำรองผ่าน Other chat sites</li>
+						<li>สิ่งที่ควรลองเมื่อ TikTok บอกว่าออฟไลน์ ข้อความตกหล่น แชตซ้ำ หรือหน้าต่างยืนยันตัวตนปิด</li>
+					</ul>
+					<p><a href="tiktok-guide.html" class="btn btn-primary">เปิดคู่มือ TikTok</a></p>
+				</div>
+			</div>
+		</section>
+
+		<section id="standalone-tiktok" class="guide-section alt">
+			<div class="container">
+				<h2>TikTok (แอปแยก)</h2>
+				<p class="section-subtitle">ความช่วยเหลือตั้งค่า TikTok โดยเฉพาะ รวมการตอบ เลือกโหมด และทางสำรอง TikFinity</p>
+
+				<div class="guide-card">
+					<h3>เปิดคู่มือ TikTok ฉบับเต็ม</h3>
+					<p>แอปแยกมีตัวเลือก TikTok มากที่สุดใน SSN คู่มือจึงย้ายไปหน้าเฉพาะแล้ว</p>
+					<ul class="guide-list">
+						<li>ความช่วยเหลือเลือกโหมด: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy และ Euler Signing</li>
+						<li>วิธีส่งคำตอบเข้าแชต TikTok จาก SSN</li>
+						<li>วิธีใช้ TikFinity OBS Dock ผ่าน <strong>เว็บไซต์แชตอื่น</strong></li>
+						<li>วิธีแก้ปัญหาพบบ่อยเมื่อหน้าต่างยืนยันตัวตนปิด แชตตกหล่น แชตซ้ำ และการลดการทำงาน</li>
+					</ul>
+					<p><a href="tiktok-guide.html" class="btn btn-primary">เปิดคู่มือ TikTok</a></p>
+				</div>
+			</div>
+		</section>
+
+		<section id="standalone-customization" class="guide-section alt">
+			<div class="container">
+				<h2>การปรับแต่ง (แอปแยก)</h2>
+				
+				<div class="guide-card">
+					<h3>พารามิเตอร์ URL</h3>
+					<p>แอปแยกรองรับพารามิเตอร์ URL เดียวกับส่วนขยายเบราว์เซอร์ ปรับได้ทั้งแดชบอร์ดและโอเวอร์เลย์:</p>
+					
+					<h4>พารามิเตอร์แดชบอร์ด:</h4>
+					<div class="code-block">
+						<code>&darkmode</code> - เปิดโหมดมืดสำหรับแดชบอร์ด<br>
+						<code>&scale=2</code> - เพิ่มขนาด/ความละเอียดทุกองค์ประกอบเป็นสองเท่า<br>
+						<code>&hidesource</code> - ซ่อนไอคอนแพลตฟอร์ม (YouTube, Twitch ฯลฯ)<br>
+						<code>&compact</code> - ลบช่องว่างระหว่างชื่อกับข้อความ<br>
+						<code>&inline</code> - วางข้อความต่อข้างชื่อโดยคงระยะห่างปกติ<br>
+						<code>&autoshow</code> - นำข้อความมาแสดงเด่นอัตโนมัติเมื่อเข้ามา
+					</div>
+					
+					<h4>พารามิเตอร์โอเวอร์เลย์:</h4>
+					<div class="code-block">
+						<code>&showtime=20000</code> - ซ่อนข้อความที่เลือกอัตโนมัติหลัง 20 วินาที<br>
+						<code>&showsource</code> - แสดงไอคอนแพลตฟอร์มข้างชื่อผู้ใช้<br>
+						<code>&fade</code> - ทำให้ข้อความเด่นค่อย ๆ ปรากฏแทนโผล่ทันที<br>
+						<code>&swipe</code> - ทำให้ข้อความเด่นเลื่อนเข้าจากซ้าย<br>
+						<code>&center</code> - จัดข้อความเด่นไว้กึ่งกลางจอ
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>การปรับแต่ง CSS</h3>
+					<p>แอปแยกรองรับการปรับ CSS แบบเดียวกับส่วนขยาย:</p>
+					
+					<h4>วิธีที่ 1: CSS แหล่งเบราว์เซอร์ OBS</h4>
+					<p>เมื่อใช้ URL โอเวอร์เลย์แอปใน OBS:</p>
+					<ol class="guide-steps">
+						<li>เพิ่ม URL โอเวอร์เลย์ของแอปเป็นแหล่งเบราว์เซอร์ใน OBS</li>
+						<li>เลือกตัวเลือก "Custom CSS"</li>
+						<li>ป้อน CSS กำหนดเองในช่องข้อความ</li>
+					</ol>
+					
+					<h4>วิธีที่ 2: การตั้งค่าเมนูแอป</h4>
+					<p>เพิ่ม CSS โดยตรงผ่านเมนูแอป:</p>
+					<ol class="guide-steps">
+						<li>เปิดเมนูตั้งค่าแอป</li>
+						<li>หาส่วนตั้งค่า CSS/JavaScript</li>
+						<li>ป้อน CSS หรือ JavaScript กำหนดเอง</li>
+						<li>CSS จะถูกต่อท้าย URL เป็นข้อมูลเข้ารหัส base64</li>
+					</ol>
+					
+					<h4>วิธีที่ 3: ใช้เทมเพลตกำหนดเอง</h4>
+					<p>เลือกเทมเพลตตกแต่งสำเร็จที่มี CSS ในตัว:</p>
+					<ul class="guide-list">
+						<li>ดู <a href="templates.html">แกลเลอรีเทมเพลต</a></li>
+						<li>เลือกเทมเพลตที่เข้ากับสไตล์สตรีม</li>
+						<li>แทนที่ <code>YOURSESSIONID</code> ใน URL เทมเพลตด้วยรหัสเซสชันของคุณ</li>
+						<li>เพิ่ม URL เทมเพลตเป็นแหล่งเบราว์เซอร์ใน OBS</li>
+					</ul>
+					<div class="guide-note">
+						<p><strong>ตัวอย่าง:</strong> <code>https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID</code></p>
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>ฟีเจอร์เฉพาะแอป</h3>
+					<p>แอปแยกมีฟีเจอร์เพิ่มเติมที่ไม่มีในส่วนขยายเบราว์เซอร์:</p>
+					<ul class="guide-list">
+						<li><strong>การตรึงหน้าต่าง:</strong> ให้หน้าต่างแอปอยู่บนสุดเสมอ</li>
+						<li><strong>ความโปร่งใสพื้นหลัง:</strong> ปรับความโปร่งใสหน้าต่างเพื่อเอฟเฟกต์โอเวอร์เลย์</li>
+						<li><strong>อัปเดตอัตโนมัติ:</strong> รับฟีเจอร์และการแก้ไขล่าสุดอัตโนมัติ</li>
+						<li><strong>ประสิทธิภาพดีขึ้น:</strong> หลีกเลี่ยงปัญหาเบราว์เซอร์ลดการทำงาน</li>
+					</ul>
+				</div>
+			</div>
+		</section>
+
+		<section id="standalone-advanced" class="guide-section">
+			<div class="container">
+				<h2>ฟีเจอร์ขั้นสูง (แอปแยก)</h2>
+
+				<div class="guide-card">
+					<h3>แชตสองทาง</h3>
+					<p>แอปแยกรองรับรับส่งแชตสองทางในแพลตฟอร์มที่รองรับ:</p>
+					<ul class="guide-list">
+						<li>ส่งข้อความโดยตรงจากแดชบอร์ด</li>
+						<li>ข้อความปรากฏพร้อมกันบนทุกแพลตฟอร์มที่เชื่อมต่อ</li>
+						<li>ใช้คำสั่งบอตและคำตอบอัตโนมัติ</li>
+					</ul>
+				</div>
+
+				<div class="guide-card">
+					<h3>ตั้งค่าโปรเจกต์ YouTube กำหนดเอง</h3>
+					<p>หากต้องการให้แอปเดสก์ท็อปใช้โควตา YouTube API ของคุณเอง ให้ใช้คู่มือตั้งค่าเฉพาะ ครอบคลุมการตั้งค่า Google Cloud, URL เปลี่ยนเส้นทางที่ตรงทุกตัว ข้อจำกัดคีย์ API และคำแนะนำความปลอดภัยพื้นฐาน</p>
+					<p><a href="youtube-project-setup.html" target="_blank" rel="noopener">เปิดคู่มือตั้งค่าโปรเจกต์ YouTube</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h3>แถบด้านบน Hype Train</h3>
+					<p>ใช้ลิงก์ Hype Train Top Bar โดยเฉพาะเพื่อแสดงความคืบหน้า Twitch Hype Train และ Treasure Train ใน OBS</p>
+					<ul class="guide-list">
+						<li>คัดลอก URL ของ Hype Train Top Bar จากป๊อปอัป</li>
+						<li>ปรับการจัดแนว สเกล ความทึบ และพื้นหลัง</li>
+						<li>ใช้ปุ่ม Fake Hype Train เพื่อทดสอบ</li>
+					</ul>
+					<p><a href="hype-train-top-bar.html" class="btn btn-primary">เปิดคู่มือแถบด้านบน Hype Train</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h3>ผู้แชตครั้งแรก</h3>
+					<p>ใช้การตรวจผู้แชตครั้งแรกเพื่อไฮไลต์ผู้ชมใหม่ แสดงตราใบไม้ หรือเรียกเสียงเฉพาะครั้งแรก</p>
+					<ul class="guide-list">
+						<li>เปิดฐานข้อมูลข้อความในเครื่องไว้</li>
+						<li>เปิด First-time chatter detection</li>
+						<li>ใช้คู่มือเพื่อดูขั้นตอนตั้งค่า ภาพหน้าจอ และการแก้ปัญหา</li>
+					</ul>
+					<p><a href="first-time-chatters.html" class="btn btn-primary">เปิดคู่มือผู้แชตครั้งแรก</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h3>การเชื่อมต่อ LLM</h3>
+					<p>แอปเดสก์ท็อปรองรับเครื่องมือ AI ที่ใช้ผู้ให้บริการชุดเดียวกัน ได้แก่:</p>
+					<ul class="guide-list">
+						<li><strong>ผู้ช่วยดำเนินรายการด้วยเสียง:</strong> รวมบทสนทนาไมโครโฟน คำถามแชตสด และคำตอบเสียง</li>
+						<li><strong>บอตหลักและส่วนตัว:</strong> คำตอบแชตสาธารณะหรือผู้ช่วยตัวต่อตัวแยก</li>
+						<li><strong>การประมวลผล AI:</strong> การดูแลแชต การแปล การสรุป และค้นความรู้ RAG</li>
+						<li><strong>การเลือกผู้ให้บริการ:</strong> โมเดลในเครื่อง endpoint ที่โฮสต์เอง หรือ API คลาวด์ที่รองรับ</li>
+					</ul>
+					<p><a href="ai-modes-guide.html" class="btn btn-primary">เปิดคู่มือ AI ฉบับสมบูรณ์</a></p>
+				</div>
+
+				<div class="guide-card" id="standalone-stream-events">
+					<h3>การจับอีเวนต์สตรีม</h3>
+					<p>จับอีเวนต์ที่ไม่ใช่แชต เช่น ผู้ติดตามใหม่ สมัครสมาชิก เรด และการบริจาค</p>
+
+					<h4>วิธีเปิดใช้:</h4>
+					<ol class="guide-steps">
+						<li>เปิดแอป Social Stream Ninja</li>
+						<li>ไปการตั้งค่าแล้วหา <strong>"จับอีเวนต์สตรีม (Capture Stream Events)"</strong></li>
+						<li>เปิดเพื่อเริ่มรับการแจ้งเตือน</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>หมายเหตุ:</strong> การบริจาค (Super Chats, Bits, Tips) ส่งต่ออัตโนมัติ สวิตช์มีไว้หลัก ๆ สำหรับแจ้งเตือนผู้ติดตาม/สมาชิก</p>
+					</div>
+
+					<h4>อีเวนต์ที่จับได้:</h4>
+					<ul class="guide-list">
+						<li><strong>YouTube:</strong> สมาชิก Super Chats และจำนวนผู้ติดตาม</li>
+						<li><strong>Twitch:</strong> สมาชิก ผู้ติดตาม บิต เรด แต้มช่อง</li>
+						<li><strong>TikTok:</strong> ผู้ติดตาม ของขวัญ จำนวนผู้ชม</li>
+						<li><strong>Kick:</strong> การสมัครสมาชิก ทิป การแจ้งเตือนติดตาม</li>
+					</ul>
+
+					<p>ดู <a href="event-reference.html">เอกสารอ้างอิงอีเวนต์</a> สำหรับเอกสารข้อมูลอีเวนต์ฉบับสมบูรณ์</p>
+				</div>
+
+				<div class="guide-card" id="standalone-event-flow">
+					<h3>ตัวแก้ไข Event Flow</h3>
+					<p>สร้างระบบอัตโนมัติที่ครบครันด้วยตัวแก้ไข Event Flow แบบโหนด</p>
+
+					<h4>สิ่งที่ทำได้:</h4>
+					<ul class="guide-list">
+						<li><strong>ส่งต่อแชต</strong> ระหว่างแพลตฟอร์มพร้อมตัวกรองอัจฉริยะ</li>
+						<li><strong>เรียกโอเวอร์เลย์และเสียง</strong> ตามอีเวนต์หรือคำสำคัญ</li>
+						<li><strong>ควบคุม OBS</strong> ฉากและแหล่งข้อมูลอัตโนมัติ</li>
+						<li><strong>สร้างคำสั่งกำหนดเอง</strong> ด้วยเกตตรรกะ (AND/OR/NOT)</li>
+						<li><strong>สร้างการจับรางวัลและเกม</strong> พร้อมจัดการคิว</li>
+					</ul>
+
+					<h4>เริ่มต้นใช้งาน:</h4>
+					<ol class="guide-steps">
+						<li>เปิดตัวแก้ไข Event Flow จากเมนูแอป</li>
+						<li>สร้างโฟลว์พร้อมโหนดต้นทาง (Message, Timer, Manual Trigger)</li>
+						<li>เพิ่มโหนดตรรกะเพื่อกรอง (Contains Keyword, User Role ฯลฯ)</li>
+						<li>เชื่อมโหนดการกระทำ (Send Chat, Play Audio, Display Overlay)</li>
+						<li>ทดสอบด้วยตัวจำลองก่อนถ่ายทอดสด</li>
+					</ol>
+
+					<h4>โอเวอร์เลย์ Flow Actions:</h4>
+					<p>เพิ่ม URL ของ Flow Actions เป็นแหล่งเบราว์เซอร์ใน OBS เพื่อให้การกระทำเสียง/โอเวอร์เลย์ทำงาน หา URL ได้ในส่วน "Flow Actions" ของแอป</p>
+
+					<div class="guide-note">
+						<p>สำหรับเอกสารแบบละเอียด ดู <a href="../actions/event-flow-guide.html">คู่มือ Event Flow</a> สำหรับเสียงหรือสื่อรางวัล Kick ใช้ <a href="../../docs/index.html?file=kick-channel-points-event-flow.md">คู่มือแต้มช่อง / รางวัล Kick</a>.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="standalone-midi">
+					<h3>การควบคุมด้วย MIDI และปุ่มลัด</h3>
+					<p>ควบคุมแอปโดยตรงจาก Stream Deck คอนโทรลเลอร์ MIDI หรือแป้นพิมพ์ลัด</p>
+
+					<h4>ตั้งค่า:</h4>
+					<ol class="guide-steps">
+						<li>เชื่อมต่ออุปกรณ์ MIDI</li>
+						<li>เปิดการตั้งค่าแล้วหาส่วน MIDI</li>
+						<li>เลือกอุปกรณ์จากรายการแบบเลื่อนลง</li>
+						<li>จับคู่โน้ต MIDI กับการกระทำ</li>
+					</ol>
+
+					<h4>การกระทำที่ใช้ได้:</h4>
+					<ul class="guide-list">
+						<li>เรียกโอเวอร์เลย์และสื่อ</li>
+						<li>ส่งข้อความแชต</li>
+						<li>สลับฉาก OBS</li>
+						<li>เล่นคลิปเสียง</li>
+						<li>เรียกตัวเรียก Event Flow</li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="standalone-webhooks">
+					<h3>Webhook และการเชื่อมต่อ</h3>
+					<p>เชื่อมแพลตฟอร์มบริจาคและบริการภายนอก</p>
+
+					<h4>การเชื่อมต่อที่รองรับ:</h4>
+					<ul class="guide-list">
+						<li><strong>Stripe:</strong> อีเวนต์ชำระเงิน</li>
+						<li><strong>Ko-Fi:</strong> การแจ้งเตือนบริจาค</li>
+						<li><strong>Buy Me A Coffee:</strong> เคล็ดลับ</li>
+						<li><strong>Webhook กำหนดเอง:</strong> บริการ HTTP POST ใดก็ได้</li>
+					</ul>
+
+					<h4>การตั้งค่า:</h4>
+					<ol class="guide-steps">
+						<li>หา URL รีเลย์ webhook ในการตั้งค่าแอป</li>
+						<li>เพิ่มในการตั้งค่า webhook ของแพลตฟอร์มบริจาค</li>
+						<li>อีเวนต์ปรากฏอัตโนมัติในแดชบอร์ดและโฟลว์</li>
+					</ol>
+				</div>
+			</div>
+		</section>
+
+		<section id="standalone-troubleshooting" class="guide-section alt">
+			<div class="container">
+				<h2>การแก้ปัญหา (แอปแยก)</h2>
+				<p class="section-subtitle">วิธีแก้ปัญหาพบบ่อยของแอปแยก</p>
+				
+				<div class="troubleshooting-grid">
+					<div class="troubleshooting-card">
+						<div class="issue-header">
+							<div class="issue-icon">
+								<img src="../../icons/issues.svg" alt="ปัญหาการเชื่อมต่อ">
+							</div>
+							<h3>ปัญหาเชื่อมต่อแพลตฟอร์ม</h3>
+						</div>
+						<div class="issue-content">
+							<p class="issue-description">มีปัญหาเชื่อมต่อบางแพลตฟอร์มในแอปแยก</p>
+							
+							<div class="solutions">
+								<div class="solution">
+									<h5>ปัญหาการยืนยันตัวตน</h5>
+									<ul class="solution-steps">
+										<li>สำหรับ Facebook, TikTok และ Instagram ใช้ปุ่ม "Sign in" ก่อน</li>
+										<li>ตรวจว่าใช้ข้อมูลเข้าสู่ระบบเดียวกับเบราว์เซอร์</li>
+										<li>ตรวจว่าต้องให้สิทธิ์แอปเพิ่มหรือไม่</li>
+									</ul>
+								</div>
+								
+								<div class="solution">
+									<h5>ปัญหาเครือข่าย</h5>
+									<ul class="solution-steps">
+										<li>ตรวจการเชื่อมต่ออินเทอร์เน็ต</li>
+										<li>ปิด VPN หากรบกวนการเชื่อมต่อ</li>
+										<li>ลองเปลี่ยนผู้ให้บริการ DNS</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="troubleshooting-card">
+						<div class="issue-header">
+							<div class="issue-icon">
+								<img src="../../icons/main_msg_save.png" alt="ปัญหาการตั้งค่า">
+							</div>
+							<h3>การตั้งค่าไม่บันทึก</h3>
+						</div>
+						<div class="issue-content">
+							<p class="issue-description">การกำหนดค่าหรือการตั้งค่าไม่ถูกบันทึกข้ามเซสชัน</p>
+							
+							<div class="solutions">
+								<div class="solution">
+									<h5>ปัญหาสิทธิ์</h5>
+									<ul class="solution-steps">
+										<li>ตรวจว่าแอปมีสิทธิ์เขียนในโฟลเดอร์ติดตั้ง</li>
+										<li>เรียกแอปในฐานะผู้ดูแลระบบ (Windows) หากจำเป็น</li>
+										<li>ตรวจว่าโปรแกรมป้องกันไวรัสบล็อกการเขียนไฟล์หรือไม่</li>
+									</ul>
+								</div>
+								
+								<div class="solution">
+									<h5>ส่งออกการตั้งค่า</h5>
+									<ul class="solution-steps">
+										<li>ใช้ฟีเจอร์ส่งออกเพื่อบันทึกการตั้งค่า</li>
+										<li>บันทึกไฟล์ส่งออกไว้ในที่ปลอดภัย</li>
+										<li>นำเข้าการตั้งค่าหากสูญหายหลังอัปเดต</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</div>
+	
+
+	<!-- FAQ Section (common to both) -->
+	<section id="faq" class="guide-section">
+		<div class="container">
+			<h2>คำถามที่พบบ่อย</h2>
+			
+			<div class="accordion">
+				<div class="accordion-item">
+					<button class="accordion-header">
+						Social Stream Ninja รองรับแพลตฟอร์มใดบ้าง?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>Social Stream Ninja รองรับกว่า 100 แพลตฟอร์ม เช่น YouTube, Twitch, Facebook, Instagram, TikTok, Discord, Zoom, Google Meet, X (Twitter), WhatsApp, Telegram และอีกมาก ดูรายการทั้งหมดได้ที่ <a href="supported-sites.html">แพลตฟอร์มที่รองรับ</a> หน้า</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						ควรใช้ส่วนขยายเบราว์เซอร์หรือแอปแยก?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>แนะนำแอปแยกสำหรับผู้ใช้ส่วนใหญ่ เพราะ:</span>
+						<ul>
+							<li>หลีกเลี่ยงปัญหาเบราว์เซอร์ลดการทำงาน</li>
+							<li>มีการอัปเดตอัตโนมัติ</li>
+							<li>มีฟีเจอร์ตรึงหน้าต่างและความโปร่งใส</li>
+							<li>มีประสิทธิภาพและความเสถียรดีกว่า</li>
+						</ul>
+						<span>ส่วนขยายเบราว์เซอร์เหมาะกว่าหากคุณ:</span>
+						<ul>
+							<li>ต้องใช้บนคอมพิวเตอร์หลายเครื่อง</li>
+							<li>ไม่ต้องการติดตั้งซอฟต์แวร์เพิ่ม</li>
+							<li>ต้องการอัปเดตล่าสุดทันที (ติดตั้งเอง)</li>
+						</ul>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						ต้องใช้คีย์ API หรือข้อมูลเข้าสู่ระบบแต่ละแพลตฟอร์มหรือไม่?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>ไม่ต้อง! ข้อดีสำคัญของ Social Stream Ninja คือแพลตฟอร์มส่วนใหญ่ไม่ต้องใช้คีย์ API หรือข้อมูลเข้าสู่ระบบ ระบบจับข้อมูลแชตโดยตรงจากหน้าต่างเบราว์เซอร์หรือหน้าแอป อย่างไรก็ตาม คุณต้องเข้าสู่ระบบแต่ละแพลตฟอร์มเพื่อดูแชตตามปกติ</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						อัปเดต Social Stream Ninja อย่างไร?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span><strong>สำหรับส่วนขยายเบราว์เซอร์:</strong> อัปเดตส่วนขยายที่ติดตั้งเองโดยดาวน์โหลดเวอร์ชันล่าสุด แทนไฟล์เก่าด้วยไฟล์ใหม่ แล้วโหลดส่วนขยายหรือเริ่มเบราว์เซอร์ใหม่ <strong>อย่าถอนการติดตั้ง</strong> ส่วนขยายหากต้องการเก็บการตั้งค่า หากใช้เวอร์ชัน Chrome Web Store จะอัปเดตอัตโนมัติแต่ไม่บ่อยเท่า</span>
+						<span><strong>สำหรับแอปแยก:</strong> แอปอัปเดตอัตโนมัติเมื่อเริ่มใหม่ คุณตรวจอัปเดตด้วยตนเองจากเมนูแอปได้เช่นกัน</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						ส่งข้อความกลับไปหลายแพลตฟอร์มพร้อมกันได้หรือไม่?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>ได้! Social Stream Ninja รองรับแชตสองทางในแพลตฟอร์มส่วนใหญ่ เมื่อเข้าสู่ระบบแพลตฟอร์มและมีสิทธิ์ที่เหมาะสม คุณส่งข้อความจากแดชบอร์ดหรือคำสั่ง API ให้ปรากฏในทุกแชตที่เชื่อมต่อพร้อมกันได้</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						ใช้กับ OBS และซอฟต์แวร์สตรีมอื่นได้หรือไม่?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>ได้แน่นอน! Social Stream Ninja ออกแบบให้ใช้กับ OBS Studio และซอฟต์แวร์สตรีมอื่นได้ เพียงเพิ่ม URL โอเวอร์เลย์เป็นแหล่งเบราว์เซอร์ในซอฟต์แวร์สตรีม ปรับหน้าตาด้วย CSS โดยตรงใน OBS หรือผ่านพารามิเตอร์ URL ได้</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						Social Stream Ninja ฟรีจริงหรือไม่?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>ใช่ Social Stream Ninja ฟรีทั้งหมดและเป็นโอเพนซอร์สภายใต้ GPLv3.0 ไม่มีค่าสมัคร ค่าธรรมเนียมแอบแฝง หรือข้อจำกัดฟีเจอร์ โครงการดูแลโดย Steve Seguin พร้อมการร่วมพัฒนาจากชุมชน</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						รองรับข้อมูลอีเวนต์สตรีมอะไรบ้าง เช่น ผู้ติดตามใหม่?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>เราดูแลรายการมาตรฐานของข้อมูลอีเวนต์ทั้งหมด (ผู้ติดตาม สมาชิก เรด จำนวนผู้ชม บริจาค และอื่น ๆ) ใน <a href="event-reference.html">เอกสารอ้างอิงอีเวนต์</a> ยังอธิบายว่าแหล่งใดต้องเปิด “Capture Stream Events” มีสิทธิ์เข้าสู่ระบบ หรือขอบเขตสิทธิ์เพิ่มเติมเพื่อรับข้อมูล</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						หาเอกสาร API และระบบอัตโนมัติได้ที่ไหน?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>URL โอเวอร์เลย์ API แผงด็อก คำสั่ง WebSocket และจุดเชื่อมระบบอัตโนมัติทั้งหมดอธิบายไว้ใน <a href="commands.html">คำสั่งและ API</a> หน้า เป็นจุดเริ่มต้นที่เหมาะที่สุดเมื่อคุณต้องการเขียนพฤติกรรมกำหนดเองหรือเชื่อม Social Stream Ninja กับเครื่องมืออื่น</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						ขอความช่วยเหลือได้ที่ไหนหากมีปัญหา?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>Social Stream Ninja มีชุมชน Discord ที่มีการพูดคุยต่อเนื่อง คุณขอความช่วยเหลือตรงจากผู้พัฒนาและผู้ใช้อื่นได้ เข้าร่วมที่ <a href="https://discord.socialstream.ninja" target="_blank">discord.socialstream.ninja</a> คุณรายงานปัญหาได้ที่ <a href="https://github.com/steveseguin/social_stream/issues" target="_blank">คลังโค้ด GitHub</a>.</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	</details>
+
+	<section class="get-started">
+		<div class="container">
+			<h2>ยังต้องการความช่วยเหลือ?</h2>
+			<p>เข้าร่วมเซิร์ฟเวอร์ Discord ชุมชนของเรา ผู้พัฒนาและผู้ใช้อื่นช่วยแก้ปัญหาได้</p>
+			<div class="get-started-cta">
+				<a href="https://discord.socialstream.ninja" target="_blank" class="btn btn-primary">เข้าร่วมชุมชน Discord</a>
+				<a href="#extension-troubleshooting" class="btn btn-secondary">ดูคู่มือแก้ปัญหา</a>
+			</div>
+		</div>
+	</section>
+
+	<footer>
+		<div class="container">
+			<div class="footer-columns">
+				<div class="footer-column">
+					<h3>Social Stream Ninja</h3>
+					<p>รวมข้อความโซเชียลสดและอีกมากมาย ฟรีและเป็นโอเพนซอร์ส</p>
+					<div class="social-links">
+						<a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+						<a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+						<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+					</div>
+				</div>
+				<div class="footer-column">
+					<h3>ลิงก์ด่วน</h3>
+					<ul>
+						<li><a href="../index.html">หน้าแรก</a></li>
+						<li><a href="features.html">ฟีเจอร์</a></li>
+						<li><a href="download.html">ดาวน์โหลด</a></li>
+						<li><a href="guides.html">คู่มือ</a></li>
+						<li><a href="commands.html">คำสั่งและ API</a></li>
+						<li><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a></li>
+						<li><a href="templates.html">เทมเพลต</a></li>
+						<li><a href="support.html">การสนับสนุน</a></li>
+					</ul>
+				</div>
+				<div class="footer-column">
+					<h3>แหล่งข้อมูลอ้างอิง</h3>
+					<ul>
+						<li><a href="guides.html#extension-getting-started">คู่มือการติดตั้ง</a></li>
+						<li><a href="guides.html#extension-customization">คู่มือการปรับแต่ง</a></li>
+						<li><a href="guides.html#faq">คำถามที่พบบ่อย</a></li>
+						<li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">รายงานปัญหา</a></li>
+						<li><a href="../privacy.html">นโยบายความเป็นส่วนตัว</a></li>
+						<li><a href="../TOS.html">ข้อกำหนดการให้บริการ</a></li>
+					</ul>
+				</div>
+				<div class="footer-column">
+					<h3>ชุมชน</h3>
+					<ul>
+						<li><a href="https://discord.socialstream.ninja" target="_blank">เข้าร่วม Discord ของเรา</a></li>
+						<li><a href="https://github.com/steveseguin/social_stream" target="_blank">ที่เก็บโค้ด GitHub</a></li>
+						<li><a href="support.html#contribute">ร่วมพัฒนา</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">บริจาค</a></li>
+					</ul>
+				</div>
+			</div>
+			<div class="footer-bottom">
+				<p>&copy; <span id="current-year">2025</span> Social Stream Ninja สัญญาอนุญาต GPLv3.0 สร้างโดย <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> ร่วมพัฒนาโดยชุมชน</p>
+			</div>
+		</div>
+	</footer>
+
+	<script src="../../docs/js/main.js"></script>
+	<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		const tabButtons = document.querySelectorAll('.tab-btn');
+		const guideSections = document.querySelectorAll('.guide-section-wrapper');
+		const navSections = document.querySelectorAll('.nav-links');
+		const faqSection = document.getElementById('faq');
+		const guideFilterInput = document.getElementById('guide-filter-input');
+		const guideFilterClear = document.getElementById('guide-filter-clear');
+		const guideFilterEmpty = document.getElementById('guide-filter-empty');
+		const guideTreeGroups = document.querySelectorAll('.guide-tree-group');
+		const detailedGuides = document.getElementById('detailed-guides');
+
+		guideTreeGroups.forEach(group => {
+			group.setAttribute('data-default-open', group.open ? 'true' : 'false');
+		});
+
+		function filterGuideDirectory(query) {
+			const term = (query || '').trim().toLowerCase();
+			let visibleCount = 0;
+
+			guideTreeGroups.forEach(group => {
+				const links = group.querySelectorAll('li');
+				let groupHasMatch = false;
+
+				links.forEach(item => {
+					const text = item.textContent.toLowerCase();
+					const isMatch = !term || text.indexOf(term) !== -1;
+					item.classList.toggle('guide-filter-hidden', !isMatch);
+					if (isMatch) {
+						groupHasMatch = true;
+						visibleCount += 1;
+					}
+				});
+
+				group.classList.toggle('guide-filter-hidden', !groupHasMatch);
+				if (term) {
+					group.open = groupHasMatch;
+				} else {
+					group.open = group.getAttribute('data-default-open') === 'true';
+				}
+			});
+
+			if (guideFilterEmpty) {
+				guideFilterEmpty.style.display = visibleCount ? 'none' : 'block';
+			}
+		}
+
+		if (guideFilterInput) {
+			guideFilterInput.addEventListener('input', function() {
+				filterGuideDirectory(this.value);
+			});
+		}
+
+		if (guideFilterClear) {
+			guideFilterClear.addEventListener('click', function() {
+				guideFilterInput.value = '';
+				filterGuideDirectory('');
+				guideFilterInput.focus();
+			});
+		}
+
+		// Anchor alias mapping for generic links (e.g., #getting-started -> #extension-getting-started)
+		const anchorAliases = {
+			'getting-started': 'extension-getting-started',
+			'installation': 'extension-getting-started',
+			'tiktok': 'standalone-tiktok',
+			'customization': 'extension-customization',
+			'advanced': 'extension-advanced',
+			'troubleshooting': 'extension-troubleshooting',
+			'stream-events': 'extension-stream-events',
+			'event-flow': 'extension-event-flow',
+			'midi': 'extension-midi',
+			'bot-commands': 'extension-bot-commands',
+			'webhooks': 'extension-webhooks'
+		};
+
+		function switchTab(tabId, updateHash = false) {
+			// Remove active class from all buttons
+			tabButtons.forEach(btn => btn.classList.remove('active'));
+
+			// Find and activate the correct tab button
+			const targetButton = document.querySelector(`[data-tab="${tabId}"]`);
+			if (targetButton) {
+				targetButton.classList.add('active');
+			}
+
+			// Hide all guide sections
+			guideSections.forEach(section => section.style.display = 'none');
+
+			// Hide all nav sections
+			navSections.forEach(nav => nav.style.display = 'none');
+
+			// Show the selected sections
+			document.getElementById(tabId).style.display = 'block';
+
+			if (tabId === 'extension-guides') {
+				document.getElementById('extension-nav').style.display = 'flex';
+			} else {
+				document.getElementById('standalone-nav').style.display = 'flex';
+			}
+
+			// Make sure FAQ is visible when either tab is active
+			faqSection.style.display = 'block';
+		}
+
+		function scrollToSection(sectionId) {
+			const targetElement = document.getElementById(sectionId);
+			if (targetElement) {
+				const headerHeight = document.querySelector('header').offsetHeight;
+				const navHeight = document.querySelector('.navigation').offsetHeight;
+				const offsetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight - navHeight - 20;
+
+				window.scrollTo({
+					top: offsetPosition,
+					behavior: 'smooth'
+				});
+			}
+		}
+
+		function handleHash(hash, updateUrl = true) {
+			if (!hash) return;
+
+			// Remove the # if present
+			hash = hash.replace(/^#/, '');
+
+			if (detailedGuides) {
+				detailedGuides.open = true;
+			}
+
+			// Check if it's an alias
+			if (anchorAliases[hash]) {
+				hash = anchorAliases[hash];
+			}
+
+			// Determine which tab to show based on the hash
+			let tabToShow = 'extension-guides';
+			if (hash.startsWith('standalone-')) {
+				tabToShow = 'standalone-guides';
+			}
+
+			// Switch to the appropriate tab
+			switchTab(tabToShow);
+
+			// Update URL hash
+			if (updateUrl) {
+				history.replaceState(null, null, '#' + hash);
+			}
+
+			// Scroll to the section after a brief delay for tab switch
+			setTimeout(() => {
+				scrollToSection(hash);
+
+				// Update active nav link
+				const currentNavLinks = tabToShow === 'extension-guides' ?
+					document.querySelectorAll('#extension-nav .nav-link') :
+					document.querySelectorAll('#standalone-nav .nav-link');
+
+				currentNavLinks.forEach(link => {
+					link.classList.remove('active');
+					if (link.getAttribute('href') === '#' + hash) {
+						link.classList.add('active');
+					}
+				});
+			}, 100);
+		}
+
+		document.querySelectorAll('.guide-tree a[href^="#"], .get-started a[href^="#"]').forEach(anchor => {
+			anchor.addEventListener('click', function(e) {
+				e.preventDefault();
+				e.stopImmediatePropagation();
+				handleHash(this.getAttribute('href'), true);
+			}, true);
+		});
+
+		tabButtons.forEach(button => {
+			button.addEventListener('click', () => {
+				if (detailedGuides) {
+					detailedGuides.open = true;
+				}
+				const tabId = button.getAttribute('data-tab');
+				switchTab(tabId);
+
+				// Update URL hash to reflect tab change
+				const defaultSection = tabId === 'extension-guides' ? 'extension-getting-started' : 'standalone-getting-started';
+				history.replaceState(null, null, '#' + defaultSection);
+			});
+		});
+
+		// Smooth scroll for guide navigation
+		document.querySelectorAll('.nav-link').forEach(anchor => {
+			anchor.addEventListener('click', function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+
+				const targetId = this.getAttribute('href').replace(/^#/, '');
+
+				// Check if we need to switch tabs first
+				const isExtensionSection = targetId.includes('extension-');
+				const isStandaloneSection = targetId.includes('standalone-');
+
+				if (isExtensionSection && document.getElementById('extension-guides').style.display === 'none') {
+					switchTab('extension-guides');
+				} else if (isStandaloneSection && document.getElementById('standalone-guides').style.display === 'none') {
+					switchTab('standalone-guides');
+				}
+
+				// Update URL hash
+				history.replaceState(null, null, '#' + targetId);
+
+				// Wait for tab switch to complete if needed
+				setTimeout(() => {
+					scrollToSection(targetId);
+
+					// Update active class on navigation
+					const parentNav = this.closest('.nav-links');
+					parentNav.querySelectorAll('.nav-link').forEach(link => {
+						link.classList.remove('active');
+					});
+					this.classList.add('active');
+				}, isExtensionSection || isStandaloneSection ? 100 : 0);
+			});
+		});
+
+		// Auto-activate menu items based on scroll position
+		function updateActiveNav() {
+			const scrollPosition = window.scrollY;
+			const headerHeight = document.querySelector('header').offsetHeight;
+			const navElement = document.getElementById('guides-nav');
+			const navHeight = navElement ? navElement.offsetHeight : 0;
+			const offset = headerHeight + navHeight + 50;
+
+			// Determine which tab is currently active
+			const isExtensionView = document.getElementById('extension-guides').style.display !== 'none';
+			const currentNavLinks = isExtensionView ?
+				document.querySelectorAll('#extension-nav .nav-link') :
+				document.querySelectorAll('#standalone-nav .nav-link');
+
+			let activeSet = false;
+			let activeSection = null;
+
+			// Loop through each section to find which one is in view
+			document.querySelectorAll('.guide-section').forEach(section => {
+				const sectionTop = section.offsetTop - offset;
+				const sectionBottom = sectionTop + section.offsetHeight;
+				const sectionId = section.getAttribute('id');
+
+				// Check if this section is in view
+				if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+					currentNavLinks.forEach(link => {
+						link.classList.remove('active');
+						if (link.getAttribute('href') === `#${sectionId}`) {
+							link.classList.add('active');
+							activeSet = true;
+							activeSection = sectionId;
+						}
+					});
+				}
+			});
+
+			// If no section is active (user scrolled to top), activate first link
+			if (!activeSet && currentNavLinks.length > 0) {
+				if (scrollPosition < 1000){
+					currentNavLinks[0].classList.add('active');
+				}
+			}
+		}
+
+		// Debounce scroll event for better performance
+		let scrollTimeout;
+		window.addEventListener('scroll', function() {
+			if (scrollTimeout) {
+				window.cancelAnimationFrame(scrollTimeout);
+			}
+			scrollTimeout = window.requestAnimationFrame(function() {
+				updateActiveNav();
+			});
+		});
+
+		// Handle hash changes (browser back/forward)
+		window.addEventListener('hashchange', function() {
+			handleHash(window.location.hash, false);
+		});
+
+		// Sticky navigation on scroll
+		const guideNav = document.getElementById('guides-nav');
+		if (guideNav) {
+			let navOffset = guideNav.offsetTop;
+			function refreshGuideNavOffset() {
+				navOffset = guideNav.offsetTop;
+			}
+
+			if (detailedGuides) {
+				detailedGuides.addEventListener('toggle', function() {
+					setTimeout(refreshGuideNavOffset, 0);
+				});
+			}
+
+			window.addEventListener('scroll', function() {
+				if (window.pageYOffset >= navOffset) {
+					guideNav.classList.add('sticky');
+				} else {
+					guideNav.classList.remove('sticky');
+				}
+			});
+		}
+
+		// Accordion functionality
+		const accordionHeaders = document.querySelectorAll('.accordion-header');
+
+		accordionHeaders.forEach(header => {
+			header.addEventListener('click', () => {
+				const accordionItem = header.parentElement;
+				accordionItem.classList.toggle('active');
+			});
+		});
+
+		// Handle initial hash on page load
+		if (window.location.hash) {
+			handleHash(window.location.hash, false);
+		} else {
+			// Default to extension guides
+			switchTab('extension-guides');
+		}
+
+		// Update active nav on page load
+		updateActiveNav();
+	});
+	</script>
+</body>
+</html>

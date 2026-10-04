@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pl" data-site-root="../../" data-site-language="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/pl/docs/multiple-overlays-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="pl_PL">
+    <meta property="og:url" content="https://socialstream.ninja/pl/docs/multiple-overlays-guide.html">
+    <meta property="og:title" content="Wiele kanałów i osobne nakładki - Social Stream Ninja">
+    <meta property="og:description" content="Czytaj wszystkie czaty w jednym doku, wybierając platformy widoczne w każdej nakładce widowni.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/pl/docs/multiple-overlays-guide.html">
+    <meta name="twitter:title" content="Wiele kanałów i osobne nakładki - Social Stream Ninja">
+    <meta name="twitter:description" content="Czytaj wszystkie czaty w jednym doku, wybierając platformy widoczne w każdej nakładce widowni.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Wiele kanałów i osobne nakładki - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Czytaj wszystkie czaty w jednym doku, wybierając platformy widoczne w każdej nakładce widowni.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+
+<meta name="ssn-site-translation" content="pl">
+<script id="ssn-site-language" type="application/json">{"language":"pl","page":"docs/multiple-overlays-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Przełącz na jasny motyw","Switch to dark theme":"Przełącz na ciemny motyw","Light mode":"Tryb jasny","Dark mode":"Tryb ciemny","Open navigation menu":"Otwórz menu nawigacji","Close navigation menu":"Zamknij menu nawigacji","Copy this document as Markdown to the clipboard":"Skopiuj ten dokument w formacie Markdown do schowka","Copy Markdown":"Kopiuj Markdown","Copying…":"Kopiowanie…","Markdown copied":"Skopiowano Markdown","Copy failed":"Nie udało się skopiować","Copy comprehensive Markdown for an AI assistant":"Skopiuj pełny Markdown dla asystenta AI","Copy this documentation page as Markdown for an AI assistant":"Skopiuj tę stronę dokumentacji jako Markdown dla asystenta AI"},"strings":{"(replace an existing":"(zastąp istniejące","(see":"(zobacz",") or percentages (for example,":") lub procentach (na przykład","). Blank width and height fill the browser; blank offsets start at the top-left corner.":"). Pusta szerokość i wysokość wypełniają przeglądarkę; puste przesunięcia zaczynają w lewym górnym rogu.","). Do not use a platform channel ID here. Tab IDs can change when sources reopen, and sources without a matching tab ID may be excluded. This is a Dock option, not a general Featured Chat channel filter.":"). Nie używaj tutaj identyfikatora kanału platformy. Identyfikatory kart mogą zmieniać się po ponownym otwarciu źródeł, a źródła bez pasującego identyfikatora karty mogą zostać wykluczone. To opcja doku, a nie ogólny filtr kanału Featured Chat.",", and":" i",", and remove":", i usuń",", and top to":", a górę na",", append":", dopisz",", height to":", wysokość na",", left to":", lewo na",", then":", a następnie",", then use these values under each layer’s":", a następnie użyj tych wartości w sekcji każdej warstwy",". An optional compact starting style is":". Opcjonalny zwarty styl początkowy to",". Changing an OBS source’s name does not update its saved URL.":". Zmiana nazwy źródła OBS nie aktualizuje jego zapisanego URL.",". Enter just the numbers, without commas or “px”. Add the layers in this order, bottom first:":". Wpisz same liczby, bez przecinków ani „px”. Dodaj warstwy w tej kolejności, zaczynając od spodu:",". Keep that Dock as your operator view.":". Zachowaj ten dok jako widok operatora.",". Other layers can stay fullscreen. For Hype above chat and Featured Chat shifted right, use the":". Inne warstwy mogą pozostać pełnoekranowe. Dla Hype nad czatem i Featured Chat przesuniętego w prawo użyj",". Other pages need their own transparent background settings. Some external sites block embedding entirely.":". Inne strony potrzebują własnych ustawień przezroczystego tła. Niektóre witryny zewnętrzne całkowicie blokują osadzanie.",". Other scene sizes need different pixel values.":". Inne rozmiary scen wymagają innych wartości pikseli.",". Pixel sizes stay fixed when the browser changes size; percentages follow the browser’s width or height.":". Rozmiary w pikselach pozostają stałe przy zmianie rozmiaru przeglądarki; procenty podążają za jej szerokością lub wysokością.","1. Combine capture in one session":"1. Połącz przechwytywanie w jednej sesji","1. Live Chat / Dock":"1. Czat na żywo / dok","2. Hype counter":"2. Licznik hype","2. Split rolling chat by platform":"2. Podziel przewijany czat według platformy","3. Emoji / Emote Wall":"3. Ściana emoji / emotek","3. Split selected messages":"3. Podziel wybrane wiadomości","4. Featured Chat":"4. Wyróżniony czat","4. Two channels on the same platform":"4. Dwa kanały na tej samej platformie","5. NinjaBacker (optional)":"5. NinjaBacker (opcjonalnie)","5. Verify each audience view":"5. Sprawdź każdy widok widowni","6. Chat and alerts in one browser tab":"6. Czat i alerty w jednej karcie przeglądarki",": 450 + 1470 = 1920. Moving a 1920-wide layer right by 450 would cut off its right edge. Featured Chat still places its message near the bottom of its own area. To center shorter messages within that area, add":": 450 + 1470 = 1920. Przesunięcie warstwy szerokiej na 1920 o 450 w prawo obcięłoby jej prawą krawędź. Featured Chat nadal umieszcza wiadomość blisko dołu własnego obszaru. Aby wyśrodkować krótsze wiadomości w tym obszarze, dodaj","; replace existing values rather than duplicating them. Increase the Hype layer’s height if your chosen style needs more room.":"; zastąp istniejące wartości zamiast je powielać. Zwiększ wysokość warstwy Hype, jeśli wybrany styl potrzebuje więcej miejsca.","A transparent layer can still block taps. Turn off":"Przezroczysta warstwa nadal może blokować dotyk. Wyłącz","Actual Chromium test with four SSN overlays and an isolated test feed. The image is transparent; a dark background is shown here for readability. Click to see full size. Your fonts, colors, and message spacing come from your own overlay settings.":"Rzeczywisty test Chromium z czterema nakładkami SSN i odizolowanym strumieniem testowym. Obraz jest przezroczysty; ciemne tło pokazano tutaj dla czytelności. Kliknij, aby zobaczyć pełny rozmiar. Czcionki, kolory i odstępy wiadomości pochodzą z własnych ustawień nakładek.","Add the intended source chats in SSN and confirm one fresh message from each reaches the same unfiltered":"Dodaj zamierzone czaty źródłowe w SSN i sprawdź, czy jedna nowa wiadomość z każdego dociera do tego samego niefiltrowanego doku","All guides":"Wszystkie poradniki","Allow taps and scrolling":"Zezwól na dotyk i przewijanie","Append to its Dock URL":"Dopisz do URL doku","Audience view":"Widok widowni","Automatic transparency supports":"Automatyczna przezroczystość obsługuje","Browse all guides":"Przeglądaj wszystkie poradniki","Capture":"Przechwytywanie","Center Hype within the column.":"Wyśrodkuj Hype w kolumnie.","Clear saved setup":"Wyczyść zapisaną konfigurację","Combine overlays":"Połącz nakładki","Commands & API":"Polecenia i API","Confirm both appear in the operator Dock, and each rolling overlay shows only its intended source.":"Sprawdź, czy oba pojawiają się w doku operatora i czy każda przewijana nakładka pokazuje tylko zamierzone źródło.","Copy combined link":"Kopiuj połączone łącze","Copy generated links so their session, password, version, and server settings remain intact. Add each audience view as a separate OBS Browser Source. Give OBS sources descriptive names such as":"Kopiuj wygenerowane łącza, aby zachować sesję, hasło, wersję i ustawienia serwera. Dodaj każdy widok widowni jako osobne źródło przeglądarkowe OBS. Nadaj źródłom OBS opisowe nazwy, takie jak","Copy the new combined link into OBS.":"Skopiuj nowe połączone łącze do OBS.","Copy them from your existing Browser Source properties, keeping the session, password, styles, and connection settings. Leave":"Skopiuj je z właściwości istniejących źródeł przeglądarkowych, zachowując sesję, hasło, style i ustawienia połączenia. Pozostaw","Create test messages":"Twórz wiadomości testowe","Download":"Pobierz","Each layer is its own browser area. Set the overall OBS Browser Source to":"Każda warstwa jest osobnym obszarem przeglądarki. Ustaw całe źródło przeglądarkowe OBS na","Event reference":"Dokumentacja zdarzeń","Everything except Discord":"Wszystko oprócz Discorda","Feature each message and test the clear button. Check all visible featured pages after switching platforms.":"Wyróżnij każdą wiadomość i przetestuj przycisk czyszczenia. Po zmianie platform sprawdź wszystkie widoczne strony wyróżnionych wiadomości.","Features":"Funkcje","For a left chat column on a 1920×1080 OBS Browser Source, set the chat layer’s width to":"Dla lewej kolumny czatu w źródle przeglądarkowym OBS 1920×1080 ustaw szerokość warstwy czatu na","For advanced Dock filtering,":"Do zaawansowanego filtrowania doku","For example, with a default connection:":"Na przykład przy domyślnym połączeniu:","For fully independent productions, use separate capture instances/profiles with distinct sessions and open only each production’s intended sources there. Giving one overlay a different session without matching capture will leave it idle. An overlay’s":"Dla w pełni niezależnych produkcji użyj osobnych instancji/profili przechwytywania z odrębnymi sesjami i otwieraj tam tylko źródła przeznaczone dla danej produkcji. Nadanie jednej nakładce innej sesji bez pasującego przechwytywania pozostawi ją bezczynną. Należące do nakładki","For rolling chat, make two copies of your generated":"Dla przewijanego czatu utwórz dwie kopie wygenerowanego adresu URL doku","For selected rather than rolling chat, duplicate your generated":"Dla wybranego zamiast przewijanego czatu zduplikuj wygenerowane łącze","Guides":"Poradniki","Height":"Wysokość","Hire":"Zleć pracę","Home":"Strona główna","If a layer is blank or covers chat":"Jeśli warstwa jest pusta lub zakrywa czat","If a view is blank, remove its filter temporarily. If chat returns, check the exact source type or tab ID. If it remains blank, use":"Jeśli widok jest pusty, tymczasowo usuń filtr. Jeśli czat wróci, sprawdź dokładny typ źródła lub identyfikator karty. Jeśli nadal jest pusty, użyj","Inspiration":"Inspiracje","Keep Featured Chat clear of the chat column.":"Trzymaj Featured Chat poza kolumną czatu.","Keep NinjaBacker above Featured Chat.":"Trzymaj NinjaBacker nad Featured Chat.","Keep combined links and QR codes as private as the individual overlay links. SSN capture must still be running, and the phone must be able to reach the servers used by the original URLs. A":"Chroń połączone łącza i kody QR tak samo jak pojedyncze łącza nakładek. Przechwytywanie SSN nadal musi działać, a telefon musi mieć dostęp do serwerów używanych przez oryginalne adresy URL. Adres","Layer":"Warstwa","Leave":"Pozostaw","Left":"Lewo","Left = 450 and Width = 1470 together":"Left = 450 i Width = 1470 razem","Main navigation":"Nawigacja główna","Mobile browsers may require interaction with a page before playing sound. If needed, enable interaction for that layer and tap it; browser autoplay restrictions still apply. Check audio on the actual phone before relying on it.":"Przeglądarki mobilne mogą wymagać interakcji ze stroną przed odtworzeniem dźwięku. W razie potrzeby włącz interakcję dla tej warstwy i dotknij jej; ograniczenia automatycznego odtwarzania nadal obowiązują. Sprawdź dźwięk na rzeczywistym telefonie, zanim na nim polegniesz.","Multiple channels and separate overlays":"Wiele kanałów i osobne nakładki","Multiple channels and separate overlays - Social Stream Ninja":"Wiele kanałów i osobne nakładki - Social Stream Ninja","OBS layout recipe below":"przepisu układu OBS poniżej","OBS recipe: a left chat column with fullscreen effects":"Przepis OBS: lewa kolumna czatu z pełnoekranowymi efektami","OBS views":"Widoki OBS","On its":"W jego","On this page":"Na tej stronie","One SSN session":"Jedna sesja SSN","One captured feed can supply several differently filtered views.":"Jeden przechwycony strumień może zasilać kilka różnie filtrowanych widoków.","Open each original URL separately first. Alerts normally remain empty until an event arrives; combining pages does not capture new events.":"Najpierw otwórz każdy oryginalny URL osobno. Alerty zwykle pozostają puste do nadejścia zdarzenia; łączenie stron nie przechwytuje nowych zdarzeń.","Open navigation menu":"Otwórz menu nawigacji","Operator Dock sees both":"Dok operatora widzi oba","Overlay Gallery":"Galeria nakładek","Paste its viewer overlay URL as the last layer, with its existing right-entry animation setting. The combiner controls its area and layer order; the NinjaBacker overlay controls its animation and internal placement. Its background must be transparent and its site must allow embedding. This optional layer was not part of the four-overlay example test.":"Wklej URL nakładki widza jako ostatnią warstwę z istniejącym ustawieniem animacji wejścia z prawej. Łącznik steruje obszarem i kolejnością warstw; nakładka NinjaBacker steruje animacją i wewnętrznym rozmieszczeniem. Jej tło musi być przezroczyste, a witryna musi zezwalać na osadzanie. Ta opcjonalna warstwa nie była częścią testu przykładu czterech nakładek.","Paste your complete overlay URLs.":"Wklej pełne adresy URL nakładek.","Paste your generated Streaming Chat Dock URL into the bottom layer and your Multi-Stream Alert Box URL into the top layer. Keep the session, password, and connection options in both links.":"Wklej wygenerowany URL Streaming Chat Dock do dolnej warstwy, a URL Multi-Stream Alert Box do górnej. Zachowaj sesję, hasło i opcje połączenia w obu łączach.","Performance:":"Wydajność:","Preview":"Podgląd","Preview at 1920×1080.":"Podejrzyj w rozdzielczości 1920×1080.","Read all your chats in one Dock while choosing which platforms appear in each audience overlay.":"Czytaj wszystkie czaty w jednym doku, wybierając platformy widoczne w każdej nakładce widowni.","Repeat with a real message from each of your own connected sources, since synthetic messages cannot establish actual source-tab IDs.":"Powtórz z prawdziwą wiadomością z każdego własnego połączonego źródła, ponieważ sztuczne wiadomości nie ustalają rzeczywistych identyfikatorów kart źródeł.","Reset to fullscreen":"Przywróć pełny ekran","Select":"Wybierz","Send a fictional Twitch test message and a fictional YouTube test message into an isolated session using":"Wyślij fikcyjną wiadomość testową Twitch i fikcyjną wiadomość testową YouTube do odizolowanej sesji za pomocą","Send a test chat message containing emojis, feature a message from your Dock, and enable Hype data in SSN. Regular chat alone does not select a Featured Chat message. Confirm each overlay works separately if it remains empty.":"Wyślij testową wiadomość czatu z emoji, wyróżnij wiadomość z doku i włącz dane Hype w SSN. Sam zwykły czat nie wybiera wiadomości Featured Chat. Jeśli nakładka pozostaje pusta, sprawdź działanie każdej osobno.","Set":"Ustaw","Set that Browser Source’s own Width to 1920 and Height to 1080. The combiner’s preview size does not set OBS dimensions. Fit the new source to your scene without cropping. After every layout edit, copy the new combined link again; an older OBS link will keep its old layout.":"Ustaw własną szerokość tego źródła przeglądarkowego na 1920, a wysokość na 1080. Rozmiar podglądu łącznika nie ustawia wymiarów OBS. Dopasuj nowe źródło do sceny bez przycinania. Po każdej zmianie układu skopiuj nowe połączone łącze ponownie; starsze łącze OBS zachowa stary układ.","Show QR code":"Pokaż kod QR","Size and position":"Rozmiar i pozycja","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja ·":"Social Stream Ninja ·","Source types":"Typy źródeł","Streaming Chat Dock":"Dok czatu transmisji","Support":"Pomoc","Supported Sites":"Obsługiwane witryny","Switch theme":"Zmień motyw","Tested combined output: Hype centered over a narrow left chat column, emojis across the scene, and a featured message along the bottom to the right of chat.":"Przetestowany połączony widok: Hype wyśrodkowany nad wąską lewą kolumną czatu, emoji w całej scenie i wyróżniona wiadomość wzdłuż dołu po prawej stronie czatu.","The combined link and QR code contain the complete layout and URLs. Set up on desktop, scan once on mobile, then bookmark the combined view. Opening it also saves that setup in the phone’s browser. Changes on desktop do not automatically update an older link: copy or scan the new link after editing. This feature does not sync settings through your session ID.":"Połączone łącze i kod QR zawierają pełny układ oraz adresy URL. Skonfiguruj na komputerze, zeskanuj raz na telefonie i dodaj połączony widok do zakładek. Otwarcie zapisuje też konfigurację w przeglądarce telefonu. Zmiany na komputerze nie aktualizują automatycznie starszego łącza: po edycji skopiuj lub zeskanuj nowe. Funkcja nie synchronizuje ustawień przez identyfikator sesji.","The current Featured Chat":"Bieżący parametr Featured Chat","The first 80 pixels are reserved for Hype, leaving a 450-pixel-wide chat column below it. To let chat occupy the full height behind Hype instead, set Live Chat’s height to":"Pierwsze 80 pikseli jest zarezerwowane dla Hype, pozostawiając poniżej kolumnę czatu szeroką na 450 pikseli. Aby czat zamiast tego zajmował pełną wysokość za Hype, ustaw wysokość Live Chat na","This filters which selections a featured page accepts. It does not create independent operator queues, and a rejected selection is not a clear command. Clear the featured message explicitly when switching segments so an older accepted selection is not left visible.":"Filtruje, które wybory przyjmuje strona wyróżnionych wiadomości. Nie tworzy niezależnych kolejek operatora, a odrzucony wybór nie jest poleceniem czyszczenia. Jawnie wyczyść wyróżnioną wiadomość podczas zmiany segmentów, aby starszy przyjęty wybór nie pozostał widoczny.","Top":"Góra","Transparent SSN background":"Przezroczyste tło SSN","Twitch + YouTube":"Twitch + YouTube","Twitch and YouTube together":"Twitch i YouTube razem","Twitch chat":"Czat Twitch","Twitch-only and YouTube-only":"Tylko Twitch i tylko YouTube","URL, set":"URL ustaw","URL. Append these options to the respective copies:":". Dopisz te opcje do odpowiednich kopii:","URL. For centered messages across the whole scene instead, use Left = 0, Width = 1920, and":"URL. Aby zamiast tego wyśrodkować wiadomości w całej scenie, użyj Left = 0, Width = 1920 oraz","Use":"Użyj","Use the editable link to reopen the setup with your URLs and placement filled in. To edit a combined link later, add":"Użyj edytowalnego łącza, aby ponownie otworzyć konfigurację z wypełnionymi URL-ami i pozycjami. Aby później edytować połączone łącze, dodaj","Width":"Szerokość","You can add up to eight URLs and use the arrow buttons to move a layer behind or in front of another. Layers fill the browser by default. Expand":"Możesz dodać do ośmiu adresów URL i używać przycisków strzałek do przesuwania warstwy za inną lub przed nią. Warstwy domyślnie wypełniają przeglądarkę. Rozwiń","You do not need CSS for this layout.":"Do tego układu nie potrzebujesz CSS.","YouTube chat":"Czat YouTube","Your links and layer options are saved automatically in this browser, including unfinished setups. Reopen":"Łącza i opcje warstw są automatycznie zapisywane w tej przeglądarce, także niedokończone konfiguracje. Otwórz ponownie","accepts one source type. The Dock’s comma-separated example above should not be copied into that field on Featured Chat.":"przyjmuje jeden typ źródła. Przykładu doku z wartościami oddzielonymi przecinkami powyżej nie należy kopiować do tego pola Featured Chat.","accepts the numeric originating tab ID; comma-separated IDs are supported. Inspect an actual captured payload to obtain its":"przyjmuje liczbowy identyfikator karty źródłowej; obsługiwane są identyfikatory oddzielone przecinkami. Sprawdź rzeczywiste przechwycone dane, aby uzyskać jego","address points to the device opening the link. Very long URLs may exceed QR capacity; the combined link can still be copied.":"wskazuje urządzenie otwierające łącze. Bardzo długie adresy URL mogą przekroczyć pojemność QR; połączone łącze nadal można skopiować.","and":"i","and scan it with your phone’s camera. Or select":"i zeskanuj aparatem telefonu. Lub wybierz","and top to":"i górę na","before its":"przed jego","checked. Enable \"Allow taps and scrolling on this layer\" for chat, and disable it for alerts so they do not block chat interaction.":"zaznaczone. Włącz „Zezwalaj na dotknięcia i przewijanie na tej warstwie” dla czatu, a wyłącz dla alertów, aby nie blokowały interakcji z czatem.","checked. OBS cropping, transforms, filters, and its Custom CSS field are not part of the URL and do not transfer.":"zaznaczone. Przycinanie, przekształcenia, filtry OBS i pole Custom CSS nie są częścią URL i nie są przenoszone.","clears that layer’s placement. Each overlay retains its own content and settings.":"czyści pozycję tej warstwy. Każda nakładka zachowuje własną treść i ustawienia.","for these pages. Do not assume an option such as":"dla tych stron. Nie zakładaj, że opcja taka jak","from another overlay works here. Use":"z innej nakładki działa tutaj. Użyj","hidefrom":"hidefrom","identifies a page for routing; it is not a channel filter.":"identyfikuje stronę do routingu; nie jest filtrem kanału.","if present). With a URL that already has":"jeśli obecne). W URL, który już ma","link and add":"i dodaj","on a layer to set its width, height, left offset, and top offset in pixels (for example,":"w warstwie, aby ustawić jej szerokość, wysokość i przesunięcia od lewej oraz od góry w pikselach (na przykład","on any layer above the chat that does not need interaction.":"w każdej warstwie nad czatem, która nie wymaga interakcji.","one Browser Source still runs each embedded overlay and its connections. Combining reduces the number of OBS sources, but does not guarantee lower CPU or memory use. Close the browser preview when finished and compare OBS performance with the old sources disabled. M1 macOS/OBS performance and your specific NinjaBacker URL still need checking on your setup. You can keep Live Chat separate and combine only the other overlays if that works better.":"jedno źródło przeglądarkowe nadal uruchamia każdą osadzoną nakładkę i jej połączenia. Łączenie zmniejsza liczbę źródeł OBS, ale nie gwarantuje mniejszego użycia CPU ani pamięci. Po zakończeniu zamknij podgląd przeglądarki i porównaj wydajność OBS z wyłączonymi starymi źródłami. Wydajność M1 macOS/OBS i konkretny URL NinjaBacker nadal wymagają sprawdzenia w Twojej konfiguracji. Możesz zachować Live Chat osobno i połączyć tylko pozostałe nakładki, jeśli działa to lepiej.","onlyfrom":"onlyfrom","or":"lub","selects Twitch as a platform, not a particular Twitch channel. Channel names and stream titles are metadata, not interchangeable URL filter names. Add":"wybiera Twitch jako platformę, a nie konkretny kanał Twitch. Nazwy kanałów i tytuły transmisji są metadanymi, a nie wymiennymi nazwami filtrów URL. Dodaj","separately when the capture reports that type. See":"osobno, gdy przechwytywanie zgłasza ten typ. Zobacz","session and routing troubleshooting":"rozwiązywanie problemów z sesją i routingiem","to continue editing, or select":"aby kontynuować edycję, lub wybierz","to its":"do jego","to layer existing overlay URLs in one tab or one OBS Browser Source. This is useful when reading chat on a phone during an IRL stream.":"aby ułożyć istniejące adresy URL nakładek warstwami w jednej karcie lub jednym źródle przeglądarkowym OBS. Przydaje się to do czytania czatu na telefonie podczas transmisji IRL.","to one copy and":"do jednej kopii i","to paste the result into a browser source. The combined view has no setup controls.":"aby wkleić wynik do źródła przeglądarkowego. Połączony widok nie ma elementów konfiguracji.","to show channel names when supplied by the source.":"aby pokazywać nazwy kanałów, gdy źródło je dostarcza.","to start over. Browser storage may be unavailable or temporary in private browsing.":"aby zacząć od nowa. Magazyn przeglądarki może być niedostępny lub tymczasowy w trybie prywatnym.","to the other. Keep the operator Dock open to select messages.":"do drugiej. Pozostaw dok operatora otwarty do wybierania wiadomości."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/multiple-overlays-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="Nawigacja główna">
+<a href="../index.html">Strona główna</a>
+<a href="features.html">Funkcje</a>
+<a href="inspiration.html" class="site-priority-inspiration">Inspiracje</a>
+<a href="download.html">Pobierz</a>
+<a href="guides.html">Poradniki</a>
+<a href="commands.html">Polecenia i API</a>
+<a href="supported-sites.html">Obsługiwane witryny</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">Galeria nakładek</a>
+<a href="services.html" class="site-priority-hire">Zleć pracę</a>
+<a href="support.html">Pomoc</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Polski"><span aria-hidden="true">🌐 </span><span lang="pl">Polski</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/multiple-overlays-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/multiple-overlays-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/multiple-overlays-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/multiple-overlays-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/multiple-overlays-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/multiple-overlays-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/multiple-overlays-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/multiple-overlays-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/multiple-overlays-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/multiple-overlays-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="multiple-overlays-guide.html" lang="pl" hreflang="pl" aria-current="true">Polski</a><a class="site-language-link" href="../../ko/docs/multiple-overlays-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/multiple-overlays-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/multiple-overlays-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/multiple-overlays-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/multiple-overlays-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/multiple-overlays-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="Zmień motyw">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="Otwórz menu nawigacji" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>Wiele kanałów i osobne nakładki</h1>
+<p>Czytaj wszystkie czaty w jednym doku, wybierając platformy widoczne w każdej nakładce widowni.</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="Na tej stronie">
+<a href="guides.html">Wszystkie poradniki</a>
+<a href="#setup">1. Połącz przechwytywanie w jednej sesji</a>
+<a href="#rolling">2. Podziel przewijany czat według platformy</a>
+<a href="#featured">3. Podziel wybrane wiadomości</a>
+<a href="#channels">4. Dwa kanały na tej samej platformie</a>
+<a href="#check">5. Sprawdź każdy widok widowni</a>
+<a href="#combine">6. Czat i alerty w jednej karcie przeglądarki</a>
+</nav>
+<section class="guide-card" id="setup">
+<h2>1. Połącz przechwytywanie w jednej sesji</h2>
+<p>Dodaj zamierzone czaty źródłowe w SSN i sprawdź, czy jedna nowa wiadomość z każdego dociera do tego samego niefiltrowanego doku <strong>Dok czatu transmisji</strong>. Zachowaj ten dok jako widok operatora.</p>
+<p>Kopiuj wygenerowane łącza, aby zachować sesję, hasło, wersję i ustawienia serwera. Dodaj każdy widok widowni jako osobne źródło przeglądarkowe OBS. Nadaj źródłom OBS opisowe nazwy, takie jak <strong>Czat Twitch</strong> i <strong>Czat YouTube</strong>.</p>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>Przechwytywanie</strong>
+<span>Twitch + YouTube</span>
+</li>
+<li>
+<strong>Jedna sesja SSN</strong>
+<span>Dok operatora widzi oba</span>
+</li>
+<li>
+<strong>Widoki OBS</strong>
+<span>Tylko Twitch i tylko YouTube</span>
+</li>
+</ol>
+<figcaption>Jeden przechwycony strumień może zasilać kilka różnie filtrowanych widoków.</figcaption>
+</figure>
+</section>
+<section class="guide-card" id="rolling">
+<h2>2. Podziel przewijany czat według platformy</h2>
+<p>Dla przewijanego czatu utwórz dwie kopie wygenerowanego adresu URL doku <code>dock.html</code> . Dopisz te opcje do odpowiednich kopii:</p>
+<table class="guide-table guide-table-stack">
+<thead>
+<tr>
+<th scope="col">Widok widowni</th>
+<th scope="col">Dopisz do URL doku</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td data-label="Audience view">Czat Twitch</td>
+<td data-label="Append to its Dock URL">
+<code>&amp;onlyfrom=twitch&amp;hidemenu</code>
+</td>
+</tr>
+<tr>
+<td data-label="Audience view">Czat YouTube</td>
+<td data-label="Append to its Dock URL">
+<code>&amp;onlyfrom=youtube&amp;hidemenu</code>
+</td>
+</tr>
+<tr>
+<td data-label="Audience view">Twitch i YouTube razem</td>
+<td data-label="Append to its Dock URL">
+<code>&amp;onlyfrom=twitch,youtube&amp;hidemenu</code>
+</td>
+</tr>
+<tr>
+<td data-label="Audience view">Wszystko oprócz Discorda</td>
+<td data-label="Append to its Dock URL">
+<code>&amp;hidefrom=discord&amp;hidemenu</code>
+</td>
+</tr>
+</tbody>
+</table>
+<p>Na przykład przy domyślnym połączeniu:</p>
+<pre>
+<code>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;onlyfrom=twitch&amp;hidemenu</code>
+</pre>
+<p>Użyj <strong>onlyfrom</strong> i <strong>hidefrom</strong> dla tych stron. Nie zakładaj, że opcja taka jak <code>onlytype</code> z innej nakładki działa tutaj. Użyj <code>youtubeshorts</code> osobno, gdy przechwytywanie zgłasza ten typ. Zobacz <a href="source-types-guide.html">Typy źródeł</a>.</p>
+</section>
+<section class="guide-card" id="featured">
+<h2>3. Podziel wybrane wiadomości</h2>
+<p>Dla wybranego zamiast przewijanego czatu zduplikuj wygenerowane łącze <code>featured.html</code> i dodaj <code>&amp;onlyfrom=twitch</code> do jednej kopii i <code>&amp;onlyfrom=youtube</code> do drugiej. Pozostaw dok operatora otwarty do wybierania wiadomości.</p>
+<p>Bieżący parametr Featured Chat <code>onlyfrom</code> przyjmuje jeden typ źródła. Przykładu doku z wartościami oddzielonymi przecinkami powyżej nie należy kopiować do tego pola Featured Chat.</p>
+<div class="guide-note">Filtruje, które wybory przyjmuje strona wyróżnionych wiadomości. Nie tworzy niezależnych kolejek operatora, a odrzucony wybór nie jest poleceniem czyszczenia. Jawnie wyczyść wyróżnioną wiadomość podczas zmiany segmentów, aby starszy przyjęty wybór nie pozostał widoczny.</div>
+</section>
+<section class="guide-card" id="channels">
+<h2>4. Dwa kanały na tej samej platformie</h2>
+<p>
+<code>onlyfrom=twitch</code> wybiera Twitch jako platformę, a nie konkretny kanał Twitch. Nazwy kanałów i tytuły transmisji są metadanymi, a nie wymiennymi nazwami filtrów URL. Dodaj <code>&amp;showchannelname</code> aby pokazywać nazwy kanałów, gdy źródło je dostarcza.</p>
+<p>Do zaawansowanego filtrowania doku <code>&amp;filtertid=123</code> przyjmuje liczbowy identyfikator karty źródłowej; obsługiwane są identyfikatory oddzielone przecinkami. Sprawdź rzeczywiste przechwycone dane, aby uzyskać jego <code>tid</code> (zobacz <a href="event-reference.html">Dokumentacja zdarzeń</a> i <a href="commands.html">Polecenia i API</a>). Nie używaj tutaj identyfikatora kanału platformy. Identyfikatory kart mogą zmieniać się po ponownym otwarciu źródeł, a źródła bez pasującego identyfikatora karty mogą zostać wykluczone. To opcja doku, a nie ogólny filtr kanału Featured Chat.</p>
+<p>Dla w pełni niezależnych produkcji użyj osobnych instancji/profili przechwytywania z odrębnymi sesjami i otwieraj tam tylko źródła przeznaczone dla danej produkcji. Nadanie jednej nakładce innej sesji bez pasującego przechwytywania pozostawi ją bezczynną. Należące do nakładki <code>label</code> identyfikuje stronę do routingu; nie jest filtrem kanału.</p>
+</section>
+<section class="guide-card" id="check">
+<h2>5. Sprawdź każdy widok widowni</h2>
+<ol class="guide-steps">
+<li>Wyślij fikcyjną wiadomość testową Twitch i fikcyjną wiadomość testową YouTube do odizolowanej sesji za pomocą <a href="test-message-guide.html">Twórz wiadomości testowe</a>.</li>
+<li>Sprawdź, czy oba pojawiają się w doku operatora i czy każda przewijana nakładka pokazuje tylko zamierzone źródło.</li>
+<li>Wyróżnij każdą wiadomość i przetestuj przycisk czyszczenia. Po zmianie platform sprawdź wszystkie widoczne strony wyróżnionych wiadomości.</li>
+<li>Powtórz z prawdziwą wiadomością z każdego własnego połączonego źródła, ponieważ sztuczne wiadomości nie ustalają rzeczywistych identyfikatorów kart źródeł.</li>
+</ol>
+<p>Jeśli widok jest pusty, tymczasowo usuń filtr. Jeśli czat wróci, sprawdź dokładny typ źródła lub identyfikator karty. Jeśli nadal jest pusty, użyj <a href="sessions-passwords-relay-modes.html">rozwiązywanie problemów z sesją i routingiem</a>. Zmiana nazwy źródła OBS nie aktualizuje jego zapisanego URL.</p>
+</section>
+<section class="guide-card" id="combine">
+<h2>6. Czat i alerty w jednej karcie przeglądarki</h2>
+<p>Użyj <a href="../../combine.html">Połącz nakładki</a> aby ułożyć istniejące adresy URL nakładek warstwami w jednej karcie lub jednym źródle przeglądarkowym OBS. Przydaje się to do czytania czatu na telefonie podczas transmisji IRL.</p>
+<ol class="guide-steps">
+<li>Wklej wygenerowany URL Streaming Chat Dock do dolnej warstwy, a URL Multi-Stream Alert Box do górnej. Zachowaj sesję, hasło i opcje połączenia w obu łączach.</li>
+<li>Pozostaw <strong>Przezroczyste tło SSN</strong> zaznaczone. Włącz „Zezwalaj na dotknięcia i przewijanie na tej warstwie” dla czatu, a wyłącz dla alertów, aby nie blokowały interakcji z czatem.</li>
+<li>Wybierz <strong>Podgląd</strong>, a następnie <strong>Pokaż kod QR</strong> i zeskanuj aparatem telefonu. Lub wybierz <strong>Kopiuj połączone łącze</strong> aby wkleić wynik do źródła przeglądarkowego. Połączony widok nie ma elementów konfiguracji.</li>
+</ol>
+<p>Możesz dodać do ośmiu adresów URL i używać przycisków strzałek do przesuwania warstwy za inną lub przed nią. Warstwy domyślnie wypełniają przeglądarkę. Rozwiń <strong>Rozmiar i pozycja</strong> w warstwie, aby ustawić jej szerokość, wysokość i przesunięcia od lewej oraz od góry w pikselach (na przykład <code>450</code>) lub procentach (na przykład <code>100%</code>). Pusta szerokość i wysokość wypełniają przeglądarkę; puste przesunięcia zaczynają w lewym górnym rogu. <strong>Przywróć pełny ekran</strong> czyści pozycję tej warstwy. Każda nakładka zachowuje własną treść i ustawienia.</p>
+<p>Dla lewej kolumny czatu w źródle przeglądarkowym OBS 1920×1080 ustaw szerokość warstwy czatu na <code>450</code>, wysokość na <code>1080</code>, lewo na <code>0</code>, a górę na <code>0</code>. Inne warstwy mogą pozostać pełnoekranowe. Dla Hype nad czatem i Featured Chat przesuniętego w prawo użyj <a href="#combine-obs">przepisu układu OBS poniżej</a>. Rozmiary w pikselach pozostają stałe przy zmianie rozmiaru przeglądarki; procenty podążają za jej szerokością lub wysokością.</p>
+<p>Użyj edytowalnego łącza, aby ponownie otworzyć konfigurację z wypełnionymi URL-ami i pozycjami. Aby później edytować połączone łącze, dodaj <code>?edit=1</code> przed jego <code>#</code>.</p>
+<p>Łącza i opcje warstw są automatycznie zapisywane w tej przeglądarce, także niedokończone konfiguracje. Otwórz ponownie <a href="../../combine.html">Połącz nakładki</a> aby kontynuować edycję, lub wybierz <strong>Wyczyść zapisaną konfigurację</strong> aby zacząć od nowa. Magazyn przeglądarki może być niedostępny lub tymczasowy w trybie prywatnym.</p>
+<p>Połączone łącze i kod QR zawierają pełny układ oraz adresy URL. Skonfiguruj na komputerze, zeskanuj raz na telefonie i dodaj połączony widok do zakładek. Otwarcie zapisuje też konfigurację w przeglądarce telefonu. Zmiany na komputerze nie aktualizują automatycznie starszego łącza: po edycji skopiuj lub zeskanuj nowe. Funkcja nie synchronizuje ustawień przez identyfikator sesji.</p>
+<p>Chroń połączone łącza i kody QR tak samo jak pojedyncze łącza nakładek. Przechwytywanie SSN nadal musi działać, a telefon musi mieć dostęp do serwerów używanych przez oryginalne adresy URL. Adres <code>localhost</code> lub <code>127.0.0.1</code> wskazuje urządzenie otwierające łącze. Bardzo długie adresy URL mogą przekroczyć pojemność QR; połączone łącze nadal można skopiować.</p>
+<h3 id="combine-obs">Przepis OBS: lewa kolumna czatu z pełnoekranowymi efektami</h3>
+<p><strong>Do tego układu nie potrzebujesz CSS.</strong> Każda warstwa jest osobnym obszarem przeglądarki. Ustaw całe źródło przeglądarkowe OBS na <strong>1920×1080</strong>, a następnie użyj tych wartości w sekcji każdej warstwy <strong>Rozmiar i pozycja</strong>. Wpisz same liczby, bez przecinków ani „px”. Dodaj warstwy w tej kolejności, zaczynając od spodu:</p>
+<table class="guide-table guide-table-stack">
+<thead><tr><th scope="col">Warstwa</th><th scope="col">Szerokość</th><th scope="col">Wysokość</th><th scope="col">Lewo</th><th scope="col">Góra</th></tr></thead>
+<tbody>
+<tr><td data-label="Layer">1. Czat na żywo / dok</td><td data-label="Width">450</td><td data-label="Height">1000</td><td data-label="Left">0</td><td data-label="Top">80</td></tr>
+<tr><td data-label="Layer">2. Licznik hype</td><td data-label="Width">450</td><td data-label="Height">80</td><td data-label="Left">0</td><td data-label="Top">0</td></tr>
+<tr><td data-label="Layer">3. Ściana emoji / emotek</td><td data-label="Width">1920</td><td data-label="Height">1080</td><td data-label="Left">0</td><td data-label="Top">0</td></tr>
+<tr><td data-label="Layer">4. Wyróżniony czat</td><td data-label="Width">1470</td><td data-label="Height">1080</td><td data-label="Left">450</td><td data-label="Top">0</td></tr>
+<tr><td data-label="Layer">5. NinjaBacker (opcjonalnie)</td><td data-label="Width">1920</td><td data-label="Height">1080</td><td data-label="Left">0</td><td data-label="Top">0</td></tr>
+</tbody>
+</table>
+<p>Pierwsze 80 pikseli jest zarezerwowane dla Hype, pozostawiając poniżej kolumnę czatu szeroką na 450 pikseli. Aby czat zamiast tego zajmował pełną wysokość za Hype, ustaw wysokość Live Chat na <code>1080</code> i górę na <code>0</code>. Inne rozmiary scen wymagają innych wartości pikseli.</p>
+<ol class="guide-steps">
+<li><strong>Wklej pełne adresy URL nakładek.</strong> Skopiuj je z właściwości istniejących źródeł przeglądarkowych, zachowując sesję, hasło, style i ustawienia połączenia. Pozostaw <strong>Przezroczyste tło SSN</strong> zaznaczone. Przycinanie, przekształcenia, filtry OBS i pole Custom CSS nie są częścią URL i nie są przenoszone.</li>
+<li><strong>Wyśrodkuj Hype w kolumnie.</strong> W jego <code>hype.html</code> URL ustaw <code>align=center</code> (zastąp istniejące <code>align=left</code> lub <code>align=right</code>, i usuń <code>alignright</code> jeśli obecne). W URL, który już ma <code>?session=...</code>, dopisz <code>&amp;align=center</code>. Opcjonalny zwarty styl początkowy to <code>&amp;combineall&amp;hidetitle&amp;style=compact&amp;scale=0.75</code>; zastąp istniejące wartości zamiast je powielać. Zwiększ wysokość warstwy Hype, jeśli wybrany styl potrzebuje więcej miejsca.</li>
+<li><strong>Trzymaj Featured Chat poza kolumną czatu.</strong> Ustaw <strong>Left = 450 i Width = 1470 razem</strong>: 450 + 1470 = 1920. Przesunięcie warstwy szerokiej na 1920 o 450 w prawo obcięłoby jej prawą krawędź. Featured Chat nadal umieszcza wiadomość blisko dołu własnego obszaru. Aby wyśrodkować krótsze wiadomości w tym obszarze, dodaj <code>&amp;center</code> do jego <code>featured.html</code> URL. Aby zamiast tego wyśrodkować wiadomości w całej scenie, użyj Left = 0, Width = 1920 oraz <code>&amp;center</code>.</li>
+<li><strong>Trzymaj NinjaBacker nad Featured Chat.</strong> Wklej URL nakładki widza jako ostatnią warstwę z istniejącym ustawieniem animacji wejścia z prawej. Łącznik steruje obszarem i kolejnością warstw; nakładka NinjaBacker steruje animacją i wewnętrznym rozmieszczeniem. Jej tło musi być przezroczyste, a witryna musi zezwalać na osadzanie. Ta opcjonalna warstwa nie była częścią testu przykładu czterech nakładek.</li>
+<li><strong>Podejrzyj w rozdzielczości 1920×1080.</strong> Wyślij testową wiadomość czatu z emoji, wyróżnij wiadomość z doku i włącz dane Hype w SSN. Sam zwykły czat nie wybiera wiadomości Featured Chat. Jeśli nakładka pozostaje pusta, sprawdź działanie każdej osobno.</li>
+<li><strong>Skopiuj nowe połączone łącze do OBS.</strong> Ustaw własną szerokość tego źródła przeglądarkowego na 1920, a wysokość na 1080. Rozmiar podglądu łącznika nie ustawia wymiarów OBS. Dopasuj nowe źródło do sceny bez przycinania. Po każdej zmianie układu skopiuj nowe połączone łącze ponownie; starsze łącze OBS zachowa stary układ.</li>
+</ol>
+<figure class="guide-figure">
+<a href="../../docs/images/combined-podcast-scene.png" target="_blank" rel="noopener noreferrer"><img class="guide-image" src="../../docs/images/combined-podcast-scene.png" width="1920" height="1080" loading="lazy" style="background:#181b23" alt="Przetestowany połączony widok: Hype wyśrodkowany nad wąską lewą kolumną czatu, emoji w całej scenie i wyróżniona wiadomość wzdłuż dołu po prawej stronie czatu."></a>
+<figcaption>Rzeczywisty test Chromium z czterema nakładkami SSN i odizolowanym strumieniem testowym. Obraz jest przezroczysty; ciemne tło pokazano tutaj dla czytelności. Kliknij, aby zobaczyć pełny rozmiar. Czcionki, kolory i odstępy wiadomości pochodzą z własnych ustawień nakładek.</figcaption>
+</figure>
+<p><strong>Wydajność:</strong> jedno źródło przeglądarkowe nadal uruchamia każdą osadzoną nakładkę i jej połączenia. Łączenie zmniejsza liczbę źródeł OBS, ale nie gwarantuje mniejszego użycia CPU ani pamięci. Po zakończeniu zamknij podgląd przeglądarki i porównaj wydajność OBS z wyłączonymi starymi źródłami. Wydajność M1 macOS/OBS i konkretny URL NinjaBacker nadal wymagają sprawdzenia w Twojej konfiguracji. Możesz zachować Live Chat osobno i połączyć tylko pozostałe nakładki, jeśli działa to lepiej.</p>
+<h3>Jeśli warstwa jest pusta lub zakrywa czat</h3>
+<ul class="guide-list">
+<li>Najpierw otwórz każdy oryginalny URL osobno. Alerty zwykle pozostają puste do nadejścia zdarzenia; łączenie stron nie przechwytuje nowych zdarzeń.</li>
+<li>Automatyczna przezroczystość obsługuje <code>dock.html</code>, <code>featured.html</code>, <code>multi-alerts.html</code> i <code>minecraft.html</code>. Inne strony potrzebują własnych ustawień przezroczystego tła. Niektóre witryny zewnętrzne całkowicie blokują osadzanie.</li>
+<li>Przezroczysta warstwa nadal może blokować dotyk. Wyłącz <strong>Zezwól na dotyk i przewijanie</strong> w każdej warstwie nad czatem, która nie wymaga interakcji.</li>
+<li>Przeglądarki mobilne mogą wymagać interakcji ze stroną przed odtworzeniem dźwięku. W razie potrzeby włącz interakcję dla tej warstwy i dotknij jej; ograniczenia automatycznego odtwarzania nadal obowiązują. Sprawdź dźwięk na rzeczywistym telefonie, zanim na nim polegniesz.</li>
+</ul>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">Przeglądaj wszystkie poradniki</a>
+</p>
+</div>
+</div>
+</footer>
+<script data-copy-markdown src="../../docs/js/main.js">
+</script>
+</body>
+</html>

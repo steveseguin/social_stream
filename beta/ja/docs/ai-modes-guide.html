@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ja/docs/ai-modes-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ja/docs/ai-modes-guide.html">
+    <meta property="og:title" content="AI機能の総合ガイド - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream NinjaのAI機能を選び、設定します。音声共同司会、公開・非公開チャットボット、ChatGPTブラウザ連携、モデレーション、翻訳、RAG、要約、読み上げ、AIによるオーバーレイ作成に対応。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ja/docs/ai-modes-guide.html">
+    <meta name="twitter:title" content="AI機能の総合ガイド - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream NinjaのAI機能を選び、設定します。音声共同司会、公開・非公開チャットボット、ChatGPTブラウザ連携、モデレーション、翻訳、RAG、要約、読み上げ、AIによるオーバーレイ作成に対応。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI機能の総合ガイド - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream NinjaのAI機能を選び、設定します。音声共同司会、公開・非公開チャットボット、ChatGPTブラウザ連携、モデレーション、翻訳、RAG、要約、読み上げ、AIによるオーバーレイ作成に対応。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/ai-modes-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{", and":"、および",", and test with a new turn instead of existing history.":"を確認し、過去の履歴ではなく新しい発言でテストしてください。",", enable":"で、次を有効にします：",", just like it captures a chat source.":"として、チャットソースと同様に取り込みます。",", open the page with your session, and use the configured LLM provider.":"を有効にし、自分のセッションでページを開いて、設定済みLLMプロバイダーを使います。",", then press":"、続いて押すボタン：",". A Connected result proves only that the provider answered the test.":"。Connectedという結果は、プロバイダーがテストに応答したことだけを示します。",". When selected, SSN sends one current image with each direct spoken or typed request; it is not a continuous video stream and can add API cost and latency.":"。選択すると、SSNは直接の音声・文字による依頼ごとに現在の画像を1枚送ります。連続した映像ストリームではなく、API料金と遅延が増える場合があります。","AI Overlay Builder showing prompt, preview, save controls, and event simulation buttons":"プロンプト、プレビュー、保存操作、イベントシミュレーションボタンを表示したAI Overlay Builder","AI Website Capture Status":"AIウェブサイトの取り込み対応状況","AI cohost":"AI共同司会","AI cohost controls showing media devices, AI provider settings, system instructions, and live chat mode":"メディアデバイス、AIプロバイダー設定、システム指示、ライブチャットモードを表示したAI共同司会の操作画面","AI in Social Stream Ninja":"Social Stream NinjaのAI機能","API Key?":"APIキーは必要？","Allows users to trigger an AI summary with":"ユーザーが次のコマンドでAI要約を呼び出せます：","An SSN/API conversation, separate from chatgpt.com.":"chatgpt.comとは別の、SSNとAPIによる会話です。","Audio Response":"音声応答（Audio Response）","Automatically answer selected YouTube, Twitch, Kick, or other chat messages":"YouTube、Twitch、Kickなどの選択したチャットメッセージに自動返信する","Bot cannot post:":"ボットが投稿できない場合：","Bot replies ONLY go to the bot overlay page":"ボットの返信をボットオーバーレイページだけに送る（Bot replies ONLY go to the bot overlay page）","Bot skips most messages:":"ボットがほとんどのメッセージを無視する場合：","Capture a ChatGPT Conversation":"ChatGPTの会話を取り込む","Censor bot":"検閲ボット","Chat Bot - Private Interface":"チャットボット - 非公開インターフェース（Chat Bot - Private Interface）","Chat Bots and AI services":"チャットボットとAIサービス（Chat Bots and AI services）","Chat summaries":"チャットの要約","ChatGPT":"ChatGPT","ChatGPT API":"ChatGPT API","ChatGPT API provider":"ChatGPT APIプロバイダー","ChatGPT browser source":"ChatGPTブラウザソース","ChatGPT browser source is silent:":"ChatGPTブラウザソースから何も届かない場合：","Check history size, cost, and private content.":"履歴の量、費用、非公開の内容を確認してください。","Choose and configure Social Stream Ninja AI features: voice cohosts, public and private chat bots, ChatGPT browser companion mode, moderation, translation, RAG, summaries, TTS, and AI-built overlays.":"Social Stream NinjaのAI機能を選び、設定します。音声共同司会、公開・非公開チャットボット、ChatGPTブラウザ連携、モデレーション、翻訳、RAG、要約、読み上げ、AIによるオーバーレイ作成に対応。","Choose between a voice cohost, live-chat bot, private helper, browser companion, moderation, translation, knowledge search, and AI-built overlays.":"音声共同司会、ライブチャットボット、個人用アシスタント、ブラウザ連携、モデレーション、翻訳、知識検索、AIによるオーバーレイ作成から選べます。","Choose the Result You Want":"実現したいことを選ぶ","Choose the provider, microphone, response type, instructions, and live-chat mode from the cohost page.":"共同司会ページでプロバイダー、マイク、応答形式、指示、ライブチャットモードを選びます。","Choose trigger words, moderator-only behavior, rate limits, history, and prompt instructions.":"トリガーワード、モデレーター限定の動作、レート制限、履歴、プロンプトの指示を設定します。","Classifies, sanitizes, or blocks incoming messages.":"受信メッセージを分類、修正、ブロックします。","Claude":"Claude","Cloud":"クラウド","Co-host Stream Controls":"共同司会の配信操作","Cohost sees chat but stays quiet:":"共同司会がチャットを見ているのに話さない場合：","Commands & API":"コマンドとAPI","Commands & API AI Integration":"コマンドとAPIのAI連携","Common Fixes":"よくある問題の対処","Complete AI Guide - Social Stream Ninja":"AI機能の総合ガイド - Social Stream Ninja","Configure LLM Service Provider":"LLMサービスプロバイダーの設定（Configure LLM Service Provider）","Configure and test an AI provider.":"AIプロバイダーを設定してテストします。","Connected, but no live reply:":"接続済みなのにライブチャットへ応答しない場合：","Context only - answer when asked":"コンテキストのみ — 尋ねられたときに回答（Context only - answer when asked）","Context only intentionally waits for the streamer to ask about chat. Switch to Questions and mentions or Every message for automatic replies.":"Context onlyは、配信者がチャットについて尋ねるまで意図的に待ちます。自動返信にはQuestions and mentionsまたはEvery messageへ切り替えてください。","Conversation":"会話","Current Support":"現在の対応状況","Custom OpenAI-compatible API":"独自のOpenAI互換API","Custom/local server":"独自・ローカルサーバー","Depends on provider":"プロバイダーによります","Describe an overlay and have AI build it":"作りたいオーバーレイを説明してAIに作ってもらう","Download":"ダウンロード","Enable the":"有効にする項目：","Enable the feature that should use it: Primary bot, Private bot, cohost, moderation, translation, RAG, or builder.":"それを使う機能を別途有効にします。メインボット、非公開ボット、共同司会、モデレーション、翻訳、RAG、ビルダーから選んでください。","Enter its endpoint, model, API key, or local asset settings.":"エンドポイント、モデル、APIキー、またはローカルアセットの設定を入力します。","Every message":"すべてのメッセージ（Every message）","Experimental and may be disabled or rate-limited.":"実験的な機能で、無効化またはレート制限される場合があります。","Experimental capture of new text turns; existing history is ignored. Generic browser relay can target its prompt composer.":"新しいテキスト発言を実験的に取り込みます。過去の履歴は無視します。汎用ブラウザ転送でプロンプト入力欄を送信先にできます。","Experimental:":"実験的機能：","Explicitly select your microphone and":"マイクと次の項目を明示的に選択します：","Features":"機能","Filter, translate, summarize, or answer from documents":"フィルタリング、翻訳、要約、文書に基づく回答を行う","For OpenAI Realtime, capture the audio from the co-host browser/app in OBS and use":"OpenAI Realtimeでは共同司会のブラウザ・アプリの音声をOBSで取り込み、次を使います：","For a safe first test, enable":"最初は安全にテストするため、次を有効にします：","For llama.cpp, LM Studio, vLLM, and compatible gateways. Ollama should use its native option.":"llama.cpp、LM Studio、vLLM、互換ゲートウェイ向けです。Ollamaには専用の選択肢を使ってください。","For lower OpenAI latency, choose the Mini model, Low reasoning, and Fast turn-taking. Full quality and higher reasoning can improve difficult answers at greater delay and API cost; Fast turn-taking can interrupt natural pauses. Diagnostics shows measured first-output latency.":"OpenAIの遅延を抑えるには、モデルをMini、推論をLow、発話交代をFastにします。Full qualityや高い推論設定は難しい回答を改善できますが、遅延とAPI料金が増えます。Fastでは自然な間を遮ることがあります。Diagnosticsに最初の出力までの実測遅延が表示されます。","Gemini, Copilot, Perplexity, and other AI sites":"Gemini、Copilot、PerplexityなどのAIサイト","Guides":"ガイド","Have a private one-on-one helper":"1対1の非公開アシスタントを使う","Hire":"仕事を依頼する","Home":"ホーム","I Want To...":"やりたいこと…","Important:":"重要：","In the popup, enable the opt-in":"ポップアップで、利用時に明示的な有効化が必要な次の機能をオンにします：","Inspiration":"活用アイデア","Install and enable the Social Stream Ninja Chrome extension.":"Social Stream NinjaのChrome拡張機能をインストールし、有効にします。","Keep the ChatGPT tab open. Its new replies return to SSN as":"ChatGPTのタブを開いたままにしてください。新しい返信は、SSNに次の形式で戻ります：","Keep the speech bubble visible, or provide captions, so viewers do not need to hear the AI voice to follow the conversation.":"AIの声を聞かなくても視聴者が会話を追えるよう、吹き出しを表示するか字幕を用意してください。","Keys, access, billing, quotas, and model names are controlled by each provider.":"キー、アクセス権、料金、利用枠、モデル名は各プロバイダーが管理します。","Lets the Primary bot retrieve relevant text from uploaded resource files.":"アップロードした資料ファイルから、メインボットが関連する文章を検索できます。","Local":"ローカル","Local AI TTS":"ローカルAI読み上げ","Local or cloud provider":"ローカルまたはクラウドのプロバイダー","Main navigation":"メインナビゲーション","Management":"管理","Moderation, translation, summaries, or RAG":"モデレーション、翻訳、要約、RAG","More references:":"その他の資料：","No":"不要","No Video":"映像なし（No Video）","No cloud API key. Performance depends on the computer and model assets.":"クラウドAPIキーは不要です。性能はコンピューターとモデルアセットによって異なります。","No conversation capture. The packaged Claude script is a page-style helper only.":"会話の取り込みには非対応です。同梱のClaudeスクリプトはページのスタイルを調整する補助機能だけです。","No dedicated website capture source currently ships with SSN. Their APIs may still be usable where listed as an SSN provider.":"現在のSSNには専用のウェブサイト取り込みソースは含まれていません。ただし、SSNプロバイダーの一覧にあるサービスではAPIを使える場合があります。","Notes":"補足","Ollama; Local Gemma; Local Qwen":"Ollama、Local Gemma、Local Qwen","Only disable overlay-only mode after confirming the destination platform supports posting.":"送信先プラットフォームが投稿に対応していることを確認してから、オーバーレイ専用モードを解除してください。","Open":"開く項目：","Open navigation menu":"ナビゲーションメニューを開く","Open the AI Chat Bot Setup Guide":"AIチャットボット設定ガイドを開く","Open the AI Overlay Builder Guide":"AIオーバーレイビルダーのガイドを開く","Open the Detailed AI Cohost Guide":"AI共同司会の詳細ガイドを開く","Open the SSN Dock with the same session.":"同じセッションでSSNドックを開きます。","OpenAI Realtime uses the OpenAI project key configured under":"OpenAI Realtimeは、次の場所に設定したOpenAIプロジェクトキーを使います：","OpenAI camera and Screen Share input is optional and defaults to":"OpenAIのカメラ入力とScreen Shareは任意で、初期設定は","OpenAI, Gemini, DeepSeek, xAI, AWS Bedrock, OpenRouter, Groq, OpenCode Zen":"OpenAI、Gemini、DeepSeek、xAI、AWS Bedrock、OpenRouter、Groq、OpenCode Zen","Option":"選択肢","Option 1: ChatGPT Browser Companion (Experimental)":"選択肢1：ChatGPTブラウザ連携（実験的）","Option 2: Configure an AI Provider Inside SSN":"選択肢2：SSN内でAIプロバイダーを設定","Option 3: Voice AI Cohost":"選択肢3：音声AI共同司会","Option 4: Primary Live-Chat Bot":"選択肢4：メインのライブチャットボット","Option 5: Private One-on-One Bot":"選択肢5：1対1の非公開ボット","Option 6: AI Processing Tools":"選択肢6：AI処理ツール","Option 7: AI Overlay Builder":"選択肢7：AIオーバーレイビルダー","Optional stream tools are off by default. Enable Spotify, an allowlist of OBS scene names, or featured-chat control in the SSN popup, then arm the same tools under":"任意の配信ツールは初期状態ではオフです。SSNポップアップでSpotify、許可したOBSシーン名の一覧、注目チャットの操作を有効にし、次の場所でも同じツールを使用可能にします：","Options":"設定","Overlay Gallery":"オーバーレイギャラリー","Pick relay destinations":"転送先を選択（Pick relay destinations）","Platform replies normally use the signed-in account. For a separate identity, use a dedicated YouTube, Twitch, or Kick bot account where supported.":"プラットフォームへの返信は通常、ログイン中のアカウントを使います。別の名義を使うには、対応しているYouTube、Twitch、Kickで専用のボットアカウントを使ってください。","Primary AI chat bot":"メインAIチャットボット（Primary AI chat bot）","Primary bot + overlay-only + TTS":"メインボット + オーバーレイ専用 + 読み上げ","Provider Type":"プロバイダーの種類","Questions and mentions":"質問とメンション（Questions and mentions）","RAG knowledge base":"RAGナレッジベース","Relay all messages":"すべてのメッセージを転送（Relay all messages）","SSN Hosted Trial LLM":"SSNホスト型試用LLM（SSN Hosted Trial LLM）","SSN sends prompts to OpenAI using your API key and selected model.":"SSNは自分のAPIキーと選択したモデルを使い、OpenAIにプロンプトを送信します。","Select":"選択する項目：","Select a voice/realtime provider or the LLM configured in the SSN popup.":"音声・Realtimeプロバイダー、またはSSNポップアップで設定したLLMを選びます。","Send Live Chat Into the Open ChatGPT Tab":"開いているChatGPTタブへライブチャットを送る","Send a new ChatGPT message. New User and ChatGPT turns should appear in the Dock; existing history is intentionally ignored.":"ChatGPTで新しいメッセージを送信します。新しいユーザー発言とChatGPTの応答がドックに表示されるはずです。過去の履歴は意図的に無視されます。","Set":"設定する項目：","Show or speak AI answers without posting them back into chat":"チャットに投稿せず、AIの回答を表示・読み上げする","Simulate normal chat and alert events before adding a generated overlay to OBS.":"生成したオーバーレイをOBSに追加する前に、通常のチャットとアラートイベントをシミュレーションしてください。","Skip to main content":"本文へ移動","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0ライセンス。","Start Co-host":"共同司会を開始（Start Co-host）","Start Safely":"安全に始める","Start in non-blocking mode and review results.":"最初はブロックしないモードで使い、結果を確認してください。","Support":"サポート","Supported Sites":"対応サイト","Switch theme":"テーマを切り替え","TTS Setup":"読み上げ設定","Talk to an AI that can also hear live-chat questions and answer aloud":"ライブチャットの質問も受け取り、声で答えるAIと会話する","Test one language and avoid block mode until reliable.":"まず1つの言語でテストし、安定して動くまではブロックモードを避けてください。","Test selected chat bot":"選択したチャットボットをテスト","Test with a private or unlisted stream and a regular ChatGPT text conversation.":"非公開または限定公開の配信と、通常のChatGPTテキスト会話でテストしてください。","Text appears but no sound:":"テキストは出るのに音が出ない場合：","The Primary bot evaluates captured viewer messages and can answer in an overlay, through TTS, or back into supported platform chats.":"メインボットは取り込んだ視聴者メッセージを判断し、オーバーレイ、読み上げ、対応プラットフォームのチャットへの投稿で回答できます。","The browser conversation you opened; no API key is used.":"ブラウザで開いた会話です。APIキーは使いません。","The cohost is designed for the exact “talk to AI while it also sees live chat” workflow. Your microphone and selected live-chat messages feed the same cohost session, and the response can be spoken on stream.":"共同司会は「ライブチャットも見ているAIと話す」という用途のために設計されています。マイクと選択したライブチャットメッセージが同じ共同司会セッションに入り、応答を配信上で読み上げられます。","The extension reads new User and ChatGPT turns rendered in an open":"拡張機能は、開いている次のタブに表示された新しいユーザー発言とChatGPTの応答を読み取ります：","The private bot is separate from the Primary live-chat bot and currently does not share its RAG dataset or other chat history.":"非公開ボットはメインのライブチャットボットとは別で、現在はRAGデータセットや他のチャット履歴を共有しません。","This is the closest option when you already use ChatGPT in Chrome and do not want an API key. SSN can capture new text turns from the page as source type":"ChromeですでにChatGPTを使っていてAPIキーを用意したくない場合は、この選択肢が最も近いものです。SSNはページの新しいテキスト発言を次のソース種類として取り込めます：","Tool":"ツール","Translates incoming chat and optional outgoing host messages.":"受信チャットと、任意で送信する配信者のメッセージを翻訳します。","Translation":"翻訳","Trial":"試用","Two Different Meanings of “ChatGPT”":"「ChatGPT」の2つの意味","Under":"次のセクションで：","Use":"使う項目：","Use ChatGPT audio or SSN TTS/overlay output to put those replies on stream.":"ChatGPTの音声、またはSSNの読み上げ・オーバーレイ出力を使い、その返信を配信に載せます。","Use a provider when SSN should generate replies, moderate messages, translate chat, search a knowledge base, or build overlays.":"SSNで返信生成、メッセージのモデレーション、チャット翻訳、ナレッジベース検索、オーバーレイ作成を行う場合にプロバイダーを使います。","Use an open ChatGPT browser tab as an experimental companion":"開いているChatGPTのブラウザタブを実験的なパートナーとして使う","Use current, focused text or Markdown files.":"最新で、内容を絞ったテキストまたはMarkdownファイルを使ってください。","Website":"ウェブサイト","What It Does":"できること","What It Is":"概要","With OpenAI Realtime, leave Live Chat on":"OpenAI Realtimeでは、Live Chatを次の設定にします：","and choose the provider you actually use.":"で、実際に使うプロバイダーを選択します。","and enable TTS if replies should be spoken.":"を有効にし、返信を読み上げる場合はTTSも有効にします。","and reload the page after enabling the source.":"を有効にし、ソースをオンにした後でページを再読み込みします。","as the OBS output page after it is saved.":"を、保存後にOBSの出力ページとして使います。","check platform send-back support, login state, account permissions, and rate limits.":"プラットフォームの返信対応、ログイン状態、アカウント権限、レート制限を確認してください。","check trigger words, moderator-only mode, rate limits, and the model's instruction to reply selectively.":"トリガーワード、モデレーター限定モード、レート制限、選択的に返信するようモデルに与えた指示を確認してください。","confirm the TTS-producing page is open and OBS is capturing that page's audio.":"読み上げを生成するページが開いていて、OBSがそのページの音声を取り込んでいることを確認してください。","connecting the OpenAI API does not attach SSN to an existing ChatGPT web or voice conversation. OpenAI's API manages its own conversation state.":"OpenAI APIを接続しても、既存のChatGPTウェブ会話や音声会話にSSNが接続されるわけではありません。OpenAIのAPIは独自の会話状態を管理します。","deliberately adds a separate overlay voice.":"は、別のオーバーレイ音声を意図的に追加します。","enable the ChatGPT opt-in, reload":"ChatGPTの利用設定をオンにし、次のページを再読み込みします：","enable the Primary bot or the specific AI feature; provider setup alone does not process chat.":"メインボット、または使いたいAI機能を有効にしてください。プロバイダーを設定しただけではチャットは処理されません。","for spoken automatic replies; these modes do not post into platform chat.":"で自動応答を音声再生できます。これらのモードはプラットフォームのチャットには投稿しません。","for the stage avatar and speech bubble. The overlay does not receive the same WebRTC voice stream. Use the co-host output-device selector for a virtual cable when supported;":"をステージのアバターと吹き出しに使います。オーバーレイには同じWebRTC音声ストリームは届きません。対応している場合は共同司会の出力デバイス選択欄で仮想ケーブルを選べます。","in the SSN popup.":"をSSNポップアップで設定します。","in the SSN popup. The standard key stays in the SSN extension/Desktop background, which creates a short-lived Realtime client secret for the co-host page. Microphone and AI voice audio then travel over WebRTC. Replies are capped at 512 output tokens and Diagnostics shows cumulative usage and latency. SSN checks quiet sessions and reconnects failed transports; a recovered session reapplies its instructions and performance settings but cannot restore the previous spoken conversation. This creates an SSN cohost session; it does not take over an existing conversation in the ChatGPT website or ChatGPT desktop app.":"をSSNポップアップで設定します。通常のキーはSSN拡張機能・デスクトップアプリのバックグラウンドに保持され、共同司会ページ向けに短時間だけ有効なRealtimeクライアントシークレットを生成します。その後、マイクとAI音声はWebRTCで送受信されます。応答は最大512出力トークンで、Diagnosticsに累計使用量と遅延が表示されます。SSNは静かなセッションの状態を確認し、失敗した接続を再接続します。復旧したセッションには指示と性能設定が再適用されますが、以前の音声会話は復元できません。これはSSN共同司会セッションを作成するもので、ChatGPTサイトやChatGPTデスクトップアプリの既存の会話を引き継ぐものではありません。","is a private helper and prompt-testing page. Enable":"は、非公開アシスタントとプロンプトテスト用のページです。有効にする項目：","messages.":"メッセージ。","on the co-host page.":"を共同司会ページで設定します。","or":"または","so captured viewer messages go only to the ChatGPT tab.":"として、取り込んだ視聴者メッセージをChatGPTタブだけに送ります。","source.":"のソースです。","tab.":"のタブです。","to":"→","to describe, generate, preview, and save an overlay. Use":"でオーバーレイを説明し、生成、プレビュー、保存します。使うページ：","web-page controls can change, relay-all can flood a conversation, and ChatGPT Voice mode may not accept injected text like the regular text page. Use filters or a test stream before sending every viewer message.":"ウェブページの操作要素は変わることがあり、全件転送では会話に大量のメッセージが流れ込みます。また、ChatGPTの音声モードは通常のテキストページのように注入した文字を受け付けない場合があります。すべての視聴者メッセージを送る前に、フィルターまたはテスト配信を使ってください。","when you want the AI to remember recent viewer messages without interrupting. Choose":"にすると、AIは割り込まずに最近の視聴者メッセージを記憶します。自動応答には次を選びます："}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/ai-modes-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/ai-modes-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+	<a class="skip-link" href="#main-content">本文へ移動</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション"><a href="../index.html">ホーム</a><a href="features.html">機能</a><a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a><a href="download.html">ダウンロード</a><a href="guides.html">ガイド</a><a href="commands.html">コマンドとAPI</a><a href="supported-sites.html">対応サイト</a><a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a><a href="services.html" class="site-priority-hire">仕事を依頼する</a><a href="support.html">サポート</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/ai-modes-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/ai-modes-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/ai-modes-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/ai-modes-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/ai-modes-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/ai-modes-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="ai-modes-guide.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/ai-modes-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/ai-modes-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/ai-modes-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/ai-modes-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/ai-modes-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/ai-modes-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/ai-modes-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/ai-modes-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/ai-modes-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/ai-modes-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="テーマを切り替え"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Social Stream NinjaのAI機能</h1>
+            <p>音声共同司会、ライブチャットボット、個人用アシスタント、ブラウザ連携、モデレーション、翻訳、知識検索、AIによるオーバーレイ作成から選べます。</p>
+        </div>
+    </section>
+
+    <main class="guide-section" id="main-content">
+        <div class="container">
+            <div class="guide-card">
+                <h2>実現したいことを選ぶ</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>やりたいこと…</th><th>使う項目：</th><th>APIキーは必要？</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Goal">ライブチャットの質問も受け取り、声で答えるAIと会話する</td><td data-label="Use"><strong>AI共同司会</strong>: <code>cohost.html</code></td><td data-label="API Key">プロバイダーによります</td></tr>
+                        <tr><td data-label="Goal">開いているChatGPTのブラウザタブを実験的なパートナーとして使う</td><td data-label="Use"><strong>ChatGPTブラウザソース</strong></td><td data-label="API Key">不要</td></tr>
+                        <tr><td data-label="Goal">YouTube、Twitch、Kickなどの選択したチャットメッセージに自動返信する</td><td data-label="Use"><strong>メインAIチャットボット（Primary AI chat bot）</strong></td><td data-label="API Key">ローカルまたはクラウドのプロバイダー</td></tr>
+                        <tr><td data-label="Goal">チャットに投稿せず、AIの回答を表示・読み上げする</td><td data-label="Use"><strong>メインボット + オーバーレイ専用 + 読み上げ</strong></td><td data-label="API Key">ローカルまたはクラウドのプロバイダー</td></tr>
+                        <tr><td data-label="Goal">1対1の非公開アシスタントを使う</td><td data-label="Use"><code>chatbot.html</code></td><td data-label="API Key">ローカルまたはクラウドのプロバイダー</td></tr>
+                        <tr><td data-label="Goal">フィルタリング、翻訳、要約、文書に基づく回答を行う</td><td data-label="Use"><strong>モデレーション、翻訳、要約、RAG</strong></td><td data-label="API Key">ローカルまたはクラウドのプロバイダー</td></tr>
+                        <tr><td data-label="Goal">作りたいオーバーレイを説明してAIに作ってもらう</td><td data-label="Use"><code>aiprompt.html</code> + <code>aioverlay.html</code></td><td data-label="API Key">ローカルまたはクラウドのプロバイダー</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>「ChatGPT」の2つの意味</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>選択肢</th><th>概要</th><th>会話</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Option">ChatGPT APIプロバイダー</td><td data-label="What It Is">SSNは自分のAPIキーと選択したモデルを使い、OpenAIにプロンプトを送信します。</td><td data-label="Conversation">chatgpt.comとは別の、SSNとAPIによる会話です。</td></tr>
+                        <tr><td data-label="Option">ChatGPTブラウザソース</td><td data-label="What It Is">拡張機能は、開いている次のタブに表示された新しいユーザー発言とChatGPTの応答を読み取ります： <code>chatgpt.com</code> のタブです。</td><td data-label="Conversation">ブラウザで開いた会話です。APIキーは使いません。</td></tr>
+                    </tbody>
+                </table>
+                <div class="guide-note">
+                    <p><strong>重要：</strong> OpenAI APIを接続しても、既存のChatGPTウェブ会話や音声会話にSSNが接続されるわけではありません。OpenAIのAPIは独自の会話状態を管理します。</p>
+                </div>
+            </div>
+
+            <div class="guide-card" id="browser-companion">
+                <h2>選択肢1：ChatGPTブラウザ連携（実験的）</h2>
+                <p>ChromeですでにChatGPTを使っていてAPIキーを用意したくない場合は、この選択肢が最も近いものです。SSNはページの新しいテキスト発言を次のソース種類として取り込めます： <code>openai</code>として、チャットソースと同様に取り込みます。</p>
+                <h3>ChatGPTの会話を取り込む</h3>
+                <ol class="guide-steps">
+                    <li>Social Stream NinjaのChrome拡張機能をインストールし、有効にします。</li>
+                    <li>ポップアップで、利用時に明示的な有効化が必要な次の機能をオンにします： <strong>ChatGPT</strong> のソースです。</li>
+                    <li>開く項目： <code>https://chatgpt.com/</code> を有効にし、ソースをオンにした後でページを再読み込みします。</li>
+                    <li>同じセッションでSSNドックを開きます。</li>
+                    <li>ChatGPTで新しいメッセージを送信します。新しいユーザー発言とChatGPTの応答がドックに表示されるはずです。過去の履歴は意図的に無視されます。</li>
+                </ol>
+                <h3>開いているChatGPTタブへライブチャットを送る</h3>
+                <ol class="guide-steps">
+                    <li>非公開または限定公開の配信と、通常のChatGPTテキスト会話でテストしてください。</li>
+                    <li>次のセクションで： <strong>管理</strong>で、次を有効にします： <strong>すべてのメッセージを転送（Relay all messages）</strong>.</li>
+                    <li>設定する項目： <strong>転送先を選択（Pick relay destinations）</strong> → <code>openai</code> として、取り込んだ視聴者メッセージをChatGPTタブだけに送ります。</li>
+                    <li>ChatGPTのタブを開いたままにしてください。新しい返信は、SSNに次の形式で戻ります： <code>openai</code> メッセージ。</li>
+                    <li>ChatGPTの音声、またはSSNの読み上げ・オーバーレイ出力を使い、その返信を配信に載せます。</li>
+                </ol>
+                <div class="warning-note">
+                    <p><strong>実験的機能：</strong> ウェブページの操作要素は変わることがあり、全件転送では会話に大量のメッセージが流れ込みます。また、ChatGPTの音声モードは通常のテキストページのように注入した文字を受け付けない場合があります。すべての視聴者メッセージを送る前に、フィルターまたはテスト配信を使ってください。</p>
+                </div>
+                <h3>AIウェブサイトの取り込み対応状況</h3>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>ウェブサイト</th><th>現在の対応状況</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Website">ChatGPT</td><td data-label="Current Support">新しいテキスト発言を実験的に取り込みます。過去の履歴は無視します。汎用ブラウザ転送でプロンプト入力欄を送信先にできます。</td></tr>
+                        <tr><td data-label="Website">Claude</td><td data-label="Current Support">会話の取り込みには非対応です。同梱のClaudeスクリプトはページのスタイルを調整する補助機能だけです。</td></tr>
+                        <tr><td data-label="Website">Gemini、Copilot、PerplexityなどのAIサイト</td><td data-label="Current Support">現在のSSNには専用のウェブサイト取り込みソースは含まれていません。ただし、SSNプロバイダーの一覧にあるサービスではAPIを使える場合があります。</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card" id="providers">
+                <h2>選択肢2：SSN内でAIプロバイダーを設定</h2>
+                <p>SSNで返信生成、メッセージのモデレーション、チャット翻訳、ナレッジベース検索、オーバーレイ作成を行う場合にプロバイダーを使います。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>プロバイダーの種類</th><th>設定</th><th>補足</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Type">ローカル</td><td data-label="Options">Ollama、Local Gemma、Local Qwen</td><td data-label="Notes">クラウドAPIキーは不要です。性能はコンピューターとモデルアセットによって異なります。</td></tr>
+                        <tr><td data-label="Type">独自・ローカルサーバー</td><td data-label="Options">独自のOpenAI互換API</td><td data-label="Notes">llama.cpp、LM Studio、vLLM、互換ゲートウェイ向けです。Ollamaには専用の選択肢を使ってください。</td></tr>
+                        <tr><td data-label="Type">クラウド</td><td data-label="Options">OpenAI、Gemini、DeepSeek、xAI、AWS Bedrock、OpenRouter、Groq、OpenCode Zen</td><td data-label="Notes">キー、アクセス権、料金、利用枠、モデル名は各プロバイダーが管理します。</td></tr>
+                        <tr><td data-label="Type">試用</td><td data-label="Options">SSNホスト型試用LLM（SSN Hosted Trial LLM）</td><td data-label="Notes">実験的な機能で、無効化またはレート制限される場合があります。</td></tr>
+                    </tbody>
+                </table>
+                <ol class="guide-steps">
+                    <li>開く項目： <strong>チャットボットとAIサービス（Chat Bots and AI services）</strong> をSSNポップアップで設定します。</li>
+                    <li>開く項目： <strong>LLMサービスプロバイダーの設定（Configure LLM Service Provider）</strong> で、実際に使うプロバイダーを選択します。</li>
+                    <li>エンドポイント、モデル、APIキー、またはローカルアセットの設定を入力します。</li>
+                    <li>選択する項目： <strong>選択したチャットボットをテスト</strong>。Connectedという結果は、プロバイダーがテストに応答したことだけを示します。</li>
+                    <li>それを使う機能を別途有効にします。メインボット、非公開ボット、共同司会、モデレーション、翻訳、RAG、ビルダーから選んでください。</li>
+                </ol>
+            </div>
+
+            <div class="guide-card" id="voice-cohost">
+                <h2>選択肢3：音声AI共同司会</h2>
+                <p>共同司会は「ライブチャットも見ているAIと話す」という用途のために設計されています。マイクと選択したライブチャットメッセージが同じ共同司会セッションに入り、応答を配信上で読み上げられます。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-ai-cohost-controls.png" alt="メディアデバイス、AIプロバイダー設定、システム指示、ライブチャットモードを表示したAI共同司会の操作画面" class="guide-image">
+                    <figcaption>共同司会ページでプロバイダー、マイク、応答形式、指示、ライブチャットモードを選びます。</figcaption>
+                </figure>
+                <ol class="guide-steps">
+                    <li>開く項目： <code>cohost.html?session=YOUR_SESSION</code>.</li>
+                    <li>音声・Realtimeプロバイダー、またはSSNポップアップで設定したLLMを選びます。</li>
+					<li>マイクと次の項目を明示的に選択します： <strong>音声応答（Audio Response）</strong>、続いて押すボタン： <strong>共同司会を開始（Start Co-host）</strong>.</li>
+					<li>OpenAI Realtimeでは、Live Chatを次の設定にします： <strong>コンテキストのみ — 尋ねられたときに回答（Context only - answer when asked）</strong> にすると、AIは割り込まずに最近の視聴者メッセージを記憶します。自動応答には次を選びます： <strong>質問とメンション（Questions and mentions）</strong> または <strong>すべてのメッセージ（Every message）</strong> で自動応答を音声再生できます。これらのモードはプラットフォームのチャットには投稿しません。</li>
+					<li>OpenAI Realtimeでは共同司会のブラウザ・アプリの音声をOBSで取り込み、次を使います： <code>cohost-overlay.html?session=YOUR_SESSION</code> をステージのアバターと吹き出しに使います。オーバーレイには同じWebRTC音声ストリームは届きません。対応している場合は共同司会の出力デバイス選択欄で仮想ケーブルを選べます。 <code>&amp;forcetts</code> は、別のオーバーレイ音声を意図的に追加します。</li>
+					<li>任意の配信ツールは初期状態ではオフです。SSNポップアップでSpotify、許可したOBSシーン名の一覧、注目チャットの操作を有効にし、次の場所でも同じツールを使用可能にします： <strong>共同司会の配信操作</strong> を共同司会ページで設定します。</li>
+					<li>OpenAIの遅延を抑えるには、モデルをMini、推論をLow、発話交代をFastにします。Full qualityや高い推論設定は難しい回答を改善できますが、遅延とAPI料金が増えます。Fastでは自然な間を遮ることがあります。Diagnosticsに最初の出力までの実測遅延が表示されます。</li>
+					<li>OpenAIのカメラ入力とScreen Shareは任意で、初期設定は <strong>映像なし（No Video）</strong>。選択すると、SSNは直接の音声・文字による依頼ごとに現在の画像を1枚送ります。連続した映像ストリームではなく、API料金と遅延が増える場合があります。</li>
+					<li>AIの声を聞かなくても視聴者が会話を追えるよう、吹き出しを表示するか字幕を用意してください。</li>
+                </ol>
+                <div class="guide-note">
+					<p>OpenAI Realtimeは、次の場所に設定したOpenAIプロジェクトキーを使います： <strong>ChatGPT API</strong> をSSNポップアップで設定します。通常のキーはSSN拡張機能・デスクトップアプリのバックグラウンドに保持され、共同司会ページ向けに短時間だけ有効なRealtimeクライアントシークレットを生成します。その後、マイクとAI音声はWebRTCで送受信されます。応答は最大512出力トークンで、Diagnosticsに累計使用量と遅延が表示されます。SSNは静かなセッションの状態を確認し、失敗した接続を再接続します。復旧したセッションには指示と性能設定が再適用されますが、以前の音声会話は復元できません。これはSSN共同司会セッションを作成するもので、ChatGPTサイトやChatGPTデスクトップアプリの既存の会話を引き継ぐものではありません。</p>
+                </div>
+                <p><a href="ai-cohost-guide.html" class="btn btn-primary">AI共同司会の詳細ガイドを開く</a></p>
+            </div>
+
+            <div class="guide-card" id="primary-bot">
+                <h2>選択肢4：メインのライブチャットボット</h2>
+                <p>メインボットは取り込んだ視聴者メッセージを判断し、オーバーレイ、読み上げ、対応プラットフォームのチャットへの投稿で回答できます。</p>
+                <ol class="guide-steps">
+                    <li>AIプロバイダーを設定してテストします。</li>
+                    <li>有効にする項目： <strong>メインAIチャットボット（Primary AI chat bot）</strong>.</li>
+                    <li>トリガーワード、モデレーター限定の動作、レート制限、履歴、プロンプトの指示を設定します。</li>
+                    <li>最初は安全にテストするため、次を有効にします： <strong>ボットの返信をボットオーバーレイページだけに送る（Bot replies ONLY go to the bot overlay page）</strong>.</li>
+                    <li>開く項目： <code>bot.html?session=YOUR_SESSION</code> を有効にし、返信を読み上げる場合はTTSも有効にします。</li>
+                    <li>送信先プラットフォームが投稿に対応していることを確認してから、オーバーレイ専用モードを解除してください。</li>
+                </ol>
+                <p>プラットフォームへの返信は通常、ログイン中のアカウントを使います。別の名義を使うには、対応しているYouTube、Twitch、Kickで専用のボットアカウントを使ってください。</p>
+                <p><a href="chatbot-basics-guide.html" class="btn btn-primary">AIチャットボット設定ガイドを開く</a></p>
+            </div>
+
+            <div class="guide-card" id="private-bot">
+                <h2>選択肢5：1対1の非公開ボット</h2>
+                <p><code>chatbot.html</code> は、非公開アシスタントとプロンプトテスト用のページです。有効にする項目： <strong>チャットボット - 非公開インターフェース（Chat Bot - Private Interface）</strong>を有効にし、自分のセッションでページを開いて、設定済みLLMプロバイダーを使います。</p>
+                <div class="guide-note">
+                    <p>非公開ボットはメインのライブチャットボットとは別で、現在はRAGデータセットや他のチャット履歴を共有しません。</p>
+                </div>
+            </div>
+
+            <div class="guide-card" id="processing-tools">
+                <h2>選択肢6：AI処理ツール</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>ツール</th><th>できること</th><th>安全に始める</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Tool">検閲ボット</td><td data-label="What It Does">受信メッセージを分類、修正、ブロックします。</td><td data-label="Safety">最初はブロックしないモードで使い、結果を確認してください。</td></tr>
+                        <tr><td data-label="Tool">翻訳</td><td data-label="What It Does">受信チャットと、任意で送信する配信者のメッセージを翻訳します。</td><td data-label="Safety">まず1つの言語でテストし、安定して動くまではブロックモードを避けてください。</td></tr>
+                        <tr><td data-label="Tool">RAGナレッジベース</td><td data-label="What It Does">アップロードした資料ファイルから、メインボットが関連する文章を検索できます。</td><td data-label="Safety">最新で、内容を絞ったテキストまたはMarkdownファイルを使ってください。</td></tr>
+                        <tr><td data-label="Tool">チャットの要約</td><td data-label="What It Does">ユーザーが次のコマンドでAI要約を呼び出せます： <code>!summary</code>.</td><td data-label="Safety">履歴の量、費用、非公開の内容を確認してください。</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card" id="overlay-builder">
+                <h2>選択肢7：AIオーバーレイビルダー</h2>
+                <p>使う項目： <code>aiprompt.html</code> でオーバーレイを説明し、生成、プレビュー、保存します。使うページ： <code>aioverlay.html</code> を、保存後にOBSの出力ページとして使います。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-ai-overlay-builder.png" alt="プロンプト、プレビュー、保存操作、イベントシミュレーションボタンを表示したAI Overlay Builder" class="guide-image">
+                    <figcaption>生成したオーバーレイをOBSに追加する前に、通常のチャットとアラートイベントをシミュレーションしてください。</figcaption>
+                </figure>
+                <p><a href="ai-overlay-builder-guide.html" class="btn btn-primary">AIオーバーレイビルダーのガイドを開く</a></p>
+            </div>
+
+            <div class="guide-card">
+                <h2>よくある問題の対処</h2>
+                <ul class="guide-list">
+                    <li><strong>接続済みなのにライブチャットへ応答しない場合：</strong> メインボット、または使いたいAI機能を有効にしてください。プロバイダーを設定しただけではチャットは処理されません。</li>
+                    <li><strong>共同司会がチャットを見ているのに話さない場合：</strong> Context onlyは、配信者がチャットについて尋ねるまで意図的に待ちます。自動返信にはQuestions and mentionsまたはEvery messageへ切り替えてください。</li>
+                    <li><strong>ChatGPTブラウザソースから何も届かない場合：</strong> ChatGPTの利用設定をオンにし、次のページを再読み込みします： <code>chatgpt.com</code>を確認し、過去の履歴ではなく新しい発言でテストしてください。</li>
+                    <li><strong>ボットがほとんどのメッセージを無視する場合：</strong> トリガーワード、モデレーター限定モード、レート制限、選択的に返信するようモデルに与えた指示を確認してください。</li>
+                    <li><strong>テキストは出るのに音が出ない場合：</strong> 読み上げを生成するページが開いていて、OBSがそのページの音声を取り込んでいることを確認してください。</li>
+                    <li><strong>ボットが投稿できない場合：</strong> プラットフォームの返信対応、ログイン状態、アカウント権限、レート制限を確認してください。</li>
+                </ul>
+                <p>その他の資料： <a href="tts-setup-guide.html">読み上げ設定</a>, <a href="local-tts.html">ローカルAI読み上げ</a>、および <a href="commands.html#ai-integration">コマンドとAPIのAI連携</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0ライセンス。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

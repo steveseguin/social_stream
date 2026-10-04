@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ja/docs/dock-live-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ja/docs/dock-live-guide.html">
+    <meta property="og:title" content="配信中のドック操作 - Social Stream Ninja">
+    <meta property="og:description" content="メッセージの注目表示、キューの準備、視聴者への返信、活発なチャットの管理を行います。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ja/docs/dock-live-guide.html">
+    <meta name="twitter:title" content="配信中のドック操作 - Social Stream Ninja">
+    <meta name="twitter:description" content="メッセージの注目表示、キューの準備、視聴者への返信、活発なチャットの管理を行います。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>配信中のドック操作 - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="メッセージの注目表示、キューの準備、視聴者への返信、活発なチャットの管理を行います。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/dock-live-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{", feature one message, queue two more, advance once, and clear the overlay. If the Dock works but OBS stays blank, check the saved OBS URL, session/password, and that the featured Browser Source is loaded. See":"を使い、1件を注目表示し、さらに2件をキューに追加して1回進め、オーバーレイを消去します。ドックは動くのにOBSが空の場合は、保存されたOBSのURL、セッション・パスワード、注目表示のブラウザソースが読み込まれているかを確認してください。参照先：",", right-click and use":"の場合は右クリックして次を使います：",", to remove it from the overlay.":"でオーバーレイから消します。",". Check the recipient and enter your response, then select":"を選びます。宛先を確認して返信を入力し、次を選択します：",". Open the generated":"。生成された次のリンクを開きます：",". The source must support replies and be signed in with permission to post.":"。ソースが返信に対応し、投稿権限のあるアカウントでログインしている必要があります。","1. Open your operator Dock":"1. 操作用ドックを開く","2. Feature and clear a message":"2. メッセージを注目表示・消去する","3. Prepare your next questions":"3. 次の質問を準備する","4. Reply to the right chat":"4. 正しいチャットに返信する","5. Manage a busy chat":"5. 活発なチャットを管理する","Actual browser Dock, using fictional sample messages in an isolated preview. Hover over toolbar buttons to read their labels.":"独立したプレビューで架空のサンプルメッセージを使った、実際のブラウザドックです。ツールバーボタンにカーソルを合わせるとラベルが表示されます。","Add the generated":"生成された次のリンクを追加します：","All guides":"すべてのガイド","Alt-click or use the Pin context-menu action to keep a message in the Dock’s pinned area. Queuing prepares a sequence to feature.":"Altを押しながらクリックするか、右クリックメニューのPinを使うと、ドックのピン留め欄にメッセージを保持できます。キューへの追加は、注目表示の順序を準備する操作です。","Back to live / Scroll to bottom":"最新に戻る / 一番下へスクロール","Before going live":"配信前に","Bot accounts for replies":"返信用ボットアカウント","Browse all guides":"すべてのガイドを見る","Capture":"取り込み","Check the destination warning.":"宛先の警告を確認してください。","Clear the featured message (not this chat)":"注目メッセージを消去（このチャットは消去しない）","Click a chat message in the Dock. It should appear in the connected featured overlay.":"ドック内のチャットメッセージをクリックします。接続した注目表示オーバーレイに表示されるはずです。","Click another message to replace it.":"別のメッセージをクリックすると置き換わります。","Commands & API":"コマンドとAPI","Control":"制御","Ctrl":"Ctrl","Display":"表示","Dock with sample chat and the bottom toolbar, including queue and clear-featured controls":"サンプルチャットと、キュー・注目表示消去などの下部ツールバーがあるドック","Donations / Members filters":"寄付 / メンバーのフィルター","Download":"ダウンロード","Exclude filtered messages from auto-selecting":"フィルターで除外したメッセージを自動選択の対象外にする（Exclude filtered messages from auto-selecting）","Feature":"注目表示","Feature messages, prepare a queue, reply to viewers, and keep up with a busy chat.":"メッセージの注目表示、キューの準備、視聴者への返信、活発なチャットの管理を行います。","Feature next message in queue":"キューの次のメッセージを注目表示","Featured Chat":"注目チャット（Featured Chat）","Featured Chat in OBS":"OBSの注目チャット","Features":"機能","Filter":"フィルター","Find relevant messages; clear the filter to return to the full view.":"関連メッセージを探します。全件表示に戻るにはフィルターを解除してください。","Guides":"ガイド","Hire":"仕事を依頼する","Hold":"押しながら操作するキー：","Home":"ホーム","If a message has no originating tab, the reply dialog warns that it will go to all destinations. Do not send a targeted reply from that dialog until the routing is right.":"メッセージに元のタブ情報がない場合、返信ダイアログはすべての宛先に送ると警告します。経路が正しくなるまで、そのダイアログから特定の相手向けの返信を送らないでください。","If you enabled":"次を有効にした場合：","Inspiration":"活用アイデア","Keep":"次の項目は維持します：","Look for the queue count in the bottom toolbar. Use":"下部ツールバーのキュー件数を確認します。使う項目：","Main navigation":"メインナビゲーション","Moderation and filtering":"モデレーションとフィルタリング","Must manually select via context-menu":"コンテキストメニューから手動選択する（Must manually select via context-menu）","OBS quick start":"OBSクイックスタート","OBS troubleshooting":"OBSのトラブル対処","On this page":"このページの内容","Open navigation menu":"ナビゲーションメニューを開く","Operate":"操作","Overlay Gallery":"オーバーレイギャラリー","Pause / Play incoming chat":"受信チャットの一時停止 / 再生","Pause the Dock display while reading; resume to process its buffered messages. This does not stop source capture or other overlays.":"読む間はドック表示を一時停止し、再開すると蓄積したメッセージを処理します。ソースの取り込みや他のオーバーレイは停止しません。","Pinning is separate:":"ピン留めは別の機能です：","Reply":"返信（Reply）","Return to recent messages after reading older chat.":"過去のチャットを読んだ後、最近のメッセージへ戻ります。","Right-click the viewer’s message and select":"視聴者のメッセージを右クリックし、次を選びます：","SEND":"送信（SEND）","Show only the messages in queue":"キュー内のメッセージだけを表示","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream Ninja ·":"Social Stream Ninja ·","Sources and Settings":"ソースと設定","Start with chat arriving in SSN. In the extension, open its popup; in the desktop app, open":"まずSSNにチャットが届くようにします。拡張機能ではポップアップを開き、デスクトップアプリでは次を開きます：","Streaming Chat Dock":"Streaming Chatドック","Support":"サポート","Supported Sites":"対応サイト","Switch theme":"テーマを切り替え","Temporarily narrow the displayed chat. Turn these off if normal messages seem missing.":"表示するチャットを一時的に絞り込みます。通常のメッセージが見つからない場合は、これらをオフにしてください。","The Dock selects the message. OBS displays the separate featured overlay.":"ドックでメッセージを選び、OBSでは別の注目表示オーバーレイを表示します。","The general speech-bubble toolbar button opens the send-message controls. Review its destinations before sending. A successful incoming capture does not prove outgoing replies work. For separate sender accounts, see":"通常の吹き出しのツールバーボタンで、メッセージ送信の操作欄が開きます。送信前に宛先を確認してください。受信の取り込みが成功しても、送信の返信が動くとは限りません。別の送信者アカウントについてはこちら：","Toggle Queue":"キュー登録を切り替え（Toggle Queue）","Use":"使う項目：","Use it for":"用途：","Use the broom button,":"ほうきのボタンを使います：","Using":"使用するもの：","Using the Dock during a stream":"配信中のドック操作","Using the Dock during a stream - Social Stream Ninja":"配信中のドック操作 - Social Stream Ninja","Your platform chats":"各プラットフォームのチャット","enabled if you use automatic featuring with filters. A viewing filter alone is not a moderation policy. See":"を、フィルター付きの自動注目表示を使う場合は有効にしてください。閲覧用フィルターだけではモデレーションのルールにはなりません。参照先：","if those are not connected yet.":"を、まだ接続していない場合にご覧ください。","instead. Turn off auto-feature when you want to review each message before showing it.":"を代わりに使います。表示前に1件ずつ確認したい場合は、自動注目表示をオフにしてください。","link to OBS as a Browser Source, using the same session and password. The Dock is your control window; Featured Chat is the audience view. See":"のリンクをOBSブラウザソースとして追加し、同じセッションとパスワードを使います。ドックは操作画面、Featured Chatは視聴者向け表示です。参照先：","link. Keep your source chats and SSN running.":"のリンクです。元のチャットとSSNを起動したままにしてください。","test messages":"テストメッセージ","to advance. Toggle Queue again to remove an unwanted queued message.":"で次へ進みます。不要なキューメッセージは、Toggle Queueをもう一度実行して外します。","to review your picks.":"で選んだメッセージを確認します。","while clicking messages to add them to the queue, or right-click a message and select":"を押しながらメッセージをクリックしてキューに追加するか、メッセージを右クリックして次を選びます："}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/dock-live-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/dock-live-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション">
+<a href="../index.html">ホーム</a>
+<a href="features.html">機能</a>
+<a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a>
+<a href="download.html">ダウンロード</a>
+<a href="guides.html">ガイド</a>
+<a href="commands.html">コマンドとAPI</a>
+<a href="supported-sites.html">対応サイト</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a>
+<a href="services.html" class="site-priority-hire">仕事を依頼する</a>
+<a href="support.html">サポート</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/dock-live-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/dock-live-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/dock-live-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/dock-live-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/dock-live-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/dock-live-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="dock-live-guide.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/dock-live-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/dock-live-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/dock-live-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/dock-live-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/dock-live-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/dock-live-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/dock-live-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/dock-live-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/dock-live-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/dock-live-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="テーマを切り替え">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>配信中のドック操作</h1>
+<p>メッセージの注目表示、キューの準備、視聴者への返信、活発なチャットの管理を行います。</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="このページの内容">
+<a href="guides.html">すべてのガイド</a>
+<a href="#setup">1. 操作用ドックを開く</a>
+<a href="#feature">2. メッセージを注目表示・消去する</a>
+<a href="#queue">3. 次の質問を準備する</a>
+<a href="#reply">4. 正しいチャットに返信する</a>
+<a href="#busy">5. 活発なチャットを管理する</a>
+<a href="#check">配信前に</a>
+</nav>
+<section class="guide-card" id="setup">
+<h2>1. 操作用ドックを開く</h2>
+<p>まずSSNにチャットが届くようにします。拡張機能ではポップアップを開き、デスクトップアプリでは次を開きます： <strong>ソースと設定</strong>。生成された次のリンクを開きます： <strong>Streaming Chatドック</strong> のリンクです。元のチャットとSSNを起動したままにしてください。</p>
+<p>生成された次のリンクを追加します： <strong>注目チャット（Featured Chat）</strong> のリンクをOBSブラウザソースとして追加し、同じセッションとパスワードを使います。ドックは操作画面、Featured Chatは視聴者向け表示です。参照先： <a href="obs-quick-start.html">OBSクイックスタート</a> を、まだ接続していない場合にご覧ください。</p>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>取り込み</strong>
+<span>各プラットフォームのチャット</span>
+</li>
+<li>
+<strong>操作</strong>
+<span>Streaming Chatドック</span>
+</li>
+<li>
+<strong>表示</strong>
+<span>OBSの注目チャット</span>
+</li>
+</ol>
+<figcaption>ドックでメッセージを選び、OBSでは別の注目表示オーバーレイを表示します。</figcaption>
+</figure>
+</section>
+<section class="guide-card" id="feature">
+<h2>2. メッセージを注目表示・消去する</h2>
+<ol class="guide-steps">
+<li>ドック内のチャットメッセージをクリックします。接続した注目表示オーバーレイに表示されるはずです。</li>
+<li>別のメッセージをクリックすると置き換わります。</li>
+<li>ほうきのボタンを使います： <strong>注目メッセージを消去（このチャットは消去しない）</strong>でオーバーレイから消します。</li>
+</ol>
+<p>次を有効にした場合： <strong>コンテキストメニューから手動選択する（Must manually select via context-menu）</strong>の場合は右クリックして次を使います： <strong>注目表示</strong> を代わりに使います。表示前に1件ずつ確認したい場合は、自動注目表示をオフにしてください。</p>
+<figure class="guide-figure">
+<a href="../../docs/images/guides/dock-live-controls.png">
+<img class="guide-image" src="../../docs/images/guides/dock-live-controls.png" alt="サンプルチャットと、キュー・注目表示消去などの下部ツールバーがあるドック" loading="lazy">
+</a>
+<figcaption>独立したプレビューで架空のサンプルメッセージを使った、実際のブラウザドックです。ツールバーボタンにカーソルを合わせるとラベルが表示されます。</figcaption>
+</figure>
+</section>
+<section class="guide-card" id="queue">
+<h2>3. 次の質問を準備する</h2>
+<ol class="guide-steps">
+<li>押しながら操作するキー： <strong>Ctrl</strong> を押しながらメッセージをクリックしてキューに追加するか、メッセージを右クリックして次を選びます： <strong>キュー登録を切り替え（Toggle Queue）</strong>.</li>
+<li>下部ツールバーのキュー件数を確認します。使う項目： <strong>キュー内のメッセージだけを表示</strong> で選んだメッセージを確認します。</li>
+<li>使う項目： <strong>キューの次のメッセージを注目表示</strong> で次へ進みます。不要なキューメッセージは、Toggle Queueをもう一度実行して外します。</li>
+</ol>
+<p>
+<strong>ピン留めは別の機能です：</strong> Altを押しながらクリックするか、右クリックメニューのPinを使うと、ドックのピン留め欄にメッセージを保持できます。キューへの追加は、注目表示の順序を準備する操作です。</p>
+</section>
+<section class="guide-card" id="reply">
+<h2>4. 正しいチャットに返信する</h2>
+<p>視聴者のメッセージを右クリックし、次を選びます： <strong>返信（Reply）</strong>を選びます。宛先を確認して返信を入力し、次を選択します： <strong>送信（SEND）</strong>。ソースが返信に対応し、投稿権限のあるアカウントでログインしている必要があります。</p>
+<div class="warning-note">
+<strong>宛先の警告を確認してください。</strong> メッセージに元のタブ情報がない場合、返信ダイアログはすべての宛先に送ると警告します。経路が正しくなるまで、そのダイアログから特定の相手向けの返信を送らないでください。</div>
+<p>通常の吹き出しのツールバーボタンで、メッセージ送信の操作欄が開きます。送信前に宛先を確認してください。受信の取り込みが成功しても、送信の返信が動くとは限りません。別の送信者アカウントについてはこちら： <a href="twitch-bot-account-chatbot.html">返信用ボットアカウント</a>.</p>
+</section>
+<section class="guide-card" id="busy">
+<h2>5. 活発なチャットを管理する</h2>
+<table class="guide-table guide-table-stack">
+<thead>
+<tr>
+<th scope="col">制御</th>
+<th scope="col">用途：</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td data-label="Control">受信チャットの一時停止 / 再生</td>
+<td data-label="Use it for">読む間はドック表示を一時停止し、再開すると蓄積したメッセージを処理します。ソースの取り込みや他のオーバーレイは停止しません。</td>
+</tr>
+<tr>
+<td data-label="Control">フィルター</td>
+<td data-label="Use it for">関連メッセージを探します。全件表示に戻るにはフィルターを解除してください。</td>
+</tr>
+<tr>
+<td data-label="Control">寄付 / メンバーのフィルター</td>
+<td data-label="Use it for">表示するチャットを一時的に絞り込みます。通常のメッセージが見つからない場合は、これらをオフにしてください。</td>
+</tr>
+<tr>
+<td data-label="Control">最新に戻る / 一番下へスクロール</td>
+<td data-label="Use it for">過去のチャットを読んだ後、最近のメッセージへ戻ります。</td>
+</tr>
+</tbody>
+</table>
+<p>次の項目は維持します： <strong>フィルターで除外したメッセージを自動選択の対象外にする（Exclude filtered messages from auto-selecting）</strong> を、フィルター付きの自動注目表示を使う場合は有効にしてください。閲覧用フィルターだけではモデレーションのルールにはなりません。参照先： <a href="moderation-filtering-guide.html">モデレーションとフィルタリング</a>.</p>
+</section>
+<section class="guide-card" id="check">
+<h2>配信前に</h2>
+<p>使用するもの： <a href="test-message-guide.html">テストメッセージ</a>を使い、1件を注目表示し、さらに2件をキューに追加して1回進め、オーバーレイを消去します。ドックは動くのにOBSが空の場合は、保存されたOBSのURL、セッション・パスワード、注目表示のブラウザソースが読み込まれているかを確認してください。参照先： <a href="obs-troubleshooting.html">OBSのトラブル対処</a>.</p>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">すべてのガイドを見る</a>
+</p>
+</div>
+</div>
+</footer>
+<script data-copy-markdown src="../../docs/js/main.js">
+</script>
+</body>
+</html>

@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="uk" data-site-root="../../" data-site-language="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/uk/docs/on-screen-chat-overlay.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="uk_UA">
+    <meta property="og:url" content="https://socialstream.ninja/uk/docs/on-screen-chat-overlay.html">
+    <meta property="og:title" content="Оверлей чату на екрані під час гри — Social Stream Ninja">
+    <meta property="og:description" content="Показуйте приватний оверлей чату Social Stream Ninja поверх гри через окремий настільний застосунок або Electron Capture: прозорість, гарячі клавіші пропускання натискань, приклади командного рядка й примітки щодо захоплення OBS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Логотип Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/uk/docs/on-screen-chat-overlay.html">
+    <meta name="twitter:title" content="Оверлей чату на екрані під час гри — Social Stream Ninja">
+    <meta name="twitter:description" content="Показуйте приватний оверлей чату Social Stream Ninja поверх гри через окремий настільний застосунок або Electron Capture: прозорість, гарячі клавіші пропускання натискань, приклади командного рядка й примітки щодо захоплення OBS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Логотип Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оверлей чату на екрані під час гри — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Показуйте приватний оверлей чату Social Stream Ninja поверх гри через окремий настільний застосунок або Electron Capture: прозорість, гарячі клавіші пропускання натискань, приклади командного рядка й примітки щодо захоплення OBS.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="uk">
+<script id="ssn-site-language" type="application/json">{"language":"uk","page":"docs/on-screen-chat-overlay.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Перемкнути на світлу тему","Switch to dark theme":"Перемкнути на темну тему","Light mode":"Світла тема","Dark mode":"Темна тема","Open navigation menu":"Відкрити меню навігації","Close navigation menu":"Закрити меню навігації","Copy this document as Markdown to the clipboard":"Скопіювати цей документ у форматі Markdown до буфера обміну","Copy Markdown":"Скопіювати Markdown","Copying…":"Копіювання…","Markdown copied":"Markdown скопійовано","Copy failed":"Не вдалося скопіювати","Copy comprehensive Markdown for an AI assistant":"Скопіювати повний Markdown для ШІ-асистента","Copy this documentation page as Markdown for an AI assistant":"Скопіювати цю сторінку документації як Markdown для ШІ-асистента"},"strings":{"(or":"(або",". Activate your chat sources normally.":". Активуйте джерела чату як зазвичай.",". If the URL has no question mark yet, use":". Якщо URL ще не має знака питання, використовуйте",". Mouse clicks will pass through to the game.":". Натискання миші проходитимуть до гри.",". SSApp opens it as its own overlay window.":". SSApp відкриє його як окреме вікно оверлею.",". The browser extension and an OBS Browser Source cannot create a system-wide click-through window by themselves.":". Розширення браузера та браузерне джерело OBS самі не можуть створити загальносистемне вікно, що пропускає натискання.",". The generated URL should contain":". Згенерований URL має містити","A Dock or Featured URL with the wrong session ID will remain empty.":"URL дока або Featured із неправильним ID сесії залишатиметься порожнім.","A test recording confirms viewers cannot see the private overlay.":"Тестовий запис підтверджує, що глядачі не бачать приватний оверлей.","Action":"Дія","Alternative transparent background mode; useful when the Dock's normal":"Альтернативний режим прозорого фону; корисний, коли звичайний режим дока","Always on top":"Завжди зверху","An exclusive fullscreen game may cover all normal desktop windows, including an always-on-top overlay.":"Гра в ексклюзивному повноекранному режимі може закривати всі звичайні вікна робочого столу, зокрема оверлей «завжди зверху».","Avoid":"Уникайте","Best When":"Найкраще, коли","Borderless or windowed fullscreen is the reliable game mode.":"Безрамковий або віконний повноекранний режим — надійний варіант для гри.","Capture third-party overlays (such as Steam)":"Захоплювати сторонні оверлеї, наприклад Steam (Capture third-party overlays)","Chat is arriving in Social Stream.":"Чат надходить у Social Stream.","Choose The Chat View":"Виберіть вигляд чату","Choose a zero-based monitor when a monitor index is easier than desktop coordinates.":"Виберіть монітор за індексом, починаючи з нуля, коли це простіше за координати робочого столу.","Click the generated Dock or Featured link":"Натисніть згенероване посилання Dock або Featured","Click-through disables mouse interaction.":"Пропускання натискань вимикає взаємодію мишею.","Click-through is enabled only after positioning.":"Пропускання натискань увімкнено лише після розміщення.","Closing SSApp or Electron Capture closes the local overlay.":"Закриття SSApp або Electron Capture закриває локальний оверлей.","Commands & API":"Команди й API","Continuous Chat Dock":"Док безперервного чату","Copy your generated Social Stream Dock, Featured, template, or custom overlay URL.":"Скопіюйте згенерований URL дока Social Stream, Featured, шаблону або власного оверлею.","Display Capture":"Захоплення екрана","Display capture includes what you see.":"Захоплення екрана включає все, що ви бачите.","Do not add this overlay URL as an OBS Browser Source":"Не додавайте URL цього оверлею як браузерне джерело OBS","Do not attempt to bypass a game's security controls.":"Не намагайтеся обходити засоби захисту гри.","Download":"Завантажити","Electron Capture":"Electron Capture","Electron Capture Command-Line Launch":"Запуск Electron Capture з командного рядка","Electron Capture feature cards for Pin on Top, Frameless Window, Transparency Support, Click-Through Mode, Auto Screen Capture, and Game and App Capture":"Картки функцій Electron Capture: Pin on Top, Frameless Window, Transparency Support, Click-Through Mode, Auto Screen Capture та Game and App Capture","Electron Capture provides the pin, frameless transparency, and click-through controls needed for a private on-screen overlay.":"Electron Capture надає закріплення, безрамкову прозорість і пропускання натискань, потрібні для приватного оверлею на екрані.","Example placement using the real SSApp Featured Chat overlay over a simulated gameplay scene. A Dock URL can show the full running chat instead.":"Приклад розміщення справжнього оверлею Featured Chat SSApp поверх імітованої ігрової сцени. URL дока може натомість показувати весь поточний чат.","Featured Chat Only":"Лише вибраний чат","Featured Chat Overlay":"Оверлей вибраних повідомлень чату","Featured Chat Overlay:":"Оверлей Featured Chat:","Featured Chat is not the full feed.":"Featured Chat — не вся стрічка.","Features":"Можливості","For templates, custom CSS, fonts, and more URL controls, see the":"Про шаблони, власний CSS, шрифти та інші параметри URL див.","Force transparent background":"Примусово прозорий фон","Frameless transparency, pinning, click-through, monitor selection, and command-line control.":"Безрамкова прозорість, закріплення, пропускання натискань, вибір монітора й керування з командного рядка.","Game Capture":"Захоплення гри","Guides":"Посібники","Hide platform source labels or icons in the Dock.":"Приховуйте підписи або значки платформ у доку.","Hide the Dock toolbar after setup.":"Приховуйте панель інструментів дока після налаштування.","Hire":"Найняти фахівця","Home":"Головна","If you cannot isolate the game from the monitor in your capture software, this overlay cannot be guaranteed private.":"Якщо у програмі захоплення неможливо відокремити гру від усього монітора, приватність цього оверлею не можна гарантувати.","Important Limitations":"Важливі обмеження","In the Social Stream settings panel, find":"У панелі налаштувань Social Stream знайдіть","Initial position in the virtual desktop. Negative coordinates may be valid for monitors placed left or above the primary monitor.":"Початкове положення на віртуальному робочому столі. Від’ємні координати можуть бути правильними для моніторів ліворуч або вище основного.","Initial window size in pixels.":"Початковий розмір вікна в пікселях.","Inject a local CSS file for advanced styling.":"Підключіть локальний CSS-файл для розширеного оформлення.","Inspiration":"Натхнення","Install and open the":"Установіть і відкрийте","It only shows a message after you select one in the Dock.":"Він показує повідомлення лише після його вибору в доку.","Keep It On Your Monitor, Not On The Stream":"Залиште його на моніторі, поза стрімом","Keep Social Stream chat visible on your monitor without automatically putting it on the stream.":"Тримайте чат Social Stream видимим на своєму моніторі без автоматичного додавання до стріму.","Leave OBS's":"Залишайте параметр OBS","Leave it off unless a page specifically needs screen capture or another elevated Electron feature.":"Залишайте його вимкненим, якщо сторінці явно не потрібне захоплення екрана чи інша функція Electron із підвищеними правами.","Limit the number of retained messages on supported pages.":"Обмежуйте кількість збережених повідомлень на підтримуваних сторінках.","Main navigation":"Основна навігація","Make UnClickable":"Зробити неклікабельним (Make UnClickable)","Make a short local recording and watch it back before going live. Capture methods and games differ.":"Зробіть короткий локальний запис і перегляньте його перед ефіром. Способи захоплення та ігри відрізняються.","Make sure it includes":"Переконайтеся, що він містить","Method 1: Social Stream Standalone App":"Спосіб 1: окремий застосунок Social Stream","Method 2: Electron Capture":"Спосіб 2: Electron Capture","Move and resize it, then enable":"Перемістіть і змініть розмір, а потім увімкніть","Move and size the window before locking it. Right-click the overlay for size presets and select":"Перемістіть і змініть розмір вікна перед блокуванням. Натисніть оверлей правою кнопкою для готових розмірів і виберіть","No reliable system-wide transparency or mouse click-through.":"Без надійної загальносистемної прозорості чи пропускання натискань миші.","Normal browser or OBS only":"Лише звичайний браузер або OBS","OBS Game Capture is Windows-only. If your setup must capture the entire display, the on-screen overlay will also be captured. Use a separate monitor or a window/application capture method that excludes the overlay, then verify with a recording.":"Захоплення гри OBS доступне лише у Windows. Якщо ваша система має захоплювати весь екран, оверлей на екрані також потрапить до запису. Використовуйте окремий монітор або спосіб захоплення вікна/застосунку, який виключає оверлей, а потім перевірте записом.","OBS captures the game/window, not the entire display.":"OBS захоплює гру/вікно, а не весь екран.","On Windows, prefer an OBS":"У Windows віддавайте перевагу джерелу OBS","On-Screen Chat Overlay While Gaming - Social Stream Ninja":"Оверлей чату на екрані під час гри — Social Stream Ninja","On-Screen Chat While Gaming":"Чат на екрані під час гри","Open its options and enable":"Відкрийте його параметри й увімкніть","Open navigation menu":"Відкрити меню навігації","Open the URL in Electron Capture.":"Відкрийте URL в Electron Capture.","Option":"Варіант","Overlay Customization guide":"посібник із налаштування оверлеїв","Overlay Gallery":"Галерея оверлеїв","Positioning tip:":"Порада щодо розміщення:","Purpose":"Призначення","Quick Checklist":"Короткий контрольний список","Reload the focused overlay window.":"Перезавантажте активне вікно оверлею.","Remove the page background and request a transparent desktop window.":"Приберіть фон сторінки й запросіть прозоре вікно робочого столу.","Right-click an SSApp overlay window to resize, pin, or make it click-through. Set click-through last so you do not lock yourself out while positioning it.":"Натисніть вікно оверлею SSApp правою кнопкою, щоб змінити розмір, закріпити або ввімкнути пропускання натискань. Умикайте пропускання натискань останнім, щоб не втратити керування під час розміщення.","Right-click its window and enable":"Натисніть його вікно правою кнопкою й увімкніть","Run a separate Electron Capture process when you need more than one independent overlay.":"Запускайте окремий процес Electron Capture, коли потрібно більше одного незалежного оверлею.","SSApp Hotkeys":"Гарячі клавіші SSApp","SSApp overlay right-click menu showing Resize window, Always on top, and Make UnClickable until in-focus with the Ctrl Shift Alt X hotkey":"Контекстне меню оверлею SSApp із пунктами Resize window, Always on top і Make UnClickable until in-focus та гарячою клавішею Ctrl Shift Alt X","Scale supported overlays down without changing window size.":"Зменшуйте масштаб підтримуваних оверлеїв без зміни розміру вікна.","See Electron Capture's":"Див. у Electron Capture","See Live Chat While Gaming! Transparent Overlay Guide":"Див. Live Chat While Gaming! Transparent Overlay Guide","Show a private Social Stream Ninja chat overlay over a game using the standalone desktop app or Electron Capture, with transparency, click-through hotkeys, command-line examples, and OBS capture notes.":"Показуйте приватний оверлей чату Social Stream Ninja поверх гри через окремий настільний застосунок або Electron Capture: прозорість, гарячі клавіші пропускання натискань, приклади командного рядка й примітки щодо захоплення OBS.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja featured chat message positioned over a simulated gameplay scene":"Вибране повідомлення чату Social Stream Ninja поверх імітованої ігрової сцени","Social Stream Ninja logo":"Логотип Social Stream Ninja","Social Stream Ninja standalone app":"окремий застосунок Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Ліцензія GPLv3.0.","Social Stream can sit above a game as a transparent, always-on-top window. This is a separate desktop window, not a game HUD injection.":"Social Stream може розміщуватися поверх гри як прозоре вікно «завжди зверху». Це окреме вікно робочого столу, а не впровадження в HUD гри.","Social Stream standalone app":"окремий застосунок Social Stream","Some games and anti-cheat systems restrict overlays.":"Деякі ігри й античіт-системи обмежують оверлеї.","Start always-on-top.":"Запускати завжди зверху.","Start in click-through mode. Remember the recovery hotkey before using it.":"Запускати з пропусканням натискань. Запам’ятайте гарячу клавішу відновлення перед використанням.","Streaming Chat":"Чат стріму","Streaming Chat / Dock:":"Чат стріму / док:","Support":"Підтримка","Supported Sites":"Підтримувані сайти","Switch theme":"Перемкнути тему","Template or custom overlay:":"Шаблон або власний оверлей:","The URL contains":"URL містить","The chat should appear on the broadcast rather than privately on your monitor.":"Чат має з’являтися в трансляції, а не приватно на вашому моніторі.","The complete Social Stream overlay URL. Quote it because it contains":"Повний URL оверлею Social Stream. Візьміть його в лапки, оскільки він містить","The desktop app must stay open.":"Настільний застосунок має залишатися відкритим.","The desktop wrapper is pinned above the game.":"Настільна оболонка закріплена над грою.","The game uses borderless or windowed fullscreen if exclusive fullscreen hides the overlay.":"Гра використовує безрамковий або віконний повноекранний режим, якщо ексклюзивний повноекранний режим приховує оверлей.","The overlay URL uses the correct session ID.":"URL оверлею використовує правильний ID сесії.","The overlay stays private only when your streaming software captures the game or game window rather than the whole monitor.":"Оверлей залишається приватним лише тоді, коли програма трансляції захоплює гру або вікно гри, а не весь монітор.","The portable Windows build is the simplest version to automate. Replace":"Портативна збірка Windows — найпростіша версія для автоматизації. Замініть","The session must match.":"Сесія має збігатися.","This older video shows the transparent, always-on-top, click-through chat setup. The app interface may look different in current versions.":"Це старіше відео показує налаштування прозорого чату «завжди зверху» з пропусканням натискань. Інтерфейс застосунку в поточних версіях може відрізнятися.","Toggle mouse click-through so you can interact with the overlay again.":"Перемкніть пропускання натискань миші, щоб знову взаємодіяти з оверлеєм.","Transparency varies by operating system and graphics setup.":"Прозорість залежить від операційної системи й графічної конфігурації.","Transparent popup windows, always-on-top, resizing, and click-through.":"Прозорі спливні вікна, режим «завжди зверху», зміна розміру та пропускання натискань.","URL Option":"Параметр URL","Update the desktop app and graphics driver if a transparent area appears white or black.":"Оновіть настільний застосунок і графічний драйвер, якщо прозора область виглядає білою чи чорною.","Use":"Використовуйте","Use a denser Dock layout.":"Використовуйте щільніше компонування дока.","Use the":"Використовуйте","Use the recovery hotkey before trying to right-click the window again.":"Скористайтеся гарячою клавішею відновлення, перш ніж знову натискати вікно правою кнопкою.","Use the same session ID as your active Social Stream setup. In the Social Stream settings panel, open the options for the view you chose and enable":"Використовуйте той самий ID сесії, що й активна конфігурація Social Stream. У панелі налаштувань Social Stream відкрийте параметри вибраного вигляду та ввімкніть","Useful Overlay URL Options":"Корисні параметри URL оверлею","Video Walkthrough":"Відеоінструкція","What It Adds":"Що додає","When placement is finished, right-click it again and select":"Після завершення розміщення знову натисніть правою кнопкою й виберіть","Windows / Linux":"Windows / Linux","Yes, With A Desktop Overlay Window":"Так, із настільним вікном оверлею","You already capture chat in SSApp and want the shortest setup.":"Ви вже захоплюєте чат у SSApp і хочете найкоротше налаштування.","You need a desktop wrapper.":"Вам потрібна настільна оболонка.","You want exact size and position, reusable launch commands, or a dedicated overlay wrapper.":"Вам потрібні точні розміри й положення, багаторазові команди запуску або окрема оболонка оверлею.","and":"і","and adjust the size and position for your display.":"та налаштуйте розмір і положення для свого дисплея.","characters.":"символи.","complete command-line reference":"повний довідник командного рядка","for additional parameters.":"щодо додаткових параметрів.","for this workflow. It captures the entire monitor, including the chat overlay.":"для цього процесу. Воно захоплює весь монітор, зокрема оверлей чату.","from inside the standalone app":"зсередини окремого застосунку","if viewers should not see it.":", якщо глядачі не повинні його бачити.","is a separate free, open-source app that can wrap a Social Stream URL in a transparent desktop window. It is often the easier option when you only want a dedicated overlay window.":"— окремий безкоштовний застосунок із відкритим кодом, який може відкрити URL Social Stream у прозорому настільному вікні. Це часто простіший варіант, коли потрібне лише окреме вікно оверлею.","is not needed for a normal Social Stream overlay.":"не потрібен для звичайного оверлею Social Stream.","macOS":"macOS","macOS And Linux":"macOS і Linux","macOS and Linux limitation:":"Обмеження macOS і Linux:","mode hides its scrollbar.":"приховує смугу прокручування.","on macOS) to toggle click-through later.":"у macOS), щоб пізніше перемикати пропускання натискань.","option off unless you have tested that it does not include this window.":"вимкненим, якщо ви не перевірили, що він не включає це вікно.","options for exact placement.":"для точного розміщення.","or":"або","shows one message selected from the Dock. Use this when you only want highlighted messages.":"показує одне повідомлення, вибране в доку. Використовуйте, коли потрібні лише виділені повідомлення.","shows the ongoing combined chat. This is usually the best choice while gaming.":"показує поточний об’єднаний чат. Зазвичай це найкращий вибір під час гри.","source targeting the game.":", спрямованому на гру.","standalone desktop app":"окремий настільний застосунок","transparent areas can be hard to grab. Keep the Dock menu visible while positioning it, use your operating system's window movement shortcuts, or use Electron Capture's":"за прозорі області буває важко вхопитися. Залишайте меню дока видимим під час розміщення, використовуйте клавіші переміщення вікон своєї ОС або параметри Electron Capture","works too, as long as the page supports a transparent background.":"також працює, якщо сторінка підтримує прозорий фон."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/on-screen-chat-overlay.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Основна навігація"><a href="../index.html">Головна</a><a href="features.html">Можливості</a><a href="inspiration.html" class="site-priority-inspiration">Натхнення</a><a href="download.html">Завантажити</a><a href="guides.html">Посібники</a><a href="commands.html">Команди й API</a><a href="supported-sites.html">Підтримувані сайти</a><a href="overlay-gallery.html" class="site-priority-gallery">Галерея оверлеїв</a><a href="services.html" class="site-priority-hire">Найняти фахівця</a><a href="support.html">Підтримка</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Українська"><span aria-hidden="true">🌐 </span><span lang="uk">Українська</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/on-screen-chat-overlay.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/on-screen-chat-overlay.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/on-screen-chat-overlay.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/on-screen-chat-overlay.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/on-screen-chat-overlay.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/on-screen-chat-overlay.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/on-screen-chat-overlay.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/on-screen-chat-overlay.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/on-screen-chat-overlay.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/on-screen-chat-overlay.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/on-screen-chat-overlay.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/on-screen-chat-overlay.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="on-screen-chat-overlay.html" lang="uk" hreflang="uk" aria-current="true">Українська</a><a class="site-language-link" href="../../ar/docs/on-screen-chat-overlay.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/on-screen-chat-overlay.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/on-screen-chat-overlay.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/on-screen-chat-overlay.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Перемкнути тему"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Відкрити меню навігації" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Чат на екрані під час гри</h1>
+            <p>Тримайте чат Social Stream видимим на своєму моніторі без автоматичного додавання до стріму.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Так, із настільним вікном оверлею</h2>
+                <p>Social Stream може розміщуватися поверх гри як прозоре вікно «завжди зверху». Це окреме вікно робочого столу, а не впровадження в HUD гри.</p>
+                <div class="guide-note">
+                    <p><strong>Вам потрібна настільна оболонка.</strong> Використовуйте <a href="download.html">окремий застосунок Social Stream Ninja</a> або <a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a>. Розширення браузера та браузерне джерело OBS самі не можуть створити загальносистемне вікно, що пропускає натискання.</p>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Варіант</th><th>Найкраще, коли</th><th>Що додає</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Option">окремий застосунок Social Stream</td>
+                            <td data-label="Best When">Ви вже захоплюєте чат у SSApp і хочете найкоротше налаштування.</td>
+                            <td data-label="What It Adds">Прозорі спливні вікна, режим «завжди зверху», зміна розміру та пропускання натискань.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Option">Electron Capture</td>
+                            <td data-label="Best When">Вам потрібні точні розміри й положення, багаторазові команди запуску або окрема оболонка оверлею.</td>
+                            <td data-label="What It Adds">Безрамкова прозорість, закріплення, пропускання натискань, вибір монітора й керування з командного рядка.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Option">Лише звичайний браузер або OBS</td>
+                            <td data-label="Best When">Чат має з’являтися в трансляції, а не приватно на вашому моніторі.</td>
+                            <td data-label="What It Adds">Без надійної загальносистемної прозорості чи пропускання натискань миші.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Відеоінструкція</h2>
+                <p>Це старіше відео показує налаштування прозорого чату «завжди зверху» з пропусканням натискань. Інтерфейс застосунку в поточних версіях може відрізнятися.</p>
+                <div class="video-container">
+                    <iframe
+                        src="https://www.youtube.com/embed/bMVVof_L0sI"
+                        title="Див. Live Chat While Gaming! Transparent Overlay Guide"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Виберіть вигляд чату</h2>
+                <ul class="guide-list">
+                    <li><strong>Чат стріму / док:</strong> показує поточний об’єднаний чат. Зазвичай це найкращий вибір під час гри.</li>
+                    <li><strong>Оверлей Featured Chat:</strong> показує одне повідомлення, вибране в доку. Використовуйте, коли потрібні лише виділені повідомлення.</li>
+                    <li><strong>Шаблон або власний оверлей:</strong> також працює, якщо сторінка підтримує прозорий фон.</li>
+                </ul>
+                <p>Використовуйте той самий ID сесії, що й активна конфігурація Social Stream. У панелі налаштувань Social Stream відкрийте параметри вибраного вигляду та ввімкніть <strong>Примусово прозорий фон</strong>. Згенерований URL має містити <code>transparent</code>.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/on-screen-overlay-preview.png" alt="Вибране повідомлення чату Social Stream Ninja поверх імітованої ігрової сцени" class="guide-image">
+                    <figcaption>Приклад розміщення справжнього оверлею Featured Chat SSApp поверх імітованої ігрової сцени. URL дока може натомість показувати весь поточний чат.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Спосіб 1: окремий застосунок Social Stream</h2>
+                <ol class="guide-steps">
+                    <li>Установіть і відкрийте <a href="download.html">окремий настільний застосунок</a>. Активуйте джерела чату як зазвичай.</li>
+                    <li>У панелі налаштувань Social Stream знайдіть <strong>Чат стріму</strong> або <strong>Оверлей вибраних повідомлень чату</strong>.</li>
+                    <li>Відкрийте його параметри й увімкніть <strong>Примусово прозорий фон</strong>.</li>
+                    <li>Натисніть згенероване посилання Dock або Featured <strong>зсередини окремого застосунку</strong>. SSApp відкриє його як окреме вікно оверлею.</li>
+                    <li>Перемістіть і змініть розмір вікна перед блокуванням. Натисніть оверлей правою кнопкою для готових розмірів і виберіть <strong>Завжди зверху</strong>.</li>
+                    <li>Після завершення розміщення знову натисніть правою кнопкою й виберіть <strong>Зробити неклікабельним (Make UnClickable)</strong>. Натискання миші проходитимуть до гри.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/ssapp-on-screen-overlay-menu.png" alt="Контекстне меню оверлею SSApp із пунктами Resize window, Always on top і Make UnClickable until in-focus та гарячою клавішею Ctrl Shift Alt X" class="guide-image">
+                    <figcaption>Натисніть вікно оверлею SSApp правою кнопкою, щоб змінити розмір, закріпити або ввімкнути пропускання натискань. Умикайте пропускання натискань останнім, щоб не втратити керування під час розміщення.</figcaption>
+                </figure>
+                <h3>Гарячі клавіші SSApp</h3>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Windows / Linux</th><th>macOS</th><th>Дія</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+X</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+X</code></td>
+                            <td data-label="Action">Перемкніть пропускання натискань миші, щоб знову взаємодіяти з оверлеєм.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+R</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+R</code></td>
+                            <td data-label="Action">Перезавантажте активне вікно оверлею.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="guide-note">
+                    <p><strong>Порада щодо розміщення:</strong> за прозорі області буває важко вхопитися. Залишайте меню дока видимим під час розміщення, використовуйте клавіші переміщення вікон своєї ОС або параметри Electron Capture <code>--x</code> і <code>--y</code> для точного розміщення.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Спосіб 2: Electron Capture</h2>
+                <p><a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a> — окремий безкоштовний застосунок із відкритим кодом, який може відкрити URL Social Stream у прозорому настільному вікні. Це часто простіший варіант, коли потрібне лише окреме вікно оверлею.</p>
+                <ol class="guide-steps">
+                    <li>Скопіюйте згенерований URL дока Social Stream, Featured, шаблону або власного оверлею.</li>
+                    <li>Переконайтеся, що він містить <code>&amp;transparent</code>. Якщо URL ще не має знака питання, використовуйте <code>?transparent</code>.</li>
+                    <li>Відкрийте URL в Electron Capture.</li>
+                    <li>Натисніть його вікно правою кнопкою й увімкніть <strong>Завжди зверху</strong>.</li>
+                    <li>Перемістіть і змініть розмір, а потім увімкніть <strong>Зробити неклікабельним (Make UnClickable)</strong>.</li>
+                    <li>Використовуйте <code>Ctrl+Shift+Alt+X</code> (або <code>Command+Shift+Option+X</code> у macOS), щоб пізніше перемикати пропускання натискань.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/electron-capture-overlay-features.png" alt="Картки функцій Electron Capture: Pin on Top, Frameless Window, Transparency Support, Click-Through Mode, Auto Screen Capture та Game and App Capture" class="guide-image">
+                    <figcaption>Electron Capture надає закріплення, безрамкову прозорість і пропускання натискань, потрібні для приватного оверлею на екрані.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Запуск Electron Capture з командного рядка</h2>
+                <p>Портативна збірка Windows — найпростіша версія для автоматизації. Замініть <code>YOUR_SESSION_ID</code> та налаштуйте розмір і положення для свого дисплея.</p>
+
+                <h3>Док безперервного чату</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;transparent&amp;compact&amp;hidemenu" --width=520 --height=760 --x=1380 --y=80 --pin --unclickable --title="SSN Chat"</code></pre>
+
+                <h3>Лише вибраний чат</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID&amp;transparent" --width=700 --height=500 --x=1160 --y=80 --pin --unclickable --title="SSN Featured"</code></pre>
+
+                <h3>macOS і Linux</h3>
+                <pre><code># macOS
+"/Applications/elecap.app/Contents/MacOS/elecap" --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable
+
+# Linux AppImage; replace the filename with the version you downloaded
+./elecap-VERSION-x86_64.AppImage --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable</code></pre>
+
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Варіант</th><th>Призначення</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Option"><code>--url</code></td><td data-label="Purpose">Повний URL оверлею Social Stream. Візьміть його в лапки, оскільки він містить <code>&amp;</code> символи.</td></tr>
+                        <tr><td data-label="Option"><code>--width</code>, <code>--height</code></td><td data-label="Purpose">Початковий розмір вікна в пікселях.</td></tr>
+                        <tr><td data-label="Option"><code>--x</code>, <code>--y</code></td><td data-label="Purpose">Початкове положення на віртуальному робочому столі. Від’ємні координати можуть бути правильними для моніторів ліворуч або вище основного.</td></tr>
+                        <tr><td data-label="Option"><code>--monitor=0</code></td><td data-label="Purpose">Виберіть монітор за індексом, починаючи з нуля, коли це простіше за координати робочого столу.</td></tr>
+                        <tr><td data-label="Option"><code>--pin</code></td><td data-label="Purpose">Запускати завжди зверху.</td></tr>
+                        <tr><td data-label="Option"><code>--unclickable</code></td><td data-label="Purpose">Запускати з пропусканням натискань. Запам’ятайте гарячу клавішу відновлення перед використанням.</td></tr>
+                        <tr><td data-label="Option"><code>--css="C:\path\chat.css"</code></td><td data-label="Purpose">Підключіть локальний CSS-файл для розширеного оформлення.</td></tr>
+                        <tr><td data-label="Option"><code>--multiinstance</code></td><td data-label="Purpose">Запускайте окремий процес Electron Capture, коли потрібно більше одного незалежного оверлею.</td></tr>
+                    </tbody>
+                </table>
+                <p>Див. у Electron Capture <a href="https://electroncapture.app/command-line.html" target="_blank" rel="noopener">повний довідник командного рядка</a> щодо додаткових параметрів.</p>
+                <div class="guide-note">
+                    <p><strong><code>--node</code> не потрібен для звичайного оверлею Social Stream.</strong> Залишайте його вимкненим, якщо сторінці явно не потрібне захоплення екрана чи інша функція Electron із підвищеними правами.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Корисні параметри URL оверлею</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Параметр URL</th><th>Використовуйте</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="URL Option"><code>transparent</code></td><td data-label="Use">Приберіть фон сторінки й запросіть прозоре вікно робочого столу.</td></tr>
+                        <tr><td data-label="URL Option"><code>compact</code></td><td data-label="Use">Використовуйте щільніше компонування дока.</td></tr>
+                        <tr><td data-label="URL Option"><code>hidemenu</code></td><td data-label="Use">Приховуйте панель інструментів дока після налаштування.</td></tr>
+                        <tr><td data-label="URL Option"><code>scale=0.85</code></td><td data-label="Use">Зменшуйте масштаб підтримуваних оверлеїв без зміни розміру вікна.</td></tr>
+                        <tr><td data-label="URL Option"><code>limit=15</code></td><td data-label="Use">Обмежуйте кількість збережених повідомлень на підтримуваних сторінках.</td></tr>
+                        <tr><td data-label="URL Option"><code>hidesource</code></td><td data-label="Use">Приховуйте підписи або значки платформ у доку.</td></tr>
+                        <tr><td data-label="URL Option"><code>chroma=0000</code></td><td data-label="Use">Альтернативний режим прозорого фону; корисний, коли звичайний режим дока <code>transparent</code> приховує смугу прокручування.</td></tr>
+                    </tbody>
+                </table>
+                <p>Про шаблони, власний CSS, шрифти та інші параметри URL див. <a href="overlay-customization-guide.html">посібник із налаштування оверлеїв</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Залиште його на моніторі, поза стрімом</h2>
+                <p>Оверлей залишається приватним лише тоді, коли програма трансляції захоплює гру або вікно гри, а не весь монітор.</p>
+                <ol class="guide-steps">
+                    <li><strong>Не додавайте URL цього оверлею як браузерне джерело OBS</strong> , якщо глядачі не повинні його бачити.</li>
+                    <li>У Windows віддавайте перевагу джерелу OBS <a href="https://obsproject.com/kb/game-capture-source" target="_blank" rel="noopener">Захоплення гри</a> , спрямованому на гру.</li>
+                    <li>Залишайте параметр OBS <strong>Захоплювати сторонні оверлеї, наприклад Steam (Capture third-party overlays)</strong> вимкненим, якщо ви не перевірили, що він не включає це вікно.</li>
+                    <li>Уникайте <a href="https://obsproject.com/kb/display-capture-sources" target="_blank" rel="noopener">Захоплення екрана</a> для цього процесу. Воно захоплює весь монітор, зокрема оверлей чату.</li>
+                    <li>Зробіть короткий локальний запис і перегляньте його перед ефіром. Способи захоплення та ігри відрізняються.</li>
+                </ol>
+                <div class="warning-note">
+                    <p><strong>Обмеження macOS і Linux:</strong> Захоплення гри OBS доступне лише у Windows. Якщо ваша система має захоплювати весь екран, оверлей на екрані також потрапить до запису. Використовуйте окремий монітор або спосіб захоплення вікна/застосунку, який виключає оверлей, а потім перевірте записом.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Важливі обмеження</h2>
+                <ul class="guide-list">
+                    <li><strong>Безрамковий або віконний повноекранний режим — надійний варіант для гри.</strong> Гра в ексклюзивному повноекранному режимі може закривати всі звичайні вікна робочого столу, зокрема оверлей «завжди зверху».</li>
+                    <li><strong>Настільний застосунок має залишатися відкритим.</strong> Закриття SSApp або Electron Capture закриває локальний оверлей.</li>
+                    <li><strong>Сесія має збігатися.</strong> URL дока або Featured із неправильним ID сесії залишатиметься порожнім.</li>
+                    <li><strong>Featured Chat — не вся стрічка.</strong> Він показує повідомлення лише після його вибору в доку.</li>
+                    <li><strong>Пропускання натискань вимикає взаємодію мишею.</strong> Скористайтеся гарячою клавішею відновлення, перш ніж знову натискати вікно правою кнопкою.</li>
+                    <li><strong>Деякі ігри й античіт-системи обмежують оверлеї.</strong> Не намагайтеся обходити засоби захисту гри.</li>
+                    <li><strong>Прозорість залежить від операційної системи й графічної конфігурації.</strong> Оновіть настільний застосунок і графічний драйвер, якщо прозора область виглядає білою чи чорною.</li>
+                    <li><strong>Захоплення екрана включає все, що ви бачите.</strong> Якщо у програмі захоплення неможливо відокремити гру від усього монітора, приватність цього оверлею не можна гарантувати.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>Короткий контрольний список</h2>
+                <ol class="guide-steps">
+                    <li>Чат надходить у Social Stream.</li>
+                    <li>URL оверлею використовує правильний ID сесії.</li>
+                    <li>URL містить <code>transparent</code>.</li>
+                    <li>Настільна оболонка закріплена над грою.</li>
+                    <li>Пропускання натискань увімкнено лише після розміщення.</li>
+                    <li>Гра використовує безрамковий або віконний повноекранний режим, якщо ексклюзивний повноекранний режим приховує оверлей.</li>
+                    <li>OBS захоплює гру/вікно, а не весь екран.</li>
+                    <li>Тестовий запис підтверджує, що глядачі не бачать приватний оверлей.</li>
+                </ol>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Ліцензія GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

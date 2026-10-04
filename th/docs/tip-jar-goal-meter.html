@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/th/docs/tip-jar-goal-meter.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/th/docs/tip-jar-goal-meter.html">
+    <meta property="og:title" content="คู่มือ Tip Jar และ Goal Meter - Social Stream Ninja">
+    <meta property="og:description" content="ตั้งค่า Tip Jar และ Goal Meter ของ Social Stream Ninja และแก้ปัญหาการบริจาค สมาชิก และสมาชิกของขวัญที่ขาดหาย">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/th/docs/tip-jar-goal-meter.html">
+    <meta name="twitter:title" content="คู่มือ Tip Jar และ Goal Meter - Social Stream Ninja">
+    <meta name="twitter:description" content="ตั้งค่า Tip Jar และ Goal Meter ของ Social Stream Ninja และแก้ปัญหาการบริจาค สมาชิก และสมาชิกของขวัญที่ขาดหาย">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คู่มือ Tip Jar และ Goal Meter - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="ตั้งค่า Tip Jar และ Goal Meter ของ Social Stream Ninja และแก้ปัญหาการบริจาค สมาชิก และสมาชิกของขวัญที่ขาดหาย">
+    <style>
+        .quick-note {
+            background: rgba(26, 115, 232, 0.08);
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 1.4rem 1.6rem;
+            margin: 1.5rem 0;
+        }
+        .dark-mode .quick-note { background: rgba(26, 115, 232, 0.18); }
+        .warning-note { background: rgba(251, 188, 5, 0.14); border-left-color: #f9ab00; }
+        .dark-mode .warning-note { background: rgba(251, 188, 5, 0.2); }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/tip-jar-goal-meter.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{"(12–96 pixels), and":" (12–96 พิกเซล) และ","(six-digit hex color),":" (สีฐานสิบหกหกหลัก)",") only if you want the updated spacing, colors, and typography. The new styles below are separately selectable.":") เฉพาะเมื่อต้องการระยะห่าง สี และตัวอักษรรูปแบบใหม่ ส่วนรูปแบบใหม่ด้านล่างเลือกแยกได้","): a circular percentage display above the goal total.":"): แสดงเปอร์เซ็นต์เป็นวงกลมเหนือยอดเป้าหมาย","): a compact panel with a large total and slim progress bar.":"): แผงกะทัดรัดพร้อมยอดตัวใหญ่และแถบความคืบหน้าบาง","): a goal panel with twenty progress segments.":"): แผงเป้าหมายพร้อมแถบความคืบหน้ายี่สิบส่วน","): a wide, low panel with the title beside the total.":"): แผงกว้างและเตี้ย พร้อมชื่อข้างยอดรวม","): the same goal shown as a progress bar with recent supporters.":"): เป้าหมายเดียวกันในรูปแถบความคืบหน้าพร้อมผู้สนับสนุนล่าสุด",", then open its options.":" แล้วเปิดตัวเลือก",". Explicit fill start/end colors take precedence over the accent for the progress fill. Leave values blank to use each style's defaults. Bar text size and “bar only” apply to Fluid Goal Bar; a custom jar image applies only to Jar.":" สีเริ่มต้น/สิ้นสุดที่กำหนดโดยตรงมีลำดับความสำคัญเหนือสีเน้นสำหรับส่วนเติมความคืบหน้า ปล่อยค่าว่างเพื่อใช้ค่าเริ่มต้นของแต่ละรูปแบบ ขนาดข้อความบนแถบและ “bar only” ใช้กับ Fluid Goal Bar ส่วนภาพโหลกำหนดเองใช้เฉพาะ Jar",". The overlay displays progress such as":" โอเวอร์เลย์แสดงความคืบหน้า เช่น",". This is off by default and only changes the goal display; donation values, conversion, and Bits or other unit labels stay the same.":" ตัวเลือกนี้ปิดโดยค่าเริ่มต้นและเปลี่ยนเฉพาะการแสดงเป้าหมาย มูลค่าการบริจาค การแปลงค่า และป้าย Bits หรือหน่วยอื่นยังเหมือนเดิม",": a progress bar with recent supporters in a dark panel.":": แถบความคืบหน้าพร้อมผู้สนับสนุนล่าสุดในแผงสีเข้ม",": a simple text readout.":": แสดงค่าเป็นข้อความง่าย ๆ",": a small bar suited to a corner;":": แถบเล็กเหมาะกับมุมจอ ส่วน",": a thermometer for a side column.":": รูปเทอร์โมมิเตอร์สำหรับคอลัมน์ด้านข้าง",": a wide animated bar for a prominent goal.":": แถบกว้างเคลื่อนไหวได้สำหรับเป้าหมายที่ต้องการเน้น",": large totals and percentage;":": ยอดรวมและเปอร์เซ็นต์ขนาดใหญ่ ส่วน",": the classic cup with falling items.":": ถ้วยแบบดั้งเดิมที่มีวัตถุตกลงมา","A paid message with a currency amount":"ข้อความแบบชำระเงินที่มีจำนวนเงิน","A separate virtual-gift event with a native-unit amount":"อีเวนต์ของขวัญเสมือนแยกต่างหากที่มีจำนวนหน่วยดั้งเดิม","Activate the YouTube, Twitch, or other source in Social Stream Ninja.":"เปิดใช้งานแหล่งข้อมูล YouTube, Twitch หรืออื่น ๆ ใน Social Stream Ninja","All donations":"การบริจาคทั้งหมด (All donations)","All styles use the same donation totals, filters, count goals, Hype scoring, and recurring goals. Choose one under":"ทุกรูปแบบใช้ยอดบริจาค ตัวกรอง เป้าหมายแบบนับจำนวน คะแนน Hype และเป้าหมายแบบวนซ้ำชุดเดียวกัน เลือกได้ที่","An old amount returns":"ยอดเก่ากลับมา","Avoid double counting:":"หลีกเลี่ยงการนับซ้ำ:","Bar style (":"รูปแบบแถบ (","Best for":"เหมาะกับ","Carry extra points":"เก็บแต้มส่วนเกิน (Carry extra points)","Changing Jar to Bar only changes the appearance.":"เปลี่ยน Jar เป็น Bar จะเปลี่ยนเฉพาะหน้าตา","Choose a style":"เลือกรูปแบบ","Choose the display style, goal, title, source/event filters, and persistence behavior.":"เลือกรูปแบบแสดงผล เป้าหมาย ชื่อ ตัวกรองแหล่งข้อมูล/อีเวนต์ และพฤติกรรมการเก็บยอด","Choose what counts, assign supporter values, add the overlay to OBS, and troubleshoot totals that look wrong.":"เลือกสิ่งที่จะนับ กำหนดค่าผู้สนับสนุน เพิ่มโอเวอร์เลย์ใน OBS และแก้ปัญหายอดที่ดูไม่ถูกต้อง","Choose whether the goal measures donation value or the number of qualifying donations.":"เลือกว่าจะวัดเป้าหมายด้วยมูลค่าการบริจาคหรือจำนวนการบริจาคที่เข้าเกณฑ์","Commands & API":"คำสั่งและ API","Compact Bar":"แถบกะทัดรัด (Compact Bar)","Copy the updated Tip Jar link and add it to OBS as a Browser Source.":"คัดลอกลิงก์ Tip Jar ที่อัปเดตแล้วและเพิ่มใน OBS เป็นแหล่งข้อมูลเบราว์เซอร์","Count YouTube Super Chats instead of money":"นับ YouTube Super Chat แทนจำนวนเงิน","Count individual gift recipients too":"นับผู้รับของขวัญแต่ละคนด้วย","Count unit label":"ป้ายหน่วยนับ (Count unit label)","Disable individual gift-recipient counting.":"ปิดการนับผู้รับของขวัญรายคน","Donation count":"จำนวนการบริจาค","Donation mode or Hype scoring?":"โหมดการบริจาคหรือคะแนน Hype?","Donation points per USD:":"แต้มบริจาคต่อ USD:","Donation type filter":"ตัวกรองประเภทการบริจาค","Donations, memberships/subscriptions, renewals, and gifted memberships/subscriptions":"การบริจาค การเป็นสมาชิก/สมัครสมาชิก การต่ออายุ และสมาชิก/การสมัครสมาชิกที่มอบเป็นของขวัญ","Download":"ดาวน์โหลด","Each qualifying paid event as one, regardless of its value":"นับอีเวนต์ชำระเงินที่เข้าเกณฑ์แต่ละครั้งเป็นหนึ่ง ไม่ว่ามูลค่าเท่าใด","Enable":"เปิดใช้","Enable Exclude YouTube gifted memberships, or exclude all gifts from Hype scoring.":"เปิด Exclude YouTube gifted memberships หรือไม่นับของขวัญทั้งหมดในคะแนน Hype","Enable Hype Cup Scoring and leave donation type on All donations.":"เปิด Hype Cup Scoring และคงประเภทการบริจาคเป็น All donations","Enable Hype Cup Scoring when memberships or subscriptions should move the goal.":"เปิด Hype Cup Scoring เมื่อต้องการให้การเป็นสมาชิกหรือสมัครสมาชิกเพิ่มความคืบหน้าเป้าหมาย","Event Reference":"เอกสารอ้างอิงอีเวนต์","Existing styles keep their original appearance by default. Enable":"รูปแบบเดิมคงหน้าตาเดิมไว้โดยค่าเริ่มต้น เปิด","Features":"ฟีเจอร์","Fluid Goal Bar":"แถบเป้าหมายแบบลื่นไหล (Fluid Goal Bar)","For the four new panels, optional controls include":"แผงใหม่ทั้งสี่มีตัวเลือกเสริม ได้แก่","Gift memberships appear twice":"สมาชิกของขวัญปรากฏสองครั้ง","Gift recipient":"ผู้รับของขวัญ","Gifted memberships":"สมาชิกที่มอบเป็นของขวัญ","Gifted memberships add less than expected":"สมาชิกของขวัญเพิ่มยอดน้อยกว่าที่คาด","Gifted memberships move a Hype goal":"สมาชิกของขวัญทำให้เป้าหมาย Hype เพิ่ม","Gifted sub/member points:":"แต้มสมาชิก/การสมัครสมาชิกที่เป็นของขวัญ:","Gifted-membership events provide the number of memberships and membership level, but not the purchase price or creator's net revenue. Their exact cash value cannot be calculated from the event.":"อีเวนต์สมาชิกของขวัญให้จำนวนสมาชิกและระดับสมาชิก แต่ไม่ให้ราคาซื้อหรือรายได้สุทธิของครีเอเตอร์ จึงคำนวณมูลค่าเงินจริงที่แน่นอนจากอีเวนต์ไม่ได้","Goal Card":"การ์ดเป้าหมาย (Goal Card)","Goal Meter":"มาตรวัดเป้าหมาย","Goal completion and saved totals":"การบรรลุเป้าหมายและยอดที่บันทึกไว้","Goal measures":"วิธีวัดเป้าหมาย","Goal meter bar overlay showing $63.50 of a $100 goal with recent supporters listed below":"โอเวอร์เลย์แถบมาตรวัดเป้าหมายแสดง $63.50 จากเป้าหมาย $100 พร้อมรายชื่อผู้สนับสนุนล่าสุดด้านล่าง","Goals such as 7 / 20 Super Chats":"เป้าหมาย เช่น Super Chat 7 / 20 ครั้ง","Guides":"คู่มือ","Hide dollar signs":"ซ่อนเครื่องหมายดอลลาร์ (Hide dollar signs)","Hire":"จ้างงาน","Home":"หน้าแรก","How Hype values work":"ค่า Hype ทำงานอย่างไร","How it counts":"วิธีนับ","Hype Cup Scoring":"คะแนน Hype Cup (Hype Cup Scoring)","Hype goals reset after completion by default; the completion delay controls how long the completed value stays visible.":"เป้าหมาย Hype รีเซ็ตเมื่อสำเร็จโดยค่าเริ่มต้น ระยะหน่วงเมื่อสำเร็จกำหนดว่าจะคงยอดที่สำเร็จไว้ให้เห็นนานเท่าใด","Hype mode uses gift count × configured gift points":"โหมด Hype ใช้จำนวนของขวัญ × แต้มของขวัญที่กำหนด","Hype resets by default; use a rolling goal for a cumulative total.":"Hype รีเซ็ตโดยค่าเริ่มต้น ใช้เป้าหมายแบบต่อเนื่องหากต้องการยอดสะสม","Ignored for points by default to prevent double counting":"ไม่นับแต้มโดยค่าเริ่มต้นเพื่อป้องกันการนับซ้ำ","Inspiration":"ไอเดียสร้างสรรค์","Jar":"โหล (Jar)","Jar style: each qualifying donation fires a celebration and updates the goal total.":"รูปแบบ Jar: การบริจาคที่เข้าเกณฑ์แต่ละครั้งเรียกการฉลองและอัปเดตยอดเป้าหมาย","Jewels / virtual gifts":"Jewels / ของขวัญเสมือน","Keep amount between sessions":"เก็บยอดระหว่างเซสชัน (Keep amount between sessions)","Keep total and advance target":"คงยอดรวมและเลื่อนเป้าหมาย (Keep total and advance target)","Leave":"คงค่า","Leave Hype Cup Scoring off for a donation-only goal. Enable it for a mixed supporter goal.":"ปิด Hype Cup Scoring ไว้สำหรับเป้าหมายที่นับเฉพาะการบริจาค เปิดเมื่อต้องการเป้าหมายผู้สนับสนุนแบบรวม","Lower Third":"แถบล่าง (Lower Third)","Main navigation":"เมนูหลัก","Meaning":"ความหมาย","Minimal":"น้อยมาก","Mixed-goal filter:":"ตัวกรองเป้าหมายแบบรวม:","Mode":"โหมด","Money or native-unit goals":"เป้าหมายจำนวนเงินหรือหน่วยดั้งเดิม","Normal Tip Jar":"Tip Jar ปกติ","Normal donation goals retain their total unless a reset is requested.":"เป้าหมายการบริจาคปกติเก็บยอดรวมไว้จนกว่าจะสั่งรีเซ็ต","Normal or Hype mode":"โหมดปกติหรือ Hype","Nothing updates":"ไม่มีอะไรอัปเดต","Number of qualifying donations":"จำนวนการบริจาคที่เข้าเกณฑ์","One combined supporter-points goal":"เป้าหมายแต้มผู้สนับสนุนรวมหนึ่งเดียว","One viewer received a membership from the bundle":"ผู้ชมหนึ่งคนได้รับสมาชิกจากชุดของขวัญ","Open":"เปิด","Open navigation menu":"เปิดเมนูนำทาง","Open the safe style preview gallery":"เปิดแกลเลอรีตัวอย่างรูปแบบที่ปลอดภัย","Other count goals:":"เป้าหมายแบบนับอื่น ๆ:","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Paid event filter":"ตัวกรองอีเวนต์ชำระเงิน (Paid event filter)","Persistence is enabled in the same browser or OBS profile.":"เปิดการเก็บยอดถาวรในเบราว์เซอร์หรือโปรไฟล์ OBS เดิมอยู่","Persistent totals are separated by normal/Hype mode and active source/unit filters, but not by Social Stream session ID. Reset the saved amount before reusing the same browser profile for a different goal.":"ยอดถาวรแยกตามโหมดปกติ/Hype และตัวกรองแหล่งข้อมูล/หน่วยที่ใช้อยู่ แต่ไม่ได้แยกตามรหัสเซสชัน Social Stream รีเซ็ตยอดที่บันทึกก่อนใช้โปรไฟล์เบราว์เซอร์เดิมกับเป้าหมายอื่น","Point unit label:":"ป้ายหน่วยแต้ม:","Progress Ring":"วงแหวนความคืบหน้า (Progress Ring)","Recurring goal increment":"จำนวนที่เพิ่มในเป้าหมายวนซ้ำ (Recurring goal increment)","Refreshed appearance":"หน้าตาใหม่ (Refreshed appearance)","Resources":"แหล่งข้อมูลอ้างอิง","Segmented Bar":"แถบแบ่งส่วน (Segmented Bar)","Session check:":"ตรวจสอบเซสชัน:","Set":"ตั้งค่า","Set Paid event filter to Super Chats only.":"ตั้ง Paid event filter เป็น Super Chats only","Set it up":"ตั้งค่า","Set the goal target, such as":"ตั้งยอดเป้าหมาย เช่น","Set up the Social Stream Ninja Tip Jar and Goal Meter and troubleshoot missing donations, memberships, and gifted memberships.":"ตั้งค่า Tip Jar และ Goal Meter ของ Social Stream Ninja และแก้ปัญหาการบริจาค สมาชิก และสมาชิกของขวัญที่ขาดหาย","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Someone bought memberships for other viewers":"มีคนซื้อสมาชิกให้ผู้ชมคนอื่น","Source filter":"ตัวกรองแหล่งข้อมูล","Source is active, overlay is open, session IDs match, and filters match the event.":"แหล่งข้อมูลทำงานอยู่ โอเวอร์เลย์เปิดอยู่ รหัสเซสชันตรงกัน และตัวกรองตรงกับอีเวนต์","Style, Goal, and Filters → Display Style":"Style, Goal, and Filters → Display Style","Sub/member points:":"แต้มสมาชิก/การสมัครสมาชิก:","Super Chat / Super Sticker":"Super Chat / Super Sticker","Super Chat count includes Super Stickers":"ยอดนับ Super Chat รวม Super Sticker ด้วย","Super Chat value does not affect a count goal: a $1 Super Chat and a $100 Super Chat each add one. Memberships, gifted memberships, Super Stickers, and YouTube Gifts do not move a Super Chat-only goal.":"มูลค่า Super Chat ไม่มีผลต่อเป้าหมายแบบนับ: Super Chat ราคา $1 และ $100 เพิ่มอย่างละหนึ่ง การเป็นสมาชิก สมาชิกของขวัญ Super Sticker และ YouTube Gifts ไม่เพิ่มเป้าหมายแบบ Super Chat เท่านั้น","Super Chats count but memberships do not":"Super Chat ถูกนับแต่สมาชิกไม่ถูกนับ","Super Chats only":"เฉพาะ Super Chat (Super Chats only)","Super Chats, Cheers/Bits, tips, and other payloads with a donation amount":"Super Chat, Cheers/Bits, ทิป และข้อมูลอื่นที่มีจำนวนการบริจาค","Support":"การสนับสนุน","Supported Sites":"เว็บไซต์ที่รองรับ","Switch theme":"เปลี่ยนธีม","Symptom":"อาการ","Text Only":"ข้อความเท่านั้น (Text Only)","The new panels support Default, Neon, and Gold themes. Existing fill-color settings also work on them; the ring uses a solid stroke that changes with progress. Backgrounds outside the overlay remain transparent for OBS.":"แผงใหม่รองรับธีม Default, Neon และ Gold การตั้งค่าสีเติมเดิมใช้ได้ด้วย วงแหวนใช้เส้นสีทึบที่เปลี่ยนตามความคืบหน้า พื้นหลังนอกโอเวอร์เลย์ยังโปร่งใสสำหรับ OBS","The paid event filter can count only Super Stickers or combine Super Chats and Super Stickers. Use":"ตัวกรองอีเวนต์ชำระเงินนับเฉพาะ Super Sticker หรือรวม Super Chat กับ Super Sticker ได้ ใช้","The popup's test buttons currently test donation rows. For membership or gift issues, use the Dock or Events Dashboard with the same session to confirm the event arrives before troubleshooting the goal.":"ปัจจุบันปุ่มทดสอบในป๊อปอัปทดสอบแถวการบริจาค สำหรับปัญหาสมาชิกหรือของขวัญ ให้ใช้แผงด็อกหรือ Events Dashboard ในเซสชันเดียวกันเพื่อยืนยันว่าอีเวนต์มาถึงก่อนแก้ปัญหาเป้าหมาย","The source and copied overlay URL must use the same session ID. Keep session and password values private.":"แหล่งข้อมูลและ URL โอเวอร์เลย์ที่คัดลอกต้องใช้รหัสเซสชันเดียวกัน เก็บค่าเซสชันและรหัสผ่านเป็นส่วนตัว","They use fixed gift points, not an unavailable purchase price.":"ใช้แต้มของขวัญที่กำหนดไว้ ไม่ใช่ราคาซื้อที่ไม่มีข้อมูล","Tip Jar and Goal Meter":"โหลทิปและมาตรวัดเป้าหมาย","Tip Jar and Goal Meter Guide":"คู่มือ Tip Jar และ Goal Meter","Tip Jar and Goal Meter Guide - Social Stream Ninja":"คู่มือ Tip Jar และ Goal Meter - Social Stream Ninja","Tip jar overlay celebrating a $20 tip with confetti and a toast showing Ryu tipped $20.00":"โอเวอร์เลย์โหลทิปฉลองทิป $20 ด้วยกระดาษโปรยและข้อความแจ้งว่า Ryu ให้ทิป $20.00","Total drops after reaching the goal":"ยอดลดหลังถึงเป้าหมาย","Troubleshooting":"การแก้ปัญหา","Use the matching native-unit filter":"ใช้ตัวกรองหน่วยดั้งเดิมที่ตรงกัน","Vertical Bar":"แถบแนวตั้ง (Vertical Bar)","What it counts":"สิ่งที่นับ","What to check":"สิ่งที่ต้องตรวจ","YouTube":"YouTube","YouTube event":"อีเวนต์ YouTube","YouTube gifts are not all the same":"ของขวัญ YouTube ไม่ได้เหมือนกันทั้งหมด","changes the displayed label. Using":"เปลี่ยนป้ายที่แสดง การใช้","creates a cumulative rolling goal.":"สร้างเป้าหมายสะสมแบบต่อเนื่อง","creates repeating levels.":"สร้างระดับที่วนซ้ำ","does not make membership points an exact cash value.":"ไม่ได้ทำให้แต้มสมาชิกเป็นมูลค่าเงินที่แน่นอน","fixed points for each gift. A bundle of 5 contributes":"แต้มคงที่ต่อของขวัญหนึ่งรายการ ชุดของขวัญ 5 รายการเพิ่ม","fixed points for each new membership/subscription or renewal.":"แต้มคงที่ต่อสมาชิก/การสมัครสมาชิกใหม่หรือการต่ออายุแต่ละครั้ง","in the same section (or add":"ในส่วนเดียวกัน (หรือเพิ่ม","instead of":"แทน","multiplier applied after supported cash donations are converted to USD.":"เป็นตัวคูณที่ใช้หลังแปลงการบริจาคเงินจริงที่รองรับเป็น USD แล้ว","off.":"ปิดไว้","on":"บน","only when recipient points should be added on top of the original gift bundle.":"เฉพาะเมื่อต้องการเพิ่มแต้มผู้รับนอกเหนือจากชุดของขวัญต้นทาง","preserves points beyond the completed goal.":"เก็บแต้มที่เกินจากเป้าหมายที่สำเร็จไว้","stores the amount and history in that browser or OBS profile.":"เก็บยอดและประวัติในเบราว์เซอร์หรือโปรไฟล์ OBS นั้น","to":"เป็น","to compare sample layouts on light or dark backgrounds. Previews do not connect to live overlays or read or save donation totals. Paste your existing tip jar link in the gallery to copy a styled link while keeping its session, goal, and filter settings.":"เพื่อเปรียบเทียบรูปแบบตัวอย่างบนพื้นหลังสว่างหรือมืด ตัวอย่างไม่เชื่อมโอเวอร์เลย์สดและไม่อ่านหรือบันทึกยอดบริจาค วางลิงก์โหลทิปเดิมในแกลเลอรีเพื่อคัดลอกลิงก์ที่จัดรูปแบบแล้ว โดยคงการตั้งค่าเซสชัน เป้าหมาย และตัวกรองไว้","to override the automatic label.":"เพื่อแทนป้ายที่กำหนดอัตโนมัติ","to the overlay URL) to display":"ใน URL โอเวอร์เลย์) เพื่อแสดง","when memberships and gifts should also count. A specific donation-unit filter currently limits Hype scoring to matching donation rows.":"เมื่อต้องการนับสมาชิกและของขวัญด้วย ปัจจุบันตัวกรองหน่วยบริจาคที่เจาะจงจำกัดคะแนน Hype ไว้เฉพาะแถวบริจาคที่ตรงกัน","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja สงวนลิขสิทธิ์"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/tip-jar-goal-meter.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก"><a href="../index.html">หน้าแรก</a><a href="features.html">ฟีเจอร์</a><a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a><a href="download.html">ดาวน์โหลด</a><a href="guides.html">คู่มือ</a><a href="commands.html">คำสั่งและ API</a><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a><a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a><a href="services.html" class="site-priority-hire">จ้างงาน</a><a href="support.html">การสนับสนุน</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tip-jar-goal-meter.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tip-jar-goal-meter.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tip-jar-goal-meter.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tip-jar-goal-meter.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tip-jar-goal-meter.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tip-jar-goal-meter.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tip-jar-goal-meter.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tip-jar-goal-meter.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tip-jar-goal-meter.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tip-jar-goal-meter.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tip-jar-goal-meter.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tip-jar-goal-meter.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tip-jar-goal-meter.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tip-jar-goal-meter.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tip-jar-goal-meter.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tip-jar-goal-meter.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="tip-jar-goal-meter.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="เปลี่ยนธีม"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>คู่มือ Tip Jar และ Goal Meter</h1>
+            <p>เลือกสิ่งที่จะนับ กำหนดค่าผู้สนับสนุน เพิ่มโอเวอร์เลย์ใน OBS และแก้ปัญหายอดที่ดูไม่ถูกต้อง</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <h3>โหมดการบริจาคหรือคะแนน Hype?</h3>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>โหมด</th><th>สิ่งที่นับ</th><th>เหมาะกับ</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Mode">Tip Jar ปกติ</td><td data-label="What it counts">Super Chat, Cheers/Bits, ทิป และข้อมูลอื่นที่มีจำนวนการบริจาค</td><td data-label="Best for">เป้าหมายจำนวนเงินหรือหน่วยดั้งเดิม</td></tr>
+                            <tr><td data-label="Mode">จำนวนการบริจาค</td><td data-label="What it counts">นับอีเวนต์ชำระเงินที่เข้าเกณฑ์แต่ละครั้งเป็นหนึ่ง ไม่ว่ามูลค่าเท่าใด</td><td data-label="Best for">เป้าหมาย เช่น Super Chat 7 / 20 ครั้ง</td></tr>
+                            <tr><td data-label="Mode">คะแนน Hype Cup (Hype Cup Scoring)</td><td data-label="What it counts">การบริจาค การเป็นสมาชิก/สมัครสมาชิก การต่ออายุ และสมาชิก/การสมัครสมาชิกที่มอบเป็นของขวัญ</td><td data-label="Best for">เป้าหมายแต้มผู้สนับสนุนรวมหนึ่งเดียว</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="quick-note"><strong>เปลี่ยน Jar เป็น Bar จะเปลี่ยนเฉพาะหน้าตา</strong> เปิด Hype Cup Scoring เมื่อต้องการให้การเป็นสมาชิกหรือสมัครสมาชิกเพิ่มความคืบหน้าเป้าหมาย</div>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/tip-jar-donation-celebration.png" alt="โอเวอร์เลย์โหลทิปฉลองทิป $20 ด้วยกระดาษโปรยและข้อความแจ้งว่า Ryu ให้ทิป $20.00" class="guide-image guide-image-medium">
+                        <figcaption>รูปแบบ Jar: การบริจาคที่เข้าเกณฑ์แต่ละครั้งเรียกการฉลองและอัปเดตยอดเป้าหมาย</figcaption>
+                    </figure>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/goal-meter-bar-demo.png" alt="โอเวอร์เลย์แถบมาตรวัดเป้าหมายแสดง $63.50 จากเป้าหมาย $100 พร้อมรายชื่อผู้สนับสนุนล่าสุดด้านล่าง" class="guide-image guide-image-medium">
+                        <figcaption>รูปแบบแถบ (<code>style=meter</code>): เป้าหมายเดียวกันในรูปแถบความคืบหน้าพร้อมผู้สนับสนุนล่าสุด</figcaption>
+                    </figure>
+                </div>
+
+                <div class="guide-card">
+                    <h3>เลือกรูปแบบ</h3>
+                    <p><a href="../../tipjar-preview.html">เปิดแกลเลอรีตัวอย่างรูปแบบที่ปลอดภัย</a> เพื่อเปรียบเทียบรูปแบบตัวอย่างบนพื้นหลังสว่างหรือมืด ตัวอย่างไม่เชื่อมโอเวอร์เลย์สดและไม่อ่านหรือบันทึกยอดบริจาค วางลิงก์โหลทิปเดิมในแกลเลอรีเพื่อคัดลอกลิงก์ที่จัดรูปแบบแล้ว โดยคงการตั้งค่าเซสชัน เป้าหมาย และตัวกรองไว้</p>
+                    <p>รูปแบบเดิมคงหน้าตาเดิมไว้โดยค่าเริ่มต้น เปิด <strong>หน้าตาใหม่ (Refreshed appearance)</strong> (<code>&amp;refresh</code>) เฉพาะเมื่อต้องการระยะห่าง สี และตัวอักษรรูปแบบใหม่ ส่วนรูปแบบใหม่ด้านล่างเลือกแยกได้</p>
+                    <p>ทุกรูปแบบใช้ยอดบริจาค ตัวกรอง เป้าหมายแบบนับจำนวน คะแนน Hype และเป้าหมายแบบวนซ้ำชุดเดียวกัน เลือกได้ที่ <strong>Style, Goal, and Filters &rarr; Display Style</strong>.</p>
+                    <p>เปิดใช้ <strong>ซ่อนเครื่องหมายดอลลาร์ (Hide dollar signs)</strong> ในส่วนเดียวกัน (หรือเพิ่ม <code>&amp;hidecurrency</code> ใน URL โอเวอร์เลย์) เพื่อแสดง <code>0.00 / 500</code> แทน <code>$0.00 / $500</code> ตัวเลือกนี้ปิดโดยค่าเริ่มต้นและเปลี่ยนเฉพาะการแสดงเป้าหมาย มูลค่าการบริจาค การแปลงค่า และป้าย Bits หรือหน่วยอื่นยังเหมือนเดิม</p>
+                    <ul>
+                        <li><strong>โหล (Jar)</strong>: ถ้วยแบบดั้งเดิมที่มีวัตถุตกลงมา</li>
+                        <li><strong>มาตรวัดเป้าหมาย</strong>: แถบความคืบหน้าพร้อมผู้สนับสนุนล่าสุดในแผงสีเข้ม</li>
+                        <li><strong>แถบเป้าหมายแบบลื่นไหล (Fluid Goal Bar)</strong>: แถบกว้างเคลื่อนไหวได้สำหรับเป้าหมายที่ต้องการเน้น</li>
+                        <li><strong>แถบกะทัดรัด (Compact Bar)</strong>: แถบเล็กเหมาะกับมุมจอ ส่วน <strong>แถบแนวตั้ง (Vertical Bar)</strong>: รูปเทอร์โมมิเตอร์สำหรับคอลัมน์ด้านข้าง</li>
+                        <li><strong>น้อยมาก</strong>: ยอดรวมและเปอร์เซ็นต์ขนาดใหญ่ ส่วน <strong>ข้อความเท่านั้น (Text Only)</strong>: แสดงค่าเป็นข้อความง่าย ๆ</li>
+                        <li><strong>การ์ดเป้าหมาย (Goal Card)</strong> (<code>style=card</code>): แผงกะทัดรัดพร้อมยอดตัวใหญ่และแถบความคืบหน้าบาง</li>
+                        <li><strong>วงแหวนความคืบหน้า (Progress Ring)</strong> (<code>style=ring</code>): แสดงเปอร์เซ็นต์เป็นวงกลมเหนือยอดเป้าหมาย</li>
+                        <li><strong>แถบล่าง (Lower Third)</strong> (<code>style=lowerthird</code>): แผงกว้างและเตี้ย พร้อมชื่อข้างยอดรวม</li>
+                        <li><strong>แถบแบ่งส่วน (Segmented Bar)</strong> (<code>style=segmented</code>): แผงเป้าหมายพร้อมแถบความคืบหน้ายี่สิบส่วน</li>
+                    </ul>
+                    <p>แผงใหม่รองรับธีม Default, Neon และ Gold การตั้งค่าสีเติมเดิมใช้ได้ด้วย วงแหวนใช้เส้นสีทึบที่เปลี่ยนตามความคืบหน้า พื้นหลังนอกโอเวอร์เลย์ยังโปร่งใสสำหรับ OBS</p>
+                    <p>แผงใหม่ทั้งสี่มีตัวเลือกเสริม ได้แก่ <code>panelopacity=0.5</code> (0–1), <code>accent=%2366d9b2</code>  (สีฐานสิบหกหกหลัก) <code>amountsize=32</code>  (12–96 พิกเซล) และ <code>hidepercent</code> สีเริ่มต้น/สิ้นสุดที่กำหนดโดยตรงมีลำดับความสำคัญเหนือสีเน้นสำหรับส่วนเติมความคืบหน้า ปล่อยค่าว่างเพื่อใช้ค่าเริ่มต้นของแต่ละรูปแบบ ขนาดข้อความบนแถบและ “bar only” ใช้กับ Fluid Goal Bar ส่วนภาพโหลกำหนดเองใช้เฉพาะ Jar</p>
+                </div>
+
+                <div class="guide-card">
+                    <h3>ตั้งค่า</h3>
+                    <ol class="guide-steps">
+                        <li>เปิดใช้งานแหล่งข้อมูล YouTube, Twitch หรืออื่น ๆ ใน Social Stream Ninja</li>
+                        <li>เปิด <strong>โหลทิปและมาตรวัดเป้าหมาย</strong> แล้วเปิดตัวเลือก</li>
+                        <li>ปิด Hype Cup Scoring ไว้สำหรับเป้าหมายที่นับเฉพาะการบริจาค เปิดเมื่อต้องการเป้าหมายผู้สนับสนุนแบบรวม</li>
+                        <li>เลือกว่าจะวัดเป้าหมายด้วยมูลค่าการบริจาคหรือจำนวนการบริจาคที่เข้าเกณฑ์</li>
+                        <li>เลือกรูปแบบแสดงผล เป้าหมาย ชื่อ ตัวกรองแหล่งข้อมูล/อีเวนต์ และพฤติกรรมการเก็บยอด</li>
+                        <li>คัดลอกลิงก์ Tip Jar ที่อัปเดตแล้วและเพิ่มใน OBS เป็นแหล่งข้อมูลเบราว์เซอร์</li>
+                    </ol>
+                    <div class="quick-note warning-note"><strong>ตรวจสอบเซสชัน:</strong> แหล่งข้อมูลและ URL โอเวอร์เลย์ที่คัดลอกต้องใช้รหัสเซสชันเดียวกัน เก็บค่าเซสชันและรหัสผ่านเป็นส่วนตัว</div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>นับ YouTube Super Chat แทนจำนวนเงิน</h3>
+                    <ol class="guide-steps">
+                        <li>คงค่า <strong>คะแนน Hype Cup (Hype Cup Scoring)</strong> ปิดไว้</li>
+                        <li>ตั้งค่า <strong>วิธีวัดเป้าหมาย</strong> เป็น <strong>จำนวนการบริจาคที่เข้าเกณฑ์</strong>.</li>
+                        <li>ตั้งค่า <strong>ตัวกรองแหล่งข้อมูล</strong> เป็น <strong>YouTube</strong>.</li>
+                        <li>ตั้งค่า <strong>ตัวกรองอีเวนต์ชำระเงิน (Paid event filter)</strong> เป็น <strong>เฉพาะ Super Chat (Super Chats only)</strong>.</li>
+                        <li>ตั้งยอดเป้าหมาย เช่น <code>20</code> โอเวอร์เลย์แสดงความคืบหน้า เช่น <code>7 / 20 Super Chats</code>.</li>
+                    </ol>
+                    <p>มูลค่า Super Chat ไม่มีผลต่อเป้าหมายแบบนับ: Super Chat ราคา $1 และ $100 เพิ่มอย่างละหนึ่ง การเป็นสมาชิก สมาชิกของขวัญ Super Sticker และ YouTube Gifts ไม่เพิ่มเป้าหมายแบบ Super Chat เท่านั้น</p>
+                    <div class="quick-note"><strong>เป้าหมายแบบนับอื่น ๆ:</strong> ตัวกรองอีเวนต์ชำระเงินนับเฉพาะ Super Sticker หรือรวม Super Chat กับ Super Sticker ได้ ใช้ <strong>ป้ายหน่วยนับ (Count unit label)</strong> เพื่อแทนป้ายที่กำหนดอัตโนมัติ</div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>ค่า Hype ทำงานอย่างไร</h3>
+                    <ul class="guide-list">
+                        <li><strong>แต้มสมาชิก/การสมัครสมาชิก:</strong> แต้มคงที่ต่อสมาชิก/การสมัครสมาชิกใหม่หรือการต่ออายุแต่ละครั้ง</li>
+                        <li><strong>แต้มสมาชิก/การสมัครสมาชิกที่เป็นของขวัญ:</strong> แต้มคงที่ต่อของขวัญหนึ่งรายการ ชุดของขวัญ 5 รายการเพิ่ม <code>5 × giftpoints</code>.</li>
+                        <li><strong>แต้มบริจาคต่อ USD:</strong> เป็นตัวคูณที่ใช้หลังแปลงการบริจาคเงินจริงที่รองรับเป็น USD แล้ว</li>
+                        <li><strong>ป้ายหน่วยแต้ม:</strong> เปลี่ยนป้ายที่แสดง การใช้ <code>$</code> ไม่ได้ทำให้แต้มสมาชิกเป็นมูลค่าเงินที่แน่นอน</li>
+                    </ul>
+                    <div class="quick-note warning-note"><strong>ตัวกรองเป้าหมายแบบรวม:</strong> คงค่า <strong>ตัวกรองประเภทการบริจาค</strong> บน <strong>การบริจาคทั้งหมด (All donations)</strong> เมื่อต้องการนับสมาชิกและของขวัญด้วย ปัจจุบันตัวกรองหน่วยบริจาคที่เจาะจงจำกัดคะแนน Hype ไว้เฉพาะแถวบริจาคที่ตรงกัน</div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>ของขวัญ YouTube ไม่ได้เหมือนกันทั้งหมด</h3>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>อีเวนต์ YouTube</th><th>ความหมาย</th><th>วิธีนับ</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="YouTube event">Super Chat / Super Sticker</td><td data-label="Meaning">ข้อความแบบชำระเงินที่มีจำนวนเงิน</td><td data-label="How it counts">โหมดปกติหรือ Hype</td></tr>
+                            <tr><td data-label="YouTube event">สมาชิกที่มอบเป็นของขวัญ</td><td data-label="Meaning">มีคนซื้อสมาชิกให้ผู้ชมคนอื่น</td><td data-label="How it counts">โหมด Hype ใช้จำนวนของขวัญ × แต้มของขวัญที่กำหนด</td></tr>
+                            <tr><td data-label="YouTube event">ผู้รับของขวัญ</td><td data-label="Meaning">ผู้ชมหนึ่งคนได้รับสมาชิกจากชุดของขวัญ</td><td data-label="How it counts">ไม่นับแต้มโดยค่าเริ่มต้นเพื่อป้องกันการนับซ้ำ</td></tr>
+                            <tr><td data-label="YouTube event">Jewels / ของขวัญเสมือน</td><td data-label="Meaning">อีเวนต์ของขวัญเสมือนแยกต่างหากที่มีจำนวนหน่วยดั้งเดิม</td><td data-label="How it counts">ใช้ตัวกรองหน่วยดั้งเดิมที่ตรงกัน</td></tr>
+                        </tbody>
+                    </table>
+                    <p>อีเวนต์สมาชิกของขวัญให้จำนวนสมาชิกและระดับสมาชิก แต่ไม่ให้ราคาซื้อหรือรายได้สุทธิของครีเอเตอร์ จึงคำนวณมูลค่าเงินจริงที่แน่นอนจากอีเวนต์ไม่ได้</p>
+                    <div class="quick-note warning-note"><strong>หลีกเลี่ยงการนับซ้ำ:</strong> เปิดใช้ <strong>นับผู้รับของขวัญแต่ละคนด้วย</strong> เฉพาะเมื่อต้องการเพิ่มแต้มผู้รับนอกเหนือจากชุดของขวัญต้นทาง</div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>การบรรลุเป้าหมายและยอดที่บันทึกไว้</h3>
+                    <ul class="guide-list">
+                        <li>เป้าหมายการบริจาคปกติเก็บยอดรวมไว้จนกว่าจะสั่งรีเซ็ต</li>
+                        <li>เป้าหมาย Hype รีเซ็ตเมื่อสำเร็จโดยค่าเริ่มต้น ระยะหน่วงเมื่อสำเร็จกำหนดว่าจะคงยอดที่สำเร็จไว้ให้เห็นนานเท่าใด</li>
+                        <li><strong>เก็บแต้มส่วนเกิน (Carry extra points)</strong> เก็บแต้มที่เกินจากเป้าหมายที่สำเร็จไว้</li>
+                        <li><strong>คงยอดรวมและเลื่อนเป้าหมาย (Keep total and advance target)</strong> สร้างเป้าหมายสะสมแบบต่อเนื่อง</li>
+                        <li><strong>จำนวนที่เพิ่มในเป้าหมายวนซ้ำ (Recurring goal increment)</strong> สร้างระดับที่วนซ้ำ</li>
+                        <li><strong>เก็บยอดระหว่างเซสชัน (Keep amount between sessions)</strong> เก็บยอดและประวัติในเบราว์เซอร์หรือโปรไฟล์ OBS นั้น</li>
+                    </ul>
+                    <div class="quick-note">ยอดถาวรแยกตามโหมดปกติ/Hype และตัวกรองแหล่งข้อมูล/หน่วยที่ใช้อยู่ แต่ไม่ได้แยกตามรหัสเซสชัน Social Stream รีเซ็ตยอดที่บันทึกก่อนใช้โปรไฟล์เบราว์เซอร์เดิมกับเป้าหมายอื่น</div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>การแก้ปัญหา</h3>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>อาการ</th><th>สิ่งที่ต้องตรวจ</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Symptom">ไม่มีอะไรอัปเดต</td><td data-label="What to check">แหล่งข้อมูลทำงานอยู่ โอเวอร์เลย์เปิดอยู่ รหัสเซสชันตรงกัน และตัวกรองตรงกับอีเวนต์</td></tr>
+                            <tr><td data-label="Symptom">Super Chat ถูกนับแต่สมาชิกไม่ถูกนับ</td><td data-label="What to check">เปิด Hype Cup Scoring และคงประเภทการบริจาคเป็น All donations</td></tr>
+                            <tr><td data-label="Symptom">สมาชิกของขวัญเพิ่มยอดน้อยกว่าที่คาด</td><td data-label="What to check">ใช้แต้มของขวัญที่กำหนดไว้ ไม่ใช่ราคาซื้อที่ไม่มีข้อมูล</td></tr>
+                            <tr><td data-label="Symptom">ยอดลดหลังถึงเป้าหมาย</td><td data-label="What to check">Hype รีเซ็ตโดยค่าเริ่มต้น ใช้เป้าหมายแบบต่อเนื่องหากต้องการยอดสะสม</td></tr>
+                            <tr><td data-label="Symptom">ยอดเก่ากลับมา</td><td data-label="What to check">เปิดการเก็บยอดถาวรในเบราว์เซอร์หรือโปรไฟล์ OBS เดิมอยู่</td></tr>
+                            <tr><td data-label="Symptom">สมาชิกของขวัญปรากฏสองครั้ง</td><td data-label="What to check">ปิดการนับผู้รับของขวัญรายคน</td></tr>
+                            <tr><td data-label="Symptom">ยอดนับ Super Chat รวม Super Sticker ด้วย</td><td data-label="What to check">ตั้ง Paid event filter เป็น Super Chats only</td></tr>
+                            <tr><td data-label="Symptom">สมาชิกของขวัญทำให้เป้าหมาย Hype เพิ่ม</td><td data-label="What to check">เปิด Exclude YouTube gifted memberships หรือไม่นับของขวัญทั้งหมดในคะแนน Hype</td></tr>
+                        </tbody>
+                    </table>
+                    <p>ปัจจุบันปุ่มทดสอบในป๊อปอัปทดสอบแถวการบริจาค สำหรับปัญหาสมาชิกหรือของขวัญ ให้ใช้แผงด็อกหรือ Events Dashboard ในเซสชันเดียวกันเพื่อยืนยันว่าอีเวนต์มาถึงก่อนแก้ปัญหาเป้าหมาย</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo"><img src="../../media/logo.png" alt="โลโก้ Social Stream Ninja"><span>Social Stream Ninja</span></div>
+                <div class="footer-links"><div class="footer-section"><h4>แหล่งข้อมูลอ้างอิง</h4><ul><li><a href="guides.html">คู่มือ</a></li><li><a href="event-reference.html">เอกสารอ้างอิงอีเวนต์</a></li><li><a href="support.html">การสนับสนุน</a></li></ul></div></div>
+            </div>
+            <div class="footer-bottom"><p>© 2026 Social Stream Ninja สงวนลิขสิทธิ์</p></div>
+        </div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

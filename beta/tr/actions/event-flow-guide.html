@@ -1,0 +1,1000 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Etkinlik Akışı tetikleyicileri, koşulları ve eylemleriyle Social Stream Ninja otomasyonları oluşturun. Canlı sohbet etkinliklerini ses, medya, ödül ve OBS kontrollerine bağlayın.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/tr/actions/event-flow-guide.html">
+    <meta property="og:title" content="Etkinlik Akışı Rehberi - Social Stream Ninja">
+    <meta property="og:description" content="Etkinlik Akışı tetikleyicileri, koşulları ve eylemleriyle Social Stream Ninja otomasyonları oluşturun. Canlı sohbet etkinliklerini ses, medya, ödül ve OBS kontrollerine bağlayın.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/tr/actions/event-flow-guide.html">
+    <meta name="twitter:title" content="Etkinlik Akışı Rehberi - Social Stream Ninja">
+    <meta name="twitter:description" content="Etkinlik Akışı tetikleyicileri, koşulları ve eylemleriyle Social Stream Ninja otomasyonları oluşturun. Canlı sohbet etkinliklerini ses, medya, ödül ve OBS kontrollerine bağlayın.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etkinlik Akışı Rehberi - Social Stream Ninja</title>
+    <link rel="canonical" href="https://socialstream.ninja/beta/tr/actions/event-flow-guide.html">
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1f2937 40%, #312e81 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .guide-shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(4, 12, 38, 0.5);
+        }
+        header {
+            background: radial-gradient(circle at top left, rgba(109,40,217,0.15), transparent),
+                        linear-gradient(135deg, #4c1d95, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+        }
+        header p {
+            font-size: 1.2rem;
+            max-width: 640px;
+            opacity: 0.92;
+        }
+        .content {
+            padding: 45px 55px 65px;
+        }
+        section {
+            margin-bottom: 60px;
+        }
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 18px;
+            color: #312e81;
+        }
+        h3 {
+            font-size: 1.4rem;
+            margin: 25px 0 10px;
+            color: #4338ca;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 25px;
+            margin: 15px 0;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .panel {
+            background: #f7f7fb;
+            border: 1px solid rgba(67,56,202,0.12);
+            border-radius: 12px;
+            padding: 22px 25px;
+            margin: 22px 0;
+        }
+        .panel strong {
+            color: #312e81;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            padding: 22px;
+            border-radius: 14px;
+            margin: 25px 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 22px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+        }
+        .card h4 {
+            margin-bottom: 12px;
+            color: #4c1d95;
+        }
+        code {
+            background: rgba(226,232,240,0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .callout {
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin: 24px 0;
+            border-left: 4px solid;
+        }
+        .callout.tip { background: #eef2ff; border-color: #4338ca; }
+        .callout.warn { background: #fef3c7; border-color: #d97706; }
+        .callout.danger { background: #fee2e2; border-color: #b91c1c; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(255,255,255,0.14);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+        .var-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            font-size: 0.95rem;
+        }
+        .var-table th, .var-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .var-table th {
+            background: #f7f7fb;
+            color: #312e81;
+            font-weight: 600;
+        }
+        .var-table tr:hover {
+            background: rgba(99,102,241,0.04);
+        }
+        .var-table code {
+            background: rgba(99,102,241,0.1);
+            color: #4338ca;
+        }
+        /* ── Custom JS section additions ── */
+        .code-js {
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 18px 22px;
+            border-radius: 10px;
+            margin: 16px 0;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.88rem;
+            line-height: 1.65;
+            overflow-x: auto;
+            white-space: pre;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .snippet-block {
+            margin: 28px 0;
+            border: 1px solid rgba(67,56,202,0.15);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .snippet-label {
+            background: rgba(67,56,202,0.07);
+            padding: 10px 18px;
+            font-weight: 600;
+            color: #312e81;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .snippet-desc {
+            padding: 10px 18px 0;
+            font-size: 0.93rem;
+            color: #475569;
+        }
+        .snippet-block .code-js {
+            border-radius: 0;
+            margin: 0;
+            border: none;
+            border-top: 1px solid rgba(0,0,0,0.15);
+        }
+        figure.screenshot {
+            margin: 24px 0;
+            text-align: center;
+        }
+        figure.screenshot img {
+            max-width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(15,23,42,0.12);
+            box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+        }
+        figure.screenshot figcaption {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #64748b;
+            font-style: italic;
+        }
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 24px 0;
+            align-items: start;
+        }
+        .desktop-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #312e81;
+            color: #e0e7ff;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            padding: 3px 10px;
+            border-radius: 999px;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        .snippet-heading {
+            margin: 28px 0 4px;
+            color: #4c1d95;
+        }
+        @media (max-width: 700px) {
+            header, .content { padding: 35px 20px; }
+            h1 { font-size: 2rem; }
+            .diagram { font-size: 0.85rem; }
+            .var-table { font-size: 0.85rem; display: block; max-width: 100%; overflow-x: auto; }
+            .var-table th, .var-table td { padding: 8px 10px; }
+            .panel code { overflow-wrap: anywhere; }
+            .two-col { grid-template-columns: 1fr; }
+            .code-js { font-size: 0.8rem; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"actions/event-flow-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{"\"Desktop only\"":"\"Yalnızca masaüstü\"","\"chat message contains !raffle\").":"\"sohbet mesajı !raffle içeriyor\").","$5.00, 500 bits":"$5.00, 500 bits","(Send Test Event) before pushing a flow live.":"(Test Etkinliği Gönder), akışı canlı kullanıma almadan önce.","(Twitch Message, Timers, Manual Trigger, etc.) ignore upstream input. They generate their own payload and always emit":"(Twitch Mesajı, Zamanlayıcılar, Elle Tetikleyici vb.) önceki girdiyi yok sayar — kendi verilerini üretir ve her zaman şu değeri çıkarır:","(action). They are the escape hatch for anything the built-in nodes cannot express.":"(eylem). Yerleşik düğümlerin ifade edemediği her şey için çıkış yoludur.","(counters, toggles, timers) to track context between events.":"(sayaçlar, anahtarlar, zamanlayıcılar), etkinlikler arasında bağlamı takip etmek için.","(current flow result state),":"(mevcut akış sonucu durumu),","(left ports) expect the message context.":"(sol bağlantı noktaları) mesaj bağlamını bekler.","(paste into the action's JavaScript Code field):":"(eylemin JavaScript Kodu alanına yapıştırın):","(paste into the trigger's JavaScript Code field):":"(tetikleyicinin JavaScript Kodu alanına yapıştırın):","(platform, type, chatname, chatmessage, etc.). Attach custom data under":"(platform, type, chatname, chatmessage vb.). Özel verileri şu alana ekleyin:","(right ports) emit the same context plus any edits.":"(sağ bağlantı noktaları) aynı bağlamı ve yapılan düzenlemeleri çıkarır.","(see":"(bkz.","(the event payload),":"(etkinlik verisi),","(top-right of the editor) to send a synthetic message through the pipeline without needing a live stream. Set the chatname to a subscriber, add a message like":"(düzenleyicinin sağ üstünde); böylece canlı yayın gerekmeden işlem hattından yapay mesaj gönderebilirsiniz. chatname'i bir aboneye ayarlayın ve şu tür mesaj ekleyin:","(trigger) and":"(tetikleyici) ve","(trigger) or a no-op (action) and logs to the DevTools console. The flow doesn't crash.":"(tetikleyici) veya işlem yapmadan döner (eylem) ve DevTools konsoluna kaydeder — akış çökmez.","). Treat imported flow files like executable code. Only import flows from sources you trust.":"). İçe aktarılan akış dosyalarını çalıştırılabilir kod gibi değerlendirin — yalnızca güvendiğiniz kaynaklardan akış içe aktarın.",", a new line, then":", yeni bir satır, ardından",", and":", ve",", and confirm the Relay Chat destination receives the reformatted string.":", ve Sohbeti Aktar hedefinin yeniden biçimlendirilmiş metni aldığını doğrulayın.",", and the OBS controls need a rendering surface. That surface is the Flow Actions overlay page served from":", ve OBS kontrolleri bir görüntüleme yüzeyi gerektirir. Bu yüzey, şu adresten sunulan Akış Eylemleri katman sayfasıdır:",", not when it happens:":", ne zaman gerçekleştiğini değil:",", or":", veya",", or leave it blank to use the Flow Actions TTS default.":", veya Akış Eylemleri TTS varsayılanını kullanmak için boş bırakın.",", plus":", ayrıca",", so the output is":", dolayısıyla çıktı",", source / filter / mute / text actions will not work until OBS / obs-websocket is upgraded.":", kaynak / filtre / sessize alma / metin eylemleri OBS / obs-websocket yükseltilene kadar çalışmaz.",", then return":", ardından şunu döndürün:",". A flow built only from actions chained together looks valid but is permanently idle, because nothing ever starts the chain. Node names describe what the node":". Yalnızca birbirine bağlı eylemlerden oluşan akış geçerli görünür ama zinciri başlatan hiçbir şey olmadığından sürekli boşta kalır. Düğüm adları düğümün ne",". Connect that wire into NOT to invert the result.":". Sonucu tersine çevirmek için bu bağlantıyı NOT'a bağlayın.",". Drag a wire from the colored output you need (green = true, gray/red = false) to the next node.":". Gereken renkli çıkıştan (yeşil = doğru, gri/kırmızı = yanlış) sonraki düğüme bağlantı sürükleyin.",". Each flow can subscribe to multiple platforms at once.":". Her akış aynı anda birden fazla platforma abone olabilir.",". If you're accepting shared flows from others, audit the JS before activating them.":". Başkalarından paylaşılan akışlar alıyorsanız etkinleştirmeden önce JS kodunu inceleyin.",". Keep it running in your broadcasting software (OBS/Streamer.bot browser docks/etc.) so Event Flow actions have somewhere to appear.":". Etkinlik Akışı eylemlerinin görünebileceği bir yer olması için yayın yazılımınızda (OBS/Streamer.bot tarayıcı panelleri vb.) çalışır tutun.",". Keep it wired to something meaningful or disable the node so it does not accidentally unblock a flow.":". Yanlışlıkla akışı açmaması için anlamlı bir yere bağlı tutun veya düğümü devre dışı bırakın.",". Open the editor through the":". Düzenleyiciyi şu yoldan açın:",". Paste it into an OBS Browser Source (1920×1080 suggested) or open it in any overlay browser.":". OBS Tarayıcı Kaynağı'na yapıştırın (1920×1080 önerilir) veya herhangi bir katman tarayıcısında açın.",". Returning the Promise lets Event Flow wait for submission and report errors.":". Promise döndürmek Etkinlik Akışı'nın gönderimi beklemesini ve hataları bildirmesini sağlar.",". SSApp queues the job silently through the native Windows printer API and uses those saved settings. A flow can override them with options such as":". SSApp işi yerel Windows yazıcı API'si üzerinden sessizce kuyruğa alır ve kayıtlı ayarları kullanır. Akış bunları şu gibi seçeneklerle geçersiz kılabilir:",". Scene switching works here, and recording / streaming / replay buffer actions can fall back to it.":". Sahne değiştirme burada çalışır; kayıt / yayın / tekrar arabelleği eylemleri de alternatif olarak bunu kullanabilir.",". See the":". Bkz.",". The fields below are always available; platform-specific events may include additional ones.":". Aşağıdaki alanlar her zaman kullanılabilir; platforma özel etkinlikler ek alanlar içerebilir.",". They can still output an updated payload if you want to keep chaining actions.":". Eylemleri zincirlemeyi sürdürmek isterseniz güncellenmiş veri de çıkarabilirler.",". This controls display on re-ingest, not sending. Follow the":". Bu, gönderimi değil yeniden alındığında gösterimi kontrol eder. Şunu izleyin:",". Use two relay actions when a message should reach both variants. See":". Mesaj iki çeşide de ulaşacaksa iki aktarma eylemi kullanın. Bkz.","0. Quick Orientation":"0. Hızlı Tanıtım","1. What Moves Through a Node?":"1. Düğümden Ne Geçer?","2. Logic Node Cheatsheet":"2. Mantık Düğümü Özeti","3. Example Micro-Flows":"3. Örnek Küçük Akışlar","4. Preventing Echoes, Loops, and Relay Feedback":"4. Yankı, Döngü ve Aktarma Geri Beslemesini Önleme","5. Inputs, Outputs, and Practical Questions":"5. Girdiler, Çıktılar ve Pratik Sorular","6. Template Variables Reference":"6. Şablon Değişkenleri Referansı","7. Best Practices Checklist":"7. İyi Uygulamalar Kontrol Listesi","8. Further Exploration":"8. Daha Fazla Keşif","9. Custom JavaScript":"9. Özel JavaScript",": add a standard Relay Chat node after the action and configure it to point at your Discord (or other) destination. No custom code is needed here. The reformatted":": eylemden sonra standart Sohbeti Aktar düğümü ekleyip Discord (veya başka) hedefinize yönlendirin. Burada özel kod gerekmez — yeniden biçimlendirilen",": named triggers, a starter template, workflow discovery, extra data, HTTP/WebSocket/P2P examples, and dial gestures.":": adlandırılmış tetikleyiciler, başlangıç şablonu, iş akışı keşfi, ek veriler, HTTP/WebSocket/P2P örnekleri ve kadran hareketleri.","; see":"— bkz.","; with no trigger on top, nothing starts the chain.":"; üstte tetikleyici yoksa zinciri hiçbir şey başlatmaz.","= continue,":"= devam et,","= stop). Use":"= dur). Şunu kullanın:","A 50/50 coin flip between two audio clips. The RANDOM gate rolls once per matching message: when it passes, sound A plays; when it fails, the NOT gate flips the result and the AND gate lets sound B play instead.":"İki ses klibi arasında yüzde 50 olasılıklı seçim. RANDOM kapısı eşleşen her mesaj için bir kez seçim yapar: geçerse A sesi çalar; geçmezse NOT kapısı sonucu tersine çevirir ve AND kapısı B sesinin çalmasını sağlar.","A Custom Code trigger (blue) and Execute Custom Code action (green) placed on the canvas. Wire the trigger's output port to the action's input port to connect them.":"Tuvale yerleştirilmiş Özel Kod tetikleyicisi (mavi) ve Özel Kod Çalıştır eylemi (yeşil). Bağlamak için tetikleyicinin çıkışını eylemin girişine bağlayın.","A bare NOT would output":"Tek başına NOT şu çıktıyı verir:","A floating NOT node will still output":"Bağlantısız NOT düğümü yine şu çıktıyı verir:","A recalculated gate bit (logic nodes) or passthrough bit (actions).":"Yeniden hesaplanan geçit biti (mantık düğümleri) veya aktarılan bit (eylemler).","A reflection is an outgoing message captured again from a destination chat. Current Relay Chat actions skip these recognized reflections; there is no separate No Reflections checkbox. To hide or limit their display in the Dock and overlays, use a":"Yansıma, giden mesajın hedef sohbetten yeniden yakalanmasıdır. Mevcut Sohbeti Aktar eylemleri tanınan yansımaları atlar; ayrı Yansıma Yok kutusu bulunmaz. Panel ve katmanlarda gösterimini gizlemek veya sınırlamak için şunu kullanın:","A runtime error in your code returns":"Kodunuzdaki çalışma zamanı hatası şu değeri döndürür:","A. Auto-reply Unless the Message Is a Command":"A. Mesaj Komut Değilse Otomatik Yanıtla","AND":"VE","Action Nodes":"Eylem Düğümleri","Action code can call":"Eylem kodu şunu çağırabilir:","Action nodes (green) never run on their own. They only fire when a trigger node (blue) above them evaluates":"Eylem düğümleri (yeşil) kendiliğinden çalışmaz — yalnızca üstlerindeki tetikleyici düğümü (mavi) şu sonucu verdiğinde çalışır:","Action panel showing Execute Custom Code under the Integrations group":"Entegrasyonlar grubunda Özel Kod Çalıştır'ı gösteren Eylemler paneli","Action properties. Return an object to merge changes back into the flow result.":"Eylem özellikleri. Değişiklikleri akış sonucuyla birleştirmek için nesne döndürün.","Action snippets: return":"Eylem kod parçaları — şunu döndürün:","Actions":"Eylemler","Add a visual indicator at the end of every message that passes through this action.":"Bu eylemden geçen her mesajın sonuna görsel gösterge ekleyin.","Additional context":"Ek bağlam","Advanced":"Gelişmiş","Advanced Access Level":"Gelişmiş Erişim Düzeyi","Alias":"Takma ad","Allow All":"Tümüne izin ver","Allow First":"İlkine izin ver","An error of type":"Şu tür bir hata:","Any Message":"Herhangi Bir Mesaj","Any Message trigger connected to Feature Message and Speak Text actions":"Mesajı Öne Çıkar ve Metni Seslendir eylemlerine bağlı Herhangi Bir Mesaj tetikleyicisi","Any Message trigger connected to a Play Audio Clip action":"Ses Klibi Çal eylemine bağlı Herhangi Bir Mesaj tetikleyicisi","Any node with a green output emits":"Yeşil çıkışlı her düğüm şu değeri çıkarır:","Append a badge or tag to the message":"Mesaja rozet veya etiket ekleyin","Arbitrary structured data attached to the event":"Etkinliğe eklenen herhangi bir yapılandırılmış veri","Attach routing metadata for downstream nodes":"Sonraki düğümler için yönlendirme üst verileri ekleyin","Attached image URL":"Eklenen resmin URL'si","Available:":"Kullanılabilir:","Avoid duplicate relay systems.":"Yinelenen aktarma sistemlerinden kaçının.","B. Require Multiple Checks with AND":"B. AND ile Birden Fazla Kontrol Gerektirin","Block All":"Tümünü engelle","Block message conditionally":"Mesajı koşula bağlı engelleyin","Both nodes receive the full event payload as":"Her iki düğüm de tüm etkinlik verisini şu değişkenle alır:","Break cycles intentionally.":"Döngüleri bilinçli kırın.","Browser Source API:":"Tarayıcı Kaynağı API'si:","Build Social Stream Ninja automations with Event Flow triggers, conditions and actions. Connect live chat events to sounds, media, rewards and OBS controls.":"Etkinlik Akışı tetikleyicileri, koşulları ve eylemleriyle Social Stream Ninja otomasyonları oluşturun. Canlı sohbet etkinliklerini ses, medya, ödül ve OBS kontrollerine bağlayın.","Build loyalty-based commands, keyword games, or raffle gating with AND/OR/NOT logic.":"AND/OR/NOT mantığıyla sadakate dayalı komutlar, anahtar kelime oyunları veya çekiliş katılım denetimi oluşturun.","Build reliable automations for Social Stream Ninja. This guide walks through the basics, logic nodes, signal flow, and the practical tricks that creators ask about most (like avoiding chat echoes and knowing when to stack AND/NOT blocks).":"Social Stream Ninja için güvenilir otomasyonlar oluşturun. Bu rehber temelleri, mantık düğümlerini, sinyal akışını ve içerik üreticilerinin sık sorduğu pratik konuları (sohbet yankısını önlemek ve AND/NOT bloklarını ne zaman birleştirmek gibi) anlatır.","C. NOT Node to Block Repeat Alerts":"C. Tekrarlanan Uyarıları Engellemek için NOT Düğümü","Call Webhook JSON:":"Webhook Çağır JSON:","Can a node emit a payload even if it returns false?":"Düğüm yanlış döndürse bile veri çıkarabilir mi?","Can each Speak Text node use a different voice?":"Her Metni Seslendir düğümü farklı ses kullanabilir mi?","Canvas showing a Custom Code trigger and Execute Custom Code action side by side":"Yan yana Özel Kod tetikleyicisi ve Özel Kod Çalıştır eylemi gösteren tuval","Chat message text":"Sohbet mesajı metni","Check the":"Şunu kontrol edin:","Choose":"Seçin:","Choose Local File":"Yerel dosya seç","Click":"Tıklayın:","Click this button:":"Şu düğmeye tıklayın:","Closing the Flow Actions page pauses every overlay/audio/OBS action in Event Flow. Hide it or put it on a separate monitor instead of closing it outright.":"Akış Eylemleri sayfasını kapatmak Etkinlik Akışı'ndaki tüm katman/ses/OBS eylemlerini duraklatır. Tamamen kapatmak yerine gizleyin veya başka monitöre taşıyın.","Combine":"Birleştirin:","Combine role check and message content in a single expression that no built-in trigger covers.":"Yerleşik tetikleyicilerin kapsamadığı tek bir ifadede rol kontrolü ve mesaj içeriğini birleştirin.","Common Q & A":"Yaygın Sorular ve Yanıtlar","Complete example: VIP feature request bot":"Tam örnek — VIP özellik talebi botu","Condition, Compare, Regex, and Logic nodes emit two ports.":"Koşul, Karşılaştırma, Regex ve Mantık düğümleri iki çıkış sunar.","Confirm":"Doğrulayın:","Continue the flow only when the message contains a specific word or phrase.":"Akışı yalnızca mesaj belirli bir kelime veya ifade içerdiğinde sürdürün.","Convert the standard YouTube donation label to EUR, exclude Jewels/Gifts, and select one sound or visual range.":"Standart YouTube bağış etiketini EUR'ya çevirin, Jewels/Hediyeler'i hariç tutun ve tek ses veya görsel aralığı seçin.","CoolViewer123":"CoolViewer123","Copy Local Flow Actions URL for OBS":"OBS için Yerel Flow Actions URL'sini kopyala","Copy any of these into the JavaScript Code textarea of the matching node type.":"Bunlardan herhangi birini ilgili düğüm türünün JavaScript Kodu metin alanına kopyalayın.","Core Variables (backward compatible)":"Temel Değişkenler (geriye uyumlu)","Counter target minus current value, clamped at 0":"Sayaç hedefi eksi mevcut değer; en az 0","Counter target value":"Sayaç hedef değeri","Currency conversion:":"Para birimi dönüştürme:","Current counter value after a Counter or Check Counter step":"Sayaç veya Sayacı Kontrol Et adımından sonraki mevcut sayaç değeri","Custom Code":"Özel Kod","Custom Code lives under the":"Özel Kod şu bölümde bulunur:","Custom Code trigger properties panel showing the JavaScript code editor":"JavaScript kod düzenleyicisini gösteren Özel Kod tetikleyici özellikleri paneli","Custom Code: Trigger node":"Özel Kod — Tetikleyici düğümü","Custom JavaScript nodes":"Özel JavaScript düğümleri","Custom JavaScript nodes are disabled in the browser extension because Chrome's Manifest V3 Content Security Policy blocks":"Chrome Manifest V3 İçerik Güvenliği Politikası şu öğeyi engellediği için tarayıcı uzantısında özel JavaScript düğümleri devre dışıdır:","Custom code runs with renderer-process privileges.":"Özel kod, görüntüleyici işlem yetkileriyle çalışır.","D. Randomly Play One of Two Sounds":"D. İki Sesten Birini Rastgele Çalın","Data type":"Veri türü","Default behavior:":"Varsayılan davranış:","Description":"Açıklama","Desktop app required.":"Masaüstü uygulaması gerekir.","Disable global Relay all when using equivalent Event Flow routes, and check for other services bridging the same chats. Custom metadata is not guaranteed to survive a trip through a platform chat.":"Eşdeğer Etkinlik Akışı yollarını kullanırken genel Tümünü Aktar'ı kapatın ve aynı sohbetleri bağlayan diğer hizmetleri kontrol edin. Özel üst verilerin platform sohbetinden geçerken korunacağı garanti edilmez.","Discord Call Webhook:":"Discord Webhook Çağır:","Display Media Overlay":"Medya katmanını göster","Display name (alternate field)":"Görünen ad (alternatif alan)","Display name of the sender":"Gönderenin görünen adı","Display name of the user":"Kullanıcının görünen adı","Do I always need an AND node?":"Her zaman AND düğümü gerekir mi?","Do I have to use AND for every pair of filters?":"Her filtre çifti için AND kullanmalı mıyım?","Document meta fields.":"meta alanlarını belgeleyin.","Donation Alert:":"Bağış Uyarısı:","Donation above a threshold":"Eşik üstündeki bağış","Donation/tip display label":"Bağış/bahşiş görünüm etiketi","Donation: animation + sound + OBS filter":"Bağış: animasyon + ses + OBS filtresi","Donation: celebration + voice":"Bağış: kutlama + seslendirme","Drag":"Sürükleyin:","Editing code:":"Kodu düzenleme:","Effect":"Etki","Emits":"Şunu üretir:","Enable audio":"Sesi etkinleştir","Errors are caught.":"Hatalar yakalanır.","Even if you didn't change anything, returning":"Hiçbir şeyi değiştirmeseniz bile şu değeri döndürmek:","Event Flow":"Etkinlik Akışı","Event Flow Editor Guide":"Etkinlik Akışı düzenleyicisi kılavuzu","Event Flow Editor: empty state":"Etkinlik Akışı Düzenleyicisi — boş durum","Event Flow Guide - Social Stream Ninja":"Etkinlik Akışı Rehberi - Social Stream Ninja","Event Flow System":"Etkinlik Akışı Sistemi","Event Flow plays through the":"Etkinlik Akışı şu kaynak üzerinden oynatır:","Event Payload ─▶ State Check (isAlertMuted) └─false─▶ NOT ─▶ Play Celebration":"Event Payload ─▶ State Check (isAlertMuted) └─false─▶ NOT ─▶ Play Celebration","Event Reference":"Etkinlik başvuru kaynağı","Event Sources":"Etkinlik Kaynakları","Event type identifier":"Etkinlik türü tanımlayıcısı","Every flow starts with a trigger":"Her akış bir tetikleyiciyle başlar","Every message carries a JSON object. Mandatory keys follow":"Her mesaj JSON nesnesi taşır. Zorunlu anahtarlar şu yapıyı izler:","Every project is saved locally until exported. Use":"Her proje dışa aktarılana kadar yerel kaydedilir. Şunu kullanın:","Example":"Örnek","Example Templates":"Örnek Şablonlar","Example:":"Örnek:","Execute Custom Code":"Özel Kod Çalıştır","Execute Custom Code action properties panel showing the code editor":"Kod düzenleyicisini gösteren Özel Kod Çalıştır eylem özellikleri paneli","Execute Custom Code under the":"Özel Kod Çalıştır şu bölümde:","Execute Custom Code: Action node":"Özel Kod Çalıştır — Eylem düğümü","Export your flow whenever you reach a milestone. Imports are the easiest rollback if an experiment goes sideways.":"Önemli bir aşamaya ulaştığınızda akışı dışa aktarın. Deneme ters giderse içe aktarma, önceki duruma dönmenin en kolay yoludur.","Extended Variables":"Genişletilmiş Değişkenler","Feature Message":"Mesajı Öne Çıkar","Feeding the trigger into the AND as a second input restricts sound B to matching messages only. The same pattern works for any either/or pair of actions, not just audio.":"Tetikleyiciyi AND'e ikinci girdi olarak bağlamak B sesini yalnızca eşleşen mesajlarla sınırlar. Aynı örüntü yalnızca seste değil, iki seçenekli her eylem çiftinde çalışır.","Field":"Alan","Filter as early as possible to avoid extra processing down the line.":"Sonraki aşamalardaki ek işlemleri önlemek için mümkün olduğunca erken filtreleyin.","Fire only when a donation meets or exceeds a minimum amount.":"Yalnızca bağış minimum tutarı karşıladığında veya aştığında tetikleyin.","Flow Actions":"Flow Actions","Flow Actions Overlay (Action Output)":"Akış Eylemleri Katmanı (Eylem Çıktısı)","Flow using a RANDOM gate, NOT gate, and AND gate to play one of two audio clips at random":"İki ses klibinden birini rastgele çalmak için RANDOM, NOT ve AND kapıları kullanan akış","Flow-added fields also work.":"Akışın eklediği alanlar da çalışır.","Format a donation announcement":"Bağış duyurusu biçimlendirin","Formatted donation string if present":"Varsa biçimlendirilmiş bağış metni","Gate signal":"Geçit sinyali","Great for multi-platform triggers: feed Twitch + YouTube message nodes into a single OR, then unify the downstream action.":"Çok platformlu tetikleyiciler için idealdir: Twitch + YouTube mesaj düğümlerini tek OR'a bağlayıp sonraki eylemi birleştirin.","Group logic near the source.":"Mantığı kaynağın yakınında gruplayın.","Hello everyone!":"Herkese merhaba!","Here the Regex node emits":"Burada Regex düğümü şu çıktıyı verir:","Highlight My Message":"Mesajımı Vurgula","Hook into the":"Şu sisteme bağlanın:","How do I match TikTok Team members?":"TikTok Takım üyelerini nasıl eşleştiririm?","How do true/false values reach the NOT node?":"Doğru/yanlış değerleri NOT düğümüne nasıl ulaşır?","How to open it (from the popup/dash):":"Nasıl açılır (açılır pencere/panodan):","If a node outputs false:":"Düğüm yanlış çıktısı verirse:","If an earlier action adds a top-level value to the message, later templates can read it directly. This is how":"Önceki eylem mesaja üst düzey değer eklerse sonraki şablonlar bunu doğrudan okuyabilir. Şu şekilde çalışır:","If an event does not have a particular field (e.g.,":"Etkinlik belirli alanı içermiyorsa (örneğin","If nothing is connected to the NOT input it evaluates to":"NOT girişine hiçbir şey bağlı değilse şu sonucu verir:","If two branches feed each other, add a logic node that checks a state variable (\"currentlyRelaying\") so the flow exits early when the flag is set.":"İki dal birbirini besliyorsa bir durum değişkenini (\"currentlyRelaying\") kontrol eden mantık düğümü ekleyin; böylece bayrak ayarlandığında akış erken çıkar.","If you do nothing with a":"Şu çıktıyla hiçbir şey yapmazsanız:","In a Play Audio Clip or Display Media Overlay action, click":"Ses Klibi Çal veya Medya Katmanı Göster eyleminde şuna tıklayın:","Incoming triggers and outgoing Relay Chat destinations both distinguish between":"Gelen tetikleyiciler ve giden Sohbeti Aktar hedefleri şu iki türü ayrı tutar:","Input Expectations":"Girdi Beklentileri","Inputs":"Girdiler","Inputs: 1 boolean (true/false) derived from the previous node.":"Girdiler: önceki düğümden gelen 1 mantıksal değer (doğru/yanlış).","Inputs: two or more boolean signals (A, B, ...). You can leave extra ports empty.":"Girdiler: iki veya daha fazla mantıksal sinyal (A, B, ...). Ek bağlantı noktalarını boş bırakabilirsiniz.","Inside the SSApp, code in Custom JS nodes has full access to the":"SSApp içinde Özel JS düğümlerindeki kod şu nesneye tam erişir:","Inspect the content and silently drop the message if a rule matches. This is useful for spam patterns the keyword filter can't express.":"İçeriği inceleyin ve kural eşleşirse mesajı sessizce atın — anahtar kelime filtresinin ifade edemediği spam örüntüleri için kullanışlıdır.","Integrations":"Entegrasyonlar","Keep SSApp running. If a selected file moves, return to the action and click":"SSApp'i çalışır tutun. Seçili dosya taşınırsa eyleme dönüp şuna tıklayın:","Keep the overlay open.":"Katmanı açık tutun.","Keyword match (case-insensitive)":"Anahtar kelime eşleşmesi (büyük/küçük harfe duyarsız)","Launch + Basics":"Başlatma ve Temeller","Let the flow continue only for privileged users.":"Akışın yalnızca ayrıcalıklı kullanıcılar için sürmesini sağlayın.","Listen / Stop":"Dinle / Durdur","Logic nodes may emit both the":"Mantık düğümleri şu kanallardan çıktı verebilir:","MEMBERSHIP, new_sponsor":"MEMBERSHIP, new_sponsor","Match messages that start with a command from a defined list (e.g.":"Belirlenmiş listedeki komutla başlayan mesajları eşleştirin (örneğin","Media Files for Event Flow guide":"Etkinlik Akışı için Medya Dosyaları rehberi","Member for 3 months":"3 aydır üye","Membership state":"Üyelik durumu","Membership state when applicable":"Geçerliyse üyelik durumu","Message length gate":"Mesaj uzunluğu geçidi","Minimal safe return:":"Güvenli en küçük dönüş değeri:","Missing variables become empty strings.":"Eksik değişkenler boş metne dönüşür.","Mix multiple platforms inside a single automation (Kick + Twitch + YouTube routed through one flow).":"Birden fazla platformu tek otomasyonda birleştirin (Kick + Twitch + YouTube tek akıştan yönlendirilir).","Most nodes expose one output. Whatever enters (payload + gate) exits unchanged unless the node edits it.":"Çoğu düğüm tek çıkış sunar. Giren veri ve geçit, düğüm değiştirmedikçe aynı çıkar.","Most side effects (like sending chat) do not alter the payload, but points actions can attach status fields such as":"Çoğu yan etki (sohbet gönderme gibi) veriyi değiştirmez ancak puan eylemleri şu gibi durum alanları ekleyebilir:","Multi-condition: VIP + keyword":"Çoklu koşul — VIP + anahtar kelime","Must return:":"Şunu döndürmelidir:","NOT":"DEĞİL","NOT & empty inputs:":"NOT ve boş girdiler:","Name & color":"Adlandırın ve renklendirin","Need to remember participants, check later eligibility, run a unique-user draw, or clear one named list? Open the":"Katılımcıları hatırlamak, sonraki uygunluğu kontrol etmek, benzersiz kullanıcı çekilişi yapmak veya adlandırılmış bir listeyi temizlemek mi gerekiyor? Şunu açın:","No network sandbox.":"Ağ korumalı alanı yoktur.","No. Many nodes already provide all-in-one filters (for example \"Filter User Level\" + \"Contains Text\"). Use AND only when the built-in options do not cover your combination, or when you want a reusable logic junction that other branches can share.":"Hayır. Birçok düğüm zaten birleşik filtreler sağlar (örneğin \"Kullanıcı Düzeyini Filtrele\" + \"Metin İçerir\"). AND'i yalnızca yerleşik seçenekler birleşiminizi karşılamadığında veya diğer dalların paylaşabileceği yeniden kullanılabilir mantık birleşimi istediğinizde kullanın.","No. Many nodes include multiple checks (for example, the basic Message Filter supports keyword + role). Use AND only for advanced combinations or when merging signals from different nodes.":"Hayır. Birçok düğüm birden fazla kontrol içerir (örneğin temel Mesaj Filtresi anahtar kelime + rol destekler). AND'i yalnızca gelişmiş birleşimlerde veya farklı düğümlerden gelen sinyalleri birleştirirken kullanın.","Nodes at a Glance":"Düğümlere Genel Bakış","Nodes such as":"Şu gibi düğümler:","OBS Control Guide":"OBS Kontrol Rehberi","OBS WebSocket:":"OBS WebSocket:","OBS control modes:":"OBS kontrol modları:","OR":"OR","Old 4.x installs:":"Eski 4.x kurulumları:","Once loaded, that overlay can:":"Yüklendiğinde bu katman şunları yapabilir:","Only process events from specific platforms.":"Yalnızca belirli platformlardan gelen etkinlikleri işleyin.","Only process messages that have enough content (useful for TTS or relay to avoid single-emoji spam).":"Yalnızca yeterli içerikli mesajları işleyin (tek emoji spamini önlemek için TTS veya aktarmada kullanışlıdır).","Open":"Açın:","Open Code Editor":"Kod Düzenleyicisini Aç","Open the Event Flow editor from the main dashboard's menu (desktop or extension).":"Ana panonun menüsünden Etkinlik Akışı düzenleyicisini açın (masaüstü veya uzantı).","Open the main Social Stream Ninja popup (the window loaded from":"Ana Social Stream Ninja açılır penceresini açın (şuradan yüklenen pencere:","Optional context (state variables, timers) that the node asks for explicitly.":"Düğümün açıkça istediği isteğe bağlı bağlam (durum değişkenleri, zamanlayıcılar).","Output Patterns":"Çıkış Örüntüleri","Outputs":"Çıktılar","Outputs:":"Çıktılar:","Outputs: the inverted boolean plus the untouched payload.":"Çıktılar: tersine çevrilmiş mantıksal değer ve değiştirilmemiş veri.","Overlay diagnostics:":"Katman tanılaması:","Pass the (possibly mutated) message back so downstream nodes receive your changes.":"Sonraki düğümlerin değişikliklerinizi alması için (değiştirilmiş olabilecek) mesajı geri verin.","Pass-Through vs. Override":"Olduğu Gibi Aktarma ve Geçersiz Kılma","Password:":"Parola:","Payload":"Veri","Payload Structure":"Veri Yapısı","Place NOT after \"Contains Keyword\" to trigger an alert when a viewer":"NOT'u “Anahtar Kelime İçerir” düğümünden sonra yerleştirin; uyarı şu durumda tetiklensin: izleyici","Platform filter":"Platform filtresi","Platform name (capitalized)":"Platform adı (baş harfi büyük)","Platform name (raw)":"Platform adı (ham)","Platform user ID":"Platform kullanıcı kimliği","Platform-aware message prefix":"Platforma göre mesaj öneki","Play Audio Clip":"Ses klibi oynat","Play sounds (TTS, audio clips) locally so viewers hear them.":"İzleyicilerin duyabilmesi için sesleri (TTS, ses klipleri) yerel çalın.","Points & Rewards":"Puanlar ve Ödüller","Prepend a platform label when relaying cross-platform so viewers know the source.":"Platformlar arası aktarırken izleyicilerin kaynağı bilmesi için başa platform etiketi ekleyin.","Printer Control":"Yazıcı Kontrolü","Properties panel after placing the trigger. Write any expression that returns":"Tetikleyici yerleştirildikten sonraki özellikler paneli. Şu değeri döndüren herhangi bir ifade yazın:","Ready for more depth?":"Daha derine inmeye hazır mısınız?","Recommended diagnostic path:":"Önerilen tanılama yolu:","Reflection Filter":"Yansıma filtresi","Regex command detection":"Regex ile komut algılama","Relay Chat":"Sohbeti aktar","Relay Chat skips recognized reflections automatically.":"Sohbeti Aktar tanınan yansımaları otomatik atlar.","Relay Chat:":"Sohbeti Aktar:","Relay chat between services with filters (e.g., mirror Twitch to Discord but block commands).":"Sohbeti filtrelerle hizmetler arasında aktarın (ör. Twitch'i Discord'a yansıtın ama komutları engelleyin).","Relaying chat between surfaces is powerful but can echo infinitely if you listen to your own output. Follow these safeguards:":"Sohbeti arayüzler arasında aktarmak güçlüdür ancak kendi çıkışınızı dinlerseniz sonsuz yankı oluşabilir. Şu önlemleri izleyin:","Relink":"Yeniden bağla","Remember:":"Unutmayın:","Remove all @username mentions from a message before relaying it to another platform.":"Başka platforma aktarmadan önce mesajdaki tüm @kullanıcıadı etiketlerini kaldırın.","Return a plain object from your action code. Any fields you include are merged into the flow's":"Eylem kodunuzdan düz nesne döndürün. Eklediğiniz tüm alanlar akışın şu nesnesiyle birleştirilir:","Return field":"Dönüş alanı","Reward name when the source exposes a top-level reward title field":"Kaynak üst düzey ödül başlığı alanı sunuyorsa ödül adı","Rewrite the chatmessage into a consistent announcement string when a donation is present.":"Bağış varsa chatmessage alanını tutarlı duyuru metnine dönüştürün.","Run Test":"Testi Çalıştır","Run custom workflows from Stream Deck or the API":"Stream Deck veya API'den özel iş akışları çalıştırın","Run the matching action check there before testing the full Event Flow automation.":"Tam Etkinlik Akışı otomasyonunu test etmeden önce orada ilgili eylem kontrolünü çalıştırın.","Running the":"Kullandığınız yazılım","SSApp / Desktop only":"Yalnızca SSApp / Masaüstü","SSApp desktop app":"SSApp masaüstü uygulaması","SSApp desktop app?":"SSApp masaüstü uygulaması mı?","Save & Close":"Kaydet ve Kapat","Save versions.":"Sürümleri kaydedin.","Scroll to the “Flow Actions” card. Use the":"“Akış Eylemleri” kartına kaydırın. Şu düğmeyi kullanın:","Secondary context line":"İkincil bağlam satırı","Security considerations":"Güvenlikle ilgili hususlar","See the dedicated":"Özel rehbere bakın:","Send Message":"Mesaj Gönder","Sender has VIP status":"Gönderen VIP durumunda","Sender is a moderator":"Gönderen moderatör","Sender is a subscriber":"Gönderen abone","Set":"Şunu ayarlayın:","Set OBS Text Source:":"OBS Metin Kaynağını Ayarla:","Set Text Source:":"Metin Kaynağını Ayarla:","Several action nodes (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label) support":"Birçok eylem düğümü (Metin Göster, Metin Kaynağını Ayarla, Mesaj Gönder, Sohbeti Aktar, TTS Seslendir, Webhook Çağır, Termal Etiket Yazdır) şunu destekler:","Should return:":"Şunu döndürmesi gerekir:","Show GIPHY or direct media URLs, text, and confetti triggered by your flows.":"Akışlarınızın tetiklediği GIPHY veya doğrudan medya URL'lerini, metni ve konfetiyi gösterin.","Show Text:":"Metin Göster:","Signature:":"İmza:","Single Output":"Tek Çıkış","Snippet examples":"Kod parçası örnekleri","Social Stream Ninja logo":"Social Stream Ninja logosu","Some nodes (Set Variable, Math, Text Replace) mutate the payload but still forward the":"Bazı düğümler (Değişken Ayarla, Matematik, Metin Değiştir) veriyi değiştirir ancak şu değeri yine aktarır:","Source platform (lowercase)":"Kaynak platform (küçük harf)","Speak Text":"Metni Seslendir","Start with an alert template:":"Bir uyarı şablonuyla başlayın:","State Nodes":"Durum Düğümleri","Step 1: Custom Code trigger":"1. Adım — Özel Kod tetikleyicisi","Step 2: Execute Custom Code action":"2. Adım — Özel Kod Çalıştır eylemi","Step 3: Relay Chat action":"3. Adım — Sohbeti Aktar eylemi","Store repeats in State nodes.":"Tekrarları Durum düğümlerinde saklayın.","Strip @mentions":"@etiketleri kaldır","Structured event data (JSON)":"Yapılandırılmış etkinlik verisi (JSON)","Subscriber / VIP / mod gate":"Abone / VIP / moderatör geçidi","Syntax errors too.":"Sözdizimi hataları da yakalanır.","TTS:":"TTS:","Tag the message with a custom field that a later":"Mesajı, sonraki bir eylemin okuyabileceği özel alanla etiketleyin:","Talk to OBS via the WebSocket settings that live under the Flow Actions section in the popup (scene switching, source toggles, GDI+/FreeType text updates, replay buffer, etc.).":"Açılır penceredeki Akış Eylemleri bölümünde bulunan WebSocket ayarları üzerinden OBS ile iletişim kurun (sahne değiştirme, kaynak anahtarları, GDI+/FreeType metin güncellemeleri, tekrar arabelleği vb.).","Template variables work in JSON string values at any nested object or array depth. Object keys are not templated, and a custom body without placeholders is sent unchanged.":"Şablon değişkenleri her iç içe nesne veya dizi derinliğindeki JSON metin değerlerinde çalışır. Nesne anahtarları şablon olarak işlenmez; yer tutucu içermeyen özel gövde değiştirilmeden gönderilir.","Test Flow":"Akışı Test Et","Test with the built-in simulator":"Yerleşik simülatörle test edin","Testing the flow.":"Akışı test etme.","The AND gate is not optional.":"AND kapısı isteğe bağlı değildir.","The AND node ensures only members using the right keyword relay to Discord. Both branches send their boolean result to the AND node; the payload from the":"AND düğümü yalnızca doğru anahtar kelimeyi kullanan üyelerin Discord'a aktarılmasını sağlar. İki dal da mantıksal sonucunu AND düğümüne gönderir; veri","The Chrome extension cannot serve disk files by itself. Use Upload or a hosted URL when no desktop companion is available. See the":"Chrome uzantısı tek başına disk dosyalarını sunamaz. Masaüstü yardımcı uygulaması yoksa Yükle'yi veya barındırılan URL'yi kullanın. Şuraya bakın:","The Event Flow Editor. The left panel lists all available nodes; the dotted canvas is where you build flows; the right panel shows properties for the selected node.":"Etkinlik Akışı Düzenleyicisi. Sol panel tüm düğümleri listeler; noktalı tuvalde akışları oluşturursunuz; sağ panel seçili düğümün özelliklerini gösterir.","The Event Flow editor is the “advanced automation” layer for Social Stream Ninja. It sits above the simple popup switches and lets you script your own routing logic. Use it when you need to:":"Etkinlik Akışı düzenleyicisi Social Stream Ninja'nın “gelişmiş otomasyon” katmanıdır. Basit açılır pencere anahtarlarının üzerinde yer alır ve kendi yönlendirme mantığınızı yazmanızı sağlar. Şunlara ihtiyacınız olduğunda kullanın:","The Event Flow runtime passes two things through every wire:":"Etkinlik Akışı çalışma zamanı her bağlantıdan iki şey geçirir:","The Test Flow panel for sending synthetic test events":"Yapay test etkinlikleri göndermek için Akışı Test Et paneli","The Test Flow panel. Fill in fields matching your trigger conditions and click":"Akışı Test Et paneli. Tetikleyici koşullarınıza uyan alanları doldurup şuna tıklayın:","The chat message text (may contain HTML)":"Sohbet mesajı metni (HTML içerebilir)","The editor's Preview button plays locally; live playback needs the overlay open. If the browser blocks autoplay, click":"Düzenleyicinin Önizleme düğmesi yerel oynatır; canlı oynatma katmanın açık olmasını gerektirir. Tarayıcı otomatik oynatmayı engellerse şuna tıklayın:","The full message payload.":"Tam mesaj verisi.","The gate bit (":"Geçit biti (","The link looks like":"Bağlantı şöyle görünür:","The object":"Nesne:","The same payload unless the node edits it.":"Düğüm değiştirmedikçe aynı veri.","Thermal Label:":"Termal Etiket:","Thermal Printer Guide":"Termal Yazıcı Rehberi","Thermal printing in SSApp:":"SSApp'te termal yazdırma:","These blocks answer the most common \"What does true/false mean?\" questions.":"Bu bloklar en yaygın \"doğru/yanlış ne anlama gelir?\" sorularını yanıtlar.","Think of the popup as “quick presets” and Event Flow as the toolkit for bespoke workflows.":"Açılır pencereyi “hızlı ön ayarlar”, Etkinlik Akışı'nı ise özel iş akışları için araç takımı olarak düşünün.","This flow is complete and fires on every message, but the sound plays on the Flow Actions overlay page,":"Bu akış tamamdır ve her mesajda tetiklenir — ancak ses Akış Eylemleri katman sayfasında çalar,","This flow listens for":"Bu akış şunu dinler:","This guide is intentionally standalone. Copy it locally, adapt it for your team, and keep experimenting inside the editor.":"Bu rehber bilinçli olarak bağımsız hazırlanmıştır — yerel olarak kopyalayın, ekibinize uyarlayın ve düzenleyicide denemeyi sürdürün.","TikTok Team Member":"TikTok Takım Üyesi","Transform & Logic Nodes":"Dönüştürme ve Mantık Düğümleri","Trigger custom overlays, audio, OBS scenes, or webhooks based on data you enrich in the flow.":"Akışta zenginleştirdiğiniz verilere göre özel katmanlar, ses, OBS sahneleri veya webhook'lar tetikleyin.","Trigger panel showing Custom Code node under the Advanced group":"Gelişmiş grubunda Özel Kod düğümünü gösteren Tetikleyiciler paneli","Trigger snippets: return":"Tetikleyici kod parçaları — şunu döndürün:","Trigger ──▶ RANDOM (50%) ──▶ Play Sound A │ └──▶ NOT ──▶ AND ──▶ Play Sound B Trigger ──────────────────▲":"Trigger ──▶ RANDOM (50%) ──▶ Play Sound A │ └──▶ NOT ──▶ AND ──▶ Play Sound B Trigger ──────────────────▲","Triggers":"Tetikleyiciler","True":"Doğru","True/False Outputs":"Doğru/Yanlış Çıkışları","Twitch Message ──▶ Regex Match \"^!\" ─┐ │ ├─false──▶ Auto Reply (\"Thanks for chatting!\") │ └─true──▶ Do nothing":"Twitch Message ──▶ Regex Match \"^!\" ─┐ │ ├─false──▶ Auto Reply (\"Thanks for chatting!\") │ └─true──▶ Do nothing","Twitch and YouTube relay walkthrough":"Twitch ve YouTube aktarma anlatımı","Twitch, YouTube":"Twitch, YouTube","Two action nodes chained together with no trigger node":"Tetikleyici düğümü olmadan birbirine bağlı iki eylem düğümü","Two nodes in the Event Flow editor let you write arbitrary JavaScript that runs inside the flow pipeline:":"Etkinlik Akışı düzenleyicisindeki iki düğüm, akış işlem hattında çalışan istediğiniz JavaScript kodunu yazmanızı sağlar:","USD donation equivalent when the source provides one; valid zero values are honored. Event Flow falls back to":"Kaynak sağlıyorsa bağışın USD karşılığı; geçerli sıfır değerleri dikkate alınır. Etkinlik Akışı alternatif olarak şunu kullanır:","USD donation equivalent, supplied or estimated; Event Flow derives threshold values from normalized":"Sağlanan veya tahmin edilen USD bağış karşılığı; Etkinlik Akışı eşik değerlerini normalleştirilmiş şu alandan türetir:","Unlock":"Şu düğümlerin kilidini açın:","Use":"Kullanın:","Use AND when multiple conditions must be satisfied simultaneously (\"is subscriber\"":"Birden fazla koşul aynı anda sağlanmalıysa AND kullanın (\"abone\"","Use Debounce or Cooldown nodes":"Debounce veya Bekleme Süresi düğümlerini kullanın","Use counters, toggles, and timestamps to avoid double alerts.":"Çift uyarıları önlemek için sayaç, anahtar ve zaman damgaları kullanın.","User Memory guide":"Kullanıcı Belleği kılavuzu","User avatar URL":"Kullanıcı avatar URL'si","User's platform ID":"Kullanıcının platform kimliği","Using local media in the standalone app:":"Bağımsız uygulamada yerel medya kullanımı:","Variable":"Değişken","Variable matching is case-insensitive.":"Değişken eşleştirmesi büyük/küçük harfe duyarsızdır.","Variables + Logic":"Değişkenler + Mantık","Voice Override":"Ses Geçersiz Kılması","What comes into a node?":"Bir düğüme ne girer?","What is this editor?":"Bu düzenleyici nedir?","What leaves a node?":"Düğümden ne çıkar?","What the action returns":"Eylemin döndürdüğü","When to branch?":"Ne zaman dallanmalı?","When you add custom":"Özel şu alanları eklediğinizde:","Whenever you want to react differently to":"Farklı tepki vermek istediğinizde:","Work inside canvases called":"Şu adla anılan tuvallerde çalışın:","Yes. Enter a provider-supported voice name or ID in":"Evet. Şu alana sağlayıcının desteklediği ses adı veya kimliğini girin:","Yes. The payload still travels through the false output; it is up to you to decide where that branch should go.":"Evet. Veri yanlış çıkışından geçmeye devam eder; o dalın nereye gideceğine siz karar verirsiniz.","YouTube Message ──▶ Contains \"!queue\" ─▶ AND ─▶ Relay to Discord Gifted Membership ─▶ User Role = Member ──▲":"YouTube Message ──▶ Contains \"!queue\" ─▶ AND ─▶ Relay to Discord Gifted Membership ─▶ User Role = Member ──▲","YouTube Shorts and Event Flow":"YouTube Shorts ve Etkinlik Akışı","YouTube Shorts destination note:":"YouTube Shorts hedef notu:","YouTube Super Chat or Super Sticker in a EUR range":"EUR aralığında YouTube Super Chat veya Super Sticker","[copy link]":"[bağlantıyı kopyala]","a boolean:":"mantıksal değer —","action can read from a template variable (":"eylemi şablon değişkeninden okuyabilir (","action with":"eylemi, şu seçenekle:","action.":"eylemi.","actions":"eylemler","actions.html":"actions.html","all work the same way.":"aynı şekilde çalışır.","an object or Promise merged into":"şuna birleştirilen nesne veya Promise:","and":"ve","and Multi-Alerts now share a library of 17 sounds: applause, drumroll, whoosh, cash register and other effects, four labelled synthetic English phrases, and simple sounds.":"ve Çoklu Uyarılar artık 17 seslik ortak kitaplığı kullanır: alkış, davul rulosu, geçiş sesi, kasa ve diğer efektler, etiketlenmiş dört sentetik İngilizce ifade ve basit sesler.","and use that generated localhost URL instead of the hosted Flow Actions URL.":"ve barındırılan Akış Eylemleri URL'si yerine oluşturulan localhost URL'sini kullanın.","any":"herhangi bir","append":"ekleyin:","at compile time is caught the same way. Check DevTools (F12) if a node appears to do nothing.":"derleme sırasında aynı şekilde yakalanır. Düğüm hiçbir şey yapmıyor görünüyorsa DevTools'u (F12) kontrol edin.","available only when":"yalnızca şu durumda kullanılabilir:","becomes available on the gray/red port.":"gri/kırmızı bağlantı noktasında kullanılabilir olur.","below), plus":"aşağıda), ayrıca","bit telling the next node whether to run.":"sonraki düğüme çalışıp çalışmayacağını söyleyen bit.","boolean":"boolean","browser source; Multi-Alerts plays through its own browser source. Keep sound enabled in only one for the same event to avoid duplicate playback. Tab to a flow node and press Enter or Space to edit its properties.":"tarayıcı kaynağı; Çoklu Uyarılar kendi tarayıcı kaynağı üzerinden oynatır. Çift oynatmayı önlemek için aynı etkinlikte yalnızca birinde sesi açık tutun. Özelliklerini düzenlemek için Tab ile akış düğümüne geçip Enter veya Boşluk'a basın.","button or click the URL inside the card.":"veya kart içindeki URL'ye tıklayın.","by default. When a condition fails, it emits":"varsayılan olarak. Koşul sağlanmazsa şu çıktıyı verir:","channel and an optional":"ve isteğe bağlı","channel.":".","checks the JavaScript syntax and saves the whole flow;":"JavaScript sözdizimini kontrol eder ve tüm akışı kaydeder;","cheer, raid, new_follower":"cheer, raid, new_follower","choose the printer and calibrate its paper width and safe margins under":"yazıcıyı seçin, kağıt genişliğini ve güvenli kenar boşluklarını şu bölümden ayarlayın:","connected input is true.":"bağlı girdi doğruysa.","continues downstream.":"sonraki aşamaya aktarılır.","continues through the green port;":"yeşil bağlantı noktasından devam eder;","conversion of normalized":". Normalleştirilmiş","docs/event-reference.html":"docs/event-reference.html","does":"yaptığını açıklar","does not use the keyword.":"anahtar kelimeyi kullanmadığında.","does the same. Cancel leaves the node unchanged.":"aynısını yapar. İptal, düğümü değiştirmez.","doesn't match your trigger.":"tetikleyicinizle eşleşmeyen tüm mesajlar.","downstream nodes stop executing unless they receive input on a separate branch (for example, the":"ayrı daldan girdi almadıkları sürece sonraki düğümler çalışmayı durdurur (örneğin","exposes":"sunar:","false":"false","features a message when the flow reaches it. It does not fire when you feature a message elsewhere.":"akış kendisine ulaştığında mesajı öne çıkarır — başka yerde mesaj öne çıkardığınızda tetiklenmez.","fields. Tells downstream nodes the payload has been edited.":"alanları. Sonraki düğümlere verinin düzenlendiğini bildirir.","fire only when the gate remains":"yalnızca geçit şu değerde kaldığında çalışır:","first branch":"ilk daldan","flows":"akışlar","flows through automatically.":"otomatik olarak aktarılır.","for a complete setup.":"tam kurulum için.","for a large editing window.":"büyük düzenleme penceresi için.","for a ready-made animation and synthetic thank-you clip, or the advanced":"hazır animasyon ve sentetik teşekkür klibi için veya gelişmiş","for alerts that should only fire once every X seconds.":"yalnızca her X saniyede bir tetiklenmesi gereken uyarılar için.","for arbitrary logic that no built-in node covers.":"yerleşik düğümlerin kapsamadığı özel mantık için.","for detailed payload documentation across all platforms.":"tüm platformlarda ayrıntılı veri belgeleri için.","for downstream logic.":"sonraki mantık için.","for every trigger, action, setup step, and tested recipe.":"her tetikleyici, eylem, kurulum adımı ve test edilmiş tarif için.","for printer setup, fixed-size labels, and a complete flow.":"yazıcı kurulumu, sabit boyutlu etiketler ve tam akış için.","for the full setup.":"tam kurulum için.","for the shared-state model, screenshots, and an importable example.":"ortak durum modeli, ekran görüntüleri ve içe aktarılabilir örnek için.","from subscribers, VIPs, or mods, reformats it as a feature request, and relays it to a second destination (e.g. Discord).":"abonelerden, VIP'lerden veya moderatörlerden; bunu yeni özellik talebi olarak yeniden biçimlendirip ikinci hedefe (ör. Discord) aktarır.","from the":"şu kaynaktan:","group in the":"grubu, şu panelde:","group in the Actions panel.":"Eylemler panelindeki grup.","group in the Triggers panel.":"Tetikleyiciler panelindeki grup.","https://...":"https://...","if":"eğer","if you are still using obs-websocket 4.x / port":"hâlâ obs-websocket 4.x / şu bağlantı noktasını kullanıyorsanız:","if you changed":"şunu değiştirdiyseniz:","if you want a small live OBS connection badge on the overlay while troubleshooting.":"sorun giderirken katmanda küçük, canlı OBS bağlantı rozeti istiyorsanız.","in the User Role node. It recognizes TikTok Fan Club/team levels and badges on the incoming message and does not depend on Main Chat Overlay settings.":"Kullanıcı Rolü düğümünde. Gelen mesajdaki TikTok Hayran Kulübü/takım seviyelerini ve rozetlerini tanır; Ana Sohbet Katmanı ayarlarına bağlı değildir.","is a legacy alias":"eski bir takma addır","is a node-based editor. Each line carries a message payload plus a boolean state (":"düğüm tabanlı düzenleyicidir. Her çizgi mesaj verisi ve mantıksal durum taşır (","is running inside OBS Browser Source with":"OBS Tarayıcı Kaynağı içinde şu seçenekle çalışıyorsa:","keeps it flowing to the next node.":"sonraki düğüme akmayı sürdürür.","keys, note them so overlays and remote clients stay consistent.":"anahtarlarını belgeleyin; böylece katmanlar ve uzak istemciler tutarlı kalır.","labels for threshold comparisons, including 100 unknown named units = $0.01 USD. It does not parse":"etiketlerini eşik karşılaştırmaları için dönüştürür; 100 bilinmeyen adlandırılmış birim = 0,01 USD dahildir. Bağış değerlerini şu alandaki serbest metinden ayrıştırmaz:","labels such as value,":"değer gibi etiketler,","logic nodes":"mantık düğümleri","message API":"mesaj API'si","not in the editor.":"düzenleyicide çalmaz.","number / string":"number / string","object":"object","object and any APIs the preload script exposes (e.g.":"ve preload betiğinin sunduğu tüm API'lere (ör.","object; fields you omit keep their current values.":"; belirtmediğiniz alanlar mevcut değerlerini korur.","obs-websocket-test.html":"obs-websocket-test.html","on a regular chat message), the placeholder is replaced with an empty string rather than showing the literal":"normal sohbet mesajında), yer tutucunun kendisini göstermek yerine boş metin konur:","on the Flow Actions page to retry the latest blocked clip. Clicking elsewhere on that page also enables playback. An OBS Browser Source normally allows autoplay.":"Akış Eylemleri sayfasında, son engellenen klibi yeniden denemek için. Sayfanın başka yerine tıklamak da oynatmayı etkinleştirir. OBS Tarayıcı Kaynağı normalde otomatik oynatmaya izin verir.","only if all connected inputs equal":"yalnızca bağlı tüm girdiler şu değere eşitse:","optional. Only append":"isteğe bağlıdır. Yalnızca şunu ekleyin:","or":"veya","or the extension icon).":"veya uzantı simgesi).","output, the flow simply ends there. That is perfect for filters (\"block everything that fails the check\") but do not forget to connect the":", akış orada biter. Bu filtreler için idealdir (\"kontrolden geçmeyen her şeyi engelle\") ancak şu yolu bağlamayı unutmayın:","outputs a value of":"şu değeri verir:","panel onto the canvas. It acts as a gate: the flow continues only when your code returns":"panelinden tuvale. Geçit görevi görür: akış yalnızca kodunuz şu değeri döndürdüğünde sürer:","panel. It can mutate the message, block it, or attach metadata that downstream nodes can read.":"paneli. Mesajı değiştirebilir, engelleyebilir veya sonraki düğümlerin okuyabileceği üst veriler ekleyebilir.","path if you need fallbacks.":"yolu, alternatifler gerekiyorsa.","popup.html":"popup.html","previews locally with visible playback status. You can still upload a recording or choose an app-local file. For changing names or messages, use the existing":"görünür oynatma durumuyla yerel önizleme yapar. Yine kayıt yükleyebilir veya uygulamaya yerel dosya seçebilirsiniz. Değişen adlar veya mesajlar için mevcut şu seçeneği kullanın:","prose for donation values.":".","read the payload and may rewrite fields, set state, or flip the gate signal to":"veriyi okur ve alanları yeniden yazabilir, durum ayarlayabilir veya geçit sinyalini şu değere çevirebilir:","recommended for consistent control. Social Stream Ninja Flow Actions use the OBS WebSocket v5 API from OBS 28+ and expect the modern request set on port":"tutarlı kontrol için önerilir. Social Stream Ninja Akış Eylemleri, OBS 28+ içindeki OBS WebSocket v5 API'sini kullanır ve şu bağlantı noktasında güncel istek kümesini bekler:","result API":"sonuç API'si","select a Custom Code node and click":"Özel Kod düğümünü seçip şuna tıklayın:","socket on a Condition node). That makes it easy to build fallback logic without duplicating whole flows.":"Koşul düğümündeki bağlantı noktası). Böylece tüm akışları çoğaltmadan alternatif mantık oluşturabilirsiniz.","socket to our reply, so regular chatters get an acknowledgement while commands simply pass through.":". Böylece normal sohbet katılımcıları yanıt alırken komutlar yalnızca geçer.","sources":"kaynaklar","state from their input. Others (NOT, AND, OR) recalculate the boolean themselves.":"durumunu girdilerinden alır. Diğerleri (NOT, AND, OR) mantıksal değeri kendileri yeniden hesaplar.","string":"metin","succeed.":"başarılı olur.","system so viewers can intentionally trigger flows.":"; böylece izleyiciler akışları bilinçli tetikleyebilir.","template variables":"şablon değişkenleri","template. New alert templates start disabled so you can configure and test them first. For the OBS template, choose a source and the same normally-off filter in both filter actions.":"şablonu. Yeni uyarı şablonları önce yapılandırıp test edebilmeniz için devre dışı başlar. OBS şablonunda her iki filtre eyleminde de kaynak ve normalde kapalı olan aynı filtreyi seçin.","text.":"metni.","that get replaced with event data at runtime. Wrap variable names in curly braces like":"çalışma zamanında etkinlik verileriyle değiştirilir. Değişken adlarını şu şekilde süslü paranteze alın:","the object":"nesne:","to back up or share.":"yedeklemek veya paylaşmak için.","to build queue systems, raffles, or scoring engines.":"kuyruk sistemleri, çekilişler veya puanlama motorları oluşturmak için.","to continue the flow":"akışı sürdürmek için","to convert the formatted donation label into EUR. It returns a number, or":"biçimlendirilmiş bağış etiketini EUR'ya çevirmek için. Sayı döndürür veya","to enable them. In extension mode the nodes appear greyed-out with the label":"bunları etkinleştirmek için. Uzantı modunda düğümler şu etiketle gri görünür:","to filter decisions, and":"kararları filtrelemek için ve","to inject events,":"etkinlik eklemek için,","to let the flow continue,":"akışın devam etmesini sağlamak için,","to make things happen (send chat, control overlays, relay messages, etc.).":"eylemleri gerçekleştirmek için (sohbet gönderme, katman kontrolü, mesaj aktarma vb.).","to prevent the message from being displayed or relayed.":"mesajın görüntülenmesini veya aktarılmasını önlemek için.","to stop it.":"durdurmak için.","to the Flow Actions URL if your OBS server is configured to require authentication.":"OBS sunucunuz kimlik doğrulama gerektirecek şekilde ayarlanmışsa Akış Eylemleri URL'sine.","to the URL for":"şu sayfanın URL'sine:","to validate the full pipeline.":"tüm işlem hattını doğrulamak için.","trigger (or Message Contains, a regex, a donation event, etc.) starts the chain; both actions then run for each matching message.":"tetikleyicisi (veya Mesaj İçerir, regex, bağış etkinliği vb.) zinciri başlatır; ardından her iki eylem eşleşen her mesajda çalışır.","true":"true","twitch, youtube":"twitch, youtube","unless the node itself errors.":"düğümün kendisi hata vermedikçe.","updates OBS Text (GDI+) and Text (FreeType 2) inputs directly and supports Event Flow template variables such as":"OBS Metin (GDI+) ve Metin (FreeType 2) girişlerini doğrudan günceller ve şu gibi Etkinlik Akışı şablon değişkenlerini destekler:","use":"kullanın:","value, value + unit, or compact unit/value. Unknown named virtual units use 100 units = $0.01 USD; unpriced TikTok gifts use one coin per gift ($0.01 each).":"değer, değer + birim veya kısa birim/değer. Bilinmeyen adlandırılmış sanal birimler için 100 birim = 0,01 USD kullanılır; fiyatı bilinmeyen TikTok hediyeleri hediye başına bir coin (her biri 0,01 USD) kullanır.","vs":"ile","when the alert is muted. By inverting that result, the NOT node makes sure we only play the celebration when the flag is":"uyarı sessize alındığında. NOT düğümü bu sonucu tersine çevirerek kutlamanın yalnızca bayrak şu değerdeyken çalmasını sağlar:","when the message is a command. We route the":"mesaj bir komut olduğunda. Şu bağlantı noktasını yanıtımıza yönlendiririz:","when the requested target currency is unsupported. The converter uses Social Stream Ninja's approximate internal rates; it does not contact an external exchange service.":"istenen hedef para birimi desteklenmediğinde. Dönüştürücü Social Stream Ninja'nın yaklaşık dahili kurlarını kullanır; harici kur hizmetine bağlanmaz.","whenever the RANDOM gate sits idle, so sound B would play on every chat message that":"RANDOM kapısı boşta kaldığında; bu yüzden B sesinin çalacağı sohbet mesajları şunlar olurdu:","your code runs as":"kodunuz şu şekilde çalışır:","your nodes so future-you knows which branch is which.":"düğümlerinizi; böylece gelecekte hangi dalın ne olduğunu bilirsiniz.","{\"viewers\":100}":"{\"viewers\":100}","– a":"– bir","– the event or message data object.":"– etkinlik veya mesaj verisi nesnesi.","┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│ Relay Chat │ │ │ │ │ │ (to Discord) │ │ Gate: VIP/sub/mod │ │ Reformat message text │ │ │ │ + starts with │ │ → \"📋 Feature Request │ │ │ │ !feature │ │ from {name}: {text}\" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘":"┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│ Relay Chat │ │ │ │ │ │ (to Discord) │ │ Gate: VIP/sub/mod │ │ Reformat message text │ │ │ │ + starts with │ │ → \"📋 Feature Request │ │ │ │ !feature │ │ from {name}: {text}\" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘","✅ Works. An":"✅ Çalışır. Bir","❌ Never runs. Feature Message and Speak Text are both":"❌ Hiç çalışmaz. Mesajı Öne Çıkar ve Metni Seslendir ikisi de"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/actions/event-flow-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="guide-shell">
+        <header>
+            <p class="badge">Etkinlik Akışı Sistemi</p>
+            <h1>Etkinlik Akışı düzenleyicisi kılavuzu</h1>
+            <p>Social Stream Ninja için güvenilir otomasyonlar oluşturun. Bu rehber temelleri, mantık düğümlerini, sinyal akışını ve içerik üreticilerinin sık sorduğu pratik konuları (sohbet yankısını önlemek ve AND/NOT bloklarını ne zaman birleştirmek gibi) anlatır.</p>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/event-flow-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/event-flow-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/event-flow-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/event-flow-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/event-flow-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/event-flow-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/event-flow-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/event-flow-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/event-flow-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/event-flow-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/event-flow-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/event-flow-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/event-flow-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/event-flow-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="event-flow-guide.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/actions/event-flow-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/event-flow-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></header>
+        <div class="content">
+            <section>
+                <h2>0. Hızlı Tanıtım</h2>
+                <div class="panel">
+                    <strong>Etkinlik Akışı</strong> düğüm tabanlı düzenleyicidir. Her çizgi mesaj verisi ve mantıksal durum taşır (<em>true</em> = devam et, <em>false</em> = dur). Şunu kullanın: <strong>kaynaklar</strong> etkinlik eklemek için, <strong>mantık düğümleri</strong> kararları filtrelemek için ve <strong>eylemler</strong> eylemleri gerçekleştirmek için (sohbet gönderme, katman kontrolü, mesaj aktarma vb.).
+                </div>
+                <div class="callout">
+                    Katılımcıları hatırlamak, sonraki uygunluğu kontrol etmek, benzersiz kullanıcı çekilişi yapmak veya adlandırılmış bir listeyi temizlemek mi gerekiyor? Şunu açın: <a href="user-memory-guide.html">Kullanıcı Belleği kılavuzu</a> ortak durum modeli, ekran görüntüleri ve içe aktarılabilir örnek için.
+                </div>
+                <h3 id="what-is-event-flow">Bu düzenleyici nedir?</h3>
+                <p>Etkinlik Akışı düzenleyicisi Social Stream Ninja'nın “gelişmiş otomasyon” katmanıdır. Basit açılır pencere anahtarlarının üzerinde yer alır ve kendi yönlendirme mantığınızı yazmanızı sağlar. Şunlara ihtiyacınız olduğunda kullanın:</p>
+                <ul>
+                    <li>Sohbeti filtrelerle hizmetler arasında aktarın (ör. Twitch'i Discord'a yansıtın ama komutları engelleyin).</li>
+                    <li>AND/OR/NOT mantığıyla sadakate dayalı komutlar, anahtar kelime oyunları veya çekiliş katılım denetimi oluşturun.</li>
+                    <li>Akışta zenginleştirdiğiniz verilere göre özel katmanlar, ses, OBS sahneleri veya webhook'lar tetikleyin.</li>
+                    <li>Birden fazla platformu tek otomasyonda birleştirin (Kick + Twitch + YouTube tek akıştan yönlendirilir).</li>
+                </ul>
+                <p>Açılır pencereyi “hızlı ön ayarlar”, Etkinlik Akışı'nı ise özel iş akışları için araç takımı olarak düşünün.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Başlatma ve Temeller</h4>
+                        <ul>
+                            <li>Ana panonun menüsünden Etkinlik Akışı düzenleyicisini açın (masaüstü veya uzantı).</li>
+                            <li>Her proje dışa aktarılana kadar yerel kaydedilir. Şunu kullanın: <code>Export</code> yedeklemek veya paylaşmak için.</li>
+                            <li>Şu adla anılan tuvallerde çalışın: <em>akışlar</em>. Her akış aynı anda birden fazla platforma abone olabilir.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Düğümlere Genel Bakış</h4>
+                        <ul>
+                            <li><strong>Girdiler</strong> (sol bağlantı noktaları) mesaj bağlamını bekler.</li>
+                            <li><strong>Çıktılar</strong> (sağ bağlantı noktaları) aynı bağlamı ve yapılan düzenlemeleri çıkarır.</li>
+                            <li>Mantık düğümleri şu kanallardan çıktı verebilir: <code>true</code> ve isteğe bağlı <code>false</code> .</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Veri Yapısı</h4>
+                        <p>Her mesaj JSON nesnesi taşır. Zorunlu anahtarlar şu yapıyı izler: <a href="../docs/event-reference.html" target="_blank" rel="noopener">docs/event-reference.html</a> (platform, type, chatname, chatmessage vb.). Özel verileri şu alana ekleyin: <code>meta</code>.</p>
+                    </div>
+                </div>
+                <h3 id="every-flow-needs-a-trigger">Her akış bir tetikleyiciyle başlar</h3>
+                <p>Eylem düğümleri (yeşil) kendiliğinden çalışmaz — yalnızca üstlerindeki tetikleyici düğümü (mavi) şu sonucu verdiğinde çalışır: <code>true</code>. Yalnızca birbirine bağlı eylemlerden oluşan akış geçerli görünür ama zinciri başlatan hiçbir şey olmadığından sürekli boşta kalır. Düğüm adları düğümün ne <em>yaptığını açıklar</em>, ne zaman gerçekleştiğini değil: <em>Mesajı Öne Çıkar</em> akış kendisine ulaştığında mesajı öne çıkarır — başka yerde mesaj öne çıkardığınızda tetiklenmez.</p>
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-missing-trigger.png" alt="Tetikleyici düğümü olmadan birbirine bağlı iki eylem düğümü">
+                        <figcaption>❌ Hiç çalışmaz. Mesajı Öne Çıkar ve Metni Seslendir ikisi de <em>eylemler</em>; üstte tetikleyici yoksa zinciri hiçbir şey başlatmaz.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-trigger-first.png" alt="Mesajı Öne Çıkar ve Metni Seslendir eylemlerine bağlı Herhangi Bir Mesaj tetikleyicisi">
+                        <figcaption>✅ Çalışır. Bir <em>Herhangi Bir Mesaj</em> tetikleyicisi (veya Mesaj İçerir, regex, bağış etkinliği vb.) zinciri başlatır; ardından her iki eylem eşleşen her mesajda çalışır.</figcaption>
+                    </figure>
+                </div>
+            </section>
+            <section id="flow-actions-overlay">
+                <h2>Akış Eylemleri Katmanı (Eylem Çıktısı)</h2>
+                <div class="panel">
+                    <strong>Bir uyarı şablonuyla başlayın:</strong>
+                    <p>Seçin: <em>Bağış: kutlama + seslendirme</em> hazır animasyon ve sentetik teşekkür klibi için veya gelişmiş <em>Bağış: animasyon + ses + OBS filtresi</em> şablonu. Yeni uyarı şablonları önce yapılandırıp test edebilmeniz için devre dışı başlar. OBS şablonunda her iki filtre eyleminde de kaynak ve normalde kapalı olan aynı filtreyi seçin.</p>
+                    <p><em>Ses klibi oynat</em> ve Çoklu Uyarılar artık 17 seslik ortak kitaplığı kullanır: alkış, davul rulosu, geçiş sesi, kasa ve diğer efektler, etiketlenmiş dört sentetik İngilizce ifade ve basit sesler. <em>Dinle / Durdur</em> görünür oynatma durumuyla yerel önizleme yapar. Yine kayıt yükleyebilir veya uygulamaya yerel dosya seçebilirsiniz. Değişen adlar veya mesajlar için mevcut şu seçeneği kullanın: <em>Metni Seslendir</em> eylemi.</p>
+                    <p>Etkinlik Akışı şu kaynak üzerinden oynatır: <strong>Flow Actions</strong> tarayıcı kaynağı; Çoklu Uyarılar kendi tarayıcı kaynağı üzerinden oynatır. Çift oynatmayı önlemek için aynı etkinlikte yalnızca birinde sesi açık tutun. Özelliklerini düzenlemek için Tab ile akış düğümüne geçip Enter veya Boşluk'a basın.</p>
+                </div>
+                <p>Şu gibi düğümler: <em>Ses klibi oynat</em>, <em>Medya katmanını göster</em>, ve OBS kontrolleri bir görüntüleme yüzeyi gerektirir. Bu yüzey, şu adresten sunulan Akış Eylemleri katman sayfasıdır: <a href="../../actions.html" target="_blank" rel="noopener">actions.html</a>. Etkinlik Akışı eylemlerinin görünebileceği bir yer olması için yayın yazılımınızda (OBS/Streamer.bot tarayıcı panelleri vb.) çalışır tutun.</p>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-audio-overlay.png" alt="Ses Klibi Çal eylemine bağlı Herhangi Bir Mesaj tetikleyicisi">
+                    <figcaption>Bu akış tamamdır ve her mesajda tetiklenir — ancak ses Akış Eylemleri katman sayfasında çalar, <em>düzenleyicide çalmaz.</em> Düzenleyicinin Önizleme düğmesi yerel oynatır; canlı oynatma katmanın açık olmasını gerektirir. Tarayıcı otomatik oynatmayı engellerse şuna tıklayın: <strong>Sesi etkinleştir</strong> Akış Eylemleri sayfasında, son engellenen klibi yeniden denemek için. Sayfanın başka yerine tıklamak da oynatmayı etkinleştirir. OBS Tarayıcı Kaynağı normalde otomatik oynatmaya izin verir.</figcaption>
+                </figure>
+                <div class="panel">
+                    <strong>Nasıl açılır (açılır pencere/panodan):</strong>
+                    <ol>
+                        <li>Ana Social Stream Ninja açılır penceresini açın (şuradan yüklenen pencere: <a href="../../popup.html" target="_blank" rel="noopener">popup.html</a> veya uzantı simgesi).</li>
+                        <li>“Akış Eylemleri” kartına kaydırın. Şu düğmeyi kullanın: <em>[bağlantıyı kopyala]</em> veya kart içindeki URL'ye tıklayın.</li>
+                        <li>Bağlantı şöyle görünür: <code>https://socialstream.ninja/actions.html?session=YOURSESSION</code>. OBS Tarayıcı Kaynağı'na yapıştırın (1920×1080 önerilir) veya herhangi bir katman tarayıcısında açın.</li>
+                    </ol>
+                </div>
+                <div class="panel">
+                    <strong>Bağımsız uygulamada yerel medya kullanımı:</strong>
+                    <ol>
+                        <li>Ses Klibi Çal veya Medya Katmanı Göster eyleminde şuna tıklayın: <em>Yerel dosya seç</em>.</li>
+                        <li>Tıklayın: <em>OBS için Yerel Flow Actions URL'sini kopyala</em> ve barındırılan Akış Eylemleri URL'si yerine oluşturulan localhost URL'sini kullanın.</li>
+                        <li>SSApp'i çalışır tutun. Seçili dosya taşınırsa eyleme dönüp şuna tıklayın: <em>Yeniden bağla</em>.</li>
+                    </ol>
+                    <p>Chrome uzantısı tek başına disk dosyalarını sunamaz. Masaüstü yardımcı uygulaması yoksa Yükle'yi veya barındırılan URL'yi kullanın. Şuraya bakın: <a href="../docs/media-hosting-event-flow.html" target="_blank" rel="noopener">Etkinlik Akışı için Medya Dosyaları rehberi</a> tam kurulum için.</p>
+                </div>
+                <p>Yüklendiğinde bu katman şunları yapabilir:</p>
+                <ul>
+                    <li>Akışlarınızın tetiklediği GIPHY veya doğrudan medya URL'lerini, metni ve konfetiyi gösterin.</li>
+                    <li>İzleyicilerin duyabilmesi için sesleri (TTS, ses klipleri) yerel çalın.</li>
+                    <li>Açılır penceredeki Akış Eylemleri bölümünde bulunan WebSocket ayarları üzerinden OBS ile iletişim kurun (sahne değiştirme, kaynak anahtarları, GDI+/FreeType metin güncellemeleri, tekrar arabelleği vb.).</li>
+                </ul>
+                <div class="panel">
+                    <strong>OBS kontrol modları:</strong>
+                    <ul>
+                        <li><strong>Tarayıcı Kaynağı API'si:</strong> yalnızca şu durumda kullanılabilir: <code>actions.html</code> OBS Tarayıcı Kaynağı içinde şu seçenekle çalışıyorsa: <em>Gelişmiş Erişim Düzeyi</em>. Sahne değiştirme burada çalışır; kayıt / yayın / tekrar arabelleği eylemleri de alternatif olarak bunu kullanabilir.</li>
+                        <li><strong>OBS WebSocket:</strong> tutarlı kontrol için önerilir. Social Stream Ninja Akış Eylemleri, OBS 28+ içindeki OBS WebSocket v5 API'sini kullanır ve şu bağlantı noktasında güncel istek kümesini bekler: <code>4455</code>.</li>
+                        <li><strong>Parola:</strong> isteğe bağlıdır. Yalnızca şunu ekleyin: <code>&amp;obspw=...</code> OBS sunucunuz kimlik doğrulama gerektirecek şekilde ayarlanmışsa Akış Eylemleri URL'sine.</li>
+                        <li><strong>Katman tanılaması:</strong> ekleyin: <code>&amp;obsdebug=1</code> şu sayfanın URL'sine: <code>actions.html</code> sorun giderirken katmanda küçük, canlı OBS bağlantı rozeti istiyorsanız.</li>
+                        <li><strong>Metin Kaynağını Ayarla:</strong> OBS Metin (GDI+) ve Metin (FreeType 2) girişlerini doğrudan günceller ve şu gibi Etkinlik Akışı şablon değişkenlerini destekler: <code>{counterValue}</code> ve <code>{counterTarget}</code>.</li>
+                        <li><strong>Eski 4.x kurulumları:</strong> hâlâ obs-websocket 4.x / şu bağlantı noktasını kullanıyorsanız: <code>4444</code>, kaynak / filtre / sessize alma / metin eylemleri OBS / obs-websocket yükseltilene kadar çalışmaz.</li>
+                    </ul>
+                    <p>Özel rehbere bakın: <a href="obs-control-guide.html">OBS Kontrol Rehberi</a> her tetikleyici, eylem, kurulum adımı ve test edilmiş tarif için.</p>
+                </div>
+                <div class="panel">
+                    <strong>Önerilen tanılama yolu:</strong>
+                    <ol>
+                        <li>Açın: <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">obs-websocket-test.html</a>.</li>
+                        <li>Doğrulayın: <code>GetVersion</code>, <code>GetCurrentProgramScene</code>, ve <code>GetSceneList</code> başarılı olur.</li>
+                        <li>Tam Etkinlik Akışı otomasyonunu test etmeden önce orada ilgili eylem kontrolünü çalıştırın.</li>
+                    </ol>
+                </div>
+                <div class="panel warn">
+                    <strong>Katmanı açık tutun.</strong> Akış Eylemleri sayfasını kapatmak Etkinlik Akışı'ndaki tüm katman/ses/OBS eylemlerini duraklatır. Tamamen kapatmak yerine gizleyin veya başka monitöre taşıyın.
+                </div>
+            </section>
+
+            <section>
+                <h2>1. Düğümden Ne Geçer?</h2>
+                <p>Etkinlik Akışı çalışma zamanı her bağlantıdan iki şey geçirir:</p>
+                <ol>
+                    <li><strong>Veri</strong> – etkinlik veya mesaj verisi nesnesi.</li>
+                    <li><strong>Geçit sinyali</strong> – bir <em>true</em>/<em>false</em> sonraki düğüme çalışıp çalışmayacağını söyleyen bit.</li>
+                </ol>
+                <div class="panel">
+                    <strong>Düğüm yanlış çıktısı verirse:</strong> ayrı daldan girdi almadıkları sürece sonraki düğümler çalışmayı durdurur (örneğin <code>false</code> Koşul düğümündeki bağlantı noktası). Böylece tüm akışları çoğaltmadan alternatif mantık oluşturabilirsiniz.
+                </div>
+                <h3>Girdi Beklentileri</h3>
+                <ul>
+                    <li><strong>Etkinlik Kaynakları</strong> (Twitch Mesajı, Zamanlayıcılar, Elle Tetikleyici vb.) önceki girdiyi yok sayar — kendi verilerini üretir ve her zaman şu değeri çıkarır: <code>true</code> düğümün kendisi hata vermedikçe.</li>
+                    <li><strong>Dönüştürme ve Mantık Düğümleri</strong> veriyi okur ve alanları yeniden yazabilir, durum ayarlayabilir veya geçit sinyalini şu değere çevirebilir: <code>false</code>.</li>
+                    <li><strong>Eylem Düğümleri</strong> yalnızca geçit şu değerde kaldığında çalışır: <code>true</code>. Eylemleri zincirlemeyi sürdürmek isterseniz güncellenmiş veri de çıkarabilirler.</li>
+                </ul>
+                <h3>Çıkış Örüntüleri</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Tek Çıkış</h4>
+                        <p>Çoğu düğüm tek çıkış sunar. Giren veri ve geçit, düğüm değiştirmedikçe aynı çıkar.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Doğru/Yanlış Çıkışları</h4>
+                        <p>Koşul, Karşılaştırma, Regex ve Mantık düğümleri iki çıkış sunar. <em>Doğru</em> yeşil bağlantı noktasından devam eder; <em>false</em> gri/kırmızı bağlantı noktasında kullanılabilir olur.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Olduğu Gibi Aktarma ve Geçersiz Kılma</h4>
+                        <p>Bazı düğümler (Değişken Ayarla, Matematik, Metin Değiştir) veriyi değiştirir ancak şu değeri yine aktarır: <em>true</em>/<em>false</em> durumunu girdilerinden alır. Diğerleri (NOT, AND, OR) mantıksal değeri kendileri yeniden hesaplar.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>2. Mantık Düğümü Özeti</h2>
+                <p>Bu bloklar en yaygın "doğru/yanlış ne anlama gelir?" sorularını yanıtlar.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>DEĞİL</h4>
+                        <ul>
+                            <li>Girdiler: önceki düğümden gelen 1 mantıksal değer (doğru/yanlış).</li>
+                            <li>Çıktılar: tersine çevrilmiş mantıksal değer ve değiştirilmemiş veri.</li>
+                            <li><strong>Varsayılan davranış:</strong> NOT girişine hiçbir şey bağlı değilse şu sonucu verir: <code>false</code>, dolayısıyla çıktı <code>true</code>.</li>
+                        </ul>
+                        <div class="panel">
+                            <strong>Örnek:</strong> NOT'u “Anahtar Kelime İçerir” düğümünden sonra yerleştirin; uyarı şu durumda tetiklensin: izleyici <em>anahtar kelimeyi kullanmadığında.</em>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>VE</h4>
+                        <ul>
+                            <li>Girdiler: iki veya daha fazla mantıksal sinyal (A, B, ...). Ek bağlantı noktalarını boş bırakabilirsiniz.</li>
+                            <li>Çıktılar: <code>true</code> yalnızca bağlı tüm girdiler şu değere eşitse: <code>true</code>.</li>
+                            <li>Birden fazla koşul aynı anda sağlanmalıysa AND kullanın ("abone" <em>ve</em> "sohbet mesajı !raffle içeriyor").</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>OR</h4>
+                        <ul>
+                            <li>Şunu üretir: <code>true</code> eğer <strong>herhangi bir</strong> bağlı girdi doğruysa.</li>
+                            <li>Çok platformlu tetikleyiciler için idealdir: Twitch + YouTube mesaj düğümlerini tek OR'a bağlayıp sonraki eylemi birleştirin.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="callout tip">
+                    <strong>Her zaman AND düğümü gerekir mi?</strong><br>
+                    Hayır. Birçok düğüm zaten birleşik filtreler sağlar (örneğin "Kullanıcı Düzeyini Filtrele" + "Metin İçerir"). AND'i yalnızca yerleşik seçenekler birleşiminizi karşılamadığında veya diğer dalların paylaşabileceği yeniden kullanılabilir mantık birleşimi istediğinizde kullanın.
+                </div>
+                <div class="callout.warn">
+                    <strong>NOT ve boş girdiler:</strong> Bağlantısız NOT düğümü yine şu çıktıyı verir: <code>true</code>. Yanlışlıkla akışı açmaması için anlamlı bir yere bağlı tutun veya düğümü devre dışı bırakın.
+                </div>
+            </section>
+
+            <section>
+                <h2>3. Örnek Küçük Akışlar</h2>
+                <h3>A. Mesaj Komut Değilse Otomatik Yanıtla</h3>
+                <div class="diagram">
+Twitch Message ──▶ Regex Match "^!" ─┐
+                                   │
+                                   ├─false──▶ Auto Reply ("Thanks for chatting!")
+                                   │
+                                   └─true──▶ Do nothing
+                </div>
+                <p>Burada Regex düğümü şu çıktıyı verir: <code>true</code> mesaj bir komut olduğunda. Şu bağlantı noktasını yanıtımıza yönlendiririz: <code>false</code> . Böylece normal sohbet katılımcıları yanıt alırken komutlar yalnızca geçer.</p>
+                <h3>B. AND ile Birden Fazla Kontrol Gerektirin</h3>
+                <div class="diagram">
+YouTube Message ──▶ Contains "!queue" ─▶ AND ─▶ Relay to Discord
+Gifted Membership ─▶ User Role = Member ──▲
+                </div>
+                <p>AND düğümü yalnızca doğru anahtar kelimeyi kullanan üyelerin Discord'a aktarılmasını sağlar. İki dal da mantıksal sonucunu AND düğümüne gönderir; veri <em>ilk daldan</em> sonraki aşamaya aktarılır.</p>
+                <h3>C. Tekrarlanan Uyarıları Engellemek için NOT Düğümü</h3>
+                <div class="diagram">
+Event Payload ─▶ State Check (isAlertMuted)
+                 └─false─▶ NOT ─▶ Play Celebration
+                </div>
+                <p><code>State Check</code> şu değeri verir: <code>true</code> uyarı sessize alındığında. NOT düğümü bu sonucu tersine çevirerek kutlamanın yalnızca bayrak şu değerdeyken çalmasını sağlar: <code>false</code>.</p>
+                <h3>D. İki Sesten Birini Rastgele Çalın</h3>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-random-two-sounds.png" alt="İki ses klibinden birini rastgele çalmak için RANDOM, NOT ve AND kapıları kullanan akış">
+                    <figcaption>İki ses klibi arasında yüzde 50 olasılıklı seçim. RANDOM kapısı eşleşen her mesaj için bir kez seçim yapar: geçerse A sesi çalar; geçmezse NOT kapısı sonucu tersine çevirir ve AND kapısı B sesinin çalmasını sağlar.</figcaption>
+                </figure>
+                <div class="diagram">
+Trigger ──▶ RANDOM (50%) ──▶ Play Sound A
+              │
+              └──▶ NOT ──▶ AND ──▶ Play Sound B
+Trigger ──────────────────▲
+                </div>
+                <p><strong>AND kapısı isteğe bağlı değildir.</strong> Tek başına NOT şu çıktıyı verir: <code>true</code> RANDOM kapısı boşta kaldığında; bu yüzden B sesinin çalacağı sohbet mesajları şunlar olurdu: <em>tetikleyicinizle eşleşmeyen tüm mesajlar.</em> Tetikleyiciyi AND'e ikinci girdi olarak bağlamak B sesini yalnızca eşleşen mesajlarla sınırlar. Aynı örüntü yalnızca seste değil, iki seçenekli her eylem çiftinde çalışır.</p>
+            </section>
+
+            <section>
+                <h2>4. Yankı, Döngü ve Aktarma Geri Beslemesini Önleme</h2>
+                <p>Sohbeti arayüzler arasında aktarmak güçlüdür ancak kendi çıkışınızı dinlerseniz sonsuz yankı oluşabilir. Şu önlemleri izleyin:</p>
+                <div class="callout tip">
+                    <strong>YouTube Shorts hedef notu:</strong><br>
+                    Gelen tetikleyiciler ve giden Sohbeti Aktar hedefleri şu iki türü ayrı tutar: <code>youtube</code> ve <code>youtubeshorts</code>. Mesaj iki çeşide de ulaşacaksa iki aktarma eylemi kullanın. Bkz. <a href="../docs/source-types-guide.html#youtube-shorts-event-flow">YouTube Shorts ve Etkinlik Akışı</a>.
+                </div>
+                <div class="callout.danger">
+                    <strong>Sohbeti Aktar tanınan yansımaları otomatik atlar.</strong><br>
+                    Yansıma, giden mesajın hedef sohbetten yeniden yakalanmasıdır. Mevcut Sohbeti Aktar eylemleri tanınan yansımaları atlar; ayrı Yansıma Yok kutusu bulunmaz. Panel ve katmanlarda gösterimini gizlemek veya sınırlamak için şunu kullanın: <strong>Yansıma filtresi</strong> eylemi, şu seçenekle: <strong>Tümünü engelle</strong>, <strong>İlkine izin ver</strong>, veya <strong>Tümüne izin ver</strong>. Bu, gönderimi değil yeniden alındığında gösterimi kontrol eder. Şunu izleyin: <a href="../docs/chat-relay-guide.html">Twitch ve YouTube aktarma anlatımı</a> tam kurulum için.
+                </div>
+                <ul>
+                    <li><strong>Yinelenen aktarma sistemlerinden kaçının.</strong> Eşdeğer Etkinlik Akışı yollarını kullanırken genel Tümünü Aktar'ı kapatın ve aynı sohbetleri bağlayan diğer hizmetleri kontrol edin. Özel üst verilerin platform sohbetinden geçerken korunacağı garanti edilmez.</li>
+                    <li><strong>Debounce veya Bekleme Süresi düğümlerini kullanın</strong> yalnızca her X saniyede bir tetiklenmesi gereken uyarılar için.</li>
+                    <li><strong>Döngüleri bilinçli kırın.</strong> İki dal birbirini besliyorsa bir durum değişkenini ("currentlyRelaying") kontrol eden mantık düğümü ekleyin; böylece bayrak ayarlandığında akış erken çıkar.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>5. Girdiler, Çıktılar ve Pratik Sorular</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Bir düğüme ne girer?</h4>
+                        <ul>
+                            <li>Tam mesaj verisi.</li>
+                            <li>Geçit biti (<code>true</code>/<code>false</code>).</li>
+                            <li>Düğümün açıkça istediği isteğe bağlı bağlam (durum değişkenleri, zamanlayıcılar).</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Düğümden ne çıkar?</h4>
+                        <ul>
+                            <li>Düğüm değiştirmedikçe aynı veri.</li>
+                            <li>Yeniden hesaplanan geçit biti (mantık düğümleri) veya aktarılan bit (eylemler).</li>
+                            <li>Çoğu yan etki (sohbet gönderme gibi) veriyi değiştirmez ancak puan eylemleri şu gibi durum alanları ekleyebilir: <code>pointsTotal</code> veya <code>pointsSpendError</code> sonraki mantık için.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Ne zaman dallanmalı?</h4>
+                        <p>Farklı tepki vermek istediğinizde: <code>true</code> ile <code>false</code>. Gereken renkli çıkıştan (yeşil = doğru, gri/kırmızı = yanlış) sonraki düğüme bağlantı sürükleyin.</p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <strong>Unutmayın:</strong> Şu çıktıyla hiçbir şey yapmazsanız: <code>false</code> , akış orada biter. Bu filtreler için idealdir ("kontrolden geçmeyen her şeyi engelle") ancak şu yolu bağlamayı unutmayın: <code>false</code> yolu, alternatifler gerekiyorsa.
+                </div>
+                <h3>Yaygın Sorular ve Yanıtlar</h3>
+                <ul>
+                    <li><strong>Her filtre çifti için AND kullanmalı mıyım?</strong> Hayır. Birçok düğüm birden fazla kontrol içerir (örneğin temel Mesaj Filtresi anahtar kelime + rol destekler). AND'i yalnızca gelişmiş birleşimlerde veya farklı düğümlerden gelen sinyalleri birleştirirken kullanın.</li>
+                    <li><strong>Doğru/yanlış değerleri NOT düğümüne nasıl ulaşır?</strong> Yeşil çıkışlı her düğüm şu değeri çıkarır: <code>true</code> varsayılan olarak. Koşul sağlanmazsa şu çıktıyı verir: <code>false</code>. Sonucu tersine çevirmek için bu bağlantıyı NOT'a bağlayın.</li>
+                    <li><strong>Düğüm yanlış döndürse bile veri çıkarabilir mi?</strong> Evet. Veri yanlış çıkışından geçmeye devam eder; o dalın nereye gideceğine siz karar verirsiniz.</li>
+					<li><strong>TikTok Takım üyelerini nasıl eşleştiririm?</strong> Seçin: <em>TikTok Takım Üyesi</em> Kullanıcı Rolü düğümünde. Gelen mesajdaki TikTok Hayran Kulübü/takım seviyelerini ve rozetlerini tanır; Ana Sohbet Katmanı ayarlarına bağlı değildir.</li>
+					<li><strong>Her Metni Seslendir düğümü farklı ses kullanabilir mi?</strong> Evet. Şu alana sağlayıcının desteklediği ses adı veya kimliğini girin: <em>Ses Geçersiz Kılması</em>, veya Akış Eylemleri TTS varsayılanını kullanmak için boş bırakın.</li>
+                </ul>
+            </section>
+
+            <section id="template-variables">
+                <h2>6. Şablon Değişkenleri Referansı</h2>
+                <p>Birçok eylem düğümü (Metin Göster, Metin Kaynağını Ayarla, Mesaj Gönder, Sohbeti Aktar, TTS Seslendir, Webhook Çağır, Termal Etiket Yazdır) şunu destekler: <strong>şablon değişkenleri</strong> çalışma zamanında etkinlik verileriyle değiştirilir. Değişken adlarını şu şekilde süslü paranteze alın: <code>{username}</code>.</p>
+
+                <h3>Temel Değişkenler (geriye uyumlu)</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>Değişken</th><th>Takma ad</th><th>Açıklama</th><th>Örnek</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{username}</code></td><td><code>{chatname}</code></td><td>Kullanıcının görünen adı</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{message}</code></td><td><code>{chatmessage}</code></td><td>Sohbet mesajı metni</td><td>Herkese merhaba!</td></tr>
+                        <tr><td><code>{source}</code></td><td>-</td><td>Platform adı (baş harfi büyük)</td><td>Twitch, YouTube</td></tr>
+                        <tr><td><code>{type}</code></td><td>-</td><td>Platform adı (ham)</td><td>twitch, youtube</td></tr>
+                        <tr><td><code>{donation}</code></td><td><code>{hasDonation}</code></td><td>Bağış/bahşiş görünüm etiketi</td><td>$5.00, 500 bits</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Genişletilmiş Değişkenler</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>Değişken</th><th>Açıklama</th><th>Örnek</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{displayname}</code></td><td>Görünen ad (alternatif alan)</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{donoValue}</code></td><td>Sağlanan veya tahmin edilen USD bağış karşılığı; Etkinlik Akışı eşik değerlerini normalleştirilmiş şu alandan türetir: <code>hasDonation</code> değer gibi etiketler, <code>$</code>değer, değer + birim veya kısa birim/değer. Bilinmeyen adlandırılmış sanal birimler için 100 birim = 0,01 USD kullanılır; fiyatı bilinmeyen TikTok hediyeleri hediye başına bir coin (her biri 0,01 USD) kullanır. <code>{donationAmount}</code> eski bir takma addır</td><td>5.00</td></tr>
+                        <tr><td><code>{event}</code></td><td>Etkinlik türü tanımlayıcısı</td><td>cheer, raid, new_follower</td></tr>
+                        <tr><td><code>{membership}</code></td><td>Üyelik durumu</td><td>MEMBERSHIP, new_sponsor</td></tr>
+                        <tr><td><code>{subtitle}</code></td><td>Ek bağlam</td><td>3 aydır üye</td></tr>
+                        <tr><td><code>{userid}</code></td><td>Kullanıcının platform kimliği</td><td>12345678</td></tr>
+                        <tr><td><code>{chatimg}</code></td><td>Kullanıcı avatar URL'si</td><td>https://...</td></tr>
+                        <tr><td><code>{contentimg}</code></td><td>Eklenen resmin URL'si</td><td>https://...</td></tr>
+                        <tr><td><code>{rewardTitle}</code></td><td>Kaynak üst düzey ödül başlığı alanı sunuyorsa ödül adı</td><td>Mesajımı Vurgula</td></tr>
+                        <tr><td><code>{meta}</code></td><td>Yapılandırılmış etkinlik verisi (JSON)</td><td>{"viewers":100}</td></tr>
+                        <tr><td><code>{counterValue}</code></td><td>Sayaç veya Sayacı Kontrol Et adımından sonraki mevcut sayaç değeri</td><td>12</td></tr>
+                        <tr><td><code>{counterTarget}</code></td><td>Sayaç hedef değeri</td><td>30</td></tr>
+                        <tr><td><code>{counterRemaining}</code></td><td>Sayaç hedefi eksi mevcut değer; en az 0</td><td>18</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>Değişken eşleştirmesi büyük/küçük harfe duyarsızdır.</strong> <code>{USERNAME}</code>, <code>{Username}</code>, ve <code>{username}</code> aynı şekilde çalışır.
+                </div>
+                <div class="panel">
+                    <strong>Akışın eklediği alanlar da çalışır.</strong> Önceki eylem mesaja üst düzey değer eklerse sonraki şablonlar bunu doğrudan okuyabilir. Şu şekilde çalışır: <code>Check Counter</code> sunar: <code>{counterValue}</code>, <code>{counterTarget}</code>, ve <code>{counterRemaining}</code>.
+                </div>
+                <div class="panel">
+                    <strong>Webhook Çağır JSON:</strong> Şablon değişkenleri her iç içe nesne veya dizi derinliğindeki JSON metin değerlerinde çalışır. Nesne anahtarları şablon olarak işlenmez; yer tutucu içermeyen özel gövde değiştirilmeden gönderilir.
+                </div>
+
+                <h3>Örnek Şablonlar</h3>
+                <ul>
+                    <li><strong>Metin Göster:</strong> <code>{username} just cheered {hasDonation}!</code></li>
+                    <li><strong>OBS Metin Kaynağını Ayarla:</strong> <code>{username}: now {counterValue}, need {counterTarget}</code></li>
+                    <li><strong>Sohbeti Aktar:</strong> <code>[{source}] {username}: {message}</code></li>
+                    <li><strong>TTS:</strong> <code>{username} says {message}</code></li>
+                    <li><strong>Bağış Uyarısı:</strong> <code>{username} donated {donation} - {subtitle}</code></li>
+					<li><strong>Termal Etiket:</strong> <code>{username}</code>, yeni bir satır, ardından <code>{donation}</code>. Bkz. <a href="../docs/thermal-printer-guide.html">Termal Yazıcı Rehberi</a> yazıcı kurulumu, sabit boyutlu etiketler ve tam akış için.</li>
+                    <li><strong>Discord Webhook Çağır:</strong> <code>{&quot;content&quot;:&quot;{message}&quot;,&quot;username&quot;:&quot;{username}&quot;,&quot;avatar_url&quot;:&quot;{chatimg}&quot;}</code></li>
+                </ul>
+
+                <div class="callout tip">
+                    <strong>Eksik değişkenler boş metne dönüşür.</strong> Etkinlik belirli alanı içermiyorsa (örneğin <code>{donation}</code> normal sohbet mesajında), yer tutucunun kendisini göstermek yerine boş metin konur: <code>{donation}</code> metni.
+                </div>
+            </section>
+
+            <section>
+                <h2>7. İyi Uygulamalar Kontrol Listesi</h2>
+                <ul>
+                    <li><strong>Adlandırın ve renklendirin</strong> düğümlerinizi; böylece gelecekte hangi dalın ne olduğunu bilirsiniz.</li>
+                    <li><strong>Yerleşik simülatörle test edin</strong> (Test Etkinliği Gönder), akışı canlı kullanıma almadan önce.</li>
+                    <li><strong>Mantığı kaynağın yakınında gruplayın.</strong> Sonraki aşamalardaki ek işlemleri önlemek için mümkün olduğunca erken filtreleyin.</li>
+                    <li><strong>Tekrarları Durum düğümlerinde saklayın.</strong> Çift uyarıları önlemek için sayaç, anahtar ve zaman damgaları kullanın.</li>
+                    <li><strong>meta alanlarını belgeleyin.</strong> Özel şu alanları eklediğinizde: <code>meta</code> anahtarlarını belgeleyin; böylece katmanlar ve uzak istemciler tutarlı kalır.</li>
+                </ul>
+                <div class="callout tip">
+                    <strong>Sürümleri kaydedin.</strong> Önemli bir aşamaya ulaştığınızda akışı dışa aktarın. Deneme ters giderse içe aktarma, önceki duruma dönmenin en kolay yoludur.
+                </div>
+            </section>
+
+            <section>
+                <h2>8. Daha Fazla Keşif</h2>
+                <p><a href="../docs/streamdeck-event-flow.html">Stream Deck veya API'den özel iş akışları çalıştırın</a>: adlandırılmış tetikleyiciler, başlangıç şablonu, iş akışı keşfi, ek veriler, HTTP/WebSocket/P2P örnekleri ve kadran hareketleri.</p>
+                <p>Daha derine inmeye hazır mısınız?</p>
+                <ul>
+                    <li>Kullanın: <strong>Durum Düğümleri</strong> (sayaçlar, anahtarlar, zamanlayıcılar), etkinlikler arasında bağlamı takip etmek için.</li>
+                    <li>Birleştirin: <strong>Değişkenler + Mantık</strong> kuyruk sistemleri, çekilişler veya puanlama motorları oluşturmak için.</li>
+                    <li>Şu sisteme bağlanın: <strong>Puanlar ve Ödüller</strong> ; böylece izleyiciler akışları bilinçli tetikleyebilir.</li>
+                    <li>Kullandığınız yazılım <strong>SSApp masaüstü uygulaması mı?</strong> Şu düğümlerin kilidini açın: <a href="#custom-js"><strong>Özel JavaScript düğümleri</strong></a> yerleşik düğümlerin kapsamadığı özel mantık için.</li>
+                    <li>Şunu kontrol edin: <a href="../docs/event-reference.html"><strong>Etkinlik başvuru kaynağı</strong></a> tüm platformlarda ayrıntılı veri belgeleri için.</li>
+                </ul>
+                <p>Bu rehber bilinçli olarak bağımsız hazırlanmıştır — yerel olarak kopyalayın, ekibinize uyarlayın ve düzenleyicide denemeyi sürdürün.</p>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 SECTION 9: CUSTOM JAVASCRIPT
+                 Direct link anchors:
+                   #custom-js              → section root
+                   #custom-js-trigger      → Custom Code trigger node
+                   #custom-js-action       → Execute Custom Code action node
+                   #custom-js-message-api  → message object reference table
+                   #custom-js-result-api   → result return object reference
+                   #custom-js-examples     → snippet library
+                   #custom-js-example-flow → complete worked example
+            ══════════════════════════════════════════════════════════════ -->
+            <section id="custom-js">
+                <h2>9. Özel JavaScript <span class="desktop-badge">Yalnızca SSApp / Masaüstü</span></h2>
+                <p>Etkinlik Akışı düzenleyicisindeki iki düğüm, akış işlem hattında çalışan istediğiniz JavaScript kodunu yazmanızı sağlar: <strong>Özel Kod</strong> (tetikleyici) ve <strong>Özel Kod Çalıştır</strong> (eylem). Yerleşik düğümlerin ifade edemediği her şey için çıkış yoludur.</p>
+
+                <div class="callout warn">
+                    <strong>Masaüstü uygulaması gerekir.</strong> Chrome Manifest V3 İçerik Güvenliği Politikası şu öğeyi engellediği için tarayıcı uzantısında özel JavaScript düğümleri devre dışıdır: <code>new Function()</code> / <code>eval()</code>. Düzenleyiciyi şu yoldan açın: <strong>SSApp masaüstü uygulaması</strong> bunları etkinleştirmek için. Uzantı modunda düğümler şu etiketle gri görünür: <em>"Yalnızca masaüstü"</em>.
+                </div>
+
+                <div class="panel">
+                    <strong>Kodu düzenleme:</strong> Özel Kod düğümünü seçip şuna tıklayın: <strong>Kod Düzenleyicisini Aç</strong> büyük düzenleme penceresi için. <strong>Kaydet ve Kapat</strong> JavaScript sözdizimini kontrol eder ve tüm akışı kaydeder; <code>Ctrl+S</code> veya <code>Cmd+S</code> aynısını yapar. İptal, düğümü değiştirmez.
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/editor-overview.png" alt="Etkinlik Akışı Düzenleyicisi — boş durum">
+                    <figcaption>Etkinlik Akışı Düzenleyicisi. Sol panel tüm düğümleri listeler; noktalı tuvalde akışları oluşturursunuz; sağ panel seçili düğümün özelliklerini gösterir.</figcaption>
+                </figure>
+
+                <!-- ─── Trigger ─── -->
+                <h3 id="custom-js-trigger">Özel Kod — Tetikleyici düğümü</h3>
+                <p>Sürükleyin: <strong>Özel Kod</strong> şu kaynaktan: <em>Gelişmiş</em> grubu, şu panelde: <strong>Tetikleyiciler</strong> panelinden tuvale. Geçit görevi görür: akış yalnızca kodunuz şu değeri döndürdüğünde sürer: <code>true</code>.</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/trigger-panel.png" alt="Gelişmiş grubunda Özel Kod düğümünü gösteren Tetikleyiciler paneli">
+                        <figcaption>Özel Kod şu bölümde bulunur: <em>Gelişmiş</em> Tetikleyiciler panelindeki grup.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-trigger-props.png" alt="JavaScript kod düzenleyicisini gösteren Özel Kod tetikleyici özellikleri paneli">
+                        <figcaption>Tetikleyici yerleştirildikten sonraki özellikler paneli. Şu değeri döndüren herhangi bir ifade yazın: <code>true</code> veya <code>false</code>.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>İmza:</strong> kodunuz şu şekilde çalışır: <code>function(message) { ... }</code><br>
+                    <strong>Şunu döndürmelidir:</strong> mantıksal değer — <code>true</code> akışın devam etmesini sağlamak için, <code>false</code> durdurmak için.<br>
+                    <strong>Kullanılabilir:</strong> nesne: <code>message</code> (bkz. <a href="#custom-js-message-api">mesaj API'si</a> aşağıda), ayrıca <code>convertCurrency(value, targetCurrency, source)</code> ve <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <!-- ─── Action ─── -->
+                <h3 id="custom-js-action">Özel Kod Çalıştır — Eylem düğümü</h3>
+                <p>Sürükleyin: <strong>Özel Kod Çalıştır</strong> şu kaynaktan: <em>Entegrasyonlar</em> grubu, şu panelde: <strong>Eylemler</strong> paneli. Mesajı değiştirebilir, engelleyebilir veya sonraki düğümlerin okuyabileceği üst veriler ekleyebilir.</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/action-panel.png" alt="Entegrasyonlar grubunda Özel Kod Çalıştır&#x27;ı gösteren Eylemler paneli">
+                        <figcaption>Özel Kod Çalıştır şu bölümde: <em>Entegrasyonlar</em> Eylemler panelindeki grup.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-action-props.png" alt="Kod düzenleyicisini gösteren Özel Kod Çalıştır eylem özellikleri paneli">
+                        <figcaption>Eylem özellikleri. Değişiklikleri akış sonucuyla birleştirmek için nesne döndürün.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>İmza:</strong> kodunuz şu şekilde çalışır: <code>function(message, result) { ... }</code><br>
+                    <strong>Şunu döndürmesi gerekir:</strong> şuna birleştirilen nesne veya Promise: <code>result</code>— bkz. <a href="#custom-js-result-api">sonuç API'si</a>.<br>
+                    <strong>Kullanılabilir:</strong> <code>message</code> (etkinlik verisi), <code>result</code> (mevcut akış sonucu durumu), <code>printThermal(html, options)</code>, ayrıca <code>convertCurrency(value, targetCurrency, source)</code> ve <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <div class="panel">
+                    <strong>SSApp'te termal yazdırma:</strong> yazıcıyı seçin, kağıt genişliğini ve güvenli kenar boşluklarını şu bölümden ayarlayın: <em>Yazıcı Kontrolü</em>, ardından şunu döndürün: <code>printThermal('&lt;strong&gt;' + message.chatname + '&lt;/strong&gt;')</code>. SSApp işi yerel Windows yazıcı API'si üzerinden sessizce kuyruğa alır ve kayıtlı ayarları kullanır. Akış bunları şu gibi seçeneklerle geçersiz kılabilir: <code>{ width: '58mm', marginLeft: '3mm', marginRight: '3mm', marginTop: '2mm', marginBottom: '2mm', feed: '3mm', marginType: 'printableArea' }</code>. Promise döndürmek Etkinlik Akışı'nın gönderimi beklemesini ve hataları bildirmesini sağlar.
+                </div>
+
+                <!-- ─── Both nodes on canvas ─── -->
+                <figure class="screenshot">
+                    <img src="../../actions/img/both-nodes-canvas.png" alt="Yan yana Özel Kod tetikleyicisi ve Özel Kod Çalıştır eylemi gösteren tuval">
+                    <figcaption>Tuvale yerleştirilmiş Özel Kod tetikleyicisi (mavi) ve Özel Kod Çalıştır eylemi (yeşil). Bağlamak için tetikleyicinin çıkışını eylemin girişine bağlayın.</figcaption>
+                </figure>
+
+                <!-- ─── message API ─── -->
+                <h3 id="custom-js-message-api">Nesne: <code>message</code></h3>
+                <p>Her iki düğüm de tüm etkinlik verisini şu değişkenle alır: <code>message</code>. Aşağıdaki alanlar her zaman kullanılabilir; platforma özel etkinlikler ek alanlar içerebilir.</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>Alan</th><th>Veri türü</th><th>Açıklama</th><th>Örnek</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>message.chatmessage</code></td><td>metin</td><td>Sohbet mesajı metni (HTML içerebilir)</td><td><code>"Hello stream!"</code></td></tr>
+                        <tr><td><code>message.chatname</code></td><td>metin</td><td>Gönderenin görünen adı</td><td><code>"CoolViewer"</code></td></tr>
+                        <tr><td><code>message.userid</code></td><td>metin</td><td>Platform kullanıcı kimliği</td><td><code>"12345678"</code></td></tr>
+                        <tr><td><code>message.type</code></td><td>metin</td><td>Kaynak platform (küçük harf)</td><td><code>"twitch"</code>, <code>"youtube"</code>, <code>"kick"</code></td></tr>
+                        <tr><td><code>message.hasDonation</code></td><td>metin</td><td>Varsa biçimlendirilmiş bağış metni</td><td><code>"$5.00"</code>, <code>"500 bits"</code></td></tr>
+                        <tr><td><code>message.donoValue</code></td><td>number&nbsp;/&nbsp;string</td><td>Kaynak sağlıyorsa bağışın USD karşılığı; geçerli sıfır değerleri dikkate alınır. Etkinlik Akışı alternatif olarak şunu kullanır: <code>currency.js</code> . Normalleştirilmiş <code>hasDonation</code> etiketlerini eşik karşılaştırmaları için dönüştürür; 100 bilinmeyen adlandırılmış birim = 0,01 USD dahildir. Bağış değerlerini şu alandaki serbest metinden ayrıştırmaz: <code>chatmessage</code> .</td><td><code>5</code></td></tr>
+                        <tr><td><code>message.event</code></td><td>metin</td><td>Etkinlik türü tanımlayıcısı</td><td><code>"new_follower"</code>, <code>"cheer"</code>, <code>"raid"</code></td></tr>
+                        <tr><td><code>message.membership</code></td><td>metin</td><td>Geçerliyse üyelik durumu</td><td><code>"MEMBERSHIP"</code></td></tr>
+                        <tr><td><code>message.subtitle</code></td><td>metin</td><td>İkincil bağlam satırı</td><td><code>"Member for 3 months"</code></td></tr>
+                        <tr><td><code>message.mod</code></td><td>boolean</td><td>Gönderen moderatör</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.subscriber</code></td><td>boolean</td><td>Gönderen abone</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.vip</code></td><td>boolean</td><td>Gönderen VIP durumunda</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.chatimg</code></td><td>metin</td><td>Kullanıcı avatar URL'si</td><td><code>"https://..."</code></td></tr>
+                        <tr><td><code>message.meta</code></td><td>object</td><td>Etkinliğe eklenen herhangi bir yapılandırılmış veri</td><td><code>{ viewers: 120 }</code></td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>Para birimi dönüştürme:</strong> kullanın: <code>convertCurrency(message.hasDonation, 'EUR', message.type)</code> biçimlendirilmiş bağış etiketini EUR'ya çevirmek için. Sayı döndürür veya <code>null</code> istenen hedef para birimi desteklenmediğinde. Dönüştürücü Social Stream Ninja'nın yaklaşık dahili kurlarını kullanır; harici kur hizmetine bağlanmaz.
+                </div>
+
+                <!-- ─── result API ─── -->
+                <h3 id="custom-js-result-api">Eylemin döndürdüğü</h3>
+                <p>Eylem kodunuzdan düz nesne döndürün. Eklediğiniz tüm alanlar akışın şu nesnesiyle birleştirilir: <code>result</code> ; belirtmediğiniz alanlar mevcut değerlerini korur.</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>Dönüş alanı</th><th>Veri türü</th><th>Etki</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>modified</code></td><td>boolean</td><td>Şunu ayarlayın: <code>true</code> şunu değiştirdiyseniz: <code>message</code> alanları. Sonraki düğümlere verinin düzenlendiğini bildirir.</td></tr>
+                        <tr><td><code>message</code></td><td>object</td><td>Sonraki düğümlerin değişikliklerinizi alması için (değiştirilmiş olabilecek) mesajı geri verin.</td></tr>
+                        <tr><td><code>blocked</code></td><td>boolean</td><td>Şunu ayarlayın: <code>true</code> mesajın görüntülenmesini veya aktarılmasını önlemek için.</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>Güvenli en küçük dönüş değeri:</strong> <code>return { modified: false, message };</code><br>
+                    Hiçbir şeyi değiştirmeseniz bile şu değeri döndürmek: <code>message</code> sonraki düğüme akmayı sürdürür.
+                </div>
+
+                <!-- ─── Snippet Examples ─── -->
+                <h3 id="custom-js-examples">Kod parçası örnekleri</h3>
+                <p>Bunlardan herhangi birini ilgili düğüm türünün JavaScript Kodu metin alanına kopyalayın.</p>
+
+                <h4 class="snippet-heading">Tetikleyici kod parçaları — şunu döndürün: <code>true</code> akışı sürdürmek için</h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Anahtar kelime eşleşmesi (büyük/küçük harfe duyarsız)</div>
+                    <div class="snippet-desc">Akışı yalnızca mesaj belirli bir kelime veya ifade içerdiğinde sürdürün.</div>
+                    <div class="code-js">// Matches "!hello" anywhere in the message
+return (message.chatmessage || '').toLowerCase().includes('!hello');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Regex ile komut algılama</div>
+                    <div class="snippet-desc">Belirlenmiş listedeki komutla başlayan mesajları eşleştirin (örneğin <code>!queue</code>, <code>!raffle</code>, <code>!enter</code>).</div>
+                    <div class="code-js">return /^!(queue|raffle|enter)\b/i.test(message.chatmessage || '');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Eşik üstündeki bağış</div>
+                    <div class="snippet-desc">Yalnızca bağış minimum tutarı karşıladığında veya aştığında tetikleyin.</div>
+                    <div class="code-js">const amount = message.donoValue !== undefined && message.donoValue !== null && message.donoValue !== ''
+  ? Number(message.donoValue)
+  : (typeof convertToUSD === 'function' ? convertToUSD(message.hasDonation || '', message.type || '') : Number(String(message.hasDonation || '').replace(/[^0-9.]/g, '') || 0));
+return amount >= 5;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">EUR aralığında YouTube Super Chat veya Super Sticker</div>
+                    <div class="snippet-desc">Standart YouTube bağış etiketini EUR'ya çevirin, Jewels/Hediyeler'i hariç tutun ve tek ses veya görsel aralığı seçin.</div>
+                    <div class="code-js">var eventName = String(message.event || '').toLowerCase();
+if (eventName !== 'superchat' &amp;&amp; eventName !== 'supersticker') return false;
+
+var eurValue = convertCurrency(message.hasDonation || '', 'EUR', message.type || '');
+if (typeof eurValue !== 'number' || !isFinite(eurValue)) return false;
+
+message.eurValue = eurValue;
+return eurValue &gt;= 10 &amp;&amp; eurValue &lt; 25;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Platform filtresi</div>
+                    <div class="snippet-desc">Yalnızca belirli platformlardan gelen etkinlikleri işleyin.</div>
+                    <div class="code-js">return ['twitch', 'youtube'].includes(message.type);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Abone / VIP / moderatör geçidi</div>
+                    <div class="snippet-desc">Akışın yalnızca ayrıcalıklı kullanıcılar için sürmesini sağlayın.</div>
+                    <div class="code-js">return !!(message.subscriber || message.vip || message.mod);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Çoklu koşul — VIP + anahtar kelime</div>
+                    <div class="snippet-desc">Yerleşik tetikleyicilerin kapsamadığı tek bir ifadede rol kontrolü ve mesaj içeriğini birleştirin.</div>
+                    <div class="code-js">const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test(message.chatmessage || '');
+return isPrivileged && isCommand;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Mesaj uzunluğu geçidi</div>
+                    <div class="snippet-desc">Yalnızca yeterli içerikli mesajları işleyin (tek emoji spamini önlemek için TTS veya aktarmada kullanışlıdır).</div>
+                    <div class="code-js">return (message.chatmessage || '').replace(/<[^>]+>/g, '').trim().length >= 20;</div>
+                </div>
+
+                <h4 class="snippet-heading" style="margin-top:36px;">Eylem kod parçaları — şunu döndürün: <code>{ modified, message }</code></h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Mesaja rozet veya etiket ekleyin</div>
+                    <div class="snippet-desc">Bu eylemden geçen her mesajın sonuna görsel gösterge ekleyin.</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').trimEnd() + ' ✅';
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Mesajı koşula bağlı engelleyin</div>
+                    <div class="snippet-desc">İçeriği inceleyin ve kural eşleşirse mesajı sessizce atın — anahtar kelime filtresinin ifade edemediği spam örüntüleri için kullanışlıdır.</div>
+                    <div class="code-js">const text = (message.chatmessage || '').toLowerCase();
+const spamPatterns = ['buy followers', 'free nitro', 'click here'];
+
+if (spamPatterns.some(p => text.includes(p))) {
+    return { blocked: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">@etiketleri kaldır</div>
+                    <div class="snippet-desc">Başka platforma aktarmadan önce mesajdaki tüm @kullanıcıadı etiketlerini kaldırın.</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').replace(/@\w+/g, '').trim();
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Bağış duyurusu biçimlendirin</div>
+                    <div class="snippet-desc">Bağış varsa chatmessage alanını tutarlı duyuru metnine dönüştürün.</div>
+                    <div class="code-js">const amount = parseFloat(message.donoValue || 0);
+if (amount > 0) {
+    const note = (message.chatmessage || '').trim();
+    message.chatmessage = `💰 ${message.chatname} donated $${amount.toFixed(2)}!`
+        + (note ? ` "${note}"` : '');
+    return { modified: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Sonraki düğümler için yönlendirme üst verileri ekleyin</div>
+                    <div class="snippet-desc">Mesajı, sonraki bir eylemin okuyabileceği özel alanla etiketleyin: <em>Sohbeti aktar</em> veya <em>Mesaj Gönder</em> eylemi şablon değişkeninden okuyabilir (<code>{meta}</code>).</div>
+                    <div class="code-js">message.meta = message.meta || {};
+
+// Assign a donation tier so the next node can use {meta} to decide overlay colour
+const amount = parseFloat(message.donoValue || 0);
+message.meta.donationTier = amount >= 20 ? 'gold' : amount >= 5 ? 'silver' : 'bronze';
+
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Platforma göre mesaj öneki</div>
+                    <div class="snippet-desc">Platformlar arası aktarırken izleyicilerin kaynağı bilmesi için başa platform etiketi ekleyin.</div>
+                    <div class="code-js">const labels = {
+    twitch:  '[Twitch]',
+    youtube: '[YouTube]',
+    kick:    '[Kick]',
+    tiktok:  '[TikTok]',
+};
+const label = labels[message.type] || `[${message.type || 'Chat'}]`;
+message.chatmessage = `${label} ${message.chatname}: ${message.chatmessage || ''}`;
+return { modified: true, message };</div>
+                </div>
+
+                <!-- ─── Complete worked example ─── -->
+                <h3 id="custom-js-example-flow">Tam örnek — VIP özellik talebi botu</h3>
+                <p>Bu akış şunu dinler: <code>!feature &lt;text&gt;</code> abonelerden, VIP'lerden veya moderatörlerden; bunu yeni özellik talebi olarak yeniden biçimlendirip ikinci hedefe (ör. Discord) aktarır.</p>
+
+                <div class="diagram">
+┌──────────────────────┐     ┌──────────────────────────┐     ┌──────────────────┐
+│  Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│  Relay Chat      │
+│                      │     │                          │     │  (to Discord)    │
+│  Gate: VIP/sub/mod   │     │  Reformat message text   │     │                  │
+│  + starts with       │     │  → "📋 Feature Request   │     │                  │
+│    !feature          │     │     from {name}: {text}" │     │                  │
+└──────────────────────┘     └──────────────────────────┘     └──────────────────┘</div>
+
+                <p><strong>1. Adım — Özel Kod tetikleyicisi</strong> (tetikleyicinin JavaScript Kodu alanına yapıştırın):</p>
+                <div class="code-js">// Only let VIPs, subscribers, and mods through, and only for !feature commands
+const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test((message.chatmessage || '').trim());
+return isPrivileged && isCommand;</div>
+
+                <p><strong>2. Adım — Özel Kod Çalıştır eylemi</strong> (eylemin JavaScript Kodu alanına yapıştırın):</p>
+                <div class="code-js">// Strip the "!feature" command word and format a clean announcement
+const featureText = (message.chatmessage || '')
+    .replace(/^!feature\s*/i, '')
+    .trim();
+
+if (!featureText) {
+    // No text after the command: block rather than relay an empty request
+    return { blocked: true, message };
+}
+
+message.chatmessage = `📋 Feature request from ${message.chatname}: ${featureText}`;
+return { modified: true, message };</div>
+
+                <p><strong>3. Adım — Sohbeti Aktar eylemi</strong>: eylemden sonra standart Sohbeti Aktar düğümü ekleyip Discord (veya başka) hedefinize yönlendirin. Burada özel kod gerekmez — yeniden biçimlendirilen <code>message.chatmessage</code> otomatik olarak aktarılır.</p>
+
+                <div class="callout tip">
+                    <strong>Akışı test etme.</strong> Şu düğmeye tıklayın: <strong>Akışı Test Et</strong> (düzenleyicinin sağ üstünde); böylece canlı yayın gerekmeden işlem hattından yapay mesaj gönderebilirsiniz. chatname'i bir aboneye ayarlayın ve şu tür mesaj ekleyin: <code>!feature dark mode support</code>, ve Sohbeti Aktar hedefinin yeniden biçimlendirilmiş metni aldığını doğrulayın.
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/test-panel.png" alt="Yapay test etkinlikleri göndermek için Akışı Test Et paneli">
+                    <figcaption>Akışı Test Et paneli. Tetikleyici koşullarınıza uyan alanları doldurup şuna tıklayın: <em>Testi Çalıştır</em> tüm işlem hattını doğrulamak için.</figcaption>
+                </figure>
+
+                <!-- ─── Security note ─── -->
+                <h3 id="custom-js-security">Güvenlikle ilgili hususlar</h3>
+                <div class="callout warn">
+                    <strong>Özel kod, görüntüleyici işlem yetkileriyle çalışır.</strong> SSApp içinde Özel JS düğümlerindeki kod şu nesneye tam erişir: <code>window</code> ve preload betiğinin sunduğu tüm API'lere (ör. <code>window.ninjafy</code>). İçe aktarılan akış dosyalarını çalıştırılabilir kod gibi değerlendirin — yalnızca güvendiğiniz kaynaklardan akış içe aktarın.
+                </div>
+                <ul>
+                    <li><strong>Ağ korumalı alanı yoktur.</strong> Eylem kodu şunu çağırabilir: <code>fetch()</code>. Başkalarından paylaşılan akışlar alıyorsanız etkinleştirmeden önce JS kodunu inceleyin.</li>
+                    <li><strong>Hatalar yakalanır.</strong> Kodunuzdaki çalışma zamanı hatası şu değeri döndürür: <code>false</code> (tetikleyici) veya işlem yapmadan döner (eylem) ve DevTools konsoluna kaydeder — akış çökmez.</li>
+                    <li><strong>Sözdizimi hataları da yakalanır.</strong> Şu tür bir hata: <code>SyntaxError</code> derleme sırasında aynı şekilde yakalanır. Düğüm hiçbir şey yapmıyor görünüyorsa DevTools'u (F12) kontrol edin.</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

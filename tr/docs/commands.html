@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/tr/docs/commands.html">
+    <meta property="og:title" content="Komutlar ve API - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja komutları, API entegrasyonu ve bot işlevleri için ayrıntılı belgeler.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/tr/docs/commands.html">
+    <meta name="twitter:title" content="Komutlar ve API - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja komutları, API entegrasyonu ve bot işlevleri için ayrıntılı belgeler.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Komutlar ve API - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/commands.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <meta name="description" content="Social Stream Ninja komutları, API entegrasyonu ve bot işlevleri için ayrıntılı belgeler.">
+    <link rel="canonical" href="https://socialstream.ninja/tr/docs/commands.html">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/commands.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{"\"Enable remote API control of extension\"":"“Uzantının uzaktan API kontrolünü etkinleştir”","\"Send chat messages to API server\"":"“Sohbet mesajlarını API sunucusuna gönder”","(Toggle 1). Connect to":"(Anahtar 1) — Şuraya bağlanın:","(Toggle 3). Connect to":"(Anahtar 3) — Şuraya bağlanın:","(runs in background)":"(arka planda çalışır)",", and":", ve",", or":", veya","- Current featured message text":"- Şu anda öne çıkarılan mesajın metni","- Current featured username":"- Şu anda öne çıkarılan kullanıcı adı","- Number of messages in queue":"- Kuyruktaki mesaj sayısı","; use":"; kullanın:","AI Chat Bot Mode":"Yapay zekâ sohbet botu modu","AI Chat Bot Setup Guide":"Yapay zekâ sohbet botu kurulum kılavuzu","AI Co-Host":"Yapay zekâ yardımcı sunucusu","AI Integration":"Yapay zekâ entegrasyonu","AI-powered text-to-speech with natural voice conversion capabilities.":"Doğal ses dönüştürme yetenekleri sunan yapay zekâ destekli metinden konuşma.","API Endpoints and Connection Methods":"API uç noktaları ve bağlantı yöntemleri","API Method":"API yöntemi","AWS Bedrock":"AWS Bedrock","Access to multiple AI models through a unified API interface.":"Tek bir API arayüzü üzerinden birden fazla yapay zekâ modeline erişim.","Action":"İşlem","Add":"Ekleyin:","Add custom animations for new messages":"Yeni mesajlar için özel animasyonlar ekleyin","Add custom instructions for tone, role, and moderation rules":"Üslup, rol ve moderasyon kuralları için özel yönergeler ekleyin","Add endpoint:":"Uç nokta ekleyin:","Add interactive elements with JavaScript":"JavaScript ile etkileşimli öğeler ekleyin","Add your API key and preferred model":"API anahtarınızı ve tercih ettiğiniz modeli ekleyin","Auto-Response Configuration":"Otomatik yanıt yapılandırması","Automated Chat Responses":"Otomatik sohbet yanıtları","Automatically welcomes anyone who says \"hi\" in chat":"Sohbette “hi” diyen herkesi otomatik olarak karşılar","Begin with our sample overlay template to understand the basics:":"Temelleri anlamak için örnek katman şablonumuzla başlayın:","Bitfocus Companion":"Bitfocus Companion","Bitfocus Companion provides powerful control of Social Stream Ninja using either WebSocket or HTTP APIs.":"Bitfocus Companion, WebSocket veya HTTP API'lerini kullanarak Social Stream Ninja üzerinde güçlü kontrol sağlar.","Blocks a user from a specific platform":"Belirli bir platformdaki bir kullanıcıyı engeller","Bluesky":"Bluesky","Bot Accounts for Automatic Replies":"Otomatik yanıtlar için bot hesapları","Bot Commands":"Bot komutları","Bot Instances and Overlays":"Bot örnekleri ve katmanlar","Bot Type":"Bot türü","Bot commands will only work when the auto-responder is properly configured and you have permission to post messages in the respective platforms.":"Bot komutları yalnızca otomatik yanıtlayıcı doğru yapılandırıldığında ve ilgili platformlarda mesaj gönderme izniniz olduğunda çalışır.","Both donations and membership events are supported":"Hem bağış hem de üyelik etkinlikleri desteklenir","Built-in Bot Commands":"Yerleşik bot komutları","Buy Me A Coffee":"Buy Me A Coffee","CC Number":"CC numarası","Censor Bot":"Sansür Botu","Channel System":"Kanal sistemi","ChatGPT / OpenAI":"ChatGPT / OpenAI","ChatGPT, Gemini, DeepSeek, xAI, Groq, OpenRouter, Bedrock:":"ChatGPT, Gemini, DeepSeek, xAI, Groq, OpenRouter, Bedrock:","Choose and Connect Your LLM Provider":"LLM sağlayıcınızı seçin ve bağlayın","Choose fixed, message-length, or after-TTS auto-hide behavior for":"Sabit süreli, mesaj uzunluğuna göre veya TTS sonrası otomatik gizleme davranışını şu sayfa için seçin:","Choose whether replies go back to chat or only to the bot overlay page":"Yanıtların sohbete geri mi yoksa yalnızca bot katmanı sayfasına mı gideceğini seçin","Clear Featured Message":"Öne çıkan mesajı temizle","Clear overlay":"Katmanı temizle","Clears the featured message from the overlay":"Öne çıkan mesajı katmandan temizler","Clears the waitlist and reopens entries":"Bekleme listesini temizler ve katılımı yeniden açar","Collect donations through the popular Buy Me A Coffee platform.":"Popüler Buy Me A Coffee platformu üzerinden bağış toplayın.","Command":"Komut","Commands & API":"Komutlar ve API","Commands & API - Social Stream Ninja":"Komutlar ve API - Social Stream Ninja","Common API Commands":"Yaygın API komutları","Community":"Topluluk","Companion Integration":"Companion entegrasyonu","Configure Bot Behavior":"Bot davranışını yapılandırın","Configure LLM Service Provider":"LLM hizmet sağlayıcısını yapılandır","Configure your MIDI controller or StreamDeck MIDI plugin":"MIDI kontrolcünüzü veya StreamDeck MIDI eklentinizi yapılandırın","Connect to llama.cpp, LM Studio, vLLM, or any other OpenAI-compatible endpoint.":"llama.cpp, LM Studio, vLLM veya başka bir OpenAI uyumlu uç noktaya bağlanın.","Connect with your desired channel:":"İstediğiniz kanalla bağlanın:","Consolidates your live social messaging streams and more. Free and open source.":"Canlı sosyal mesaj akışlarınızı ve daha fazlasını birleştirir. Ücretsiz ve açık kaynaklıdır.","Content Moderation":"İçerik moderasyonu","Contribute":"Katkıda bulunun","Control Social Stream Ninja using MIDI controllers, keyboard shortcuts, or StreamDeck with MIDI plugins.":"MIDI kontrolcüleri, klavye kısayolları veya MIDI eklentili StreamDeck kullanarak Social Stream Ninja'yı kontrol edin.","Control Social Stream Ninja with built-in commands, automation, and API integration":"Yerleşik komutlar, otomasyon ve API entegrasyonuyla Social Stream Ninja'yı kontrol edin","Control featured messages, clear overlays, and manipulate content appearance in your stream.":"Öne çıkan mesajları kontrol edin, katmanları temizleyin ve yayınınızdaki içeriğin görünümünü değiştirin.","Create Tests":"Testler oluşturun","Create a payment link at":"Şurada bir ödeme bağlantısı oluşturun:","Creating Custom Overlays":"Özel katmanlar oluşturma","Custom API":"Özel API","Custom API (OpenAI-compatible)":"Özel API (OpenAI uyumlu)","Custom API:":"Özel API:","Custom JavaScript":"Özel JavaScript","Custom Overlays":"Özel katmanlar","Custom Scripts":"Özel betikler","Customization Guide":"Özelleştirme kılavuzu","Customize how the bot behaves in chat:":"Botun sohbetteki davranışını özelleştirin:","Customize the CSS for your desired appearance":"İstediğiniz görünüm için CSS'yi özelleştirin","Customize the appearance with CSS":"Görünümü CSS ile özelleştirin","Dedicated 1-on-1 bot page that does not share the main bot's RAG dataset or chat history":"Ana botun RAG veri kümesini veya sohbet geçmişini paylaşmayan, ayrı bir bire bir bot sayfası","DeepSeek":"DeepSeek","Description":"Açıklama","Detailed Documentation":"Ayrıntılı belgeler","Detailed documentation for Social Stream Ninja's commands, API integration, and bot functionality.":"Social Stream Ninja komutları, API entegrasyonu ve bot işlevleri için ayrıntılı belgeler.","Discord":"Discord","Displays the next message in the queue":"Kuyruktaki sonraki mesajı gösterir","Displays the next queued message":"Sıradaki mesajı gösterir","Donate":"Bağış yapın","Donation Services":"Bağış hizmetleri","Download":"İndir","Download Now":"Şimdi indir","Download the sample overlay HTML file":"Örnek katman HTML dosyasını indirin","Downloads the current waitlist as a TSV file from the running Social Stream page/app":"Mevcut bekleme listesini çalışan Social Stream sayfasından veya uygulamasından TSV dosyası olarak indirir","Dynamic Variables":"Dinamik değişkenler","Edit the HTML for your custom layout":"Özel düzeniniz için HTML'yi düzenleyin","Edit the file to add your custom functionality":"Özel işlevinizi eklemek için dosyayı düzenleyin","Efficient, cost-effective AI models optimized for conversational tasks.":"Konuşma görevleri için optimize edilmiş verimli ve uygun maliyetli yapay zekâ modelleri.","ElevenLabs":"ElevenLabs","Emote reaction":"İfade tepkisi","Enable":"Şunu etkinleştirin:","Enable MIDI support in the extension settings":"Uzantı ayarlarında MIDI desteğini etkinleştirin","Enable Optional Extras":"İsteğe bağlı ek özellikleri etkinleştirin","Enable RAG and upload documents for knowledge-aware answers":"Bilgiye dayalı yanıtlar için RAG'ı etkinleştirin ve belgeler yükleyin","Enable TTS for bot replies and choose a provider":"Bot yanıtları için TTS'yi etkinleştirin ve bir sağlayıcı seçin","Enable Toggle 1 +":"Anahtar 1'i etkinleştirin +","Enable the LLM AI chat bot":"LLM yapay zekâ sohbet botunu etkinleştir","Enable the censor bot for moderation or strict block mode":"Moderasyon veya sıkı engelleme modu için sansür botunu etkinleştirin","Enable the specific command toggles in the extension menu":"Uzantı menüsünde ilgili komut anahtarlarını etkinleştirin","Enable via the extension menu toggle":"Uzantı menüsündeki anahtarla etkinleştirin","Enables/disables automatic message featuring":"Mesajların otomatik öne çıkarılmasını açar/kapatır","Ensure you're logged into the platform (YouTube, Twitch, etc.)":"Platformda (YouTube, Twitch vb.) oturum açtığınızdan emin olun","Enter an OpenAI-compatible endpoint, model id, and optional API key":"OpenAI uyumlu bir uç nokta, model kimliği ve isteğe bağlı API anahtarı girin","Enterprise-grade AI models from various providers including Claude and Llama.":"Claude ve Llama dahil çeşitli sağlayıcılardan kurumsal düzeyde yapay zekâ modelleri.","Example":"Örnek","Export chat messages to file or forward them via webhook (POST) for custom integrations.":"Özel entegrasyonlar için sohbet mesajlarını dosyaya aktarın veya webhook (POST) üzerinden iletin.","External Service Integration":"Harici hizmet entegrasyonu","FAQ":"SSS","Features":"Özellikler","Features the first pinned dock message.":"Paneldeki ilk sabitlenmiş mesajı öne çıkarır.","Filters, sanitizes, or blocks incoming messages automatically":"Gelen mesajları otomatik olarak filtreler, temizler veya engeller","Follow these steps to set up AI integration with the current menu:":"Mevcut menüyle yapay zekâ entegrasyonunu kurmak için şu adımları izleyin:","For a smaller set of live-show buttons in OBS, use the":"OBS'de daha az sayıda canlı yayın düğmesi için şunu kullanın:","For complete setup instructions and deeper TTS coverage, use these guides:":"Eksiksiz kurulum yönergeleri ve TTS hakkında daha ayrıntılı bilgi için bu kılavuzları kullanın:","For one-way real-time updates from the server.":"Sunucudan tek yönlü gerçek zamanlı güncellemeler için.","For real-time bidirectional communication with auto-reconnection.":"Otomatik yeniden bağlanmalı, gerçek zamanlı çift yönlü iletişim için.","For the auto-responder to work properly:":"Otomatik yanıtlayıcının doğru çalışması için:","Free, built-in TTS using your operating system's voice synthesizer.":"İşletim sisteminizin ses sentezleyicisini kullanan ücretsiz, yerleşik TTS.","Free, locally-running TTS using WebGPU/CPU for privacy-conscious users.":"Gizliliğe önem veren kullanıcılar için WebGPU/CPU ile yerel çalışan ücretsiz TTS.","Free, privacy-focused, self-hosted AI models running on your own computer through Ollama's own API.":"Ollama'nın kendi API'si üzerinden bilgisayarınızda çalışan ücretsiz, gizlilik odaklı, kendi barındırdığınız yapay zekâ modelleri.","Gemini (Preview TTS)":"Gemini (Önizleme TTS)","Generate Code":"Kod oluşturun","Generate test messages with random content":"Rastgele içerikli test mesajları oluşturun","Generic POST":"Genel POST","Generic PUT":"Genel PUT","Get Companion":"Companion'ı edinin","Get Support":"Destek alın","Get code examples for HTTP, WebSocket, and SSE":"HTTP, WebSocket ve SSE için kod örnekleri alın","GitHub":"GitHub","GitHub Repository":"GitHub deposu","Go to":"Şuraya gidin:","Google Cloud TTS":"Google Cloud TTS","Google Gemini":"Google Gemini","Google Gemini models including current Gemini 2.5 text and live multimodal options.":"Güncel Gemini 2.5 metin ve canlı çok kipli seçenekleri dahil Google Gemini modelleri.","Google's preview neural voice models with selectable voice and language options.":"Seçilebilir ses ve dil seçenekleri sunan Google önizleme nöral ses modelleri.","Groq":"Groq","Guides":"Kılavuzlar","H2R":"H2R","HTTP GET/POST":"HTTP GET/POST","HTTP/API Method":"HTTP/API yöntemi","High-quality voices with extensive language and customization options.":"Kapsamlı dil ve özelleştirme seçenekleri sunan yüksek kaliteli sesler.","Highlights the first active waitlist entry, or the numbered active entry in":"İlk etkin bekleme listesi kaydını veya şu alanda belirtilen numaralı etkin kaydı öne çıkarır:","Hire":"Hizmet alın","Home":"Ana sayfa","Hotkey Support":"Kısayol tuşu desteği","Hotkeys can be configured within the menu settings and work system-wide when the browser is focused or when the app is used.":"Kısayol tuşları menü ayarlarından yapılandırılabilir; tarayıcı odaktayken veya uygulama kullanılırken sistem genelinde çalışır.","How to Enable":"Nasıl etkinleştirilir?","If you prefer to keep connections peer-to-peer without enabling WebSocket mode, you can use the Social Stream Ninja WebRTC SDK. It includes Node and browser samples such as the":"WebSocket modunu etkinleştirmeden bağlantıları eşler arası tutmayı tercih ederseniz Social Stream Ninja WebRTC SDK'sını kullanabilirsiniz. Şu gibi Node ve tarayıcı örnekleri içerir:","If you see a blue debugging bar when auto-responses are triggered, you can hide it by starting Chrome with the":"Otomatik yanıtlar tetiklendiğinde mavi bir hata ayıklama çubuğu görüyorsanız Chrome'u şu seçenekle başlatarak gizleyebilirsiniz:","Implement your own message filtering":"Kendi mesaj filtrelemenizi uygulayın","Implementation Steps":"Uygulama adımları","In Stripe Dashboard, go to Developers → Webhooks":"Stripe Dashboard'da Developers → Webhooks bölümüne gidin","Inspiration":"İlham","Install a virtual MIDI loopback device (e.g., loopMIDI)":"Sanal bir MIDI geri döngü aygıtı kurun (ör. loopMIDI)","Install locally and set the endpoint if needed":"Yerel olarak kurun ve gerekirse uç noktayı ayarlayın","Installation Guide":"Kurulum kılavuzu","Interactive API Sandbox":"Etkileşimli API deneme alanı","Join our Discord":"Discord sunucumuza katılın","Keep your session ID private, as anyone with it can send fake donations to your overlay. The webhook URL should be treated as sensitive information.":"Oturum kimliğinizi gizli tutun; bu kimliğe sahip herkes katmanınıza sahte bağışlar gönderebilir. Webhook URL'si hassas bilgi olarak ele alınmalıdır.","Key Features to Customize":"Özelleştirilebilecek temel özellikler","Kitten TTS":"Kitten TTS","Ko-Fi":"Ko-Fi","Kokoro":"Kokoro","Let the AI engage with your viewers automatically, answering questions and keeping the conversation lively even when you're focused on your content.":"Siz içeriğinize odaklanırken bile yapay zekânın izleyicilerinizle otomatik olarak etkileşime girmesine, soruları yanıtlamasına ve sohbeti canlı tutmasına izin verin.","Lightweight browser-based TTS that downloads a small model for local voice generation.":"Yerel ses üretimi için küçük bir model indiren hafif, tarayıcı tabanlı TTS.","Local AI TTS Guide":"Yerel yapay zekâ TTS kılavuzu","Local Gemma / Local Qwen:":"Yerel Gemma / Yerel Qwen:","Local Gemma 4":"Yerel Gemma 4","Local Qwen 3.5":"Yerel Qwen 3.5","Low-latency OpenAI-compatible chat inference for fast conversational responses.":"Hızlı sohbet yanıtları için düşük gecikmeli, OpenAI uyumlu sohbet çıkarımı.","MIDI & Hotkey Control":"MIDI ve kısayol tuşlarıyla kontrol","MIDI & Hotkeys":"MIDI ve kısayol tuşları","MIDI Integration":"MIDI entegrasyonu","MIDI control works best with physical controllers but can also be triggered via virtual MIDI devices.":"MIDI kontrolü en iyi fiziksel kontrolcülerle çalışır, ancak sanal MIDI aygıtlarıyla da tetiklenebilir.","Main bot overlay with optional TTS and public chat responses":"İsteğe bağlı TTS ve herkese açık sohbet yanıtları sunan ana bot katmanı","Main navigation":"Ana gezinme","Make sure the chat window is visible (not minimized)":"Sohbet penceresinin görünür olduğundan (küçültülmediğinden) emin olun","Managed giveaway commands":"Yönetilen çekiliş komutları","Message Export":"Mesajları dışa aktarma","Modify the JavaScript as needed for custom behaviors":"Özel davranışlar için JavaScript'i gerektiği gibi değiştirin","Module Documentation":"Modül belgeleri","Multimodal AI that can see your screen, hear audio, and interact":"Ekranınızı görebilen, sesi duyabilen ve etkileşime girebilen çok kipli yapay zekâ","Multiple Bot Instances":"Birden fazla bot örneği","Native integration with pre-built actions, real-time feedback, and variables for dynamic content.":"Hazır işlemler, gerçek zamanlı geri bildirim ve dinamik içerik değişkenleriyle yerel entegrasyon.","Navigate to webhook settings":"Webhook ayarlarına gidin","Next in Queue":"Kuyruktaki sonraki","Note:":"Not:","Notes":"Notlar","OBS setup guide":"OBS kurulum kılavuzu","Official Ollama Download":"Resmî Ollama indirme sayfası","Ollama (Native Local API)":"Ollama (Yerel API)","Ollama uses its own native API. For llama.cpp, LM Studio, vLLM, or other OpenAI-compatible servers, choose":"Ollama kendi yerel API'sini kullanır. llama.cpp, LM Studio, vLLM veya diğer OpenAI uyumlu sunucular için şunu seçin:","Ollama:":"Ollama:","Open":"Açın:","Open API Sandbox":"API deneme alanını aç","Open navigation menu":"Gezinme menüsünü aç","Open the dock.html file locally for the custom.js to be loaded":"custom.js dosyasının yüklenmesi için dock.html dosyasını yerel olarak açın","OpenAI APIs including modern chat and realtime voice models.":"Modern sohbet ve gerçek zamanlı ses modellerini içeren OpenAI API'leri.","OpenAI TTS":"OpenAI TTS","OpenAI speech synthesis with selectable voices, models, and optional compatible endpoints.":"Seçilebilir sesler, modeller ve isteğe bağlı uyumlu uç noktalarla OpenAI konuşma sentezi.","OpenRouter":"OpenRouter","Overlay Gallery":"Katman galerisi","Overlay Management":"Katman yönetimi","Overview":"Genel bakış","Perfect for simple commands from Stream Deck or custom scripts.":"Stream Deck veya özel betiklerden gönderilen basit komutlar için idealdir.","Pins an existing dock message by message ID, or pins a full message object. Requires":"Mevcut bir panel mesajını mesaj kimliğiyle veya tam bir mesaj nesnesini sabitler. Şunu gerektirir:","Premium voice synthesis with natural-sounding, customizable voices.":"Doğal duyulan, özelleştirilebilir seslerle ücretli konuşma sentezi.","Primary Chat Bot":"Ana Sohbet Botu","Privacy Policy":"Gizlilik politikası","Private Chat Interface":"Özel Sohbet Arayüzü","Process credit card donations directly through your Stripe account.":"Kredi kartıyla yapılan bağışları doğrudan Stripe hesabınız üzerinden işleyin.","Quick Links":"Hızlı bağlantılar","Quick reaction":"Hızlı tepki","RAG Search":"RAG araması","Ready to Take Your Stream to the Next Level?":"Yayınınızı bir üst seviyeye taşımaya hazır mısınız?","Receive coffee donations from your supporters.":"Destekçilerinizden kahve bağışları alın.","Receive events from third-party services like Stripe, Ko-Fi, and Buy Me A Coffee.":"Stripe, Ko-Fi ve Buy Me A Coffee gibi üçüncü taraf hizmetlerden etkinlikler alın.","Remember to replace":"Şunu değiştirmeyi unutmayın:","Remote control for":"Uzaktan kontrol:","Removes featured message":"Öne çıkan mesajı kaldırır","Removes the currently featured message from overlay":"Şu anda öne çıkarılan mesajı katmandan kaldırır","Removes the first active waitlist entry, or the numbered active entry in":"İlk etkin bekleme listesi kaydını veya şu alandaki numaralı etkin kaydı kaldırır:","Rename":"Yeniden adlandırın:","Report an Issue":"Sorun bildirin","Required Settings (Global settings → Mechanics):":"Gerekli ayarlar (Genel ayarlar → Mekanikler):","Resources":"Kaynaklar","Retrieval-Augmented Generation allows the AI to search through your custom knowledge base to provide accurate answers specific to your content.":"Bilgi getirmeyle desteklenen üretim (RAG), içeriğinize özel doğru yanıtlar sunmak için yapay zekânın özel bilgi tabanınızda arama yapmasını sağlar.","Run Gemma 4 in the browser after mirroring the model files to your own asset host; the SSN largefiles host does not currently include Gemma assets.":"Model dosyalarını kendi dosya sunucunuza yansıttıktan sonra Gemma 4'ü tarayıcıda çalıştırın; SSN largefiles sunucusu şu anda Gemma dosyalarını içermez.","Run Qwen 3.5 in the browser from your own hosted model files for local, private responses.":"Yerel ve özel yanıtlar için Qwen 3.5'i kendi barındırdığınız model dosyalarından tarayıcıda çalıştırın.","Run different bot instances for various purposes: public chat bot, private 1-on-1 bot, censor bot, and even a multimodal AI co-host that can see and hear.":"Farklı amaçlar için farklı bot örnekleri çalıştırın: herkese açık sohbet botu, özel bire bir bot, sansür botu ve hatta görüp duyabilen çok kipli bir yapay zekâ yardımcı sunucusu.","Save the file locally to use in OBS as a browser source":"OBS'de tarayıcı kaynağı olarak kullanmak için dosyayı yerel olarak kaydedin","Security Note:":"Güvenlik notu:","See real-time responses from your commands":"Komutlarınızın yanıtlarını gerçek zamanlı görün","See the":"Bkz.","Select the event":"Etkinliği seçin:","Select your provider in":"Sağlayıcınızı şu bölümde seçin:","Selects one or more random waitlist/draw winners":"Bekleme listesinden veya çekilişten rastgele bir ya da daha fazla kazanan seçer","Send \"1\" to chat":"Sohbete “1” gönder","Send \"LUL\" to chat":"Sohbete “LUL” gönder","Send Chat Message":"Sohbet mesajı gönder","Sends a URL-encoded message to all platforms":"URL kodlamalı bir mesajı tüm platformlara gönderir","Sends a message to all connected chat platforms":"Bağlı tüm sohbet platformlarına mesaj gönderir","Sends a message to all connected platforms":"Bağlı tüm platformlara mesaj gönderir","Sends external content as a chat message":"Harici içeriği sohbet mesajı olarak gönderir","Sends selected messages to Singular Live for featured message overlay":"Öne çıkan mesaj katmanı için seçili mesajları Singular Live'a gönderir","Sends selected messages to a custom endpoint via POST":"Seçili mesajları POST ile özel bir uç noktaya gönderir","Sends selected messages to a custom endpoint via PUT":"Seçili mesajları PUT ile özel bir uç noktaya gönderir","Sends selected messages to a local H2R server":"Seçili mesajları yerel bir H2R sunucusuna gönderir","Server API":"Sunucu API'si","Server-Sent Events":"Sunucudan gönderilen etkinlikler","Service":"Hizmet","Set the bot name, trigger words, and response rate limit":"Bot adını, tetikleyici sözcükleri ve yanıt hız sınırını ayarlayın","Sets the waitlist or draw title message shown on the waitlist page":"Bekleme listesi sayfasında gösterilen bekleme listesi veya çekiliş başlık mesajını ayarlar","Setting Up AI Integration":"Yapay zekâ entegrasyonunu kurma","Setup Requirements":"Kurulum gereksinimleri","Setup Resources":"Kurulum kaynakları","Setup, presentations, command values and recovery":"Kurulum, sunumlar, komut değerleri ve kurtarma","Sign in to your Buy Me A Coffee account":"Buy Me A Coffee hesabınızda oturum açın","Sign in to your Ko-Fi account":"Ko-Fi hesabınızda oturum açın","Singular Live":"Singular Live","Social Stream Control Dock":"Social Stream kontrol paneli","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja can also send data to third-party services:":"Social Stream Ninja, üçüncü taraf hizmetlere de veri gönderebilir:","Social Stream Ninja can receive donations and events from third-party services via webhooks; a few popular ones are below:":"Social Stream Ninja, webhook'lar üzerinden üçüncü taraf hizmetlerden bağışlar ve etkinlikler alabilir; popüler olanlardan bazıları aşağıdadır:","Social Stream Ninja includes comprehensive TTS support for bot messages and featured chat content:":"Social Stream Ninja, bot mesajları ve öne çıkan sohbet içeriği için kapsamlı TTS desteği içerir:","Social Stream Ninja includes several built-in commands that your viewers can use in chat, or that you can trigger via the API.":"Social Stream Ninja, izleyicilerinizin sohbette kullanabileceği veya sizin API üzerinden tetikleyebileceğiniz çeşitli yerleşik komutlar içerir.","Social Stream Ninja integrates with StreamDeck through multiple methods: native HTTP actions and Bitfocus Companion integration.":"Social Stream Ninja, StreamDeck ile birden fazla yöntemle entegre olur: yerel HTTP işlemleri ve Bitfocus Companion entegrasyonu.","Social Stream Ninja listener":"Social Stream Ninja dinleyicisi","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja provides a powerful API that allows you to control every aspect of your streaming setup programmatically. The API server can both issue commands to your setup and listen to incoming messages from consolidated chat services.":"Social Stream Ninja, yayın kurulumunuzun her yönünü programlı olarak kontrol etmenizi sağlayan güçlü bir API sunar. API sunucusu hem kurulumunuza komut gönderebilir hem de birleştirilmiş sohbet hizmetlerinden gelen mesajları dinleyebilir.","Social Stream Ninja provides comprehensive AI integration to enhance your streams with AI-powered chat responses, moderation, and more. Choose from local or cloud-based AI providers to match your needs.":"Social Stream Ninja, yayınlarınızı yapay zekâ destekli sohbet yanıtları, moderasyon ve daha fazlasıyla geliştirmek için kapsamlı yapay zekâ entegrasyonu sunar. İhtiyacınıza uygun yerel veya bulut tabanlı yapay zekâ sağlayıcılarından seçim yapın.","Social Stream Ninja provides multiple bot instances for different use cases:":"Social Stream Ninja, farklı kullanım senaryoları için birden fazla bot örneği sunar:","Social Stream Ninja supports multiple AI providers, from fully local browser/runtime models to hosted APIs:":"Social Stream Ninja, tamamen yerel tarayıcı/çalışma ortamı modellerinden barındırılan API'lere kadar birden fazla yapay zekâ sağlayıcısını destekler:","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. GPLv3.0 Lisansı. Geliştiren:","Speechify":"Speechify","Starting with a Template":"Bir şablonla başlama","Steve Seguin":"Steve Seguin","Stops or resumes new waitlist entries without clearing the existing list.":"Mevcut listeyi temizlemeden yeni bekleme listesi kayıtlarını durdurur veya devam ettirir.","StreamDeck & Companion":"StreamDeck ve Companion","StreamDeck Integration":"StreamDeck entegrasyonu","Stripe":"Stripe","Support":"Destek","Supported AI Providers":"Desteklenen yapay zekâ sağlayıcıları","Supported Sites":"Desteklenen siteler","Switch theme":"Temayı değiştir","System TTS":"Sistem TTS","TTS functionality requires the appropriate overlay page to be open in OBS. Each TTS provider offers different voice options, latency, and pricing or hardware requirements.":"TTS işlevi için ilgili katman sayfasının OBS'de açık olması gerekir. Her TTS sağlayıcısının ses seçenekleri, gecikmesi ve fiyatlandırma veya donanım gereksinimleri farklıdır.","Tell a joke":"Şaka anlat","Tells a random geeky dad joke in response":"Yanıt olarak rastgele, teknoloji meraklılarına yönelik bir baba şakası anlatır","Templates":"Şablonlar","Terms of Service":"Hizmet koşulları","Test Commands":"Komutları test edin","Test selected chat bot":"Seçili sohbet botunu test et","Test the Selected Chat Bot":"Seçili sohbet botunu test edin","Test with the \"Send Single Donation Test\" button":"“Tek Bağış Testi Gönder” düğmesiyle test edin","Text-to-Speech Integration":"Metinden konuşma entegrasyonu","The API uses a channel system for message routing:":"API, mesaj yönlendirme için bir kanal sistemi kullanır:","The timer page is intentionally narrow in scope: one timer, optional operator controls, warning states, overtime, and a few visual styles.":"Zamanlayıcı sayfasının kapsamı bilerek dardır: tek zamanlayıcı, isteğe bağlı operatör kontrolleri, uyarı durumları, süre aşımı ve birkaç görsel stil.","These parameters should be added to the dock page URL.":"Bu parametreler panel sayfasının URL'sine eklenmelidir.","This method allows for complex customizations and triggers.":"Bu yöntem karmaşık özelleştirmelere ve tetikleyicilere olanak tanır.","This minimal template includes just the essential code needed for a functioning overlay.":"Bu küçük şablon yalnızca çalışan bir katman için gerekli temel kodu içerir.","Timer API":"Zamanlayıcı API'si","Tip:":"İpucu:","To query the current timer state, use":"Mevcut zamanlayıcı durumunu sorgulamak için şunu kullanın:","Toggle Auto-Show":"Otomatik gösterimi aç/kapat","Toggle between featured messages or showing all messages":"Öne çıkan mesajlarla tüm mesajları gösterme arasında geçiş yapın","Toggles automatic featuring of messages":"Mesajların otomatik öne çıkarılmasını açar/kapatır","Triggers bot response":"Bot yanıtını tetikler","Try all API commands in a safe environment":"Tüm API komutlarını güvenli bir ortamda deneyin","Try manually sending a test message first to confirm permissions":"İzinleri doğrulamak için önce elle bir test mesajı göndermeyi deneyin","Try out the API with our interactive sandbox that provides easy access to all commands and features:":"Tüm komutlara ve özelliklere kolay erişim sağlayan etkileşimli deneme alanımızda API'yi deneyin:","Turn on the features you want around the bot:":"Botla birlikte kullanmak istediğiniz özellikleri açın:","Turns draw mode on/off, or toggles it when":"Çekiliş modunu açar/kapatır veya şu durumda değiştirir:","URL":"URL","URL Parameter":"URL parametresi","Unpins an existing dock message by message ID. Use the target field/path segment for a labeled dock.":"Mevcut bir panel mesajının sabitlemesini mesaj kimliğiyle kaldırır. Etiketli bir panel için hedef alanını veya yol bölümünü kullanın.","Use AI to help moderate chat by identifying potentially harmful messages and automatically handling them based on your preferences. Choose between non-blocking or strict blocking modes.":"Potansiyel olarak zararlı mesajları belirleyip tercihlerinize göre otomatik işleyerek sohbet moderasyonuna yardımcı olması için yapay zekâ kullanın. Engellemeyen mod ile sıkı engelleme modu arasından seçim yapın.","Use StreamDeck's \"Website\" action with \"GET request in background\" enabled to send commands directly to the API.":"API'ye doğrudan komut göndermek için StreamDeck'in “Website” işlemini “GET request in background” etkin olacak şekilde kullanın.","Use hosted browser model assets and optional model folder override; Qwen can use SSN largefiles, while Gemma needs your own mirrored folder":"Barındırılan tarayıcı model dosyalarını ve isteğe bağlı model klasörü geçersiz kılmasını kullanın; Qwen SSN largefiles'ı kullanabilir, Gemma ise kendi yansıttığınız klasörü gerektirir","Use keyboard shortcuts for quick access to common functions.":"Yaygın işlevlere hızlı erişmek için klavye kısayollarını kullanın.","Use the built-in":"Yerleşik düğmeyi kullanın:","Use the page with":"Sayfayı şu seçenekle kullanın:","Useful actions include":"Yararlı işlemler şunlardır:","Using custom.js":"custom.js kullanımı","Value":"Değer","View Complete API Documentation":"Eksiksiz API belgelerini görüntüleyin","View Results":"Sonuçları görüntüleyin","View Sample Overlay":"Örnek katmanı görüntüleyin","WebSocket":"WebSocket","WebSocket/HTTP":"WebSocket/HTTP","Webhook Integration":"Webhook entegrasyonu","Webhook settings":"Webhook ayarları","Webhooks":"Webhook'lar","When enabled, allows viewers to change OBS scenes":"Etkinleştirildiğinde izleyicilerin OBS sahnelerini değiştirmesine izin verir","With these powerful commands and API options, you can create a truly unique and interactive streaming experience.":"Bu güçlü komutlar ve API seçenekleriyle benzersiz ve etkileşimli bir yayın deneyimi oluşturabilirsiniz.","X.com":"X.com","You can create completely custom chat overlays from scratch to match your stream's unique style and function. Social Stream Ninja provides a flexible foundation that you can build upon.":"Yayınınızın kendine özgü tarzına ve işlevine uygun, tamamen özel sohbet katmanlarını sıfırdan oluşturabilirsiniz. Social Stream Ninja üzerine geliştirme yapabileceğiniz esnek bir temel sunar.","You can create your own commands and functionality by customizing the JavaScript code:":"JavaScript kodunu özelleştirerek kendi komutlarınızı ve işlevlerinizi oluşturabilirsiniz:","and":"ve","and fill in the matching fields:":"ve ilgili alanları doldurun:","and follow the":"ve şu kılavuzu izleyin:","are aliases for":"şunun diğer adlarıdır:","as the webhook URL":"webhook URL'si olarak","button to verify your provider, model, and credentials before going live.":". Canlı yayından önce sağlayıcınızı, modelinizi ve kimlik bilgilerinizi doğrulayın.","channel 1":"kanal 1","channel 4":"kanal 4","equals":"eşittir","flag.":".","for detailed setup guides and code samples.":"ayrıntılı kurulum kılavuzları ve kod örnekleri için.","for manual clearing":"elle temizleme için","full API documentation":"tam API belgeleri","if you want it controlled directly through the API server.":"doğrudan API sunucusuyla kontrol edilmesini istiyorsanız.","in OBS or a browser as needed":"gerektiği şekilde OBS'de veya bir tarayıcıda","open on the same session.":"aynı oturumda açık olmalıdır.","operate the dedicated giveaway pool using the same API/Stream Deck controls. Draw closes entries automatically. New round preserves earlier winner history and rejects unpaid reservations. Cancel and refund returns outstanding ticket payments. Paid tickets, Number Hunt, Coin Flip Pot and Event Flow use the same host service.":"aynı API/Stream Deck kontrollerini kullanarak özel çekiliş havuzunu yönetir. Çekiliş, katılımı otomatik olarak kapatır. Yeni tur, önceki kazanan geçmişini korur ve ödenmemiş rezervasyonları reddeder. İptal et ve iade et, bekleyen bilet ödemelerini geri verir. Ücretli biletler, Sayı Avı, Yazı Tura Havuzu ve Etkinlik Akışı aynı yayıncı hizmetini kullanır.","stripe.com":"stripe.com","to the filename":"yeni dosya adı olarak şunu kullanın:","to your dock URL":"panel URL'nize","to your dock URL to receive events":"etkinlikleri almak için panel URL'nize","with a callback token.":"bir geri çağrı tokeniyle.","with contributions from the community.":"topluluğun katkılarıyla.","with your actual session ID from Social Stream Ninja!":"Social Stream Ninja'daki gerçek oturum kimliğinizle!","xAI (Grok)":"xAI (Grok)","xAI Grok APIs, including realtime voice sessions when using ephemeral client secrets.":"Geçici istemci sırları kullanıldığında gerçek zamanlı ses oturumları da dahil xAI Grok API'leri.","🎮 Remote Control (StreamDeck/Bitfocus):":"🎮 Uzaktan kontrol (StreamDeck/Bitfocus):","📡 Chat Listener (Python/Node apps):":"📡 Sohbet dinleyicisi (Python/Node uygulamaları):"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/commands.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/commands.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/commands.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/commands.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/commands.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/commands.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/commands.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/commands.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/commands.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/commands.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/commands.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/commands.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/commands.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/commands.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/commands.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/commands.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/commands.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/commands.html">
+<!-- ssn-languages:end --></head>
+<body>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme"><a href="../index.html">Ana sayfa</a><a href="features.html">Özellikler</a><a href="inspiration.html" class="site-priority-inspiration">İlham</a><a href="download.html">İndir</a><a href="guides.html">Kılavuzlar</a><a href="commands.html" aria-current="page">Komutlar ve API</a><a href="supported-sites.html">Desteklenen siteler</a><a href="overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a><a href="services.html" class="site-priority-hire">Hizmet alın</a><a href="support.html">Destek</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/commands.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/commands.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/commands.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/commands.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/commands.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/commands.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/commands.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/commands.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/commands.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/commands.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/commands.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/commands.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/commands.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/commands.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="commands.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/commands.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/commands.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Komutlar ve API</h1>
+            <p>Yerleşik komutlar, otomasyon ve API entegrasyonuyla Social Stream Ninja'yı kontrol edin</p>
+        </div>
+    </section>
+
+	<section class="navigation" id="commands-nav">
+		<div class="container">
+			<div class="nav-links">
+				<a href="#bot-commands" class="nav-link active">
+					<i class="fas fa-robot"></i> Bot komutları
+				</a>
+				<a href="#server-api" class="nav-link">
+					<i class="fas fa-server"></i> Sunucu API'si
+				</a>
+				<a href="#streamdeck-companion" class="nav-link">
+					<i class="fas fa-th"></i> StreamDeck ve Companion
+				</a>
+				<a href="#ai-integration" class="nav-link">
+					<i class="fas fa-brain"></i> Yapay zekâ entegrasyonu
+				</a>
+				<a href="#midi-hotkey" class="nav-link">
+					<i class="fas fa-music"></i> MIDI ve kısayol tuşları
+				</a>
+				<a href="#webhook" class="nav-link">
+					<i class="fas fa-plug"></i> Webhook'lar
+				</a>
+				<a href="#custom-scripts" class="nav-link">
+					<i class="fas fa-code"></i> Özel betikler
+				</a>
+				<a href="#custom-overlays" class="nav-link">
+					<i class="fas fa-paint-brush"></i> Özel katmanlar
+				</a>
+			</div>
+		</div>
+	</section>
+
+    <section id="bot-commands" class="command-section">
+        <div class="container">
+            <h2>Bot komutları</h2>
+            
+            <div class="command-card">
+                <h3>Yerleşik bot komutları</h3>
+                <p>Social Stream Ninja, izleyicilerinizin sohbette kullanabileceği veya sizin API üzerinden tetikleyebileceğiniz çeşitli yerleşik komutlar içerir.</p>
+                
+                <div class="command-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Komut</th>
+                                <th>Açıklama</th>
+                                <th>Nasıl etkinleştirilir?</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>!joke</code></td>
+                                <td>Yanıt olarak rastgele, teknoloji meraklılarına yönelik bir baba şakası anlatır</td>
+                                <td>Uzantı menüsündeki anahtarla etkinleştirin</td>
+                            </tr>
+                            <tr>
+                                <td><code>hi</code></td>
+                                <td>Sohbette “hi” diyen herkesi otomatik olarak karşılar</td>
+                                <td>Uzantı menüsündeki anahtarla etkinleştirin</td>
+                            </tr>
+                            <tr>
+                                <td><code>!cycle</code></td>
+                                <td>Etkinleştirildiğinde izleyicilerin OBS sahnelerini değiştirmesine izin verir</td>
+                                <td>Uzantı menüsündeki anahtarla etkinleştirin</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="command-note">
+                    <p><strong>Not:</strong> Bot komutları yalnızca otomatik yanıtlayıcı doğru yapılandırıldığında ve ilgili platformlarda mesaj gönderme izniniz olduğunda çalışır.</p>
+                </div>
+            </div>
+            
+            <div class="command-card">
+                <h3>Otomatik yanıt yapılandırması</h3>
+                <p>Otomatik yanıtlayıcının doğru çalışması için:</p>
+                <ol class="command-steps">
+                    <li>Platformda (YouTube, Twitch vb.) oturum açtığınızdan emin olun</li>
+                    <li>Sohbet penceresinin görünür olduğundan (küçültülmediğinden) emin olun</li>
+                    <li>İzinleri doğrulamak için önce elle bir test mesajı göndermeyi deneyin</li>
+                    <li>Uzantı menüsünde ilgili komut anahtarlarını etkinleştirin</li>
+                </ol>
+                
+                <p>Otomatik yanıtlar tetiklendiğinde mavi bir hata ayıklama çubuğu görüyorsanız Chrome'u şu seçenekle başlatarak gizleyebilirsiniz: <code>--silent-debugger-extension-api</code> .</p>
+            </div>
+        </div>
+    </section>
+
+    
+	<section id="server-api" class="command-section alt">
+		<div class="container">
+			<h2>Sunucu API'si</h2>
+			
+			<div class="command-card">
+				<h3>Genel bakış</h3>
+				<p>Social Stream Ninja, yayın kurulumunuzun her yönünü programlı olarak kontrol etmenizi sağlayan güçlü bir API sunar. API sunucusu hem kurulumunuza komut gönderebilir hem de birleştirilmiş sohbet hizmetlerinden gelen mesajları dinleyebilir.</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-tv"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Katman yönetimi</h4>
+							<p>Öne çıkan mesajları kontrol edin, katmanları temizleyin ve yayınınızdaki içeriğin görünümünü değiştirin.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-exchange-alt"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Webhook entegrasyonu</h4>
+							<p>Stripe, Ko-Fi ve Buy Me A Coffee gibi üçüncü taraf hizmetlerden etkinlikler alın.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-download"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Mesajları dışa aktarma</h4>
+							<p>Özel entegrasyonlar için sohbet mesajlarını dosyaya aktarın veya webhook (POST) üzerinden iletin.</p>
+						</div>
+					</div>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>Gerekli ayarlar (Genel ayarlar → Mekanikler):</strong></p>
+					<ul style="text-align:left; margin: 10px 0;">
+						<li><strong>🎮 Uzaktan kontrol (StreamDeck/Bitfocus):</strong> Şunu etkinleştirin: <em>“Uzantının uzaktan API kontrolünü etkinleştir”</em> (Anahtar 1) — Şuraya bağlanın: <strong>kanal 1</strong></li>
+						<li><strong>📡 Sohbet dinleyicisi (Python/Node uygulamaları):</strong> Anahtar 1'i etkinleştirin + <em>“Sohbet mesajlarını API sunucusuna gönder”</em> (Anahtar 3) — Şuraya bağlanın: <strong>kanal 4</strong></li>
+					</ul>
+					<p>Bkz. <a href="../../api.md">tam API belgeleri</a> ayrıntılı kurulum kılavuzları ve kod örnekleri için.</p>
+				</div>
+			</div>
+
+			<div class="command-card">
+				<h3>API uç noktaları ve bağlantı yöntemleri</h3>
+				
+				<div class="api-methods">
+					<div class="api-method">
+						<h4><i class="fas fa-globe"></i> HTTP GET/POST</h4>
+						<div class="code-block">
+							<pre>https://io.socialstream.ninja/{sessionID}/{action}/{target}/{value}</pre>
+						</div>
+						<p>Stream Deck veya özel betiklerden gönderilen basit komutlar için idealdir.</p>
+					</div>
+					
+					<div class="api-method">
+						<h4><i class="fas fa-exchange-alt"></i> WebSocket</h4>
+						<div class="code-block">
+							<pre>wss://io.socialstream.ninja:443</pre>
+						</div>
+						<p>Otomatik yeniden bağlanmalı, gerçek zamanlı çift yönlü iletişim için.</p>
+						<p>WebSocket modunu etkinleştirmeden bağlantıları eşler arası tutmayı tercih ederseniz Social Stream Ninja WebRTC SDK'sını kullanabilirsiniz. Şu gibi Node ve tarayıcı örnekleri içerir: <a href="https://github.com/steveseguin/ninjasdk/blob/main/demos/socialstreamninja-listener.js" target="_blank" rel="noopener">Social Stream Ninja dinleyicisi</a>.</p>
+					</div>
+					
+					<div class="api-method">
+						<h4><i class="fas fa-broadcast-tower"></i> Sunucudan gönderilen etkinlikler</h4>
+						<div class="code-block">
+							<pre>https://io.socialstream.ninja/sse/{sessionID}</pre>
+						</div>
+						<p>Sunucudan tek yönlü gerçek zamanlı güncellemeler için.</p>
+					</div>
+				</div>
+				
+				<div class="channel-system">
+					<h4>Kanal sistemi</h4>
+					<p>API, mesaj yönlendirme için bir kanal sistemi kullanır:</p>
+					<div class="code-block">
+						<pre>
+	- Channel 1: Remote control commands (default for StreamDeck/Bitfocus)
+	- Channel 2: Dock page output
+	- Channel 3: Extension receives commands from Dock
+	- Channel 4: <strong>Chat messages from Extension</strong> (use this to receive Twitch/YouTube chat!)
+	- Channel 5: Waitlist/giveaway communication
+	- Channels 6-9: Reserved for future use</pre>
+					</div>
+					<p>İstediğiniz kanalla bağlanın:</p>
+					<div class="code-block">
+						<pre>// To receive chat messages (listen on channel 4):
+wss://io.socialstream.ninja/join/SESSION_ID/4
+
+// To send commands (channel 1 default):
+wss://io.socialstream.ninja/join/SESSION_ID</pre>
+					</div>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Yaygın API komutları</h3>
+				
+				<div class="command-table-responsive">
+					<table class="command-table">
+						<thead>
+							<tr>
+								<th>İşlem</th>
+								<th>Açıklama</th>
+								<th>Örnek</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>sendChat</code></td>
+								<td>Bağlı tüm sohbet platformlarına mesaj gönderir</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/sendChat/null/Hello everyone!</code></td>
+							</tr>
+							<tr>
+								<td><code>sendEncodedChat</code></td>
+								<td>URL kodlamalı bir mesajı tüm platformlara gönderir</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/sendEncodedChat/null/Hello%20everyone%21</code></td>
+							</tr>
+							<tr>
+								<td><code>clearOverlay</code></td>
+								<td>Öne çıkan mesajı katmandan temizler</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/clearOverlay</code></td>
+							</tr>
+							<tr>
+								<td><code>nextInQueue</code></td>
+								<td>Kuyruktaki sonraki mesajı gösterir</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/nextInQueue</code></td>
+							</tr>
+							<tr>
+								<td><code>autoShow</code></td>
+								<td>Mesajların otomatik öne çıkarılmasını açar/kapatır</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/autoShow/toggle</code></td>
+							</tr>
+							<tr>
+								<td><code>blockUser</code></td>
+								<td>Belirli bir platformdaki bir kullanıcıyı engeller</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/blockUser/null/{"chatname":"username","type":"twitch"}</code></td>
+							</tr>
+							<tr>
+								<td><code>extContent</code></td>
+								<td>Harici içeriği sohbet mesajı olarak gönderir</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/extContent/null/{"chatname":"User","chatmessage":"Hello"}</code></td>
+							</tr>
+							<tr>
+								<td><code>pin</code></td>
+								<td>Mevcut bir panel mesajını mesaj kimliğiyle veya tam bir mesaj nesnesini sabitler. Şunu gerektirir: <code>dock.html</code> aynı oturumda açık olmalıdır.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/pin/null/MESSAGE_MID</code></td>
+							</tr>
+							<tr>
+								<td><code>unpin</code></td>
+								<td>Mevcut bir panel mesajının sabitlemesini mesaj kimliğiyle kaldırır. Etiketli bir panel için hedef alanını veya yol bölümünü kullanın.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/unpin/null/MESSAGE_MID</code></td>
+							</tr>
+							<tr>
+								<td><code>nextPinned</code></td>
+								<td>Paneldeki ilk sabitlenmiş mesajı öne çıkarır.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/nextPinned</code></td>
+							</tr>
+							<tr>
+								<td><code>removefromwaitlist</code></td>
+								<td>İlk etkin bekleme listesi kaydını veya şu alandaki numaralı etkin kaydı kaldırır: <code>value</code></td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/removefromwaitlist/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>highlightwaitlist</code></td>
+								<td>İlk etkin bekleme listesi kaydını veya şu alanda belirtilen numaralı etkin kaydı öne çıkarır: <code>value</code></td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/highlightwaitlist/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>stopentries</code> / <code>startentries</code></td>
+								<td>Mevcut listeyi temizlemeden yeni bekleme listesi kayıtlarını durdurur veya devam ettirir. <code>openentries</code> ve <code>resumeentries</code> şunun diğer adlarıdır: <code>startentries</code>.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/stopentries</code></td>
+							</tr>
+							<tr>
+								<td><code>selectwinner</code></td>
+								<td>Bekleme listesinden veya çekilişten rastgele bir ya da daha fazla kazanan seçer</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/selectwinner/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>downloadwaitlist</code></td>
+								<td>Mevcut bekleme listesini çalışan Social Stream sayfasından veya uygulamasından TSV dosyası olarak indirir</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/downloadwaitlist</code></td>
+							</tr>
+							<tr>
+								<td><code>drawmode</code></td>
+								<td>Çekiliş modunu açar/kapatır veya şu durumda değiştirir: <code>value</code> eşittir <code>toggle</code></td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/drawmode/null/toggle</code></td>
+							</tr>
+							<tr>
+								<td><code>waitlistmessage</code></td>
+								<td>Bekleme listesi sayfasında gösterilen bekleme listesi veya çekiliş başlık mesajını ayarlar</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/waitlistmessage/null/Type%20!join%20to%20enter</code></td>
+							</tr>
+							<tr>
+								<td><code>resetwaitlist</code></td>
+								<td>Bekleme listesini temizler ve katılımı yeniden açar</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/resetwaitlist</code></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<div class="view-more-link">
+					<a href="https://github.com/steveseguin/social_stream/blob/main/api.md" target="_blank" class="btn btn-secondary">
+						<i class="fab fa-github"></i> Eksiksiz API belgelerini görüntüleyin
+					</a>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Etkileşimli API deneme alanı</h3>
+				<p>Tüm komutlara ve özelliklere kolay erişim sağlayan etkileşimli deneme alanımızda API'yi deneyin:</p>
+				<p>OBS'de daha az sayıda canlı yayın düğmesi için şunu kullanın: <a href="../../obs-control-dock.html">Social Stream kontrol paneli</a> ve şu kılavuzu izleyin: <a href="obs-control-dock-guide.html">OBS kurulum kılavuzu</a>.</p>
+				
+				<div class="sandbox-api-preview">
+					<div class="sandbox-overlay">
+						<a href="https://socialstream.ninja/sampleapi.html" class="btn btn-primary" target="_blank">
+							<i class="fas fa-external-link-alt"></i> API deneme alanını aç
+						</a>
+					</div>
+				</div>
+				
+				<div class="sandbox-features">
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-flask"></i>
+							<h4>Komutları test edin</h4>
+						</div>
+						<p>Tüm API komutlarını güvenli bir ortamda deneyin</p>
+					</div>
+					
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-code"></i>
+							<h4>Kod oluşturun</h4>
+						</div>
+						<p>HTTP, WebSocket ve SSE için kod örnekleri alın</p>
+					</div>
+					
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-eye"></i>
+							<h4>Sonuçları görüntüleyin</h4>
+						</div>
+						<p>Komutlarınızın yanıtlarını gerçek zamanlı görün</p>
+					</div>
+					
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-magic"></i>
+							<h4>Testler oluşturun</h4>
+						</div>
+						<p>Rastgele içerikli test mesajları oluşturun</p>
+					</div>
+				</div>
+				
+				<div class="sandbox-api-note">
+					<p><strong>Not:</strong> Şunu değiştirmeyi unutmayın: <code>SESSIONID</code> Social Stream Ninja'daki gerçek oturum kimliğinizle!</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section id="streamdeck-companion" class="command-section">
+		<div class="container">
+			<h2>StreamDeck ve Companion</h2>
+			
+			<div class="command-card">
+				<h3>StreamDeck entegrasyonu</h3>
+				<p>Social Stream Ninja, StreamDeck ile birden fazla yöntemle entegre olur: yerel HTTP işlemleri ve Bitfocus Companion entegrasyonu.</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-globe"></i>
+						</div>
+						<div class="capability-content">
+							<h4>HTTP/API yöntemi</h4>
+							<p>API'ye doğrudan komut göndermek için StreamDeck'in “Website” işlemini “GET request in background” etkin olacak şekilde kullanın.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-boxes"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Bitfocus Companion</h4>
+							<p>Hazır işlemler, gerçek zamanlı geri bildirim ve dinamik içerik değişkenleriyle yerel entegrasyon.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Companion entegrasyonu</h3>
+				<p>Bitfocus Companion, WebSocket veya HTTP API'lerini kullanarak Social Stream Ninja üzerinde güçlü kontrol sağlar.</p>
+				
+				<div class="command-table">
+					<table>
+						<thead>
+							<tr>
+								<th>İşlem</th>
+								<th>Açıklama</th>
+								<th>API yöntemi</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Öne çıkan mesajı temizle</td>
+								<td>Şu anda öne çıkarılan mesajı katmandan kaldırır</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+							<tr>
+								<td>Kuyruktaki sonraki</td>
+								<td>Sıradaki mesajı gösterir</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+							<tr>
+								<td>Otomatik gösterimi aç/kapat</td>
+								<td>Mesajların otomatik öne çıkarılmasını açar/kapatır</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+							<tr>
+								<td>Sohbet mesajı gönder</td>
+								<td>Bağlı tüm platformlara mesaj gönderir</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<div class="companion-features">
+					<h4>Dinamik değişkenler</h4>
+					<ul class="feature-list">
+						<li><code>featured_message</code> - Şu anda öne çıkarılan mesajın metni</li>
+						<li><code>featured_username</code> - Şu anda öne çıkarılan kullanıcı adı</li>
+						<li><code>queue_size</code> - Kuyruktaki mesaj sayısı</li>
+					</ul>
+				</div>
+				
+				<div class="documentation-links">
+					<h4>Kurulum kaynakları</h4>
+					<div class="doc-links">
+						<a href="https://bitfocus.io/companion" target="_blank" class="btn btn-secondary">
+							<i class="fas fa-external-link-alt"></i> Companion'ı edinin
+						</a>
+						<a href="https://github.com/bitfocus/companion-module-socialstream-ninja" target="_blank" class="btn btn-secondary">
+							<i class="fab fa-github"></i> Modül belgeleri
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<section id="ai-integration" class="command-section">
+		<div class="container">
+			<h2>Yapay zekâ entegrasyonu</h2>
+			
+			<div class="command-card">
+				<h3>Yapay zekâ sohbet botu modu</h3>
+				<p>Social Stream Ninja, yayınlarınızı yapay zekâ destekli sohbet yanıtları, moderasyon ve daha fazlasıyla geliştirmek için kapsamlı yapay zekâ entegrasyonu sunar. İhtiyacınıza uygun yerel veya bulut tabanlı yapay zekâ sağlayıcılarından seçim yapın.</p>
+				
+				<div class="feature-highlights">
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-comment-dots"></i>
+						</div>
+						<div class="feature-content">
+							<h4>Otomatik sohbet yanıtları</h4>
+							<p>Siz içeriğinize odaklanırken bile yapay zekânın izleyicilerinizle otomatik olarak etkileşime girmesine, soruları yanıtlamasına ve sohbeti canlı tutmasına izin verin.</p>
+						</div>
+					</div>
+					
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-shield-alt"></i>
+						</div>
+						<div class="feature-content">
+							<h4>İçerik moderasyonu</h4>
+							<p>Potansiyel olarak zararlı mesajları belirleyip tercihlerinize göre otomatik işleyerek sohbet moderasyonuna yardımcı olması için yapay zekâ kullanın. Engellemeyen mod ile sıkı engelleme modu arasından seçim yapın.</p>
+						</div>
+					</div>
+					
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-search"></i>
+						</div>
+						<div class="feature-content">
+							<h4>RAG araması</h4>
+							<p>Bilgi getirmeyle desteklenen üretim (RAG), içeriğinize özel doğru yanıtlar sunmak için yapay zekânın özel bilgi tabanınızda arama yapmasını sağlar.</p>
+						</div>
+					</div>
+					
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-user-friends"></i>
+						</div>
+						<div class="feature-content">
+							<h4>Birden fazla bot örneği</h4>
+							<p>Farklı amaçlar için farklı bot örnekleri çalıştırın: herkese açık sohbet botu, özel bire bir bot, sansür botu ve hatta görüp duyabilen çok kipli bir yapay zekâ yardımcı sunucusu.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Desteklenen yapay zekâ sağlayıcıları</h3>
+				<p>Social Stream Ninja, tamamen yerel tarayıcı/çalışma ortamı modellerinden barındırılan API'lere kadar birden fazla yapay zekâ sağlayıcısını destekler:</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-robot"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Ollama (Yerel API)</h4>
+							<p>Ollama'nın kendi API'si üzerinden bilgisayarınızda çalışan ücretsiz, gizlilik odaklı, kendi barındırdığınız yapay zekâ modelleri.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-laptop-code"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Yerel Gemma 4</h4>
+							<p>Model dosyalarını kendi dosya sunucunuza yansıttıktan sonra Gemma 4'ü tarayıcıda çalıştırın; SSN largefiles sunucusu şu anda Gemma dosyalarını içermez.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-microchip"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Yerel Qwen 3.5</h4>
+							<p>Yerel ve özel yanıtlar için Qwen 3.5'i kendi barındırdığınız model dosyalarından tarayıcıda çalıştırın.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-openai"></i>
+						</div>
+						<div class="capability-content">
+							<h4>ChatGPT / OpenAI</h4>
+							<p>Modern sohbet ve gerçek zamanlı ses modellerini içeren OpenAI API'leri.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-google"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Google Gemini</h4>
+							<p>Güncel Gemini 2.5 metin ve canlı çok kipli seçenekleri dahil Google Gemini modelleri.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-brain"></i>
+						</div>
+						<div class="capability-content">
+							<h4>DeepSeek</h4>
+							<p>Konuşma görevleri için optimize edilmiş verimli ve uygun maliyetli yapay zekâ modelleri.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-rocket"></i>
+						</div>
+						<div class="capability-content">
+							<h4>xAI (Grok)</h4>
+							<p>Geçici istemci sırları kullanıldığında gerçek zamanlı ses oturumları da dahil xAI Grok API'leri.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-aws"></i>
+						</div>
+						<div class="capability-content">
+							<h4>AWS Bedrock</h4>
+							<p>Claude ve Llama dahil çeşitli sağlayıcılardan kurumsal düzeyde yapay zekâ modelleri.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-route"></i>
+						</div>
+						<div class="capability-content">
+							<h4>OpenRouter</h4>
+							<p>Tek bir API arayüzü üzerinden birden fazla yapay zekâ modeline erişim.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-bolt"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Groq</h4>
+							<p>Hızlı sohbet yanıtları için düşük gecikmeli, OpenAI uyumlu sohbet çıkarımı.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-tools"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Özel API (OpenAI uyumlu)</h4>
+							<p>llama.cpp, LM Studio, vLLM veya başka bir OpenAI uyumlu uç noktaya bağlanın.</p>
+						</div>
+					</div>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>Not:</strong> Ollama kendi yerel API'sini kullanır. llama.cpp, LM Studio, vLLM veya diğer OpenAI uyumlu sunucular için şunu seçin: <strong>Özel API</strong>.</p>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Metinden konuşma entegrasyonu</h3>
+				<p>Social Stream Ninja, bot mesajları ve öne çıkan sohbet içeriği için kapsamlı TTS desteği içerir:</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-laptop"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Sistem TTS</h4>
+							<p>İşletim sisteminizin ses sentezleyicisini kullanan ücretsiz, yerleşik TTS.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-heart"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Kokoro</h4>
+							<p>Gizliliğe önem veren kullanıcılar için WebGPU/CPU ile yerel çalışan ücretsiz TTS.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-cat"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Kitten TTS</h4>
+							<p>Yerel ses üretimi için küçük bir model indiren hafif, tarayıcı tabanlı TTS.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-microphone-alt"></i>
+						</div>
+						<div class="capability-content">
+							<h4>ElevenLabs</h4>
+							<p>Doğal duyulan, özelleştirilebilir seslerle ücretli konuşma sentezi.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-google"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Google Cloud TTS</h4>
+							<p>Kapsamlı dil ve özelleştirme seçenekleri sunan yüksek kaliteli sesler.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-wave-square"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Gemini (Önizleme TTS)</h4>
+							<p>Seçilebilir ses ve dil seçenekleri sunan Google önizleme nöral ses modelleri.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-volume-up"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Speechify</h4>
+							<p>Doğal ses dönüştürme yetenekleri sunan yapay zekâ destekli metinden konuşma.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-openai"></i>
+						</div>
+						<div class="capability-content">
+							<h4>OpenAI TTS</h4>
+							<p>Seçilebilir sesler, modeller ve isteğe bağlı uyumlu uç noktalarla OpenAI konuşma sentezi.</p>
+						</div>
+					</div>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>Not:</strong> TTS işlevi için ilgili katman sayfasının OBS'de açık olması gerekir. Her TTS sağlayıcısının ses seçenekleri, gecikmesi ve fiyatlandırma veya donanım gereksinimleri farklıdır.</p>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Bot örnekleri ve katmanlar</h3>
+				<p>Social Stream Ninja, farklı kullanım senaryoları için birden fazla bot örneği sunar:</p>
+				
+				<div class="command-table">
+					<table>
+						<thead>
+							<tr>
+								<th>Bot türü</th>
+								<th>URL</th>
+								<th>Açıklama</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Ana Sohbet Botu</td>
+								<td><code>/bot.html</code></td>
+								<td>İsteğe bağlı TTS ve herkese açık sohbet yanıtları sunan ana bot katmanı</td>
+							</tr>
+							<tr>
+								<td>Özel Sohbet Arayüzü</td>
+								<td><code>/chatbot.html</code></td>
+								<td>Ana botun RAG veri kümesini veya sohbet geçmişini paylaşmayan, ayrı bir bire bir bot sayfası</td>
+							</tr>
+							<tr>
+								<td>Sansür Botu</td>
+								<td>(arka planda çalışır)</td>
+								<td>Gelen mesajları otomatik olarak filtreler, temizler veya engeller</td>
+							</tr>
+							<tr>
+								<td>Yapay zekâ yardımcı sunucusu</td>
+								<td><code>/cohost.html</code></td>
+								<td>Ekranınızı görebilen, sesi duyabilen ve etkileşime girebilen çok kipli yapay zekâ</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Yapay zekâ entegrasyonunu kurma</h3>
+				<p>Mevcut menüyle yapay zekâ entegrasyonunu kurmak için şu adımları izleyin:</p>
+				
+				<div class="ai-setup-steps">
+					<div class="ai-step">
+						<div class="ai-step-number">1</div>
+						<div class="ai-step-content">
+							<h4>LLM sağlayıcınızı seçin ve bağlayın</h4>
+							<p>Sağlayıcınızı şu bölümde seçin: <strong>LLM hizmet sağlayıcısını yapılandır</strong> ve ilgili alanları doldurun:</p>
+							<ul>
+								<li><strong>Ollama:</strong> Yerel olarak kurun ve gerekirse uç noktayı ayarlayın</li>
+								<li><strong>Yerel Gemma / Yerel Qwen:</strong> Barındırılan tarayıcı model dosyalarını ve isteğe bağlı model klasörü geçersiz kılmasını kullanın; Qwen SSN largefiles'ı kullanabilir, Gemma ise kendi yansıttığınız klasörü gerektirir</li>
+								<li><strong>ChatGPT, Gemini, DeepSeek, xAI, Groq, OpenRouter, Bedrock:</strong> API anahtarınızı ve tercih ettiğiniz modeli ekleyin</li>
+								<li><strong>Özel API:</strong> OpenAI uyumlu bir uç nokta, model kimliği ve isteğe bağlı API anahtarı girin</li>
+							</ul>
+						</div>
+					</div>
+					
+					<div class="ai-step">
+						<div class="ai-step-number">2</div>
+						<div class="ai-step-content">
+							<h4>Seçili sohbet botunu test edin</h4>
+							<p>Yerleşik düğmeyi kullanın: <strong>Seçili sohbet botunu test et</strong> . Canlı yayından önce sağlayıcınızı, modelinizi ve kimlik bilgilerinizi doğrulayın.</p>
+						</div>
+					</div>
+					
+					<div class="ai-step">
+						<div class="ai-step-number">3</div>
+						<div class="ai-step-content">
+							<h4>Bot davranışını yapılandırın</h4>
+							<p>Botun sohbetteki davranışını özelleştirin:</p>
+							<ul>
+								<li>LLM yapay zekâ sohbet botunu etkinleştir</li>
+								<li>Bot adını, tetikleyici sözcükleri ve yanıt hız sınırını ayarlayın</li>
+								<li>Yanıtların sohbete geri mi yoksa yalnızca bot katmanı sayfasına mı gideceğini seçin</li>
+								<li>Üslup, rol ve moderasyon kuralları için özel yönergeler ekleyin</li>
+							</ul>
+						</div>
+					</div>
+					
+					<div class="ai-step">
+						<div class="ai-step-number">4</div>
+						<div class="ai-step-content">
+							<h4>İsteğe bağlı ek özellikleri etkinleştirin</h4>
+							<p>Botla birlikte kullanmak istediğiniz özellikleri açın:</p>
+							<ul>
+								<li>Bot yanıtları için TTS'yi etkinleştirin ve bir sağlayıcı seçin</li>
+								<li>Sabit süreli, mesaj uzunluğuna göre veya TTS sonrası otomatik gizleme davranışını şu sayfa için seçin: <code>/bot.html</code>; kullanın: <code>clearBotOverlay</code> elle temizleme için</li>
+								<li>Bilgiye dayalı yanıtlar için RAG'ı etkinleştirin ve belgeler yükleyin</li>
+								<li>Moderasyon veya sıkı engelleme modu için sansür botunu etkinleştirin</li>
+								<li>Açın: <code>/bot.html</code>, <code>/chatbot.html</code>, veya <code>/cohost.html</code> gerektiği şekilde OBS'de veya bir tarayıcıda</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+				
+				<div class="documentation-links">
+					<h4>Ayrıntılı belgeler</h4>
+					<p>Eksiksiz kurulum yönergeleri ve TTS hakkında daha ayrıntılı bilgi için bu kılavuzları kullanın:</p>
+					<div class="doc-links">
+						<a href="chatbot-basics-guide.html" class="btn btn-primary">
+							<i class="fas fa-file-alt"></i>
+							<span>Yapay zekâ sohbet botu kurulum kılavuzu</span>
+						</a>
+						<a href="local-tts.html" class="btn btn-secondary">
+							<i class="fas fa-volume-up"></i>
+							<span>Yerel yapay zekâ TTS kılavuzu</span>
+						</a>
+						<a href="twitch-bot-account-chatbot.html" class="btn btn-secondary">
+							<i class="fas fa-robot"></i>
+							<span>Otomatik yanıtlar için bot hesapları</span>
+						</a>
+						<a href="https://ollama.com/download" class="btn btn-secondary" target="_blank" rel="noopener">
+							<i class="fas fa-download"></i>
+							<span>Resmî Ollama indirme sayfası</span>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+
+	<section id="midi-hotkey" class="command-section alt">
+		<div class="container">
+			<h2>MIDI ve kısayol tuşlarıyla kontrol</h2>
+			
+			<div class="command-card">
+				<h3>MIDI entegrasyonu</h3>
+				<p>MIDI kontrolcüleri, klavye kısayolları veya MIDI eklentili StreamDeck kullanarak Social Stream Ninja'yı kontrol edin.</p>
+				
+				<div class="midi-setup">
+					<h4>Kurulum gereksinimleri</h4>
+					<ol class="command-steps">
+						<li>Uzantı ayarlarında MIDI desteğini etkinleştirin</li>
+						<li>Sanal bir MIDI geri döngü aygıtı kurun (ör. loopMIDI)</li>
+						<li>MIDI kontrolcünüzü veya StreamDeck MIDI eklentinizi yapılandırın</li>
+					</ol>
+				</div>
+				
+				<div class="command-table">
+					<table>
+						<thead>
+							<tr>
+								<th>CC numarası</th>
+								<th>Değer</th>
+								<th>İşlem</th>
+								<th>Notlar</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>102</td>
+								<td>1</td>
+								<td>Sohbete “1” gönder</td>
+								<td>Hızlı tepki</td>
+							</tr>
+							<tr>
+								<td>102</td>
+								<td>2</td>
+								<td>Sohbete “LUL” gönder</td>
+								<td>İfade tepkisi</td>
+							</tr>
+							<tr>
+								<td>102</td>
+								<td>3</td>
+								<td>Şaka anlat</td>
+								<td>Bot yanıtını tetikler</td>
+							</tr>
+							<tr>
+								<td>102</td>
+								<td>4</td>
+								<td>Katmanı temizle</td>
+								<td>Öne çıkan mesajı kaldırır</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>İpucu:</strong> MIDI kontrolü en iyi fiziksel kontrolcülerle çalışır, ancak sanal MIDI aygıtlarıyla da tetiklenebilir.</p>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Kısayol tuşu desteği</h3>
+				<p>Yaygın işlevlere hızlı erişmek için klavye kısayollarını kullanın.</p>
+				
+				<div class="hotkey-info">
+					<p>Kısayol tuşları menü ayarlarından yapılandırılabilir; tarayıcı odaktayken veya uygulama kullanılırken sistem genelinde çalışır.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+    <section id="webhook" class="command-section alt">
+        <div class="container">
+            <h2>Webhook entegrasyonu</h2>
+            
+            <div class="command-card">
+                <h3>Bağış hizmetleri</h3>
+                <p>Social Stream Ninja, webhook'lar üzerinden üçüncü taraf hizmetlerden bağışlar ve etkinlikler alabilir; popüler olanlardan bazıları aşağıdadır:</p>
+                
+                <div class="webhook-grid">
+					<div class="webhook-item">
+						<div class="webhook-icon">
+							<img src="../../sources/images/stripe.png" alt="Stripe">
+						</div>
+						<h4>Stripe</h4>
+						<p>Kredi kartıyla yapılan bağışları doğrudan Stripe hesabınız üzerinden işleyin.</p>
+						<ul class="webhook-steps">
+							<li>Şurada bir ödeme bağlantısı oluşturun: <a href="https://stripe.com" target="_blank">stripe.com</a></li>
+							<li>Stripe Dashboard'da Developers → Webhooks bölümüne gidin</li>
+							<li>Uç nokta ekleyin: <code>https://io.socialstream.ninja/SESSIONID/stripe</code></li>
+							<li>Etkinliği seçin: <code>checkout.session.completed</code></li>
+							<li>Ekleyin: <code>&server</code> panel URL'nize</li>
+						</ul>
+					</div>
+					
+					<div class="webhook-item">
+						<div class="webhook-icon">
+							<img src="../../sources/images/kofi.png" alt="Ko-Fi">
+						</div>
+						<h4>Ko-Fi</h4>
+						<p>Destekçilerinizden kahve bağışları alın.</p>
+						<ul class="webhook-steps">
+							<li>Ko-Fi hesabınızda oturum açın</li>
+							<li>Şuraya gidin: <a href="https://ko-fi.com/manage/webhooks" target="_blank">Webhook ayarları</a></li>
+							<li>Ekleyin: <code>https://io.socialstream.ninja/SESSIONID/kofi</code> webhook URL'si olarak</li>
+							<li>Ekleyin: <code>&server</code> panel URL'nize</li>
+							<li>“Tek Bağış Testi Gönder” düğmesiyle test edin</li>
+						</ul>
+					</div>
+					
+					<div class="webhook-item">
+						<div class="webhook-icon">
+							<img src="../../sources/images/bmac.png" alt="Buy Me A Coffee">
+						</div>
+						<h4>Buy Me A Coffee</h4>
+						<p>Popüler Buy Me A Coffee platformu üzerinden bağış toplayın.</p>
+						<ul class="webhook-steps">
+							<li>Buy Me A Coffee hesabınızda oturum açın</li>
+							<li>Webhook ayarlarına gidin</li>
+							<li>Ekleyin: <code>https://io.socialstream.ninja/SESSIONID/bmac</code> webhook URL'si olarak</li>
+							<li>Ekleyin: <code>&server</code> etkinlikleri almak için panel URL'nize</li>
+							<li>Hem bağış hem de üyelik etkinlikleri desteklenir</li>
+						</ul>
+					</div>
+				</div>
+
+				<div class="webhook-note">
+					<p><strong>Güvenlik notu:</strong> Oturum kimliğinizi gizli tutun; bu kimliğe sahip herkes katmanınıza sahte bağışlar gönderebilir. Webhook URL'si hassas bilgi olarak ele alınmalıdır.</p>
+				</div>
+            </div>
+            
+            <div class="command-card">
+                <h3>Harici hizmet entegrasyonu</h3>
+                <p>Social Stream Ninja, üçüncü taraf hizmetlere de veri gönderebilir:</p>
+                
+                <div class="command-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Hizmet</th>
+                                <th>URL parametresi</th>
+                                <th>Açıklama</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Singular Live</td>
+                                <td><code>&singular=IDENTIFIER</code></td>
+                                <td>Öne çıkan mesaj katmanı için seçili mesajları Singular Live'a gönderir</td>
+                            </tr>
+                            <tr>
+                                <td>H2R</td>
+                                <td><code>&h2r=IDENTIFIER</code></td>
+                                <td>Seçili mesajları yerel bir H2R sunucusuna gönderir</td>
+                            </tr>
+                            <tr>
+                                <td>Genel POST</td>
+                                <td><code>&postserver=URL</code></td>
+                                <td>Seçili mesajları POST ile özel bir uç noktaya gönderir</td>
+                            </tr>
+                            <tr>
+                                <td>Genel PUT</td>
+                                <td><code>&putserver=URL</code></td>
+                                <td>Seçili mesajları PUT ile özel bir uç noktaya gönderir</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <p>Bu parametreler panel sayfasının URL'sine eklenmelidir.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="custom-scripts" class="command-section">
+        <div class="container">
+            <h2>Özel betikler</h2>
+            
+            <div class="command-card">
+                <h3>Özel JavaScript</h3>
+                <p>JavaScript kodunu özelleştirerek kendi komutlarınızı ve işlevlerinizi oluşturabilirsiniz:</p>
+
+                <div class="custom-js-method">
+                    <h4>custom.js kullanımı</h4>
+                    <ol class="command-steps">
+                        <li>Yeniden adlandırın: <code>custom_sample.js</code> yeni dosya adı olarak şunu kullanın: <code>custom.js</code></li>
+                        <li>Özel işlevinizi eklemek için dosyayı düzenleyin</li>
+                        <li>custom.js dosyasının yüklenmesi için dock.html dosyasını yerel olarak açın</li>
+                    </ol>
+                    <p>Bu yöntem karmaşık özelleştirmelere ve tetikleyicilere olanak tanır.</p>
+                </div>
+            </div>
+       </div>
+	</section>
+            
+<section id="custom-overlays" class="command-section">
+    <div class="container">
+        <h2>Özel katmanlar</h2>
+        
+        <div class="command-card">
+            <h3>Özel katmanlar oluşturma</h3>
+            <p>Yayınınızın kendine özgü tarzına ve işlevine uygun, tamamen özel sohbet katmanlarını sıfırdan oluşturabilirsiniz. Social Stream Ninja üzerine geliştirme yapabileceğiniz esnek bir temel sunar.</p>
+            
+            <div class="overlay-options">
+                <div class="overlay-option">
+                    <h4>Bir şablonla başlama</h4>
+                    <p>Temelleri anlamak için örnek katman şablonumuzla başlayın:</p>
+                    <div class="code-block">
+                        <pre>// View the sample overlay
+https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
+                    </div>
+                    <p>Bu küçük şablon yalnızca çalışan bir katman için gerekli temel kodu içerir.</p>
+                    <a href="https://socialstream.ninja/sampleoverlay?session=SESSIONID" class="btn btn-secondary" target="_blank">Örnek katmanı görüntüleyin</a>
+                </div>
+                
+                <div class="overlay-option">
+                    <h4>Özelleştirilebilecek temel özellikler</h4>
+                    <ul class="feature-list">
+                        <li>Öne çıkan mesajlarla tüm mesajları gösterme arasında geçiş yapın</li>
+                        <li>Görünümü CSS ile özelleştirin</li>
+                        <li>Yeni mesajlar için özel animasyonlar ekleyin</li>
+                        <li>Kendi mesaj filtrelemenizi uygulayın</li>
+                        <li>JavaScript ile etkileşimli öğeler ekleyin</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="implementation-steps">
+                <h4>Uygulama adımları</h4>
+                <ol class="command-steps">
+                    <li>Örnek katman HTML dosyasını indirin</li>
+                    <li>Özel düzeniniz için HTML'yi düzenleyin</li>
+                    <li>İstediğiniz görünüm için CSS'yi özelleştirin</li>
+                    <li>Özel davranışlar için JavaScript'i gerektiği gibi değiştirin</li>
+                    <li>OBS'de tarayıcı kaynağı olarak kullanmak için dosyayı yerel olarak kaydedin</li>
+                </ol>
+            </div>
+		</div>
+    </div>
+
+	</section>
+	
+	
+	<section id="timer-api" class="command-section">
+		<div class="container">
+			<h2>Zamanlayıcı API'si</h2>
+			<div class="command-card">
+				<h3>Uzaktan kontrol: <code>timer.html</code></h3>
+				<p>Zamanlayıcı sayfasının kapsamı bilerek dardır: tek zamanlayıcı, isteğe bağlı operatör kontrolleri, uyarı durumları, süre aşımı ve birkaç görsel stil.</p>
+				<p>Yararlı işlemler şunlardır: <code>starttimer</code>, <code>pausetimer</code>, <code>resettimer</code>, <code>timeradd</code>, <code>timersubtract</code>, ve <code>settimer</code>.</p>
+				<div class="code-block">
+					<pre>{
+  "action": "settimer",
+  "value": {
+    "seconds": 300,
+    "label": "Interview",
+    "mode": "countdown",
+    "style": "stage",
+    "warnSeconds": 60,
+    "dangerSeconds": 15
+  }
+}</pre>
+				</div>
+				<p>Mevcut zamanlayıcı durumunu sorgulamak için şunu kullanın: <code>gettimerstate</code> bir geri çağrı tokeniyle.</p>
+				<div class="code-block">
+					<pre>{ "action": "gettimerstate", "get": "timer-state-1" }</pre>
+				</div>
+				<p>Sayfayı şu seçenekle kullanın: <code>timer.html?session=YOUR_SESSION&amp;server</code> doğrudan API sunucusuyla kontrol edilmesini istiyorsanız.</p>
+			</div>
+		</div>
+	</section>
+	
+	
+
+
+<section class="container"><h2>Yönetilen çekiliş komutları</h2><p><code>startgiveaway</code>, <code>closegiveaway</code>, <code>drawgiveaway</code>, <code>resetgiveaway</code>, ve <code>getgiveawaystate</code> aynı API/Stream Deck kontrollerini kullanarak özel çekiliş havuzunu yönetir. Çekiliş, katılımı otomatik olarak kapatır. Yeni tur, önceki kazanan geçmişini korur ve ödenmemiş rezervasyonları reddeder. İptal et ve iade et, bekleyen bilet ödemelerini geri verir. Ücretli biletler, Sayı Avı, Yazı Tura Havuzu ve Etkinlik Akışı aynı yayıncı hizmetini kullanır. <a href="giveaway-points-guide.html">Kurulum, sunumlar, komut değerleri ve kurtarma</a>.</p></section>
+    <section class="get-started">
+        <div class="container">
+            <h2>Yayınınızı bir üst seviyeye taşımaya hazır mısınız?</h2>
+            <p>Bu güçlü komutlar ve API seçenekleriyle benzersiz ve etkileşimli bir yayın deneyimi oluşturabilirsiniz.</p>
+            <div class="get-started-cta">
+                <a href="download.html" class="btn btn-primary">Şimdi indir</a>
+                <a href="support.html" class="btn btn-secondary">Destek alın</a>
+            </div>
+        </div>
+    </section>
+
+       <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>Canlı sosyal mesaj akışlarınızı ve daha fazlasını birleştirir. Ücretsiz ve açık kaynaklıdır.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+					<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Hızlı bağlantılar</h3>
+                    <ul>
+                        <li><a href="../index.html">Ana sayfa</a></li>
+                        <li><a href="features.html">Özellikler</a></li>
+                        <li><a href="download.html">İndir</a></li>
+                        <li><a href="guides.html">Kılavuzlar</a></li>
+                        <li><a href="commands.html">Komutlar ve API</a></li>
+                        <li><a href="supported-sites.html">Desteklenen siteler</a></li>
+                        <li><a href="templates.html">Şablonlar</a></li>
+                        <li><a href="support.html">Destek</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Kaynaklar</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">Kurulum kılavuzu</a></li>
+                        <li><a href="guides.html#extension-customization">Özelleştirme kılavuzu</a></li>
+                        <li><a href="guides.html#faq">SSS</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Sorun bildirin</a></li>
+                        <li><a href="../privacy.html">Gizlilik politikası</a></li>
+                        <li><a href="../TOS.html">Hizmet koşulları</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Topluluk</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Discord sunucumuza katılın</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub deposu</a></li>
+                        <li><a href="support.html#contribute">Katkıda bulunun</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">Bağış yapın</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 Lisansı. Geliştiren: <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> topluluğun katkılarıyla.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        // Set current year in footer
+		document.getElementById('current-year').textContent = new Date().getFullYear();
+
+		document.addEventListener('DOMContentLoaded', function() {
+			// Sticky navigation functionality
+			const commandsNav = document.getElementById('commands-nav');
+			const header = document.querySelector('header');
+			const navOffset = commandsNav ? commandsNav.offsetTop : 0;
+			
+			// Make navigation sticky on scroll
+			function makeNavSticky() {
+				if (!commandsNav) return;
+				
+				const scrollPosition = window.pageYOffset;
+				const headerHeight = header ? header.offsetHeight : 0;
+				
+				if (scrollPosition > (navOffset - headerHeight)) {
+					commandsNav.classList.add('sticky');
+					document.body.classList.add('sticky-nav-active');
+					document.body.style.paddingTop = commandsNav.offsetHeight + 'px';
+				} else {
+					commandsNav.classList.remove('sticky');
+					document.body.classList.remove('sticky-nav-active');
+					document.body.style.paddingTop = '0';
+				}
+			}
+			
+			// Update active nav item based on scroll
+			function updateActiveNav() {
+				const scrollPosition = window.scrollY;
+				const headerHeight = header.offsetHeight;
+				const navElement = document.getElementById('commands-nav');
+				const navHeight = navElement ? navElement.offsetHeight : 0;
+				const offset = headerHeight + navHeight + 50;
+				
+				document.querySelectorAll('.command-section').forEach(section => {
+					const sectionTop = section.offsetTop - offset;
+					const sectionBottom = sectionTop + section.offsetHeight;
+					const sectionId = section.getAttribute('id');
+					
+					if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+						document.querySelectorAll('.nav-link').forEach(link => {
+							link.classList.remove('active');
+							if (link.getAttribute('href') === `#${sectionId}`) {
+								link.classList.add('active');
+							}
+						});
+					}
+				});
+				
+			}
+			
+			
+			
+			// Combined scroll handler
+			let scrollTimeout;
+			window.addEventListener('scroll', function() {
+				makeNavSticky();
+				
+				if (scrollTimeout) {
+					window.cancelAnimationFrame(scrollTimeout);
+				}
+				scrollTimeout = window.requestAnimationFrame(function() {
+					updateActiveNav();
+				});
+			});
+			
+			// Initial checks
+			makeNavSticky();
+			updateActiveNav();
+			
+			// Smooth scroll for command navigation
+			document.querySelectorAll('.nav-link').forEach(anchor => {
+				anchor.addEventListener('click', function(e) {
+					e.preventDefault();
+					
+					const targetId = this.getAttribute('href');
+					const targetElement = document.querySelector(targetId);
+					
+					if (targetElement) {
+						const headerHeight = document.querySelector('header').offsetHeight;
+						const navHeight = document.querySelector('.navigation').offsetHeight;
+						const offsetPosition = targetElement.offsetTop - headerHeight - navHeight;
+						
+						window.scrollTo({
+							top: offsetPosition,
+							behavior: 'smooth'
+						});
+						
+						// Update active class on navigation
+						document.querySelectorAll('.nav-link').forEach(link => {
+							link.classList.remove('active');
+						});
+						this.classList.add('active');
+					}
+				});
+			});
+			
+			// Add anchor links to headings
+			document.querySelectorAll('h2, h3').forEach(heading => {
+				if (heading.id) {
+					heading.classList.add('section-heading');
+					const anchor = document.createElement('a');
+					anchor.className = 'section-anchor';
+					anchor.href = `#${heading.id}`;
+					anchor.innerHTML = '<i class="fas fa-link"></i>';
+					heading.appendChild(anchor);
+				}
+			});
+		});
+    </script>
+</body>
+</html>

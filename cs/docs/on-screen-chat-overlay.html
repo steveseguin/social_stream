@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/cs/docs/on-screen-chat-overlay.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/cs/docs/on-screen-chat-overlay.html">
+    <meta property="og:title" content="Překryv chatu na obrazovce při hraní - Social Stream Ninja">
+    <meta property="og:description" content="Zobrazte soukromý překryv chatu Social Stream Ninja nad hrou pomocí samostatné desktopové aplikace nebo Electron Capture; průvodce zahrnuje průhlednost, zkratky propouštění kliknutí, příklady příkazového řádku a poznámky k zachytávání OBS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/cs/docs/on-screen-chat-overlay.html">
+    <meta name="twitter:title" content="Překryv chatu na obrazovce při hraní - Social Stream Ninja">
+    <meta name="twitter:description" content="Zobrazte soukromý překryv chatu Social Stream Ninja nad hrou pomocí samostatné desktopové aplikace nebo Electron Capture; průvodce zahrnuje průhlednost, zkratky propouštění kliknutí, příklady příkazového řádku a poznámky k zachytávání OBS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Překryv chatu na obrazovce při hraní - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Zobrazte soukromý překryv chatu Social Stream Ninja nad hrou pomocí samostatné desktopové aplikace nebo Electron Capture; průvodce zahrnuje průhlednost, zkratky propouštění kliknutí, příklady příkazového řádku a poznámky k zachytávání OBS.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/on-screen-chat-overlay.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"(or":"(nebo",". Activate your chat sources normally.":". Zdroje chatu aktivujte obvyklým způsobem.",". If the URL has no question mark yet, use":". Pokud URL ještě nemá otazník, použijte",". Mouse clicks will pass through to the game.":". Kliknutí myší budou procházet do hry.",". SSApp opens it as its own overlay window.":". SSApp ho otevře jako vlastní okno překryvu.",". The browser extension and an OBS Browser Source cannot create a system-wide click-through window by themselves.":". Rozšíření prohlížeče ani zdroj prohlížeče OBS samy nemohou vytvořit systémové okno propouštějící kliknutí.",". The generated URL should contain":". Vygenerovaná URL by měla obsahovat","A Dock or Featured URL with the wrong session ID will remain empty.":"URL doku nebo vybraných zpráv s nesprávným ID relace zůstane prázdná.","A test recording confirms viewers cannot see the private overlay.":"Testovací záznam potvrzuje, že diváci soukromý překryv nevidí.","Action":"Akce","Alternative transparent background mode; useful when the Dock's normal":"Alternativní režim průhledného pozadí; hodí se, když běžný režim doku","Always on top":"Vždy navrchu","An exclusive fullscreen game may cover all normal desktop windows, including an always-on-top overlay.":"Hra v exkluzivním celoobrazovkovém režimu může zakrýt všechna běžná okna plochy, včetně překryvu nastaveného vždy navrchu.","Avoid":"Vyhněte se","Best When":"Vhodné, když","Borderless or windowed fullscreen is the reliable game mode.":"Spolehlivý je bezokrajový nebo celoobrazovkový režim v okně.","Capture third-party overlays (such as Steam)":"Zachytávat překryvy třetích stran (například Steam)","Chat is arriving in Social Stream.":"Chat přichází do Social Stream.","Choose The Chat View":"Vyberte zobrazení chatu","Choose a zero-based monitor when a monitor index is easier than desktop coordinates.":"Vyberte monitor indexem od nuly, pokud je index monitoru jednodušší než souřadnice plochy.","Click the generated Dock or Featured link":"Klikněte na vygenerovaný odkaz doku nebo vybraných zpráv","Click-through disables mouse interaction.":"Propouštění kliknutí vypíná ovládání myší.","Click-through is enabled only after positioning.":"Propouštění kliknutí zapněte až po umístění.","Closing SSApp or Electron Capture closes the local overlay.":"Zavřením SSApp nebo Electron Capture se místní překryv zavře.","Commands & API":"Příkazy a API","Continuous Chat Dock":"Dok průběžného chatu","Copy your generated Social Stream Dock, Featured, template, or custom overlay URL.":"Zkopírujte vygenerovanou URL doku, vybraných zpráv, šablony nebo vlastního překryvu Social Stream.","Display Capture":"Zachytávání obrazovky","Display capture includes what you see.":"Zachytávání obrazovky zahrnuje vše, co vidíte.","Do not add this overlay URL as an OBS Browser Source":"Nepřidávejte tuto URL překryvu jako zdroj prohlížeče OBS","Do not attempt to bypass a game's security controls.":"Nepokoušejte se obcházet bezpečnostní mechanismy hry.","Download":"Stáhnout","Electron Capture":"Electron Capture","Electron Capture Command-Line Launch":"Spuštění Electron Capture z příkazového řádku","Electron Capture feature cards for Pin on Top, Frameless Window, Transparency Support, Click-Through Mode, Auto Screen Capture, and Game and App Capture":"Karty funkcí Electron Capture: připnutí navrch, bezrámové okno, průhlednost, propouštění kliknutí, automatické zachytávání obrazovky a zachytávání her a aplikací","Electron Capture provides the pin, frameless transparency, and click-through controls needed for a private on-screen overlay.":"Electron Capture poskytuje připnutí, bezrámovou průhlednost a propouštění kliknutí potřebné pro soukromý překryv na obrazovce.","Example placement using the real SSApp Featured Chat overlay over a simulated gameplay scene. A Dock URL can show the full running chat instead.":"Ukázka umístění skutečného překryvu vybraných zpráv SSApp nad simulovanou herní scénou. URL doku může místo něj zobrazit celý průběžný chat.","Featured Chat Only":"Pouze vybrané zprávy","Featured Chat Overlay":"Překryv vybraných zpráv","Featured Chat Overlay:":"Překryv vybraných zpráv:","Featured Chat is not the full feed.":"Vybrané zprávy nejsou celý chat.","Features":"Funkce","For templates, custom CSS, fonts, and more URL controls, see the":"Šablony, vlastní CSS, písma a další možnosti URL najdete v","Force transparent background":"Vynutit průhledné pozadí","Frameless transparency, pinning, click-through, monitor selection, and command-line control.":"Bezrámová průhlednost, připnutí, propouštění kliknutí, výběr monitoru a ovládání příkazovým řádkem.","Game Capture":"Zachytávání hry","Guides":"Návody","Hide platform source labels or icons in the Dock.":"Skryje popisky nebo ikony zdrojových platforem v doku.","Hide the Dock toolbar after setup.":"Po nastavení skryje panel nástrojů doku.","Hire":"Najmout odborníka","Home":"Domů","If you cannot isolate the game from the monitor in your capture software, this overlay cannot be guaranteed private.":"Pokud zachytávací software neumí oddělit hru od celého monitoru, nelze zaručit soukromí překryvu.","Important Limitations":"Důležitá omezení","In the Social Stream settings panel, find":"V panelu nastavení Social Stream najděte","Initial position in the virtual desktop. Negative coordinates may be valid for monitors placed left or above the primary monitor.":"Počáteční poloha na virtuální ploše. Záporné souřadnice mohou být platné pro monitory vlevo nebo nad hlavním monitorem.","Initial window size in pixels.":"Počáteční velikost okna v pixelech.","Inject a local CSS file for advanced styling.":"Vloží místní soubor CSS pro pokročilé stylování.","Inspiration":"Inspirace","Install and open the":"Nainstalujte a otevřete","It only shows a message after you select one in the Dock.":"Zpráva se zobrazí až po jejím výběru v doku.","Keep It On Your Monitor, Not On The Stream":"Ponechte chat na monitoru, nikoli ve streamu","Keep Social Stream chat visible on your monitor without automatically putting it on the stream.":"Mějte chat Social Stream viditelný na monitoru, aniž by se automaticky zobrazoval ve streamu.","Leave OBS's":"Ponechte v OBS možnost","Leave it off unless a page specifically needs screen capture or another elevated Electron feature.":"Nechte ji vypnutou, pokud stránka výslovně nepotřebuje zachytávání obrazovky nebo jinou privilegovanou funkci Electronu.","Limit the number of retained messages on supported pages.":"Omezí počet uchovaných zpráv na podporovaných stránkách.","Main navigation":"Hlavní navigace","Make UnClickable":"Zakázat klikání","Make a short local recording and watch it back before going live. Capture methods and games differ.":"Před vysíláním vytvořte krátký místní záznam a přehrajte si ho. Metody zachytávání a hry se liší.","Make sure it includes":"Ověřte, že obsahuje","Method 1: Social Stream Standalone App":"Metoda 1: Samostatná aplikace Social Stream","Method 2: Electron Capture":"Metoda 2: Electron Capture","Move and resize it, then enable":"Přesuňte a upravte velikost, poté povolte","Move and size the window before locking it. Right-click the overlay for size presets and select":"Před uzamčením okno přesuňte a nastavte velikost. Pravým tlačítkem na překryvu otevřete předvolby velikosti a vyberte","No reliable system-wide transparency or mouse click-through.":"Bez spolehlivé systémové průhlednosti a propouštění kliknutí myši.","Normal browser or OBS only":"Pouze běžný prohlížeč nebo OBS","OBS Game Capture is Windows-only. If your setup must capture the entire display, the on-screen overlay will also be captured. Use a separate monitor or a window/application capture method that excludes the overlay, then verify with a recording.":"Zachytávání hry OBS je dostupné pouze ve Windows. Pokud musíte zachytávat celou obrazovku, zachytí se i překryv. Použijte samostatný monitor nebo zachytávání okna/aplikace, které překryv vylučuje, a ověřte to záznamem.","OBS captures the game/window, not the entire display.":"OBS zachytává hru/okno, nikoli celou obrazovku.","On Windows, prefer an OBS":"Ve Windows upřednostněte zdroj OBS","On-Screen Chat Overlay While Gaming - Social Stream Ninja":"Překryv chatu na obrazovce při hraní - Social Stream Ninja","On-Screen Chat While Gaming":"Chat na obrazovce při hraní","Open its options and enable":"Otevřete jeho možnosti a povolte","Open navigation menu":"Otevřít navigační nabídku","Open the URL in Electron Capture.":"Otevřete URL v Electron Capture.","Option":"Možnost","Overlay Customization guide":"průvodci přizpůsobením překryvů","Overlay Gallery":"Galerie překryvů","Positioning tip:":"Tip k umístění:","Purpose":"Účel","Quick Checklist":"Rychlý kontrolní seznam","Reload the focused overlay window.":"Znovu načte aktivní okno překryvu.","Remove the page background and request a transparent desktop window.":"Odstraní pozadí stránky a požádá o průhledné okno plochy.","Right-click an SSApp overlay window to resize, pin, or make it click-through. Set click-through last so you do not lock yourself out while positioning it.":"Pravým tlačítkem na okně překryvu SSApp můžete změnit velikost, připnout ho nebo povolit propouštění kliknutí. Propouštění kliknutí nastavte až nakonec, abyste si během umísťování nezablokovali ovládání.","Right-click its window and enable":"Klikněte pravým tlačítkem na jeho okno a povolte","Run a separate Electron Capture process when you need more than one independent overlay.":"Pokud potřebujete více nezávislých překryvů, spusťte samostatný proces Electron Capture.","SSApp Hotkeys":"Klávesové zkratky SSApp","SSApp overlay right-click menu showing Resize window, Always on top, and Make UnClickable until in-focus with the Ctrl Shift Alt X hotkey":"Kontextová nabídka překryvu SSApp s možnostmi Změnit velikost okna, Vždy navrchu a Zakázat klikání do získání fokusu a zkratkou Ctrl Shift Alt X","Scale supported overlays down without changing window size.":"Zmenší podporované překryvy bez změny velikosti okna.","See Electron Capture's":"Viz dokumentace Electron Capture:","See Live Chat While Gaming! Transparent Overlay Guide":"Sledujte živý chat při hraní! Průvodce průhledným překryvem","Show a private Social Stream Ninja chat overlay over a game using the standalone desktop app or Electron Capture, with transparency, click-through hotkeys, command-line examples, and OBS capture notes.":"Zobrazte soukromý překryv chatu Social Stream Ninja nad hrou pomocí samostatné desktopové aplikace nebo Electron Capture; průvodce zahrnuje průhlednost, zkratky propouštění kliknutí, příklady příkazového řádku a poznámky k zachytávání OBS.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja featured chat message positioned over a simulated gameplay scene":"Vybraná zpráva Social Stream Ninja umístěná nad simulovanou herní scénou","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja standalone app":"samostatnou aplikaci Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Social Stream can sit above a game as a transparent, always-on-top window. This is a separate desktop window, not a game HUD injection.":"Social Stream může být nad hrou jako průhledné okno vždy navrchu. Jde o samostatné okno plochy, nikoli vložení HUD do hry.","Social Stream standalone app":"Samostatná aplikace Social Stream","Some games and anti-cheat systems restrict overlays.":"Některé hry a systémy proti podvádění omezují překryvy.","Start always-on-top.":"Spustí okno vždy navrchu.","Start in click-through mode. Remember the recovery hotkey before using it.":"Spustí režim propouštění kliknutí. Než ho použijete, zapamatujte si obnovovací zkratku.","Streaming Chat":"Streamovaný chat","Streaming Chat / Dock:":"Streamovaný chat / dok:","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","Template or custom overlay:":"Šablona nebo vlastní překryv:","The URL contains":"URL obsahuje","The chat should appear on the broadcast rather than privately on your monitor.":"Chat se má zobrazovat ve vysílání místo soukromě na monitoru.","The complete Social Stream overlay URL. Quote it because it contains":"Úplná URL překryvu Social Stream. Uzavřete ji do uvozovek, protože obsahuje","The desktop app must stay open.":"Desktopová aplikace musí zůstat otevřená.","The desktop wrapper is pinned above the game.":"Desktopové okno je připnuté nad hrou.","The game uses borderless or windowed fullscreen if exclusive fullscreen hides the overlay.":"Pokud exkluzivní celá obrazovka překryv skrývá, hra používá bezokrajový nebo celoobrazovkový režim v okně.","The overlay URL uses the correct session ID.":"URL překryvu používá správné ID relace.","The overlay stays private only when your streaming software captures the game or game window rather than the whole monitor.":"Překryv zůstane soukromý pouze tehdy, když vysílací software zachytává hru nebo její okno místo celého monitoru.","The portable Windows build is the simplest version to automate. Replace":"Nejsnáze se automatizuje přenosná verze pro Windows. Nahraďte","The session must match.":"Relace se musí shodovat.","This older video shows the transparent, always-on-top, click-through chat setup. The app interface may look different in current versions.":"Toto starší video ukazuje průhledný chat vždy navrchu s propouštěním kliknutí. Rozhraní aktuálních verzí aplikace může vypadat jinak.","Toggle mouse click-through so you can interact with the overlay again.":"Přepne propouštění kliknutí myši, abyste mohli překryv znovu ovládat.","Transparency varies by operating system and graphics setup.":"Průhlednost se liší podle operačního systému a grafické sestavy.","Transparent popup windows, always-on-top, resizing, and click-through.":"Průhledná vyskakovací okna, vždy navrchu, změna velikosti a propouštění kliknutí.","URL Option":"Možnost URL","Update the desktop app and graphics driver if a transparent area appears white or black.":"Pokud je průhledná oblast bílá nebo černá, aktualizujte desktopovou aplikaci a grafický ovladač.","Use":"Použijte","Use a denser Dock layout.":"Použije hustší rozvržení doku.","Use the":"Použijte","Use the recovery hotkey before trying to right-click the window again.":"Než se znovu pokusíte kliknout pravým tlačítkem, použijte obnovovací zkratku.","Use the same session ID as your active Social Stream setup. In the Social Stream settings panel, open the options for the view you chose and enable":"Použijte stejné ID relace jako v aktivním nastavení Social Stream. V panelu nastavení otevřete možnosti vybraného pohledu a povolte","Useful Overlay URL Options":"Užitečné možnosti URL překryvu","Video Walkthrough":"Videoprůvodce","What It Adds":"Co přidává","When placement is finished, right-click it again and select":"Po dokončení umístění znovu klikněte pravým tlačítkem a vyberte","Windows / Linux":"Windows / Linux","Yes, With A Desktop Overlay Window":"Ano, s desktopovým oknem překryvu","You already capture chat in SSApp and want the shortest setup.":"Již zachytáváte chat v SSApp a chcete nejkratší nastavení.","You need a desktop wrapper.":"Potřebujete desktopovou aplikaci pro zobrazení stránky.","You want exact size and position, reusable launch commands, or a dedicated overlay wrapper.":"Chcete přesnou velikost a polohu, opakovaně použitelné spouštěcí příkazy nebo samostatnou aplikaci pro překryv.","and":"a","and adjust the size and position for your display.":"a upravte velikost a polohu pro svůj displej.","characters.":"znaky.","complete command-line reference":"úplný přehled příkazového řádku","for additional parameters.":"pro další parametry.","for this workflow. It captures the entire monitor, including the chat overlay.":"v tomto postupu. Zachytává celý monitor včetně překryvu chatu.","from inside the standalone app":"ze samostatné aplikace","if viewers should not see it.":"pokud ho diváci nemají vidět.","is a separate free, open-source app that can wrap a Social Stream URL in a transparent desktop window. It is often the easier option when you only want a dedicated overlay window.":"je samostatná bezplatná aplikace s otevřeným zdrojovým kódem, která zobrazí URL Social Stream v průhledném desktopovém okně. Často je jednodušší volbou, pokud chcete pouze vyhrazené okno překryvu.","is not needed for a normal Social Stream overlay.":"není pro běžný překryv Social Stream potřeba.","macOS":"macOS","macOS And Linux":"macOS a Linux","macOS and Linux limitation:":"Omezení macOS a Linuxu:","mode hides its scrollbar.":"skrývá posuvník.","on macOS) to toggle click-through later.":"na macOS) pro pozdější přepnutí propouštění kliknutí.","option off unless you have tested that it does not include this window.":"vypnutou, pokud jste neověřili, že toto okno nezahrnuje.","options for exact placement.":"pro přesné umístění.","or":"nebo","shows one message selected from the Dock. Use this when you only want highlighted messages.":"zobrazuje jednu zprávu vybranou v doku. Použijte, pokud chcete pouze zvýrazněné zprávy.","shows the ongoing combined chat. This is usually the best choice while gaming.":"zobrazuje průběžný spojený chat. Obvykle je to nejlepší volba při hraní.","source targeting the game.":"cílený na hru.","standalone desktop app":"samostatnou desktopovou aplikaci","transparent areas can be hard to grab. Keep the Dock menu visible while positioning it, use your operating system's window movement shortcuts, or use Electron Capture's":"průhledné oblasti se mohou špatně uchopovat. Při umísťování ponechte nabídku doku viditelnou, použijte systémové zkratky pro přesun okna nebo možnosti Electron Capture","works too, as long as the page supports a transparent background.":"funguje také, pokud stránka podporuje průhledné pozadí."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/on-screen-chat-overlay.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/on-screen-chat-overlay.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/on-screen-chat-overlay.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/on-screen-chat-overlay.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/on-screen-chat-overlay.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/on-screen-chat-overlay.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/on-screen-chat-overlay.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/on-screen-chat-overlay.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/on-screen-chat-overlay.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/on-screen-chat-overlay.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/on-screen-chat-overlay.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/on-screen-chat-overlay.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/on-screen-chat-overlay.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/on-screen-chat-overlay.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/on-screen-chat-overlay.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/on-screen-chat-overlay.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="on-screen-chat-overlay.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/on-screen-chat-overlay.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Chat na obrazovce při hraní</h1>
+            <p>Mějte chat Social Stream viditelný na monitoru, aniž by se automaticky zobrazoval ve streamu.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Ano, s desktopovým oknem překryvu</h2>
+                <p>Social Stream může být nad hrou jako průhledné okno vždy navrchu. Jde o samostatné okno plochy, nikoli vložení HUD do hry.</p>
+                <div class="guide-note">
+                    <p><strong>Potřebujete desktopovou aplikaci pro zobrazení stránky.</strong> Použijte <a href="download.html">samostatnou aplikaci Social Stream Ninja</a> nebo <a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a>. Rozšíření prohlížeče ani zdroj prohlížeče OBS samy nemohou vytvořit systémové okno propouštějící kliknutí.</p>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Možnost</th><th>Vhodné, když</th><th>Co přidává</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Option">Samostatná aplikace Social Stream</td>
+                            <td data-label="Best When">Již zachytáváte chat v SSApp a chcete nejkratší nastavení.</td>
+                            <td data-label="What It Adds">Průhledná vyskakovací okna, vždy navrchu, změna velikosti a propouštění kliknutí.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Option">Electron Capture</td>
+                            <td data-label="Best When">Chcete přesnou velikost a polohu, opakovaně použitelné spouštěcí příkazy nebo samostatnou aplikaci pro překryv.</td>
+                            <td data-label="What It Adds">Bezrámová průhlednost, připnutí, propouštění kliknutí, výběr monitoru a ovládání příkazovým řádkem.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Option">Pouze běžný prohlížeč nebo OBS</td>
+                            <td data-label="Best When">Chat se má zobrazovat ve vysílání místo soukromě na monitoru.</td>
+                            <td data-label="What It Adds">Bez spolehlivé systémové průhlednosti a propouštění kliknutí myši.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Videoprůvodce</h2>
+                <p>Toto starší video ukazuje průhledný chat vždy navrchu s propouštěním kliknutí. Rozhraní aktuálních verzí aplikace může vypadat jinak.</p>
+                <div class="video-container">
+                    <iframe
+                        src="https://www.youtube.com/embed/bMVVof_L0sI"
+                        title="Sledujte živý chat při hraní! Průvodce průhledným překryvem"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Vyberte zobrazení chatu</h2>
+                <ul class="guide-list">
+                    <li><strong>Streamovaný chat / dok:</strong> zobrazuje průběžný spojený chat. Obvykle je to nejlepší volba při hraní.</li>
+                    <li><strong>Překryv vybraných zpráv:</strong> zobrazuje jednu zprávu vybranou v doku. Použijte, pokud chcete pouze zvýrazněné zprávy.</li>
+                    <li><strong>Šablona nebo vlastní překryv:</strong> funguje také, pokud stránka podporuje průhledné pozadí.</li>
+                </ul>
+                <p>Použijte stejné ID relace jako v aktivním nastavení Social Stream. V panelu nastavení otevřete možnosti vybraného pohledu a povolte <strong>Vynutit průhledné pozadí</strong>. Vygenerovaná URL by měla obsahovat <code>transparent</code>.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/on-screen-overlay-preview.png" alt="Vybraná zpráva Social Stream Ninja umístěná nad simulovanou herní scénou" class="guide-image">
+                    <figcaption>Ukázka umístění skutečného překryvu vybraných zpráv SSApp nad simulovanou herní scénou. URL doku může místo něj zobrazit celý průběžný chat.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Metoda 1: Samostatná aplikace Social Stream</h2>
+                <ol class="guide-steps">
+                    <li>Nainstalujte a otevřete <a href="download.html">samostatnou desktopovou aplikaci</a>. Zdroje chatu aktivujte obvyklým způsobem.</li>
+                    <li>V panelu nastavení Social Stream najděte <strong>Streamovaný chat</strong> nebo <strong>Překryv vybraných zpráv</strong>.</li>
+                    <li>Otevřete jeho možnosti a povolte <strong>Vynutit průhledné pozadí</strong>.</li>
+                    <li>Klikněte na vygenerovaný odkaz doku nebo vybraných zpráv <strong>ze samostatné aplikace</strong>. SSApp ho otevře jako vlastní okno překryvu.</li>
+                    <li>Před uzamčením okno přesuňte a nastavte velikost. Pravým tlačítkem na překryvu otevřete předvolby velikosti a vyberte <strong>Vždy navrchu</strong>.</li>
+                    <li>Po dokončení umístění znovu klikněte pravým tlačítkem a vyberte <strong>Zakázat klikání</strong>. Kliknutí myší budou procházet do hry.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/ssapp-on-screen-overlay-menu.png" alt="Kontextová nabídka překryvu SSApp s možnostmi Změnit velikost okna, Vždy navrchu a Zakázat klikání do získání fokusu a zkratkou Ctrl Shift Alt X" class="guide-image">
+                    <figcaption>Pravým tlačítkem na okně překryvu SSApp můžete změnit velikost, připnout ho nebo povolit propouštění kliknutí. Propouštění kliknutí nastavte až nakonec, abyste si během umísťování nezablokovali ovládání.</figcaption>
+                </figure>
+                <h3>Klávesové zkratky SSApp</h3>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Windows / Linux</th><th>macOS</th><th>Akce</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+X</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+X</code></td>
+                            <td data-label="Action">Přepne propouštění kliknutí myši, abyste mohli překryv znovu ovládat.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+R</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+R</code></td>
+                            <td data-label="Action">Znovu načte aktivní okno překryvu.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="guide-note">
+                    <p><strong>Tip k umístění:</strong> průhledné oblasti se mohou špatně uchopovat. Při umísťování ponechte nabídku doku viditelnou, použijte systémové zkratky pro přesun okna nebo možnosti Electron Capture <code>--x</code> a <code>--y</code> pro přesné umístění.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Metoda 2: Electron Capture</h2>
+                <p><a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a> je samostatná bezplatná aplikace s otevřeným zdrojovým kódem, která zobrazí URL Social Stream v průhledném desktopovém okně. Často je jednodušší volbou, pokud chcete pouze vyhrazené okno překryvu.</p>
+                <ol class="guide-steps">
+                    <li>Zkopírujte vygenerovanou URL doku, vybraných zpráv, šablony nebo vlastního překryvu Social Stream.</li>
+                    <li>Ověřte, že obsahuje <code>&amp;transparent</code>. Pokud URL ještě nemá otazník, použijte <code>?transparent</code>.</li>
+                    <li>Otevřete URL v Electron Capture.</li>
+                    <li>Klikněte pravým tlačítkem na jeho okno a povolte <strong>Vždy navrchu</strong>.</li>
+                    <li>Přesuňte a upravte velikost, poté povolte <strong>Zakázat klikání</strong>.</li>
+                    <li>Použijte <code>Ctrl+Shift+Alt+X</code> (nebo <code>Command+Shift+Option+X</code> na macOS) pro pozdější přepnutí propouštění kliknutí.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/electron-capture-overlay-features.png" alt="Karty funkcí Electron Capture: připnutí navrch, bezrámové okno, průhlednost, propouštění kliknutí, automatické zachytávání obrazovky a zachytávání her a aplikací" class="guide-image">
+                    <figcaption>Electron Capture poskytuje připnutí, bezrámovou průhlednost a propouštění kliknutí potřebné pro soukromý překryv na obrazovce.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Spuštění Electron Capture z příkazového řádku</h2>
+                <p>Nejsnáze se automatizuje přenosná verze pro Windows. Nahraďte <code>YOUR_SESSION_ID</code> a upravte velikost a polohu pro svůj displej.</p>
+
+                <h3>Dok průběžného chatu</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;transparent&amp;compact&amp;hidemenu" --width=520 --height=760 --x=1380 --y=80 --pin --unclickable --title="SSN Chat"</code></pre>
+
+                <h3>Pouze vybrané zprávy</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID&amp;transparent" --width=700 --height=500 --x=1160 --y=80 --pin --unclickable --title="SSN Featured"</code></pre>
+
+                <h3>macOS a Linux</h3>
+                <pre><code># macOS
+"/Applications/elecap.app/Contents/MacOS/elecap" --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable
+
+# Linux AppImage; replace the filename with the version you downloaded
+./elecap-VERSION-x86_64.AppImage --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable</code></pre>
+
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Možnost</th><th>Účel</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Option"><code>--url</code></td><td data-label="Purpose">Úplná URL překryvu Social Stream. Uzavřete ji do uvozovek, protože obsahuje <code>&amp;</code> znaky.</td></tr>
+                        <tr><td data-label="Option"><code>--width</code>, <code>--height</code></td><td data-label="Purpose">Počáteční velikost okna v pixelech.</td></tr>
+                        <tr><td data-label="Option"><code>--x</code>, <code>--y</code></td><td data-label="Purpose">Počáteční poloha na virtuální ploše. Záporné souřadnice mohou být platné pro monitory vlevo nebo nad hlavním monitorem.</td></tr>
+                        <tr><td data-label="Option"><code>--monitor=0</code></td><td data-label="Purpose">Vyberte monitor indexem od nuly, pokud je index monitoru jednodušší než souřadnice plochy.</td></tr>
+                        <tr><td data-label="Option"><code>--pin</code></td><td data-label="Purpose">Spustí okno vždy navrchu.</td></tr>
+                        <tr><td data-label="Option"><code>--unclickable</code></td><td data-label="Purpose">Spustí režim propouštění kliknutí. Než ho použijete, zapamatujte si obnovovací zkratku.</td></tr>
+                        <tr><td data-label="Option"><code>--css="C:\path\chat.css"</code></td><td data-label="Purpose">Vloží místní soubor CSS pro pokročilé stylování.</td></tr>
+                        <tr><td data-label="Option"><code>--multiinstance</code></td><td data-label="Purpose">Pokud potřebujete více nezávislých překryvů, spusťte samostatný proces Electron Capture.</td></tr>
+                    </tbody>
+                </table>
+                <p>Viz dokumentace Electron Capture: <a href="https://electroncapture.app/command-line.html" target="_blank" rel="noopener">úplný přehled příkazového řádku</a> pro další parametry.</p>
+                <div class="guide-note">
+                    <p><strong><code>--node</code> není pro běžný překryv Social Stream potřeba.</strong> Nechte ji vypnutou, pokud stránka výslovně nepotřebuje zachytávání obrazovky nebo jinou privilegovanou funkci Electronu.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Užitečné možnosti URL překryvu</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Možnost URL</th><th>Použijte</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="URL Option"><code>transparent</code></td><td data-label="Use">Odstraní pozadí stránky a požádá o průhledné okno plochy.</td></tr>
+                        <tr><td data-label="URL Option"><code>compact</code></td><td data-label="Use">Použije hustší rozvržení doku.</td></tr>
+                        <tr><td data-label="URL Option"><code>hidemenu</code></td><td data-label="Use">Po nastavení skryje panel nástrojů doku.</td></tr>
+                        <tr><td data-label="URL Option"><code>scale=0.85</code></td><td data-label="Use">Zmenší podporované překryvy bez změny velikosti okna.</td></tr>
+                        <tr><td data-label="URL Option"><code>limit=15</code></td><td data-label="Use">Omezí počet uchovaných zpráv na podporovaných stránkách.</td></tr>
+                        <tr><td data-label="URL Option"><code>hidesource</code></td><td data-label="Use">Skryje popisky nebo ikony zdrojových platforem v doku.</td></tr>
+                        <tr><td data-label="URL Option"><code>chroma=0000</code></td><td data-label="Use">Alternativní režim průhledného pozadí; hodí se, když běžný režim doku <code>transparent</code> skrývá posuvník.</td></tr>
+                    </tbody>
+                </table>
+                <p>Šablony, vlastní CSS, písma a další možnosti URL najdete v <a href="overlay-customization-guide.html">průvodci přizpůsobením překryvů</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Ponechte chat na monitoru, nikoli ve streamu</h2>
+                <p>Překryv zůstane soukromý pouze tehdy, když vysílací software zachytává hru nebo její okno místo celého monitoru.</p>
+                <ol class="guide-steps">
+                    <li><strong>Nepřidávejte tuto URL překryvu jako zdroj prohlížeče OBS</strong> pokud ho diváci nemají vidět.</li>
+                    <li>Ve Windows upřednostněte zdroj OBS <a href="https://obsproject.com/kb/game-capture-source" target="_blank" rel="noopener">Zachytávání hry</a> cílený na hru.</li>
+                    <li>Ponechte v OBS možnost <strong>Zachytávat překryvy třetích stran (například Steam)</strong> vypnutou, pokud jste neověřili, že toto okno nezahrnuje.</li>
+                    <li>Vyhněte se <a href="https://obsproject.com/kb/display-capture-sources" target="_blank" rel="noopener">Zachytávání obrazovky</a> v tomto postupu. Zachytává celý monitor včetně překryvu chatu.</li>
+                    <li>Před vysíláním vytvořte krátký místní záznam a přehrajte si ho. Metody zachytávání a hry se liší.</li>
+                </ol>
+                <div class="warning-note">
+                    <p><strong>Omezení macOS a Linuxu:</strong> Zachytávání hry OBS je dostupné pouze ve Windows. Pokud musíte zachytávat celou obrazovku, zachytí se i překryv. Použijte samostatný monitor nebo zachytávání okna/aplikace, které překryv vylučuje, a ověřte to záznamem.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Důležitá omezení</h2>
+                <ul class="guide-list">
+                    <li><strong>Spolehlivý je bezokrajový nebo celoobrazovkový režim v okně.</strong> Hra v exkluzivním celoobrazovkovém režimu může zakrýt všechna běžná okna plochy, včetně překryvu nastaveného vždy navrchu.</li>
+                    <li><strong>Desktopová aplikace musí zůstat otevřená.</strong> Zavřením SSApp nebo Electron Capture se místní překryv zavře.</li>
+                    <li><strong>Relace se musí shodovat.</strong> URL doku nebo vybraných zpráv s nesprávným ID relace zůstane prázdná.</li>
+                    <li><strong>Vybrané zprávy nejsou celý chat.</strong> Zpráva se zobrazí až po jejím výběru v doku.</li>
+                    <li><strong>Propouštění kliknutí vypíná ovládání myší.</strong> Než se znovu pokusíte kliknout pravým tlačítkem, použijte obnovovací zkratku.</li>
+                    <li><strong>Některé hry a systémy proti podvádění omezují překryvy.</strong> Nepokoušejte se obcházet bezpečnostní mechanismy hry.</li>
+                    <li><strong>Průhlednost se liší podle operačního systému a grafické sestavy.</strong> Pokud je průhledná oblast bílá nebo černá, aktualizujte desktopovou aplikaci a grafický ovladač.</li>
+                    <li><strong>Zachytávání obrazovky zahrnuje vše, co vidíte.</strong> Pokud zachytávací software neumí oddělit hru od celého monitoru, nelze zaručit soukromí překryvu.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>Rychlý kontrolní seznam</h2>
+                <ol class="guide-steps">
+                    <li>Chat přichází do Social Stream.</li>
+                    <li>URL překryvu používá správné ID relace.</li>
+                    <li>URL obsahuje <code>transparent</code>.</li>
+                    <li>Desktopové okno je připnuté nad hrou.</li>
+                    <li>Propouštění kliknutí zapněte až po umístění.</li>
+                    <li>Pokud exkluzivní celá obrazovka překryv skrývá, hra používá bezokrajový nebo celoobrazovkový režim v okně.</li>
+                    <li>OBS zachytává hru/okno, nikoli celou obrazovku.</li>
+                    <li>Testovací záznam potvrzuje, že diváci soukromý překryv nevidí.</li>
+                </ol>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

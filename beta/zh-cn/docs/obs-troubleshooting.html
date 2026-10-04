@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-cn/docs/obs-troubleshooting.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-cn/docs/obs-troubleshooting.html">
+    <meta property="og:title" content="OBS 故障排查 - Social Stream Ninja">
+    <meta property="og:description" content="排查 Social Stream Ninja OBS 叠加层空白、会话错误、TTS 无声、浏览器来源缓存及来源捕获问题。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-cn/docs/obs-troubleshooting.html">
+    <meta name="twitter:title" content="OBS 故障排查 - Social Stream Ninja">
+    <meta name="twitter:description" content="排查 Social Stream Ninja OBS 叠加层空白、会话错误、TTS 无声、浏览器来源缓存及来源捕获问题。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS 故障排查 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="排查 Social Stream Ninja OBS 叠加层空白、会话错误、TTS 无声、浏览器来源缓存及来源捕获问题。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/obs-troubleshooting.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{", replace its URL, apply the change, and reopen that dock.":"，替换其 URL，应用更改，再重新打开该停靠面板。",", right-click it, and choose":"，右键点击并选择",", then paste the new link over the old one.":"，然后将新链接粘贴到旧链接上。",", then send one fake test message from Social Stream Ninja.":"，然后从 Social Stream Ninja 发送一条模拟测试消息。",". Administrator mode is not a normal fix for a blank Dock.":"。管理员模式不是解决停靠面板空白的常规方法。","Audio routing issue.":"音频路由问题。","Bottom of OBS Browser Source Properties with Refresh cache of current page highlighted":"OBS 浏览器来源属性底部，突出显示“刷新当前页面缓存”","Check The Overlay URL":"检查叠加层 URL","Check login, live page, popout/source page, app mode, or platform guide.":"检查登录、直播页面、弹出聊天／来源页面、应用模式或平台指南。","Check provider vs system TTS and OBS audio capture.":"检查提供商 TTS 与系统 TTS 的区别，以及 OBS 音频捕获。","Click":"点击","Close the old Dock page or window, then click the newly generated":"关闭旧停靠面板页面或窗口，然后点击新生成的","Commands & API":"命令与 API","Common Fixes":"常见解决办法","Decision Tree":"判断流程","Detailed help:":"详细帮助：","Do these in this order. Refreshing the cache alone does not add a changed session, password, or server-routing option to an old URL.":"按此顺序操作。仅刷新缓存不会将更改后的会话、密码或服务器路由选项添加到旧 URL。","Dock":"停靠面板","Dock is empty":"停靠面板为空","Dock works, browser overlay blank":"停靠面板正常，浏览器叠加层空白","Dock works, browser overlay works":"停靠面板正常，浏览器叠加层正常","Docks → Custom Browser Docks":"停靠面板 → 自定义浏览器停靠面板","Download":"下载","Export your Social Stream Ninja settings and OBS scene collection for support":"导出 Social Stream Ninja 设置和 OBS 场景集合以获取支持","Featured overlay preview showing a selected message":"精选叠加层预览，显示选中的消息","Features":"功能","Find out whether the source, session, overlay, or OBS browser source is the problem.":"确定问题出在来源、会话、叠加层还是 OBS 浏览器来源。","Guides":"指南","Hire":"雇用","Home":"首页","If TTS Is Silent In OBS":"TTS 在 OBS 中无声时","If it is still stale:":"如果仍未更新：","If messages appear in the dock, Social Stream Ninja is receiving chat.":"如果消息出现在停靠面板中，说明 Social Stream Ninja 正在接收聊天。","If support has confirmed a Windows privilege mismatch, follow":"如果支持人员已确认 Windows 权限不匹配，请参照","Image works, TTS silent":"图像正常，TTS 无声","In OBS, find the Social Stream source in":"在 OBS 中，在以下位置找到 Social Stream 来源：","In Social Stream Ninja, copy a freshly generated link for the exact Dock or overlay you use. Copy the whole link instead of editing its parameters by hand.":"在 Social Stream Ninja 中，为您实际使用的停靠面板或叠加层复制新生成的链接。复制整个链接，不要手动编辑参数。","Inspiration":"灵感","Local file":"本地文件","Main navigation":"主导航","Make sure":"请确保","Make the source visible and check that width/height are not tiny.":"使来源可见，并检查宽度／高度是否过小。","Meaning":"含义","Next Step":"下一步","OBS Browser Source Properties showing the Local file checkbox and URL field":"OBS 浏览器来源属性，显示“本地文件”复选框和 URL 字段","OBS Troubleshooting":"OBS 故障排查","OBS Troubleshooting - Social Stream Ninja":"OBS 故障排查 - Social Stream Ninja","OBS audio capture note explaining system TTS limitations":"OBS 音频捕获说明，解释系统 TTS 的限制","OBS browser source is the likely issue.":"问题很可能出在 OBS 浏览器来源。","OK":"确定","Open navigation menu":"打开导航菜单","Open the same OBS URL in a normal browser to separate OBS issues from Social Stream Ninja issues.":"在普通浏览器中打开相同的 OBS URL，以区分 OBS 问题和 Social Stream Ninja 问题。","Overlay Gallery":"叠加层图库","Plain system TTS is the common trap. It may speak through your speakers while OBS Browser Source hears nothing.":"普通系统 TTS 是常见陷阱。它可能通过扬声器发声，而 OBS 浏览器来源却听不到任何声音。","Properties":"属性","Refresh OBS source, check URL, dimensions, visibility, cache, and custom CSS.":"刷新 OBS 来源，检查 URL、尺寸、可见性、缓存和自定义 CSS。","Refresh cache of current page":"刷新当前页面缓存","Reopen A Dock Link":"重新打开停靠面板链接","Replace The Saved OBS URL And Refresh Its Cache":"替换已保存的 OBS URL 并刷新缓存","Replace the entire URL with the freshly generated Social Stream link. Screenshot from the":"使用新生成的 Social Stream 链接替换整个 URL。截图来自","Replace the saved URL, then refresh the Browser Source cache":"替换已保存的 URL，然后刷新浏览器来源缓存","Run OBS and Social Stream as Administrator":"以管理员身份运行 OBS 和 Social Stream","Scroll to the bottom of the Properties window and click":"滚动到属性窗口底部并点击","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja dock showing received chat messages":"Social Stream Ninja 停靠面板显示已收到的聊天消息","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 许可证。","Some overlays only show content after a message is featured or a matching event happens.":"有些叠加层仅在消息被精选或匹配事件发生后才显示内容。","Source/platform capture is not working yet.":"来源／平台捕获尚未正常工作。","Sources":"来源","Spin and Wheel's OBS setup page":"Spin and Wheel 的 OBS 设置页面","Start With The Dock":"从停靠面板开始","Still stuck?":"仍然遇到问题？","Support":"支持","Supported Sites":"支持的网站","Switch theme":"切换主题","TTS Setup Guide":"TTS 设置指南","Temporarily remove custom OBS CSS to rule out hidden text or opacity.":"暂时移除自定义 OBS CSS，以排除文字隐藏或不透明度问题。","Test":"测试","The cache button is near the bottom of Browser Source Properties. UI example cropped from":"缓存按钮位于浏览器来源属性底部附近。界面示例裁剪自","The dock is the fastest test. If the dock is empty, do not debug OBS yet. Fix the platform source first.":"停靠面板是最快的测试方式。如果停靠面板为空，先不要调试 OBS。请先修复平台来源。","Troubleshoot blank Social Stream Ninja OBS overlays, wrong sessions, silent TTS, browser source cache, and source capture problems.":"排查 Social Stream Ninja OBS 叠加层空白、会话错误、TTS 无声、浏览器来源缓存及来源捕获问题。","URL":"URL","Use provider/browser TTS for easier OBS capture, or route system audio separately.":"使用提供商／浏览器 TTS 以便 OBS 捕获，或单独路由系统音频。","Use the exact same session ID everywhere. A one-character difference creates a separate room.":"所有位置使用完全相同的会话 ID。一个字符的差异就会创建另一个房间。","Use the same session and pick a page that matches the expected output.":"使用相同会话，并选择符合预期输出的页面。","Wrong overlay page, wrong session, or no matching payload.":"叠加层页面错误、会话错误，或没有匹配的载荷。","close Properties, open it again, and repeat the test. Removing and recreating the Browser Source with the fresh link is the last resort.":"关闭属性，重新打开并重复测试。最后才考虑移除浏览器来源，并使用新链接重新创建。","is not selected. Select everything in":"未选中。选中以下字段中的全部内容：","link in Social Stream Ninja. If it is saved as an OBS Custom Browser Dock, open":"链接，位于 Social Stream Ninja 中。如果它被保存为 OBS 自定义浏览器停靠面板，请打开","official OBS Browser Source guide":"OBS 官方浏览器来源指南"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/obs-troubleshooting.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-troubleshooting.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-troubleshooting.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/obs-troubleshooting.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-troubleshooting.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-troubleshooting.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-troubleshooting.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-troubleshooting.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="obs-troubleshooting.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-troubleshooting.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-troubleshooting.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-troubleshooting.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/obs-troubleshooting.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/obs-troubleshooting.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/obs-troubleshooting.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/obs-troubleshooting.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/obs-troubleshooting.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/obs-troubleshooting.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>OBS 故障排查</h1><p>确定问题出在来源、会话、叠加层还是 OBS 浏览器来源。</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>从停靠面板开始</h2>
+                <p>停靠面板是最快的测试方式。如果停靠面板为空，先不要调试 OBS。请先修复平台来源。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-dock-message-check.png" alt="Social Stream Ninja 停靠面板显示已收到的聊天消息" class="guide-image">
+                    <figcaption>如果消息出现在停靠面板中，说明 Social Stream Ninja 正在接收聊天。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card" id="replace-url-and-cache">
+                <h2>替换已保存的 OBS URL 并刷新缓存</h2>
+                <p>按此顺序操作。仅刷新缓存不会将更改后的会话、密码或服务器路由选项添加到旧 URL。</p>
+                <ol class="guide-steps">
+                    <li>在 Social Stream Ninja 中，为您实际使用的停靠面板或叠加层复制新生成的链接。复制整个链接，不要手动编辑参数。</li>
+                    <li>在 OBS 中，在以下位置找到 Social Stream 来源： <strong>来源</strong>，右键点击并选择 <strong>属性</strong>.</li>
+                    <li>请确保 <strong>本地文件</strong> 未选中。选中以下字段中的全部内容： <strong>URL</strong>，然后将新链接粘贴到旧链接上。</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-browser-source-url.png" alt="OBS 浏览器来源属性，显示“本地文件”复选框和 URL 字段" class="guide-image">
+                    <figcaption>使用新生成的 Social Stream 链接替换整个 URL。截图来自 <a href="https://obsproject.com/kb/browser-source">OBS 官方浏览器来源指南</a>.</figcaption>
+                </figure>
+                <ol class="guide-steps" start="4">
+                    <li>滚动到属性窗口底部并点击 <strong>刷新当前页面缓存</strong>.</li>
+                    <li>点击 <strong>确定</strong>，然后从 Social Stream Ninja 发送一条模拟测试消息。</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-browser-source-refresh-cache.png" alt="OBS 浏览器来源属性底部，突出显示“刷新当前页面缓存”" class="guide-image guide-image-medium">
+                    <figcaption>缓存按钮位于浏览器来源属性底部附近。界面示例裁剪自 <a href="https://spinandwheel.com/obs-setup/">Spin and Wheel 的 OBS 设置页面</a>.</figcaption>
+                </figure>
+                <div class="guide-note">
+                    <p><strong>如果仍未更新：</strong> 关闭属性，重新打开并重复测试。最后才考虑移除浏览器来源，并使用新链接重新创建。</p>
+                </div>
+                <h3>重新打开停靠面板链接</h3>
+                <p>关闭旧停靠面板页面或窗口，然后点击新生成的 <strong>停靠面板</strong> 链接，位于 Social Stream Ninja 中。如果它被保存为 OBS 自定义浏览器停靠面板，请打开 <strong>停靠面板 → 自定义浏览器停靠面板</strong>，替换其 URL，应用更改，再重新打开该停靠面板。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>判断流程</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>测试</th><th>含义</th><th>下一步</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Test">停靠面板为空</td><td data-label="Meaning">来源／平台捕获尚未正常工作。</td><td data-label="Next Step">检查登录、直播页面、弹出聊天／来源页面、应用模式或平台指南。</td></tr>
+                        <tr><td data-label="Test">停靠面板正常，浏览器叠加层正常</td><td data-label="Meaning">问题很可能出在 OBS 浏览器来源。</td><td data-label="Next Step">刷新 OBS 来源，检查 URL、尺寸、可见性、缓存和自定义 CSS。</td></tr>
+                        <tr><td data-label="Test">停靠面板正常，浏览器叠加层空白</td><td data-label="Meaning">叠加层页面错误、会话错误，或没有匹配的载荷。</td><td data-label="Next Step">使用相同会话，并选择符合预期输出的页面。</td></tr>
+                        <tr><td data-label="Test">图像正常，TTS 无声</td><td data-label="Meaning">音频路由问题。</td><td data-label="Next Step">检查提供商 TTS 与系统 TTS 的区别，以及 OBS 音频捕获。</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>检查叠加层 URL</h2>
+                <p>所有位置使用完全相同的会话 ID。一个字符的差异就会创建另一个房间。</p>
+                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION</pre>
+                <pre>https://socialstream.ninja/featured.html?session=YOUR_SESSION</pre>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-featured-overlay-preview.png" alt="精选叠加层预览，显示选中的消息" class="guide-image">
+                    <figcaption>有些叠加层仅在消息被精选或匹配事件发生后才显示内容。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>TTS 在 OBS 中无声时</h2>
+                <p>普通系统 TTS 是常见陷阱。它可能通过扬声器发声，而 OBS 浏览器来源却听不到任何声音。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-tts-obs-audio.png" alt="OBS 音频捕获说明，解释系统 TTS 的限制" class="guide-image">
+                    <figcaption>使用提供商／浏览器 TTS 以便 OBS 捕获，或单独路由系统音频。</figcaption>
+                </figure>
+                <p>详细帮助： <a href="tts-setup-guide.html">TTS 设置指南</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>常见解决办法</h2>
+                <ul class="guide-list">
+                    <li><a href="#replace-url-and-cache">替换已保存的 URL，然后刷新浏览器来源缓存</a>.</li>
+                    <li>使来源可见，并检查宽度／高度是否过小。</li>
+                    <li>暂时移除自定义 OBS CSS，以排除文字隐藏或不透明度问题。</li>
+                    <li>在普通浏览器中打开相同的 OBS URL，以区分 OBS 问题和 Social Stream Ninja 问题。</li>
+                </ul>
+                <p>如果支持人员已确认 Windows 权限不匹配，请参照 <a href="windows-administrator-mode.html">以管理员身份运行 OBS 和 Social Stream</a>。管理员模式不是解决停靠面板空白的常规方法。</p>
+                <p>仍然遇到问题？ <a href="export-settings-for-support.html">导出 Social Stream Ninja 设置和 OBS 场景集合以获取支持</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja。GPLv3.0 许可证。</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

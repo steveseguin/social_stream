@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/tr/docs/event-flow-recipes.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/tr/docs/event-flow-recipes.html">
+    <meta property="og:title" content="Etkinlik Akışı tarifleri - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja için uygulamalı Etkinlik Akışı tarifleri: sesler, medya, ödüller, OBS işlemleri, webhook&#x27;lar ve güvenli testler.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/tr/docs/event-flow-recipes.html">
+    <meta name="twitter:title" content="Etkinlik Akışı tarifleri - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja için uygulamalı Etkinlik Akışı tarifleri: sesler, medya, ödüller, OBS işlemleri, webhook&#x27;lar ve güvenli testler.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etkinlik Akışı tarifleri - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja için uygulamalı Etkinlik Akışı tarifleri: sesler, medya, ödüller, OBS işlemleri, webhook&#x27;lar ve güvenli testler.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/event-flow-recipes.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{", password, and permissions.":", parolayı ve izinleri kontrol edin.","Action":"İşlem","Audio or media does not play:":"Ses veya medya oynatılmıyorsa:","Before Any Recipe":"Her tariften önce","Build useful automations one small recipe at a time.":"Küçük tariflerle adım adım yararlı otomasyonlar oluşturun.","Commands & API":"Komutlar ve API","Common Fixes":"Yaygın çözümler","Donation alert":"Bağış uyarısı","Download":"İndir","Event Flow Editor Guide":"Etkinlik Akışı düzenleyicisi kılavuzu","Event Flow Guide overview explaining sources, logic nodes, actions, and payloads":"Kaynakları, mantık düğümlerini, işlemleri ve veri yüklerini açıklayan Etkinlik Akışı kılavuzuna genel bakış","Event Flow Recipes":"Etkinlik Akışı tarifleri","Event Flow Recipes - Social Stream Ninja":"Etkinlik Akışı tarifleri - Social Stream Ninja","Event Flow is the advanced automation editor. Use it when popup toggles are not enough: filter chat, trigger media, relay messages, call webhooks, or control OBS.":"Etkinlik Akışı gelişmiş otomasyon düzenleyicisidir. Açılır menü anahtarları yetmediğinde kullanın: sohbeti filtreleyin, medya tetikleyin, mesaj aktarın, webhook çağırın veya OBS'yi kontrol edin.","Event Flow media action fields for reward-triggered sound or media":"Ödülle tetiklenen ses veya medya için Etkinlik Akışı medya işlemi alanları","Event Flow media hosting guide":"Etkinlik Akışı medya barındırma kılavuzu","Event Flow reward trigger example for Kick rewards":"Kick ödülleri için Etkinlik Akışı ödül tetikleyicisi örneği","Export a working flow before making a large edit.":"Büyük bir düzenleme yapmadan önce çalışan akışı dışa aktarın.","Feature the message or show a welcome overlay.":"Mesajı öne çıkarın veya karşılama katmanı gösterin.","Features":"Özellikler","First-time chatter":"İlk kez yazan katılımcı","First-time chatter flag or filter":"İlk kez yazan katılımcı işareti veya filtresi","Flow fires too often:":"Akış çok sık tetikleniyorsa:","Full deep dive:":"Ayrıntılı inceleme:","Full reference:":"Tam başvuru kaynağı:","Giveaways, paid tickets, game prizes and recovery guide":"Çekilişler, ücretli biletler, oyun ödülleri ve kurtarma kılavuzu","Guides":"Kılavuzlar","Hire":"Hizmet alın","Home":"Ana sayfa","Inspiration":"İlham","Keyword + RANDOM gate":"Anahtar sözcük + RANDOM kapısı","Keyword sound":"Anahtar sözcük sesi","Kick Reward Media Example":"Kick ödül medyası örneği","Kick reward media":"Kick ödül medyası","Kick rewards sounds/media guide":"Kick ödül sesleri/medya kılavuzu","Main navigation":"Ana gezinme","Message contains":"Mesaj şunu içerir","Nothing happens:":"Hiçbir şey olmuyorsa:","OBS action fails:":"OBS işlemi başarısızsa:","Open":"Açın:","Open navigation menu":"Gezinme menüsünü aç","Open the dock and confirm chat arrives.":"Paneli açın ve sohbetin geldiğini doğrulayın.","Overlay Gallery":"Katman galerisi","POST a selected payload to your service.":"Seçili veri yükünü hizmetinize POST ile gönderin.","Platform/type filter":"Platform/tür filtresi","Play audio clip in":"Ses klibini şurada oynatın:","Play one of two clips at random. See":"İki klipten birini rastgele oynatın — bkz.","Practical Event Flow recipes for Social Stream Ninja: sounds, media, rewards, OBS actions, webhooks, and safe testing.":"Social Stream Ninja için uygulamalı Etkinlik Akışı tarifleri: sesler, medya, ödüller, OBS işlemleri, webhook'lar ve güvenli testler.","Random sound pick":"Rastgele ses seçimi","Recipe":"Tarif","Recipe Ideas":"Tarif fikirleri","Reward/channel point event":"Ödül/kanal puanı etkinliği","Run a custom workflow from a Stream Deck key or HTTP/WebSocket/P2P API call":"Stream Deck tuşundan veya HTTP/WebSocket/P2P API çağrısından özel bir iş akışı çalıştırın","Send to alert overlay, webhook, or OBS scene action.":"Uyarı katmanına, webhook'a veya OBS sahne işlemine gönderin.","Show an image, video, or sound.":"Resim, video veya ses gösterin.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 Lisansı.","Start with a specific trigger so the flow does not fire for every chat message.":"Akışın her sohbet mesajında çalışmaması için belirli bir tetikleyiciyle başlayın.","Support":"Destek","Supported Sites":"Desteklenen siteler","Switch theme":"Temayı değiştir","Test with a fake message or a safe trigger before going live.":"Canlı yayından önce sahte bir mesaj veya güvenli bir tetikleyiciyle test edin.","Then point the action to the sound, image, video, or overlay output you want.":"Ardından işlemi istediğiniz ses, resim, video veya katman çıktısına yönlendirin.","Think in three pieces: source event, logic/filter, action.":"Üç parça olarak düşünün: kaynak etkinliği, mantık/filtre ve işlem.","This is the most common practical Event Flow pattern: match a reward, then play media through Flow Actions.":"Bu, en yaygın uygulamalı Etkinlik Akışı düzenidir: bir ödülü eşleştirin, ardından Akış İşlemleri üzerinden medya oynatın.","Trigger":"Tetikleyici","Use one test platform and one Social Stream session.":"Tek bir test platformu ve tek bir Social Stream oturumu kullanın.","Webhook relay":"Webhook aktarımı","What Event Flow Is For":"Etkinlik Akışı ne içindir?","add a stricter platform, event, keyword, or user filter.":"daha dar bir platform, etkinlik, anahtar sözcük veya kullanıcı filtresi ekleyin.","check OBS WebSocket v5, port":"OBS WebSocket v5'i, şu bağlantı noktasını","confirm the source event arrives in the dock first.":"önce kaynak etkinliğinin panele ulaştığını doğrulayın.","if the recipe plays audio, media, or controls OBS.":"tarif ses veya medya oynatıyorsa ya da OBS'yi kontrol ediyorsa.","keep":"şunu tutun:","micro-flow D in the editor guide":"düzenleyici kılavuzundaki mikro akış D","open with the same session, then check the":"aynı oturumla açık; ardından şunu kontrol edin:","or donation event":"veya bağış etkinliği"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/event-flow-recipes.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/event-flow-recipes.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme"><a href="../index.html">Ana sayfa</a><a href="features.html">Özellikler</a><a href="inspiration.html" class="site-priority-inspiration">İlham</a><a href="download.html">İndir</a><a href="guides.html">Kılavuzlar</a><a href="commands.html">Komutlar ve API</a><a href="supported-sites.html">Desteklenen siteler</a><a href="overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a><a href="services.html" class="site-priority-hire">Hizmet alın</a><a href="support.html">Destek</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/event-flow-recipes.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/event-flow-recipes.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/event-flow-recipes.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/event-flow-recipes.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/event-flow-recipes.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/event-flow-recipes.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/event-flow-recipes.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/event-flow-recipes.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/event-flow-recipes.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/event-flow-recipes.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/event-flow-recipes.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/event-flow-recipes.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/event-flow-recipes.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/event-flow-recipes.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="event-flow-recipes.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/event-flow-recipes.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/event-flow-recipes.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>Etkinlik Akışı tarifleri</h1>
+<p><a href="giveaway-points-guide.html">Çekilişler, ücretli biletler, oyun ödülleri ve kurtarma kılavuzu</a></p><p>Küçük tariflerle adım adım yararlı otomasyonlar oluşturun.</p></div></section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Etkinlik Akışı ne içindir?</h2>
+                <p><a href="streamdeck-event-flow.html">Stream Deck tuşundan veya HTTP/WebSocket/P2P API çağrısından özel bir iş akışı çalıştırın</a>.</p>
+                <p>Etkinlik Akışı gelişmiş otomasyon düzenleyicisidir. Açılır menü anahtarları yetmediğinde kullanın: sohbeti filtreleyin, medya tetikleyin, mesaj aktarın, webhook çağırın veya OBS'yi kontrol edin.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-event-flow-overview.png" alt="Kaynakları, mantık düğümlerini, işlemleri ve veri yüklerini açıklayan Etkinlik Akışı kılavuzuna genel bakış" class="guide-image">
+                    <figcaption>Üç parça olarak düşünün: kaynak etkinliği, mantık/filtre ve işlem.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Her tariften önce</h2>
+                <ol class="guide-steps">
+                    <li>Tek bir test platformu ve tek bir Social Stream oturumu kullanın.</li>
+                    <li>Paneli açın ve sohbetin geldiğini doğrulayın.</li>
+                    <li>Açın: <code>actions.html?session=YOUR_SESSION</code> tarif ses veya medya oynatıyorsa ya da OBS'yi kontrol ediyorsa.</li>
+                    <li>Canlı yayından önce sahte bir mesaj veya güvenli bir tetikleyiciyle test edin.</li>
+                    <li>Büyük bir düzenleme yapmadan önce çalışan akışı dışa aktarın.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2>Tarif fikirleri</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Tarif</th><th>Tetikleyici</th><th>İşlem</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Recipe">Anahtar sözcük sesi</td><td data-label="Trigger">Mesaj şunu içerir <code>!hype</code></td><td data-label="Action">Ses klibini şurada oynatın: <code>actions.html</code>.</td></tr>
+                        <tr><td data-label="Recipe">Kick ödül medyası</td><td data-label="Trigger">Ödül/kanal puanı etkinliği</td><td data-label="Action">Resim, video veya ses gösterin.</td></tr>
+                        <tr><td data-label="Recipe">İlk kez yazan katılımcı</td><td data-label="Trigger">İlk kez yazan katılımcı işareti veya filtresi</td><td data-label="Action">Mesajı öne çıkarın veya karşılama katmanı gösterin.</td></tr>
+                        <tr><td data-label="Recipe">Bağış uyarısı</td><td data-label="Trigger"><code>hasDonation</code> veya bağış etkinliği</td><td data-label="Action">Uyarı katmanına, webhook'a veya OBS sahne işlemine gönderin.</td></tr>
+                        <tr><td data-label="Recipe">Webhook aktarımı</td><td data-label="Trigger">Platform/tür filtresi</td><td data-label="Action">Seçili veri yükünü hizmetinize POST ile gönderin.</td></tr>
+                        <tr><td data-label="Recipe">Rastgele ses seçimi</td><td data-label="Trigger">Anahtar sözcük + RANDOM kapısı</td><td data-label="Action">İki klipten birini rastgele oynatın — bkz. <a href="../actions/event-flow-guide.html">düzenleyici kılavuzundaki mikro akış D</a>.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Kick ödül medyası örneği</h2>
+                <p>Bu, en yaygın uygulamalı Etkinlik Akışı düzenidir: bir ödülü eşleştirin, ardından Akış İşlemleri üzerinden medya oynatın.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/kick-channel-points-event-flow/event-flow-reward-trigger.png" alt="Kick ödülleri için Etkinlik Akışı ödül tetikleyicisi örneği" class="guide-image">
+                    <figcaption>Akışın her sohbet mesajında çalışmaması için belirli bir tetikleyiciyle başlayın.</figcaption>
+                </figure>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/kick-channel-points-event-flow/event-flow-media-action-values.png" alt="Ödülle tetiklenen ses veya medya için Etkinlik Akışı medya işlemi alanları" class="guide-image guide-image-narrow">
+                    <figcaption>Ardından işlemi istediğiniz ses, resim, video veya katman çıktısına yönlendirin.</figcaption>
+                </figure>
+                <p>Ayrıntılı inceleme: <a href="../../docs/index.html?file=kick-channel-points-event-flow.md">Kick ödül sesleri/medya kılavuzu</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Yaygın çözümler</h2>
+                <ul class="guide-list">
+                    <li><strong>Hiçbir şey olmuyorsa:</strong> önce kaynak etkinliğinin panele ulaştığını doğrulayın.</li>
+                    <li><strong>Ses veya medya oynatılmıyorsa:</strong> şunu tutun: <code>actions.html</code> aynı oturumla açık; ardından şunu kontrol edin: <a href="media-hosting-event-flow.html">Etkinlik Akışı medya barındırma kılavuzu</a>.</li>
+                    <li><strong>OBS işlemi başarısızsa:</strong> OBS WebSocket v5'i, şu bağlantı noktasını <code>4455</code>, parolayı ve izinleri kontrol edin.</li>
+                    <li><strong>Akış çok sık tetikleniyorsa:</strong> daha dar bir platform, etkinlik, anahtar sözcük veya kullanıcı filtresi ekleyin.</li>
+                </ul>
+                <p>Tam başvuru kaynağı: <a href="../actions/event-flow-guide.html">Etkinlik Akışı düzenleyicisi kılavuzu</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 Lisansı.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

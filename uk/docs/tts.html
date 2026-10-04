@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="uk" data-site-root="../../" data-site-language="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/uk/docs/tts.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="uk_UA">
+    <meta property="og:url" content="https://socialstream.ninja/uk/docs/tts.html">
+    <meta property="og:title" content="Посібник із голосів TTS - Social Stream Ninja">
+    <meta property="og:description" content="Налаштуйте постачальників озвучення тексту Social Stream Ninja, голоси, параметри URL, підтримку браузерів, захоплення звуку в OBS та усувайте неполадки.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Логотип Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/uk/docs/tts.html">
+    <meta name="twitter:title" content="Посібник із голосів TTS - Social Stream Ninja">
+    <meta name="twitter:description" content="Налаштуйте постачальників озвучення тексту Social Stream Ninja, голоси, параметри URL, підтримку браузерів, захоплення звуку в OBS та усувайте неполадки.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Логотип Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Посібник із голосів TTS - Social Stream Ninja</title>
+    <meta name="description" content="Налаштуйте постачальників озвучення тексту Social Stream Ninja, голоси, параметри URL, підтримку браузерів, захоплення звуку в OBS та усувайте неполадки.">
+    <script src="../../docs/js/standalone-theme.js"></script>
+    <script defer src="../../docs/js/copy-markdown.js"></script>
+    <style>
+        :root {
+            --primary-color: #1565C0;
+            --on-primary: #FFFFFF;
+            --secondary-color: #1976D2;
+            --accent-color: #996000;
+            --text-color: #212121;
+            --text-light: #757575;
+            --bg-color: #FFFFFF;
+            --card-bg: #F5F5F5;
+            --border-color: #E0E0E0;
+            --code-bg: #263238;
+            --code-text: #ECEFF1;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #64B5F6;
+            --on-primary: #10283B;
+            --secondary-color: #42A5F5;
+            --accent-color: #FFB74D;
+            --text-color: #E0E0E0;
+            --text-light: #BDBDBD;
+            --bg-color: #121212;
+            --card-bg: #1E1E1E;
+            --border-color: #424242;
+            --code-bg: #000000;
+            --code-text: #ECEFF1;
+        }
+
+        html[data-theme="dark"],
+        body[data-theme="dark"] {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .voice-card,
+        [data-theme="dark"] .tts-test {
+            color: var(--text-color);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: var(--on-primary);
+            padding: 40px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 2px solid currentColor;
+            color: var(--on-primary);
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            margin-top: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .warning {
+            background-color: #FFF3E0;
+            border-left: 4px solid var(--accent-color);
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        [data-theme="dark"] .warning {
+            background-color: #5D4037;
+            color: #FFCC80;
+        }
+
+        .info {
+            background-color: #E3F2FD;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        [data-theme="dark"] .info {
+            background-color: #1565C0;
+            color: #BBDEFB;
+        }
+
+        .info a {
+            color: inherit;
+            text-decoration: underline;
+        }
+
+        .code {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+            white-space: pre-line;
+        }
+
+        code {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: var(--on-primary);
+        }
+
+        tr:nth-child(even) {
+            background-color: #F9F9F9;
+        }
+
+        [data-theme="dark"] tr:nth-child(even) {
+            background-color: #2A2A2A;
+        }
+
+        .browser-support {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .browser-card {
+            text-align: center;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .supported {
+            color: #267A2B;
+        }
+
+        [data-theme="dark"] .supported {
+            color: #81C784;
+        }
+
+        .partial {
+            color: var(--accent-color);
+        }
+
+        .not-supported {
+            color: #F44336;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin: 10px 0;
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .tts-test {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: var(--on-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .parameter-table td:first-child {
+            font-family: monospace;
+            background-color: #F5F5F5;
+        }
+
+        [data-theme="dark"] .parameter-table td:first-child {
+            background-color: #2A2A2A;
+        }
+
+        @media (max-width: 700px) {
+            table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        nav {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        nav li {
+            margin: 5px 0;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background-color: var(--card-bg);
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="uk">
+<script id="ssn-site-language" type="application/json">{"language":"uk","page":"docs/tts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Перемкнути на світлу тему","Switch to dark theme":"Перемкнути на темну тему","Light mode":"Світла тема","Dark mode":"Темна тема","Open navigation menu":"Відкрити меню навігації","Close navigation menu":"Закрити меню навігації","Copy this document as Markdown to the clipboard":"Скопіювати цей документ у форматі Markdown до буфера обміну","Copy Markdown":"Скопіювати Markdown","Copying…":"Копіювання…","Markdown copied":"Markdown скопійовано","Copy failed":"Не вдалося скопіювати","Copy comprehensive Markdown for an AI assistant":"Скопіювати повний Markdown для ШІ-асистента","Copy this documentation page as Markdown for an AI assistant":"Скопіювати цю сторінку документації як Markdown для ШІ-асистента"},"strings":{"&pitch\u003c":"&pitch\u003c","&pitch=1.2":"&pitch=1.2","&rate\u003c":"&rate\u003c","&rate=1.5":"&rate=1.5","&readevents\u003c":"&readevents\u003c","&simpletts2\u003c":"&simpletts2\u003c","&simpletts\u003c":"&simpletts\u003c","&skipmessages=3":"&skipmessages=3","&speech\u003c":"&speech\u003c","&speech=en-US":"&speech=en-US","&ttscommand\u003c":"&ttscommand\u003c","&ttsprovider\u003c":"&ttsprovider\u003c","&ttsprovider=customtts":"&ttsprovider=customtts","&voice\u003c":"&voice\u003c","&voice=google":"&voice=google","&volume\u003c":"&volume\u003c","&volume=0.8":"&volume=0.8","(default), or":"(за замовчуванням) або","(range 0.5 to 3.0; normal is 1.0).":"(від 0,5 до 3,0; звичайне значення — 1,0).",", click":", натисніть",", language:":", мова:",", mixer mute, and output tracks, or capture the external browser that is speaking":", вимкнення звуку в мікшері та вихідні доріжки або захоплюйте звук зовнішнього браузера, що відтворює мовлення",", speed:":", швидкість:",", while openedai-speech/OpenAI-style voices may look like":", а голоси openedai-speech/у стилі OpenAI можуть мати вигляд",". It does not test OBS, a separate SSN app window, or providers such as Kokoro. An empty list does not mean SSN’s other TTS providers are unavailable.":". Це не перевіряє OBS, окреме вікно застосунку SSN або такі постачальники, як Kokoro. Порожній список не означає, що інші постачальники TTS у SSN недоступні.",". Keep this page open and connected; only one copy should speak.":". Залиште цю сторінку відкритою та підключеною; озвучувати має лише одна копія.",". This defaults to System TTS. For a free OBS provider, also add":". За замовчуванням використовується системне TTS. Для безкоштовного постачальника в OBS також додайте",". Use a voice name your server supports; Kokoro voices look like":". Використовуйте назву голосу, яку підтримує ваш сервер; голоси Kokoro мають вигляд","; this page covers voice options and advanced settings.":"; ця сторінка описує варіанти голосів і розширені налаштування.","A missing voice is different from speech playing outside OBS’s audio capture. Audio routing cannot fix missing speech support.":"Відсутність голосу — це інша проблема, ніж відтворення мовлення поза захопленням звуку OBS. Маршрутизація звуку не виправить відсутність підтримки мовлення.","API costs apply":"Використання API платне","API costs apply (or free local)":"Використання API платне (або безкоштовно локально)","Add":"Додайте","Add Voices":"Додати голоси","Advanced Parameters":"Розширені параметри","Alternatives:":"Альтернативи:","Audio Capture in OBS":"Захоплення звуку в OBS","Audio Router (legacy)":"Audio Router (застарілий)","Basic Parameters":"Основні параметри","Best Practices":"Рекомендовані практики","Both services offer premium and free TTS options":"Обидва сервіси пропонують платні й безкоштовні варіанти TTS","Browser Limitations:":"Обмеження браузерів:","Browser Support":"Підтримка браузерів","Browser compatibility varies significantly":"Сумісність із браузерами суттєво відрізняється","Browser-based AI, excellent quality, dozens of voices":"ШІ у браузері, чудова якість, десятки голосів","Browser-based, fast, CPU-friendly neural TTS":"Швидке нейронне TTS у браузері з помірним навантаженням на процесор","Browser-based, lightweight ONNX model":"У браузері, легка модель ONNX","CAPTION.Ninja:":"CAPTION.Ninja:","Check":"Перевірте","Check API key and ensure provider is correctly specified":"Перевірте ключ API та переконайтеся, що постачальника вказано правильно","Check Available Voices":"Перевірити доступні голоси","Check This Browser's System Voices":"Перевірити системні голоси цього браузера","Check that TTS is enabled, the TTS-producing page is open, and the browser source is not muted. In a normal browser, click the page once.":"Перевірте, чи ввімкнено TTS, чи відкрита сторінка, яка генерує мовлення, і чи не вимкнено звук джерела браузера. У звичайному браузері один раз натисніть на сторінці.","Check voice availability, then audio capture.":"Перевірте доступність голосів, а потім — захоплення звуку.","Choose Fish Audio and enter your API key, with an optional voice ID. The default model is":"Виберіть Fish Audio та введіть свій ключ API, за потреби додавши ID голосу. Модель за замовчуванням —","Choose a voice for the language:":"Виберіть голос для мови:","Chrome":"Chrome","Chrome offers Google-powered TTS options":"Chrome пропонує варіанти TTS від Google","Chrome offers Google-powered options, Edge has Microsoft options":"Chrome пропонує варіанти від Google, а Edge — від Microsoft","Chromium-based; available voices vary by install":"На основі Chromium; доступні голоси залежать від інсталяції","Classic open-source TTS, works on any hardware":"Класичне TTS з відкритим кодом, працює на будь-якому обладнанні","Classic open-source, works on any hardware":"Класичне рішення з відкритим кодом, працює на будь-якому обладнанні","Common Issues":"Поширені проблеми","Compare providers, hear samples and see the settings.":"Порівнюйте постачальників, слухайте зразки та переглядайте налаштування.","Complete guide to Text-to-Speech voice options, browser compatibility, and audio capture":"Повний посібник із голосів для озвучення тексту, сумісності браузерів і захоплення звуку","Configure Social Stream Ninja text-to-speech providers, voices, URL parameters, browser support, OBS audio capture, and troubleshooting.":"Налаштуйте постачальників озвучення тексту Social Stream Ninja, голоси, параметри URL, підтримку браузерів, захоплення звуку в OBS та усувайте неполадки.","Consider user-generated content risks with TTS":"Враховуйте ризики озвучення створеного користувачами вмісту","Control audio via OBS":"Керувати звуком через OBS (Control audio via OBS)","Cost":"Вартість","Custom endpoint:":"Власна кінцева точка:","Custom voice training, natural sounding":"Навчання власного голосу, природне звучання","Custom/local endpoint playback is buffered today; SSN does not progressively play streamed audio chunks yet":"Відтворення через власну/локальну кінцеву точку наразі буферизується; SSN ще не відтворює потокові фрагменти звуку поступово","Description":"Опис","Direct":"Безпосередньо","Do not assume OBS exposes the same voices as Chrome or Edge":"Не припускайте, що OBS надає ті самі голоси, що й Chrome або Edge","Don't read chatnames at all":"Взагалі не читати імена учасників чату","Don't say \"says\" or \"someone says\"":"Не говорити «каже» або «хтось каже»","Edge":"Edge","Edge supports Microsoft TTS and Windows language pack voices":"Edge підтримує Microsoft TTS і голоси з мовних пакетів Windows","ElevenLabs":"ElevenLabs","ElevenLabs TTS":"ElevenLabs TTS","Enable TTS with language code":"Увімкнути TTS із кодом мови","Enable custom TTS command (default: !say)":"Увімкнути власну команду TTS (за замовчуванням: !say)","Enable with":"Увімкніть за допомогою","Example":"Приклад","Fast, CPU-friendly neural TTS running in browser":"Швидке нейронне TTS у браузері з помірним навантаженням на процесор","Features":"Можливості","Firefox":"Firefox","First confirm that System TTS generates speech. OBS’s embedded browser may not expose a usable system voice. If it generates no speech, changing audio routing will not help. Choose another provider, or generate speech in a supported browser and capture that browser’s audio.":"Спершу переконайтеся, що системне TTS генерує мовлення. Вбудований браузер OBS може не надавати придатного системного голосу. Якщо мовлення не генерується, зміна маршрутизації звуку не допоможе. Виберіть іншого постачальника або генеруйте мовлення в підтримуваному браузері й захоплюйте звук цього браузера.","Fish Audio TTS":"Fish Audio TTS","Follow the instructions in":"Дотримуйтеся інструкцій в","For System TTS specifically:":"Саме для системного TTS:","For cloud voices, use a provider voice/language that supports the target language, such as Google Cloud, ElevenLabs, Speechify, Gemini, or an OpenAI-compatible local server.":"Для хмарних голосів використовуйте голос/мову постачальника, що підтримує потрібну мову, наприклад Google Cloud, ElevenLabs, Speechify, Gemini або локальний сервер, сумісний з OpenAI.","Free":"Безкоштовно","Free providers such as Kokoro, Piper, Kitten, and eSpeak generate page audio instead. Payment is not required for TTS in OBS.":"Безкоштовні постачальники, як-от Kokoro, Piper, Kitten та eSpeak, натомість генерують звук сторінки. Для TTS в OBS платити не потрібно.","Free tier available":"Є безкоштовний тариф","Gemini TTS":"Gemini TTS","GitHub repository":"Репозиторій GitHub","Google Cloud":"Google Cloud","Google Cloud TTS":"Google Cloud TTS","Google generative language API":"API генеративних мовних моделей Google","Google-powered voices + system voices":"Голоси Google + системні голоси","Have a toggle to quickly disable TTS if needed":"Майте перемикач, щоб за потреби швидко вимкнути TTS","High quality; also supports local servers via custom endpoint":"Висока якість; також підтримує локальні сервери через власну кінцеву точку","High-quality voices, multiple languages":"Високоякісні голоси, кілька мов","If speech plays outside the scene Browser Source, capture that output separately":"Якщо мовлення відтворюється поза джерелом браузера сцени, захоплюйте цей звук окремо","If the local server has CORS or local network problems in Chrome/OBS, run":"Якщо локальний сервер має проблеми з CORS або локальною мережею у Chrome/OBS, запустіть","If there is no speech, check voice/provider availability first. If speech exists, check":"Якщо мовлення відсутнє, спершу перевірте доступність голосу/постачальника. Якщо мовлення є, перевірте","Important:":"Важливо:","Include stream events in TTS":"Озвучувати події трансляції","Installing Additional Language Packs":"Установлення додаткових мовних пакетів","Installing Language Packs":"Установлення мовних пакетів","Kitten TTS":"Kitten TTS","Kitten TTS (Free, Built-in)":"Kitten TTS (безкоштовне, вбудоване)","Kokoro TTS":"Kokoro TTS","Kokoro TTS (Free, Built-in)":"Kokoro TTS (безкоштовне, вбудоване)","Language:":"Мова:","Lightweight ONNX-based TTS running in browser":"Легке TTS на основі ONNX, що працює у браузері","Limited language support based on system installation":"Обмежена підтримка мов залежно від установлених у системі компонентів","Limited support across browsers (Firefox may lack some TTS voices)":"Обмежена підтримка в різних браузерах (у Firefox деякі голоси TTS можуть бути відсутні)","Local / Free TTS Options (No API Key Required)":"Локальні / безкоштовні варіанти TTS (ключ API не потрібен)","Local AI TTS Guide":"Посібник із локального озвучення ШІ","Local endpoint works in the app test but not OBS:":"Локальна кінцева точка працює під час перевірки в застосунку, але не в OBS:","Local system languages only":"Лише локальні системні мови","Manage Voices":"Керувати голосами","Method 1: Default Audio Route with a Virtual Cable":"Спосіб 1: стандартний маршрут звуку через віртуальний кабель","Method 2: Windows 10 App Route":"Спосіб 2: маршрут для застосунку у Windows 10","Method 3: Windows 11 App Route":"Спосіб 3: маршрут для застосунку у Windows 11","Method 4: Audio Router Software":"Спосіб 4: програма Audio Router","Method 5: Voicemeeter (Advanced)":"Спосіб 5: Voicemeeter (розширений)","Microsoft voices + Windows TTS packs":"Голоси Microsoft + пакети TTS Windows","Microsoft's official guide":"офіційному посібнику Microsoft","Model:":"Модель:","Navigate to":"Перейдіть до","No API key needed for local servers":"Для локальних серверів ключ API не потрібен","No audio playing:":"Звук не відтворюється:","No virtual audio cables needed":"Віртуальні аудіокабелі не потрібні","Not all browsers support text-to-speech equally (some Firefox versions have limited voices)":"Не всі браузери однаково підтримують озвучення тексту (деякі версії Firefox мають обмежений набір голосів)","OBS Capture":"Захоплення в OBS","OBS is a separate browser. Check the endpoint from the OBS computer, especially if using":"OBS — це окремий браузер. Перевірте кінцеву точку з комп’ютера OBS, особливо якщо використовуєте","OBS not capturing:":"OBS не захоплює звук:","Offers closed-captioning, transcription, and translation with TTS":"Пропонує приховані субтитри, транскрибування та переклад з озвученням","Only the first letter or first words are read:":"Читається лише перша літера або перші слова:","OpenAI / Local Server TTS":"OpenAI / TTS на локальному сервері","OpenAI TTS":"OpenAI TTS","Opera":"Opera","Overview":"Огляд","Page Audio: Free Local and Cloud Providers":"Звук сторінки: безкоштовні локальні та хмарні постачальники","Parameter":"Параметр","Parameters: stability, similarity, style can be adjusted":"Можна налаштувати параметри stability, similarity, style","Partial voice name match":"Частковий збіг назви голосу","Piper TTS":"Piper TTS","Piper TTS (Free, Built-in)":"Piper TTS (безкоштовне, вбудоване)","Portuguese and Spanish TTS Examples":"Приклади TTS португальською та іспанською","Portuguese example:":"Приклад португальською:","Portuguese voices:":"Португальські голоси:","Portuguese, best free local quality tested in SSN:":"Португальська, найкраща якість безкоштовного локального TTS, перевірена в SSN:","Portuguese, fastest fallback tested in SSN:":"Португальська, найшвидший запасний варіант, перевірений у SSN:","Premium / Cloud TTS Options (Direct Browser Audio)":"Платні / хмарні варіанти TTS (безпосередній звук браузера)","Premium TTS Options":"Платні варіанти TTS","Premium service not working:":"Платний сервіс не працює:","Professional quality voices":"Голоси професійної якості","Professional quality, multiple languages":"Професійна якість, кілька мов","Provider":"Постачальник","Quick Start:":"Швидкий початок:","Read every 3rd message only":"Читати лише кожне третє повідомлення","Reads out audience chat messages in multiple areas":"Озвучує повідомлення чату аудиторії в кількох місцях","Restart browser after installing language packs":"Перезапустіть браузер після встановлення мовних пакетів","Restart browsers to refresh available voices":"Перезапустіть браузери, щоб оновити доступні голоси","Routing downloads:":"Завантаження засобів маршрутизації:","Runs in browser via WebGPU/WASM without a server":"Працює у браузері через WebGPU/WASM — сервер не потрібен","SSN can read captured chat text from any supported source; the chat platform does not need its own TTS feature.":"SSN може читати захоплений текст чату з будь-якого підтримуваного джерела; платформа чату не потребує власної функції TTS.","SSN sends":"SSN надсилає","SSN’s browser-based local providers and cloud audio providers play generated audio through the page:":"Локальні постачальники SSN, що працюють у браузері, і хмарні постачальники звуку відтворюють згенерований звук через сторінку:","Safari has limited automatic TTS support":"Safari має обмежену підтримку автоматичного TTS","Safari issues:":"Проблеми Safari:","Safari requires user interaction to start audio":"Safari потребує дії користувача для початку відтворення звуку","See the":"Дивіться","Select desired languages and click":"Виберіть потрібні мови та натисніть","Select provider: kokoro, piper, kitten, espeak, openai, customtts, localtts, elevenlabs, google, speechify, gemini":"Виберіть постачальника: kokoro, piper, kitten, espeak, openai, customtts, localtts, elevenlabs, google, speechify, gemini","Setup, model options, and browser access limitations":"Налаштування, варіанти моделей та обмеження доступу з браузера","Several high-quality AI voices are built directly into Social Stream Ninja and run in your browser without an API key, cloud service, or extra installation. See the":"Кілька високоякісних голосів ШІ вбудовано безпосередньо в Social Stream Ninja. Вони працюють у вашому браузері без ключа API, хмари та додаткового встановлення. Дивіться","Simply enable \"Control audio via OBS\" in browser source":"Просто ввімкніть «Керувати звуком через OBS» (Control audio via OBS) у джерелі браузера","Social Stream Ninja - TTS Voice Guide":"Посібник із голосів TTS - Social Stream Ninja","Social Stream Ninja TTS Guide":"Посібник із TTS Social Stream Ninja","Social Stream Ninja TTS Guide - For the latest updates, visit the":"Посібник із TTS Social Stream Ninja — для останніх оновлень відвідайте","Social Stream Ninja logo":"Логотип Social Stream Ninja","Social Stream Ninja:":"Social Stream Ninja:","Some third-party voices may not appear in browsers due to compatibility issues. Firefox often shows more system voices than Chromium-based browsers.":"Деякі сторонні голоси можуть не з’являтися у браузерах через проблеми сумісності. Firefox часто показує більше системних голосів, ніж браузери на основі Chromium.","Spanish example:":"Приклад іспанською:","Spanish voices:":"Іспанські голоси:","Spanish, best free local quality tested in SSN:":"Іспанська, найкраща якість безкоштовного локального TTS, перевірена в SSN:","Spanish, fastest fallback tested in SSN:":"Іспанська, найшвидший запасний варіант, перевірений у SSN:","Speaking rate (0.1 to 10.0)":"Темп мовлення (від 0,1 до 10,0)","Speaking speed:":"Швидкість мовлення:","Speechify":"Speechify","Speechify TTS":"Speechify TTS","Speechify setup, voices, speed, and volume guide":"Посібник із налаштування Speechify, голосів, швидкості та гучності","Speed control:":"Керування швидкістю:","Start > Settings > Time & Language > Speech":"Пуск > Налаштування > Час і мова > Мовлення","Style instructions:":"Інструкції щодо стилю:","System TTS (Free)":"Системне TTS (безкоштовне)","System TTS Capture Methods":"Способи захоплення системного TTS","System TTS is not the same as all free TTS:":"Системне TTS — лише один із безкоштовних варіантів TTS:","System TTS voices in the browser displaying this guide only":"Лише голоси системного TTS у браузері, де відкрито цей посібник","System Voice Availability":"Доступність системних голосів","System voices depend on the browser and operating system. OBS may expose no usable voices, even when Chrome/Edge works.":"Системні голоси залежать від браузера та операційної системи. OBS може не надавати придатних голосів, навіть коли Chrome/Edge працює.","TTS Provider Configuration":"Налаштування постачальника TTS","TTS Provider Options":"Варіанти постачальників TTS","TTS Providers":"Постачальники TTS","Table of Contents":"Зміст","Test your setup with simple phrases before going live":"Перевірте налаштування простими фразами перед виходом в ефір","Testing Your Setup":"Перевірка налаштування","These are typical capabilities, not guarantees for every installation. OBS uses its own embedded browser and does not inherit an installed Chrome/Edge voice list. A successful SSN app test does not test a separate OBS Browser Source.":"Це типові можливості, а не гарантії для кожної інсталяції. OBS використовує власний вбудований браузер і не успадковує список голосів установленого Chrome/Edge. Успішна перевірка в застосунку SSN не перевіряє окреме джерело браузера OBS.","This lists":"Тут перелічено","Tip:":"Порада:","Toggle Dark Mode":"Перемкнути темну тему","Toggle Light Mode":"Перемкнути світлий режим","Troubleshooting":"Усунення несправностей","Try capturing the speaking browser with OBS application or desktop audio first, where supported. The virtual-cable methods below are optional alternatives; they do not add speech support to OBS.":"Спочатку спробуйте захопити звук браузера, що озвучує текст, через захоплення звуку застосунку або робочого столу в OBS, якщо це підтримується. Наведені нижче способи з віртуальним кабелем — необов’язкові альтернативи; вони не додають OBS підтримку мовлення.","URL Parameters":"Параметри URL","URL Parameters for TTS Configuration":"Параметри URL для налаштування TTS","Under":"У розділі","Use":"Використовуйте","Use a free built-in provider such as Kokoro, Piper, Kitten, or eSpeak, a cloud provider, or a self-hosted TTS server.":"Використовуйте безкоштовного вбудованого постачальника, як-от Kokoro, Piper, Kitten або eSpeak, хмарного постачальника чи власний сервер TTS.","Use a provider that generates page audio for a simpler OBS setup; free local providers are available":"Для простішого налаштування OBS використовуйте постачальника, який генерує звук сторінки; доступні безкоштовні локальні постачальники","Uses OpenAI's API by default, or any compatible local server":"За замовчуванням використовує API OpenAI або будь-який сумісний локальний сервер","Uses your operating system's built-in voices":"Використовує вбудовані голоси вашої операційної системи","VB-Audio Virtual Cable":"VB-Audio Virtual Cable","Voice ID:":"ID голосу:","Voice availability and audio routing depend on the browser and operating system; test in the actual player":"Доступність голосів і маршрутизація звуку залежать від браузера та операційної системи; перевіряйте в тому програвачі, який фактично використовуєте","Voice pitch (0.1 to 2.0)":"Висота голосу (від 0,1 до 2,0)","Voice selection:":"Вибір голосу:","Voice:":"Голос:","Voicemeeter":"Voicemeeter","Voices not showing:":"Голоси не відображаються:","Volume level (0.0 to 1.0)":"Рівень гучності (від 0,0 до 1,0)","Want fully local AI TTS?":"Потрібне повністю локальне TTS із ШІ?","Where is TTS Used?":"Де використовується TTS?","Windows 10":"Windows 10","Windows 11":"Windows 11","Windows TTS Audio Capture Methods for OBS":"Способи захоплення звуку TTS Windows для OBS","Works directly with OBS browser source":"Працює безпосередньо з джерелом браузера OBS","Works with SSN app and OBS browser sources":"Працює із застосунком SSN і джерелами браузера OBS","Your TTS-enabled dock or overlay speaks the messages it receives, subject to its filters and TTS settings. Start with the":"Ваш док або оверлей із увімкненим TTS озвучує отримані повідомлення відповідно до своїх фільтрів і налаштувань TTS. Почніть із","alone does not change the selected voice. Existing English voice IDs still work.":"сама по собі не змінює вибраний голос. Наявні ID англійських голосів продовжують працювати.","and":"і","and supports binary audio, JSON audio URLs, and JSON base64 audio":"і підтримує двійковий звук, URL звуку в JSON та звук у base64 у JSON","available voices":"доступні голоси","eSpeak-NG":"eSpeak-NG","eSpeak-NG (Free, Built-in)":"eSpeak-NG (безкоштовне, вбудоване)","for Brazilian Portuguese. Changing":"для бразильської португальської. Зміна","for English.":"для англійської.","for Spanish or":"для іспанської або","for a self-hosted endpoint":"для кінцевої точки на власному сервері","for installing language packs.":"для встановлення мовних пакетів.","for self-hosted server setup":"для налаштування власного сервера","for setup instructions and self-hosted server options.":"для інструкцій із налаштування та варіантів власного сервера.","for your browser":"для вашого браузера","from the OBS URL if present.":"з URL OBS, якщо він присутній.","mean the same computer that is playing the TTS page. If OBS is on a different computer than your TTS server, use the server computer's LAN IP instead.":"означають той самий комп’ютер, на якому відтворюється сторінка TTS. Якщо OBS працює на іншому комп’ютері, ніж сервер TTS, натомість використовуйте локальну IP-адресу комп’ютера сервера.","on the OBS computer and point SSN at":"на комп’ютері OBS та спрямуйте SSN на","or":"або","remove":"видаліть","short setup guide":"короткого посібника з налаштування","⚠ Limited Support":"⚠ Обмежена підтримка","✓ System voices available on supported installations":"✓ Системні голоси доступні в підтримуваних інсталяціях"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/tts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/tts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/tts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/tts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/tts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/tts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/tts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/tts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/tts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/tts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/tts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/tts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/tts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/tts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/tts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/tts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/tts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/tts.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header>
+        <div class="container">
+            <button class="theme-toggle" data-theme-toggle type="button">
+                <span class="theme-icon">🌓</span>
+                <span class="theme-text">Перемкнути темну тему</span>
+            </button>
+            <h1>Посібник із TTS Social Stream Ninja</h1>
+            <p>Повний посібник із голосів для озвучення тексту, сумісності браузерів і захоплення звуку</p>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Українська"><span aria-hidden="true">🌐 </span><span lang="uk">Українська</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="tts.html" lang="uk" hreflang="uk" aria-current="true">Українська</a><a class="site-language-link" href="../../ar/docs/tts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tts.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tts.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+    </header>
+    
+    <div class="container">
+        <nav>
+            <h3>Зміст</h3>
+            <ul>
+                <li><a href="#overview">Огляд</a></li>
+                <li><a href="#providers">Постачальники TTS</a></li>
+                <li><a href="#browser-support">Підтримка браузерів</a></li>
+                <li><a href="#audio-capture">Захоплення звуку в OBS</a></li>
+                <li><a href="#language-installation">Установлення мовних пакетів</a></li>
+                <li><a href="#parameters">Параметри URL</a></li>
+                <li><a href="#premium-options">Платні варіанти TTS</a></li>
+                <li><a href="#troubleshooting">Усунення несправностей</a></li>
+            </ul>
+        </nav>
+        
+        <h2 id="overview">Огляд</h2>
+        <div class="card">
+            <p><strong>SSN може читати захоплений текст чату з будь-якого підтримуваного джерела; платформа чату не потребує власної функції TTS.</strong> Ваш док або оверлей із увімкненим TTS озвучує отримані повідомлення відповідно до своїх фільтрів і налаштувань TTS. Почніть із <a href="tts-setup-guide.html#chat-platforms">короткого посібника з налаштування</a>; ця сторінка описує варіанти голосів і розширені налаштування. <a href="tts-setup-guide.html#voice-chooser">Порівнюйте постачальників, слухайте зразки та переглядайте налаштування.</a></p>
+            
+            <div class="info">
+                <strong>Швидкий початок:</strong> Використовуйте <code>dock.html?session=YOUR_SESSION&amp;speech=en-US</code>. За замовчуванням використовується системне TTS. Для безкоштовного постачальника в OBS також додайте <code>&amp;ttsprovider=kokoro</code>. Залиште цю сторінку відкритою та підключеною; озвучувати має лише одна копія.
+            </div>
+            
+            <h3>Де використовується TTS?</h3>
+            <ul>
+                <li><strong>Social Stream Ninja:</strong> Озвучує повідомлення чату аудиторії в кількох місцях</li>
+                <li><strong>CAPTION.Ninja:</strong> Пропонує приховані субтитри, транскрибування та переклад з озвученням</li>
+                <li>Обидва сервіси пропонують платні й безкоштовні варіанти TTS</li>
+            </ul>
+            
+            <div class="warning">
+                <strong>Системне TTS — лише один із безкоштовних варіантів TTS:</strong>
+                <ul>
+                    <li>Системні голоси залежать від браузера та операційної системи. OBS може не надавати придатних голосів, навіть коли Chrome/Edge працює.</li>
+                    <li>Відсутність голосу — це інша проблема, ніж відтворення мовлення поза захопленням звуку OBS. Маршрутизація звуку не виправить відсутність підтримки мовлення.</li>
+                    <li>Безкоштовні постачальники, як-от Kokoro, Piper, Kitten та eSpeak, натомість генерують звук сторінки. Для TTS в OBS платити не потрібно.</li>
+                    <li><a href="tts-setup-guide.html#obs-voices">Перевірте доступність голосів, а потім — захоплення звуку.</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <h2 id="providers">Варіанти постачальників TTS</h2>
+        <div class="card">
+            <h3>Системне TTS (безкоштовне)</h3>
+            <ul>
+                <li>Використовує вбудовані голоси вашої операційної системи</li>
+                <li>Обмежена підтримка мов залежно від установлених у системі компонентів</li>
+                <li>Доступність голосів і маршрутизація звуку залежать від браузера та операційної системи; перевіряйте в тому програвачі, який фактично використовуєте</li>
+                <li>Сумісність із браузерами суттєво відрізняється</li>
+            </ul>
+            
+            <h3>Локальні / безкоштовні варіанти TTS (ключ API не потрібен)</h3>
+            <div class="info">
+                <strong>Потрібне повністю локальне TTS із ШІ?</strong> Кілька високоякісних голосів ШІ вбудовано безпосередньо в Social Stream Ninja. Вони працюють у вашому браузері без ключа API, хмари та додаткового встановлення. Дивіться <a href="local-tts.html"><strong>Посібник із локального озвучення ШІ</strong></a> для інструкцій із налаштування та варіантів власного сервера.
+            </div>
+            <table>
+                <tr>
+                    <th>Постачальник</th>
+                    <th>Вартість</th>
+                    <th>Захоплення в OBS</th>
+                    <th>Можливості</th>
+                </tr>
+                <tr>
+                    <td>Kokoro TTS</td>
+                    <td>Безкоштовно</td>
+                    <td>Безпосередньо</td>
+                    <td>ШІ у браузері, чудова якість, десятки голосів</td>
+                </tr>
+                <tr>
+                    <td>Piper TTS</td>
+                    <td>Безкоштовно</td>
+                    <td>Безпосередньо</td>
+                    <td>Швидке нейронне TTS у браузері з помірним навантаженням на процесор</td>
+                </tr>
+                <tr>
+                    <td>Kitten TTS</td>
+                    <td>Безкоштовно</td>
+                    <td>Безпосередньо</td>
+                    <td>У браузері, легка модель ONNX</td>
+                </tr>
+                <tr>
+                    <td>eSpeak-NG</td>
+                    <td>Безкоштовно</td>
+                    <td>Безпосередньо</td>
+                    <td>Класичне рішення з відкритим кодом, працює на будь-якому обладнанні</td>
+                </tr>
+            </table>
+
+            <h3>Платні / хмарні варіанти TTS (безпосередній звук браузера)</h3>
+            <table>
+                <tr>
+                    <th>Постачальник</th>
+                    <th>Вартість</th>
+                    <th>Захоплення в OBS</th>
+                    <th>Можливості</th>
+                </tr>
+                <tr>
+                    <td>OpenAI TTS</td>
+                    <td>Використання API платне (або безкоштовно локально)</td>
+                    <td>Безпосередньо</td>
+                    <td>Висока якість; також підтримує локальні сервери через власну кінцеву точку</td>
+                </tr>
+                <tr>
+                    <td>Google Cloud</td>
+                    <td>Використання API платне</td>
+                    <td>Безпосередньо</td>
+                    <td>Професійна якість, кілька мов</td>
+                </tr>
+                <tr>
+                    <td>ElevenLabs</td>
+                    <td>Є безкоштовний тариф</td>
+                    <td>Безпосередньо</td>
+                    <td>Навчання власного голосу, природне звучання</td>
+                </tr>
+                <tr>
+                    <td>Speechify</td>
+                    <td>Використання API платне</td>
+                    <td>Безпосередньо</td>
+                    <td>Високоякісні голоси, кілька мов</td>
+                </tr>
+                <tr>
+                    <td>Gemini TTS</td>
+                    <td>Використання API платне</td>
+                    <td>Безпосередньо</td>
+                    <td>API генеративних мовних моделей Google</td>
+                </tr>
+            </table>
+        </div>
+        
+        <h2 id="browser-support">Доступність системних голосів</h2>
+        <p>Це типові можливості, а не гарантії для кожної інсталяції. OBS використовує власний вбудований браузер і не успадковує список голосів установленого Chrome/Edge. Успішна перевірка в застосунку SSN не перевіряє окреме джерело браузера OBS.</p>
+        <div class="browser-support">
+            <div class="browser-card">
+                <h3>Chrome</h3>
+                <p class="supported">✓ Системні голоси доступні в підтримуваних інсталяціях</p>
+                <p>Голоси Google + системні голоси</p>
+            </div>
+            <div class="browser-card">
+                <h3>Edge</h3>
+                <p class="supported">✓ Системні голоси доступні в підтримуваних інсталяціях</p>
+                <p>Голоси Microsoft + пакети TTS Windows</p>
+            </div>
+            <div class="browser-card">
+                <h3>Firefox</h3>
+                <p class="partial">⚠ Обмежена підтримка</p>
+                <p>Лише локальні системні мови</p>
+            </div>
+            <div class="browser-card">
+                <h3>Opera</h3>
+                <p class="partial">⚠ Обмежена підтримка</p>
+                <p>На основі Chromium; доступні голоси залежать від інсталяції</p>
+            </div>
+        </div>
+        
+        <div class="warning">
+            <strong>Обмеження браузерів:</strong>
+            <ul>
+                <li>Не всі браузери однаково підтримують озвучення тексту (деякі версії Firefox мають обмежений набір голосів)</li>
+                <li>Chrome пропонує варіанти TTS від Google</li>
+                <li>Edge підтримує Microsoft TTS і голоси з мовних пакетів Windows</li>
+                <li>Safari потребує дії користувача для початку відтворення звуку</li>
+                <li>Перевірте <a href="https://socialstream.ninja/tts" target="_blank">доступні голоси</a> для вашого браузера</li>
+            </ul>
+        </div>
+        
+        <h2 id="audio-capture">Способи захоплення звуку TTS Windows для OBS</h2>
+        <div class="card">
+            <h3>Звук сторінки: безкоштовні локальні та хмарні постачальники</h3>
+            <p>Локальні постачальники SSN, що працюють у браузері, і хмарні постачальники звуку відтворюють згенерований звук через сторінку:</p>
+            <ul>
+                <li>Просто ввімкніть «Керувати звуком через OBS» (Control audio via OBS) у джерелі браузера</li>
+                <li>Віртуальні аудіокабелі не потрібні</li>
+                <li>Працює із застосунком SSN і джерелами браузера OBS</li>
+            </ul>
+            
+            <h3>Способи захоплення системного TTS</h3>
+            <div class="warning">
+                <strong>Важливо:</strong> Спершу переконайтеся, що системне TTS генерує мовлення. Вбудований браузер OBS може не надавати придатного системного голосу. Якщо мовлення не генерується, зміна маршрутизації звуку не допоможе. Виберіть іншого постачальника або генеруйте мовлення в підтримуваному браузері й захоплюйте звук цього браузера.
+            </div>
+            
+            <p>Саме для системного TTS:</p>
+            <ul>
+                <li>Не припускайте, що OBS надає ті самі голоси, що й Chrome або Edge</li>
+                <li>Обмежена підтримка в різних браузерах (у Firefox деякі голоси TTS можуть бути відсутні)</li>
+                <li>Chrome пропонує варіанти від Google, а Edge — від Microsoft</li>
+                <li>Якщо мовлення відтворюється поза джерелом браузера сцени, захоплюйте цей звук окремо</li>
+            </ul>
+            <p><strong>Завантаження засобів маршрутизації:</strong> <a href="https://vb-audio.com/Cable/" target="_blank">VB-Audio Virtual Cable</a> | <a href="https://vb-audio.com/Voicemeeter/" target="_blank">Voicemeeter</a> | <a href="https://github.com/audiorouterdev/audio-router" target="_blank">Audio Router (застарілий)</a></p>
+
+            <p>Спочатку спробуйте захопити звук браузера, що озвучує текст, через захоплення звуку застосунку або робочого столу в OBS, якщо це підтримується. Наведені нижче способи з віртуальним кабелем — необов’язкові альтернативи; вони не додають OBS підтримку мовлення.</p>
+            <h4>Спосіб 1: стандартний маршрут звуку через віртуальний кабель</h4>
+            <div class="code">
+1. Set VB-Audio Virtual Cable as Windows default output
+   - Sound Settings > Output > CABLE Input
+2. OBS:
+   - Add Audio Input Capture
+   - Source: CABLE Output
+   - Monitor: Monitor and Output, or Monitor Only if another source handles stream output
+            </div>
+            
+            <h4>Спосіб 2: маршрут для застосунку у Windows 10</h4>
+            <div class="code">
+1. Sound Settings > App volume and device preferences
+2. Find browser in list
+3. Output: CABLE Input
+4. OBS setup same as Method 1
+            </div>
+            
+            <h4>Спосіб 3: маршрут для застосунку у Windows 11</h4>
+            <div class="code">
+1. Settings > System > Sound > Volume Mixer
+2. Locate browser
+3. Output: CABLE Input
+4. OBS setup same as Method 1
+            </div>
+            
+            <h4>Спосіб 4: програма Audio Router</h4>
+            <div class="code">
+1. Install Audio Router
+2. Route browser to CABLE Input
+3. OBS setup same as Method 1
+            </div>
+            
+            <h4>Спосіб 5: Voicemeeter (розширений)</h4>
+            <div class="code">
+1. Install Voicemeeter
+2. Set as Windows default output
+3. Route:
+   - Hardware out > speakers
+   - Virtual out > OBS
+4. OBS captures Voicemeeter output
+            </div>
+            
+            <h3>Перевірка налаштування</h3>
+            <div class="code">
+1. Play TTS
+2. Check OBS meter
+3. Verify system audio
+4. Adjust levels if needed
+            </div>
+            
+            <div class="info">
+                <strong>Альтернативи:</strong> Використовуйте безкоштовного вбудованого постачальника, як-от Kokoro, Piper, Kitten або eSpeak, хмарного постачальника чи власний сервер TTS.
+            </div>
+        </div>
+        
+        <h2 id="language-installation">Установлення додаткових мовних пакетів</h2>
+        <div class="card">
+            <h3>Windows 11</h3>
+            <ol>
+                <li>Перейдіть до <strong>Пуск &gt; Налаштування &gt; Час і мова &gt; Мовлення</strong></li>
+                <li>У розділі <strong>Керувати голосами</strong>, натисніть <strong>Додати голоси</strong></li>
+                <li>Виберіть потрібні мови та натисніть <strong>Додайте</strong></li>
+                <li>Перезапустіть браузери, щоб оновити доступні голоси</li>
+            </ol>
+            
+            <h3>Windows 10</h3>
+            <p>Дотримуйтеся інструкцій в <a href="https://support.microsoft.com/en-US/Windows/Hardware/Input-Devices/manage-the-language-and-keyboard-input-layout-settings-in-windows" target="_blank">офіційному посібнику Microsoft</a> для встановлення мовних пакетів.</p>
+            
+            <div class="info">
+                <strong>Порада:</strong> Деякі сторонні голоси можуть не з’являтися у браузерах через проблеми сумісності. Firefox часто показує більше системних голосів, ніж браузери на основі Chromium.
+            </div>
+        </div>
+        
+        <h2 id="parameters">Параметри URL для налаштування TTS</h2>
+        <div class="card">
+            <h3>Основні параметри</h3>
+            <table class="parameter-table">
+                <tr>
+                    <th>Параметр</th>
+                    <th>Опис</th>
+                    <th>Приклад</th>
+                </tr>
+                <tr>
+                    <td>&speech</td>
+                    <td>Увімкнути TTS із кодом мови</td>
+                    <td>&speech=en-US</td>
+                </tr>
+                <tr>
+                    <td>&pitch</td>
+                    <td>Висота голосу (від 0,1 до 2,0)</td>
+                    <td>&pitch=1.2</td>
+                </tr>
+                <tr>
+                    <td>&volume</td>
+                    <td>Рівень гучності (від 0,0 до 1,0)</td>
+                    <td>&volume=0.8</td>
+                </tr>
+                <tr>
+                    <td>&rate</td>
+                    <td>Темп мовлення (від 0,1 до 10,0)</td>
+                    <td>&rate=1.5</td>
+                </tr>
+                <tr>
+                    <td>&voice</td>
+                    <td>Частковий збіг назви голосу</td>
+                    <td>&voice=google</td>
+                </tr>
+                <tr>
+                    <td>&ttsprovider</td>
+                    <td>Виберіть постачальника: kokoro, piper, kitten, espeak, openai, customtts, localtts, elevenlabs, google, speechify, gemini</td>
+                    <td>&ttsprovider=customtts</td>
+                </tr>
+            </table>
+            
+            <h3>Розширені параметри</h3>
+            <table class="parameter-table">
+                <tr>
+                    <th>Параметр</th>
+                    <th>Опис</th>
+                </tr>
+                <tr>
+                    <td>&simpletts</td>
+                    <td>Не говорити «каже» або «хтось каже»</td>
+                </tr>
+                <tr>
+                    <td>&simpletts2</td>
+                    <td>Взагалі не читати імена учасників чату</td>
+                </tr>
+                <tr>
+                    <td>&ttscommand</td>
+                    <td>Увімкнути власну команду TTS (за замовчуванням: !say)</td>
+                </tr>
+                <tr>
+                    <td>&readevents</td>
+                    <td>Озвучувати події трансляції</td>
+                </tr>
+                <tr>
+                    <td>&skipmessages=3</td>
+                    <td>Читати лише кожне третє повідомлення</td>
+                </tr>
+            </table>
+        </div>
+        
+        <h2 id="premium-options">Налаштування постачальника TTS</h2>
+        <div class="card">
+            <h3>Kokoro TTS (безкоштовне, вбудоване)</h3>
+            <ul>
+                <li>Увімкніть за допомогою <code>?ttsprovider=kokoro</code></li>
+                <li>Працює у браузері через WebGPU/WASM — сервер не потрібен</li>
+                <li>Працює безпосередньо з джерелом браузера OBS</li>
+                <li>Вибір голосу: <code>&voicekokoro=af_bella</code></li>
+                <li>Керування швидкістю: <code>&kokorospeed=1.2</code></li>
+                <li>Виберіть голос для мови: <code>&amp;voicekokoro=ef_dora</code> для іспанської або <code>&amp;voicekokoro=pf_dora</code> для бразильської португальської. Зміна <code>&amp;speech=</code> сама по собі не змінює вибраний голос. Наявні ID англійських голосів продовжують працювати.</li>
+
+            </ul>
+
+            <h3>Piper TTS (безкоштовне, вбудоване)</h3>
+            <ul>
+                <li>Увімкніть за допомогою <code>?ttsprovider=piper</code></li>
+                <li>Швидке нейронне TTS у браузері з помірним навантаженням на процесор</li>
+                <li>Вибір голосу: <code>&pipervoice=en_US-hfc_female-medium</code></li>
+                <li>Португальські голоси: <code>&pipervoice=pt_BR-faber-medium</code> або <code>&pipervoice=pt_BR-edresson-low</code></li>
+                <li>Іспанські голоси: <code>&pipervoice=es_ES-davefx-medium</code> або <code>&pipervoice=es_MX-ald-medium</code></li>
+                <li>Керування швидкістю: <code>&piperspeed=1.0</code></li>
+            </ul>
+
+            <h3>Kitten TTS (безкоштовне, вбудоване)</h3>
+            <ul>
+                <li>Увімкніть за допомогою <code>?ttsprovider=kitten</code></li>
+                <li>Легке TTS на основі ONNX, що працює у браузері</li>
+                <li>Вибір голосу: <code>&kittenvoice=expr-voice-4-f</code></li>
+            </ul>
+
+            <h3>eSpeak-NG (безкоштовне, вбудоване)</h3>
+            <ul>
+                <li>Увімкніть за допомогою <code>?ttsprovider=espeak</code></li>
+                <li>Класичне TTS з відкритим кодом, працює на будь-якому обладнанні</li>
+                <li>Вибір голосу: <code>&espeakvoice=en</code></li>
+                <li>Приклад португальською: <code>&speech=pt-BR&ttsprovider=espeak&espeakvoice=pt-br</code></li>
+                <li>Приклад іспанською: <code>&speech=es-ES&ttsprovider=espeak&espeakvoice=es</code></li>
+                <li>Керування швидкістю: <code>&espeakspeed=175</code></li>
+            </ul>
+
+            <h3>Приклади TTS португальською та іспанською</h3>
+            <ul>
+                <li>Португальська, найкраща якість безкоштовного локального TTS, перевірена в SSN: <code>?speech=pt-BR&ttsprovider=piper&pipervoice=pt_BR-faber-medium</code></li>
+                <li>Португальська, найшвидший запасний варіант, перевірений у SSN: <code>?speech=pt-BR&ttsprovider=espeak&espeakvoice=pt-br</code></li>
+                <li>Іспанська, найкраща якість безкоштовного локального TTS, перевірена в SSN: <code>?speech=es-ES&ttsprovider=piper&pipervoice=es_ES-davefx-medium</code></li>
+                <li>Іспанська, найшвидший запасний варіант, перевірений у SSN: <code>?speech=es-ES&ttsprovider=espeak&espeakvoice=es</code></li>
+                <li>Для хмарних голосів використовуйте голос/мову постачальника, що підтримує потрібну мову, наприклад Google Cloud, ElevenLabs, Speechify, Gemini або локальний сервер, сумісний з OpenAI.</li>
+            </ul>
+
+            <h3>OpenAI / TTS на локальному сервері</h3>
+            <ul>
+                <li>Увімкніть за допомогою <code>?ttsprovider=openai</code></li>
+                <li>Використовуйте <code>?ttsprovider=customtts</code> або <code>?ttsprovider=localtts</code> для кінцевої точки на власному сервері</li>
+                <li>За замовчуванням використовує API OpenAI або будь-який сумісний локальний сервер</li>
+                <li>Власна кінцева точка: <code>&openaiendpoint=http://localhost:8880/v1/audio/speech</code></li>
+                <li><strong>Важливо:</strong> <code>localhost</code> і <code>127.0.0.1</code> означають той самий комп’ютер, на якому відтворюється сторінка TTS. Якщо OBS працює на іншому комп’ютері, ніж сервер TTS, натомість використовуйте локальну IP-адресу комп’ютера сервера.</li>
+                <li>Для локальних серверів ключ API не потрібен</li>
+                <li>Якщо локальний сервер має проблеми з CORS або локальною мережею у Chrome/OBS, запустіть <code>npm run local-tts-bridge</code> на комп’ютері OBS та спрямуйте SSN на <code>http://127.0.0.1:8124/v1/audio/speech</code></li>
+                <li>SSN надсилає <code>{ model, input, voice, response_format, speed }</code> і підтримує двійковий звук, URL звуку в JSON та звук у base64 у JSON</li>
+                <li>Відтворення через власну/локальну кінцеву точку наразі буферизується; SSN ще не відтворює потокові фрагменти звуку поступово</li>
+                <li>Голос: <code>&voiceopenai=af_bella</code>, швидкість: <code>&openaispeed=1.0</code>. Використовуйте назву голосу, яку підтримує ваш сервер; голоси Kokoro мають вигляд <code>af_bella</code>, а голоси openedai-speech/у стилі OpenAI можуть мати вигляд <code>nova</code> або <code>echo</code>.</li>
+                <li>Дивіться <a href="local-tts.html">Посібник із локального озвучення ШІ</a> для налаштування власного сервера</li>
+            </ul>
+            
+            <h3>Google Cloud TTS</h3>
+            <ul>
+                <li>Увімкніть за допомогою <code>?ttsprovider=google&ttskey=YOUR_API_KEY</code></li>
+                <li>Голоси професійної якості</li>
+                <li>Вибір голосу: <code>&voicegoogle=en-GB-Standard-A</code></li>
+                <li>Мова: <code>&googlelang=en-US</code></li>
+            </ul>
+
+            <h3>Gemini TTS</h3>
+            <ul>
+                <li>Увімкніть за допомогою <code>?ttsprovider=gemini&geminikey=YOUR_API_KEY</code></li>
+                <li>Модель: <code>&geminimodel=gemini-2.5-flash-preview-tts</code></li>
+                <li>Голос: <code>&voicegemini=Kore</code>, мова: <code>&geminilang=th-TH</code></li>
+                <li>Інструкції щодо стилю: <code>&geministyle=Read aloud in a warm tone.</code></li>
+            </ul>
+
+            <h3>ElevenLabs TTS</h3>
+            <ul>
+                <li>Увімкніть за допомогою <code>?ttsprovider=elevenlabs&elevenlabskey=YOUR_API_KEY</code></li>
+                <li>ID голосу: <code>&voice11=YOUR_VOICE_ID</code></li>
+                <li>Модель: <code>&elevenlabsmodel=eleven_multilingual_v2</code></li>
+                <li>Можна налаштувати параметри stability, similarity, style</li>
+            </ul>
+            
+            <h3>Fish Audio TTS</h3>
+            <p>Виберіть Fish Audio та введіть свій ключ API, за потреби додавши ID голосу. Модель за замовчуванням — <code>s2.1-pro-free</code>. <a href="tts-setup-guide.html#settings-fish">Налаштування, варіанти моделей та обмеження доступу з браузера</a>.</p>
+
+            <h3>Speechify TTS</h3>
+            <ul>
+                <li>Увімкніть за допомогою <code>?ttsprovider=speechify&speechifykey=YOUR_API_KEY</code></li>
+                <li>Голос: <code>&voicespeechify=henry</code></li>
+                <li>Модель: <code>&speechifymodel=simba-3.0</code> (за замовчуванням) або <code>&speechifymodel=simba-3.2</code> для англійської.</li>
+                <li>Швидкість мовлення: <code>&speechifyspeed=1.2</code> (від 0,5 до 3,0; звичайне значення — 1,0).</li>
+                <li><a href="speechify-setup-guide.html">Посібник із налаштування Speechify, голосів, швидкості та гучності</a></li>
+            </ul>
+        </div>
+        
+        <h2 id="troubleshooting">Усунення несправностей</h2>
+        <div class="card">
+            <h3>Поширені проблеми</h3>
+            <ul>
+                <li><strong>Звук не відтворюється:</strong> Перевірте, чи ввімкнено TTS, чи відкрита сторінка, яка генерує мовлення, і чи не вимкнено звук джерела браузера. У звичайному браузері один раз натисніть на сторінці.</li>
+                <li><strong>Голоси не відображаються:</strong> Перезапустіть браузер після встановлення мовних пакетів</li>
+                <li><strong>OBS не захоплює звук:</strong> Якщо мовлення відсутнє, спершу перевірте доступність голосу/постачальника. Якщо мовлення є, перевірте <strong>Керувати звуком через OBS (Control audio via OBS)</strong>, вимкнення звуку в мікшері та вихідні доріжки або захоплюйте звук зовнішнього браузера, що відтворює мовлення</li>
+                <li><strong>Локальна кінцева точка працює під час перевірки в застосунку, але не в OBS:</strong> OBS — це окремий браузер. Перевірте кінцеву точку з комп’ютера OBS, особливо якщо використовуєте <code>127.0.0.1</code>.</li>
+                <li><strong>Читається лише перша літера або перші слова:</strong> видаліть <code>ttsquick</code> з URL OBS, якщо він присутній.</li>
+                <li><strong>Проблеми Safari:</strong> Safari має обмежену підтримку автоматичного TTS</li>
+                <li><strong>Платний сервіс не працює:</strong> Перевірте ключ API та переконайтеся, що постачальника вказано правильно</li>
+            </ul>
+            
+            <h3>Рекомендовані практики</h3>
+            <ul>
+                <li>Для простішого налаштування OBS використовуйте постачальника, який генерує звук сторінки; доступні безкоштовні локальні постачальники</li>
+                <li>Перевірте налаштування простими фразами перед виходом в ефір</li>
+                <li>Враховуйте ризики озвучення створеного користувачами вмісту</li>
+                <li>Майте перемикач, щоб за потреби швидко вимкнути TTS</li>
+            </ul>
+        </div>
+        
+        <div class="tts-test">
+            <h3>Перевірити системні голоси цього браузера</h3>
+            <p>Тут перелічено <strong>Лише голоси системного TTS у браузері, де відкрито цей посібник</strong>. Це не перевіряє OBS, окреме вікно застосунку SSN або такі постачальники, як Kokoro. Порожній список не означає, що інші постачальники TTS у SSN недоступні.</p>
+            <button onclick="window.open(&#x27;https://socialstream.ninja/tts&#x27;, &#x27;_blank&#x27;)">Перевірити доступні голоси</button>
+        </div>
+        
+        <footer>
+            <p>Посібник із TTS Social Stream Ninja — для останніх оновлень відвідайте <a href="https://github.com/steveseguin/social_stream" target="_blank">Репозиторій GitHub</a></p>
+        </footer>
+    </div>
+    
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="de" data-site-root="../../" data-site-language="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/de/docs/obs-troubleshooting.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="de_DE">
+    <meta property="og:url" content="https://socialstream.ninja/de/docs/obs-troubleshooting.html">
+    <meta property="og:title" content="OBS-Fehlerbehebung – Social Stream Ninja">
+    <meta property="og:description" content="Behebe leere Social Stream Ninja OBS-Overlays, falsche Sitzungen, stumme Sprachausgabe, Browserquellen-Cache und Probleme mit der Quellerfassung.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja-Logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/de/docs/obs-troubleshooting.html">
+    <meta name="twitter:title" content="OBS-Fehlerbehebung – Social Stream Ninja">
+    <meta name="twitter:description" content="Behebe leere Social Stream Ninja OBS-Overlays, falsche Sitzungen, stumme Sprachausgabe, Browserquellen-Cache und Probleme mit der Quellerfassung.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja-Logo">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS-Fehlerbehebung – Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Behebe leere Social Stream Ninja OBS-Overlays, falsche Sitzungen, stumme Sprachausgabe, Browserquellen-Cache und Probleme mit der Quellerfassung.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="de">
+<script id="ssn-site-language" type="application/json">{"language":"de","page":"docs/obs-troubleshooting.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Zum hellen Design wechseln","Switch to dark theme":"Zum dunklen Design wechseln","Light mode":"Heller Modus","Dark mode":"Dunkler Modus","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Copy this document as Markdown to the clipboard":"Dieses Dokument als Markdown in die Zwischenablage kopieren","Copy Markdown":"Markdown kopieren","Copying…":"Wird kopiert…","Markdown copied":"Markdown kopiert","Copy failed":"Kopieren fehlgeschlagen","Copy comprehensive Markdown for an AI assistant":"Umfassende Markdown-Dokumentation für einen KI-Assistenten kopieren","Copy this documentation page as Markdown for an AI assistant":"Diese Dokumentationsseite als Markdown für einen KI-Assistenten kopieren"},"strings":{", replace its URL, apply the change, and reopen that dock.":", ersetze die URL, übernimm die Änderung und öffne dieses Dock erneut.",", right-click it, and choose":", klicke mit der rechten Maustaste darauf und wähle",", then paste the new link over the old one.":", und ersetze dann den alten Link durch den neuen.",", then send one fake test message from Social Stream Ninja.":", und sende dann eine künstliche Testnachricht aus Social Stream Ninja.",". Administrator mode is not a normal fix for a blank Dock.":". Der Administratormodus ist keine normale Lösung für ein leeres Dock.","Audio routing issue.":"Problem mit der Audioweiterleitung.","Bottom of OBS Browser Source Properties with Refresh cache of current page highlighted":"Unterer Bereich der OBS-Browserquellen-Eigenschaften mit hervorgehobenem „Cache der aktuellen Seite aktualisieren“","Check The Overlay URL":"Overlay-URL prüfen","Check login, live page, popout/source page, app mode, or platform guide.":"Prüfe Anmeldung, Liveseite, Popout-/Quellseite, App-Modus oder Plattformleitfaden.","Check provider vs system TTS and OBS audio capture.":"Prüfe Anbieter- gegenüber System-Sprachausgabe und die OBS-Audioaufnahme.","Click":"Klicke auf","Close the old Dock page or window, then click the newly generated":"Schließe die alte Dock-Seite oder das alte Fenster und klicke dann auf den neu erzeugten","Commands & API":"Befehle und API","Common Fixes":"Häufige Lösungen","Decision Tree":"Entscheidungsbaum","Detailed help:":"Ausführliche Hilfe:","Do these in this order. Refreshing the cache alone does not add a changed session, password, or server-routing option to an old URL.":"Führe dies in dieser Reihenfolge aus. Das Aktualisieren des Caches allein fügt einer alten URL keine geänderte Sitzung, kein Passwort und keine Server-Routing-Option hinzu.","Dock":"Dock","Dock is empty":"Dock ist leer","Dock works, browser overlay blank":"Dock funktioniert, Browser-Overlay ist leer","Dock works, browser overlay works":"Dock funktioniert, Browser-Overlay funktioniert","Docks → Custom Browser Docks":"Docks → Benutzerdefinierte Browser-Docks","Download":"Herunterladen","Export your Social Stream Ninja settings and OBS scene collection for support":"Exportiere deine Social Stream Ninja Einstellungen und OBS-Szenensammlung für den Support","Featured overlay preview showing a selected message":"Featured-Overlay-Vorschau mit einer ausgewählten Nachricht","Features":"Funktionen","Find out whether the source, session, overlay, or OBS browser source is the problem.":"Finde heraus, ob Quelle, Sitzung, Overlay oder OBS-Browserquelle das Problem verursacht.","Guides":"Anleitungen","Hire":"Beauftragen","Home":"Startseite","If TTS Is Silent In OBS":"Wenn die Sprachausgabe in OBS stumm ist","If it is still stale:":"Wenn der alte Stand weiterhin erscheint:","If messages appear in the dock, Social Stream Ninja is receiving chat.":"Wenn Nachrichten im Dock erscheinen, empfängt Social Stream Ninja Chat.","If support has confirmed a Windows privilege mismatch, follow":"Wenn der Support unterschiedliche Windows-Berechtigungsstufen bestätigt hat, folge","Image works, TTS silent":"Bild funktioniert, Sprachausgabe ist stumm","In OBS, find the Social Stream source in":"Suche in OBS die Social-Stream-Quelle unter","In Social Stream Ninja, copy a freshly generated link for the exact Dock or overlay you use. Copy the whole link instead of editing its parameters by hand.":"Kopiere in Social Stream Ninja einen frisch erzeugten Link für genau das Dock oder Overlay, das du verwendest. Kopiere den ganzen Link, statt Parameter von Hand zu ändern.","Inspiration":"Inspiration","Local file":"Lokale Datei","Main navigation":"Hauptnavigation","Make sure":"Stelle sicher, dass","Make the source visible and check that width/height are not tiny.":"Mache die Quelle sichtbar und prüfe, ob Breite/Höhe nicht zu klein sind.","Meaning":"Bedeutung","Next Step":"Nächster Schritt","OBS Browser Source Properties showing the Local file checkbox and URL field":"OBS-Browserquellen-Eigenschaften mit Kontrollkästchen Lokale Datei und URL-Feld","OBS Troubleshooting":"OBS-Fehlerbehebung","OBS Troubleshooting - Social Stream Ninja":"OBS-Fehlerbehebung – Social Stream Ninja","OBS audio capture note explaining system TTS limitations":"Hinweis zur OBS-Audioaufnahme mit Erläuterung der Einschränkungen der System-Sprachausgabe","OBS browser source is the likely issue.":"Die OBS-Browserquelle ist wahrscheinlich das Problem.","OK":"OK","Open navigation menu":"Navigationsmenü öffnen","Open the same OBS URL in a normal browser to separate OBS issues from Social Stream Ninja issues.":"Öffne dieselbe OBS-URL in einem normalen Browser, um OBS-Probleme von Social Stream Ninja Problemen zu unterscheiden.","Overlay Gallery":"Overlay-Galerie","Plain system TTS is the common trap. It may speak through your speakers while OBS Browser Source hears nothing.":"Einfache System-Sprachausgabe ist eine häufige Falle. Sie kann über deine Lautsprecher sprechen, während die OBS-Browserquelle nichts hört.","Properties":"Eigenschaften","Refresh OBS source, check URL, dimensions, visibility, cache, and custom CSS.":"Lade die OBS-Quelle neu und prüfe URL, Abmessungen, Sichtbarkeit, Cache und eigenes CSS.","Refresh cache of current page":"Cache der aktuellen Seite aktualisieren","Reopen A Dock Link":"Dock-Link erneut öffnen","Replace The Saved OBS URL And Refresh Its Cache":"Gespeicherte OBS-URL ersetzen und Cache aktualisieren","Replace the entire URL with the freshly generated Social Stream link. Screenshot from the":"Ersetze die gesamte URL durch den frisch erzeugten Social-Stream-Link. Screenshot aus dem","Replace the saved URL, then refresh the Browser Source cache":"Gespeicherte URL ersetzen, dann Browserquellen-Cache aktualisieren","Run OBS and Social Stream as Administrator":"OBS und Social Stream als Administrator ausführen","Scroll to the bottom of the Properties window and click":"Scrolle im Eigenschaftenfenster nach unten und klicke auf","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja dock showing received chat messages":"Social Stream Ninja Dock mit empfangenen Chatnachrichten","Social Stream Ninja logo":"Social Stream Ninja-Logo","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0-Lizenz.","Some overlays only show content after a message is featured or a matching event happens.":"Manche Overlays zeigen Inhalte erst, nachdem eine Nachricht hervorgehoben wurde oder ein passendes Ereignis eintritt.","Source/platform capture is not working yet.":"Die Erfassung der Quelle/Plattform funktioniert noch nicht.","Sources":"Quellen","Spin and Wheel's OBS setup page":"OBS-Einrichtungsseite von Spin and Wheel","Start With The Dock":"Mit dem Dock beginnen","Still stuck?":"Noch nicht weitergekommen?","Support":"Hilfe","Supported Sites":"Unterstützte Websites","Switch theme":"Design wechseln","TTS Setup Guide":"TTS-Einrichtungsleitfaden","Temporarily remove custom OBS CSS to rule out hidden text or opacity.":"Entferne eigenes OBS-CSS vorübergehend, um ausgeblendeten Text oder Deckkraft als Ursache auszuschließen.","Test":"Testen","The cache button is near the bottom of Browser Source Properties. UI example cropped from":"Die Cache-Schaltfläche befindet sich im unteren Bereich der Browserquellen-Eigenschaften. Oberflächenbeispiel aus der","The dock is the fastest test. If the dock is empty, do not debug OBS yet. Fix the platform source first.":"Das Dock ist der schnellste Test. Ist es leer, untersuche OBS noch nicht. Repariere zuerst die Plattformquelle.","Troubleshoot blank Social Stream Ninja OBS overlays, wrong sessions, silent TTS, browser source cache, and source capture problems.":"Behebe leere Social Stream Ninja OBS-Overlays, falsche Sitzungen, stumme Sprachausgabe, Browserquellen-Cache und Probleme mit der Quellerfassung.","URL":"URL","Use provider/browser TTS for easier OBS capture, or route system audio separately.":"Verwende Anbieter-/Browser-Sprachausgabe für einfachere OBS-Aufnahme oder leite Systemaudio separat weiter.","Use the exact same session ID everywhere. A one-character difference creates a separate room.":"Verwende überall exakt dieselbe Sitzungs-ID. Schon ein anderes Zeichen erzeugt einen separaten Raum.","Use the same session and pick a page that matches the expected output.":"Verwende dieselbe Sitzung und eine Seite, die zur erwarteten Ausgabe passt.","Wrong overlay page, wrong session, or no matching payload.":"Falsche Overlay-Seite, falsche Sitzung oder keine passenden Nutzdaten.","close Properties, open it again, and repeat the test. Removing and recreating the Browser Source with the fresh link is the last resort.":"schließe die Eigenschaften, öffne sie erneut und wiederhole den Test. Das Entfernen und Neuerstellen der Browserquelle mit dem neuen Link ist der letzte Ausweg.","is not selected. Select everything in":"nicht ausgewählt ist. Markiere alles in","link in Social Stream Ninja. If it is saved as an OBS Custom Browser Dock, open":"Link in Social Stream Ninja. Wenn er als benutzerdefiniertes Browser-Dock in OBS gespeichert ist, öffne","official OBS Browser Source guide":"offiziellen OBS-Browserquellen-Leitfaden"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/obs-troubleshooting.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hauptnavigation"><a href="../index.html">Startseite</a><a href="features.html">Funktionen</a><a href="inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="download.html">Herunterladen</a><a href="guides.html">Anleitungen</a><a href="commands.html">Befehle und API</a><a href="supported-sites.html">Unterstützte Websites</a><a href="overlay-gallery.html" class="site-priority-gallery">Overlay-Galerie</a><a href="services.html" class="site-priority-hire">Beauftragen</a><a href="support.html">Hilfe</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Deutsch"><span aria-hidden="true">🌐 </span><span lang="de">Deutsch</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-troubleshooting.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-troubleshooting.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/obs-troubleshooting.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-troubleshooting.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-troubleshooting.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="obs-troubleshooting.html" lang="de" hreflang="de" aria-current="true">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-troubleshooting.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/obs-troubleshooting.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-troubleshooting.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-troubleshooting.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-troubleshooting.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/obs-troubleshooting.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/obs-troubleshooting.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/obs-troubleshooting.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/obs-troubleshooting.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/obs-troubleshooting.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/obs-troubleshooting.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Design wechseln"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Navigationsmenü öffnen" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>OBS-Fehlerbehebung</h1><p>Finde heraus, ob Quelle, Sitzung, Overlay oder OBS-Browserquelle das Problem verursacht.</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Mit dem Dock beginnen</h2>
+                <p>Das Dock ist der schnellste Test. Ist es leer, untersuche OBS noch nicht. Repariere zuerst die Plattformquelle.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-dock-message-check.png" alt="Social Stream Ninja Dock mit empfangenen Chatnachrichten" class="guide-image">
+                    <figcaption>Wenn Nachrichten im Dock erscheinen, empfängt Social Stream Ninja Chat.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card" id="replace-url-and-cache">
+                <h2>Gespeicherte OBS-URL ersetzen und Cache aktualisieren</h2>
+                <p>Führe dies in dieser Reihenfolge aus. Das Aktualisieren des Caches allein fügt einer alten URL keine geänderte Sitzung, kein Passwort und keine Server-Routing-Option hinzu.</p>
+                <ol class="guide-steps">
+                    <li>Kopiere in Social Stream Ninja einen frisch erzeugten Link für genau das Dock oder Overlay, das du verwendest. Kopiere den ganzen Link, statt Parameter von Hand zu ändern.</li>
+                    <li>Suche in OBS die Social-Stream-Quelle unter <strong>Quellen</strong>, klicke mit der rechten Maustaste darauf und wähle <strong>Eigenschaften</strong>.</li>
+                    <li>Stelle sicher, dass <strong>Lokale Datei</strong> nicht ausgewählt ist. Markiere alles in <strong>URL</strong>, und ersetze dann den alten Link durch den neuen.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-browser-source-url.png" alt="OBS-Browserquellen-Eigenschaften mit Kontrollkästchen Lokale Datei und URL-Feld" class="guide-image">
+                    <figcaption>Ersetze die gesamte URL durch den frisch erzeugten Social-Stream-Link. Screenshot aus dem <a href="https://obsproject.com/kb/browser-source">offiziellen OBS-Browserquellen-Leitfaden</a>.</figcaption>
+                </figure>
+                <ol class="guide-steps" start="4">
+                    <li>Scrolle im Eigenschaftenfenster nach unten und klicke auf <strong>Cache der aktuellen Seite aktualisieren</strong>.</li>
+                    <li>Klicke auf <strong>OK</strong>, und sende dann eine künstliche Testnachricht aus Social Stream Ninja.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-browser-source-refresh-cache.png" alt="Unterer Bereich der OBS-Browserquellen-Eigenschaften mit hervorgehobenem „Cache der aktuellen Seite aktualisieren“" class="guide-image guide-image-medium">
+                    <figcaption>Die Cache-Schaltfläche befindet sich im unteren Bereich der Browserquellen-Eigenschaften. Oberflächenbeispiel aus der <a href="https://spinandwheel.com/obs-setup/">OBS-Einrichtungsseite von Spin and Wheel</a>.</figcaption>
+                </figure>
+                <div class="guide-note">
+                    <p><strong>Wenn der alte Stand weiterhin erscheint:</strong> schließe die Eigenschaften, öffne sie erneut und wiederhole den Test. Das Entfernen und Neuerstellen der Browserquelle mit dem neuen Link ist der letzte Ausweg.</p>
+                </div>
+                <h3>Dock-Link erneut öffnen</h3>
+                <p>Schließe die alte Dock-Seite oder das alte Fenster und klicke dann auf den neu erzeugten <strong>Dock</strong> Link in Social Stream Ninja. Wenn er als benutzerdefiniertes Browser-Dock in OBS gespeichert ist, öffne <strong>Docks → Benutzerdefinierte Browser-Docks</strong>, ersetze die URL, übernimm die Änderung und öffne dieses Dock erneut.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Entscheidungsbaum</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Testen</th><th>Bedeutung</th><th>Nächster Schritt</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Test">Dock ist leer</td><td data-label="Meaning">Die Erfassung der Quelle/Plattform funktioniert noch nicht.</td><td data-label="Next Step">Prüfe Anmeldung, Liveseite, Popout-/Quellseite, App-Modus oder Plattformleitfaden.</td></tr>
+                        <tr><td data-label="Test">Dock funktioniert, Browser-Overlay funktioniert</td><td data-label="Meaning">Die OBS-Browserquelle ist wahrscheinlich das Problem.</td><td data-label="Next Step">Lade die OBS-Quelle neu und prüfe URL, Abmessungen, Sichtbarkeit, Cache und eigenes CSS.</td></tr>
+                        <tr><td data-label="Test">Dock funktioniert, Browser-Overlay ist leer</td><td data-label="Meaning">Falsche Overlay-Seite, falsche Sitzung oder keine passenden Nutzdaten.</td><td data-label="Next Step">Verwende dieselbe Sitzung und eine Seite, die zur erwarteten Ausgabe passt.</td></tr>
+                        <tr><td data-label="Test">Bild funktioniert, Sprachausgabe ist stumm</td><td data-label="Meaning">Problem mit der Audioweiterleitung.</td><td data-label="Next Step">Prüfe Anbieter- gegenüber System-Sprachausgabe und die OBS-Audioaufnahme.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Overlay-URL prüfen</h2>
+                <p>Verwende überall exakt dieselbe Sitzungs-ID. Schon ein anderes Zeichen erzeugt einen separaten Raum.</p>
+                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION</pre>
+                <pre>https://socialstream.ninja/featured.html?session=YOUR_SESSION</pre>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-featured-overlay-preview.png" alt="Featured-Overlay-Vorschau mit einer ausgewählten Nachricht" class="guide-image">
+                    <figcaption>Manche Overlays zeigen Inhalte erst, nachdem eine Nachricht hervorgehoben wurde oder ein passendes Ereignis eintritt.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Wenn die Sprachausgabe in OBS stumm ist</h2>
+                <p>Einfache System-Sprachausgabe ist eine häufige Falle. Sie kann über deine Lautsprecher sprechen, während die OBS-Browserquelle nichts hört.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-tts-obs-audio.png" alt="Hinweis zur OBS-Audioaufnahme mit Erläuterung der Einschränkungen der System-Sprachausgabe" class="guide-image">
+                    <figcaption>Verwende Anbieter-/Browser-Sprachausgabe für einfachere OBS-Aufnahme oder leite Systemaudio separat weiter.</figcaption>
+                </figure>
+                <p>Ausführliche Hilfe: <a href="tts-setup-guide.html">TTS-Einrichtungsleitfaden</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Häufige Lösungen</h2>
+                <ul class="guide-list">
+                    <li><a href="#replace-url-and-cache">Gespeicherte URL ersetzen, dann Browserquellen-Cache aktualisieren</a>.</li>
+                    <li>Mache die Quelle sichtbar und prüfe, ob Breite/Höhe nicht zu klein sind.</li>
+                    <li>Entferne eigenes OBS-CSS vorübergehend, um ausgeblendeten Text oder Deckkraft als Ursache auszuschließen.</li>
+                    <li>Öffne dieselbe OBS-URL in einem normalen Browser, um OBS-Probleme von Social Stream Ninja Problemen zu unterscheiden.</li>
+                </ul>
+                <p>Wenn der Support unterschiedliche Windows-Berechtigungsstufen bestätigt hat, folge <a href="windows-administrator-mode.html">OBS und Social Stream als Administrator ausführen</a>. Der Administratormodus ist keine normale Lösung für ein leeres Dock.</p>
+                <p>Noch nicht weitergekommen? <a href="export-settings-for-support.html">Exportiere deine Social Stream Ninja Einstellungen und OBS-Szenensammlung für den Support</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0-Lizenz.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

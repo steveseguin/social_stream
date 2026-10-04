@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/ko/docs/commands.html">
+    <meta property="og:title" content="명령 및 API - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja 명령, API 통합, 봇 기능에 관한 상세 문서입니다.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ko/docs/commands.html">
+    <meta name="twitter:title" content="명령 및 API - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja 명령, API 통합, 봇 기능에 관한 상세 문서입니다.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>명령 및 API - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/commands.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <meta name="description" content="Social Stream Ninja 명령, API 통합, 봇 기능에 관한 상세 문서입니다.">
+    <link rel="canonical" href="https://socialstream.ninja/ko/docs/commands.html">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/commands.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"\"Enable remote API control of extension\"":"\"확장 프로그램 원격 API 제어 활성화\"","\"Send chat messages to API server\"":"\"채팅 메시지를 API 서버로 보내기\"","(Toggle 1). Connect to":"(스위치 1) — 연결 대상:","(Toggle 3). Connect to":"(스위치 3) — 연결 대상:","(runs in background)":"(백그라운드에서 실행)",", and":", 그리고",", or":", 또는","- Current featured message text":"- 현재 강조 메시지 텍스트","- Current featured username":"- 현재 강조된 사용자 이름","- Number of messages in queue":"- 대기열의 메시지 수","; use":"; 사용:","AI Chat Bot Mode":"AI 챗봇 모드","AI Chat Bot Setup Guide":"AI 챗봇 설정 가이드","AI Co-Host":"AI 공동 진행자","AI Integration":"AI 통합","AI-powered text-to-speech with natural voice conversion capabilities.":"자연스러운 음성 변환 기능을 갖춘 AI 기반 음성 읽기입니다.","API Endpoints and Connection Methods":"API 엔드포인트 및 연결 방식","API Method":"API 방식","AWS Bedrock":"AWS Bedrock","Access to multiple AI models through a unified API interface.":"통합 API 인터페이스로 여러 AI 모델에 접근합니다.","Action":"동작","Add":"추가:","Add custom animations for new messages":"새 메시지에 사용자 지정 애니메이션 추가","Add custom instructions for tone, role, and moderation rules":"말투, 역할, 채팅 관리 규칙에 관한 사용자 지정 지침 추가","Add endpoint:":"엔드포인트 추가:","Add interactive elements with JavaScript":"JavaScript로 상호작용 요소 추가","Add your API key and preferred model":"API 키와 선호하는 모델 추가","Auto-Response Configuration":"자동 응답 설정","Automated Chat Responses":"자동 채팅 응답","Automatically welcomes anyone who says \"hi\" in chat":"채팅에서 \"hi\"라고 말하는 사람에게 자동으로 환영 인사를 보냅니다","Begin with our sample overlay template to understand the basics:":"샘플 오버레이 템플릿으로 시작해 기본 사항을 익히세요:","Bitfocus Companion":"Bitfocus Companion","Bitfocus Companion provides powerful control of Social Stream Ninja using either WebSocket or HTTP APIs.":"Bitfocus Companion은 WebSocket 또는 HTTP API를 사용해 Social Stream Ninja를 강력하게 제어합니다.","Blocks a user from a specific platform":"특정 플랫폼의 사용자를 차단합니다","Bluesky":"Bluesky","Bot Accounts for Automatic Replies":"자동 답변용 봇 계정","Bot Commands":"봇 명령","Bot Instances and Overlays":"봇 인스턴스 및 오버레이","Bot Type":"봇 유형","Bot commands will only work when the auto-responder is properly configured and you have permission to post messages in the respective platforms.":"봇 명령은 자동 응답기가 올바르게 설정되어 있고 해당 플랫폼에 메시지를 게시할 권한이 있어야 작동합니다.","Both donations and membership events are supported":"후원 및 멤버십 이벤트 모두 지원됩니다","Built-in Bot Commands":"내장 봇 명령","Buy Me A Coffee":"Buy Me A Coffee","CC Number":"CC 번호","Censor Bot":"검열 봇","Channel System":"채널 시스템","ChatGPT / OpenAI":"ChatGPT / OpenAI","ChatGPT, Gemini, DeepSeek, xAI, Groq, OpenRouter, Bedrock:":"ChatGPT, Gemini, DeepSeek, xAI, Groq, OpenRouter, Bedrock:","Choose and Connect Your LLM Provider":"LLM 제공자 선택 및 연결","Choose fixed, message-length, or after-TTS auto-hide behavior for":"다음의 자동 숨김 방식을 고정 시간, 메시지 길이 또는 음성 읽기 후 중에서 선택하세요:","Choose whether replies go back to chat or only to the bot overlay page":"답변을 채팅으로 보낼지 봇 오버레이 페이지로만 보낼지 선택","Clear Featured Message":"강조 메시지 지우기","Clear overlay":"오버레이 지우기","Clears the featured message from the overlay":"오버레이에서 강조 메시지를 지웁니다","Clears the waitlist and reopens entries":"참가 대기열을 지우고 참가 접수를 다시 엽니다","Collect donations through the popular Buy Me A Coffee platform.":"널리 사용되는 Buy Me A Coffee 플랫폼으로 후원을 받으세요.","Command":"명령","Commands & API":"명령 및 API","Commands & API - Social Stream Ninja":"명령 및 API - Social Stream Ninja","Common API Commands":"자주 쓰는 API 명령","Community":"커뮤니티","Companion Integration":"Companion 통합","Configure Bot Behavior":"봇 동작 설정","Configure LLM Service Provider":"LLM 서비스 제공자 설정","Configure your MIDI controller or StreamDeck MIDI plugin":"MIDI 컨트롤러 또는 StreamDeck MIDI 플러그인 설정","Connect to llama.cpp, LM Studio, vLLM, or any other OpenAI-compatible endpoint.":"llama.cpp, LM Studio, vLLM 또는 다른 OpenAI 호환 엔드포인트에 연결하세요.","Connect with your desired channel:":"원하는 채널로 연결하세요:","Consolidates your live social messaging streams and more. Free and open source.":"실시간 소셜 메시지와 다양한 정보를 한데 모읍니다. 무료 오픈 소스입니다.","Content Moderation":"콘텐츠 관리","Contribute":"기여하기","Control Social Stream Ninja using MIDI controllers, keyboard shortcuts, or StreamDeck with MIDI plugins.":"MIDI 컨트롤러, 키보드 단축키 또는 MIDI 플러그인이 있는 StreamDeck으로 Social Stream Ninja를 제어하세요.","Control Social Stream Ninja with built-in commands, automation, and API integration":"내장 명령, 자동화, API 통합으로 Social Stream Ninja 제어","Control featured messages, clear overlays, and manipulate content appearance in your stream.":"강조 메시지를 제어하고 오버레이를 지우며 방송 콘텐츠의 표시를 조정하세요.","Create Tests":"테스트 만들기","Create a payment link at":"다음에서 결제 링크를 만드세요:","Creating Custom Overlays":"사용자 지정 오버레이 만들기","Custom API":"사용자 지정 API","Custom API (OpenAI-compatible)":"사용자 지정 API(OpenAI 호환)","Custom API:":"사용자 지정 API:","Custom JavaScript":"사용자 지정 JavaScript","Custom Overlays":"사용자 지정 오버레이","Custom Scripts":"사용자 지정 스크립트","Customization Guide":"맞춤 설정 가이드","Customize how the bot behaves in chat:":"채팅에서 봇이 동작하는 방식을 맞춤 설정하세요:","Customize the CSS for your desired appearance":"원하는 모양에 맞게 CSS 수정","Customize the appearance with CSS":"CSS로 모양 맞춤 설정","Dedicated 1-on-1 bot page that does not share the main bot's RAG dataset or chat history":"기본 봇의 RAG 데이터 세트나 채팅 기록을 공유하지 않는 전용 일대일 봇 페이지","DeepSeek":"DeepSeek","Description":"설명","Detailed Documentation":"상세 문서","Detailed documentation for Social Stream Ninja's commands, API integration, and bot functionality.":"Social Stream Ninja 명령, API 통합, 봇 기능에 관한 상세 문서입니다.","Discord":"Discord","Displays the next message in the queue":"대기열의 다음 메시지를 표시합니다","Displays the next queued message":"대기 중인 다음 메시지를 표시합니다","Donate":"후원하기","Donation Services":"후원 서비스","Download":"다운로드","Download Now":"지금 다운로드","Download the sample overlay HTML file":"샘플 오버레이 HTML 파일 다운로드","Downloads the current waitlist as a TSV file from the running Social Stream page/app":"실행 중인 Social Stream 페이지/앱에서 현재 참가 대기열을 TSV 파일로 다운로드합니다","Dynamic Variables":"동적 변수","Edit the HTML for your custom layout":"사용자 지정 레이아웃에 맞게 HTML 수정","Edit the file to add your custom functionality":"사용자 지정 기능을 추가하도록 파일 수정","Efficient, cost-effective AI models optimized for conversational tasks.":"대화 작업에 최적화된 효율적이고 비용 효율적인 AI 모델입니다.","ElevenLabs":"ElevenLabs","Emote reaction":"이모티콘 반응","Enable":"활성화","Enable MIDI support in the extension settings":"확장 프로그램 설정에서 MIDI 지원 활성화","Enable Optional Extras":"선택 기능 활성화","Enable RAG and upload documents for knowledge-aware answers":"지식을 활용하는 답변을 위해 RAG를 활성화하고 문서 업로드","Enable TTS for bot replies and choose a provider":"봇 답변의 음성 읽기를 활성화하고 제공자 선택","Enable Toggle 1 +":"스위치 1 활성화 +","Enable the LLM AI chat bot":"LLM AI 챗봇 활성화","Enable the censor bot for moderation or strict block mode":"채팅 관리 또는 엄격한 차단 모드용 검열 봇 활성화","Enable the specific command toggles in the extension menu":"확장 프로그램 메뉴에서 필요한 명령 스위치 활성화","Enable via the extension menu toggle":"확장 프로그램 메뉴의 스위치로 활성화","Enables/disables automatic message featuring":"자동 메시지 강조 표시를 켜거나 끕니다","Ensure you're logged into the platform (YouTube, Twitch, etc.)":"플랫폼(YouTube, Twitch 등)에 로그인했는지 확인하세요","Enter an OpenAI-compatible endpoint, model id, and optional API key":"OpenAI 호환 엔드포인트, 모델 ID, 선택적 API 키 입력","Enterprise-grade AI models from various providers including Claude and Llama.":"Claude와 Llama 등 다양한 제공자의 기업용 AI 모델입니다.","Example":"예시","Export chat messages to file or forward them via webhook (POST) for custom integrations.":"채팅 메시지를 파일로 내보내거나 웹훅(POST)으로 전달해 사용자 지정 통합에 활용하세요.","External Service Integration":"외부 서비스 통합","FAQ":"자주 묻는 질문","Features":"기능","Features the first pinned dock message.":"도크에 고정한 첫 번째 메시지를 강조 표시합니다.","Filters, sanitizes, or blocks incoming messages automatically":"들어오는 메시지를 자동으로 필터링, 정리 또는 차단합니다","Follow these steps to set up AI integration with the current menu:":"현재 메뉴에서 AI 통합을 설정하려면 다음 단계를 따르세요:","For a smaller set of live-show buttons in OBS, use the":"OBS에서 소수의 생방송 버튼만 사용하려면 다음을 이용하세요:","For complete setup instructions and deeper TTS coverage, use these guides:":"전체 설정 지침과 자세한 음성 읽기 설명은 다음 가이드를 참조하세요:","For one-way real-time updates from the server.":"서버의 단방향 실시간 업데이트용입니다.","For real-time bidirectional communication with auto-reconnection.":"자동 재연결을 지원하는 실시간 양방향 통신용입니다.","For the auto-responder to work properly:":"자동 응답기가 올바르게 작동하려면:","Free, built-in TTS using your operating system's voice synthesizer.":"운영체제의 음성 합성기를 사용하는 무료 내장 음성 읽기입니다.","Free, locally-running TTS using WebGPU/CPU for privacy-conscious users.":"개인정보 보호를 중시하는 사용자를 위해 WebGPU/CPU로 로컬에서 실행되는 무료 음성 읽기입니다.","Free, privacy-focused, self-hosted AI models running on your own computer through Ollama's own API.":"Ollama 자체 API를 통해 본인의 컴퓨터에서 실행되는 무료 셀프 호스팅 AI 모델로 개인정보 보호를 중시합니다.","Gemini (Preview TTS)":"Gemini(미리보기 TTS)","Generate Code":"코드 생성","Generate test messages with random content":"무작위 내용으로 테스트 메시지 생성","Generic POST":"일반 POST","Generic PUT":"일반 PUT","Get Companion":"Companion 받기","Get Support":"지원 받기","Get code examples for HTTP, WebSocket, and SSE":"HTTP, WebSocket, SSE 코드 예시 받기","GitHub":"GitHub","GitHub Repository":"GitHub 저장소","Go to":"이동할 위치:","Google Cloud TTS":"Google Cloud TTS","Google Gemini":"Google Gemini","Google Gemini models including current Gemini 2.5 text and live multimodal options.":"현재 Gemini 2.5 텍스트 및 실시간 멀티모달 옵션을 포함한 Google Gemini 모델입니다.","Google's preview neural voice models with selectable voice and language options.":"음성과 언어를 선택할 수 있는 Google의 미리보기 신경망 음성 모델입니다.","Groq":"Groq","Guides":"가이드","H2R":"H2R","HTTP GET/POST":"HTTP GET/POST","HTTP/API Method":"HTTP/API 방식","High-quality voices with extensive language and customization options.":"다양한 언어와 맞춤 설정 옵션을 갖춘 고품질 음성입니다.","Highlights the first active waitlist entry, or the numbered active entry in":"첫 번째 활성 참가자 또는 다음에 지정한 번호의 활성 참가자를 강조 표시합니다:","Hire":"작업 의뢰","Home":"홈","Hotkey Support":"단축키 지원","Hotkeys can be configured within the menu settings and work system-wide when the browser is focused or when the app is used.":"단축키는 메뉴 설정에서 구성할 수 있으며 브라우저에 포커스가 있거나 앱을 사용할 때 시스템 전체에서 작동합니다.","How to Enable":"활성화 방법","If you prefer to keep connections peer-to-peer without enabling WebSocket mode, you can use the Social Stream Ninja WebRTC SDK. It includes Node and browser samples such as the":"WebSocket 모드를 활성화하지 않고 피어 간 연결을 유지하려면 Social Stream Ninja WebRTC SDK를 사용할 수 있습니다. Node와 브라우저 샘플이 포함되어 있으며 예를 들면 다음이 있습니다:","If you see a blue debugging bar when auto-responses are triggered, you can hide it by starting Chrome with the":"자동 응답 시 나타나는 파란 디버깅 표시줄을 숨기려면 Chrome을","Implement your own message filtering":"자체 메시지 필터링 구현","Implementation Steps":"구현 단계","In Stripe Dashboard, go to Developers → Webhooks":"Stripe Dashboard에서 Developers → Webhooks로 이동하세요","Inspiration":"아이디어","Install a virtual MIDI loopback device (e.g., loopMIDI)":"가상 MIDI 루프백 장치 설치(예: loopMIDI)","Install locally and set the endpoint if needed":"로컬에 설치하고 필요하면 엔드포인트 설정","Installation Guide":"설치 가이드","Interactive API Sandbox":"대화형 API 샌드박스","Join our Discord":"Discord 참여","Keep your session ID private, as anyone with it can send fake donations to your overlay. The webhook URL should be treated as sensitive information.":"세션 ID를 가진 사람은 누구든 오버레이에 가짜 후원을 보낼 수 있으므로 비공개로 유지하세요. 웹훅 URL은 민감한 정보로 취급해야 합니다.","Key Features to Customize":"맞춤 설정할 주요 기능","Kitten TTS":"Kitten TTS","Ko-Fi":"Ko-Fi","Kokoro":"Kokoro","Let the AI engage with your viewers automatically, answering questions and keeping the conversation lively even when you're focused on your content.":"콘텐츠에 집중하는 동안에도 AI가 시청자와 자동으로 소통하고 질문에 답하며 대화를 활발하게 유지하도록 하세요.","Lightweight browser-based TTS that downloads a small model for local voice generation.":"작은 모델을 다운로드해 로컬에서 음성을 생성하는 가벼운 브라우저 기반 음성 읽기입니다.","Local AI TTS Guide":"로컬 AI 음성 읽기 가이드","Local Gemma / Local Qwen:":"Local Gemma / Local Qwen:","Local Gemma 4":"Local Gemma 4","Local Qwen 3.5":"Local Qwen 3.5","Low-latency OpenAI-compatible chat inference for fast conversational responses.":"빠른 대화 응답을 위한 지연 시간이 짧은 OpenAI 호환 채팅 추론입니다.","MIDI & Hotkey Control":"MIDI 및 단축키 제어","MIDI & Hotkeys":"MIDI 및 단축키","MIDI Integration":"MIDI 통합","MIDI control works best with physical controllers but can also be triggered via virtual MIDI devices.":"MIDI 제어는 물리 컨트롤러에서 가장 잘 작동하지만 가상 MIDI 장치로도 실행할 수 있습니다.","Main bot overlay with optional TTS and public chat responses":"선택적 음성 읽기와 공개 채팅 응답을 지원하는 기본 봇 오버레이","Main navigation":"기본 탐색 메뉴","Make sure the chat window is visible (not minimized)":"채팅 창이 최소화되지 않고 보이는지 확인하세요","Managed giveaway commands":"관리형 경품 추첨 명령","Message Export":"메시지 내보내기","Modify the JavaScript as needed for custom behaviors":"사용자 지정 동작에 맞게 JavaScript 수정","Module Documentation":"모듈 문서","Multimodal AI that can see your screen, hear audio, and interact":"화면을 보고 오디오를 들으며 상호작용할 수 있는 멀티모달 AI","Multiple Bot Instances":"여러 봇 인스턴스","Native integration with pre-built actions, real-time feedback, and variables for dynamic content.":"사전 제작된 동작, 실시간 피드백, 동적 콘텐츠용 변수를 지원하는 기본 통합입니다.","Navigate to webhook settings":"웹훅 설정으로 이동","Next in Queue":"대기열 다음 항목","Note:":"참고:","Notes":"참고","OBS setup guide":"OBS 설정 가이드","Official Ollama Download":"공식 Ollama 다운로드","Ollama (Native Local API)":"Ollama(전용 로컬 API)","Ollama uses its own native API. For llama.cpp, LM Studio, vLLM, or other OpenAI-compatible servers, choose":"Ollama는 자체 전용 API를 사용합니다. llama.cpp, LM Studio, vLLM 또는 다른 OpenAI 호환 서버의 경우 다음을 선택하세요:","Ollama:":"Ollama:","Open":"열기","Open API Sandbox":"API 샌드박스 열기","Open navigation menu":"탐색 메뉴 열기","Open the dock.html file locally for the custom.js to be loaded":"custom.js가 로드되도록 dock.html 파일을 로컬에서 여세요","OpenAI APIs including modern chat and realtime voice models.":"최신 채팅 및 실시간 음성 모델을 포함한 OpenAI API입니다.","OpenAI TTS":"OpenAI TTS","OpenAI speech synthesis with selectable voices, models, and optional compatible endpoints.":"음성, 모델, 선택적 호환 엔드포인트를 선택할 수 있는 OpenAI 음성 합성입니다.","OpenRouter":"OpenRouter","Overlay Gallery":"오버레이 갤러리","Overlay Management":"오버레이 관리","Overview":"개요","Perfect for simple commands from Stream Deck or custom scripts.":"Stream Deck이나 사용자 지정 스크립트의 간단한 명령에 적합합니다.","Pins an existing dock message by message ID, or pins a full message object. Requires":"메시지 ID로 기존 도크 메시지를 고정하거나 전체 메시지 객체를 고정합니다. 필요 항목:","Premium voice synthesis with natural-sounding, customizable voices.":"자연스럽고 맞춤 설정할 수 있는 음성을 제공하는 프리미엄 음성 합성입니다.","Primary Chat Bot":"기본 챗봇","Privacy Policy":"개인정보 처리방침","Private Chat Interface":"비공개 채팅 인터페이스","Process credit card donations directly through your Stripe account.":"Stripe 계정으로 신용카드 후원을 직접 처리하세요.","Quick Links":"바로가기","Quick reaction":"빠른 반응","RAG Search":"RAG 검색","Ready to Take Your Stream to the Next Level?":"방송을 한 단계 발전시킬 준비가 되셨나요?","Receive coffee donations from your supporters.":"후원자에게 커피 후원을 받으세요.","Receive events from third-party services like Stripe, Ko-Fi, and Buy Me A Coffee.":"Stripe, Ko-Fi, Buy Me A Coffee 같은 외부 서비스의 이벤트를 받으세요.","Remember to replace":"다음 값을 바꾸는 것을 잊지 마세요:","Remote control for":"원격 제어 대상:","Removes featured message":"강조 메시지를 제거합니다","Removes the currently featured message from overlay":"오버레이에서 현재 강조 메시지를 제거합니다","Removes the first active waitlist entry, or the numbered active entry in":"첫 번째 활성 참가자 또는 다음에 지정한 번호의 활성 참가자를 제거합니다:","Rename":"이름 변경","Report an Issue":"문제 신고","Required Settings (Global settings → Mechanics):":"필수 설정(Global settings → Mechanics):","Resources":"자료","Retrieval-Augmented Generation allows the AI to search through your custom knowledge base to provide accurate answers specific to your content.":"검색 증강 생성(RAG)은 AI가 사용자 지정 지식 베이스를 검색해 콘텐츠에 맞는 정확한 답변을 제공하게 합니다.","Run Gemma 4 in the browser after mirroring the model files to your own asset host; the SSN largefiles host does not currently include Gemma assets.":"모델 파일을 본인의 자산 호스트에 미러링한 뒤 브라우저에서 Gemma 4를 실행하세요. SSN largefiles 호스트에는 현재 Gemma 자산이 포함되어 있지 않습니다.","Run Qwen 3.5 in the browser from your own hosted model files for local, private responses.":"직접 호스팅한 모델 파일로 브라우저에서 Qwen 3.5를 실행해 로컬에서 비공개 응답을 받으세요.","Run different bot instances for various purposes: public chat bot, private 1-on-1 bot, censor bot, and even a multimodal AI co-host that can see and hear.":"공개 챗봇, 비공개 일대일 봇, 검열 봇, 보고 들을 수 있는 멀티모달 AI 공동 진행자 등 다양한 목적의 봇 인스턴스를 실행하세요.","Save the file locally to use in OBS as a browser source":"OBS 브라우저 소스로 사용하도록 파일을 로컬에 저장","Security Note:":"보안 참고:","See real-time responses from your commands":"명령의 실시간 응답 확인","See the":"다음을 참조하세요:","Select the event":"이벤트 선택:","Select your provider in":"다음에서 제공자를 선택하세요:","Selects one or more random waitlist/draw winners":"참가 대기열/추첨에서 무작위 당첨자 한 명 이상을 선택합니다","Send \"1\" to chat":"채팅에 \"1\" 보내기","Send \"LUL\" to chat":"채팅에 \"LUL\" 보내기","Send Chat Message":"채팅 메시지 보내기","Sends a URL-encoded message to all platforms":"URL 인코딩된 메시지를 모든 플랫폼으로 보냅니다","Sends a message to all connected chat platforms":"연결된 모든 채팅 플랫폼으로 메시지를 보냅니다","Sends a message to all connected platforms":"연결된 모든 플랫폼으로 메시지를 보냅니다","Sends external content as a chat message":"외부 콘텐츠를 채팅 메시지로 보냅니다","Sends selected messages to Singular Live for featured message overlay":"선택한 메시지를 강조 메시지 오버레이용 Singular Live로 보냅니다","Sends selected messages to a custom endpoint via POST":"선택한 메시지를 POST로 사용자 지정 엔드포인트에 보냅니다","Sends selected messages to a custom endpoint via PUT":"선택한 메시지를 PUT으로 사용자 지정 엔드포인트에 보냅니다","Sends selected messages to a local H2R server":"선택한 메시지를 로컬 H2R 서버로 보냅니다","Server API":"서버 API","Server-Sent Events":"서버 전송 이벤트","Service":"서비스","Set the bot name, trigger words, and response rate limit":"봇 이름, 트리거 단어, 응답 빈도 제한 설정","Sets the waitlist or draw title message shown on the waitlist page":"참가 대기열 페이지에 표시할 대기열 또는 추첨 제목 메시지를 설정합니다","Setting Up AI Integration":"AI 통합 설정","Setup Requirements":"설정 요구 사항","Setup Resources":"설정 자료","Setup, presentations, command values and recovery":"설정, 표시 방식, 명령 값, 복구","Sign in to your Buy Me A Coffee account":"Buy Me A Coffee 계정에 로그인","Sign in to your Ko-Fi account":"Ko-Fi 계정에 로그인","Singular Live":"Singular Live","Social Stream Control Dock":"Social Stream 제어 도크","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja can also send data to third-party services:":"Social Stream Ninja는 외부 서비스로 데이터를 보낼 수도 있습니다:","Social Stream Ninja can receive donations and events from third-party services via webhooks; a few popular ones are below:":"Social Stream Ninja는 웹훅으로 외부 서비스의 후원과 이벤트를 받을 수 있습니다. 널리 쓰이는 서비스 몇 가지는 다음과 같습니다:","Social Stream Ninja includes comprehensive TTS support for bot messages and featured chat content:":"Social Stream Ninja는 봇 메시지와 강조 채팅 콘텐츠에 다양한 음성 읽기 기능을 지원합니다:","Social Stream Ninja includes several built-in commands that your viewers can use in chat, or that you can trigger via the API.":"Social Stream Ninja에는 시청자가 채팅에서 사용하거나 API로 실행할 수 있는 여러 내장 명령이 있습니다.","Social Stream Ninja integrates with StreamDeck through multiple methods: native HTTP actions and Bitfocus Companion integration.":"Social Stream Ninja는 기본 HTTP 동작 및 Bitfocus Companion 통합 등 여러 방식으로 StreamDeck과 연동됩니다.","Social Stream Ninja listener":"Social Stream Ninja 수신기","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja provides a powerful API that allows you to control every aspect of your streaming setup programmatically. The API server can both issue commands to your setup and listen to incoming messages from consolidated chat services.":"Social Stream Ninja는 방송 설정의 모든 측면을 프로그래밍 방식으로 제어할 수 있는 강력한 API를 제공합니다. API 서버는 설정에 명령을 보내고 통합 채팅 서비스에서 들어오는 메시지를 수신할 수 있습니다.","Social Stream Ninja provides comprehensive AI integration to enhance your streams with AI-powered chat responses, moderation, and more. Choose from local or cloud-based AI providers to match your needs.":"Social Stream Ninja는 AI 기반 채팅 응답, 채팅 관리 등으로 방송을 개선하는 폭넓은 AI 통합을 제공합니다. 필요에 맞는 로컬 또는 클라우드 AI 제공자를 선택하세요.","Social Stream Ninja provides multiple bot instances for different use cases:":"Social Stream Ninja는 용도별로 여러 봇 인스턴스를 제공합니다:","Social Stream Ninja supports multiple AI providers, from fully local browser/runtime models to hosted APIs:":"Social Stream Ninja는 완전한 로컬 브라우저/런타임 모델부터 호스팅 API까지 다양한 AI 제공자를 지원합니다:","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. GPLv3.0 라이선스. 제작:","Speechify":"Speechify","Starting with a Template":"템플릿으로 시작하기","Steve Seguin":"Steve Seguin","Stops or resumes new waitlist entries without clearing the existing list.":"기존 목록을 지우지 않고 새 참가 접수를 중지하거나 재개합니다.","StreamDeck & Companion":"StreamDeck 및 Companion","StreamDeck Integration":"StreamDeck 통합","Stripe":"Stripe","Support":"지원","Supported AI Providers":"지원되는 AI 제공자","Supported Sites":"지원 사이트","Switch theme":"테마 전환","System TTS":"시스템 음성 읽기","TTS functionality requires the appropriate overlay page to be open in OBS. Each TTS provider offers different voice options, latency, and pricing or hardware requirements.":"음성 읽기를 사용하려면 적절한 오버레이 페이지가 OBS에서 열려 있어야 합니다. 제공자마다 음성 옵션, 지연 시간, 요금 또는 하드웨어 요구 사항이 다릅니다.","Tell a joke":"농담하기","Tells a random geeky dad joke in response":"무작위로 기술 관련 아재 개그를 답합니다","Templates":"템플릿","Terms of Service":"서비스 이용약관","Test Commands":"명령 테스트","Test selected chat bot":"선택한 챗봇 테스트","Test the Selected Chat Bot":"선택한 챗봇 테스트","Test with the \"Send Single Donation Test\" button":"\"Send Single Donation Test\" 버튼으로 테스트","Text-to-Speech Integration":"음성 읽기 통합","The API uses a channel system for message routing:":"API는 메시지 라우팅에 채널 시스템을 사용합니다:","The timer page is intentionally narrow in scope: one timer, optional operator controls, warning states, overtime, and a few visual styles.":"타이머 페이지는 타이머 하나, 선택적 운영자 제어, 경고 상태, 초과 시간, 몇 가지 시각 스타일로 범위를 한정했습니다.","These parameters should be added to the dock page URL.":"이 매개변수들은 도크 페이지 URL에 추가해야 합니다.","This method allows for complex customizations and triggers.":"이 방식으로 복잡한 맞춤 설정과 트리거를 구현할 수 있습니다.","This minimal template includes just the essential code needed for a functioning overlay.":"이 최소 템플릿에는 작동하는 오버레이에 필요한 필수 코드만 들어 있습니다.","Timer API":"타이머 API","Tip:":"팁:","To query the current timer state, use":"현재 타이머 상태를 조회하려면 다음을 사용하세요:","Toggle Auto-Show":"자동 표시 전환","Toggle between featured messages or showing all messages":"강조 메시지 표시와 모든 메시지 표시 사이 전환","Toggles automatic featuring of messages":"자동 메시지 강조 표시를 전환합니다","Triggers bot response":"봇 응답을 실행합니다","Try all API commands in a safe environment":"안전한 환경에서 모든 API 명령 체험","Try manually sending a test message first to confirm permissions":"먼저 테스트 메시지를 수동으로 보내 권한을 확인하세요","Try out the API with our interactive sandbox that provides easy access to all commands and features:":"모든 명령과 기능을 쉽게 사용할 수 있는 대화형 샌드박스에서 API를 체험하세요:","Turn on the features you want around the bot:":"봇에 필요한 부가 기능을 켜세요:","Turns draw mode on/off, or toggles it when":"추첨 모드를 켜거나 끄며, 다음일 때는 전환합니다:","URL":"URL","URL Parameter":"URL 매개변수","Unpins an existing dock message by message ID. Use the target field/path segment for a labeled dock.":"메시지 ID로 기존 도크 메시지의 고정을 해제합니다. 라벨이 있는 도크에는 target 필드/경로 구간을 사용하세요.","Use AI to help moderate chat by identifying potentially harmful messages and automatically handling them based on your preferences. Choose between non-blocking or strict blocking modes.":"AI로 잠재적으로 유해한 메시지를 식별하고 설정에 따라 자동 처리해 채팅을 관리하세요. 차단하지 않는 모드와 엄격한 차단 모드 중에서 선택하세요.","Use StreamDeck's \"Website\" action with \"GET request in background\" enabled to send commands directly to the API.":"StreamDeck의 \"Website\" 동작에서 \"GET request in background\"를 활성화하면 API로 명령을 직접 보낼 수 있습니다.","Use hosted browser model assets and optional model folder override; Qwen can use SSN largefiles, while Gemma needs your own mirrored folder":"호스팅된 브라우저 모델 자산과 선택적 모델 폴더 재정의를 사용하세요. Qwen은 SSN largefiles를 사용할 수 있으며 Gemma에는 직접 미러링한 폴더가 필요합니다","Use keyboard shortcuts for quick access to common functions.":"키보드 단축키로 자주 쓰는 기능에 빠르게 접근하세요.","Use the built-in":"내장 기능 사용:","Use the page with":"페이지를 다음과 함께 사용하세요:","Useful actions include":"유용한 동작:","Using custom.js":"custom.js 사용하기","Value":"값","View Complete API Documentation":"전체 API 문서 보기","View Results":"결과 보기","View Sample Overlay":"샘플 오버레이 보기","WebSocket":"WebSocket","WebSocket/HTTP":"WebSocket/HTTP","Webhook Integration":"웹훅 통합","Webhook settings":"웹훅 설정","Webhooks":"웹훅","When enabled, allows viewers to change OBS scenes":"활성화하면 시청자가 OBS 장면을 변경할 수 있습니다","With these powerful commands and API options, you can create a truly unique and interactive streaming experience.":"이 강력한 명령과 API 옵션으로 개성 있고 상호작용이 풍부한 방송을 만들 수 있습니다.","X.com":"X.com","You can create completely custom chat overlays from scratch to match your stream's unique style and function. Social Stream Ninja provides a flexible foundation that you can build upon.":"방송의 고유한 스타일과 기능에 맞는 채팅 오버레이를 처음부터 완전히 직접 만들 수 있습니다. Social Stream Ninja는 확장할 수 있는 유연한 기반을 제공합니다.","You can create your own commands and functionality by customizing the JavaScript code:":"JavaScript 코드를 수정해 자신만의 명령과 기능을 만들 수 있습니다:","and":"그리고","and fill in the matching fields:":"그리고 해당 필드를 입력하세요:","and follow the":"그리고 다음을 따르세요:","are aliases for":"는 다음의 별칭입니다:","as the webhook URL":"를 웹훅 URL로 사용하세요","button to verify your provider, model, and credentials before going live.":"버튼으로 생방송 전에 제공자, 모델, 자격 증명을 확인하세요.","channel 1":"채널 1","channel 4":"채널 4","equals":"값이 다음과 같을 때:","flag.":"플래그와 함께 시작하세요.","for detailed setup guides and code samples.":"에서 상세 설정 가이드와 코드 샘플을 확인하세요.","for manual clearing":"로 수동으로 지우세요","full API documentation":"전체 API 문서","if you want it controlled directly through the API server.":"를 사용하면 API 서버에서 직접 제어할 수 있습니다.","in OBS or a browser as needed":"을 필요에 따라 OBS나 브라우저에서 여세요","open on the same session.":"가 같은 세션으로 열려 있어야 합니다.","operate the dedicated giveaway pool using the same API/Stream Deck controls. Draw closes entries automatically. New round preserves earlier winner history and rejects unpaid reservations. Cancel and refund returns outstanding ticket payments. Paid tickets, Number Hunt, Coin Flip Pot and Event Flow use the same host service.":"는 동일한 API/Stream Deck 제어로 전용 경품 추첨 참가자 풀을 관리합니다. 추첨하면 참가 접수가 자동으로 닫힙니다. 새 라운드는 이전 당첨 기록을 유지하며 결제되지 않은 예약은 거부합니다. 취소 및 환불은 아직 처리되지 않은 참가권 결제를 돌려줍니다. 유료 참가권, Number Hunt, Coin Flip Pot, Event Flow는 같은 호스트 서비스를 사용합니다.","stripe.com":"stripe.com","to the filename":"에서 다음 파일명으로:","to your dock URL":"를 도크 URL에 추가하세요","to your dock URL to receive events":"를 도크 URL에 추가해 이벤트를 받으세요","with a callback token.":"를 콜백 토큰과 함께 사용하세요.","with contributions from the community.":". 커뮤니티가 함께 기여했습니다.","with your actual session ID from Social Stream Ninja!":"를 Social Stream Ninja의 실제 세션 ID로 바꾸세요!","xAI (Grok)":"xAI(Grok)","xAI Grok APIs, including realtime voice sessions when using ephemeral client secrets.":"임시 클라이언트 비밀 키를 사용하는 실시간 음성 세션을 포함한 xAI Grok API입니다.","🎮 Remote Control (StreamDeck/Bitfocus):":"🎮 원격 제어(StreamDeck/Bitfocus):","📡 Chat Listener (Python/Node apps):":"📡 채팅 수신기(Python/Node 앱):"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/commands.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/commands.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/commands.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/commands.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/commands.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/commands.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/commands.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/commands.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/commands.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/commands.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/commands.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/commands.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/commands.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/commands.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/commands.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/commands.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/commands.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/commands.html">
+<!-- ssn-languages:end --></head>
+<body>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html" aria-current="page">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/commands.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/commands.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/commands.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/commands.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/commands.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/commands.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/commands.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/commands.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/commands.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/commands.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/commands.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="commands.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/commands.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/commands.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/commands.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/commands.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/commands.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>명령 및 API</h1>
+            <p>내장 명령, 자동화, API 통합으로 Social Stream Ninja 제어</p>
+        </div>
+    </section>
+
+	<section class="navigation" id="commands-nav">
+		<div class="container">
+			<div class="nav-links">
+				<a href="#bot-commands" class="nav-link active">
+					<i class="fas fa-robot"></i> 봇 명령
+				</a>
+				<a href="#server-api" class="nav-link">
+					<i class="fas fa-server"></i> 서버 API
+				</a>
+				<a href="#streamdeck-companion" class="nav-link">
+					<i class="fas fa-th"></i> StreamDeck 및 Companion
+				</a>
+				<a href="#ai-integration" class="nav-link">
+					<i class="fas fa-brain"></i> AI 통합
+				</a>
+				<a href="#midi-hotkey" class="nav-link">
+					<i class="fas fa-music"></i> MIDI 및 단축키
+				</a>
+				<a href="#webhook" class="nav-link">
+					<i class="fas fa-plug"></i> 웹훅
+				</a>
+				<a href="#custom-scripts" class="nav-link">
+					<i class="fas fa-code"></i> 사용자 지정 스크립트
+				</a>
+				<a href="#custom-overlays" class="nav-link">
+					<i class="fas fa-paint-brush"></i> 사용자 지정 오버레이
+				</a>
+			</div>
+		</div>
+	</section>
+
+    <section id="bot-commands" class="command-section">
+        <div class="container">
+            <h2>봇 명령</h2>
+            
+            <div class="command-card">
+                <h3>내장 봇 명령</h3>
+                <p>Social Stream Ninja에는 시청자가 채팅에서 사용하거나 API로 실행할 수 있는 여러 내장 명령이 있습니다.</p>
+                
+                <div class="command-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>명령</th>
+                                <th>설명</th>
+                                <th>활성화 방법</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>!joke</code></td>
+                                <td>무작위로 기술 관련 아재 개그를 답합니다</td>
+                                <td>확장 프로그램 메뉴의 스위치로 활성화</td>
+                            </tr>
+                            <tr>
+                                <td><code>hi</code></td>
+                                <td>채팅에서 "hi"라고 말하는 사람에게 자동으로 환영 인사를 보냅니다</td>
+                                <td>확장 프로그램 메뉴의 스위치로 활성화</td>
+                            </tr>
+                            <tr>
+                                <td><code>!cycle</code></td>
+                                <td>활성화하면 시청자가 OBS 장면을 변경할 수 있습니다</td>
+                                <td>확장 프로그램 메뉴의 스위치로 활성화</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="command-note">
+                    <p><strong>참고:</strong> 봇 명령은 자동 응답기가 올바르게 설정되어 있고 해당 플랫폼에 메시지를 게시할 권한이 있어야 작동합니다.</p>
+                </div>
+            </div>
+            
+            <div class="command-card">
+                <h3>자동 응답 설정</h3>
+                <p>자동 응답기가 올바르게 작동하려면:</p>
+                <ol class="command-steps">
+                    <li>플랫폼(YouTube, Twitch 등)에 로그인했는지 확인하세요</li>
+                    <li>채팅 창이 최소화되지 않고 보이는지 확인하세요</li>
+                    <li>먼저 테스트 메시지를 수동으로 보내 권한을 확인하세요</li>
+                    <li>확장 프로그램 메뉴에서 필요한 명령 스위치 활성화</li>
+                </ol>
+                
+                <p>자동 응답 시 나타나는 파란 디버깅 표시줄을 숨기려면 Chrome을 <code>--silent-debugger-extension-api</code> 플래그와 함께 시작하세요.</p>
+            </div>
+        </div>
+    </section>
+
+    
+	<section id="server-api" class="command-section alt">
+		<div class="container">
+			<h2>서버 API</h2>
+			
+			<div class="command-card">
+				<h3>개요</h3>
+				<p>Social Stream Ninja는 방송 설정의 모든 측면을 프로그래밍 방식으로 제어할 수 있는 강력한 API를 제공합니다. API 서버는 설정에 명령을 보내고 통합 채팅 서비스에서 들어오는 메시지를 수신할 수 있습니다.</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-tv"></i>
+						</div>
+						<div class="capability-content">
+							<h4>오버레이 관리</h4>
+							<p>강조 메시지를 제어하고 오버레이를 지우며 방송 콘텐츠의 표시를 조정하세요.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-exchange-alt"></i>
+						</div>
+						<div class="capability-content">
+							<h4>웹훅 통합</h4>
+							<p>Stripe, Ko-Fi, Buy Me A Coffee 같은 외부 서비스의 이벤트를 받으세요.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-download"></i>
+						</div>
+						<div class="capability-content">
+							<h4>메시지 내보내기</h4>
+							<p>채팅 메시지를 파일로 내보내거나 웹훅(POST)으로 전달해 사용자 지정 통합에 활용하세요.</p>
+						</div>
+					</div>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>필수 설정(Global settings → Mechanics):</strong></p>
+					<ul style="text-align:left; margin: 10px 0;">
+						<li><strong>🎮 원격 제어(StreamDeck/Bitfocus):</strong> 활성화 <em>"확장 프로그램 원격 API 제어 활성화"</em> (스위치 1) — 연결 대상: <strong>채널 1</strong></li>
+						<li><strong>📡 채팅 수신기(Python/Node 앱):</strong> 스위치 1 활성화 + <em>"채팅 메시지를 API 서버로 보내기"</em> (스위치 3) — 연결 대상: <strong>채널 4</strong></li>
+					</ul>
+					<p>다음을 참조하세요: <a href="../../api.md">전체 API 문서</a> 에서 상세 설정 가이드와 코드 샘플을 확인하세요.</p>
+				</div>
+			</div>
+
+			<div class="command-card">
+				<h3>API 엔드포인트 및 연결 방식</h3>
+				
+				<div class="api-methods">
+					<div class="api-method">
+						<h4><i class="fas fa-globe"></i> HTTP GET/POST</h4>
+						<div class="code-block">
+							<pre>https://io.socialstream.ninja/{sessionID}/{action}/{target}/{value}</pre>
+						</div>
+						<p>Stream Deck이나 사용자 지정 스크립트의 간단한 명령에 적합합니다.</p>
+					</div>
+					
+					<div class="api-method">
+						<h4><i class="fas fa-exchange-alt"></i> WebSocket</h4>
+						<div class="code-block">
+							<pre>wss://io.socialstream.ninja:443</pre>
+						</div>
+						<p>자동 재연결을 지원하는 실시간 양방향 통신용입니다.</p>
+						<p>WebSocket 모드를 활성화하지 않고 피어 간 연결을 유지하려면 Social Stream Ninja WebRTC SDK를 사용할 수 있습니다. Node와 브라우저 샘플이 포함되어 있으며 예를 들면 다음이 있습니다: <a href="https://github.com/steveseguin/ninjasdk/blob/main/demos/socialstreamninja-listener.js" target="_blank" rel="noopener">Social Stream Ninja 수신기</a>.</p>
+					</div>
+					
+					<div class="api-method">
+						<h4><i class="fas fa-broadcast-tower"></i> 서버 전송 이벤트</h4>
+						<div class="code-block">
+							<pre>https://io.socialstream.ninja/sse/{sessionID}</pre>
+						</div>
+						<p>서버의 단방향 실시간 업데이트용입니다.</p>
+					</div>
+				</div>
+				
+				<div class="channel-system">
+					<h4>채널 시스템</h4>
+					<p>API는 메시지 라우팅에 채널 시스템을 사용합니다:</p>
+					<div class="code-block">
+						<pre>
+	- Channel 1: Remote control commands (default for StreamDeck/Bitfocus)
+	- Channel 2: Dock page output
+	- Channel 3: Extension receives commands from Dock
+	- Channel 4: <strong>Chat messages from Extension</strong> (use this to receive Twitch/YouTube chat!)
+	- Channel 5: Waitlist/giveaway communication
+	- Channels 6-9: Reserved for future use</pre>
+					</div>
+					<p>원하는 채널로 연결하세요:</p>
+					<div class="code-block">
+						<pre>// To receive chat messages (listen on channel 4):
+wss://io.socialstream.ninja/join/SESSION_ID/4
+
+// To send commands (channel 1 default):
+wss://io.socialstream.ninja/join/SESSION_ID</pre>
+					</div>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>자주 쓰는 API 명령</h3>
+				
+				<div class="command-table-responsive">
+					<table class="command-table">
+						<thead>
+							<tr>
+								<th>동작</th>
+								<th>설명</th>
+								<th>예시</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>sendChat</code></td>
+								<td>연결된 모든 채팅 플랫폼으로 메시지를 보냅니다</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/sendChat/null/Hello everyone!</code></td>
+							</tr>
+							<tr>
+								<td><code>sendEncodedChat</code></td>
+								<td>URL 인코딩된 메시지를 모든 플랫폼으로 보냅니다</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/sendEncodedChat/null/Hello%20everyone%21</code></td>
+							</tr>
+							<tr>
+								<td><code>clearOverlay</code></td>
+								<td>오버레이에서 강조 메시지를 지웁니다</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/clearOverlay</code></td>
+							</tr>
+							<tr>
+								<td><code>nextInQueue</code></td>
+								<td>대기열의 다음 메시지를 표시합니다</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/nextInQueue</code></td>
+							</tr>
+							<tr>
+								<td><code>autoShow</code></td>
+								<td>자동 메시지 강조 표시를 전환합니다</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/autoShow/toggle</code></td>
+							</tr>
+							<tr>
+								<td><code>blockUser</code></td>
+								<td>특정 플랫폼의 사용자를 차단합니다</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/blockUser/null/{"chatname":"username","type":"twitch"}</code></td>
+							</tr>
+							<tr>
+								<td><code>extContent</code></td>
+								<td>외부 콘텐츠를 채팅 메시지로 보냅니다</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/extContent/null/{"chatname":"User","chatmessage":"Hello"}</code></td>
+							</tr>
+							<tr>
+								<td><code>pin</code></td>
+								<td>메시지 ID로 기존 도크 메시지를 고정하거나 전체 메시지 객체를 고정합니다. 필요 항목: <code>dock.html</code> 가 같은 세션으로 열려 있어야 합니다.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/pin/null/MESSAGE_MID</code></td>
+							</tr>
+							<tr>
+								<td><code>unpin</code></td>
+								<td>메시지 ID로 기존 도크 메시지의 고정을 해제합니다. 라벨이 있는 도크에는 target 필드/경로 구간을 사용하세요.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/unpin/null/MESSAGE_MID</code></td>
+							</tr>
+							<tr>
+								<td><code>nextPinned</code></td>
+								<td>도크에 고정한 첫 번째 메시지를 강조 표시합니다.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/nextPinned</code></td>
+							</tr>
+							<tr>
+								<td><code>removefromwaitlist</code></td>
+								<td>첫 번째 활성 참가자 또는 다음에 지정한 번호의 활성 참가자를 제거합니다: <code>value</code></td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/removefromwaitlist/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>highlightwaitlist</code></td>
+								<td>첫 번째 활성 참가자 또는 다음에 지정한 번호의 활성 참가자를 강조 표시합니다: <code>value</code></td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/highlightwaitlist/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>stopentries</code> / <code>startentries</code></td>
+								<td>기존 목록을 지우지 않고 새 참가 접수를 중지하거나 재개합니다. <code>openentries</code> 그리고 <code>resumeentries</code> 는 다음의 별칭입니다: <code>startentries</code>.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/stopentries</code></td>
+							</tr>
+							<tr>
+								<td><code>selectwinner</code></td>
+								<td>참가 대기열/추첨에서 무작위 당첨자 한 명 이상을 선택합니다</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/selectwinner/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>downloadwaitlist</code></td>
+								<td>실행 중인 Social Stream 페이지/앱에서 현재 참가 대기열을 TSV 파일로 다운로드합니다</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/downloadwaitlist</code></td>
+							</tr>
+							<tr>
+								<td><code>drawmode</code></td>
+								<td>추첨 모드를 켜거나 끄며, 다음일 때는 전환합니다: <code>value</code> 값이 다음과 같을 때: <code>toggle</code></td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/drawmode/null/toggle</code></td>
+							</tr>
+							<tr>
+								<td><code>waitlistmessage</code></td>
+								<td>참가 대기열 페이지에 표시할 대기열 또는 추첨 제목 메시지를 설정합니다</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/waitlistmessage/null/Type%20!join%20to%20enter</code></td>
+							</tr>
+							<tr>
+								<td><code>resetwaitlist</code></td>
+								<td>참가 대기열을 지우고 참가 접수를 다시 엽니다</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/resetwaitlist</code></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<div class="view-more-link">
+					<a href="https://github.com/steveseguin/social_stream/blob/main/api.md" target="_blank" class="btn btn-secondary">
+						<i class="fab fa-github"></i> 전체 API 문서 보기
+					</a>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>대화형 API 샌드박스</h3>
+				<p>모든 명령과 기능을 쉽게 사용할 수 있는 대화형 샌드박스에서 API를 체험하세요:</p>
+				<p>OBS에서 소수의 생방송 버튼만 사용하려면 다음을 이용하세요: <a href="../../obs-control-dock.html">Social Stream 제어 도크</a> 그리고 다음을 따르세요: <a href="obs-control-dock-guide.html">OBS 설정 가이드</a>.</p>
+				
+				<div class="sandbox-api-preview">
+					<div class="sandbox-overlay">
+						<a href="https://socialstream.ninja/sampleapi.html" class="btn btn-primary" target="_blank">
+							<i class="fas fa-external-link-alt"></i> API 샌드박스 열기
+						</a>
+					</div>
+				</div>
+				
+				<div class="sandbox-features">
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-flask"></i>
+							<h4>명령 테스트</h4>
+						</div>
+						<p>안전한 환경에서 모든 API 명령 체험</p>
+					</div>
+					
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-code"></i>
+							<h4>코드 생성</h4>
+						</div>
+						<p>HTTP, WebSocket, SSE 코드 예시 받기</p>
+					</div>
+					
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-eye"></i>
+							<h4>결과 보기</h4>
+						</div>
+						<p>명령의 실시간 응답 확인</p>
+					</div>
+					
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-magic"></i>
+							<h4>테스트 만들기</h4>
+						</div>
+						<p>무작위 내용으로 테스트 메시지 생성</p>
+					</div>
+				</div>
+				
+				<div class="sandbox-api-note">
+					<p><strong>참고:</strong> 다음 값을 바꾸는 것을 잊지 마세요: <code>SESSIONID</code> 를 Social Stream Ninja의 실제 세션 ID로 바꾸세요!</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section id="streamdeck-companion" class="command-section">
+		<div class="container">
+			<h2>StreamDeck 및 Companion</h2>
+			
+			<div class="command-card">
+				<h3>StreamDeck 통합</h3>
+				<p>Social Stream Ninja는 기본 HTTP 동작 및 Bitfocus Companion 통합 등 여러 방식으로 StreamDeck과 연동됩니다.</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-globe"></i>
+						</div>
+						<div class="capability-content">
+							<h4>HTTP/API 방식</h4>
+							<p>StreamDeck의 "Website" 동작에서 "GET request in background"를 활성화하면 API로 명령을 직접 보낼 수 있습니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-boxes"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Bitfocus Companion</h4>
+							<p>사전 제작된 동작, 실시간 피드백, 동적 콘텐츠용 변수를 지원하는 기본 통합입니다.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Companion 통합</h3>
+				<p>Bitfocus Companion은 WebSocket 또는 HTTP API를 사용해 Social Stream Ninja를 강력하게 제어합니다.</p>
+				
+				<div class="command-table">
+					<table>
+						<thead>
+							<tr>
+								<th>동작</th>
+								<th>설명</th>
+								<th>API 방식</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>강조 메시지 지우기</td>
+								<td>오버레이에서 현재 강조 메시지를 제거합니다</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+							<tr>
+								<td>대기열 다음 항목</td>
+								<td>대기 중인 다음 메시지를 표시합니다</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+							<tr>
+								<td>자동 표시 전환</td>
+								<td>자동 메시지 강조 표시를 켜거나 끕니다</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+							<tr>
+								<td>채팅 메시지 보내기</td>
+								<td>연결된 모든 플랫폼으로 메시지를 보냅니다</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<div class="companion-features">
+					<h4>동적 변수</h4>
+					<ul class="feature-list">
+						<li><code>featured_message</code> - 현재 강조 메시지 텍스트</li>
+						<li><code>featured_username</code> - 현재 강조된 사용자 이름</li>
+						<li><code>queue_size</code> - 대기열의 메시지 수</li>
+					</ul>
+				</div>
+				
+				<div class="documentation-links">
+					<h4>설정 자료</h4>
+					<div class="doc-links">
+						<a href="https://bitfocus.io/companion" target="_blank" class="btn btn-secondary">
+							<i class="fas fa-external-link-alt"></i> Companion 받기
+						</a>
+						<a href="https://github.com/bitfocus/companion-module-socialstream-ninja" target="_blank" class="btn btn-secondary">
+							<i class="fab fa-github"></i> 모듈 문서
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<section id="ai-integration" class="command-section">
+		<div class="container">
+			<h2>AI 통합</h2>
+			
+			<div class="command-card">
+				<h3>AI 챗봇 모드</h3>
+				<p>Social Stream Ninja는 AI 기반 채팅 응답, 채팅 관리 등으로 방송을 개선하는 폭넓은 AI 통합을 제공합니다. 필요에 맞는 로컬 또는 클라우드 AI 제공자를 선택하세요.</p>
+				
+				<div class="feature-highlights">
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-comment-dots"></i>
+						</div>
+						<div class="feature-content">
+							<h4>자동 채팅 응답</h4>
+							<p>콘텐츠에 집중하는 동안에도 AI가 시청자와 자동으로 소통하고 질문에 답하며 대화를 활발하게 유지하도록 하세요.</p>
+						</div>
+					</div>
+					
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-shield-alt"></i>
+						</div>
+						<div class="feature-content">
+							<h4>콘텐츠 관리</h4>
+							<p>AI로 잠재적으로 유해한 메시지를 식별하고 설정에 따라 자동 처리해 채팅을 관리하세요. 차단하지 않는 모드와 엄격한 차단 모드 중에서 선택하세요.</p>
+						</div>
+					</div>
+					
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-search"></i>
+						</div>
+						<div class="feature-content">
+							<h4>RAG 검색</h4>
+							<p>검색 증강 생성(RAG)은 AI가 사용자 지정 지식 베이스를 검색해 콘텐츠에 맞는 정확한 답변을 제공하게 합니다.</p>
+						</div>
+					</div>
+					
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-user-friends"></i>
+						</div>
+						<div class="feature-content">
+							<h4>여러 봇 인스턴스</h4>
+							<p>공개 챗봇, 비공개 일대일 봇, 검열 봇, 보고 들을 수 있는 멀티모달 AI 공동 진행자 등 다양한 목적의 봇 인스턴스를 실행하세요.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>지원되는 AI 제공자</h3>
+				<p>Social Stream Ninja는 완전한 로컬 브라우저/런타임 모델부터 호스팅 API까지 다양한 AI 제공자를 지원합니다:</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-robot"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Ollama(전용 로컬 API)</h4>
+							<p>Ollama 자체 API를 통해 본인의 컴퓨터에서 실행되는 무료 셀프 호스팅 AI 모델로 개인정보 보호를 중시합니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-laptop-code"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Local Gemma 4</h4>
+							<p>모델 파일을 본인의 자산 호스트에 미러링한 뒤 브라우저에서 Gemma 4를 실행하세요. SSN largefiles 호스트에는 현재 Gemma 자산이 포함되어 있지 않습니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-microchip"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Local Qwen 3.5</h4>
+							<p>직접 호스팅한 모델 파일로 브라우저에서 Qwen 3.5를 실행해 로컬에서 비공개 응답을 받으세요.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-openai"></i>
+						</div>
+						<div class="capability-content">
+							<h4>ChatGPT / OpenAI</h4>
+							<p>최신 채팅 및 실시간 음성 모델을 포함한 OpenAI API입니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-google"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Google Gemini</h4>
+							<p>현재 Gemini 2.5 텍스트 및 실시간 멀티모달 옵션을 포함한 Google Gemini 모델입니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-brain"></i>
+						</div>
+						<div class="capability-content">
+							<h4>DeepSeek</h4>
+							<p>대화 작업에 최적화된 효율적이고 비용 효율적인 AI 모델입니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-rocket"></i>
+						</div>
+						<div class="capability-content">
+							<h4>xAI(Grok)</h4>
+							<p>임시 클라이언트 비밀 키를 사용하는 실시간 음성 세션을 포함한 xAI Grok API입니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-aws"></i>
+						</div>
+						<div class="capability-content">
+							<h4>AWS Bedrock</h4>
+							<p>Claude와 Llama 등 다양한 제공자의 기업용 AI 모델입니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-route"></i>
+						</div>
+						<div class="capability-content">
+							<h4>OpenRouter</h4>
+							<p>통합 API 인터페이스로 여러 AI 모델에 접근합니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-bolt"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Groq</h4>
+							<p>빠른 대화 응답을 위한 지연 시간이 짧은 OpenAI 호환 채팅 추론입니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-tools"></i>
+						</div>
+						<div class="capability-content">
+							<h4>사용자 지정 API(OpenAI 호환)</h4>
+							<p>llama.cpp, LM Studio, vLLM 또는 다른 OpenAI 호환 엔드포인트에 연결하세요.</p>
+						</div>
+					</div>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>참고:</strong> Ollama는 자체 전용 API를 사용합니다. llama.cpp, LM Studio, vLLM 또는 다른 OpenAI 호환 서버의 경우 다음을 선택하세요: <strong>사용자 지정 API</strong>.</p>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>음성 읽기 통합</h3>
+				<p>Social Stream Ninja는 봇 메시지와 강조 채팅 콘텐츠에 다양한 음성 읽기 기능을 지원합니다:</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-laptop"></i>
+						</div>
+						<div class="capability-content">
+							<h4>시스템 음성 읽기</h4>
+							<p>운영체제의 음성 합성기를 사용하는 무료 내장 음성 읽기입니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-heart"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Kokoro</h4>
+							<p>개인정보 보호를 중시하는 사용자를 위해 WebGPU/CPU로 로컬에서 실행되는 무료 음성 읽기입니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-cat"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Kitten TTS</h4>
+							<p>작은 모델을 다운로드해 로컬에서 음성을 생성하는 가벼운 브라우저 기반 음성 읽기입니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-microphone-alt"></i>
+						</div>
+						<div class="capability-content">
+							<h4>ElevenLabs</h4>
+							<p>자연스럽고 맞춤 설정할 수 있는 음성을 제공하는 프리미엄 음성 합성입니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-google"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Google Cloud TTS</h4>
+							<p>다양한 언어와 맞춤 설정 옵션을 갖춘 고품질 음성입니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-wave-square"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Gemini(미리보기 TTS)</h4>
+							<p>음성과 언어를 선택할 수 있는 Google의 미리보기 신경망 음성 모델입니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-volume-up"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Speechify</h4>
+							<p>자연스러운 음성 변환 기능을 갖춘 AI 기반 음성 읽기입니다.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-openai"></i>
+						</div>
+						<div class="capability-content">
+							<h4>OpenAI TTS</h4>
+							<p>음성, 모델, 선택적 호환 엔드포인트를 선택할 수 있는 OpenAI 음성 합성입니다.</p>
+						</div>
+					</div>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>참고:</strong> 음성 읽기를 사용하려면 적절한 오버레이 페이지가 OBS에서 열려 있어야 합니다. 제공자마다 음성 옵션, 지연 시간, 요금 또는 하드웨어 요구 사항이 다릅니다.</p>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>봇 인스턴스 및 오버레이</h3>
+				<p>Social Stream Ninja는 용도별로 여러 봇 인스턴스를 제공합니다:</p>
+				
+				<div class="command-table">
+					<table>
+						<thead>
+							<tr>
+								<th>봇 유형</th>
+								<th>URL</th>
+								<th>설명</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>기본 챗봇</td>
+								<td><code>/bot.html</code></td>
+								<td>선택적 음성 읽기와 공개 채팅 응답을 지원하는 기본 봇 오버레이</td>
+							</tr>
+							<tr>
+								<td>비공개 채팅 인터페이스</td>
+								<td><code>/chatbot.html</code></td>
+								<td>기본 봇의 RAG 데이터 세트나 채팅 기록을 공유하지 않는 전용 일대일 봇 페이지</td>
+							</tr>
+							<tr>
+								<td>검열 봇</td>
+								<td>(백그라운드에서 실행)</td>
+								<td>들어오는 메시지를 자동으로 필터링, 정리 또는 차단합니다</td>
+							</tr>
+							<tr>
+								<td>AI 공동 진행자</td>
+								<td><code>/cohost.html</code></td>
+								<td>화면을 보고 오디오를 들으며 상호작용할 수 있는 멀티모달 AI</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>AI 통합 설정</h3>
+				<p>현재 메뉴에서 AI 통합을 설정하려면 다음 단계를 따르세요:</p>
+				
+				<div class="ai-setup-steps">
+					<div class="ai-step">
+						<div class="ai-step-number">1</div>
+						<div class="ai-step-content">
+							<h4>LLM 제공자 선택 및 연결</h4>
+							<p>다음에서 제공자를 선택하세요: <strong>LLM 서비스 제공자 설정</strong> 그리고 해당 필드를 입력하세요:</p>
+							<ul>
+								<li><strong>Ollama:</strong> 로컬에 설치하고 필요하면 엔드포인트 설정</li>
+								<li><strong>Local Gemma / Local Qwen:</strong> 호스팅된 브라우저 모델 자산과 선택적 모델 폴더 재정의를 사용하세요. Qwen은 SSN largefiles를 사용할 수 있으며 Gemma에는 직접 미러링한 폴더가 필요합니다</li>
+								<li><strong>ChatGPT, Gemini, DeepSeek, xAI, Groq, OpenRouter, Bedrock:</strong> API 키와 선호하는 모델 추가</li>
+								<li><strong>사용자 지정 API:</strong> OpenAI 호환 엔드포인트, 모델 ID, 선택적 API 키 입력</li>
+							</ul>
+						</div>
+					</div>
+					
+					<div class="ai-step">
+						<div class="ai-step-number">2</div>
+						<div class="ai-step-content">
+							<h4>선택한 챗봇 테스트</h4>
+							<p>내장 기능 사용: <strong>선택한 챗봇 테스트</strong> 버튼으로 생방송 전에 제공자, 모델, 자격 증명을 확인하세요.</p>
+						</div>
+					</div>
+					
+					<div class="ai-step">
+						<div class="ai-step-number">3</div>
+						<div class="ai-step-content">
+							<h4>봇 동작 설정</h4>
+							<p>채팅에서 봇이 동작하는 방식을 맞춤 설정하세요:</p>
+							<ul>
+								<li>LLM AI 챗봇 활성화</li>
+								<li>봇 이름, 트리거 단어, 응답 빈도 제한 설정</li>
+								<li>답변을 채팅으로 보낼지 봇 오버레이 페이지로만 보낼지 선택</li>
+								<li>말투, 역할, 채팅 관리 규칙에 관한 사용자 지정 지침 추가</li>
+							</ul>
+						</div>
+					</div>
+					
+					<div class="ai-step">
+						<div class="ai-step-number">4</div>
+						<div class="ai-step-content">
+							<h4>선택 기능 활성화</h4>
+							<p>봇에 필요한 부가 기능을 켜세요:</p>
+							<ul>
+								<li>봇 답변의 음성 읽기를 활성화하고 제공자 선택</li>
+								<li>다음의 자동 숨김 방식을 고정 시간, 메시지 길이 또는 음성 읽기 후 중에서 선택하세요: <code>/bot.html</code>; 사용: <code>clearBotOverlay</code> 로 수동으로 지우세요</li>
+								<li>지식을 활용하는 답변을 위해 RAG를 활성화하고 문서 업로드</li>
+								<li>채팅 관리 또는 엄격한 차단 모드용 검열 봇 활성화</li>
+								<li>열기 <code>/bot.html</code>, <code>/chatbot.html</code>, 또는 <code>/cohost.html</code> 을 필요에 따라 OBS나 브라우저에서 여세요</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+				
+				<div class="documentation-links">
+					<h4>상세 문서</h4>
+					<p>전체 설정 지침과 자세한 음성 읽기 설명은 다음 가이드를 참조하세요:</p>
+					<div class="doc-links">
+						<a href="chatbot-basics-guide.html" class="btn btn-primary">
+							<i class="fas fa-file-alt"></i>
+							<span>AI 챗봇 설정 가이드</span>
+						</a>
+						<a href="local-tts.html" class="btn btn-secondary">
+							<i class="fas fa-volume-up"></i>
+							<span>로컬 AI 음성 읽기 가이드</span>
+						</a>
+						<a href="twitch-bot-account-chatbot.html" class="btn btn-secondary">
+							<i class="fas fa-robot"></i>
+							<span>자동 답변용 봇 계정</span>
+						</a>
+						<a href="https://ollama.com/download" class="btn btn-secondary" target="_blank" rel="noopener">
+							<i class="fas fa-download"></i>
+							<span>공식 Ollama 다운로드</span>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+
+	<section id="midi-hotkey" class="command-section alt">
+		<div class="container">
+			<h2>MIDI 및 단축키 제어</h2>
+			
+			<div class="command-card">
+				<h3>MIDI 통합</h3>
+				<p>MIDI 컨트롤러, 키보드 단축키 또는 MIDI 플러그인이 있는 StreamDeck으로 Social Stream Ninja를 제어하세요.</p>
+				
+				<div class="midi-setup">
+					<h4>설정 요구 사항</h4>
+					<ol class="command-steps">
+						<li>확장 프로그램 설정에서 MIDI 지원 활성화</li>
+						<li>가상 MIDI 루프백 장치 설치(예: loopMIDI)</li>
+						<li>MIDI 컨트롤러 또는 StreamDeck MIDI 플러그인 설정</li>
+					</ol>
+				</div>
+				
+				<div class="command-table">
+					<table>
+						<thead>
+							<tr>
+								<th>CC 번호</th>
+								<th>값</th>
+								<th>동작</th>
+								<th>참고</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>102</td>
+								<td>1</td>
+								<td>채팅에 "1" 보내기</td>
+								<td>빠른 반응</td>
+							</tr>
+							<tr>
+								<td>102</td>
+								<td>2</td>
+								<td>채팅에 "LUL" 보내기</td>
+								<td>이모티콘 반응</td>
+							</tr>
+							<tr>
+								<td>102</td>
+								<td>3</td>
+								<td>농담하기</td>
+								<td>봇 응답을 실행합니다</td>
+							</tr>
+							<tr>
+								<td>102</td>
+								<td>4</td>
+								<td>오버레이 지우기</td>
+								<td>강조 메시지를 제거합니다</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>팁:</strong> MIDI 제어는 물리 컨트롤러에서 가장 잘 작동하지만 가상 MIDI 장치로도 실행할 수 있습니다.</p>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>단축키 지원</h3>
+				<p>키보드 단축키로 자주 쓰는 기능에 빠르게 접근하세요.</p>
+				
+				<div class="hotkey-info">
+					<p>단축키는 메뉴 설정에서 구성할 수 있으며 브라우저에 포커스가 있거나 앱을 사용할 때 시스템 전체에서 작동합니다.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+    <section id="webhook" class="command-section alt">
+        <div class="container">
+            <h2>웹훅 통합</h2>
+            
+            <div class="command-card">
+                <h3>후원 서비스</h3>
+                <p>Social Stream Ninja는 웹훅으로 외부 서비스의 후원과 이벤트를 받을 수 있습니다. 널리 쓰이는 서비스 몇 가지는 다음과 같습니다:</p>
+                
+                <div class="webhook-grid">
+					<div class="webhook-item">
+						<div class="webhook-icon">
+							<img src="../../sources/images/stripe.png" alt="Stripe">
+						</div>
+						<h4>Stripe</h4>
+						<p>Stripe 계정으로 신용카드 후원을 직접 처리하세요.</p>
+						<ul class="webhook-steps">
+							<li>다음에서 결제 링크를 만드세요: <a href="https://stripe.com" target="_blank">stripe.com</a></li>
+							<li>Stripe Dashboard에서 Developers → Webhooks로 이동하세요</li>
+							<li>엔드포인트 추가: <code>https://io.socialstream.ninja/SESSIONID/stripe</code></li>
+							<li>이벤트 선택: <code>checkout.session.completed</code></li>
+							<li>추가: <code>&server</code> 를 도크 URL에 추가하세요</li>
+						</ul>
+					</div>
+					
+					<div class="webhook-item">
+						<div class="webhook-icon">
+							<img src="../../sources/images/kofi.png" alt="Ko-Fi">
+						</div>
+						<h4>Ko-Fi</h4>
+						<p>후원자에게 커피 후원을 받으세요.</p>
+						<ul class="webhook-steps">
+							<li>Ko-Fi 계정에 로그인</li>
+							<li>이동할 위치: <a href="https://ko-fi.com/manage/webhooks" target="_blank">웹훅 설정</a></li>
+							<li>추가: <code>https://io.socialstream.ninja/SESSIONID/kofi</code> 를 웹훅 URL로 사용하세요</li>
+							<li>추가: <code>&server</code> 를 도크 URL에 추가하세요</li>
+							<li>"Send Single Donation Test" 버튼으로 테스트</li>
+						</ul>
+					</div>
+					
+					<div class="webhook-item">
+						<div class="webhook-icon">
+							<img src="../../sources/images/bmac.png" alt="Buy Me A Coffee">
+						</div>
+						<h4>Buy Me A Coffee</h4>
+						<p>널리 사용되는 Buy Me A Coffee 플랫폼으로 후원을 받으세요.</p>
+						<ul class="webhook-steps">
+							<li>Buy Me A Coffee 계정에 로그인</li>
+							<li>웹훅 설정으로 이동</li>
+							<li>추가: <code>https://io.socialstream.ninja/SESSIONID/bmac</code> 를 웹훅 URL로 사용하세요</li>
+							<li>추가: <code>&server</code> 를 도크 URL에 추가해 이벤트를 받으세요</li>
+							<li>후원 및 멤버십 이벤트 모두 지원됩니다</li>
+						</ul>
+					</div>
+				</div>
+
+				<div class="webhook-note">
+					<p><strong>보안 참고:</strong> 세션 ID를 가진 사람은 누구든 오버레이에 가짜 후원을 보낼 수 있으므로 비공개로 유지하세요. 웹훅 URL은 민감한 정보로 취급해야 합니다.</p>
+				</div>
+            </div>
+            
+            <div class="command-card">
+                <h3>외부 서비스 통합</h3>
+                <p>Social Stream Ninja는 외부 서비스로 데이터를 보낼 수도 있습니다:</p>
+                
+                <div class="command-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>서비스</th>
+                                <th>URL 매개변수</th>
+                                <th>설명</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Singular Live</td>
+                                <td><code>&singular=IDENTIFIER</code></td>
+                                <td>선택한 메시지를 강조 메시지 오버레이용 Singular Live로 보냅니다</td>
+                            </tr>
+                            <tr>
+                                <td>H2R</td>
+                                <td><code>&h2r=IDENTIFIER</code></td>
+                                <td>선택한 메시지를 로컬 H2R 서버로 보냅니다</td>
+                            </tr>
+                            <tr>
+                                <td>일반 POST</td>
+                                <td><code>&postserver=URL</code></td>
+                                <td>선택한 메시지를 POST로 사용자 지정 엔드포인트에 보냅니다</td>
+                            </tr>
+                            <tr>
+                                <td>일반 PUT</td>
+                                <td><code>&putserver=URL</code></td>
+                                <td>선택한 메시지를 PUT으로 사용자 지정 엔드포인트에 보냅니다</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <p>이 매개변수들은 도크 페이지 URL에 추가해야 합니다.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="custom-scripts" class="command-section">
+        <div class="container">
+            <h2>사용자 지정 스크립트</h2>
+            
+            <div class="command-card">
+                <h3>사용자 지정 JavaScript</h3>
+                <p>JavaScript 코드를 수정해 자신만의 명령과 기능을 만들 수 있습니다:</p>
+
+                <div class="custom-js-method">
+                    <h4>custom.js 사용하기</h4>
+                    <ol class="command-steps">
+                        <li>이름 변경 <code>custom_sample.js</code> 에서 다음 파일명으로: <code>custom.js</code></li>
+                        <li>사용자 지정 기능을 추가하도록 파일 수정</li>
+                        <li>custom.js가 로드되도록 dock.html 파일을 로컬에서 여세요</li>
+                    </ol>
+                    <p>이 방식으로 복잡한 맞춤 설정과 트리거를 구현할 수 있습니다.</p>
+                </div>
+            </div>
+       </div>
+	</section>
+            
+<section id="custom-overlays" class="command-section">
+    <div class="container">
+        <h2>사용자 지정 오버레이</h2>
+        
+        <div class="command-card">
+            <h3>사용자 지정 오버레이 만들기</h3>
+            <p>방송의 고유한 스타일과 기능에 맞는 채팅 오버레이를 처음부터 완전히 직접 만들 수 있습니다. Social Stream Ninja는 확장할 수 있는 유연한 기반을 제공합니다.</p>
+            
+            <div class="overlay-options">
+                <div class="overlay-option">
+                    <h4>템플릿으로 시작하기</h4>
+                    <p>샘플 오버레이 템플릿으로 시작해 기본 사항을 익히세요:</p>
+                    <div class="code-block">
+                        <pre>// View the sample overlay
+https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
+                    </div>
+                    <p>이 최소 템플릿에는 작동하는 오버레이에 필요한 필수 코드만 들어 있습니다.</p>
+                    <a href="https://socialstream.ninja/sampleoverlay?session=SESSIONID" class="btn btn-secondary" target="_blank">샘플 오버레이 보기</a>
+                </div>
+                
+                <div class="overlay-option">
+                    <h4>맞춤 설정할 주요 기능</h4>
+                    <ul class="feature-list">
+                        <li>강조 메시지 표시와 모든 메시지 표시 사이 전환</li>
+                        <li>CSS로 모양 맞춤 설정</li>
+                        <li>새 메시지에 사용자 지정 애니메이션 추가</li>
+                        <li>자체 메시지 필터링 구현</li>
+                        <li>JavaScript로 상호작용 요소 추가</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="implementation-steps">
+                <h4>구현 단계</h4>
+                <ol class="command-steps">
+                    <li>샘플 오버레이 HTML 파일 다운로드</li>
+                    <li>사용자 지정 레이아웃에 맞게 HTML 수정</li>
+                    <li>원하는 모양에 맞게 CSS 수정</li>
+                    <li>사용자 지정 동작에 맞게 JavaScript 수정</li>
+                    <li>OBS 브라우저 소스로 사용하도록 파일을 로컬에 저장</li>
+                </ol>
+            </div>
+		</div>
+    </div>
+
+	</section>
+	
+	
+	<section id="timer-api" class="command-section">
+		<div class="container">
+			<h2>타이머 API</h2>
+			<div class="command-card">
+				<h3>원격 제어 대상: <code>timer.html</code></h3>
+				<p>타이머 페이지는 타이머 하나, 선택적 운영자 제어, 경고 상태, 초과 시간, 몇 가지 시각 스타일로 범위를 한정했습니다.</p>
+				<p>유용한 동작: <code>starttimer</code>, <code>pausetimer</code>, <code>resettimer</code>, <code>timeradd</code>, <code>timersubtract</code>, 그리고 <code>settimer</code>.</p>
+				<div class="code-block">
+					<pre>{
+  "action": "settimer",
+  "value": {
+    "seconds": 300,
+    "label": "Interview",
+    "mode": "countdown",
+    "style": "stage",
+    "warnSeconds": 60,
+    "dangerSeconds": 15
+  }
+}</pre>
+				</div>
+				<p>현재 타이머 상태를 조회하려면 다음을 사용하세요: <code>gettimerstate</code> 를 콜백 토큰과 함께 사용하세요.</p>
+				<div class="code-block">
+					<pre>{ "action": "gettimerstate", "get": "timer-state-1" }</pre>
+				</div>
+				<p>페이지를 다음과 함께 사용하세요: <code>timer.html?session=YOUR_SESSION&amp;server</code> 를 사용하면 API 서버에서 직접 제어할 수 있습니다.</p>
+			</div>
+		</div>
+	</section>
+	
+	
+
+
+<section class="container"><h2>관리형 경품 추첨 명령</h2><p><code>startgiveaway</code>, <code>closegiveaway</code>, <code>drawgiveaway</code>, <code>resetgiveaway</code>, 그리고 <code>getgiveawaystate</code> 는 동일한 API/Stream Deck 제어로 전용 경품 추첨 참가자 풀을 관리합니다. 추첨하면 참가 접수가 자동으로 닫힙니다. 새 라운드는 이전 당첨 기록을 유지하며 결제되지 않은 예약은 거부합니다. 취소 및 환불은 아직 처리되지 않은 참가권 결제를 돌려줍니다. 유료 참가권, Number Hunt, Coin Flip Pot, Event Flow는 같은 호스트 서비스를 사용합니다. <a href="giveaway-points-guide.html">설정, 표시 방식, 명령 값, 복구</a>.</p></section>
+    <section class="get-started">
+        <div class="container">
+            <h2>방송을 한 단계 발전시킬 준비가 되셨나요?</h2>
+            <p>이 강력한 명령과 API 옵션으로 개성 있고 상호작용이 풍부한 방송을 만들 수 있습니다.</p>
+            <div class="get-started-cta">
+                <a href="download.html" class="btn btn-primary">지금 다운로드</a>
+                <a href="support.html" class="btn btn-secondary">지원 받기</a>
+            </div>
+        </div>
+    </section>
+
+       <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>실시간 소셜 메시지와 다양한 정보를 한데 모읍니다. 무료 오픈 소스입니다.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+					<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>바로가기</h3>
+                    <ul>
+                        <li><a href="../index.html">홈</a></li>
+                        <li><a href="features.html">기능</a></li>
+                        <li><a href="download.html">다운로드</a></li>
+                        <li><a href="guides.html">가이드</a></li>
+                        <li><a href="commands.html">명령 및 API</a></li>
+                        <li><a href="supported-sites.html">지원 사이트</a></li>
+                        <li><a href="templates.html">템플릿</a></li>
+                        <li><a href="support.html">지원</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>자료</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">설치 가이드</a></li>
+                        <li><a href="guides.html#extension-customization">맞춤 설정 가이드</a></li>
+                        <li><a href="guides.html#faq">자주 묻는 질문</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">문제 신고</a></li>
+                        <li><a href="../privacy.html">개인정보 처리방침</a></li>
+                        <li><a href="../TOS.html">서비스 이용약관</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>커뮤니티</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Discord 참여</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub 저장소</a></li>
+                        <li><a href="support.html#contribute">기여하기</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">후원하기</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 라이선스. 제작: <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> . 커뮤니티가 함께 기여했습니다.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        // Set current year in footer
+		document.getElementById('current-year').textContent = new Date().getFullYear();
+
+		document.addEventListener('DOMContentLoaded', function() {
+			// Sticky navigation functionality
+			const commandsNav = document.getElementById('commands-nav');
+			const header = document.querySelector('header');
+			const navOffset = commandsNav ? commandsNav.offsetTop : 0;
+			
+			// Make navigation sticky on scroll
+			function makeNavSticky() {
+				if (!commandsNav) return;
+				
+				const scrollPosition = window.pageYOffset;
+				const headerHeight = header ? header.offsetHeight : 0;
+				
+				if (scrollPosition > (navOffset - headerHeight)) {
+					commandsNav.classList.add('sticky');
+					document.body.classList.add('sticky-nav-active');
+					document.body.style.paddingTop = commandsNav.offsetHeight + 'px';
+				} else {
+					commandsNav.classList.remove('sticky');
+					document.body.classList.remove('sticky-nav-active');
+					document.body.style.paddingTop = '0';
+				}
+			}
+			
+			// Update active nav item based on scroll
+			function updateActiveNav() {
+				const scrollPosition = window.scrollY;
+				const headerHeight = header.offsetHeight;
+				const navElement = document.getElementById('commands-nav');
+				const navHeight = navElement ? navElement.offsetHeight : 0;
+				const offset = headerHeight + navHeight + 50;
+				
+				document.querySelectorAll('.command-section').forEach(section => {
+					const sectionTop = section.offsetTop - offset;
+					const sectionBottom = sectionTop + section.offsetHeight;
+					const sectionId = section.getAttribute('id');
+					
+					if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+						document.querySelectorAll('.nav-link').forEach(link => {
+							link.classList.remove('active');
+							if (link.getAttribute('href') === `#${sectionId}`) {
+								link.classList.add('active');
+							}
+						});
+					}
+				});
+				
+			}
+			
+			
+			
+			// Combined scroll handler
+			let scrollTimeout;
+			window.addEventListener('scroll', function() {
+				makeNavSticky();
+				
+				if (scrollTimeout) {
+					window.cancelAnimationFrame(scrollTimeout);
+				}
+				scrollTimeout = window.requestAnimationFrame(function() {
+					updateActiveNav();
+				});
+			});
+			
+			// Initial checks
+			makeNavSticky();
+			updateActiveNav();
+			
+			// Smooth scroll for command navigation
+			document.querySelectorAll('.nav-link').forEach(anchor => {
+				anchor.addEventListener('click', function(e) {
+					e.preventDefault();
+					
+					const targetId = this.getAttribute('href');
+					const targetElement = document.querySelector(targetId);
+					
+					if (targetElement) {
+						const headerHeight = document.querySelector('header').offsetHeight;
+						const navHeight = document.querySelector('.navigation').offsetHeight;
+						const offsetPosition = targetElement.offsetTop - headerHeight - navHeight;
+						
+						window.scrollTo({
+							top: offsetPosition,
+							behavior: 'smooth'
+						});
+						
+						// Update active class on navigation
+						document.querySelectorAll('.nav-link').forEach(link => {
+							link.classList.remove('active');
+						});
+						this.classList.add('active');
+					}
+				});
+			});
+			
+			// Add anchor links to headings
+			document.querySelectorAll('h2, h3').forEach(heading => {
+				if (heading.id) {
+					heading.classList.add('section-heading');
+					const anchor = document.createElement('a');
+					anchor.className = 'section-anchor';
+					anchor.href = `#${heading.id}`;
+					anchor.innerHTML = '<i class="fas fa-link"></i>';
+					heading.appendChild(anchor);
+				}
+			});
+		});
+    </script>
+</body>
+</html>

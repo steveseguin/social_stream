@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/th/docs/events-alerts-compatibility.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/th/docs/events-alerts-compatibility.html">
+    <meta property="og:title" content="ความเข้ากันได้ของอีเวนต์และการแจ้งเตือน - Social Stream Ninja">
+    <meta property="og:description" content="ดูว่าอีเวนต์ YouTube, Twitch และ Kick ใดไปถึงการแจ้งเตือน Event Flow, TTS, เป้าหมาย โอเวอร์เลย์ และผู้ใช้ข้อมูล API ของ Social Stream Ninja">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/th/docs/events-alerts-compatibility.html">
+    <meta name="twitter:title" content="ความเข้ากันได้ของอีเวนต์และการแจ้งเตือน - Social Stream Ninja">
+    <meta name="twitter:description" content="ดูว่าอีเวนต์ YouTube, Twitch และ Kick ใดไปถึงการแจ้งเตือน Event Flow, TTS, เป้าหมาย โอเวอร์เลย์ และผู้ใช้ข้อมูล API ของ Social Stream Ninja">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ความเข้ากันได้ของอีเวนต์และการแจ้งเตือน - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="ดูว่าอีเวนต์ YouTube, Twitch และ Kick ใดไปถึงการแจ้งเตือน Event Flow, TTS, เป้าหมาย โอเวอร์เลย์ และผู้ใช้ข้อมูล API ของ Social Stream Ninja">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/events-alerts-compatibility.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{"## Verified maintainer context - Multi Alerts currently normalizes follow, subscription, donation/gift, bits, raid, auction, and Hype Train aliases into seven alert categories. Auction and Hype Train are opt-in. - Its current classifier accepts canonical names plus legacy aliases. A payload with `hasDonation` and no event is valid: bits/cheer wording routes it to Bits, while other amounts route it to Donation. - Count/status events such as `viewer_update`, `follower_update`, `subscriber_update`, and ad-break status intentionally do not become general alert cards. - Kick's current official subscribed event set includes chat, follows, new/renewed/gifted subscriptions, reward redemptions, KICKs gifts, bans, and livestream status. Kick currently has no official raid/host subscription; raid handling is compatibility-only. - TTS defaults to skipping non-donation rows with an `event` value. `readevents` disables that skip, while normal source/member/donation filters still apply. - The popup preview verifies overlay handling only. Platform capture still requires a live source, matching session, correct role/scopes, and a real event.":"## บริบทที่ผู้ดูแลโครงการตรวจยืนยันแล้ว - ขณะนี้ Multi Alerts ปรับชื่อเรียกของการติดตาม สมัครสมาชิก บริจาค/ของขวัญ บิต เรด ประมูล และ Hype Train เป็นหมวดแจ้งเตือนเจ็ดหมวด ประมูลและ Hype Train ต้องเลือกเปิดใช้ - ตัวจำแนกปัจจุบันรับทั้งชื่อมาตรฐานและชื่อเรียกเดิม ข้อมูลที่มี `hasDonation` และไม่มี event ใช้ได้: ข้อความ bits/cheer ส่งไป Bits ส่วนยอดอื่นส่งไป Donation - อีเวนต์จำนวน/สถานะ เช่น `viewer_update`, `follower_update`, `subscriber_update` และสถานะช่วงโฆษณาตั้งใจไม่แปลงเป็นการ์ดแจ้งเตือนทั่วไป - ชุดอีเวนต์ที่สมัครอย่างเป็นทางการของ Kick ปัจจุบันมีแชต ติดตาม สมัครสมาชิกใหม่/ต่ออายุ/ของขวัญ แลกรางวัล ของขวัญ KICKs แบน และสถานะไลฟ์ Kick ยังไม่มีการสมัคร raid/host อย่างเป็นทางการ การจัดการเรดมีไว้เพื่อความเข้ากันได้เท่านั้น - ค่าเริ่มต้น TTS ข้ามแถวที่ไม่ใช่บริจาคและมีค่า `event` โดย `readevents` ปิดการข้ามนี้ แต่ตัวกรองแหล่งข้อมูล/สมาชิก/บริจาคปกติยังมีผล - ตัวอย่างในป๊อปอัปตรวจเฉพาะการจัดการโอเวอร์เลย์ การจับแพลตฟอร์มยังต้องใช้แหล่งสด เซสชันตรงกัน บทบาท/ขอบเขตสิทธิ์ถูกต้อง และอีเวนต์จริง",", and fields your source emits. Use the Test Message tool before relying on a live event.":", และช่องที่แหล่งข้อมูลส่ง ใช้เครื่องมือ Test Message ก่อนพึ่งอีเวนต์สด",", donation aliases":", ชื่อเรียกแทนการบริจาค",", membership aliases":", ชื่อเรียกแทนสมาชิก",", membership fields, and selected":", ช่องสมาชิก และค่าที่เลือก",", or a row with":", หรือแถวที่มี","; API-delayed and public subscriptions only":"; ล่าช้าตาม API และเฉพาะการติดตามสาธารณะ","A donation preview checks the overlay. Next, trigger or observe a real platform event to verify the source connection.":"ตัวอย่างบริจาคตรวจโอเวอร์เลย์ จากนั้นเรียกหรือรออีเวนต์แพลตฟอร์มจริงเพื่อตรวจการเชื่อมต่อแหล่งข้อมูล","A donation-style chat row may instead use":"แถวแชตแบบบริจาคอาจใช้แทนเป็น","A successful preview proves the alert layout works.":"ตัวอย่างที่สำเร็จยืนยันว่าเลย์เอาต์แจ้งเตือนทำงาน","Activity":"กิจกรรม","Auction":"ประมูล","Auction-win alerts are opt-in.":"การแจ้งเตือนชนะประมูลต้องเลือกเปิดใช้","Availability and naming depend on the platform source.":"การรองรับและชื่อขึ้นอยู่กับแหล่งแพลตฟอร์ม","Bits":"บิต","Category":"หมวดหมู่","Channel reward":"รางวัลช่อง","Chat plus lightweight page markers for gifts, rewards, and viewer updates.":"แชตพร้อมตัวระบุจากหน้าแบบเล็กสำหรับของขวัญ รางวัล และอัปเดตผู้ชม","Chat-rendered rewards, gifted-sub notices, viewer updates, and a few page-only notices.":"รางวัลที่แสดงในแชต ประกาศสมาชิกแบบของขวัญ อัปเดตผู้ชม และประกาศเฉพาะหน้าบางรายการ","Check minimum cash/donation filters when small tips or cheers are missing.":"ตรวจตัวกรองเงิน/บริจาคขั้นต่ำเมื่อทิปเล็กหรือ cheers หายไป","Check minimum-value filters for donations and bits.":"ตรวจตัวกรองมูลค่าขั้นต่ำสำหรับบริจาคและบิต","Check source filters if events work in the Dock but not in Multi Alerts.":"ตรวจตัวกรองแหล่งข้อมูลหากอีเวนต์ทำงานในแผงด็อกแต่ไม่ทำงานใน Multi Alerts","Choose the source mode deliberately and complete authentication when the desired official events require it; do not expect an official raid event.":"เลือกโหมดแหล่งข้อมูลอย่างตั้งใจและยืนยันตัวตนให้ครบเมื่ออีเวนต์อย่างเป็นทางการที่ต้องการกำหนดไว้ อย่าคาดหวังอีเวนต์เรดอย่างเป็นทางการ","Classifies canonical":"จำแนกค่ามาตรฐาน","Commands & API":"คำสั่งและ API","Common Event Names":"ชื่ออีเวนต์ที่พบบ่อย","Compatibility Rule":"กฎความเข้ากันได้","Compatibility input only; not a current official Kick event subscription":"อินพุตเพื่อความเข้ากันได้เท่านั้น ไม่ใช่การสมัครอีเวนต์ Kick อย่างเป็นทางการปัจจุบัน","Configure each alert category independently. Enabling an alert does not grant the platform permission needed to capture it.":"ตั้งค่าแต่ละหมวดแจ้งเตือนแยกกัน การเปิดแจ้งเตือนไม่ได้ให้สิทธิ์แพลตฟอร์มที่จำเป็นต่อการจับข้อมูล","Confirm that category is enabled and not excluded by source or channel filters.":"ยืนยันว่าหมวดนั้นเปิดอยู่และไม่ถูกตัวกรองแหล่งข้อมูลหรือช่องตัดออก","Confirm that the selected source actually emits the event type, not only chat messages.":"ยืนยันว่าแหล่งที่เลือกส่งอีเวนต์ประเภทนั้นจริง ไม่ใช่เฉพาะข้อความแชต","Confirm the source and Multi Alerts page use the same session ID and password.":"ยืนยันว่าแหล่งข้อมูลและหน้า Multi Alerts ใช้รหัสเซสชันและรหัสผ่านเดียวกัน","Confirm the source received the event in its own log, Dock, or API output.":"ยืนยันว่าแหล่งได้รับอีเวนต์ในล็อกของตัวเอง แผงด็อก หรือเอาต์พุต API","Connect and activate the platform source that provides the event.":"เชื่อมต่อและเปิดใช้แหล่งแพลตฟอร์มที่ให้อีเวนต์","Connect captured platform events to Multi Alerts without confusing normal chat, donations, and event payloads.":"เชื่อมอีเวนต์แพลตฟอร์มที่จับได้กับ Multi Alerts โดยไม่สับสนระหว่างแชตปกติ การบริจาค และข้อมูลอีเวนต์","Create Test Messages":"สร้างข้อความทดสอบ","Custom overlay / API consumer":"โอเวอร์เลย์กำหนดเอง / ผู้ใช้ข้อมูล API","Donation / gift":"การบริจาค / ของขวัญ","Download":"ดาวน์โหลด","Enable The Alert Types You Want":"เปิดประเภทแจ้งเตือนที่ต้องการ","Event Flow":"Event Flow","Event Flow Recipes":"ตัวอย่าง Event Flow","Event Reference":"เอกสารอ้างอิงอีเวนต์","Event rows are skipped by default unless they are donation-style. Add":"แถวอีเวนต์ถูกข้ามตามค่าเริ่มต้นเว้นแต่เป็นแบบบริจาค เพิ่ม","EventSub adds followers, subscriptions, renewals, cheers, raids, rewards, and supported count/status events when the account and scopes permit them.":"EventSub เพิ่มผู้ติดตาม สมาชิก ต่ออายุ cheers เรด รางวัล และอีเวนต์จำนวน/สถานะที่รองรับ เมื่อบัญชีและขอบเขตสิทธิ์อนุญาต","Events and Alerts Compatibility":"ความเข้ากันได้ของอีเวนต์และการแจ้งเตือน","Events and Alerts Compatibility - Social Stream Ninja":"ความเข้ากันได้ของอีเวนต์และการแจ้งเตือน - Social Stream Ninja","Features":"ฟีเจอร์","First Check":"สิ่งที่ตรวจเป็นอันดับแรก","Follow":"ติดตาม","Follow / public subscriber alert":"การแจ้งเตือนติดตาม / ผู้ติดตามสาธารณะ","For Twitch or Kick, sign in again if chat works but protected events do not.":"สำหรับ Twitch หรือ Kick ให้เข้าสู่ระบบใหม่หากแชตทำงานแต่อีเวนต์ที่ต้องมีสิทธิ์ไม่ทำงาน","Gifted membership / subscription":"สมาชิก / การสมัครสมาชิกแบบของขวัญ","Guide":"คู่มือ","Guides":"คู่มือ","Hire":"จ้างงาน","Home":"หน้าแรก","Hype Train":"Hype Train","Hype Train alerts are opt-in and require eligible Twitch EventSub access.":"การแจ้งเตือน Hype Train ต้องเลือกเปิดและต้องมีสิทธิ์เข้าถึง Twitch EventSub ที่เหมาะสม","If multiple devices or connection modes are involved, review":"หากเกี่ยวข้องหลายอุปกรณ์หรือโหมดเชื่อมต่อ ให้ดู","Includes recurring, gifted, and membership-style events where supported.":"รวมอีเวนต์ต่ออายุ ของขวัญ และสมาชิกในกรณีที่รองรับ","Inspiration":"ไอเดียสร้างสรรค์","Interact with the browser page once if custom alert audio is blocked by autoplay rules.":"โต้ตอบกับหน้าเบราว์เซอร์หนึ่งครั้งหากเสียงแจ้งเตือนกำหนดเองถูกกฎเล่นอัตโนมัติบล็อก","It does not prove the platform source has permission to receive that live event.":"ไม่ได้ยืนยันว่าแหล่งแพลตฟอร์มมีสิทธิ์รับอีเวนต์สดนั้น","Keep that source page or standalone-app source window active.":"เปิดหน้าแหล่งข้อมูลหรือหน้าต่างแหล่งในแอปแยกให้ทำงานอยู่","Keep the source window active long enough to observe a real event; a preview alone is not an end-to-end platform test.":"เปิดหน้าต่างแหล่งนานพอให้พบอีเวนต์จริง ตัวอย่างอย่างเดียวไม่ใช่การทดสอบแพลตฟอร์มครบทุกขั้นตอน","Kick":"Kick","Kick raid note:":"หมายเหตุเรด Kick:","Kick setup and authentication":"การตั้งค่าและยืนยันตัวตน Kick","Main navigation":"เมนูหลัก","Major Platform Events":"อีเวนต์แพลตฟอร์มหลัก","Match the exact":"จับคู่ให้ตรงทุกตัวสำหรับ","Multi Alerts":"Multi Alerts","Multi Alerts Categories":"หมวดหมู่ Multi Alerts","Multi Alerts displays events that Social Stream has already captured. It does not sign in to Twitch, Kick, YouTube, TikTok, or another platform by itself.":"Multi Alerts แสดงอีเวนต์ที่ Social Stream จับมาแล้ว ไม่ได้เข้าสู่ระบบ Twitch, Kick, YouTube, TikTok หรือแพลตฟอร์มอื่นด้วยตัวเอง","Multi Alerts donation preview showing a styled donation card and preview controls":"ตัวอย่างบริจาค Multi Alerts ที่แสดงการ์ดบริจาคตกแต่งแล้วและปุ่มควบคุมตัวอย่าง","New member / subscriber":"สมาชิก / ผู้สมัครใหม่","Normal mode uses donation amounts. Hype mode can also score membership, renewal, and gifted-membership fields.":"โหมดปกติใช้ยอดบริจาค โหมด Hype ให้คะแนนช่องสมาชิก ต่ออายุ และสมาชิกแบบของขวัญได้ด้วย","Notes":"หมายเหตุ","Official follow, subscription, gift, reward-redemption, KICKs, moderation, and live-status events when authenticated.":"อีเวนต์ติดตาม สมัครสมาชิก ของขวัญ แลกรางวัล KICKs ดูแลแชต และสถานะสดอย่างเป็นทางการเมื่อยืนยันตัวตนแล้ว","Open navigation menu":"เปิดเมนูนำทาง","Open the Multi Alerts options from Social Stream settings. Follows, subscriptions, donations, bits, and raids have their own enable, style, sound, and appearance controls. Auction and Hype Train alerts require their dedicated opt-in controls.":"เปิดตัวเลือก Multi Alerts จากการตั้งค่า Social Stream การติดตาม สมาชิก บริจาค บิต และเรดมีปุ่มเปิด รูปแบบ เสียง และหน้าตาของตัวเอง การแจ้งเตือนประมูลและ Hype Train ต้องเลือกเปิดด้วยปุ่มเฉพาะ","Other sources":"แหล่งอื่น","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Paid messages, memberships, membership gifts, viewer updates, and limited page-detected events.":"ข้อความแบบชำระเงิน สมาชิก ของขวัญสมาชิก อัปเดตผู้ชม และอีเวนต์ที่ตรวจจากหน้าได้จำกัด","Paid support":"การสนับสนุนแบบชำระเงิน","Platform":"แพลตฟอร์ม","Platform Setup Notes":"หมายเหตุตั้งค่าแพลตฟอร์ม","Preview Before Going Live":"ดูตัวอย่างก่อนถ่ายทอดสด","Queue alerts":"เข้าคิวการแจ้งเตือน","Raid":"เรด","Raid / host":"เรด / โฮสต์","Renewal":"ต่ออายุ","Requires a source that captures follow events and the necessary platform permission.":"ต้องใช้แหล่งที่จับอีเวนต์ติดตามและมีสิทธิ์แพลตฟอร์มที่จำเป็น","See which YouTube, Twitch, and Kick events reach Social Stream Ninja alerts, Event Flow, TTS, goals, overlays, and API consumers.":"ดูว่าอีเวนต์ YouTube, Twitch และ Kick ใดไปถึงการแจ้งเตือน Event Flow, TTS, เป้าหมาย โอเวอร์เลย์ และผู้ใช้ข้อมูล API ของ Social Stream Ninja","Sessions, Passwords, and Relay Modes":"เซสชัน รหัสผ่าน และโหมดรีเลย์","Sign in with the broadcaster or permitted moderator and keep EventSub connected.":"เข้าสู่ระบบด้วยเจ้าของช่องหรือผู้ดูแลที่มีสิทธิ์ และคงการเชื่อมต่อ EventSub","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja Multi Alerts options showing separate alert-type controls for follows, subscriptions, donations, bits, raids, auction wins, and Hype Trains":"ตัวเลือก Social Stream Ninja Multi Alerts ที่แสดงตัวควบคุมแยกสำหรับติดตาม สมัครสมาชิก บริจาค บิต เรด ชนะประมูล และ Hype Trains","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja สัญญาอนุญาต GPLv3.0","Social Stream accepts a legacy raid/host-shaped payload for compatibility, but Kick's current official event catalog has no raid/host subscription. Do not make a Kick workflow depend on receiving one.":"Social Stream รับข้อมูลรูปแบบ raid/host เดิมเพื่อความเข้ากันได้ แต่รายการอีเวนต์ Kick อย่างเป็นทางการปัจจุบันไม่มีการสมัคร raid/host อย่าให้ขั้นตอน Kick ต้องพึ่งการรับอีเวนต์นั้น","Standard Capture":"การจับมาตรฐาน","Standard Versus WebSocket Mode":"โหมดมาตรฐานกับ WebSocket","Start With The Event Source":"เริ่มจากแหล่งอีเวนต์","Subscription":"การสมัครสมาชิก","Support":"การสนับสนุน","Supported Sites":"เว็บไซต์ที่รองรับ","Supported sites":"เว็บไซต์ที่รองรับ","Switch theme":"เปลี่ยนธีม","TTS":"TTS","Test the alert overlay from its options before debugging the platform connection.":"ทดสอบโอเวอร์เลย์แจ้งเตือนจากตัวเลือกก่อนแก้ปัญหาการเชื่อมต่อแพลตฟอร์ม","The amount can be filtered with the minimum donation/cash option.":"กรองยอดได้ด้วยตัวเลือกบริจาค/เงินขั้นต่ำ","The shared paid/member events plus member milestones, recent public-subscriber alerts, and supported count updates.":"อีเวนต์ชำระเงิน/สมาชิกร่วม พร้อมเหตุการณ์สำคัญสมาชิก การแจ้งเตือนผู้ติดตามสาธารณะล่าสุด และอัปเดตจำนวนที่รองรับ","These are the current canonical event names when the selected source mode can deliver the activity.":"นี่คือชื่ออีเวนต์มาตรฐานปัจจุบัน เมื่อโหมดแหล่งที่เลือกส่งกิจกรรมนั้นได้","Tip Jar / Goal Meter":"โหลทิป / มาตรวัดเป้าหมาย","Tool":"เครื่องมือ","Twitch":"Twitch","Twitch EventSub setup":"ตั้งค่า Twitch EventSub","Use":"ใช้","Use the canonical payload fields from the Event Reference. Accept documented aliases only for backward compatibility.":"ใช้ช่องข้อมูลมาตรฐานจากเอกสารอ้างอิงอีเวนต์ รับชื่อเรียกแทนที่บันทึกไว้เฉพาะเพื่อความเข้ากันได้ย้อนหลัง","Use the preview controls to verify the selected category, text, amount, media, sound, animation, and queue behavior.":"ใช้ปุ่มดูตัวอย่างเพื่อตรวจหมวดที่เลือก ข้อความ ยอด สื่อ เสียง ภาพเคลื่อนไหว และพฤติกรรมคิว","Use the same Social Stream session ID in the source, popup, Dock, and Multi Alerts URL.":"ใช้รหัสเซสชัน Social Stream เดียวกันในแหล่งข้อมูล ป๊อปอัป แผงด็อก และ URL ของ Multi Alerts","Viewer counts, follower totals, stream status, and ad-break status are updates rather than normal alert cards. Use the":"จำนวนผู้ชม ยอดผู้ติดตาม สถานะสตรีม และสถานะช่วงโฆษณาเป็นข้อมูลอัปเดต ไม่ใช่การ์ดแจ้งเตือนปกติ ใช้","WebSocket / API Capture":"การจับ WebSocket / API","WebSocket mode is normally the right choice for event-driven alerts. Standard capture remains useful when only rendered chat is needed or authentication is unavailable.":"ปกติโหมด WebSocket เหมาะกับการแจ้งเตือนที่ขับเคลื่อนด้วยอีเวนต์ การจับมาตรฐานยังมีประโยชน์เมื่อต้องการเพียงแชตที่แสดงหรือยืนยันตัวตนไม่ได้","When A Real Alert Is Missing":"เมื่อการแจ้งเตือนจริงหายไป","Which Fields Each Tool Uses":"เครื่องมือแต่ละตัวใช้ช่องใด","YouTube":"YouTube","and":"และ","for KICKs gifts;":"สำหรับของขวัญ KICKs;","for support/tip events. Both populate":"สำหรับอีเวนต์สนับสนุน/ทิป ทั้งคู่เติมค่าใน","for working automation examples.":"สำหรับตัวอย่างระบบอัตโนมัติที่ใช้งานได้","names, aliases,":"ชื่อ ชื่อเรียกแทน,","to verify the expected event and":"เพื่อตรวจอีเวนต์ที่คาดหวังและ","values into shared categories.":"ค่าเข้าเป็นหมวดร่วม","when building an API consumer or custom overlay.":"เมื่อสร้างผู้ใช้ข้อมูล API หรือโอเวอร์เลย์กำหนดเอง","when non-donation event messages should be spoken, then apply normal TTS filters.":"เมื่อต้องการให้อ่านข้อความอีเวนต์ที่ไม่ใช่บริจาค แล้วใช้ตัวกรอง TTS ปกติ","when several events may arrive together.":"เมื่อหลายอีเวนต์อาจเข้ามาพร้อมกัน"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/events-alerts-compatibility.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก"><a href="../index.html">หน้าแรก</a><a href="features.html">ฟีเจอร์</a><a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a><a href="download.html">ดาวน์โหลด</a><a href="guides.html">คู่มือ</a><a href="commands.html">คำสั่งและ API</a><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a><a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a><a href="services.html" class="site-priority-hire">จ้างงาน</a><a href="support.html">การสนับสนุน</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/events-alerts-compatibility.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/events-alerts-compatibility.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/events-alerts-compatibility.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/events-alerts-compatibility.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/events-alerts-compatibility.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/events-alerts-compatibility.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/events-alerts-compatibility.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/events-alerts-compatibility.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/events-alerts-compatibility.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/events-alerts-compatibility.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/events-alerts-compatibility.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/events-alerts-compatibility.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/events-alerts-compatibility.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/events-alerts-compatibility.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/events-alerts-compatibility.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/events-alerts-compatibility.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="events-alerts-compatibility.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="เปลี่ยนธีม"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>ความเข้ากันได้ของอีเวนต์และการแจ้งเตือน</h1>
+            <p>เชื่อมอีเวนต์แพลตฟอร์มที่จับได้กับ Multi Alerts โดยไม่สับสนระหว่างแชตปกติ การบริจาค และข้อมูลอีเวนต์</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>เริ่มจากแหล่งอีเวนต์</h2>
+                <p>Multi Alerts แสดงอีเวนต์ที่ Social Stream จับมาแล้ว ไม่ได้เข้าสู่ระบบ Twitch, Kick, YouTube, TikTok หรือแพลตฟอร์มอื่นด้วยตัวเอง</p>
+                <ol class="guide-steps">
+                    <li>เชื่อมต่อและเปิดใช้แหล่งแพลตฟอร์มที่ให้อีเวนต์</li>
+                    <li>เปิดหน้าแหล่งข้อมูลหรือหน้าต่างแหล่งในแอปแยกให้ทำงานอยู่</li>
+                    <li>ใช้รหัสเซสชัน Social Stream เดียวกันในแหล่งข้อมูล ป๊อปอัป แผงด็อก และ URL ของ Multi Alerts</li>
+                    <li>ทดสอบโอเวอร์เลย์แจ้งเตือนจากตัวเลือกก่อนแก้ปัญหาการเชื่อมต่อแพลตฟอร์ม</li>
+                </ol>
+                <div class="guide-note">
+                    <p><strong>ตัวอย่างที่สำเร็จยืนยันว่าเลย์เอาต์แจ้งเตือนทำงาน</strong> ไม่ได้ยืนยันว่าแหล่งแพลตฟอร์มมีสิทธิ์รับอีเวนต์สดนั้น</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>หมวดหมู่ Multi Alerts</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>หมวดหมู่</th><th>ชื่ออีเวนต์ที่พบบ่อย</th><th>หมายเหตุ</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Category">ติดตาม</td><td data-label="Common Event Names"><code>new_follower</code>, <code>follow</code>, <code>followed</code></td><td data-label="Notes">ต้องใช้แหล่งที่จับอีเวนต์ติดตามและมีสิทธิ์แพลตฟอร์มที่จำเป็น</td></tr>
+                        <tr><td data-label="Category">การสมัครสมาชิก</td><td data-label="Common Event Names"><code>new_subscriber</code>, <code>resub</code>, <code>subscription_gift</code>, ชื่อเรียกแทนสมาชิก</td><td data-label="Notes">รวมอีเวนต์ต่ออายุ ของขวัญ และสมาชิกในกรณีที่รองรับ</td></tr>
+                        <tr><td data-label="Category">การบริจาค / ของขวัญ</td><td data-label="Common Event Names"><code>superchat</code>, <code>supersticker</code>, <code>gift</code>, <code>tip</code>, ชื่อเรียกแทนการบริจาค</td><td data-label="Notes">แถวแชตแบบบริจาคอาจใช้แทนเป็น <code>hasDonation</code> และ <code>donoValue</code>.</td></tr>
+                        <tr><td data-label="Category">บิต</td><td data-label="Common Event Names"><code>cheer</code>, <code>bits</code></td><td data-label="Notes">กรองยอดได้ด้วยตัวเลือกบริจาค/เงินขั้นต่ำ</td></tr>
+                        <tr><td data-label="Category">เรด</td><td data-label="Common Event Names"><code>raid</code>, <code>host</code>, <code>redirect</code></td><td data-label="Notes">การรองรับและชื่อขึ้นอยู่กับแหล่งแพลตฟอร์ม</td></tr>
+                        <tr><td data-label="Category">ประมูล</td><td data-label="Common Event Names"><code>auction_update</code></td><td data-label="Notes">การแจ้งเตือนชนะประมูลต้องเลือกเปิดใช้</td></tr>
+                        <tr><td data-label="Category">Hype Train</td><td data-label="Common Event Names"><code>hype_train</code></td><td data-label="Notes">การแจ้งเตือน Hype Train ต้องเลือกเปิดและต้องมีสิทธิ์เข้าถึง Twitch EventSub ที่เหมาะสม</td></tr>
+                    </tbody>
+                </table>
+                <p>จำนวนผู้ชม ยอดผู้ติดตาม สถานะสตรีม และสถานะช่วงโฆษณาเป็นข้อมูลอัปเดต ไม่ใช่การ์ดแจ้งเตือนปกติ ใช้ <a href="event-reference.html">เอกสารอ้างอิงอีเวนต์</a> เมื่อสร้างผู้ใช้ข้อมูล API หรือโอเวอร์เลย์กำหนดเอง</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>อีเวนต์แพลตฟอร์มหลัก</h2>
+                <p>นี่คือชื่ออีเวนต์มาตรฐานปัจจุบัน เมื่อโหมดแหล่งที่เลือกส่งกิจกรรมนั้นได้</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>กิจกรรม</th><th>YouTube</th><th>Twitch</th><th>Kick</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Activity">สมาชิก / ผู้สมัครใหม่</td>
+                            <td data-label="YouTube"><code>sponsorship</code></td>
+                            <td data-label="Twitch"><code>new_subscriber</code></td>
+                            <td data-label="Kick"><code>new_subscriber</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">ต่ออายุ</td>
+                            <td data-label="YouTube"><code>resub</code></td>
+                            <td data-label="Twitch"><code>resub</code></td>
+                            <td data-label="Kick"><code>resub</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">สมาชิก / การสมัครสมาชิกแบบของขวัญ</td>
+                            <td data-label="YouTube"><code>giftpurchase</code>, <code>giftredemption</code></td>
+                            <td data-label="Twitch"><code>subscription_gift</code></td>
+                            <td data-label="Kick"><code>subscription_gift</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">การสนับสนุนแบบชำระเงิน</td>
+                            <td data-label="YouTube"><code>superchat</code>, <code>supersticker</code>, <code>jeweldonation</code></td>
+                            <td data-label="Twitch"><code>cheer</code>, หรือแถวที่มี <code>hasDonation</code></td>
+                            <td data-label="Kick"><code>gift</code> สำหรับของขวัญ KICKs; <code>donation</code> สำหรับอีเวนต์สนับสนุน/ทิป ทั้งคู่เติมค่าใน <code>hasDonation</code>.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">การแจ้งเตือนติดตาม / ผู้ติดตามสาธารณะ</td>
+                            <td data-label="YouTube"><code>new_follower</code>; ล่าช้าตาม API และเฉพาะการติดตามสาธารณะ</td>
+                            <td data-label="Twitch"><code>new_follower</code></td>
+                            <td data-label="Kick"><code>new_follower</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">รางวัลช่อง</td>
+                            <td data-label="YouTube">-</td>
+                            <td data-label="Twitch"><code>reward</code></td>
+                            <td data-label="Kick"><code>reward</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">เรด / โฮสต์</td>
+                            <td data-label="YouTube">-</td>
+                            <td data-label="Twitch"><code>raid</code></td>
+                            <td data-label="Kick">อินพุตเพื่อความเข้ากันได้เท่านั้น ไม่ใช่การสมัครอีเวนต์ Kick อย่างเป็นทางการปัจจุบัน</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="warning-note">
+                    <p><strong>หมายเหตุเรด Kick:</strong> Social Stream รับข้อมูลรูปแบบ raid/host เดิมเพื่อความเข้ากันได้ แต่รายการอีเวนต์ Kick อย่างเป็นทางการปัจจุบันไม่มีการสมัคร raid/host อย่าให้ขั้นตอน Kick ต้องพึ่งการรับอีเวนต์นั้น</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>โหมดมาตรฐานกับ WebSocket</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>แพลตฟอร์ม</th><th>การจับมาตรฐาน</th><th>การจับ WebSocket / API</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Platform">YouTube</td>
+                            <td data-label="Standard Capture">ข้อความแบบชำระเงิน สมาชิก ของขวัญสมาชิก อัปเดตผู้ชม และอีเวนต์ที่ตรวจจากหน้าได้จำกัด</td>
+                            <td data-label="WebSocket / API Capture">อีเวนต์ชำระเงิน/สมาชิกร่วม พร้อมเหตุการณ์สำคัญสมาชิก การแจ้งเตือนผู้ติดตามสาธารณะล่าสุด และอัปเดตจำนวนที่รองรับ</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Platform">Twitch</td>
+                            <td data-label="Standard Capture">รางวัลที่แสดงในแชต ประกาศสมาชิกแบบของขวัญ อัปเดตผู้ชม และประกาศเฉพาะหน้าบางรายการ</td>
+                            <td data-label="WebSocket / API Capture">EventSub เพิ่มผู้ติดตาม สมาชิก ต่ออายุ cheers เรด รางวัล และอีเวนต์จำนวน/สถานะที่รองรับ เมื่อบัญชีและขอบเขตสิทธิ์อนุญาต</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Platform">Kick</td>
+                            <td data-label="Standard Capture">แชตพร้อมตัวระบุจากหน้าแบบเล็กสำหรับของขวัญ รางวัล และอัปเดตผู้ชม</td>
+                            <td data-label="WebSocket / API Capture">อีเวนต์ติดตาม สมัครสมาชิก ของขวัญ แลกรางวัล KICKs ดูแลแชต และสถานะสดอย่างเป็นทางการเมื่อยืนยันตัวตนแล้ว</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>ปกติโหมด WebSocket เหมาะกับการแจ้งเตือนที่ขับเคลื่อนด้วยอีเวนต์ การจับมาตรฐานยังมีประโยชน์เมื่อต้องการเพียงแชตที่แสดงหรือยืนยันตัวตนไม่ได้</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>เปิดประเภทแจ้งเตือนที่ต้องการ</h2>
+                <p>เปิดตัวเลือก Multi Alerts จากการตั้งค่า Social Stream การติดตาม สมาชิก บริจาค บิต และเรดมีปุ่มเปิด รูปแบบ เสียง และหน้าตาของตัวเอง การแจ้งเตือนประมูลและ Hype Train ต้องเลือกเปิดด้วยปุ่มเฉพาะ</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/multi-alert-types-options.png" alt="ตัวเลือก Social Stream Ninja Multi Alerts ที่แสดงตัวควบคุมแยกสำหรับติดตาม สมัครสมาชิก บริจาค บิต เรด ชนะประมูล และ Hype Trains" class="guide-image">
+                    <figcaption>ตั้งค่าแต่ละหมวดแจ้งเตือนแยกกัน การเปิดแจ้งเตือนไม่ได้ให้สิทธิ์แพลตฟอร์มที่จำเป็นต่อการจับข้อมูล</figcaption>
+                </figure>
+                <ul class="guide-list">
+                    <li>ใช้ <strong>เข้าคิวการแจ้งเตือน</strong> เมื่อหลายอีเวนต์อาจเข้ามาพร้อมกัน</li>
+                    <li>ตรวจตัวกรองแหล่งข้อมูลหากอีเวนต์ทำงานในแผงด็อกแต่ไม่ทำงานใน Multi Alerts</li>
+                    <li>ตรวจตัวกรองเงิน/บริจาคขั้นต่ำเมื่อทิปเล็กหรือ cheers หายไป</li>
+                    <li>โต้ตอบกับหน้าเบราว์เซอร์หนึ่งครั้งหากเสียงแจ้งเตือนกำหนดเองถูกกฎเล่นอัตโนมัติบล็อก</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>ดูตัวอย่างก่อนถ่ายทอดสด</h2>
+                <p>ใช้ปุ่มดูตัวอย่างเพื่อตรวจหมวดที่เลือก ข้อความ ยอด สื่อ เสียง ภาพเคลื่อนไหว และพฤติกรรมคิว</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/multi-alerts-donation-preview.png" alt="ตัวอย่างบริจาค Multi Alerts ที่แสดงการ์ดบริจาคตกแต่งแล้วและปุ่มควบคุมตัวอย่าง" class="guide-image">
+                    <figcaption>ตัวอย่างบริจาคตรวจโอเวอร์เลย์ จากนั้นเรียกหรือรออีเวนต์แพลตฟอร์มจริงเพื่อตรวจการเชื่อมต่อแหล่งข้อมูล</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>เครื่องมือแต่ละตัวใช้ช่องใด</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>เครื่องมือ</th><th>กฎความเข้ากันได้</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Tool">Multi Alerts</td><td data-label="Compatibility Rule">จำแนกค่ามาตรฐาน <code>event</code> ชื่อ ชื่อเรียกแทน, <code>hasDonation</code>, ช่องสมาชิก และค่าที่เลือก <code>meta</code> ค่าเข้าเป็นหมวดร่วม</td></tr>
+                        <tr><td data-label="Tool">Event Flow</td><td data-label="Compatibility Rule">จับคู่ให้ตรงทุกตัวสำหรับ <code>type</code>, <code>event</code>, และช่องที่แหล่งข้อมูลส่ง ใช้เครื่องมือ Test Message ก่อนพึ่งอีเวนต์สด</td></tr>
+                        <tr><td data-label="Tool">TTS</td><td data-label="Compatibility Rule">แถวอีเวนต์ถูกข้ามตามค่าเริ่มต้นเว้นแต่เป็นแบบบริจาค เพิ่ม <code>&amp;readevents</code> เมื่อต้องการให้อ่านข้อความอีเวนต์ที่ไม่ใช่บริจาค แล้วใช้ตัวกรอง TTS ปกติ</td></tr>
+                        <tr><td data-label="Tool">โหลทิป / มาตรวัดเป้าหมาย</td><td data-label="Compatibility Rule">โหมดปกติใช้ยอดบริจาค โหมด Hype ให้คะแนนช่องสมาชิก ต่ออายุ และสมาชิกแบบของขวัญได้ด้วย</td></tr>
+                        <tr><td data-label="Tool">โอเวอร์เลย์กำหนดเอง / ผู้ใช้ข้อมูล API</td><td data-label="Compatibility Rule">ใช้ช่องข้อมูลมาตรฐานจากเอกสารอ้างอิงอีเวนต์ รับชื่อเรียกแทนที่บันทึกไว้เฉพาะเพื่อความเข้ากันได้ย้อนหลัง</td></tr>
+                    </tbody>
+                </table>
+                <p>ใช้ <a href="test-message-guide.html">สร้างข้อความทดสอบ</a> เพื่อตรวจอีเวนต์ที่คาดหวังและ <a href="event-flow-recipes.html">ตัวอย่าง Event Flow</a> สำหรับตัวอย่างระบบอัตโนมัติที่ใช้งานได้</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>หมายเหตุตั้งค่าแพลตฟอร์ม</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>แพลตฟอร์ม</th><th>สิ่งที่ตรวจเป็นอันดับแรก</th><th>คู่มือ</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Platform">Twitch</td><td data-label="First Check">เข้าสู่ระบบด้วยเจ้าของช่องหรือผู้ดูแลที่มีสิทธิ์ และคงการเชื่อมต่อ EventSub</td><td data-label="Guide"><a href="twitch-eventsub-setup.html">ตั้งค่า Twitch EventSub</a></td></tr>
+                        <tr><td data-label="Platform">Kick</td><td data-label="First Check">เลือกโหมดแหล่งข้อมูลอย่างตั้งใจและยืนยันตัวตนให้ครบเมื่ออีเวนต์อย่างเป็นทางการที่ต้องการกำหนดไว้ อย่าคาดหวังอีเวนต์เรดอย่างเป็นทางการ</td><td data-label="Guide"><a href="kick-setup-authentication.html">การตั้งค่าและยืนยันตัวตน Kick</a></td></tr>
+                        <tr><td data-label="Platform">แหล่งอื่น</td><td data-label="First Check">ยืนยันว่าแหล่งที่เลือกส่งอีเวนต์ประเภทนั้นจริง ไม่ใช่เฉพาะข้อความแชต</td><td data-label="Guide"><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>เมื่อการแจ้งเตือนจริงหายไป</h2>
+                <ol class="guide-steps">
+                    <li>ยืนยันว่าแหล่งได้รับอีเวนต์ในล็อกของตัวเอง แผงด็อก หรือเอาต์พุต API</li>
+                    <li>ยืนยันว่าแหล่งข้อมูลและหน้า Multi Alerts ใช้รหัสเซสชันและรหัสผ่านเดียวกัน</li>
+                    <li>ยืนยันว่าหมวดนั้นเปิดอยู่และไม่ถูกตัวกรองแหล่งข้อมูลหรือช่องตัดออก</li>
+                    <li>ตรวจตัวกรองมูลค่าขั้นต่ำสำหรับบริจาคและบิต</li>
+                    <li>สำหรับ Twitch หรือ Kick ให้เข้าสู่ระบบใหม่หากแชตทำงานแต่อีเวนต์ที่ต้องมีสิทธิ์ไม่ทำงาน</li>
+                    <li>เปิดหน้าต่างแหล่งนานพอให้พบอีเวนต์จริง ตัวอย่างอย่างเดียวไม่ใช่การทดสอบแพลตฟอร์มครบทุกขั้นตอน</li>
+                </ol>
+                <p>หากเกี่ยวข้องหลายอุปกรณ์หรือโหมดเชื่อมต่อ ให้ดู <a href="sessions-passwords-relay-modes.html">เซสชัน รหัสผ่าน และโหมดรีเลย์</a>.</p>
+            </div>
+
+            <template data-copy-markdown-extra>
+## บริบทที่ผู้ดูแลโครงการตรวจยืนยันแล้ว
+
+- ขณะนี้ Multi Alerts ปรับชื่อเรียกของการติดตาม สมัครสมาชิก บริจาค/ของขวัญ บิต เรด ประมูล และ Hype Train เป็นหมวดแจ้งเตือนเจ็ดหมวด ประมูลและ Hype Train ต้องเลือกเปิดใช้
+
+- ตัวจำแนกปัจจุบันรับทั้งชื่อมาตรฐานและชื่อเรียกเดิม ข้อมูลที่มี `hasDonation` และไม่มี event ใช้ได้: ข้อความ bits/cheer ส่งไป Bits ส่วนยอดอื่นส่งไป Donation
+
+- อีเวนต์จำนวน/สถานะ เช่น `viewer_update`, `follower_update`, `subscriber_update` และสถานะช่วงโฆษณาตั้งใจไม่แปลงเป็นการ์ดแจ้งเตือนทั่วไป
+
+- ชุดอีเวนต์ที่สมัครอย่างเป็นทางการของ Kick ปัจจุบันมีแชต ติดตาม สมัครสมาชิกใหม่/ต่ออายุ/ของขวัญ แลกรางวัล ของขวัญ KICKs แบน และสถานะไลฟ์ Kick ยังไม่มีการสมัคร raid/host อย่างเป็นทางการ การจัดการเรดมีไว้เพื่อความเข้ากันได้เท่านั้น
+
+- ค่าเริ่มต้น TTS ข้ามแถวที่ไม่ใช่บริจาคและมีค่า `event` โดย `readevents` ปิดการข้ามนี้ แต่ตัวกรองแหล่งข้อมูล/สมาชิก/บริจาคปกติยังมีผล
+
+- ตัวอย่างในป๊อปอัปตรวจเฉพาะการจัดการโอเวอร์เลย์ การจับแพลตฟอร์มยังต้องใช้แหล่งสด เซสชันตรงกัน บทบาท/ขอบเขตสิทธิ์ถูกต้อง และอีเวนต์จริง
+            </template>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja สัญญาอนุญาต GPLv3.0</p></div></div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/features.html">
+    <meta property="og:title" content="실시간 채팅, OBS 오버레이 및 자동화 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja의 통합 실시간 채팅, OBS 오버레이, 음성 읽기, AI 공동 진행자, 채팅 게임, 채팅 관리, 방송 자동화 기능을 살펴보세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/features.html">
+    <meta name="twitter:title" content="실시간 채팅, OBS 오버레이 및 자동화 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja의 통합 실시간 채팅, OBS 오버레이, 음성 읽기, AI 공동 진행자, 채팅 게임, 채팅 관리, 방송 자동화 기능을 살펴보세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>실시간 채팅, OBS 오버레이 및 자동화 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/featured.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja의 통합 실시간 채팅, OBS 오버레이, 음성 읽기, AI 공동 진행자, 채팅 게임, 채팅 관리, 방송 자동화 기능을 살펴보세요.">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/features.html">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/features.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"$10-50/month subscription":"월 $10~50 구독",", Stripe, Ko-Fi, Buy Me A Coffee)":", Stripe, Ko-Fi, Buy Me A Coffee)","1-5 platforms":"플랫폼 1~5개","100+ platforms":"100개 이상의 플랫폼","AI & LLM Integration":"AI 및 LLM 통합","AI Co-Host":"AI 공동 진행자","AI Integration":"AI 통합","API Integration":"API 통합","API Keys Required":"API 키 필요 여부","Active Discord community":"활발한 Discord 커뮤니티","Advanced Streaming Tools":"고급 방송 도구","Advanced Tools":"고급 도구","Alternative Streaming":"대안 방송 플랫폼","Amazon Chime":"Amazon Chime","Amazon Live":"Amazon Live","Animation options including fade and swipe effects":"페이드와 스와이프 효과를 포함한 애니메이션 옵션","Auto or manual message selection":"자동 또는 수동 메시지 선택","Automated greetings and responses":"자동 인사 및 응답","Automatic message relaying between platforms":"플랫폼 간 자동 메시지 릴레이","Bilibili.com":"Bilibili.com","Bilibili.tv":"Bilibili.tv","Bluesky":"Bluesky","Bot Commands":"봇 명령","Bot Commands & Auto-Response":"봇 명령 및 자동 응답","Bring chat messages to life with text-to-speech capabilities, making your stream more engaging and accessible.":"음성 읽기로 채팅 메시지에 목소리를 더해 방송의 참여도와 접근성을 높이세요.","Bring your chats together, put your audience on screen, and make each stream your own.":"채팅을 한데 모으고 시청자를 화면에 올리며 나만의 방송을 만드세요.","Built-in commands for common interactions":"일반적인 상호작용용 내장 명령","Built-in mini-games":"내장 미니게임","CSS styling for complete visual control":"모양을 완전히 제어하는 CSS 스타일","Castyr":"Castyr","Chat history database with search":"검색 가능한 채팅 기록 데이터베이스","Choose a voice cohost, chat bot, browser companion, or focused AI processing tools without locking the rest of your stream into one provider.":"방송 전체를 한 제공자에 묶지 않고 음성 공동 진행자, 챗봇, 브라우저 도우미 또는 특정 AI 처리 도구를 선택하세요.","Chzzk.naver.com":"Chzzk.naver.com","Closed ecosystem":"폐쇄형 생태계","Commands & API":"명령 및 API","Community":"커뮤니티","Community Support":"커뮤니티 지원","Compare every AI option →":"모든 AI 옵션 비교 →","Competitors":"경쟁 제품","Connect with viewers across all your streaming platforms simultaneously. Social Stream Ninja consolidates chat messages from dozens of platforms into a single, easy-to-manage dashboard.":"모든 방송 플랫폼의 시청자와 동시에 소통하세요. Social Stream Ninja는 수십 개 플랫폼의 채팅 메시지를 관리하기 쉬운 하나의 대시보드로 통합합니다.","Consolidates your live social messaging streams and more. Free and open source.":"실시간 소셜 메시지와 다양한 정보를 한데 모읍니다. 무료 오픈 소스입니다.","Contribute":"기여하기","Cost":"비용","Cozy.tv":"Cozy.tv","Create automated interactions with your audience through custom commands and responses.":"사용자 지정 명령과 응답으로 시청자와의 상호작용을 자동화하세요.","Credits roll and tip jar displays":"크레딧 롤 및 후원함 표시","Crowdcast.io":"Crowdcast.io","Custom JavaScript support":"사용자 지정 JavaScript 지원","Custom command logic with a scriptable plugin file":"스크립트 플러그인 파일로 사용자 지정 명령 로직 구현","Customizable voice, pitch, and speaking rate":"음성, 높낮이, 말하기 속도 맞춤 설정","Customizable with CSS for perfect integration with your stream's aesthetic":"방송 디자인에 어울리도록 CSS로 맞춤 설정 가능","Customization":"맞춤 설정","Customization Guide":"맞춤 설정 가이드","Deep Customization":"세밀한 맞춤 설정","Discord":"Discord","Don't see your platform?":"사용하는 플랫폼이 없나요?","Donate":"후원하기","Donation integration (":"후원 통합(","Download":"다운로드","Download Now":"지금 다운로드","Explore 126 stream ideas":"방송 아이디어 126개 살펴보기","Explore Social Stream Ninja features: combined live chat, OBS overlays, text-to-speech, AI cohosts, chat games, moderation and stream automation.":"Social Stream Ninja의 통합 실시간 채팅, OBS 오버레이, 음성 읽기, AI 공동 진행자, 채팅 게임, 채팅 관리, 방송 자동화 기능을 살펴보세요.","Extend Social Stream Ninja's capabilities with robust API integration options.":"강력한 API 통합 옵션으로 Social Stream Ninja의 기능을 확장하세요.","Extensions":"확장 프로그램","FAQ":"자주 묻는 질문","Facebook Live":"Facebook Live","Feature":"강조 표시","Featured Chat Overlay":"선택한 채팅 오버레이","Features":"기능","Free & Open Source":"무료 오픈 소스","Free system TTS support":"무료 시스템 음성 읽기 지원","GitHub":"GitHub","GitHub Repository":"GitHub 저장소","Giveaway system with queue management":"대기열 관리가 있는 경품 추첨 시스템","Google Meet":"Google Meet","Graphical polling system":"그래픽 투표 시스템","Guides":"가이드","Highlight the best messages from your audience directly on your stream with beautiful, customizable overlays.":"아름답고 맞춤 설정 가능한 오버레이로 시청자의 멋진 메시지를 방송에 바로 강조 표시하세요.","Hire":"작업 의뢰","Home":"홈","IRC (Multiple networks)":"IRC(여러 네트워크)","Inspiration":"아이디어","Instagram Live":"Instagram Live","Installation Guide":"설치 가이드","Interactive Games":"참여형 게임","Interactive mini-games including Battle Royal":"Battle Royal 등을 포함한 상호작용 미니게임","International Platforms":"국제 플랫폼","Join our Discord":"Discord 참여","Kick.com":"Kick.com","Limited or extra cost":"제한적 또는 추가 비용","Limited or nonexistent":"제한적 또는 없음","Limited templates":"제한된 템플릿","LinkedIn Events":"LinkedIn Events","Live Chat, OBS Overlays and Automation - Social Stream Ninja":"실시간 채팅, OBS 오버레이 및 자동화 - Social Stream Ninja","Live two-way chat messaging with Facebook, YouTube, Twitch, Zoom, and more":"Facebook, YouTube, Twitch, Zoom 등의 실시간 양방향 채팅","Livestorm.io":"Livestorm.io","Local models or cloud providers, including OpenAI, Gemini, xAI, Bedrock, OpenRouter, Groq, and custom compatible APIs":"OpenAI, Gemini, xAI, Bedrock, OpenRouter, Groq, 사용자 지정 호환 API 등 로컬 모델 또는 클라우드 제공자","Local models, voice cohost, cloud providers, and custom APIs":"로컬 모델, 음성 공동 진행자, 클라우드 제공자, 사용자 지정 API","Locals.com":"Locals.com","MIDI/Streamdeck control":"MIDI/Streamdeck 제어","Main navigation":"기본 탐색 메뉴","Major Streaming Platforms":"주요 방송 플랫폼","Make Social Stream Ninja truly yours with extensive customization options for both functionality and appearance.":"기능과 모양의 폭넓은 맞춤 설정으로 Social Stream Ninja를 나에게 맞게 만드세요.","Message filtering and moderation":"메시지 필터링 및 채팅 관리","Message queuing for organized highlighting":"체계적인 강조 표시를 위한 메시지 대기열","Messaging Platforms":"메시징 플랫폼","Microsoft Teams":"Microsoft Teams","Moderation, translation, summaries, RAG context, and overlay building":"채팅 관리, 번역, 요약, RAG 맥락, 오버레이 제작","Multi-Platform Chat Integration":"다중 플랫폼 채팅 통합","Multi-Platform Support":"멀티 플랫폼 지원","Multi-channel source icons to differentiate between platforms":"플랫폼을 구분하는 여러 채널 소스 아이콘","Multi-language support":"다국어 지원","Multimodal AI assistant":"멀티모달 AI 도우미","Multimodal AI co-host capabilities":"멀티모달 AI 공동 진행자 기능","Nimo.TV":"Nimo.TV","NinjaBacker: free, 0% platform commission":"NinjaBacker: 무료, 플랫폼 수수료 0%","No login or API keys needed for most platforms":"대부분의 플랫폼에서 로그인이나 API 키 불필요","NonOLive":"NonOLive","None for most platforms":"대부분의 플랫폼에서 불필요","Not available":"사용 불가","OBS audio capture support":"OBS 오디오 캡처 지원","OBS remote scene support":"OBS 원격 장면 지원","Odysee.com":"Odysee.com","Open for contributions":"기여 가능","Open navigation menu":"탐색 메뉴 열기","Optional ChatGPT browser capture with no API key":"API 키가 필요 없는 선택적 ChatGPT 브라우저 캡처","Overlay Gallery":"오버레이 갤러리","Owncast":"Owncast","Picarto.tv":"Picarto.tv","Piczel.tv":"Piczel.tv","Platform Support":"플랫폼 지원","Powerful API":"강력한 API","Pre-styled templates and themes":"스타일이 적용된 템플릿 및 테마","Premium TTS services integration (Google Cloud, ElevenLabs, Speechify)":"프리미엄 음성 읽기 서비스 통합(Google Cloud, ElevenLabs, Speechify)","Preview sticker rewards":"스티커 보상 미리보기","Primary and private chat bots with custom instructions and trigger rules":"사용자 지정 지침과 트리거 규칙이 있는 기본 및 비공개 챗봇","Privacy Policy":"개인정보 처리방침","Private AI chat bot interface":"비공개 AI 챗봇 인터페이스","Quick Links":"바로가기","Ready to Transform Your Multi-Platform Streaming?":"다중 플랫폼 방송을 새롭게 바꿀 준비가 되셨나요?","Report an Issue":"문제 신고","Required for most platforms":"대부분의 플랫폼에서 필요","Resources":"자료","Restream.io Chat":"Restream.io Chat","Rumble.com":"Rumble.com","SOOP Live":"SOOP Live","Seal Team Sloth":"Seal Team Sloth","See the full supported-platform list":"지원 플랫폼 전체 목록 보기","Select messages via the dockable dashboard":"도킹 가능한 대시보드에서 메시지 선택","Server API for remote control":"원격 제어용 서버 API","Sessions.us":"Sessions.us","SharePlay.tv":"SharePlay.tv","Slack":"Slack","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja works with 100+ platforms and services - here's a sample":"Social Stream Ninja는 100개 이상의 플랫폼과 서비스를 지원합니다. 일부 예시는 다음과 같습니다","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. GPLv3.0 라이선스. 제작:","Source filtering and branding options":"소스 필터링 및 브랜딩 옵션","Specialized Platforms":"전문 플랫폼","Start using Social Stream Ninja today and take your audience engagement to the next level.":"지금 Social Stream Ninja로 시청자 참여를 높여 보세요.","Steve Seguin":"Steve Seguin","Support":"지원","Supported Platforms":"지원 플랫폼","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Take your streams to the next level with our suite of professional tools designed for engagement and interaction.":"참여와 상호작용을 위한 전문 도구 모음으로 방송을 발전시키세요.","Telegram":"Telegram","Templates":"템플릿","Terms of Service":"서비스 이용약관","Text-to-Speech":"텍스트 음성 변환","TikTok Live":"TikTok Live","Twitch.tv":"Twitch.tv","Two-way Chat":"양방향 채팅","URL parameters for easy configuration":"간편한 설정을 위한 URL 매개변수","Unlimited with CSS/JS":"CSS/JS로 무제한","VKPlay.ru":"VKPlay.ru","VPZone.tv":"VPZone.tv","Varies by provider":"제공자에 따라 다름","Video Conferencing":"화상 회의","View Installation Guide":"설치 가이드 보기","Voice cohost that can hear you and receive selected live-chat messages":"내 말을 듣고 선택한 실시간 채팅 메시지를 받을 수 있는 음성 공동 진행자","Webex":"Webex","Webhook support for third-party integrations":"외부 통합용 웹훅 지원","WhatsApp Web":"WhatsApp Web","Why Choose Social Stream Ninja?":"Social Stream Ninja를 선택하는 이유","Word cloud and custom GIF commands":"워드 클라우드 및 사용자 지정 GIF 명령","X (Twitter) Live":"X(Twitter) Live","X.com":"X.com","Yes, on most platforms":"대부분의 플랫폼에서 지원","YouTube Live":"YouTube Live","Zoom.us":"Zoom.us","learn how to add it yourself":"직접 추가하는 방법 알아보기","to request a new integration or":"에서 새 통합을 요청하거나","with contributions from the community.":". 커뮤니티가 함께 기여했습니다."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/features.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/features.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/features.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/features.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/features.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/features.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/features.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/features.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/features.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/features.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/features.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/features.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/features.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/features.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/features.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/features.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/features.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/features.html">
+<!-- ssn-languages:end --></head>
+<body>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html" aria-current="page">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/features.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/features.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/features.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/features.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/features.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/features.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/features.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/features.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/features.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/features.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/features.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="features.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/features.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/features.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/features.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/features.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/features.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>기능</h1>
+            <p>채팅을 한데 모으고 시청자를 화면에 올리며 나만의 방송을 만드세요.</p>
+            <p><a href="inspiration.html">방송 아이디어 126개 살펴보기</a> · <a href="sticker-gallery.html">스티커 보상 미리보기</a></p>
+        </div>
+    </section>
+
+    <section class="features-section">
+        <div class="container">
+            <div class="feature-item">
+                <div class="feature-image">
+                    <img src="../../media/multi.png" alt="멀티 플랫폼 지원">
+                </div>
+                <div class="feature-details">
+                    <h2>다중 플랫폼 채팅 통합</h2>
+                    <p>모든 방송 플랫폼의 시청자와 동시에 소통하세요. Social Stream Ninja는 수십 개 플랫폼의 채팅 메시지를 관리하기 쉬운 하나의 대시보드로 통합합니다.</p>
+                    <ul class="feature-list">
+                        <li>Facebook, YouTube, Twitch, Zoom 등의 실시간 양방향 채팅</li>
+                        <li>대부분의 플랫폼에서 로그인이나 API 키 불필요</li>
+                        <li>플랫폼을 구분하는 여러 채널 소스 아이콘</li>
+                        <li>플랫폼 간 자동 메시지 릴레이</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feature-item reverse">
+                <div class="feature-image">
+                    <img src="../../media/featured-chat-overlay.png" alt="선택한 채팅 오버레이">
+                </div>
+                <div class="feature-details">
+                    <h2>선택한 채팅 오버레이</h2>
+                    <p>아름답고 맞춤 설정 가능한 오버레이로 시청자의 멋진 메시지를 방송에 바로 강조 표시하세요.</p>
+                    <ul class="feature-list">
+                        <li>도킹 가능한 대시보드에서 메시지 선택</li>
+                        <li>자동 또는 수동 메시지 선택</li>
+                        <li>방송 디자인에 어울리도록 CSS로 맞춤 설정 가능</li>
+                        <li>페이드와 스와이프 효과를 포함한 애니메이션 옵션</li>
+                        <li>체계적인 강조 표시를 위한 메시지 대기열</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-image">
+                    <img src="../../media/bot-commands.png" alt="봇 명령">
+                </div>
+                <div class="feature-details">
+                    <h2>봇 명령 및 자동 응답</h2>
+                    <p>사용자 지정 명령과 응답으로 시청자와의 상호작용을 자동화하세요.</p>
+                    <ul class="feature-list">
+                        <li>일반적인 상호작용용 내장 명령</li>
+                        <li>스크립트 플러그인 파일로 사용자 지정 명령 로직 구현</li>
+                        <li>자동 인사 및 응답</li>
+                        <li>메시지 필터링 및 채팅 관리</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feature-item reverse">
+                <div class="feature-image">
+                    <img src="../../media/llm-support.png" alt="AI 및 LLM 통합">
+                </div>
+                <div class="feature-details">
+                    <h2>AI 및 LLM 통합</h2>
+                    <p>방송 전체를 한 제공자에 묶지 않고 음성 공동 진행자, 챗봇, 브라우저 도우미 또는 특정 AI 처리 도구를 선택하세요.</p>
+                    <ul class="feature-list">
+                        <li>내 말을 듣고 선택한 실시간 채팅 메시지를 받을 수 있는 음성 공동 진행자</li>
+                        <li>사용자 지정 지침과 트리거 규칙이 있는 기본 및 비공개 챗봇</li>
+                        <li>OpenAI, Gemini, xAI, Bedrock, OpenRouter, Groq, 사용자 지정 호환 API 등 로컬 모델 또는 클라우드 제공자</li>
+                        <li>채팅 관리, 번역, 요약, RAG 맥락, 오버레이 제작</li>
+                        <li>API 키가 필요 없는 선택적 ChatGPT 브라우저 캡처</li>
+                    </ul>
+                    <a href="ai-modes-guide.html" class="btn btn-text">모든 AI 옵션 비교 →</a>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-image">
+                    <img src="../../media/text-to-speech.png" alt="텍스트 음성 변환">
+                </div>
+                <div class="feature-details">
+                    <h2>텍스트 음성 변환</h2>
+                    <p>음성 읽기로 채팅 메시지에 목소리를 더해 방송의 참여도와 접근성을 높이세요.</p>
+                    <ul class="feature-list">
+                        <li>무료 시스템 음성 읽기 지원</li>
+                        <li>프리미엄 음성 읽기 서비스 통합(Google Cloud, ElevenLabs, Speechify)</li>
+                        <li>다국어 지원</li>
+                        <li>음성, 높낮이, 말하기 속도 맞춤 설정</li>
+                        <li>OBS 오디오 캡처 지원</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                
+                <div class="feature-details">
+                    <h2>강력한 API</h2>
+                    <p>강력한 API 통합 옵션으로 Social Stream Ninja의 기능을 확장하세요.</p>
+                    <ul class="feature-list">
+                        <li>외부 통합용 웹훅 지원</li>
+                        <li>원격 제어용 서버 API</li>
+                        <li>후원 통합(<a href="monetization.html#ninjabacker">NinjaBacker: 무료, 플랫폼 수수료 0%</a>, Stripe, Ko-Fi, Buy Me A Coffee)</li>
+                        <li>MIDI/Streamdeck 제어</li>
+                        <li>OBS 원격 장면 지원</li>
+                    </ul>
+                </div>
+				<div class="feature-image">
+                    <img src="../../media/powerful-api.png" alt="API 통합">
+                </div>
+            </div>
+			
+			<div class="feature-item reverse">
+                
+                <div class="feature-details">
+                    <h2>세밀한 맞춤 설정</h2>
+                    <p>기능과 모양의 폭넓은 맞춤 설정으로 Social Stream Ninja를 나에게 맞게 만드세요.</p>
+                    <ul class="feature-list">
+                        <li>모양을 완전히 제어하는 CSS 스타일</li>
+                        <li>스타일이 적용된 템플릿 및 테마</li>
+                        <li>사용자 지정 JavaScript 지원</li>
+                        <li>간편한 설정을 위한 URL 매개변수</li>
+                        <li>소스 필터링 및 브랜딩 옵션</li>
+                    </ul>
+                </div>
+				<div class="feature-image">
+                    <img src="../../media/deep-customization.png" alt="맞춤 설정">
+                </div>
+            </div>
+			
+			<div class="feature-item">
+				<div class="feature-details">
+					<h2>고급 방송 도구</h2>
+					<p>참여와 상호작용을 위한 전문 도구 모음으로 방송을 발전시키세요.</p>
+					<ul class="feature-list">
+						<li>Battle Royal 등을 포함한 상호작용 미니게임</li>
+						<li>대기열 관리가 있는 경품 추첨 시스템</li>
+						<li>크레딧 롤 및 후원함 표시</li>
+						<li>워드 클라우드 및 사용자 지정 GIF 명령</li>
+						<li>그래픽 투표 시스템</li>
+						<li>검색 가능한 채팅 기록 데이터베이스</li>
+						<li>비공개 AI 챗봇 인터페이스</li>
+						<li>멀티모달 AI 공동 진행자 기능</li>
+					</ul>
+				</div>
+				<div class="feature-image">
+					<img src="../../media/advanced-streaming.png" alt="고급 도구">
+				</div>
+			</div>
+        </div>
+    </section>
+
+    <section id="supported-platforms" class="supported-platforms">
+        <div class="container">
+            <h2>지원 플랫폼</h2>
+            <p class="section-subtitle">Social Stream Ninja는 100개 이상의 플랫폼과 서비스를 지원합니다. 일부 예시는 다음과 같습니다</p>
+            
+            <div class="platforms-grid">
+                <div class="platform-category">
+                    <h3>주요 방송 플랫폼</h3>
+                    <ul>
+                        <li>YouTube Live</li>
+                        <li>Twitch.tv</li>
+                        <li>Facebook Live</li>
+                        <li>Instagram Live</li>
+                        <li>TikTok Live</li>
+                        <li>X(Twitter) Live</li>
+                        <li>LinkedIn Events</li>
+                        <li>Amazon Live</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-category">
+                    <h3>화상 회의</h3>
+                    <ul>
+                        <li>Zoom.us</li>
+                        <li>Google Meet</li>
+                        <li>Microsoft Teams</li>
+                        <li>Webex</li>
+                        <li>Sessions.us</li>
+                        <li>Amazon Chime</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-category">
+                    <h3>메시징 플랫폼</h3>
+                    <ul>
+                        <li>Discord</li>
+                        <li>Slack</li>
+                        <li>Telegram</li>
+                        <li>WhatsApp Web</li>
+                        <li>IRC(여러 네트워크)</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-category">
+                    <h3>대안 방송 플랫폼</h3>
+                    <ul>
+                        <li>Kick.com</li>
+                        <li>VPZone.tv</li>
+                        <li>Rumble.com</li>
+                        <li>Odysee.com</li>
+                        <li>Picarto.tv</li>
+                        <li>Chzzk.naver.com</li>
+                        <li>Cozy.tv</li>
+						<li>SharePlay.tv</li>
+						<li>Seal Team Sloth</li>
+						<li>Castyr</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-category">
+                    <h3>국제 플랫폼</h3>
+                    <ul>
+                        <li>Bilibili.tv</li>
+                        <li>Bilibili.com</li>
+                        <li>VKPlay.ru</li>
+                        <li>SOOP Live</li>
+                        <li>Nimo.TV</li>
+                        <li>NonOLive</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-category">
+                    <h3>전문 플랫폼</h3>
+                    <ul>
+                        <li>Owncast</li>
+                        <li>Restream.io Chat</li>
+                        <li>Piczel.tv</li>
+                        <li>Locals.com</li>
+                        <li>Crowdcast.io</li>
+                        <li>Livestorm.io</li>
+						<li><a href="supported-sites.html">지원 플랫폼 전체 목록 보기</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+			<div class="platform-note">
+				<p>사용하는 플랫폼이 없나요? <a href="https://discord.socialstream.ninja" target="_blank">Discord 참여</a> 에서 새 통합을 요청하거나 <a href="source-types-guide.html#generic-and-unnamed-sources">직접 추가하는 방법 알아보기</a>.</p>
+			</div>
+        </div>
+    </section>
+
+    <section class="comparison">
+        <div class="container">
+            <h2>Social Stream Ninja를 선택하는 이유</h2>
+            <div class="comparison-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>강조 표시</th>
+                            <th>Social Stream Ninja</th>
+                            <th>경쟁 제품</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>비용</td>
+                            <td><span class="highlight">무료 오픈 소스</span></td>
+                            <td>월 $10~50 구독</td>
+                        </tr>
+                        <tr>
+                            <td>플랫폼 지원</td>
+                            <td><span class="highlight">100개 이상의 플랫폼</span></td>
+                            <td>플랫폼 1~5개</td>
+                        </tr>
+                        <tr>
+                            <td>API 키 필요 여부</td>
+                            <td><span class="highlight">대부분의 플랫폼에서 불필요</span></td>
+                            <td>대부분의 플랫폼에서 필요</td>
+                        </tr>
+                        <tr>
+                            <td>맞춤 설정</td>
+                            <td><span class="highlight">CSS/JS로 무제한</span></td>
+                            <td>제한된 템플릿</td>
+                        </tr>
+                        <tr>
+                            <td>양방향 채팅</td>
+                            <td><span class="highlight">대부분의 플랫폼에서 지원</span></td>
+                            <td>제한적 또는 추가 비용</td>
+                        </tr>
+	                        <tr>
+	                            <td>AI 통합</td>
+	                            <td><span class="highlight">로컬 모델, 음성 공동 진행자, 클라우드 제공자, 사용자 지정 API</span></td>
+	                            <td>제한적 또는 없음</td>
+	                        </tr>
+                        <tr>
+                            <td>커뮤니티 지원</td>
+                            <td><span class="highlight">활발한 Discord 커뮤니티</span></td>
+                            <td>제공자에 따라 다름</td>
+                        </tr>
+                        <tr>
+                            <td>확장 프로그램</td>
+                            <td><span class="highlight">기여 가능</span></td>
+                            <td>폐쇄형 생태계</td>
+                        </tr>
+						<tr>
+							<td>참여형 게임</td>
+							<td><span class="highlight">내장 미니게임</span></td>
+							<td>사용 불가</td>
+						</tr>
+						<tr>
+							<td>AI 공동 진행자</td>
+							<td><span class="highlight">멀티모달 AI 도우미</span></td>
+							<td>사용 불가</td>
+						</tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+	
+    <section class="get-started">
+        <div class="container">
+            <h2>다중 플랫폼 방송을 새롭게 바꿀 준비가 되셨나요?</h2>
+            <p>지금 Social Stream Ninja로 시청자 참여를 높여 보세요.</p>
+            <div class="get-started-cta">
+                <a href="download.html" class="btn btn-primary">지금 다운로드</a>
+                <a href="guides.html" class="btn btn-secondary">설치 가이드 보기</a>
+            </div>
+        </div>
+    </section>
+
+        <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>실시간 소셜 메시지와 다양한 정보를 한데 모읍니다. 무료 오픈 소스입니다.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+					<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>바로가기</h3>
+                    <ul>
+                        <li><a href="../index.html">홈</a></li>
+                        <li><a href="features.html">기능</a></li>
+                        <li><a href="download.html">다운로드</a></li>
+                        <li><a href="guides.html">가이드</a></li>
+                        <li><a href="commands.html">명령 및 API</a></li>
+                        <li><a href="supported-sites.html">지원 사이트</a></li>
+                        <li><a href="templates.html">템플릿</a></li>
+                        <li><a href="support.html">지원</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>자료</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">설치 가이드</a></li>
+                        <li><a href="guides.html#extension-customization">맞춤 설정 가이드</a></li>
+                        <li><a href="guides.html#faq">자주 묻는 질문</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">문제 신고</a></li>
+                        <li><a href="../privacy.html">개인정보 처리방침</a></li>
+                        <li><a href="../TOS.html">서비스 이용약관</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>커뮤니티</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Discord 참여</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub 저장소</a></li>
+                        <li><a href="support.html#contribute">기여하기</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">후원하기</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 라이선스. 제작: <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> . 커뮤니티가 함께 기여했습니다.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../../docs/js/main.js"></script>
+    <script>
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

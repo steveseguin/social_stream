@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="es" data-site-root="../../" data-site-language="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="Añade sonidos, animaciones y efectos visuales a las alertas de Social Stream Ninja. Previsualiza los efectos y configura cómo aparecen en tu superposición de OBS.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/es/docs/alert-effects.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="es_ES">
+    <meta property="og:url" content="https://socialstream.ninja/beta/es/docs/alert-effects.html">
+    <meta property="og:title" content="Configuración de efectos de alertas | Social Stream Ninja">
+    <meta property="og:description" content="Añade sonidos, animaciones y efectos visuales a las alertas de Social Stream Ninja. Previsualiza los efectos y configura cómo aparecen en tu superposición de OBS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logotipo de Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/es/docs/alert-effects.html">
+    <meta name="twitter:title" content="Configuración de efectos de alertas | Social Stream Ninja">
+    <meta name="twitter:description" content="Añade sonidos, animaciones y efectos visuales a las alertas de Social Stream Ninja. Previsualiza los efectos y configura cómo aparecen en tu superposición de OBS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logotipo de Social Stream Ninja">
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Configuración de efectos de alertas | Social Stream Ninja</title>
+<link rel="stylesheet" href="../../docs/css/styles.css">
+<link rel="stylesheet" href="../../docs/css/guides.css">
+<style>
+main.container { padding-top: 10.4rem; }
+</style>
+<script>
+(function () {
+    var saved = localStorage.getItem('darkMode');
+    if (saved === 'true' || (saved !== 'false' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark-mode');
+})();
+</script>
+
+<meta name="ssn-site-translation" content="es">
+<script id="ssn-site-language" type="application/json">{"language":"es","page":"docs/alert-effects.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Cambiar al tema claro","Switch to dark theme":"Cambiar al tema oscuro","Light mode":"Modo claro","Dark mode":"Modo oscuro","Open navigation menu":"Abrir el menú de navegación","Close navigation menu":"Cerrar el menú de navegación","Copy this document as Markdown to the clipboard":"Copiar este documento en Markdown al portapapeles","Copy Markdown":"Copiar Markdown","Copying…":"Copiando…","Markdown copied":"Markdown copiado","Copy failed":"No se pudo copiar","Copy comprehensive Markdown for an AI assistant":"Copiar el contenido completo en Markdown para un asistente de IA","Copy this documentation page as Markdown for an AI assistant":"Copiar esta página de documentación en Markdown para un asistente de IA"},"strings":{"Add an optional direct GIF, image, or video URL, or upload media. A GIPHY page link is not a direct media URL. GIF images have no audio; choose a separate sound.":"Añade opcionalmente una URL directa de GIF, imagen o video, o sube un archivo multimedia. Un enlace a una página de GIPHY no es una URL directa de archivo. Las imágenes GIF no tienen audio; elige un sonido aparte.","Add sounds, animations and visual effects to Social Stream Ninja alerts. Preview effects and configure how they appear in your OBS overlay.":"Añade sonidos, animaciones y efectos visuales a las alertas de Social Stream Ninja. Previsualiza los efectos y configura cómo aparecen en tu superposición de OBS.","Alert effects setup | Social Stream Ninja":"Configuración de efectos de alertas | Social Stream Ninja","Amount limits and priority":"Límites de importe y prioridad","Animation and sound alerts":"Alertas con animación y sonido","Choose a sound and use Listen to hear it locally. Custom URL and upload options are below the picker.":"Elige un sonido y utiliza Escuchar (Listen) para oírlo localmente. Las opciones de URL personalizada y subida están debajo del selector.","Clear sound removes the custom sound override; default alert audio still applies. Disable Play alert sound to mute overlay audio. Enable alert pauses a rule while preserving its settings. Reset alert clears that rule alone.":"Borrar sonido (Clear sound) elimina el sonido personalizado; se sigue aplicando el audio predeterminado de la alerta. Desactiva Reproducir sonido de alerta (Play alert sound) para silenciar el audio de la superposición. Activar alerta (Enable alert) permite pausar una regla conservando sus ajustes. Restablecer alerta (Reset alert) borra solo esa regla.","Donations and bits use estimated USD values from the currency helper. For exactly $100, set both limits to 100. For $100 or more, leave the maximum blank. Blank limits allow any amount; other event types should have no amount limits.":"Las donaciones y los bits utilizan valores estimados en USD del conversor de divisas. Para exactamente 100 USD, fija ambos límites en 100. Para 100 USD o más, deja el máximo en blanco. Los límites vacíos permiten cualquier importe; otros tipos de evento no deberían tener límites de importe.","Enable an alert, then choose the event. The $100 donation preset fills both amount limits and supplies a synthetic Thank you sound if none is selected.":"Activa una alerta y luego elige el evento. El ajuste predefinido de donación de 100 USD rellena ambos límites de importe y añade un sonido sintético de agradecimiento si no hay ninguno seleccionado.","Event Flow and OBS effects":"Event Flow y efectos de OBS","Event Flow guide":"Guía de Event Flow","Open Multi-Alerts → Event animations & sound effects.":"Abre Multi-Alerts → Animaciones de eventos y efectos de sonido (Event animations & sound effects).","Preview and sound":"Vista previa y sonido","Set up your first alert":"Configura tu primera alerta","Social Stream Ninja logo":"Logotipo de Social Stream Ninja","Social Stream Ninja · Guides":"Social Stream Ninja · Guías","Test alert opens and focuses the local preview. It does not send an event to your live channels. The preview uses your current overlay settings, filters, media, and timing. Sound volume is under Sound & Timing.":"Probar alerta (Test alert) abre y enfoca la vista previa local. No envía ningún evento a tus canales en vivo. La vista previa utiliza tus ajustes actuales de superposición, filtros, archivos multimedia y tiempos. El volumen está en Sonido y tiempos (Sound & Timing).","The first matching alert wins. Put specific rules before broad ones. Platform and category filters still apply.":"Se aplica la primera alerta que coincida. Coloca las reglas específicas antes que las generales. Los filtros de plataforma y categoría siguen aplicándose.","Use Event Flow templates for sequences and OBS effects. Those media and sound actions play in the Flow Actions overlay. Use one overlay for each event's sound to avoid hearing it twice. OBS templates need a source and filter selected before use.":"Utiliza plantillas de Event Flow para secuencias y efectos de OBS. Esas acciones multimedia y de sonido se reproducen en la superposición Flow Actions. Utiliza una superposición para el sonido de cada evento para evitar escucharlo dos veces. Las plantillas de OBS necesitan una fuente y un filtro seleccionados antes de usarse.","Use Test alert, then add your Multi-Alerts link as an OBS browser source.":"Utiliza Probar alerta (Test alert) y luego añade tu enlace de Multi-Alerts como fuente de navegador de OBS.","Voiced phrases are labelled synthetic recordings. For names or changing text, use the Event Flow editor's Speak Text action.":"Las frases habladas están etiquetadas como grabaciones sintéticas. Para nombres o texto variable, utiliza la acción Leer texto (Speak Text) del editor Event Flow."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/alert-effects.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/alert-effects.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/alert-effects.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/alert-effects.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/alert-effects.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/alert-effects.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/alert-effects.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/alert-effects.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/alert-effects.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/alert-effects.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/alert-effects.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/alert-effects.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/alert-effects.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/alert-effects.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/alert-effects.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/alert-effects.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/alert-effects.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/alert-effects.html">
+<!-- ssn-languages:end --></head>
+<body>
+<header>
+<div class="container">
+<a href="guides.html">Social Stream Ninja · Guías</a>
+<!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Español"><span aria-hidden="true">🌐 </span><span lang="es">Español</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/alert-effects.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="alert-effects.html" lang="es" hreflang="es" aria-current="true">Español</a><a class="site-language-link" href="../../pt-br/docs/alert-effects.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/alert-effects.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/alert-effects.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/alert-effects.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/alert-effects.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/alert-effects.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/alert-effects.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/alert-effects.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/alert-effects.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/alert-effects.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/alert-effects.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/alert-effects.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/alert-effects.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/alert-effects.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/alert-effects.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+</header>
+<main class="container">
+<h1>Alertas con animación y sonido</h1>
+<section class="guide-card">
+<h2>Configura tu primera alerta</h2>
+<ol>
+<li>Abre Multi-Alerts → Animaciones de eventos y efectos de sonido (Event animations &amp; sound effects).</li>
+<li>Activa una alerta y luego elige el evento. El ajuste predefinido de donación de 100 USD rellena ambos límites de importe y añade un sonido sintético de agradecimiento si no hay ninguno seleccionado.</li>
+<li>Añade opcionalmente una URL directa de GIF, imagen o video, o sube un archivo multimedia. Un enlace a una página de GIPHY no es una URL directa de archivo. Las imágenes GIF no tienen audio; elige un sonido aparte.</li>
+<li>Elige un sonido y utiliza Escuchar (Listen) para oírlo localmente. Las opciones de URL personalizada y subida están debajo del selector.</li>
+<li>Utiliza Probar alerta (Test alert) y luego añade tu enlace de Multi-Alerts como fuente de navegador de OBS.</li>
+</ol>
+</section>
+<section class="guide-card">
+<h2>Límites de importe y prioridad</h2>
+<p>Las donaciones y los bits utilizan valores estimados en USD del conversor de divisas. Para exactamente 100 USD, fija ambos límites en 100. Para 100 USD o más, deja el máximo en blanco. Los límites vacíos permiten cualquier importe; otros tipos de evento no deberían tener límites de importe.</p>
+<p>Se aplica la primera alerta que coincida. Coloca las reglas específicas antes que las generales. Los filtros de plataforma y categoría siguen aplicándose.</p>
+</section>
+<section class="guide-card" id="testing">
+<h2>Vista previa y sonido</h2>
+<p>Probar alerta (Test alert) abre y enfoca la vista previa local. No envía ningún evento a tus canales en vivo. La vista previa utiliza tus ajustes actuales de superposición, filtros, archivos multimedia y tiempos. El volumen está en Sonido y tiempos (Sound &amp; Timing).</p>
+<p>Borrar sonido (Clear sound) elimina el sonido personalizado; se sigue aplicando el audio predeterminado de la alerta. Desactiva Reproducir sonido de alerta (Play alert sound) para silenciar el audio de la superposición. Activar alerta (Enable alert) permite pausar una regla conservando sus ajustes. Restablecer alerta (Reset alert) borra solo esa regla.</p>
+<p>Las frases habladas están etiquetadas como grabaciones sintéticas. Para nombres o texto variable, utiliza la acción Leer texto (Speak Text) del editor Event Flow.</p>
+</section>
+<section class="guide-card">
+<h2>Event Flow y efectos de OBS</h2>
+<p>Utiliza plantillas de Event Flow para secuencias y efectos de OBS. Esas acciones multimedia y de sonido se reproducen en la superposición Flow Actions. Utiliza una superposición para el sonido de cada evento para evitar escucharlo dos veces. Las plantillas de OBS necesitan una fuente y un filtro seleccionados antes de usarse.</p>
+<p>
+<a href="../actions/event-flow-guide.html">Guía de Event Flow</a>
+</p>
+</section>
+</main>
+</body>
+</html>

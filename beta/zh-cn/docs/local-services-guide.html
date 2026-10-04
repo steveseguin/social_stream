@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-cn/docs/local-services-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-cn/docs/local-services-guide.html">
+    <meta property="og:title" content="本地服务器和服务说明 - Social Stream Ninja">
+    <meta property="og:description" content="选择适合的 Social Stream Ninja 本地服务：WebSocket 中继、本地控制 API 与 MCP、无头托管或 Event Flow 媒体服务器。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-cn/docs/local-services-guide.html">
+    <meta name="twitter:title" content="本地服务器和服务说明 - Social Stream Ninja">
+    <meta name="twitter:description" content="选择适合的 Social Stream Ninja 本地服务：WebSocket 中继、本地控制 API 与 MCP、无头托管或 Event Flow 媒体服务器。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>本地服务器和服务说明 - Social Stream Ninja</title>
+	<meta name="description" content="选择适合的 Social Stream Ninja 本地服务：WebSocket 中继、本地控制 API 与 MCP、无头托管或 Event Flow 媒体服务器。">
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/local-services-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{", and":"，以及",", it uses the desktop app's local relay instead. See":"，则改用桌面应用的本地中继。参阅",". It is separate from":"。它与以下功能分开：",". See the":"。请参阅","1. Enable Local Server":"1. 启用本地服务器","2. Local Control API and MCP":"2. 本地控制 API 与 MCP","3. Headless Home Server or VPS":"3. 无头家庭服务器或 VPS","4. Local Media Server":"4. 本地媒体服务器","Choose the correct Social Stream Ninja local service: the WebSocket relay, local control API and MCP, headless hosting, or Event Flow media server.":"选择适合的 Social Stream Ninja 本地服务：WebSocket 中继、本地控制 API 与 MCP、无头托管或 Event Flow 媒体服务器。","Commands & API":"命令与 API","Default Address":"默认地址","Dock sends its commands to Extension via server":"停靠面板通过服务器向扩展发送命令","Download":"下载","Enable Local Server":"启用本地服务器","Enable Local Server guide":"启用本地服务器指南","Enable it under":"在以下位置启用：","Features":"功能","File > Local AI / Automation":"文件 > 本地 AI / 自动化","Guides":"指南","Headless SSApp hosting":"无头 SSApp 托管","Headless mode does not create a public control API. Remote control uses Social Stream's normal WebRTC or WebSocket transport. See the":"无头模式不会创建公开控制 API。远程控制使用 Social Stream 的常规 WebRTC 或 WebSocket 传输。参阅","Headless mode runs the full Electron desktop app with its source windows hidden. On Linux it still needs a display backend such as Xvfb. This is useful when a dedicated computer should keep capturing chat without a monitor attached.":"无头模式运行完整的 Electron 桌面应用，同时隐藏来源窗口。在 Linux 上仍需要 Xvfb 等显示后端。它适合让专用电脑在不连接显示器的情况下持续捕获聊天。","Hire":"雇用","Home":"首页","I Want To":"我想要","Inspiration":"灵感","It does not host the Social Stream website, capture a platform by itself, or provide the HTTP automation API. Start with the":"它不会托管 Social Stream 网站、独立捕获平台，或提供 HTTP 自动化 API。请先阅读","It is not a general web or file server. See":"它不是通用 Web 或文件服务器。参阅","Let an AI tool or local script inspect and control the desktop app":"让 AI 工具或本地脚本检查和控制桌面应用","Local Control API and MCP":"本地控制API和MCP","Local Control API and MCP guide":"本地控制 API 与 MCP 指南","Local Servers and Services Explained":"本地服务器和服务说明","Local Servers and Services Explained - Social Stream Ninja":"本地服务器和服务说明 - Social Stream Ninja","Local media server":"本地媒体服务器","Main navigation":"主导航","Media Files for Event Flow":"Event Flow 媒体文件","No new public API; remote control uses the normal Social Stream session.":"没有新增公开 API；远程控制使用常规 Social Stream 会话。","Older upgraded installs may use":"从旧版升级的安装可能使用","Open navigation menu":"打开导航菜单","Other Temporary Local Ports":"其他临时本地端口","Overlay Gallery":"叠加层图库","Play an approved local audio, image, or video file in Event Flow":"在 Event Flow 中播放获准的本地音频、图片或视频文件","Quick Chooser":"快速选择","Relay chat and supported commands between Social Stream pages without the normal remote transport":"不使用常规远程传输，在 Social Stream 页面之间转发聊天和受支持的命令","Routing flags are page-specific. Do not copy a server flag from one page to another and assume it has the same meaning.":"路由标志因页面而异。不要将一个页面的服务器标志复制到另一个页面，并假定含义相同。","Run the complete desktop app on a Linux home server or VPS without a monitor":"在没有显示器的 Linux 家庭服务器或 VPS 上运行完整桌面应用","Send chat messages to API server":"将聊天消息发送到 API 服务器","Server Fallback Is Different":"服务器备用模式有所不同","Sessions, Passwords, Relay, and Server Modes":"会话、密码、中继与服务器模式","Settings such as":"例如这些设置：","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja uses several different local services. Choose the one that matches what you want to do.":"Social Stream Ninja 使用几种不同的本地服务。请选择与你的目标相符的一种。","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 许可证。","Some sign-in and account-link workflows briefly open a loopback callback port and close it when the workflow ends. These temporary listeners are not general SSN servers or automation APIs.":"某些登录和账号关联流程会短暂打开回环回调端口，并在流程结束后关闭。这些临时监听器不是通用 SSN 服务器或自动化 API。","Support":"支持","Supported Sites":"支持的网站","Switch theme":"切换主题","The desktop app starts this automatically when local Event Flow media is available. It serves only files approved through SSApp and selected runtime assets through a random per-profile token path.":"当本地 Event Flow 媒体可用时，桌面应用会自动启动此服务。它通过每个配置独有的随机令牌路径，仅提供经 SSApp 批准的文件和选定的运行时资源。","This File-menu option starts a room- and channel-aware WebSocket relay inside the desktop app. Supported Social Stream pages can use it to exchange chat and commands on the same computer. It is an alternative endpoint for page-specific server routing.":"此“文件”菜单选项会在桌面应用内启动支持房间和频道的 WebSocket 中继。受支持的 Social Stream 页面可用它在同一台电脑上交换聊天和命令。它是页面专用服务器路由的替代端点。","This opt-in loopback API lets programs on the SSApp computer manage supported sources and settings, read status and diagnostics, inspect app or source windows, and follow captured events. The bundled MCP adapter presents those operations as tools to compatible AI clients.":"此可选启用的回环 API 让 SSApp 电脑上的程序管理受支持的来源和设置、读取状态和诊断、检查应用或来源窗口，以及跟踪捕获事件。随附的 MCP 适配器将这些操作作为工具提供给兼容的 AI 客户端。","Those settings normally use Social Stream's hosted WebSocket service. When a supported page also has":"这些设置通常使用 Social Stream 的托管 WebSocket 服务。如果受支持的页面还带有","Use":"使用","Use freshly generated links.":"使用刚生成的链接。","and":"和","choose how chat and commands are routed. Their generated URL flags include":"用于选择聊天和命令的路由方式。生成的 URL 标志包括","for the routing controls.":"，查看路由控件。","headless hosting guide":"无头托管指南","to choose between local files, uploads, and cloud hosting.":"，在本地文件、上传和云端托管之间选择。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/local-services-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/local-services-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/local-services-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/local-services-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/local-services-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/local-services-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/local-services-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/local-services-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/local-services-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/local-services-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/local-services-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/local-services-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/local-services-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/local-services-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/local-services-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/local-services-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/local-services-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/local-services-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="guides-page">
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/local-services-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/local-services-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/local-services-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/local-services-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/local-services-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/local-services-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/local-services-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="local-services-guide.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/local-services-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/local-services-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/local-services-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/local-services-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/local-services-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/local-services-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/local-services-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/local-services-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/local-services-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+	<section class="page-hero">
+		<div class="container">
+			<h1>本地服务器和服务说明</h1>
+			<p>Social Stream Ninja 使用几种不同的本地服务。请选择与你的目标相符的一种。</p>
+		</div>
+	</section>
+
+	<main class="guide-section">
+		<div class="container">
+			<div class="guide-card">
+				<h2>快速选择</h2>
+				<table class="guide-table guide-table-stack">
+					<thead>
+						<tr><th>我想要</th><th>使用</th><th>默认地址</th></tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td data-label="I Want To"><span>不使用常规远程传输，在 Social Stream 页面之间转发聊天和受支持的命令</span></td>
+							<td data-label="Use"><span><a href="local-websocket-server-guide.html"><strong>启用本地服务器</strong></a></span></td>
+							<td data-label="Default Address"><span><code>ws://127.0.0.1:3003</code><br>从旧版升级的安装可能使用 <code>3000</code>.</span></td>
+						</tr>
+						<tr>
+							<td data-label="I Want To"><span>让 AI 工具或本地脚本检查和控制桌面应用</span></td>
+							<td data-label="Use"><span><a href="llm-control-guide.html"><strong>本地控制API和MCP</strong></a></span></td>
+							<td data-label="Default Address"><span><code>http://127.0.0.1:17777</code></span></td>
+						</tr>
+						<tr>
+							<td data-label="I Want To"><span>在没有显示器的 Linux 家庭服务器或 VPS 上运行完整桌面应用</span></td>
+							<td data-label="Use"><span><a href="headless-server-guide.html"><strong>无头 SSApp 托管</strong></a></span></td>
+							<td data-label="Default Address"><span>没有新增公开 API；远程控制使用常规 Social Stream 会话。</span></td>
+						</tr>
+						<tr>
+							<td data-label="I Want To"><span>在 Event Flow 中播放获准的本地音频、图片或视频文件</span></td>
+							<td data-label="Use"><span><a href="media-hosting-event-flow.html"><strong>本地媒体服务器</strong></a></span></td>
+							<td data-label="Default Address"><span><code>http://127.0.0.1:3001</code></span></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card">
+				<h2>1. 启用本地服务器</h2>
+				<p>此“文件”菜单选项会在桌面应用内启动支持房间和频道的 WebSocket 中继。受支持的 Social Stream 页面可用它在同一台电脑上交换聊天和命令。它是页面专用服务器路由的替代端点。</p>
+				<p>它不会托管 Social Stream 网站、独立捕获平台，或提供 HTTP 自动化 API。请先阅读 <a href="local-websocket-server-guide.html">启用本地服务器指南</a>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>2. 本地控制 API 与 MCP</h2>
+				<p>此可选启用的回环 API 让 SSApp 电脑上的程序管理受支持的来源和设置、读取状态和诊断、检查应用或来源窗口，以及跟踪捕获事件。随附的 MCP 适配器将这些操作作为工具提供给兼容的 AI 客户端。</p>
+				<p>在以下位置启用： <strong>文件 &gt; 本地 AI / 自动化</strong>。它与以下功能分开： <strong>启用本地服务器</strong>。请参阅 <a href="llm-control-guide.html">本地控制 API 与 MCP 指南</a>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>3. 无头家庭服务器或 VPS</h2>
+				<p>无头模式运行完整的 Electron 桌面应用，同时隐藏来源窗口。在 Linux 上仍需要 Xvfb 等显示后端。它适合让专用电脑在不连接显示器的情况下持续捕获聊天。</p>
+				<p>无头模式不会创建公开控制 API。远程控制使用 Social Stream 的常规 WebRTC 或 WebSocket 传输。参阅 <a href="headless-server-guide.html">无头托管指南</a>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>4. 本地媒体服务器</h2>
+				<p>当本地 Event Flow 媒体可用时，桌面应用会自动启动此服务。它通过每个配置独有的随机令牌路径，仅提供经 SSApp 批准的文件和选定的运行时资源。</p>
+				<p>它不是通用 Web 或文件服务器。参阅 <a href="media-hosting-event-flow.html">Event Flow 媒体文件</a> ，在本地文件、上传和云端托管之间选择。</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>服务器备用模式有所不同</h2>
+				<p>例如这些设置： <strong>将聊天消息发送到 API 服务器</strong> 和 <strong>停靠面板通过服务器向扩展发送命令</strong> 用于选择聊天和命令的路由方式。生成的 URL 标志包括 <code>server</code>, <code>server2</code>，以及 <code>server3</code>.</p>
+				<p>这些设置通常使用 Social Stream 的托管 WebSocket 服务。如果受支持的页面还带有 <code>localserver</code>，则改用桌面应用的本地中继。参阅 <a href="sessions-passwords-relay-modes.html">会话、密码、中继与服务器模式</a> ，查看路由控件。</p>
+				<div class="warning-note">
+					<p><strong>使用刚生成的链接。</strong> 路由标志因页面而异。不要将一个页面的服务器标志复制到另一个页面，并假定含义相同。</p>
+				</div>
+			</div>
+
+			<div class="guide-card">
+				<h2>其他临时本地端口</h2>
+				<p>某些登录和账号关联流程会短暂打开回环回调端口，并在流程结束后关闭。这些临时监听器不是通用 SSN 服务器或自动化 API。</p>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja。GPLv3.0 许可证。</p></div></div></footer>
+	<script data-copy-markdown src="../../docs/js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

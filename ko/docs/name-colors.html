@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ko/docs/name-colors.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/ko/docs/name-colors.html">
+    <meta property="og:title" content="채팅 이름에 다른 색상 적용 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja 도크의 채팅 이름에 서로 다른 색상을 적용하고 색상 모드를 선택하며 CSS로 이름 색상을 지정하세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ko/docs/name-colors.html">
+    <meta name="twitter:title" content="채팅 이름에 다른 색상 적용 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja 도크의 채팅 이름에 서로 다른 색상을 적용하고 색상 모드를 선택하며 CSS로 이름 색상을 지정하세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem('darkMode');
+            var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채팅 이름에 다른 색상 적용 - Social Stream Ninja</title>
+    <meta name="description" content="Social Stream Ninja 도크의 채팅 이름에 서로 다른 색상을 적용하고 색상 모드를 선택하며 CSS로 이름 색상을 지정하세요.">
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <style>
+        .guide-image {
+            display: block;
+            width: 100%;
+            max-width: 900px;
+            margin: 1.25rem auto 0;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .source-example {
+            max-width: 600px;
+        }
+
+        .guide-figure {
+            margin: 1.5rem 0 0;
+        }
+
+        .guide-figure figcaption {
+            max-width: 900px;
+            margin: 0.7rem auto 0;
+            color: var(--text-light);
+            text-align: center;
+        }
+
+        .menu-crop {
+            position: relative;
+            width: 100%;
+            max-width: 748px;
+            height: 0;
+            padding-top: 19.385%;
+            margin: 1.25rem auto 0;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .menu-crop img {
+            position: absolute;
+            top: -157%;
+            left: 0;
+            width: 100%;
+            height: auto;
+        }
+
+        .required-note {
+            margin: 1.25rem 0;
+            padding: 1rem 1.25rem;
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            background: rgba(26, 115, 232, 0.08);
+        }
+
+        .dark-mode .required-note {
+            background: rgba(26, 115, 232, 0.18);
+        }
+
+        .option-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .option-table th,
+        .option-table td {
+            padding: 0.8rem;
+            border: 1px solid var(--border-color);
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .option-table th {
+            background: rgba(26, 115, 232, 0.08);
+        }
+
+        @media (max-width: 700px) {
+            .option-table,
+            .option-table tbody,
+            .option-table tr,
+            .option-table th,
+            .option-table td {
+                display: block;
+            }
+
+            .option-table thead {
+                display: none;
+            }
+
+            .option-table tr {
+                margin-bottom: 1rem;
+                border: 1px solid var(--border-color);
+            }
+
+            .option-table td {
+                border: 0;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .option-table td:last-child {
+                border-bottom: 0;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/name-colors.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{", expand":"에서 다음을 펼치세요:",", or":", 또는",". This keeps colors supplied by the chat platform and fills in missing ones.":"를 선택하세요. 채팅 플랫폼이 제공하는 색상은 유지하고 없는 색상만 채웁니다.","A fully mixed-color chat":"모든 이름에 다양한 색상을 쓰는 채팅","Add CSS through the Dock settings, the":"도크 설정, 다음","Assigns every username a consistent generated color, replacing colors from the platform.":"플랫폼 색상을 대체하여 모든 사용자 이름에 일관되게 생성된 색상을 지정합니다.","Best for":"적합한 대상","CSS can reliably target a platform or role, but the standard Dock does not add a username as a CSS class or attribute. For fixed per-person color rules, use the built-in generated colors or a":"CSS는 플랫폼이나 역할을 안정적으로 지정할 수 있지만 기본 도크는 사용자 이름을 CSS 클래스나 속성으로 추가하지 않습니다. 사람별 고정 색상 규칙에는 내장 생성 색상 또는 다음을 사용하세요:","Check that the Dock URL contains":"도크 URL에 다음이 있는지 확인하세요:","Check your custom CSS for a rule that forces every":"사용자 지정 CSS에서 모든","Choose colors by platform":"플랫폼별 색상 선택","Choose how the Dock should display or generate username colors.":"도크에서 사용자 이름 색상을 표시하거나 생성하는 방식을 선택하세요.","Choose the color behavior":"색상 동작 선택","Commands & API":"명령 및 API","Confirm one option is on under the Dock's":"도크의 다음 항목에서 옵션 하나가 켜져 있는지 확인하세요:","Different Colors for Chat Names - Social Stream Ninja":"채팅 이름에 다른 색상 적용 - Social Stream Ninja","Displays a color only when the chat platform supplies one.":"채팅 플랫폼이 색상을 제공할 때만 표시합니다.","Dock option":"도크 옵션","Download":"다운로드","Features":"기능","For platforms without username colors, choose":"사용자 이름 색상을 제공하지 않는 플랫폼에는 다음을 선택하세요:","Generate colors for every name":"모든 이름의 색상 생성","Generate colors for uncolored names":"색상 없는 이름의 색상 생성","Give Chat Names Different Colors":"채팅 이름에 다른 색상 적용","Guides":"가이드","Highlight moderators and VIPs":"관리자 및 VIP 강조","Hire":"작업 의뢰","Home":"홈","If the names are still one color":"이름이 여전히 한 가지 색상인 경우","Inspiration":"아이디어","Keeps platform-provided name colors and assigns a consistent color when one is missing.":"플랫폼에서 제공한 이름 색상을 유지하고 색상이 없으면 일관된 색상을 지정합니다.","Main chat overlay & control dock":"기본 채팅 오버레이 및 제어 도크","Main navigation":"기본 탐색 메뉴","Make chat names different colors in the Social Stream Ninja Dock, choose a color mode, and customize name colors with CSS.":"Social Stream Ninja 도크의 채팅 이름에 서로 다른 색상을 적용하고 색상 모드를 선택하며 CSS로 이름 색상을 지정하세요.","More control with CSS":"CSS로 더 세밀하게 제어","Most users":"대부분의 사용자","No global setting is required:":"전역 설정이 필요하지 않습니다:","Open navigation menu":"탐색 메뉴 열기","Open the Social Stream Ninja extension or desktop app settings.":"Social Stream Ninja 확장 프로그램 또는 데스크톱 앱 설정을 여세요.","Overlay Customization":"오버레이 사용자 지정","Overlay Gallery":"오버레이 갤러리","Platforms such as Twitch that provide username colors":"사용자 이름 색상을 제공하는 Twitch 등의 플랫폼","Quick setup":"빠른 설정","Real Twitch chat showing source-provided username colors. With the Dock color toggle on, Social Stream Ninja preserves these":"소스가 제공하는 사용자 이름 색상이 표시된 실제 Twitch 채팅입니다. 도크 색상 스위치를 켜면 Social Stream Ninja가 다음 값을 유지합니다:","Real Twitch chat showing usernames in clearly different colors":"사용자 이름이 서로 뚜렷이 다른 색상으로 표시된 실제 Twitch 채팅","Refresh any Dock tab or OBS Browser Source that was already open.":"이미 열려 있던 도크 탭이나 OBS 브라우저 소스를 새로고침하세요.","Resources":"자료","Result":"결과","Settings Reference":"설정 참고 문서","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","The generated colors are stable: the Dock hashes the user ID, username, or display name so the same person keeps the same color. The global color settings remain available when colors need to be added to outbound payloads and other surfaces.":"생성된 색상은 일정하게 유지됩니다. 도크는 사용자 ID, 사용자 이름 또는 표시 이름을 해시 처리하여 같은 사람이 같은 색상을 유지하도록 합니다. 전송 페이로드와 다른 화면에도 색상을 추가해야 할 때는 전역 색상 설정을 계속 사용할 수 있습니다.","Turn on":"켜기:","URL option, or OBS Browser Source custom CSS. Use":"URL 옵션 또는 OBS 브라우저 소스 사용자 지정 CSS를 통해 CSS를 추가하세요. 다음을 사용하세요:","Under":"다음 항목 아래에서:","Use one color for every name":"모든 이름에 같은 색상 사용","Use one main color option at a time so the result is predictable.":"결과를 예측할 수 있도록 기본 색상 옵션은 한 번에 하나만 사용하세요.","Use source-provided username colors":"소스에서 제공하는 사용자 이름 색상 사용","Use the updated Dock link. Existing Dock or OBS browser-source URLs also work if you add":"업데이트한 도크 링크를 사용하세요. 기존 도크 또는 OBS 브라우저 소스 URL에도 다음을 추가하면 작동합니다:","Username colors":"사용자 이름 색상","and refresh them.":"를 추가하고 새로고침하세요.","choose one option in the Dock's":"도크의 다음 항목에서 옵션 하나를 선택하세요:","custom overlay":"사용자 지정 오버레이","or":"또는","section.":"섹션입니다.","that maps usernames to colors in JavaScript.":"에서 JavaScript로 사용자 이름을 색상에 매핑하세요.","to the same color.":"을 같은 색상으로 강제하는 규칙이 있는지 확인하세요.","values.":"값입니다.","when overriding a name color supplied by a platform.":"를 플랫폼에서 제공한 이름 색상을 덮어쓸 때 사용하세요."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/name-colors.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/name-colors.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/name-colors.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/name-colors.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/name-colors.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/name-colors.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/name-colors.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/name-colors.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/name-colors.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/name-colors.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/name-colors.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/name-colors.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/name-colors.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/name-colors.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/name-colors.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/name-colors.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/name-colors.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/name-colors.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/name-colors.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/name-colors.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/name-colors.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/name-colors.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/name-colors.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/name-colors.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/name-colors.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/name-colors.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/name-colors.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/name-colors.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/name-colors.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="name-colors.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/name-colors.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/name-colors.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/name-colors.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/name-colors.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/name-colors.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>채팅 이름에 다른 색상 적용</h1>
+            <p>도크에서 사용자 이름 색상을 표시하거나 생성하는 방식을 선택하세요.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <h3>빠른 설정</h3>
+                    <div class="required-note">
+                        <strong>전역 설정이 필요하지 않습니다:</strong> 도크의 다음 항목에서 옵션 하나를 선택하세요: <strong>사용자 이름 색상</strong> 섹션입니다.
+                    </div>
+                    <ol class="guide-steps">
+                        <li>Social Stream Ninja 확장 프로그램 또는 데스크톱 앱 설정을 여세요.</li>
+                        <li>다음 항목 아래에서: <strong>기본 채팅 오버레이 및 제어 도크</strong>에서 다음을 펼치세요: <strong>사용자 이름 색상</strong>.</li>
+                        <li>켜기: <strong>색상 없는 이름의 색상 생성</strong>를 선택하세요. 채팅 플랫폼이 제공하는 색상은 유지하고 없는 색상만 채웁니다.</li>
+                        <li>업데이트한 도크 링크를 사용하세요. 기존 도크 또는 OBS 브라우저 소스 URL에도 다음을 추가하면 작동합니다: <code>&amp;randomcolor</code> 를 추가하고 새로고침하세요.</li>
+                    </ol>
+                </div>
+
+                <div class="guide-card">
+                    <h3>색상 동작 선택</h3>
+                    <p>결과를 예측할 수 있도록 기본 색상 옵션은 한 번에 하나만 사용하세요.</p>
+                    <table class="option-table">
+                        <thead>
+                            <tr>
+                                <th>도크 옵션</th>
+                                <th>결과</th>
+                                <th>적합한 대상</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>색상 없는 이름의 색상 생성</strong></td>
+                                <td>플랫폼에서 제공한 이름 색상을 유지하고 색상이 없으면 일관된 색상을 지정합니다.</td>
+                                <td>대부분의 사용자</td>
+                            </tr>
+                            <tr>
+                                <td><strong>모든 이름의 색상 생성</strong></td>
+                                <td>플랫폼 색상을 대체하여 모든 사용자 이름에 일관되게 생성된 색상을 지정합니다.</td>
+                                <td>모든 이름에 다양한 색상을 쓰는 채팅</td>
+                            </tr>
+                            <tr>
+                                <td><strong>소스에서 제공하는 사용자 이름 색상 사용</strong></td>
+                                <td>채팅 플랫폼이 색상을 제공할 때만 표시합니다.</td>
+                                <td>사용자 이름 색상을 제공하는 Twitch 등의 플랫폼</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p>생성된 색상은 일정하게 유지됩니다. 도크는 사용자 ID, 사용자 이름 또는 표시 이름을 해시 처리하여 같은 사람이 같은 색상을 유지하도록 합니다. 전송 페이로드와 다른 화면에도 색상을 추가해야 할 때는 전역 색상 설정을 계속 사용할 수 있습니다.</p>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/twitch-colored-names-source.png" alt="사용자 이름이 서로 뚜렷이 다른 색상으로 표시된 실제 Twitch 채팅" class="guide-image source-example">
+                        <figcaption>소스가 제공하는 사용자 이름 색상이 표시된 실제 Twitch 채팅입니다. 도크 색상 스위치를 켜면 Social Stream Ninja가 다음 값을 유지합니다: <code>nameColor</code> 값입니다.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="guide-card">
+                    <h3>이름이 여전히 한 가지 색상인 경우</h3>
+                    <ol class="guide-steps">
+                        <li>도크의 다음 항목에서 옵션 하나가 켜져 있는지 확인하세요: <strong>사용자 이름 색상</strong> 섹션입니다.</li>
+                        <li>사용자 이름 색상을 제공하지 않는 플랫폼에는 다음을 선택하세요: <strong>색상 없는 이름의 색상 생성</strong>.</li>
+                        <li>도크 URL에 다음이 있는지 확인하세요: <code>&amp;color</code>, <code>&amp;randomcolor</code>, 또는 <code>&amp;randomcolorall</code>.</li>
+                        <li>이미 열려 있던 도크 탭이나 OBS 브라우저 소스를 새로고침하세요.</li>
+                        <li>사용자 지정 CSS에서 모든 <code>.hl-name</code> 을 같은 색상으로 강제하는 규칙이 있는지 확인하세요.</li>
+                    </ol>
+                </div>
+
+                <div class="guide-card">
+                    <h3>CSS로 더 세밀하게 제어</h3>
+                    <p>도크 설정, 다음 <code>&amp;css=</code> 또는 <code>&amp;b64css=</code> URL 옵션 또는 OBS 브라우저 소스 사용자 지정 CSS를 통해 CSS를 추가하세요. 다음을 사용하세요: <code>!important</code> 를 플랫폼에서 제공한 이름 색상을 덮어쓸 때 사용하세요.</p>
+
+                    <h4>모든 이름에 같은 색상 사용</h4>
+                    <div class="code-block"><pre>.hl-name {
+  color: #ffd166 !important;
+}</pre></div>
+
+                    <h4>플랫폼별 색상 선택</h4>
+                    <div class="code-block"><pre>.highlight-chat[data-source-type="youtube"] .hl-name {
+  color: #ff5a5f !important;
+}
+
+.highlight-chat[data-source-type="twitch"] .hl-name {
+  color: #b794f4 !important;
+}
+
+.highlight-chat[data-source-type="kick"] .hl-name {
+  color: #53fc18 !important;
+}</pre></div>
+
+                    <h4>관리자 및 VIP 강조</h4>
+                    <div class="code-block"><pre>.highlight-chat.mod .hl-name {
+  color: #5eead4 !important;
+}
+
+.highlight-chat.vip .hl-name {
+  color: #f472b6 !important;
+}</pre></div>
+
+                    <p>CSS는 플랫폼이나 역할을 안정적으로 지정할 수 있지만 기본 도크는 사용자 이름을 CSS 클래스나 속성으로 추가하지 않습니다. 사람별 고정 색상 규칙에는 내장 생성 색상 또는 다음을 사용하세요: <a href="../../docs/customoverlays.md">사용자 지정 오버레이</a> 에서 JavaScript로 사용자 이름을 색상에 매핑하세요.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="../../media/logo.png" alt="Social Stream Ninja 로고">
+                    <span>Social Stream Ninja</span>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>자료</h4>
+                        <ul>
+                            <li><a href="guides.html">가이드</a></li>
+                            <li><a href="settings.html">설정 참고 문서</a></li>
+                            <li><a href="overlay-customization-guide.html">오버레이 사용자 지정</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 라이선스.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

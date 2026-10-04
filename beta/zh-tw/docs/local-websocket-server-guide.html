@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/local-websocket-server-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/local-websocket-server-guide.html">
+    <meta property="og:title" content="託管 WebSocket 與本機伺服器模式 - Social Stream Ninja">
+    <meta property="og:description" content="啟用 Social Stream Ninja 的託管 WebSocket 路由，處理聊天、疊加畫面、回覆和指令；公共伺服器無法使用時，也可使用進階本機轉送服務。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/local-websocket-server-guide.html">
+    <meta name="twitter:title" content="託管 WebSocket 與本機伺服器模式 - Social Stream Ninja">
+    <meta name="twitter:description" content="啟用 Social Stream Ninja 的託管 WebSocket 路由，處理聊天、疊加畫面、回覆和指令；公共伺服器無法使用時，也可使用進階本機轉送服務。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>託管 WebSocket 與本機伺服器模式 - Social Stream Ninja</title>
+	<meta name="description" content="啟用 Social Stream Ninja 的託管 WebSocket 路由，處理聊天、疊加畫面、回覆和指令；公共伺服器無法使用時，也可使用進階本機轉送服務。">
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/local-websocket-server-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{", and incoming chat route match SSApp. Saved OBS URLs do not change automatically when you toggle Local Server or change its port.":"以及傳入聊天路由與 SSApp 一致。切換本機伺服器或變更連接埠時，OBS 中儲存的 URL 不會自動變更。",", and optional":"以及選用的",", that shortcut enables the chat and command fallback routes together. Open this settings section and confirm the first":"，該快捷選項會同時啟用聊天和指令備用路由。開啟此設定區域，並確認第一個",". An upgraded installation that already used port":"。如果升級前已使用連接埠",". The menu shows the selected port.":"。選單會顯示所選連接埠。",". This adds":"。這會加入","; add":"；加入","; older installs may intentionally remain on":"；舊安裝可能有意繼續使用","A generated two-way Dock link may contain:":"產生的雙向停駐面板連結可能包含：","A regional, corporate, school, or filtered network may block the public relay. Try another network first; advanced SSApp users can use Local Server instead.":"地區、企業、學校或經過篩選的網路可能會阻止公共轉送服務。先嘗試其他網路；進階 SSApp 使用者也可改用本機伺服器。","Advanced Local Options":"進階本機選項","Advanced use only: self-host the relay on the SSApp computer, or use it when a regional, corporate, or restricted network cannot reach the public hosted WebSocket service.":"僅限進階用途：在 SSApp 電腦上自行託管轉送服務，或在地區、企業或受限網路無法存取公共託管 WebSocket 服務時使用。","Advanced: Use SSApp's Local Server":"進階：使用 SSApp 的本機伺服器","Another program may own the port. Choose another unused port, restart the relay, and recopy links.":"其他程式可能佔用了連接埠。請選擇另一個未使用的連接埠，重新啟動轉送服務並重新複製連結。","Changing this port does not change the Local Control API on":"變更此連接埠不會變更位於下列連接埠的本機控制 API：","Chat arrives but replies fail":"能收到聊天，但回覆失敗","Choose":"選擇","Commands & API":"指令與 API","Common Problems":"常見問題","Complete the hosted-route switch setup above. The same":"完成上述託管路由開關設定。相同的","Confirm LAN access is enabled, the client uses the SSApp computer's LAN IP, and the firewall permits the selected port.":"確認已啟用區域網路存取，用戶端使用 SSApp 電腦的區域網路 IP，且防火牆允許所選連接埠。","Confirm the source and page use the same session and password. For hosted mode, confirm":"確認來源和頁面使用相同的工作階段和密碼。託管模式下，確認","Copy fresh Dock and overlay links, replace old saved URLs in OBS, and reopen any pages that were already running.":"複製新的停駐面板和疊加畫面連結，取代 OBS 中儲存的舊 URL，並重新開啟已經執行的頁面。","Copy fresh Dock and overlay links. SSApp adds":"複製新的停駐面板和疊加畫面連結。SSApp 會加入","Copy fresh generated links so they contain the new":"複製新產生的連結，使其包含新的","Copy generated links instead of adding flags to every page by hand. Routing support differs between the Dock, overlays, alerts, games, and utility pages.":"請複製產生的連結，不要手動給每個頁面加入旗標。停駐面板、疊加畫面、提醒、遊戲和工具頁面的路由支援各不相同。","Copy the game link again after selecting the preset. Confirm its session,":"選擇預設後，再次複製遊戲連結。確認其工作階段、","Direction":"方向","Dock or overlay stays blank":"停駐面板或疊加畫面保持空白","Dock sends its commands to Extension via server":"停駐面板透過伺服器向擴充功能傳送指令","Dock to extension":"停駐面板到擴充功能","Dock/API route":"停駐面板／API 路由","Download":"下載","Enable":"啟用","Enable Dock to use and publish via API server":"允許停駐面板透過 API 伺服器使用和發佈","Enable Hosted WebSocket Mode":"啟用託管 WebSocket 模式","Enable Server Fallback":"啟用伺服器備用模式","Enable Social Stream Ninja's hosted WebSocket routes for chat, overlays, replies, and commands, or use the advanced local relay when the public server is unavailable.":"啟用 Social Stream Ninja 的託管 WebSocket 路由，處理聊天、疊加畫面、回覆和指令；公共伺服器無法使用時，也可使用進階本機轉送服務。","Event Flows reports a background loading error":"Event Flows 回報背景載入錯誤","Experimental/temporary: also send API-routed chat to normal dock/overlay connections":"實驗性／暫時：也將透過 API 路由的聊天傳送到普通停駐面板／疊加畫面連線","Extension to Dock":"擴充功能到停駐面板","Features":"功能","File > Allow Local Server Connections from the LAN":"檔案 > 允許來自區域網路的本機伺服器連線","File > Enable Local Server":"檔案 > 啟用本機伺服器","File > Set Local Server Port":"檔案 > 設定本機伺服器連接埠","Flag":"旗標","For a complete two-way setup, enable the three blue switches shown here. View-only setups generally need":"完整雙向設定請啟用此處顯示的三個藍色開關。僅查看的設定通常需要","For mini-games, enable":"對於小遊戲，啟用","Game joins work intermittently":"加入遊戲時好時壞","Global settings and tools > Mechanics - Connections & Integrations":"全域設定與工具 > 機制 - 連線與整合","Guides":"指南","Hire":"聘用","Home":"首頁","Hosted WebSocket":"託管 WebSocket","Hosted WebSocket and Local Server Modes":"託管 WebSocket 與本機伺服器模式","Hosted WebSocket and Local Server Modes - Social Stream Ninja":"託管 WebSocket 與本機伺服器模式 - Social Stream Ninja","Hosted WebSocket will not connect":"託管 WebSocket 無法連線","If the Dock offers":"如果停駐面板提供","If you want replies or moderation and source commands that travel from the Dock back to the extension, enable":"如果需要從停駐面板返回擴充功能的回覆、管理和來源指令，請啟用","In SSApp, choose":"在 SSApp 中選擇","Inspiration":"靈感","It does not serve the SSN interface, capture platform chat by itself, or expose the Local Control API.":"它不提供 SSN 介面、不獨立擷取平台聊天，也不暴露本機控制 API。","Keep the defaults when your Dock and overlays already connect reliably. No server flags are needed.":"如果停駐面板和疊加畫面已經能夠可靠連線，請保持預設設定，無需伺服器旗標。","LAN device cannot connect":"區域網路裝置無法連線","LAN mode has no authentication or encryption.":"區域網路模式沒有驗證或加密。","Leave":"將","Lets supported Dock and API pages use and publish through the hosted server route.":"讓支援的停駐面板和 API 頁面透過託管伺服器路由使用和發佈。","Local Control API and MCP":"本機控制API和MCP","Local Server":"本機伺服器","Local Server does not make every feature work offline. Waitlist, Word Cloud, Custom GIF Commands, private chatbot requests, and AI/co-host control bridges still use WebRTC for some or all communication. Website files, platform chat, and external AI, voice, music, or payment services can still require internet access.":"本機伺服器不會讓所有功能都能離線運作。等候名單、文字雲、自訂 GIF 指令、私人聊天機器人請求和 AI／搭檔控制橋接，仍會在部分或全部通訊中使用 WebRTC。網站檔案、平台聊天，以及外部 AI、語音、音樂或付款服務仍可能需要網際網路。","Local Server replaces the public hosted WebSocket endpoint with a relay running inside the Social Stream Ninja desktop app. Use it when you intentionally want to self-host the relay or the public server cannot be reached from your network or region.":"本機伺服器使用在 Social Stream Ninja 桌面應用程式中執行的轉送服務，取代公共託管 WebSocket 端點。適用於你明確希望自行託管轉送服務，或所在網路／地區無法存取公共伺服器的情況。","Local Server will not start":"本機伺服器無法啟動","Local Servers and Services Explained":"本機伺服器和服務說明","Main navigation":"主導覽","Mode":"模式","Most users should not enable Local Server.":"大多數使用者不應啟用本機伺服器。","New installations normally use":"新安裝通常使用","Normal WebRTC":"一般 WebRTC","Open":"開啟","Open navigation menu":"開啟導覽選單","Open the Social Stream Ninja extension popup or the settings panel in SSApp.":"開啟 Social Stream Ninja 擴充功能彈出選單，或 SSApp 中的設定面板。","Optional Trusted-LAN Access":"選用的受信任區域網路存取","Overlay Gallery":"疊加畫面圖庫","Peer-to-peer connections via local network only":"僅透過本機網路建立點對點連線","Problem":"問題","Related Guides":"相關指南","Replace old saved URLs in OBS and reopen active pages.":"取代 OBS 中儲存的舊 URL，並重新開啟作用中的頁面。","Replace saved OBS URLs and reopen active pages.":"取代 OBS 中儲存的 URL，並重新開啟作用中的頁面。","Replace the old link. New installs add":"取代舊連結。新安裝會加入","Returns supported replies and commands to the extension. It is optional for a view-only Dock.":"將支援的回覆和指令返回擴充功能。僅查看的停駐面板可不啟用。","Select an unused port from":"從下列位置選擇一個未使用的連接埠：","Send a fake test message, then test a reply or Dock command if":"傳送模擬測試訊息，然後測試回覆或停駐面板指令，條件是","Send messages to Dock from Extension via server":"透過伺服器將擴充功能中的訊息傳送到停駐面板","Sends captured chat messages to the Dock through the hosted server.":"透過託管伺服器將擷取到的聊天訊息傳送到停駐面板。","Sessions, Passwords, Relay, and Server Modes":"工作階段、密碼、轉送與伺服器模式","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja Mechanics - Connections and Integrations popup with the server, server2, and server3 switches enabled":"Social Stream Ninja「機制 - 連線與整合」彈出選單，server、server2 和 server3 開關已啟用","Social Stream Ninja desktop app File menu showing the Enable Local Server command":"Social Stream Ninja 桌面應用程式的「檔案」選單，顯示「啟用本機伺服器」指令","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 授權條款。","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","The API sample and test-message tool use WebSocket in local mode. The local relay does not accept the public API's HTTP GET, POST, or webhook URLs. Public webhook receivers need the hosted relay; provider-specific reliable receivers are separate services.":"API 範例和測試訊息工具在本機模式下使用 WebSocket。本機轉送服務不接受公共 API 的 HTTP GET、POST 或 webhook URL。公共 webhook 接收器需要託管轉送服務；各供應商專用的可靠接收器是獨立服務。","The Chrome extension and normal SSApp setups can use Social Stream's hosted WebSocket service by enabling the routing switches shown below. Local Server is an advanced replacement for the hosted relay.":"Chrome 擴充功能和一般 SSApp 設定可以啟用下方路由開關，使用 Social Stream 的託管 WebSocket 服務。本機伺服器是取代託管轉送服務的進階選項。","The Local Server command is in SSApp's File menu. Do not turn it on for the normal hosted WebSocket setup.":"「本機伺服器」指令位於 SSApp 的「檔案」選單中。一般託管 WebSocket 設定不應啟用它。","The incoming and command routes are separate. Enable":"傳入路由和指令路由彼此獨立。啟用","The link uses port 3000 but SSApp shows 3003":"連結使用連接埠 3000，但 SSApp 顯示 3003","The normal server fallback for the Chrome extension or SSApp. It uses Social Stream's public hosted relay and does not require":"Chrome 擴充功能或 SSApp 的一般伺服器備用方式。它使用 Social Stream 的公共託管轉送服務，不需要","This concerns website files, not the chat relay. Retry loading when the connection recovers. Toggling the relay preserves the selected Event Flow storage origin; a separate offline startup can still open the packaged interface with its own storage.":"此問題涉及網站檔案，不涉及聊天轉送服務。連線恢復後請重試載入。切換轉送服務會保留所選 Event Flow 儲存來源；單獨進行離線啟動時，仍可能開啟擁有獨立儲存的封裝介面。","This is a relay, not a website host.":"這是轉送服務，不是網站主機。","Use":"使用","Use Social Stream's hosted WebSocket routes for normal Chrome extension and desktop app setups. Run a local relay only when you specifically need one.":"一般 Chrome 擴充功能和桌面應用程式設定請使用 Social Stream 的託管 WebSocket 路由。只有明確需要時，才執行本機轉送服務。","Use it only on a trusted private network. Do not port-forward it or expose it to the internet. For normal cross-machine internet control, use Social Stream's existing WebRTC or hosted WebSocket transport.":"僅在受信任的私人網路上使用。不要設定連接埠轉送或將其暴露到網際網路。一般的跨裝置網際網路控制，請使用 Social Stream 現有的 WebRTC 或託管 WebSocket 傳輸。","Using Another Port":"使用其他連接埠","What The Three Server Flags Do":"三個伺服器旗標的作用","What To Check":"檢查內容","When To Use It":"何時使用","Which Mode Should I Use?":"應該使用哪種模式？","and":"和","and carries captured chat to the Dock.":"並將擷取的聊天傳送到停駐面板。","and copy the game link after selecting the game. Local game links with":"，並在選擇遊戲後複製遊戲連結。帶有下列參數的本機遊戲連結：","and the active":"以及目前的","are in a freshly copied Dock link.":"都包含在剛複製的停駐面板連結中。","changes the relay from loopback-only to listening on the computer's network interfaces. A client on another device must connect to the SSApp computer's LAN address, not":"會將轉送服務從僅限回送位址改為監聽電腦的網路介面。其他裝置上的用戶端必須連接到 SSApp 電腦的區域網路位址，而非","directions still apply.":"方向仍然適用。","for replies and commands.":"用於回覆和指令。","is enabled.":"已啟用。","may keep it. A generated local two-way Dock link may contain:":"，可能會繼續使用。產生的本機雙向停駐面板連結可能包含：","off for the normal hosted setup.":"關閉，適用於一般託管設定。","off unless you are specifically testing additive delivery.":"保持關閉，除非你正在專門測試附加傳遞。","or the local media server on":"，也不會變更本機媒體伺服器的連接埠","receive captured chat directly from SSApp, even when no Dock is open. Changing games keeps the local mode and port.":"會直接從 SSApp 接收擷取的聊天，即使沒有開啟停駐面板。更換遊戲會保留本機模式和連接埠。","so the link includes":"，使連結包含","switch is also on for the complete three-route setup.":"開關也已開啟，以完成三路由設定。","through":"透過","to supported generated links.":"到支援的產生連結中。","where supported.":"，適用於支援的頁面。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/local-websocket-server-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/local-websocket-server-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="guides-page">
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/local-websocket-server-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/local-websocket-server-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/local-websocket-server-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/local-websocket-server-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/local-websocket-server-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/local-websocket-server-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/local-websocket-server-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/local-websocket-server-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="local-websocket-server-guide.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/local-websocket-server-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/local-websocket-server-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/local-websocket-server-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/local-websocket-server-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/local-websocket-server-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/local-websocket-server-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/local-websocket-server-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/local-websocket-server-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+	<section class="page-hero">
+		<div class="container">
+			<h1>託管 WebSocket 與本機伺服器模式</h1>
+			<p>一般 Chrome 擴充功能和桌面應用程式設定請使用 Social Stream 的託管 WebSocket 路由。只有明確需要時，才執行本機轉送服務。</p>
+		</div>
+	</section>
+
+	<main class="guide-section">
+		<div class="container">
+			<div class="guide-card">
+				<h2>應該使用哪種模式？</h2>
+				<div class="guide-note">
+					<p><strong>大多數使用者不應啟用本機伺服器。</strong> Chrome 擴充功能和一般 SSApp 設定可以啟用下方路由開關，使用 Social Stream 的託管 WebSocket 服務。本機伺服器是取代託管轉送服務的進階選項。</p>
+				</div>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>模式</th><th>何時使用</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Mode"><span>一般 WebRTC</span></td><td data-label="When To Use It"><span>如果停駐面板和疊加畫面已經能夠可靠連線，請保持預設設定，無需伺服器旗標。</span></td></tr>
+						<tr><td data-label="Mode"><span>託管 WebSocket</span></td><td data-label="When To Use It"><span>Chrome 擴充功能或 SSApp 的一般伺服器備用方式。它使用 Social Stream 的公共託管轉送服務，不需要 <strong>檔案 &gt; 啟用本機伺服器</strong>.</span></td></tr>
+						<tr><td data-label="Mode"><span>本機伺服器</span></td><td data-label="When To Use It"><span>僅限進階用途：在 SSApp 電腦上自行託管轉送服務，或在地區、企業或受限網路無法存取公共託管 WebSocket 服務時使用。</span></td></tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card">
+				<h2>啟用託管 WebSocket 模式</h2>
+				<ol class="guide-steps">
+					<li>開啟 Social Stream Ninja 擴充功能彈出選單，或 SSApp 中的設定面板。</li>
+					<li>開啟 <strong>全域設定與工具 &gt; 機制 - 連線與整合</strong>.</li>
+					<li>啟用 <strong>允許停駐面板透過 API 伺服器使用和發佈</strong>。這會加入 <code>server</code> 到支援的產生連結中。</li>
+					<li>啟用 <strong>透過伺服器將擴充功能中的訊息傳送到停駐面板</strong>。這會加入 <code>server2</code> 並將擷取的聊天傳送到停駐面板。</li>
+					<li>如果需要從停駐面板返回擴充功能的回覆、管理和來源指令，請啟用 <strong>停駐面板透過伺服器向擴充功能傳送指令</strong>。這會加入 <code>server3</code>.</li>
+					<li>將 <strong>實驗性／暫時：也將透過 API 路由的聊天傳送到普通停駐面板／疊加畫面連線</strong> 保持關閉，除非你正在專門測試附加傳遞。</li>
+					<li>將 <strong>僅透過本機網路建立點對點連線</strong> 關閉，適用於一般託管設定。</li>
+					<li>複製新的停駐面板和疊加畫面連結，取代 OBS 中儲存的舊 URL，並重新開啟已經執行的頁面。</li>
+				</ol>
+				<figure class="guide-figure">
+					<img src="../../docs/images/guides/guide-hosted-websocket-popup-toggles.png" alt="Social Stream Ninja「機制 - 連線與整合」彈出選單，server、server2 和 server3 開關已啟用" class="guide-image-narrow">
+					<figcaption>完整雙向設定請啟用此處顯示的三個藍色開關。僅查看的設定通常需要 <code>server</code> 和 <code>server2</code>；加入 <code>server3</code> 用於回覆和指令。</figcaption>
+				</figure>
+				<p>如果停駐面板提供 <strong>啟用伺服器備用模式</strong>，該快捷選項會同時啟用聊天和指令備用路由。開啟此設定區域，並確認第一個 <strong>允許停駐面板透過 API 伺服器使用和發佈</strong> 開關也已開啟，以完成三路由設定。</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>三個伺服器旗標的作用</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>旗標</th><th>方向</th><th>使用</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Flag"><span><code>server</code></span></td><td data-label="Direction"><span>停駐面板／API 路由</span></td><td data-label="Use"><span>讓支援的停駐面板和 API 頁面透過託管伺服器路由使用和發佈。</span></td></tr>
+						<tr><td data-label="Flag"><span><code>server2</code></span></td><td data-label="Direction"><span>擴充功能到停駐面板</span></td><td data-label="Use"><span>透過託管伺服器將擷取到的聊天訊息傳送到停駐面板。</span></td></tr>
+						<tr><td data-label="Flag"><span><code>server3</code></span></td><td data-label="Direction"><span>停駐面板到擴充功能</span></td><td data-label="Use"><span>將支援的回覆和指令返回擴充功能。僅查看的停駐面板可不啟用。</span></td></tr>
+					</tbody>
+				</table>
+				<p>產生的雙向停駐面板連結可能包含：</p>
+				<pre><code>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;server&amp;server2&amp;server3</code></pre>
+				<p>請複製產生的連結，不要手動給每個頁面加入旗標。停駐面板、疊加畫面、提醒、遊戲和工具頁面的路由支援各不相同。</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>進階：使用 SSApp 的本機伺服器</h2>
+				<p>本機伺服器使用在 Social Stream Ninja 桌面應用程式中執行的轉送服務，取代公共託管 WebSocket 端點。適用於你明確希望自行託管轉送服務，或所在網路／地區無法存取公共伺服器的情況。</p>
+				<div class="guide-note">
+					<p><strong>這是轉送服務，不是網站主機。</strong> 它不提供 SSN 介面、不獨立擷取平台聊天，也不暴露本機控制 API。</p>
+				</div>
+				<ol class="guide-steps">
+					<li>完成上述託管路由開關設定。相同的 <code>server</code>, <code>server2</code>以及選用的 <code>server3</code> 方向仍然適用。</li>
+					<li>在 SSApp 中選擇 <strong>檔案 &gt; 啟用本機伺服器</strong>。選單會顯示所選連接埠。</li>
+					<li>複製新的停駐面板和疊加畫面連結。SSApp 會加入 <code>localserver</code> 以及目前的 <code>localserverport</code> ，適用於支援的頁面。</li>
+					<li>取代 OBS 中儲存的舊 URL，並重新開啟作用中的頁面。</li>
+					<li>傳送模擬測試訊息，然後測試回覆或停駐面板指令，條件是 <code>server3</code> 已啟用。</li>
+				</ol>
+				<figure class="guide-figure">
+					<img src="../../docs/images/guides/guide-local-server-file-menu.png" alt="Social Stream Ninja 桌面應用程式的「檔案」選單，顯示「啟用本機伺服器」指令" class="guide-image-narrow">
+					<figcaption>「本機伺服器」指令位於 SSApp 的「檔案」選單中。一般託管 WebSocket 設定不應啟用它。</figcaption>
+				</figure>
+				<p>新安裝通常使用 <code>127.0.0.1:3003</code>。如果升級前已使用連接埠 <code>3000</code> ，可能會繼續使用。產生的本機雙向停駐面板連結可能包含：</p>
+				<pre><code>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;server&amp;server2&amp;server3&amp;localserver&amp;localserverport=3003</code></pre>
+				<p>對於小遊戲，啟用 <strong>透過伺服器將擴充功能中的訊息傳送到停駐面板</strong> ，並在選擇遊戲後複製遊戲連結。帶有下列參數的本機遊戲連結： <code>server2</code> 會直接從 SSApp 接收擷取的聊天，即使沒有開啟停駐面板。更換遊戲會保留本機模式和連接埠。</p>
+				<p>API 範例和測試訊息工具在本機模式下使用 WebSocket。本機轉送服務不接受公共 API 的 HTTP GET、POST 或 webhook URL。公共 webhook 接收器需要託管轉送服務；各供應商專用的可靠接收器是獨立服務。</p>
+				<p>本機伺服器不會讓所有功能都能離線運作。等候名單、文字雲、自訂 GIF 指令、私人聊天機器人請求和 AI／搭檔控制橋接，仍會在部分或全部通訊中使用 WebRTC。網站檔案、平台聊天，以及外部 AI、語音、音樂或付款服務仍可能需要網際網路。</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>進階本機選項</h2>
+				<h3>使用其他連接埠</h3>
+				<ol class="guide-steps">
+					<li>選擇 <strong>檔案 &gt; 設定本機伺服器連接埠</strong>.</li>
+					<li>從下列位置選擇一個未使用的連接埠： <code>1024</code> 透過 <code>65535</code>.</li>
+					<li>複製新產生的連結，使其包含新的 <code>localserverport</code>.</li>
+					<li>取代 OBS 中儲存的 URL，並重新開啟作用中的頁面。</li>
+				</ol>
+				<p>變更此連接埠不會變更位於下列連接埠的本機控制 API： <code>17777</code> ，也不會變更本機媒體伺服器的連接埠 <code>3001</code>.</p>
+				<h3>選用的受信任區域網路存取</h3>
+				<p><strong>檔案 &gt; 允許來自區域網路的本機伺服器連線</strong> 會將轉送服務從僅限回送位址改為監聽電腦的網路介面。其他裝置上的用戶端必須連接到 SSApp 電腦的區域網路位址，而非 <code>127.0.0.1</code>.</p>
+				<div class="warning-note">
+					<p><strong>區域網路模式沒有驗證或加密。</strong> 僅在受信任的私人網路上使用。不要設定連接埠轉送或將其暴露到網際網路。一般的跨裝置網際網路控制，請使用 Social Stream 現有的 WebRTC 或託管 WebSocket 傳輸。</p>
+				</div>
+			</div>
+
+			<div class="guide-card">
+				<h2>常見問題</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>問題</th><th>檢查內容</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Problem"><span>停駐面板或疊加畫面保持空白</span></td><td data-label="What To Check"><span>確認來源和頁面使用相同的工作階段和密碼。託管模式下，確認 <code>server</code> 和 <code>server2</code> 都包含在剛複製的停駐面板連結中。</span></td></tr>
+						<tr><td data-label="Problem"><span>能收到聊天，但回覆失敗</span></td><td data-label="What To Check"><span>傳入路由和指令路由彼此獨立。啟用 <strong>停駐面板透過伺服器向擴充功能傳送指令</strong> ，使連結包含 <code>server3</code>.</span></td></tr>
+						<tr><td data-label="Problem"><span>託管 WebSocket 無法連線</span></td><td data-label="What To Check"><span>地區、企業、學校或經過篩選的網路可能會阻止公共轉送服務。先嘗試其他網路；進階 SSApp 使用者也可改用本機伺服器。</span></td></tr>
+						<tr><td data-label="Problem"><span>連結使用連接埠 3000，但 SSApp 顯示 3003</span></td><td data-label="What To Check"><span>取代舊連結。新安裝會加入 <code>localserverport=3003</code>；舊安裝可能有意繼續使用 <code>3000</code>.</span></td></tr>
+						<tr><td data-label="Problem"><span>本機伺服器無法啟動</span></td><td data-label="What To Check"><span>其他程式可能佔用了連接埠。請選擇另一個未使用的連接埠，重新啟動轉送服務並重新複製連結。</span></td></tr>
+						<tr><td data-label="Problem"><span>加入遊戲時好時壞</span></td><td data-label="What To Check"><span>選擇預設後，再次複製遊戲連結。確認其工作階段、 <code>localserverport</code>以及傳入聊天路由與 SSApp 一致。切換本機伺服器或變更連接埠時，OBS 中儲存的 URL 不會自動變更。</span></td></tr>
+						<tr><td data-label="Problem"><span>Event Flows 回報背景載入錯誤</span></td><td data-label="What To Check"><span>此問題涉及網站檔案，不涉及聊天轉送服務。連線恢復後請重試載入。切換轉送服務會保留所選 Event Flow 儲存來源；單獨進行離線啟動時，仍可能開啟擁有獨立儲存的封裝介面。</span></td></tr>
+						<tr><td data-label="Problem"><span>區域網路裝置無法連線</span></td><td data-label="What To Check"><span>確認已啟用區域網路存取，用戶端使用 SSApp 電腦的區域網路 IP，且防火牆允許所選連接埠。</span></td></tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card">
+				<h2>相關指南</h2>
+				<ul class="guide-list">
+					<li><a href="local-services-guide.html">本機伺服器和服務說明</a></li>
+					<li><a href="sessions-passwords-relay-modes.html">工作階段、密碼、轉送與伺服器模式</a></li>
+					<li><a href="llm-control-guide.html">本機控制API和MCP</a></li>
+				</ul>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja。GPLv3.0 授權條款。</p></div></div></footer>
+	<script data-copy-markdown src="../../docs/js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

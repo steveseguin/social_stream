@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="Social Stream NinjaのStream Deckプラグインを設定し、セッションを接続して、チャット、オーバーレイ、配信操作用のボタンを構成します。">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ja/streamdeck/">
+    <link rel="icon" href="../../streamdeck/images/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/ja/streamdeck/">
+    <meta property="og:title" content="Stream Deckの設定 | Social Stream Ninja">
+    <meta property="og:description" content="Social Stream NinjaのStream Deckプラグインを設定し、セッションを接続して、チャット、オーバーレイ、配信操作用のボタンを構成します。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ja/streamdeck/">
+    <meta name="twitter:title" content="Stream Deckの設定 | Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream NinjaのStream Deckプラグインを設定し、セッションを接続して、チャット、オーバーレイ、配信操作用のボタンを構成します。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title data-page-translate="streamdeck-setup-document-title">Stream Deckの設定 | Social Stream Ninja</title>
+	<script src="../../translations/page-i18n.js"></script>
+	<style>
+		:root {
+			color-scheme: dark;
+			--bg: #0a1520;
+			--panel: #19293a;
+			--panel-2: #111e2b;
+			--line: rgba(255,255,255,.13);
+			--text: #eef2f7;
+			--muted: #94a3b8;
+			--accent: #2563eb;
+			--accent-soft: #60a5fa;
+			--good: #22c55e;
+			--warn: #f59e0b;
+		}
+		* { box-sizing: border-box; }
+		html, body { min-height: 100%; }
+		body {
+			margin: 0;
+			font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+			background: linear-gradient(160deg, #111e2b 0%, var(--bg) 55%, #0c1a27 100%);
+			color: var(--text);
+		}
+		button, a { font: inherit; }
+		.shell { width: min(980px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 48px; }
+		.hero { display: grid; grid-template-columns: 68px 1fr; gap: 18px; align-items: center; margin-bottom: 26px; }
+		.mark {
+			width: 68px; height: 68px; display: grid; place-items: center; border: 1px solid rgba(59,130,246,.45);
+			border-radius: 12px; background: #1e3047; box-shadow: 0 4px 16px rgba(0,0,0,.4);
+		}
+		.mark svg { width: 42px; height: 42px; }
+		h1 { margin: 0 0 5px; font-size: clamp(25px, 4vw, 36px); letter-spacing: -.02em; }
+		.hero p { margin: 0; color: var(--muted); font-size: 16px; }
+		.status-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(250px, .75fr); gap: 16px; }
+		.card { border: 1px solid var(--line); border-radius: 12px; background: rgba(25,41,58,.94); box-shadow: 0 4px 16px rgba(0,0,0,.32); }
+		.card-body { padding: 22px; }
+		.eyebrow { color: var(--accent-soft); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+		.connection { display: flex; align-items: center; gap: 9px; margin-top: 8px; font-size: 14px; font-weight: 700; }
+		.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 10px rgba(245,158,11,.45); }
+		.dot.ready { background: var(--good); box-shadow: 0 0 10px rgba(34,197,94,.45); }
+		.session-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; margin-top: 18px; }
+		.session-value { min-width: 0; padding: 13px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); color: var(--text); font: 700 16px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+		.chrome-note { margin: 10px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+		.button { display: inline-flex; align-items: center; justify-content: center; min-height: 43px; padding: 0 17px; border: 1px solid var(--accent); border-radius: 8px; background: var(--accent); color: white; font-weight: 700; text-decoration: none; cursor: pointer; transition: background 150ms ease, border-color 150ms ease; }
+		.button:hover { background: #1d4ed8; border-color: #1d4ed8; }
+		.button:focus-visible { outline: 3px solid #bfdbfe; outline-offset: 3px; }
+		.button:disabled { cursor: default; filter: grayscale(.7); opacity: .45; }
+		.button.secondary { border: 1px solid var(--line); background: #1e3047; color: var(--text); }
+		.button.secondary:hover { border-color: rgba(59,130,246,.45); background: #243a54; }
+		.meta { display: grid; gap: 12px; margin-top: 17px; }
+		.meta-row { display: flex; justify-content: space-between; gap: 18px; color: var(--muted); font-size: 13px; }
+		.meta-row strong { color: var(--text); font-weight: 700; text-align: right; }
+		.install h2, .steps h2, .screenshots h2, .capabilities h2 { margin: 6px 0 8px; font-size: 19px; }
+		.install p, .step p, .screenshots p, .capabilities p { color: var(--muted); line-height: 1.5; }
+		.install .button { width: 100%; margin-top: 9px; }
+		.steps, .screenshots, .capabilities { margin-top: 16px; }
+		.step-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+		.step { min-height: 132px; padding: 17px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); }
+		.step-number { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; background: rgba(59,130,246,.16); color: var(--accent-soft); font-weight: 800; }
+		.step h3 { margin: 13px 0 5px; font-size: 15px; }
+		.step p { margin: 0; font-size: 13px; }
+		.shot { margin: 16px 0 0; }
+		.shot-frame { overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+		.shot img { display: block; width: 100%; height: auto; }
+		.shot.inspector { width: min(100%, 420px); margin-left: auto; margin-right: auto; }
+		.shot figcaption { margin-top: 8px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+		.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 16px; }
+		.feature { padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); }
+		.feature strong { display: block; margin-bottom: 5px; font-size: 14px; }
+		.feature span { color: var(--muted); font-size: 12px; line-height: 1.4; }
+		.note { margin: 16px 0 0; color: var(--muted); font-size: 12px; text-align: center; }
+		.toast { position: fixed; right: 18px; bottom: 18px; padding: 11px 14px; border: 1px solid rgba(34,197,94,.4); border-radius: 8px; background: #153629; color: #dcfce7; opacity: 0; transform: translateY(8px); pointer-events: none; transition: .18s ease; }
+		.toast.error { border-color: rgba(248,113,113,.55); background: #491b1b; color: #fee2e2; }
+		.toast.show { opacity: 1; transform: translateY(0); }
+		@media (prefers-reduced-motion: reduce) {
+			.button, .toast { transition: none; }
+		}
+		@media (max-width: 760px) {
+			.shell { width: min(100% - 22px, 620px); padding-top: 24px; }
+			.status-grid, .step-list { grid-template-columns: 1fr; }
+			.feature-grid { grid-template-columns: repeat(2, 1fr); }
+		}
+		@media (max-width: 430px) {
+			.hero { grid-template-columns: 52px 1fr; }
+			.mark { width: 52px; height: 52px; border-radius: 14px; }
+			.mark svg { width: 33px; height: 33px; }
+			.session-row { grid-template-columns: 1fr; }
+			.feature-grid { grid-template-columns: 1fr; }
+		}
+	</style>
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"streamdeck/index.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{"1 · Install":"1 · インストール","2 · Connect":"2 · 接続","Available":"利用可能","Available controls":"使える操作","Buttons, dial gestures and every command icon":"ボタン、ダイヤル操作、すべてのコマンドアイコン","Chat and overlays":"チャットとオーバーレイ","Connect your Stream Deck to Social Stream Ninja in a couple of minutes.":"数分でStream DeckをSocial Stream Ninjaに接続できます。","Control bridge":"操作用ブリッジ","Controls that fit a live workflow":"配信中の作業に合った操作","Copy":"コピー","Copy failed":"コピー失敗","Copy the ID":"IDをコピー","Core controls available":"基本操作を利用できます","Credits":"クレジット","Custom Event Flow workflows":"カスタムEvent Flowワークフロー","Detected":"検出済み","Detected after connection":"接続後に検出","Download plugin":"プラグインをダウンロード","Feature, unpin, clear, and move through queued messages.":"メッセージの取り上げ、固定解除、消去、待機中メッセージの切り替え。","Get the plugin":"プラグインを入手","In SSApp, choose Stream Deck Setup. File → Set Up Stream Deck opens the same page.":"SSAppで「Stream Deck Setup」を選択します。「File → Set Up Stream Deck」からも同じページを開けます。","In the Stream Deck desktop app, drag in Setup, Timer Dial, or another SSN action.":"Stream Deckデスクトップアプリで、Setup、Timer Dial、または別のSSNアクションをドラッグして配置します。","In the Stream Deck desktop app, paste the copied ID and choose Test Connection.":"Stream Deckデスクトップアプリで、コピーしたIDを貼り付け、「Test Connection」を選択します。","Install the Social Stream Ninja plugin, then open the Stream Deck desktop app.":"Social Stream Ninjaプラグインをインストールし、Stream Deckデスクトップアプリを開きます。","Not detected":"未検出","Open this page inside SSApp to detect your session.":"セッションを検出するには、このページをSSApp内で開いてください。","Paste and test":"貼り付けてテスト","Paste the ID into Setup and choose Test Connection. The status should turn green.":"SetupにIDを貼り付け、「Test Connection」を選択します。状態表示が緑色になれば接続できています。","Run custom Event Flow workflows, use the API, and learn dial gestures":"カスタムEvent Flowワークフローの実行、APIの利用、ダイヤル操作を学ぶ","SSApp":"SSApp","SSApp detected. Copy this ID into the Stream Deck plugin.":"SSAppを検出しました。このIDをStream Deckプラグインへコピーしてください。","SSApp is creating your session. Keep this page open for a moment.":"SSAppがセッションを作成しています。このページを少し開いたままにしてください。","SSApp navigation with the Stream Deck Setup tab selected":"Stream Deck Setupタブを選択したSSAppのナビゲーション","SSApp sources":"SSAppのソース","Select an action":"アクションを選択","Session ID available in SSApp":"セッションIDはSSAppで取得できます","Session ID copied":"セッションIDをコピーしました","Session ID is still loading":"セッションIDを読み込み中","Set up Stream Deck":"Stream Deckを設定","Set up the Social Stream Ninja Stream Deck plugin, connect your session and configure buttons for chat, overlays and stream controls.":"Social Stream NinjaのStream Deckプラグインを設定し、セッションを接続して、チャット、オーバーレイ、配信操作用のボタンを構成します。","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Start, pause, reset, adjust time, and manage live polls.":"開始、一時停止、リセット、時間調整、ライブ投票の管理。","Start, preview, test, and reset collected credits from a key.":"キー操作で、収集したクレジットを開始、プレビュー、テスト、リセット。","Start, stop, restart, mute, reveal, and change supported source modes.":"対応するソースの開始、停止、再起動、ミュート、表示、モード変更。","Stream Deck +":"Stream Deck +","Stream Deck Setup | Social Stream Ninja":"Stream Deckの設定 | Social Stream Ninja","Stream Deck property inspector showing the session field and Test Connection button":"セッション欄とTest Connectionボタンが表示されたStream Deckのプロパティインスペクター","The plugin checks the running SSApp version and only shows controls it supports.":"プラグインは実行中のSSAppのバージョンを確認し、対応している操作だけを表示します。","The two places you will use":"操作する2つの場所","Timers and polls":"タイマーと投票","Turn knobs for timer changes and browse recent chat on the touch strip.":"ダイヤルでタイマーを調整し、タッチストリップで最近のチャットを確認できます。","Use the Copy button above. This is the active Social Stream Ninja session.":"上のCopyボタンを使ってください。これは現在のSocial Stream Ninjaセッションです。","Use the same session on both apps":"両方のアプリで同じセッションを使う","Using the Chrome extension? Copy your unique session ID from Settings, then paste it into the plugin.":"Chrome拡張機能を使っている場合は、Settingsから自分のセッションIDをコピーし、プラグインに貼り付けてください。","What it can do":"できること","What to look for":"確認する内容","Your connection":"接続情報","Your session ID stays on your computer unless you use it to connect Social Stream Ninja services.":"セッションIDは、Social Stream Ninjaのサービスに接続するために使用しない限り、コンピューター内に留まります。","{count} detected features":"検出した機能：{count}件"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/streamdeck/">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/streamdeck/">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/streamdeck/">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/streamdeck/">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/streamdeck/">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/streamdeck/">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/streamdeck/">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/streamdeck/">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/streamdeck/">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/streamdeck/">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/streamdeck/">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/streamdeck/">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/streamdeck/">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/streamdeck/">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/streamdeck/">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/streamdeck/">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/streamdeck/">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/streamdeck/">
+<!-- ssn-languages:end --></head>
+<body>
+	<main class="shell">
+		<header class="hero">
+			<div class="mark" aria-hidden="true">
+				<svg viewBox="0 0 48 48" fill="none">
+					<rect x="5" y="7" width="16" height="16" rx="4" stroke="#60a5fa" stroke-width="3"/>
+					<rect x="27" y="7" width="16" height="16" rx="4" stroke="#22c55e" stroke-width="3"/>
+					<circle cx="14" cy="34" r="7" stroke="#22c55e" stroke-width="3"/>
+					<circle cx="35" cy="34" r="7" stroke="#60a5fa" stroke-width="3"/>
+				</svg>
+			</div>
+			<div>
+				<h1 data-page-translate="setup-stream-deck">Stream Deckを設定</h1>
+				<p data-page-translate="streamdeck-setup-intro">数分でStream DeckをSocial Stream Ninjaに接続できます。</p>
+			<!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../streamdeck/index.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/streamdeck/index.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/streamdeck/index.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/streamdeck/index.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/streamdeck/index.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/streamdeck/index.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="index.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/streamdeck/index.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/streamdeck/index.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/streamdeck/index.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/streamdeck/index.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/streamdeck/index.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/streamdeck/index.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/streamdeck/index.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/streamdeck/index.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/streamdeck/index.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/streamdeck/index.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+		</header>
+
+		<section class="status-grid" aria-labelledby="connection-setup-title">
+			<div class="card card-body">
+				<div id="connection-setup-title" class="eyebrow" data-page-translate="your-connection">接続情報</div>
+				<div class="connection" role="status" aria-live="polite" aria-atomic="true"><span id="connectionDot" class="dot" aria-hidden="true"></span><span id="connectionText" data-page-translate="streamdeck-open-inside-ssapp">セッションを検出するには、このページをSSApp内で開いてください。</span></div>
+				<div class="session-row">
+					<div id="sessionValue" class="session-value" data-page-translate="session-id-available-ssapp">セッションIDはSSAppで取得できます</div>
+					<button id="copySession" class="button" type="button" disabled data-page-translate="copy-button">コピー</button>
+				</div>
+				<p class="chrome-note" data-page-translate="chrome-extension-session-id">Chrome拡張機能を使っている場合は、Settingsから自分のセッションIDをコピーし、プラグインに貼り付けてください。</p>
+				<div class="meta">
+					<div class="meta-row"><span>SSApp</span><strong id="appVersion" data-page-translate="not-detected">未検出</strong></div>
+					<div class="meta-row"><span data-page-translate="control-bridge">操作用ブリッジ</span><strong id="apiVersion" data-page-translate="not-detected">未検出</strong></div>
+					<div class="meta-row"><span data-page-translate="available-controls">使える操作</span><strong id="supportSummary" data-page-translate="detected-after-connection">接続後に検出</strong></div>
+				</div>
+			</div>
+
+			<div class="card card-body install">
+				<div class="eyebrow" data-page-translate="install-step">1 · インストール</div>
+				<h2 data-page-translate="get-plugin">プラグインを入手</h2>
+				<p data-page-translate="install-streamdeck-plugin">Social Stream Ninjaプラグインをインストールし、Stream Deckデスクトップアプリを開きます。</p>
+				<a class="button secondary" href="https://github.com/steveseguin/ssn-streamdeck/releases/latest" target="_blank" rel="noopener" data-page-translate="download-plugin">プラグインをダウンロード</a>
+				<p><a href="../../streamdeck/guide.html">ボタン、ダイヤル操作、すべてのコマンドアイコン</a> · <a href="../docs/streamdeck-event-flow.html">カスタムEvent Flowワークフロー</a></p>
+			</div>
+		</section>
+
+		<section class="card card-body steps">
+			<div class="eyebrow" data-page-translate="connect-step">2 · 接続</div>
+			<h2 data-page-translate="same-session-both-apps">両方のアプリで同じセッションを使う</h2>
+			<div class="step-list">
+				<div class="step"><span class="step-number">1</span><h3 data-page-translate="copy-id">IDをコピー</h3><p data-page-translate="copy-id-description">上のCopyボタンを使ってください。これは現在のSocial Stream Ninjaセッションです。</p></div>
+				<div class="step"><span class="step-number">2</span><h3 data-page-translate="select-action">アクションを選択</h3><p data-page-translate="select-action-description">Stream Deckデスクトップアプリで、Setup、Timer Dial、または別のSSNアクションをドラッグして配置します。</p></div>
+				<div class="step"><span class="step-number">3</span><h3 data-page-translate="paste-test">貼り付けてテスト</h3><p data-page-translate="paste-test-description">SetupにIDを貼り付け、「Test Connection」を選択します。状態表示が緑色になれば接続できています。</p></div>
+			</div>
+		</section>
+
+		<section class="card card-body screenshots">
+			<div class="eyebrow" data-page-translate="what-to-look-for">確認する内容</div>
+			<h2 data-page-translate="two-places-use">操作する2つの場所</h2>
+			<figure class="shot">
+				<div class="shot-frame"><img src="../../streamdeck/images/ssapp-streamdeck-tab.png" alt="Stream Deck Setupタブを選択したSSAppのナビゲーション" data-page-alt="alt-ssapp-streamdeck-nav"></div>
+				<figcaption data-page-translate="ssapp-streamdeck-instruction">SSAppで「Stream Deck Setup」を選択します。「File → Set Up Stream Deck」からも同じページを開けます。</figcaption>
+			</figure>
+			<figure class="shot inspector">
+				<div class="shot-frame"><img src="../../streamdeck/images/streamdeck-paste-session.png" alt="セッション欄とTest Connectionボタンが表示されたStream Deckのプロパティインスペクター" data-page-alt="alt-streamdeck-session-field"></div>
+				<figcaption data-page-translate="streamdeck-paste-instruction">Stream Deckデスクトップアプリで、コピーしたIDを貼り付け、「Test Connection」を選択します。</figcaption>
+			</figure>
+		</section>
+
+		<section class="card card-body capabilities">
+            <p><a href="../docs/streamdeck-event-flow.html">カスタムEvent Flowワークフローの実行、APIの利用、ダイヤル操作を学ぶ</a></p>
+			<div class="eyebrow" data-page-translate="what-it-can-do">できること</div>
+			<h2 data-page-translate="controls-live-workflow">配信中の作業に合った操作</h2>
+			<div class="feature-grid">
+				<div class="feature"><strong data-page-translate="chat-overlays">チャットとオーバーレイ</strong><span data-page-translate="chat-overlays-description">メッセージの取り上げ、固定解除、消去、待機中メッセージの切り替え。</span></div>
+				<div class="feature"><strong data-page-translate="timers-polls">タイマーと投票</strong><span data-page-translate="timers-polls-description">開始、一時停止、リセット、時間調整、ライブ投票の管理。</span></div>
+				<div class="feature"><strong data-page-translate="ssapp-sources">SSAppのソース</strong><span data-page-translate="ssapp-sources-description">対応するソースの開始、停止、再起動、ミュート、表示、モード変更。</span></div>
+				<div class="feature"><strong data-page-translate="credits-controls">クレジット</strong><span data-page-translate="credits-controls-description">キー操作で、収集したクレジットを開始、プレビュー、テスト、リセット。</span></div>
+				<div class="feature"><strong>Stream Deck +</strong><span data-page-translate="streamdeck-plus-description">ダイヤルでタイマーを調整し、タッチストリップで最近のチャットを確認できます。</span></div>
+			</div>
+			<p id="compatibilityNote" data-page-translate="compatibility-note">プラグインは実行中のSSAppのバージョンを確認し、対応している操作だけを表示します。</p>
+		</section>
+
+		<p class="note" data-page-translate="session-id-privacy-note">セッションIDは、Social Stream Ninjaのサービスに接続するために使用しない限り、コンピューター内に留まります。</p>
+	</main>
+	<div id="toast" class="toast" role="status" aria-live="polite" data-page-translate="session-id-copied">セッションIDをコピーしました</div>
+
+	<script>
+		(function () {
+			"use strict";
+			var sessionId = "";
+			var toastTimer = null;
+			var lastSetupPayload = {};
+			var copyButton = document.getElementById("copySession");
+
+			function translate(key, fallback, values) {
+				if (window.SSNSiteTranslate && window.SSNSiteLanguage) {
+					return window.SSNSiteTranslate(fallback).replace(/\{(\w+)\}/g, function (match, name) {
+						return values && Object.prototype.hasOwnProperty.call(values, name) ? values[name] : match;
+					});
+				}
+				if (window.SSNPageI18n && typeof window.SSNPageI18n.t === "function") {
+					return window.SSNPageI18n.t(key, fallback, values);
+				}
+				return fallback;
+			}
+
+			function text(id, value) {
+				var element = document.getElementById(id);
+				if (element) element.textContent = value;
+			}
+
+			function countEnabled(value) {
+				var count = 0;
+				if (!value || typeof value !== "object") return count;
+				Object.keys(value).forEach(function (key) {
+					if (value[key] === true) count += 1;
+					else if (value[key] && typeof value[key] === "object") count += countEnabled(value[key]);
+				});
+				return count;
+			}
+
+			function applySetup(payload) {
+				payload = payload || {};
+				lastSetupPayload = payload;
+				sessionId = String(payload.sessionId || "").trim();
+				text("sessionValue", sessionId || translate("session-id-loading", "Session ID is still loading"));
+				copyButton.disabled = !sessionId;
+				text("appVersion", payload.appVersion ? "v" + payload.appVersion : translate("detected", "Detected"));
+				var apiLabel = payload.apiVersion || payload.bridgeVersion;
+				text("apiVersion", apiLabel ? "v" + apiLabel : translate("available", "Available"));
+				var supported = countEnabled(payload.capabilities || {});
+				text("supportSummary", supported
+					? translate("detected-features", "{count} detected features", { count: supported })
+					: translate("core-controls-available", "Core controls available"));
+				var dot = document.getElementById("connectionDot");
+				if (sessionId) {
+					dot.className = "dot ready";
+					text("connectionText", translate("ssapp-detected-copy-id", "SSApp detected. Copy this ID into the Stream Deck plugin."));
+				} else {
+					dot.className = "dot";
+					text("connectionText", translate("ssapp-creating-session", "SSApp is creating your session. Keep this page open for a moment."));
+				}
+			}
+
+			function showToast(message, isError) {
+				var toast = document.getElementById("toast");
+				text("toast", message);
+				toast.className = isError ? "toast error show" : "toast show";
+				clearTimeout(toastTimer);
+				toastTimer = setTimeout(function () { toast.className = "toast"; }, 1800);
+			}
+
+			function fallbackCopy(value) {
+				var input = document.createElement("textarea");
+				input.value = value;
+				input.setAttribute("readonly", "readonly");
+				input.style.position = "fixed";
+				input.style.opacity = "0";
+				document.body.appendChild(input);
+				input.select();
+				var copied = document.execCommand("copy");
+				document.body.removeChild(input);
+				return copied;
+			}
+
+			copyButton.addEventListener("click", function () {
+				if (!sessionId) return;
+				if (navigator.clipboard && navigator.clipboard.writeText) {
+					navigator.clipboard.writeText(sessionId).then(function () {
+						showToast(translate("session-id-copied", "Session ID copied"));
+					}).catch(function () {
+						var copied = fallbackCopy(sessionId);
+						showToast(copied
+							? translate("session-id-copied", "Session ID copied")
+							: translate("copy-failed", "Copy failed"), !copied);
+					});
+				} else {
+					var copied = fallbackCopy(sessionId);
+					showToast(copied
+						? translate("session-id-copied", "Session ID copied")
+						: translate("copy-failed", "Copy failed"), !copied);
+				}
+			});
+
+			window.addEventListener("ssn-page-language-changed", function () {
+				applySetup(lastSetupPayload);
+			});
+
+			window.addEventListener("message", function (event) {
+				if (event.source !== window.parent || !event.data || event.data.type !== "ssapp-streamdeck-setup") return;
+				applySetup(event.data.payload);
+			});
+
+			if (window.parent !== window) {
+				window.parent.postMessage({ type: "ssapp-streamdeck-ready" }, "*");
+			}
+		})();
+	</script>
+</body>
+</html>

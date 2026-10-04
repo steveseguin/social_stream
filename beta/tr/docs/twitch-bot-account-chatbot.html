@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/tr/docs/twitch-bot-account-chatbot.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/tr/docs/twitch-bot-account-chatbot.html">
+    <meta property="og:title" content="Otomatik Yanıtlar için Bot Hesapları - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja otomatik yanıtlarını başka hesaptan göndermek için Twitch WebSocket bot hesabı veya ayrı, yalnızca yanıt gönderen kaynak kullanın.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/tr/docs/twitch-bot-account-chatbot.html">
+    <meta name="twitter:title" content="Otomatik Yanıtlar için Bot Hesapları - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja otomatik yanıtlarını başka hesaptan göndermek için Twitch WebSocket bot hesabı veya ayrı, yalnızca yanıt gönderen kaynak kullanın.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Otomatik Yanıtlar için Bot Hesapları - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja otomatik yanıtlarını başka hesaptan göndermek için Twitch WebSocket bot hesabı veya ayrı, yalnızca yanıt gönderen kaynak kullanın.">
+    <style>
+        .bot-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin: 22px 0;
+        }
+        .bot-guide-card {
+            background: var(--card-bg, #fff);
+            border: 1px solid rgba(127, 127, 127, 0.22);
+            border-radius: 8px;
+            padding: 18px;
+        }
+        .bot-guide-card h3 {
+            margin-top: 0;
+        }
+        .bot-guide-shot {
+            display: block;
+            width: auto;
+            max-width: 100%;
+            border: 1px solid rgba(127, 127, 127, 0.28);
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            margin: 16px auto 8px;
+        }
+        .bot-guide-caption {
+            color: var(--text-secondary);
+            font-size: 1.4rem;
+            margin-bottom: 22px;
+        }
+        .dark-mode .bot-guide-card {
+            background: #161b22;
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/twitch-bot-account-chatbot.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{", and its separate session at the top.":", üstte ise ayrı oturumunu gösterir.",", click":", şuna tıklayın:",", the separate bot source takes priority. SSN will not also send the same reply through the attached Twitch WebSocket bot account.":", ayrı bot kaynağı öncelik alır. SSN aynı yanıtı ayrıca bağlı Twitch WebSocket bot hesabından göndermez.","A separate SSApp Twitch source configured as Reply only with Role Bot and a bot-account browser session":"Bot rolü ve bot hesabı tarayıcı oturumuyla Yalnızca yanıt olarak yapılandırılmış ayrı SSApp Twitch kaynağı","Account role":"Hesap rolü","Account roles can support more advanced routing setups.":"Hesap rolleri daha gelişmiş yönlendirme kurulumlarını destekleyebilir.","Activate the bot source and leave it running whenever it needs to send replies.":"Bot kaynağını etkinleştirin ve yanıt göndermesi gerektiği sürece çalışır tutun.","Add the same channel or source again. If SSApp asks whether to make it a reply-only bot source, choose":"Aynı kanalı veya kaynağı yeniden ekleyin. SSApp bunun yalnızca yanıt gönderen bot kaynağı olmasını sorarsa şunu seçin:","Add your normal source for capturing chat.":"Sohbeti yakalamak için normal kaynağınızı ekleyin.","Automatic reply account: @BotName":"Otomatik yanıt hesabı: @BotName","Automatic reply account: Main account":"Otomatik yanıt hesabı: Ana hesap","Best for":"En uygun kullanım","Bot":"Bot","Bot Accounts for Automatic Replies":"Otomatik yanıtlar için bot hesapları","Bot Accounts for Automatic Replies - Social Stream Ninja":"Otomatik Yanıtlar için Bot Hesapları - Social Stream Ninja","Bot reply-only (no capture)":"Bot yalnızca yanıt (yakalama yok)","Both methods make automatic replies appear under a bot account instead of your main account. They do it in different ways.":"Her iki yöntem de otomatik yanıtları ana hesabınız yerine bot hesabından gösterir. Bunu farklı yollarla yaparlar.","Browser Session Settings":"Tarayıcı Oturumu Ayarları","Can work with other platforms that support outgoing replies.":"Giden yanıtları destekleyen diğer platformlarla çalışabilir.","Chatbot and scheduled automatic replies use the bot account.":"Sohbet botu ve zamanlanmış otomatik yanıtlar bot hesabını kullanır.","Choose the simple Twitch WebSocket option or the existing separate reply-only source method.":"Basit Twitch WebSocket seçeneğini veya mevcut ayrı, yalnızca yanıt gönderen kaynak yöntemini seçin.","Click":"Tıklayın:","Click the source's":"Kaynağın şu öğesine tıklayın:","Commands & API":"Komutlar ve API","Connect bot account":"Bot hesabını bağla","Cons":"Eksiler","Download":"İndir","Enter this value:":"Şu değeri girin:","Extra source?":"Ek kaynak?","Features":"Özellikler","Guides":"Kılavuzlar","Hire":"Hizmet alın","Home":"Ana sayfa","If Both Methods Are Configured":"Her İki Yöntem de Yapılandırılmışsa","If reply-only is disabled, the second source can capture duplicate messages.":"Yalnızca yanıt kapalıysa ikinci kaynak yinelenen mesajlar yakalayabilir.","In SSApp, find your Twitch source and make sure":"SSApp'te Twitch kaynağınızı bulun ve şu seçeneğin","In Twitch Shared Chat, bot replies stay in this source's channel.":"Twitch Paylaşılan Sohbet'te bot yanıtları bu kaynağın kanalında kalır.","In the settings panel on the right, switch to full mode and search for":"Sağdaki ayarlar panelinde tam moda geçip şunu arayın:","Inspiration":"İlham","It does not create another source or permanent browser session.":"Başka bir kaynak veya kalıcı bir tarayıcı oturumu oluşturmaz.","It is not available for Twitch Standard mode, other platforms, or the browser extension.":"Twitch Standart modu, diğer platformlar veya tarayıcı uzantısı için kullanılamaz.","Main navigation":"Ana gezinme","Manual sends still use the main Twitch account.":"Elle gönderilen mesajlar yine ana Twitch hesabını kullanır.","Method":"Yöntem","Method 1: Twitch WebSocket Bot Account":"Yöntem 1: Twitch WebSocket Bot Hesabı","Method 2: Separate Reply-Only Bot Source":"Yöntem 2: Ayrı, Yalnızca Yanıt Gönderen Bot Kaynağı","More settings must be kept in sync.":"Daha fazla ayar eşzamanlı tutulmalıdır.","No":"Hayır","No second source to create or keep running.":"Oluşturulacak veya çalışır tutulacak ikinci kaynak yoktur.","On the second source, open":"İkinci kaynakta şunu açın:","Open its gear menu. Enable":"Dişli menüsünü açın. Şunu etkinleştirin:","Open navigation menu":"Gezinme menüsünü aç","Overlay Gallery":"Katman galerisi","Pros":"Artılar","Replies still use the main account:":"Yanıtlar hâlâ ana hesabı kullanıyor:","Reply only":"Yalnızca yanıt","Requires a second source and a separate session.":"İkinci kaynak ve ayrı oturum gerektirir.","Review the explanation, then click":"Açıklamayı inceleyip şuna tıklayın:","Role: Bot":"Rol: Bot","SSApp Automatic reply account dialog with the Connect bot account button":"Bot hesabını bağla düğmesi bulunan SSApp Otomatik yanıt hesabı iletişim kutusu","SSApp Twitch WebSocket source with its gear menu open and Automatic reply account set to Main account":"Dişli menüsü açık ve Otomatik yanıt hesabı Ana hesap olarak ayarlanmış SSApp Twitch WebSocket kaynağı","SSApp opens a separate Twitch sign-in window. Sign in with the account that should send bot replies.":"SSApp ayrı bir Twitch giriş penceresi açar. Bot yanıtlarını göndermesi gereken hesapla giriş yapın.","SSN setting Send bot replies through these SSApp account roles filled with bot":"Bot yanıtlarını şu SSApp hesap rolleri üzerinden gönder ayarı bot değeriyle doldurulmuş SSN","Send bot replies through these SSApp account roles":"Bot yanıtlarını şu SSApp hesap rolleri üzerinden gönder","Separate reply-only bot source":"Ayrı, yalnızca yanıt gönderen bot kaynağı","Set":"Şunu ayarlayın:","Sign in":"Giriş yap","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 Lisansı.","Support":"Destek","Supported Sites":"Desteklenen siteler","Switch theme":"Temayı değiştir","The attached Twitch bot cannot send:":"Bağlı Twitch botu gönderemiyor:","The bot must be a moderator, or the channel owner may need to reconnect once to approve Twitch bot access.":"Bot moderatör olmalıdır veya kanal sahibinin Twitch bot erişimini onaylamak için bir kez yeniden bağlanması gerekebilir.","The bot source has its own browser session and source controls.":"Bot kaynağının kendi tarayıcı oturumu ve kaynak kontrolleri vardır.","The bot source must be active to send.":"Göndermek için bot kaynağı etkin olmalıdır.","The easiest Twitch-only setup":"Yalnızca Twitch için en kolay kurulum","The finished second source shows":"Tamamlanan ikinci kaynak şunu gösterir:","The new attached-account method is only for Twitch WebSocket sources in the SSApp desktop app.":"Yeni bağlı hesap yöntemi yalnızca SSApp masaüstü uygulamasındaki Twitch WebSocket kaynakları içindir.","The new option is missing:":"Yeni seçenek görünmüyor:","The screenshots below use Twitch, but this method is not Twitch-only. It can also be used with other SSApp sources that support signing in and sending replies.":"Aşağıdaki ekran görüntüleri Twitch'i kullanır ancak bu yöntem yalnızca Twitch'e özel değildir. Giriş yapmayı ve yanıt göndermeyi destekleyen diğer SSApp kaynaklarında da kullanılabilir.","The separate sign-in window prevents your normal browser's Twitch login from silently choosing the wrong account.":"Ayrı giriş penceresi, normal tarayıcınızdaki Twitch girişinin fark ettirmeden yanlış hesabı seçmesini önler.","The separate source captures duplicate chat:":"Ayrı kaynak yinelenen sohbet yakalıyor:","The separate source sends nothing:":"Ayrı kaynak hiçbir şey göndermiyor:","The wrong Twitch account was selected:":"Yanlış Twitch hesabı seçildi:","This attaches a second Twitch login to your existing WebSocket source.":"Bu, mevcut WebSocket kaynağınıza ikinci bir Twitch oturumu bağlar.","This is the original SSApp method and it is still supported. It creates a second source, gives that source its own browser session, and routes automatic replies through sources with the":"Bu, ilk SSApp yöntemidir ve hâlâ desteklenir. İkinci kaynak oluşturur, bu kaynağa kendi tarayıcı oturumunu verir ve otomatik yanıtları şu role sahip kaynaklar üzerinden yönlendirir:","This section appears only when that Twitch source is using WebSocket mode.":"Bu bölüm yalnızca Twitch kaynağı WebSocket modunu kullanıyorsa görünür.","Tip: Click or tap any screenshot to open it at full size.":"İpucu: Tam boyutta açmak için ekran görüntüsüne tıklayın veya dokunun.","Troubleshooting":"Sorun giderme","Twitch Standard mode or another platform that can send replies":"Twitch Standart modu veya yanıt gönderebilen başka bir platform","Twitch WebSocket bot account":"Twitch WebSocket bot hesabı","Twitch WebSocket sending":"Twitch WebSocket gönderimi","Twitch only.":"Yalnızca Twitch.","Under":"Şu bölümde:","Use a Twitch WebSocket bot account or a separate reply-only source to send Social Stream Ninja automatic replies from another account.":"Social Stream Ninja otomatik yanıtlarını başka hesaptan göndermek için Twitch WebSocket bot hesabı veya ayrı, yalnızca yanıt gönderen kaynak kullanın.","Use one method for a given reply path. If":"Belirli bir yanıt yolu için tek yöntem kullanın. Eğer","Very little setup after the WebSocket source is connected.":"WebSocket kaynağı bağlandıktan sonra çok az kurulum gerekir.","WebSocket":"WebSocket","WebSocket mode only.":"Yalnızca WebSocket modu.","When the sign-in finishes, the source menu changes to":"Giriş tamamlandığında kaynak menüsü şuna dönüşür:","Which Method Should I Use?":"Hangi Yöntemi Kullanmalıyım?","Works with Twitch Standard mode.":"Twitch Standart moduyla çalışır.","Yes":"Evet","activate it, confirm it is signed in as the bot, and verify the routing field contains exactly":"etkinleştirin, bot olarak giriş yapıldığını doğrulayın ve yönlendirme alanının tam olarak şunu içerdiğini kontrol edin:","and cycle":"ve şu seçeneği değiştirin:","and use a separate session such as":"ve şu örnekteki gibi ayrı oturum kullanın:","bot replies":"bot replies","choose the account again and sign into the separate SSApp Twitch window with the bot account.":"hesabı yeniden seçin ve ayrı SSApp Twitch penceresinde bot hesabıyla giriş yapın.","confirm this is the SSApp desktop app and the Twitch source is set to WebSocket mode.":"bunun SSApp masaüstü uygulaması olduğunu ve Twitch kaynağının WebSocket modunda olduğunu doğrulayın.","enable":"etkinleştirin:","gear button":"dişli düğmesi","in this field. The two relay-role fields above it are separate settings and can stay blank.":"bu alana. Üstteki iki aktarma rolü alanı ayrı ayarlardır ve boş kalabilir.","is configured as":"şu değere ayarlanır:","is selected.":"seçili olduğundan emin olun.","make the bot a moderator. If it is not a moderator, reconnect the main Twitch account once using the channel owner and approve the requested permission.":"botu moderatör yapın. Moderatör değilse ana Twitch hesabını kanal sahibiyle bir kez yeniden bağlayıp istenen izni onaylayın.","on that second source and sign in with the bot account.":"ikinci kaynakta ve bot hesabıyla giriş yapın.","role.":"rolü.","to":"şu değere:","until it says":"şunu gösterene kadar:","verify the attached account is shown by username, or verify the separate source says":"bağlı hesabın kullanıcı adıyla gösterildiğini veya ayrı kaynağın şunu gösterdiğini doğrulayın:"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/twitch-bot-account-chatbot.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme"><a href="../index.html">Ana sayfa</a><a href="features.html">Özellikler</a><a href="inspiration.html" class="site-priority-inspiration">İlham</a><a href="download.html">İndir</a><a href="guides.html">Kılavuzlar</a><a href="commands.html">Komutlar ve API</a><a href="supported-sites.html">Desteklenen siteler</a><a href="overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a><a href="services.html" class="site-priority-hire">Hizmet alın</a><a href="support.html">Destek</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/twitch-bot-account-chatbot.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/twitch-bot-account-chatbot.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/twitch-bot-account-chatbot.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/twitch-bot-account-chatbot.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/twitch-bot-account-chatbot.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/twitch-bot-account-chatbot.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/twitch-bot-account-chatbot.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/twitch-bot-account-chatbot.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/twitch-bot-account-chatbot.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/twitch-bot-account-chatbot.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/twitch-bot-account-chatbot.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/twitch-bot-account-chatbot.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/twitch-bot-account-chatbot.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/twitch-bot-account-chatbot.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="twitch-bot-account-chatbot.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/twitch-bot-account-chatbot.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/twitch-bot-account-chatbot.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Otomatik yanıtlar için bot hesapları</h1>
+            <p>Basit Twitch WebSocket seçeneğini veya mevcut ayrı, yalnızca yanıt gönderen kaynak yöntemini seçin.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Hangi Yöntemi Kullanmalıyım?</h2>
+                <p>Her iki yöntem de otomatik yanıtları ana hesabınız yerine bot hesabından gösterir. Bunu farklı yollarla yaparlar.</p>
+                <div class="guide-note">
+                    <p><strong>Yeni bağlı hesap yöntemi yalnızca SSApp masaüstü uygulamasındaki Twitch WebSocket kaynakları içindir.</strong> Twitch Standart modu, diğer platformlar veya tarayıcı uzantısı için kullanılamaz.</p>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr>
+                            <th>Yöntem</th>
+                            <th>En uygun kullanım</th>
+                            <th>Ek kaynak?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Method"><strong>Twitch WebSocket bot hesabı</strong></td>
+                            <td data-label="Best for">Yalnızca Twitch için en kolay kurulum</td>
+                            <td data-label="Extra source?">Hayır</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Method"><strong>Ayrı, yalnızca yanıt gönderen bot kaynağı</strong></td>
+                            <td data-label="Best for">Twitch Standart modu veya yanıt gönderebilen başka bir platform</td>
+                            <td data-label="Extra source?">Evet</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Yöntem 1: Twitch WebSocket Bot Hesabı</h2>
+                <p>Bu, mevcut WebSocket kaynağınıza ikinci bir Twitch oturumu bağlar. <strong>Başka bir kaynak veya kalıcı bir tarayıcı oturumu oluşturmaz.</strong></p>
+                <p><small>İpucu: Tam boyutta açmak için ekran görüntüsüne tıklayın veya dokunun.</small></p>
+                <ol class="guide-steps">
+                    <li>SSApp'te Twitch kaynağınızı bulun ve şu seçeneğin <strong>WebSocket</strong> seçili olduğundan emin olun.</li>
+                    <li>Kaynağın şu öğesine tıklayın: <strong>dişli düğmesi</strong>.</li>
+                    <li>Şu bölümde: <strong>Twitch WebSocket gönderimi</strong>, şuna tıklayın: <strong>Otomatik yanıt hesabı: Ana hesap</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-websocket-bot-menu.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-websocket-bot-menu.png" alt="Dişli menüsü açık ve Otomatik yanıt hesabı Ana hesap olarak ayarlanmış SSApp Twitch WebSocket kaynağı">
+                </a>
+                <p class="bot-guide-caption">Bu bölüm yalnızca Twitch kaynağı WebSocket modunu kullanıyorsa görünür.</p>
+
+                <ol class="guide-steps" start="4">
+                    <li>Açıklamayı inceleyip şuna tıklayın: <strong>Bot hesabını bağla</strong>.</li>
+                    <li>SSApp ayrı bir Twitch giriş penceresi açar. Bot yanıtlarını göndermesi gereken hesapla giriş yapın.</li>
+                    <li>Giriş tamamlandığında kaynak menüsü şuna dönüşür: <strong>Otomatik yanıt hesabı: @BotName</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-bot-account-dialog.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-bot-account-dialog.png" alt="Bot hesabını bağla düğmesi bulunan SSApp Otomatik yanıt hesabı iletişim kutusu">
+                </a>
+                <p class="bot-guide-caption">Ayrı giriş penceresi, normal tarayıcınızdaki Twitch girişinin fark ettirmeden yanlış hesabı seçmesini önler.</p>
+
+                <div class="bot-guide-grid">
+                    <div class="bot-guide-card">
+                        <h3>Artılar</h3>
+                        <ul class="guide-list">
+                            <li>Oluşturulacak veya çalışır tutulacak ikinci kaynak yoktur.</li>
+                            <li>WebSocket kaynağı bağlandıktan sonra çok az kurulum gerekir.</li>
+                            <li>Sohbet botu ve zamanlanmış otomatik yanıtlar bot hesabını kullanır.</li>
+                            <li>Twitch Paylaşılan Sohbet'te bot yanıtları bu kaynağın kanalında kalır.</li>
+                        </ul>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>Eksiler</h3>
+                        <ul class="guide-list">
+                            <li>Yalnızca Twitch.</li>
+                            <li>Yalnızca WebSocket modu.</li>
+                            <li>Elle gönderilen mesajlar yine ana Twitch hesabını kullanır.</li>
+                            <li>Bot moderatör olmalıdır veya kanal sahibinin Twitch bot erişimini onaylamak için bir kez yeniden bağlanması gerekebilir.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Yöntem 2: Ayrı, Yalnızca Yanıt Gönderen Bot Kaynağı</h2>
+                <p>Bu, ilk SSApp yöntemidir ve hâlâ desteklenir. İkinci kaynak oluşturur, bu kaynağa kendi tarayıcı oturumunu verir ve otomatik yanıtları şu role sahip kaynaklar üzerinden yönlendirir: <code>bot</code> rolü.</p>
+                <p>Aşağıdaki ekran görüntüleri Twitch'i kullanır ancak bu yöntem yalnızca Twitch'e özel değildir. Giriş yapmayı ve yanıt göndermeyi destekleyen diğer SSApp kaynaklarında da kullanılabilir.</p>
+                <ol class="guide-steps">
+                    <li>Sohbeti yakalamak için normal kaynağınızı ekleyin.</li>
+                    <li>Aynı kanalı veya kaynağı yeniden ekleyin. SSApp bunun yalnızca yanıt gönderen bot kaynağı olmasını sorarsa şunu seçin: <strong>Evet</strong>.</li>
+                    <li>İkinci kaynakta şunu açın: <strong>Tarayıcı Oturumu Ayarları</strong> ve şu örnekteki gibi ayrı oturum kullanın: <code>bot-account</code>.</li>
+                    <li>Tıklayın: <strong>Giriş yap</strong> ikinci kaynakta ve bot hesabıyla giriş yapın.</li>
+                    <li>Dişli menüsünü açın. Şunu etkinleştirin: <strong>Bot yalnızca yanıt (yakalama yok)</strong> ve şu seçeneği değiştirin: <strong>Hesap rolü</strong> şunu gösterene kadar: <strong>Bot</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-separate-reply-only-bot-source.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-separate-reply-only-bot-source.png" alt="Bot rolü ve bot hesabı tarayıcı oturumuyla Yalnızca yanıt olarak yapılandırılmış ayrı SSApp Twitch kaynağı">
+                </a>
+                <p class="bot-guide-caption">Tamamlanan ikinci kaynak şunu gösterir: <strong>Yalnızca yanıt</strong>, <strong>Rol: Bot</strong>, üstte ise ayrı oturumunu gösterir.</p>
+
+                <ol class="guide-steps" start="6">
+                    <li>Sağdaki ayarlar panelinde tam moda geçip şunu arayın: <strong>bot replies</strong>.</li>
+                    <li>Şunu ayarlayın: <strong>Bot yanıtlarını şu SSApp hesap rolleri üzerinden gönder</strong> şu değere: <code>bot</code>.</li>
+                    <li>Bot kaynağını etkinleştirin ve yanıt göndermesi gerektiği sürece çalışır tutun.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssn-bot-reply-role-routing.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssn-bot-reply-role-routing.png" alt="Bot yanıtlarını şu SSApp hesap rolleri üzerinden gönder ayarı bot değeriyle doldurulmuş SSN">
+                </a>
+                <p class="bot-guide-caption">Şu değeri girin: <code>bot</code> bu alana. Üstteki iki aktarma rolü alanı ayrı ayarlardır ve boş kalabilir.</p>
+
+                <div class="bot-guide-grid">
+                    <div class="bot-guide-card">
+                        <h3>Artılar</h3>
+                        <ul class="guide-list">
+                            <li>Twitch Standart moduyla çalışır.</li>
+                            <li>Giden yanıtları destekleyen diğer platformlarla çalışabilir.</li>
+                            <li>Bot kaynağının kendi tarayıcı oturumu ve kaynak kontrolleri vardır.</li>
+                            <li>Hesap rolleri daha gelişmiş yönlendirme kurulumlarını destekleyebilir.</li>
+                        </ul>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>Eksiler</h3>
+                        <ul class="guide-list">
+                            <li>İkinci kaynak ve ayrı oturum gerektirir.</li>
+                            <li>Göndermek için bot kaynağı etkin olmalıdır.</li>
+                            <li>Daha fazla ayar eşzamanlı tutulmalıdır.</li>
+                            <li>Yalnızca yanıt kapalıysa ikinci kaynak yinelenen mesajlar yakalayabilir.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Her İki Yöntem de Yapılandırılmışsa</h2>
+                <p>Belirli bir yanıt yolu için tek yöntem kullanın. Eğer <strong>Bot yanıtlarını şu SSApp hesap rolleri üzerinden gönder</strong> şu değere ayarlanır: <code>bot</code>, ayrı bot kaynağı öncelik alır. SSN aynı yanıtı ayrıca bağlı Twitch WebSocket bot hesabından göndermez.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Sorun giderme</h2>
+                <ul class="guide-list">
+                    <li><strong>Yeni seçenek görünmüyor:</strong> bunun SSApp masaüstü uygulaması olduğunu ve Twitch kaynağının WebSocket modunda olduğunu doğrulayın.</li>
+                    <li><strong>Bağlı Twitch botu gönderemiyor:</strong> botu moderatör yapın. Moderatör değilse ana Twitch hesabını kanal sahibiyle bir kez yeniden bağlayıp istenen izni onaylayın.</li>
+                    <li><strong>Yanlış Twitch hesabı seçildi:</strong> hesabı yeniden seçin ve ayrı SSApp Twitch penceresinde bot hesabıyla giriş yapın.</li>
+                    <li><strong>Ayrı kaynak hiçbir şey göndermiyor:</strong> etkinleştirin, bot olarak giriş yapıldığını doğrulayın ve yönlendirme alanının tam olarak şunu içerdiğini kontrol edin: <code>bot</code>.</li>
+                    <li><strong>Ayrı kaynak yinelenen sohbet yakalıyor:</strong> etkinleştirin: <strong>Bot yalnızca yanıt (yakalama yok)</strong>.</li>
+                    <li><strong>Yanıtlar hâlâ ana hesabı kullanıyor:</strong> bağlı hesabın kullanıcı adıyla gösterildiğini veya ayrı kaynağın şunu gösterdiğini doğrulayın: <strong>Rol: Bot</strong>.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 Lisansı.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

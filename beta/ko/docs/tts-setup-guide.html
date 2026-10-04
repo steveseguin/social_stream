@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/tts-setup-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/tts-setup-guide.html">
+    <meta property="og:title" content="TTS 설정 가이드 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja의 텍스트 음성 변환, OBS 오디오, 브라우저 음성, 로컬 음성, TTS 서버 모드를 쉽게 설명하는 설정 가이드.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/tts-setup-guide.html">
+    <meta name="twitter:title" content="TTS 설정 가이드 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja의 텍스트 음성 변환, OBS 오디오, 브라우저 음성, 로컬 음성, TTS 서버 모드를 쉽게 설명하는 설정 가이드.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TTS 설정 가이드 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <style>
+        .tts-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+        .tts-preview { border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.6rem; min-width: 0; }
+        .tts-preview h3 { margin-top: 0; }
+        .tts-preview audio { width: 100%; margin: .8rem 0; }
+        .tts-settings { margin: 1.2rem 0; }
+        .tts-settings summary { cursor: pointer; font-weight: 600; padding: .8rem 0; }
+        .tts-settings summary:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+        .tts-settings img { max-width: 52rem; }
+        .tts-preview code { overflow-wrap: anywhere; }
+        .guide-card [id] { scroll-margin-top: 10rem; }
+        .guide-image-medium { max-width: 52rem; }
+        @media (max-width: 700px) { .tts-preview-grid { grid-template-columns: 1fr; } }
+    </style>
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja의 텍스트 음성 변환, OBS 오디오, 브라우저 음성, 로컬 음성, TTS 서버 모드를 쉽게 설명하는 설정 가이드.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/tts-setup-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{", expand":"에서 다음을 펼치세요:",", then a voice.":". 그다음 음성을 고르세요.",", then use the existing Test TTS button. An optional Voice ID selects a voice from":"를 입력한 뒤 기존 Test TTS 버튼을 사용하세요. 선택 항목인 Voice ID로 다음 사이트의 음성을 지정할 수 있습니다:",". Choose":". 선택할 항목:",". Enable TTS using the usual controls. Keep generated URLs containing your key private. Event Flow's existing Speak Text voice override accepts a Fish voice ID when the receiving page uses Fish Audio.":"을 지정하세요. 평소 사용하던 컨트롤로 TTS를 켜세요. 키가 포함된 생성 URL은 비공개로 유지하세요. 수신 페이지가 Fish Audio를 사용하는 경우 Event Flow의 기존 Speak Text 음성 재정의에 Fish 음성 ID를 입력할 수 있습니다.",". In the Fish Audio panel, set":"를 실행하세요. Fish Audio 패널의 설정:",". Piper offers Spain, Mexico, Brazil and Portugal; Kokoro adds three Spanish and three Brazilian Portuguese voices.":"를 사용하세요. Piper는 스페인, 멕시코, 브라질, 포르투갈 음성을 제공하며, Kokoro에는 스페인어 3종과 브라질 포르투갈어 3종이 추가로 있습니다.",". Turn on the switch shown here:":". 여기에 표시된 스위치를 켜세요:","1. Switch on chat reading":"1. 채팅 읽기 켜기","2. Choose a free voice":"2. 무료 음성 선택","3. Play it in OBS":"3. OBS에서 재생","; copy the voice model ID, not its name or page URL. Leave it empty to use the service's default voice.":". 이름이나 페이지 URL이 아닌 음성 모델 ID를 복사하세요. 비워 두면 서비스의 기본 음성을 사용합니다.","; free-tier availability and fair-use terms are controlled by Fish Audio. Paid models require account credit. SSN does not retry a failed free request with a paid model. Use More TTS options for viewer volume. Text is sent to Fish Audio, and language is detected by the service.":"입니다. 무료 등급의 제공 여부와 공정 사용 조건은 Fish Audio에서 정합니다. 유료 모델에는 계정 크레딧이 필요합니다. SSN은 무료 요청이 실패해도 유료 모델로 다시 시도하지 않습니다. 시청자에게 들리는 볼륨은 More TTS options에서 조절하세요. 텍스트는 Fish Audio로 전송되며 언어는 서비스에서 감지합니다.","; paste the local bridge token printed in the terminal into the popup":"로 설정하세요. 터미널에 표시된 로컬 브리지 토큰을 팝업의","A local TTS server is useful when you want private voices, a specific voice model, or a server such as Kokoro-FastAPI or openedai-speech. The page that plays TTS must be able to reach the endpoint.":"비공개 음성, 특정 음성 모델 또는 Kokoro-FastAPI나 openedai-speech 같은 서버를 사용하려면 로컬 TTS 서버가 유용합니다. TTS를 재생하는 페이지에서 엔드포인트에 접근할 수 있어야 합니다.","A reachable OpenAI-compatible speech endpoint; key if required. Local hardware or hosting costs vary.":"접근 가능한 OpenAI 호환 음성 엔드포인트와 필요한 경우 키가 있어야 합니다. 로컬 하드웨어나 호스팅 비용은 환경에 따라 다릅니다.","API Key":"API 키","API billing and internet required; account subscription is separate.":"API 결제와 인터넷 연결이 필요하며 계정 구독과는 별개입니다.","API key with TTS access. Chat text is sent to the configured endpoint.":"TTS 사용 권한이 있는 API 키. 채팅 텍스트는 설정한 엔드포인트로 전송됩니다.","Account limits, network delay and API charges can apply.":"계정 제한, 네트워크 지연, API 요금이 적용될 수 있습니다.","Actual SSN Custom / Local TTS provider settings":"실제 SSN 사용자 지정 / 로컬 TTS 제공업체 설정","Actual SSN ElevenLabs provider settings":"실제 SSN ElevenLabs 제공업체 설정","Actual SSN Gemini provider settings":"실제 SSN Gemini 제공업체 설정","Actual SSN Google Cloud provider settings":"실제 SSN Google Cloud 제공업체 설정","Actual SSN Kitten provider settings":"실제 SSN Kitten 제공업체 설정","Actual SSN Kokoro provider settings":"실제 SSN Kokoro 제공업체 설정","Actual SSN OpenAI provider settings":"실제 SSN OpenAI 제공업체 설정","Actual SSN Piper provider settings":"실제 SSN Piper 제공업체 설정","Actual SSN Speechify provider settings":"실제 SSN Speechify 제공업체 설정","Actual SSN System TTS provider settings":"실제 SSN 시스템 TTS 제공업체 설정","Actual SSN eSpeak provider settings":"실제 SSN eSpeak 제공업체 설정","Actual desktop-app settings, captured with a fresh profile. Open the provider you want; the API-key fields are intentionally empty. These controls configure the selected SSN dock or overlay. Select a screenshot to see it at full size.":"새 프로필에서 촬영한 실제 데스크톱 앱 설정입니다. 원하는 제공업체를 여세요. API 키 입력란은 의도적으로 비워 두었습니다. 이 컨트롤은 선택한 SSN 도크 또는 오버레이를 설정합니다. 스크린샷을 선택하면 원래 크기로 볼 수 있습니다.","Actual popup: Message: Text to Speech, with Enable TTS in dock switched on":"실제 팝업: 메시지 — 텍스트 음성 변환에서 도크 TTS 사용을 켠 상태","Actual popup: Piper TTS selected, with English US Female HFC Medium voice":"실제 팝업: Piper TTS와 English US Female HFC Medium 음성을 선택한 상태","Adam (American Male):":"Adam (미국 남성) —","Add an OBS":"OBS에 다음 소스를 추가하세요:","Advanced options include the model and speaking rate (0.5–2). SSN defaults to":"고급 옵션에는 모델과 말하기 속도(0.5–2)가 있습니다. SSN의 기본값:","Advanced: edit a TTS URL manually":"고급: TTS URL 직접 편집","Advanced: run your own local TTS server":"고급: 자체 로컬 TTS 서버 실행","Alex (Brazilian Portuguese) -":"Alex (브라질 포르투갈어) -","Alex (Spanish) -":"Alex (스페인어) -","Alice (British Female):":"Alice (영국 여성) —","Alloy (American Female):":"Alloy (미국 여성) —","An OBS Custom Browser Dock is a control panel, not the scene Browser Source used above. For Featured Chat, enable TTS in that overlay’s own popup options and copy its link. Keep one page speaking to avoid doubled voices.":"OBS 사용자 지정 브라우저 도크는 조작 패널이며 위에서 사용하는 장면의 브라우저 소스와 다릅니다. 강조 채팅을 사용하려면 해당 오버레이의 팝업 옵션에서 TTS를 켜고 링크를 복사하세요. 음성이 겹치지 않도록 한 페이지만 읽게 하세요.","Aoede (American Female):":"Aoede (미국 여성) —","Bella (American Female):":"Bella (미국 여성) —","Bella, American female. Tested using CPU/WASM, q8.":"Bella, 미국 여성. CPU/WASM, q8로 테스트했습니다.","Blue switch = chat reading is on.":"파란색 스위치 = 채팅 읽기 켜짐.","Brazilian Portuguese (Edresson) - Low:":"브라질 포르투갈어 (Edresson) - 낮음 —","Brazilian Portuguese (Faber) - Medium:":"브라질 포르투갈어 (Faber) - 중간 —","Browser Source":"브라우저 소스","Can I use an OBS dock or Featured Chat instead?":"OBS 도크나 강조 채팅을 대신 사용할 수 있나요?","Check mute and recording-track assignments in OBS. Use Monitor and Output if you also want to hear it; avoid capturing that monitoring output a second time.":"OBS에서 음소거 상태와 녹음 트랙 지정을 확인하세요. 본인도 들으려면 모니터링 및 출력을 사용하되, 모니터링 출력을 다시 캡처하지 않도록 하세요.","Check that the dock receives chat, then check the TTS switch, provider and filters. Use the newly copied link. Allow the first model download to finish.":"도크에 채팅이 수신되는지 확인한 뒤 TTS 스위치, 제공업체, 필터를 확인하세요. 새로 복사한 링크를 사용하세요. 첫 모델 다운로드가 끝날 때까지 기다리세요.","Checked September 7, 2026 in OBS 32.2.2 on Windows 11: a chat message reached the real dock, generated speech, moved the Browser Source meter and appeared in a recording. Kokoro took noticeably longer to start speaking in this CPU test. These clips preview the voice, not the waiting time.":"2026년 9월 7일 Windows 11의 OBS 32.2.2에서 확인했습니다. 채팅 메시지가 실제 도크에 도착하여 음성이 생성되었고, 브라우저 소스 미터가 움직였으며 녹화에도 포함되었습니다. 이 CPU 테스트에서는 Kokoro가 말하기 시작하기까지 확연히 더 오래 걸렸습니다. 이 클립은 음성 미리보기이며 대기 시간은 포함하지 않습니다.","Choose a language above the voice list in SSN settings, then use":"SSN 설정의 음성 목록 위에서 언어를 선택한 뒤 다음을 사용하세요:","Choose a language voice and optionally adjust speaking rate. This engine sounds robotic by design.":"언어별 음성을 선택하고 필요하면 말하기 속도를 조절하세요. 이 엔진은 원래 로봇 같은 음성을 냅니다.","Choose a matching language and model. The sample uses HFC medium. A language setting alone does not translate a voice.":"일치하는 언어와 모델을 선택하세요. 예시는 HFC medium을 사용합니다. 언어 설정만으로 음성이 번역되지는 않습니다.","Choose a supported voice/model and enter an API key. A ChatGPT subscription does not supply API credits. Keep the default endpoint for OpenAI.":"지원되는 음성/모델을 선택하고 API 키를 입력하세요. ChatGPT 구독에는 API 크레딧이 포함되지 않습니다. OpenAI에는 기본 엔드포인트를 유지하세요.","Choose a voice in SSN; the model loads on the page that speaks. The selection includes English US/UK, Spanish and Brazilian Portuguese. Use the language filter to find voices; Test plays a short phrase in the selected language. For lower CPU use, try Piper.":"SSN에서 음성을 선택하세요. 음성을 재생하는 페이지에 모델이 로드됩니다. 미국/영국 영어, 스페인어, 브라질 포르투갈어를 선택할 수 있습니다. 언어 필터로 음성을 찾으세요. Test는 선택한 언어로 짧은 문구를 재생합니다. CPU 사용량을 줄이려면 Piper를 사용해 보세요.","Commands & API":"명령 및 API","Compact English model, eight voice choices.":"작은 영어 모델과 8가지 음성 선택지.","Compare all providers: requirements, cost and trade-offs":"모든 제공업체 비교: 요구 사항, 비용, 장단점","Control audio via OBS":"OBS를 통해 오디오 제어(Control audio via OBS)","Custom / Local":"사용자 지정 / 로컬","Custom / Local TTS":"사용자 지정 / 로컬 TTS","Daniel (British Male):":"Daniel (영국 남성) —","DaveFX":"DaveFX","Deliberately synthetic/robotic sound.":"의도적으로 합성음/로봇 같은 소리를 냅니다.","Diagram showing OBS Browser Source sending TTS requests through the Social Stream Ninja local TTS bridge to a TTS server":"OBS 브라우저 소스가 Social Stream Ninja 로컬 TTS 브리지를 통해 TTS 서버로 요청을 보내는 구조도","Does my chat platform support TTS?":"제 채팅 플랫폼에서도 TTS를 사용할 수 있나요?","Dora":"Dora","Dora (Brazilian Portuguese) -":"Dora (브라질 포르투갈어) -","Dora (Spanish) -":"Dora (스페인어) -","Download":"다운로드","Download Kitten sample":"Kitten 예시 다운로드","Download Kokoro sample":"Kokoro 예시 다운로드","Download Piper sample":"Piper 예시 다운로드","Download eSpeak sample":"eSpeak 예시 다운로드","Download sample":"예시 다운로드","Download sizes above are model files, not total memory use or all required assets. Local providers use the computer running the dock/overlay; first use can be slower, and OBS has its own cache. Cloud providers save local computation but send the text off-device.":"위 다운로드 크기는 모델 파일의 크기이며 전체 메모리 사용량이나 필요한 모든 자산을 뜻하지 않습니다. 로컬 제공업체는 도크/오버레이를 실행하는 컴퓨터를 사용합니다. 첫 실행은 더 느릴 수 있고 OBS는 자체 캐시를 사용합니다. 클라우드 제공업체는 로컬 연산을 줄이지만 텍스트를 기기 외부로 보냅니다.","Echo (American Male):":"Echo (미국 남성) —","Eight English voices: male and female variants numbered 2, 3, 4 and 5. The sample uses Voice 4 (Female).":"영어 음성 8종: 2, 3, 4, 5번 각각에 남성과 여성 음성이 있습니다. 예시는 Voice 4 (Female)를 사용합니다.","ElevenLabs":"ElevenLabs","Emma (British Female):":"Emma (영국 여성) —","Enable":"활성화","English US Female (HFC) - Medium:":"미국 영어 여성 (HFC) - 중간 —","English US Female (HFC), medium quality.":"미국 영어 여성 (HFC), 중간 품질.","English, Spanish and Brazilian Portuguese voices.":"영어, 스페인어, 브라질 포르투갈어 음성.","English. A synthetic voice with a small footprint.":"영어. 용량이 작은 합성 음성입니다.","English:":"영어 —","Enter a Google Cloud TTS API key and exact voice name, with its matching language.":"Google Cloud TTS API 키와 정확한 음성 이름, 그에 맞는 언어를 입력하세요.","Enter the API key and voice ID from your Speechify API account.":"Speechify API 계정의 API 키와 음성 ID를 입력하세요.","Enter your API key, then use List My Available Voices to find a voice ID your account can use.":"API 키를 입력한 뒤 List My Available Voices를 사용하여 계정에서 사용할 수 있는 음성 ID를 찾으세요.","Eric (American Male):":"Eric (미국 남성) —","Faber":"Faber","Fable (British Male):":"Fable (영국 남성) —","Features":"기능","Fenrir (American Male):":"Fenrir (미국 남성) —","Fewer languages and voice styles.":"언어와 음성 스타일의 종류가 적습니다.","Fish Audio":"Fish Audio","Fish Audio API key":"Fish Audio API 키","Fish Audio API reference":"Fish Audio API 참조","For OBS, the local bridge usually works best when it runs on the same computer as OBS.":"OBS에서는 로컬 브리지를 OBS와 같은 컴퓨터에서 실행하는 방식이 대체로 가장 잘 작동합니다.","For Portuguese or Spanish, start with one of these instead:":"포르투갈어 또는 스페인어에는 다음 중 하나로 시작하세요:","Free local synthesis, with an initial download. Samples omit loading time. Piper is the lighter starting point; Kokoro can be slow on CPU. Use Piper if speech falls behind the chat.":"무료 로컬 음성 합성이며 최초 다운로드가 필요합니다. 예시에는 로딩 시간이 포함되지 않습니다. Piper가 더 가벼운 시작점이며 Kokoro는 CPU에서 느릴 수 있습니다. 음성이 채팅을 따라가지 못한다면 Piper를 사용하세요.","Free model announcement and terms":"무료 모델 공지 및 약관","Free, no key. Current bundled model: about 24 MB, plus engine/voice files; CPU.":"무료, 키 불필요. 현재 포함된 모델은 약 24MB이며 엔진/음성 파일이 추가로 필요합니다. CPU를 사용합니다.","Free, no key. Downloads model/voice assets; CPU or supported WebGPU.":"무료, 키 불필요. 모델/음성 자산을 다운로드하며 CPU 또는 지원되는 WebGPU를 사용합니다.","Free, no key. Downloads the selected model (HFC medium: about 63 MB), plus engine files.":"무료, 키 불필요. 선택한 모델(HFC medium: 약 63MB)과 엔진 파일을 다운로드합니다.","Free, no key. Loads packaged engine/language files; no neural model or GPU needed.":"무료, 키 불필요. 패키지에 포함된 엔진/언어 파일을 로드하며 신경망 모델이나 GPU가 필요하지 않습니다.","Full TTS reference":"전체 음성 읽기 참고 문서","Gemini":"Gemini","George (British Male):":"George (영국 남성) —","Good first tests:":"처음 테스트하기 좋은 음성:","Good for":"적합한 용도","Google Cloud":"Google Cloud","Guides":"가이드","Hear your chat in three steps. Start free, with no account or API key.":"세 단계로 채팅을 들어 보세요. 계정이나 API 키 없이 무료로 시작할 수 있습니다.","Heart (American Female):":"Heart (미국 여성) —","Hire":"작업 의뢰","Home":"홈","If SSN receives the chat as text, it can read it aloud. YouTube, Twitch, TikTok and other sources use the same feature. Your chat platform does not need its own TTS support.":"SSN이 채팅을 텍스트로 받으면 소리 내어 읽을 수 있습니다. YouTube, Twitch, TikTok 등의 소스가 같은 기능을 사용합니다. 채팅 플랫폼 자체에 TTS 지원이 없어도 됩니다.","In OBS Advanced Audio Properties, choose":"OBS 고급 오디오 속성에서 선택하세요:","In the same section, scroll to":"같은 섹션에서 아래로 스크롤하여 다음을 찾으세요:","Inspiration":"아이디어","Internet and Speechify API key. API usage terms/limits apply.":"인터넷과 Speechify API 키가 필요합니다. API 사용 약관/제한이 적용됩니다.","Internet, API key and accessible voice ID. Chat text goes to the provider.":"인터넷, API 키, 사용 가능한 음성 ID가 필요합니다. 채팅 텍스트가 제공업체로 전송됩니다.","Internet, Gemini API key and access to the selected TTS model. Check account limits/billing.":"인터넷, Gemini API 키, 선택한 TTS 모델의 사용 권한이 필요합니다. 계정 제한/결제를 확인하세요.","Internet, enabled Cloud TTS API, API key and matching voice/language. Billing/quota applies.":"인터넷, 활성화된 Cloud TTS API, API 키, 일치하는 음성/언어가 필요합니다. 결제/할당량이 적용됩니다.","Isabella (British Female):":"Isabella (영국 여성) —","Jessica (American Female):":"Jessica (미국 여성) —","Kitten":"Kitten","Kitten voice sample":"Kitten 음성 예시","Kokoro":"Kokoro","Kokoro - Portuguese (Brazil)":"Kokoro - 포르투갈어 (브라질)","Kokoro - Portuguese (Brazil) sample":"Kokoro - 포르투갈어 (브라질) 예시","Kokoro - Spanish":"Kokoro - 스페인어","Kokoro - Spanish sample":"Kokoro - 스페인어 예시","Kokoro voice sample":"Kokoro 음성 예시","Kore (American Female):":"Kore (미국 여성) —","Lewis (British Male):":"Lewis (영국 남성) —","Liam (American Male):":"Liam (미국 남성) —","Lightweight, many languages, quick to start.":"가볍고 여러 언어를 지원하며 빠르게 시작합니다.","Lily (British Female):":"Lily (영국 여성) —","Listen to the free voices":"무료 음성 들어 보기","Local TTS server guide":"로컬 TTS 서버 가이드","Local neural voices; English, Spanish and Portuguese options.":"로컬 신경망 음성. 영어, 스페인어, 포르투갈어 옵션을 제공합니다.","Main chat overlay & control dock":"기본 채팅 오버레이 및 제어 도크","Main navigation":"기본 탐색 메뉴","Message: Text to Speech":"메시지 — 음성 읽기","Michael (American Male):":"Michael (미국 남성) —","Monitor and Output":"모니터링 및 출력","More CPU work; first speech can be slow.":"CPU 연산이 많으며 첫 음성이 느릴 수 있습니다.","Most setup: endpoint, model, voice and browser access must agree.":"가장 많은 설정이 필요합니다. 엔드포인트, 모델, 음성, 브라우저 접근 조건이 맞아야 합니다.","Name reading is disabled.":"이름 읽기는 꺼져 있습니다.","Named voices and language, rate and pitch controls.":"이름으로 선택하는 음성과 언어, 속도, 높낮이 설정.","Named voices with model and format controls.":"이름으로 선택하는 음성과 모델, 형식 설정.","Need help?":"도움이 필요하신가요?","Needs API access; available voices depend on account.":"API 사용 권한이 필요하며 사용 가능한 음성은 계정에 따라 다릅니다.","Nicole (American Female):":"Nicole (미국 여성) —","No SSN provider fee. Requires a working system/browser voice; test on the actual playback page.":"SSN 제공업체 요금은 없습니다. 작동하는 시스템/브라우저 음성이 필요합니다. 실제 재생 페이지에서 테스트하세요.","No chat connected yet?":"아직 채팅을 연결하지 않았나요?","No speech?":"음성이 들리지 않나요?","Not every voice supports every control.":"모든 음성이 모든 설정을 지원하지는 않습니다.","Nova (American Female):":"Nova (미국 여성) —","OBS / browser bridge URL":"OBS / 브라우저 브리지 URL","OBS / browser setup:":"OBS / 브라우저 설정:","OBS audio guide":"OBS 오디오 가이드","OBS has a separate browser and voice list. System TTS may not work there, even when it lists voices. Try Piper, Kokoro, Kitten or eSpeak. A virtual audio cable cannot fix missing speech.":"OBS는 별도의 브라우저와 음성 목록을 사용합니다. 음성이 목록에 표시되어도 시스템 TTS가 작동하지 않을 수 있습니다. Piper, Kokoro, Kitten 또는 eSpeak를 사용해 보세요. 가상 오디오 케이블로는 음성 생성 실패를 해결할 수 없습니다.","OBS:":"OBS:","Onyx (American Male):":"Onyx (미국 남성) —","Open navigation menu":"탐색 메뉴 열기","Open the":"다음을 여세요:","OpenAI":"OpenAI","Overlay Gallery":"오버레이 갤러리","Piper":"Piper","Piper - Portuguese (Brazil)":"Piper - 포르투갈어 (브라질)","Piper - Portuguese (Brazil) sample":"Piper - 포르투갈어 (브라질) 예시","Piper - Spanish (Spain)":"Piper - 스페인어 (스페인)","Piper - Spanish (Spain) sample":"Piper - 스페인어 (스페인) 예시","Piper TTS":"Piper TTS","Piper needs no account or API key. Allow time for its first voice download.":"Piper에는 계정이나 API 키가 필요하지 않습니다. 첫 음성 다운로드가 끝날 때까지 기다리세요.","Piper voice sample":"Piper 음성 예시","Plain-English setup guide for Social Stream Ninja text-to-speech, OBS audio, browser voices, local voices, and TTS server modes.":"Social Stream Ninja의 텍스트 음성 변환, OBS 오디오, 브라우저 음성, 로컬 음성, TTS 서버 모드를 쉽게 설명하는 설정 가이드.","Portuguese Brazil:":"브라질 포르투갈어 —","Portuguese Portugal (Tugao) - Medium:":"포르투갈 포르투갈어 (Tugao) - 중간 —","Portuguese Portugal:":"포르투갈 포르투갈어 —","Prefer another sound? These four voices are free. Press play to compare.":"다른 목소리를 원하시나요? 이 네 가지 음성은 무료입니다. 재생 버튼을 눌러 비교하세요.","Preview models and quotas can change; latency varies.":"미리보기 모델과 할당량은 변경될 수 있으며 지연 시간도 달라집니다.","Provider":"제공업체","Provider reference":"제공업체 참조","Provider settings and voice names":"제공업체 설정과 음성 이름","Provider setup":"제공자 설정","Puck (American Male):":"Puck (미국 남성) —","Quality and pronunciation vary by voice.":"품질과 발음은 음성마다 다릅니다.","Requirements / cost":"요구 사항 / 비용","River (American Female):":"River (미국 여성) —","Run SSN's existing":"SSN의 기존 도구인","SSN extension popup":"SSN 확장 프로그램 팝업","Sample words and test details":"예시 문구와 테스트 세부 정보","Santa (American Male):":"Santa (미국 남성) —","Santa (Brazilian Portuguese) -":"Santa (브라질 포르투갈어) -","Santa (Spanish) -":"Santa (스페인어) -","Sarah (American Female):":"Sarah (미국 여성) —","Select":"선택:","Select a supported TTS model and voice; style instructions change delivery. These are Gemini API settings, separate from Google Cloud TTS.":"지원되는 TTS 모델과 음성을 선택하세요. 스타일 지시문으로 전달 방식을 바꿀 수 있습니다. 이는 Google Cloud TTS와 별개인 Gemini API 설정입니다.","Send a chat message. Check the source’s audio meter, then make a short recording.":"채팅 메시지를 보내세요. 소스의 오디오 미터를 확인한 뒤 짧게 녹화하세요.","Sky (American Female):":"Sky (미국 여성) —","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Sources and Settings":"소스 및 설정","Spanish Mexico (Ald) - Medium:":"멕시코 스페인어 (Ald) - 중간 —","Spanish Spain (DaveFX) - Medium:":"스페인 스페인어 (DaveFX) - 중간 —","Spanish and Portuguese samples":"스페인어 및 포르투갈어 예시","Spanish:":"스페인어 —","Speechify":"Speechify","Speechify step-by-step guide: API key, voices, speed, and viewer volume.":"Speechify 단계별 가이드: API 키, 음성, 속도, 시청자 볼륨.","Start here: install SSN, add your source and open the dock.":"여기서 시작하세요. SSN을 설치하고 소스를 추가한 뒤 도크를 여세요.","Start with Piper for a free local voice, or compare Kokoro if you prefer its sound.":"무료 로컬 음성은 Piper로 시작하세요. Kokoro의 소리가 더 마음에 드는지 비교해 볼 수도 있습니다.","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","System TTS":"시스템 음성 읽기","System TTS exposed five voices on this machine but produced no audio in the Browser Source recording. That result is specific to this setup; always test your final URL and recording. Cloud voices are not included because no paid credentials were used.":"이 컴퓨터에서 시스템 TTS는 음성 5개를 표시했지만 브라우저 소스 녹화에는 오디오가 생성되지 않았습니다. 이 결과는 해당 환경에 한정되므로 최종 URL과 녹화를 항상 테스트하세요. 유료 인증 정보를 사용하지 않아 클라우드 음성은 포함하지 않았습니다.","TTS Service Provider":"TTS 서비스 제공자","TTS Setup Guide":"음성 읽기 설정 가이드","TTS Setup Guide - Social Stream Ninja":"TTS 설정 가이드 - Social Stream Ninja","Test":"테스트","The four English samples read:":"네 영어 예시는 다음 문장을 읽습니다:","The language list is empty in this fresh profile. Available voices depend on the browser/app and installed voices; there is no universal SSN voice list.":"이 새 프로필에는 언어 목록이 비어 있습니다. 사용 가능한 음성은 브라우저/앱과 설치된 음성에 따라 다르며 모든 환경에 공통인 SSN 음성 목록은 없습니다.","The meter moves, but the recording is silent?":"미터는 움직이는데 녹화에 소리가 없나요?","This option reuses the OpenAI-compatible controls, so the heading still says OpenAI. Enter your server endpoint and its supported voice/model; authentication depends on your server. See the":"이 옵션은 OpenAI 호환 컨트롤을 재사용하므로 제목이 여전히 OpenAI로 표시됩니다. 서버 엔드포인트와 지원되는 음성/모델을 입력하세요. 인증 방식은 서버에 따라 다릅니다. 참고:","Trade-off":"장단점","Try eSpeak when responsiveness matters more than realism. Kitten is another compact English option. Listen before deciding.":"사실적인 소리보다 응답 속도가 중요하다면 eSpeak를 사용해 보세요. Kitten도 용량이 작은 영어 옵션입니다. 들어 보고 결정하세요.","URL parameters:":"URL 매개변수:","Under":"다음 항목 아래에서:","Use":"사용:","Use your own compatible voice server.":"본인의 호환 음성 서버를 사용합니다.","Uses voices exposed by your browser or desktop app.":"브라우저나 데스크톱 앱에서 제공하는 음성을 사용합니다.","View settings and voices":"설정 및 음성 보기","Voice 2 (Female):":"Voice 2 (여성) —","Voice 2 (Male):":"Voice 2 (남성) —","Voice 3 (Female):":"Voice 3 (여성) —","Voice 3 (Male):":"Voice 3 (남성) —","Voice 4 (Female):":"Voice 4 (여성) —","Voice 4 (Male):":"Voice 4 (남성) —","Voice 4, female. Bundled nano v0.1 model.":"Voice 4, 여성. 포함된 nano v0.1 모델.","Voice 5 (Female):":"Voice 5 (여성) —","Voice 5 (Male):":"Voice 5 (남성) —","Voice ID with speed, language and model controls.":"음성 ID와 속도, 언어, 모델 설정.","Voice IDs, model selection and stability/style controls.":"음성 ID, 모델 선택, 안정성/스타일 설정.","Voice examples and requirements":"음성 예시와 요구 사항","Voice list and OBS capture vary; some voices need internet.":"음성 목록과 OBS 캡처 동작은 환경마다 다르며 일부 음성은 인터넷이 필요합니다.","Voice names and URL values":"음성 이름과 URL 값","Voice names and supported controls":"음성 이름과 지원되는 설정","Voice styles and written delivery instructions.":"음성 스타일과 텍스트로 작성하는 전달 지시문.","Want to hear it yourself?":"직접 들어 보고 싶으신가요?","Welcome to the stream! Thanks for joining us. Which game should we play next?":"방송에 오신 것을 환영합니다! 함께해 주셔서 감사합니다. 다음에는 어떤 게임을 할까요?","With the bridge, add":"브리지를 사용할 때는","Works in Chrome/Edge, but not OBS?":"Chrome/Edge에서는 되지만 OBS에서는 안 되나요?","and paste that link.":"를 추가하고 해당 링크를 붙여 넣으세요.","beside":"(다음 항목 옆에 있음):","copy link":"링크 복사","eSpeak":"eSpeak","eSpeak voice sample":"eSpeak 음성 예시","environment variable to your Fish API key and start":"환경 변수를 Fish API 키로 설정한 뒤 실행하세요:","field. The token changes on restart unless you set":"입력란에 붙여 넣으세요. 재시작해도 토큰을 유지하려면 다음 값을 설정하세요:","for that source. Keep only one copy reading chat.":"을 해당 소스에 선택하세요. 채팅을 읽는 페이지는 하나만 유지하세요.","in its properties.":"을 속성에서 켜세요.","in the TTS provider menu for the chat dock, featured overlay, TTS page, or Flow Actions. Enter your own":"를 채팅 도크, 강조 오버레이, TTS 페이지 또는 Flow Actions의 TTS 제공업체 메뉴에서 선택하세요. 본인의","local TTS bridge in Fish mode":"Fish 모드의 로컬 TTS 브리지","local server guide":"로컬 서버 가이드","means the computer running the page. If your TTS server is on another computer, use that computer's LAN IP or run the bridge on the OBS computer.":"는 페이지를 실행하는 컴퓨터를 뜻합니다. TTS 서버가 다른 컴퓨터에 있다면 해당 컴퓨터의 LAN IP를 사용하거나 OBS 컴퓨터에서 브리지를 실행하세요.","on the OBS computer. Set its":"를 OBS 컴퓨터에서 실행하세요. 다음 설정:","or the desktop app’s":"또는 데스크톱 앱의","the four local providers below passed Browser Source recording tests. Cloud/custom providers return audio for the page to play, but were not tested with live accounts in this review. System TTS needs a separate test even when it lists voices.":"아래 네 로컬 제공업체는 브라우저 소스 녹화 테스트를 통과했습니다. 클라우드/사용자 지정 제공업체는 페이지에서 재생할 오디오를 반환하지만 이번 검토에서 실제 계정으로 테스트하지는 않았습니다. 시스템 TTS는 음성이 목록에 표시되어도 별도 테스트가 필요합니다.","to":"대상:","to a long random secret; keep token-bearing overlay links private. Leave the bridge running, test the voice, and use the generated overlay URL in OBS. Enable Control audio via OBS in the Browser Source settings if you want its audio in the OBS mixer. Direct Fish requests from hosted browser pages lack CORS permission; the bridge provides the browser-accessible audio response.":"에 길고 무작위인 비밀 값을 지정하세요. 토큰이 포함된 오버레이 링크는 비공개로 유지하세요. 브리지를 계속 실행한 상태에서 음성을 테스트하고 생성된 오버레이 URL을 OBS에서 사용하세요. OBS 믹서에 오디오를 표시하려면 브라우저 소스 설정에서 Control audio via OBS를 켜세요. 호스팅된 브라우저 페이지의 직접 Fish 요청에는 CORS 권한이 없으며, 브리지가 브라우저에서 접근 가능한 오디오 응답을 제공합니다.","to get your updated link.":"로 업데이트된 링크를 받으세요.","to the URL and omit":"를 URL에 추가하고 다음은 생략하세요:","when the bridge holds the key.":". 브리지에 키가 저장되어 있으면 생략할 수 있습니다."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tts-setup-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tts-setup-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tts-setup-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tts-setup-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tts-setup-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tts-setup-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tts-setup-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tts-setup-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tts-setup-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tts-setup-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tts-setup-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tts-setup-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tts-setup-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="tts-setup-guide.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/tts-setup-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tts-setup-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tts-setup-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tts-setup-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tts-setup-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>음성 읽기 설정 가이드</h1>
+            <p>세 단계로 채팅을 들어 보세요. 계정이나 API 키 없이 무료로 시작할 수 있습니다.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>1. 채팅 읽기 켜기</h2>
+                <p><strong>아직 채팅을 연결하지 않았나요?</strong> <a href="getting-started.html">여기서 시작하세요. SSN을 설치하고 소스를 추가한 뒤 도크를 여세요.</a></p>
+                <p>다음을 여세요: <strong>SSN 확장 프로그램 팝업</strong> 또는 데스크톱 앱의 <strong>소스 및 설정</strong>.</p>
+                <p>다음 항목 아래에서: <strong>기본 채팅 오버레이 및 제어 도크</strong>에서 다음을 펼치세요: <strong>메시지 — 음성 읽기</strong>. 여기에 표시된 스위치를 켜세요:</p>
+                <figure class="guide-figure">
+                    <a href="../../docs/images/guides/tts-enable-dock-popup.png"><img src="../../docs/images/guides/tts-enable-dock-popup.png" alt="실제 팝업: 메시지 — 텍스트 음성 변환에서 도크 TTS 사용을 켠 상태" class="guide-image guide-image-medium"></a>
+                    <figcaption>파란색 스위치 = 채팅 읽기 켜짐.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>2. 무료 음성 선택</h2>
+                <p>같은 섹션에서 아래로 스크롤하여 다음을 찾으세요: <strong>TTS 서비스 제공자</strong>. 선택할 항목: <strong>Piper TTS</strong>. 그다음 음성을 고르세요.</p>
+                <figure class="guide-figure">
+                    <a href="../../docs/images/guides/tts-select-provider-popup.png"><img src="../../docs/images/guides/tts-select-provider-popup.png" alt="실제 팝업: Piper TTS와 English US Female HFC Medium 음성을 선택한 상태" class="guide-image guide-image-medium" loading="lazy"></a>
+                    <figcaption>Piper에는 계정이나 API 키가 필요하지 않습니다. 첫 음성 다운로드가 끝날 때까지 기다리세요.</figcaption>
+                </figure>
+                <p>사용: <strong>링크 복사</strong> (다음 항목 옆에 있음): <strong>기본 채팅 오버레이 및 제어 도크</strong> 로 업데이트된 링크를 받으세요.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="obs-voices">3. OBS에서 재생</h2>
+                <ol class="guide-steps">
+                    <li>OBS에 다음 소스를 추가하세요: <strong>브라우저 소스</strong> 를 추가하고 해당 링크를 붙여 넣으세요.</li>
+                    <li>활성화 <strong>OBS를 통해 오디오 제어(Control audio via OBS)</strong> 을 속성에서 켜세요.</li>
+                    <li>채팅 메시지를 보내세요. 소스의 오디오 미터를 확인한 뒤 짧게 녹화하세요.</li>
+                </ol>
+                <p><strong>직접 들어 보고 싶으신가요?</strong> OBS 고급 오디오 속성에서 선택하세요: <strong>모니터링 및 출력</strong> 을 해당 소스에 선택하세요. 채팅을 읽는 페이지는 하나만 유지하세요.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="voice-samples">무료 음성 들어 보기</h2>
+                <p>다른 목소리를 원하시나요? 이 네 가지 음성은 무료입니다. 재생 버튼을 눌러 비교하세요.</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper</h3><p>미국 영어 여성 (HFC), 중간 품질.<br><code>en_US-hfc_female-medium</code></p><audio controls preload="none" aria-label="Piper 음성 예시"><source src="../../docs/audio/tts/piper-hfc.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-hfc.mp3">Piper 예시 다운로드</a></audio><p><a href="#settings-piper">설정 및 음성 보기</a></p></div>
+<div class="tts-preview"><h3>Kokoro</h3><p>Bella, 미국 여성. CPU/WASM, q8로 테스트했습니다.<br><code>af_bella</code></p><audio controls preload="none" aria-label="Kokoro 음성 예시"><source src="../../docs/audio/tts/kokoro-bella.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-bella.mp3">Kokoro 예시 다운로드</a></audio><p><a href="#settings-kokoro">설정 및 음성 보기</a></p></div>
+<div class="tts-preview"><h3>Kitten</h3><p>Voice 4, 여성. 포함된 nano v0.1 모델.<br><code>expr-voice-4-f</code></p><audio controls preload="none" aria-label="Kitten 음성 예시"><source src="../../docs/audio/tts/kitten-4f.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kitten-4f.mp3">Kitten 예시 다운로드</a></audio><p><a href="#settings-kitten">설정 및 음성 보기</a></p></div>
+<div class="tts-preview"><h3>eSpeak</h3><p>영어. 용량이 작은 합성 음성입니다.<br><code>en</code></p><audio controls preload="none" aria-label="eSpeak 음성 예시"><source src="../../docs/audio/tts/espeak-en.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/espeak-en.mp3">eSpeak 예시 다운로드</a></audio><p><a href="#settings-espeak">설정 및 음성 보기</a></p></div>
+</div>
+                <details class="tts-settings"><summary>스페인어 및 포르투갈어 예시</summary>
+                <p>SSN 설정의 음성 목록 위에서 언어를 선택한 뒤 다음을 사용하세요: <strong>테스트</strong>를 사용하세요. Piper는 스페인, 멕시코, 브라질, 포르투갈 음성을 제공하며, Kokoro에는 스페인어 3종과 브라질 포르투갈어 3종이 추가로 있습니다.</p>
+                <div class="tts-preview-grid">
+<div class="tts-preview"><h3>Piper - 스페인어 (스페인)</h3><p>DaveFX</p><audio controls preload="none" aria-label="Piper - 스페인어 (스페인) 예시"><source src="../../docs/audio/tts/piper-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-spanish.mp3">예시 다운로드</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - 스페인어</h3><p>Dora</p><audio controls preload="none" aria-label="Kokoro - 스페인어 예시"><source src="../../docs/audio/tts/kokoro-spanish.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-spanish.mp3">예시 다운로드</a></audio></div>
+<div class="tts-preview"><h3>Piper - 포르투갈어 (브라질)</h3><p>Faber</p><audio controls preload="none" aria-label="Piper - 포르투갈어 (브라질) 예시"><source src="../../docs/audio/tts/piper-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/piper-portuguese.mp3">예시 다운로드</a></audio></div>
+<div class="tts-preview"><h3>Kokoro - 포르투갈어 (브라질)</h3><p>Dora</p><audio controls preload="none" aria-label="Kokoro - 포르투갈어 (브라질) 예시"><source src="../../docs/audio/tts/kokoro-portuguese.mp3" type="audio/mpeg"><a href="../../docs/audio/tts/kokoro-portuguese.mp3">예시 다운로드</a></audio></div>
+                </div><p>무료 로컬 음성 합성이며 최초 다운로드가 필요합니다. 예시에는 로딩 시간이 포함되지 않습니다. Piper가 더 가벼운 시작점이며 Kokoro는 CPU에서 느릴 수 있습니다. 음성이 채팅을 따라가지 못한다면 Piper를 사용하세요.</p></details>
+                <details class="tts-settings"><summary>예시 문구와 테스트 세부 정보</summary>
+                <p>네 영어 예시는 다음 문장을 읽습니다: <em>방송에 오신 것을 환영합니다! 함께해 주셔서 감사합니다. 다음에는 어떤 게임을 할까요?</em> 이름 읽기는 꺼져 있습니다.</p>
+                <p>2026년 9월 7일 Windows 11의 OBS 32.2.2에서 확인했습니다. 채팅 메시지가 실제 도크에 도착하여 음성이 생성되었고, 브라우저 소스 미터가 움직였으며 녹화에도 포함되었습니다. 이 CPU 테스트에서는 Kokoro가 말하기 시작하기까지 확연히 더 오래 걸렸습니다. 이 클립은 음성 미리보기이며 대기 시간은 포함하지 않습니다.</p>
+                <p>이 컴퓨터에서 시스템 TTS는 음성 5개를 표시했지만 브라우저 소스 녹화에는 오디오가 생성되지 않았습니다. 이 결과는 해당 환경에 한정되므로 최종 URL과 녹화를 항상 테스트하세요. 유료 인증 정보를 사용하지 않아 클라우드 음성은 포함하지 않았습니다.</p>
+            </details>
+            </div>
+
+            <div class="guide-card">
+                <h2>도움이 필요하신가요?</h2>
+                <details class="tts-settings"><summary>제 채팅 플랫폼에서도 TTS를 사용할 수 있나요?</summary><p id="chat-platforms">SSN이 채팅을 텍스트로 받으면 소리 내어 읽을 수 있습니다. YouTube, Twitch, TikTok 등의 소스가 같은 기능을 사용합니다. 채팅 플랫폼 자체에 TTS 지원이 없어도 됩니다.</p></details>
+                <details class="tts-settings"><summary>음성이 들리지 않나요?</summary><p>도크에 채팅이 수신되는지 확인한 뒤 TTS 스위치, 제공업체, 필터를 확인하세요. 새로 복사한 링크를 사용하세요. 첫 모델 다운로드가 끝날 때까지 기다리세요.</p></details>
+                <details class="tts-settings"><summary>Chrome/Edge에서는 되지만 OBS에서는 안 되나요?</summary><p>OBS는 별도의 브라우저와 음성 목록을 사용합니다. 음성이 목록에 표시되어도 시스템 TTS가 작동하지 않을 수 있습니다. Piper, Kokoro, Kitten 또는 eSpeak를 사용해 보세요. 가상 오디오 케이블로는 음성 생성 실패를 해결할 수 없습니다.</p></details>
+                <details class="tts-settings"><summary>미터는 움직이는데 녹화에 소리가 없나요?</summary><p>OBS에서 음소거 상태와 녹음 트랙 지정을 확인하세요. 본인도 들으려면 모니터링 및 출력을 사용하되, 모니터링 출력을 다시 캡처하지 않도록 하세요. <a href="https://obsproject.com/kb/audio-mixer-guide">OBS 오디오 가이드</a>.</p></details>
+                <details class="tts-settings"><summary>OBS 도크나 강조 채팅을 대신 사용할 수 있나요?</summary><p>OBS 사용자 지정 브라우저 도크는 조작 패널이며 위에서 사용하는 장면의 브라우저 소스와 다릅니다. 강조 채팅을 사용하려면 해당 오버레이의 팝업 옵션에서 TTS를 켜고 링크를 복사하세요. 음성이 겹치지 않도록 한 페이지만 읽게 하세요.</p></details>
+            </div>
+
+            <div class="guide-card">
+                <details class="tts-settings" id="voice-chooser"><summary>모든 제공업체 비교: 요구 사항, 비용, 장단점</summary>
+                <p><strong>무료 로컬 음성은 Piper로 시작하세요. Kokoro의 소리가 더 마음에 드는지 비교해 볼 수도 있습니다.</strong> 사실적인 소리보다 응답 속도가 중요하다면 eSpeak를 사용해 보세요. Kitten도 용량이 작은 영어 옵션입니다. 들어 보고 결정하세요.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>제공업체</th><th>적합한 용도</th><th>장단점</th><th>요구 사항 / 비용</th></tr></thead><tbody>
+<tr><td data-label="Provider">Kokoro</td><td data-label="Good for">영어, 스페인어, 브라질 포르투갈어 음성.</td><td data-label="Trade-off">CPU 연산이 많으며 첫 음성이 느릴 수 있습니다.</td><td data-label="Requirements / cost">무료, 키 불필요. 모델/음성 자산을 다운로드하며 CPU 또는 지원되는 WebGPU를 사용합니다.</td></tr>
+<tr><td data-label="Provider">Piper</td><td data-label="Good for">로컬 신경망 음성. 영어, 스페인어, 포르투갈어 옵션을 제공합니다.</td><td data-label="Trade-off">품질과 발음은 음성마다 다릅니다.</td><td data-label="Requirements / cost">무료, 키 불필요. 선택한 모델(HFC medium: 약 63MB)과 엔진 파일을 다운로드합니다.</td></tr>
+<tr><td data-label="Provider">Kitten</td><td data-label="Good for">작은 영어 모델과 8가지 음성 선택지.</td><td data-label="Trade-off">언어와 음성 스타일의 종류가 적습니다.</td><td data-label="Requirements / cost">무료, 키 불필요. 현재 포함된 모델은 약 24MB이며 엔진/음성 파일이 추가로 필요합니다. CPU를 사용합니다.</td></tr>
+<tr><td data-label="Provider">eSpeak</td><td data-label="Good for">가볍고 여러 언어를 지원하며 빠르게 시작합니다.</td><td data-label="Trade-off">의도적으로 합성음/로봇 같은 소리를 냅니다.</td><td data-label="Requirements / cost">무료, 키 불필요. 패키지에 포함된 엔진/언어 파일을 로드하며 신경망 모델이나 GPU가 필요하지 않습니다.</td></tr>
+<tr><td data-label="Provider">시스템 음성 읽기</td><td data-label="Good for">브라우저나 데스크톱 앱에서 제공하는 음성을 사용합니다.</td><td data-label="Trade-off">음성 목록과 OBS 캡처 동작은 환경마다 다르며 일부 음성은 인터넷이 필요합니다.</td><td data-label="Requirements / cost">SSN 제공업체 요금은 없습니다. 작동하는 시스템/브라우저 음성이 필요합니다. 실제 재생 페이지에서 테스트하세요.</td></tr>
+<tr><td data-label="Provider">ElevenLabs</td><td data-label="Good for">음성 ID, 모델 선택, 안정성/스타일 설정.</td><td data-label="Trade-off">계정 제한, 네트워크 지연, API 요금이 적용될 수 있습니다.</td><td data-label="Requirements / cost">인터넷, API 키, 사용 가능한 음성 ID가 필요합니다. 채팅 텍스트가 제공업체로 전송됩니다.</td></tr>
+<tr><td data-label="Provider">Google Cloud</td><td data-label="Good for">이름으로 선택하는 음성과 언어, 속도, 높낮이 설정.</td><td data-label="Trade-off">모든 음성이 모든 설정을 지원하지는 않습니다.</td><td data-label="Requirements / cost">인터넷, 활성화된 Cloud TTS API, API 키, 일치하는 음성/언어가 필요합니다. 결제/할당량이 적용됩니다.</td></tr>
+<tr><td data-label="Provider">Gemini</td><td data-label="Good for">음성 스타일과 텍스트로 작성하는 전달 지시문.</td><td data-label="Trade-off">미리보기 모델과 할당량은 변경될 수 있으며 지연 시간도 달라집니다.</td><td data-label="Requirements / cost">인터넷, Gemini API 키, 선택한 TTS 모델의 사용 권한이 필요합니다. 계정 제한/결제를 확인하세요.</td></tr>
+<tr><td data-label="Provider">Speechify</td><td data-label="Good for">음성 ID와 속도, 언어, 모델 설정.</td><td data-label="Trade-off">API 사용 권한이 필요하며 사용 가능한 음성은 계정에 따라 다릅니다.</td><td data-label="Requirements / cost">인터넷과 Speechify API 키가 필요합니다. API 사용 약관/제한이 적용됩니다.</td></tr>
+<tr><td data-label="Provider">OpenAI</td><td data-label="Good for">이름으로 선택하는 음성과 모델, 형식 설정.</td><td data-label="Trade-off">API 결제와 인터넷 연결이 필요하며 계정 구독과는 별개입니다.</td><td data-label="Requirements / cost">TTS 사용 권한이 있는 API 키. 채팅 텍스트는 설정한 엔드포인트로 전송됩니다.</td></tr>
+<tr><td data-label="Provider">사용자 지정 / 로컬</td><td data-label="Good for">본인의 호환 음성 서버를 사용합니다.</td><td data-label="Trade-off">가장 많은 설정이 필요합니다. 엔드포인트, 모델, 음성, 브라우저 접근 조건이 맞아야 합니다.</td><td data-label="Requirements / cost">접근 가능한 OpenAI 호환 음성 엔드포인트와 필요한 경우 키가 있어야 합니다. 로컬 하드웨어나 호스팅 비용은 환경에 따라 다릅니다.</td></tr>
+</tbody></table>
+                <p>위 다운로드 크기는 모델 파일의 크기이며 전체 메모리 사용량이나 필요한 모든 자산을 뜻하지 않습니다. 로컬 제공업체는 도크/오버레이를 실행하는 컴퓨터를 사용합니다. 첫 실행은 더 느릴 수 있고 OBS는 자체 캐시를 사용합니다. 클라우드 제공업체는 로컬 연산을 줄이지만 텍스트를 기기 외부로 보냅니다.</p>
+                <p><strong>OBS:</strong> 아래 네 로컬 제공업체는 브라우저 소스 녹화 테스트를 통과했습니다. 클라우드/사용자 지정 제공업체는 페이지에서 재생할 오디오를 반환하지만 이번 검토에서 실제 계정으로 테스트하지는 않았습니다. 시스템 TTS는 음성이 목록에 표시되어도 별도 테스트가 필요합니다.</p>
+            </details>
+            </div>
+
+            <div class="guide-card">
+                <details class="tts-settings" id="provider-settings"><summary>제공업체 설정과 음성 이름</summary>
+                <p>새 프로필에서 촬영한 실제 데스크톱 앱 설정입니다. 원하는 제공업체를 여세요. API 키 입력란은 의도적으로 비워 두었습니다. 이 컨트롤은 선택한 SSN 도크 또는 오버레이를 설정합니다. 스크린샷을 선택하면 원래 크기로 볼 수 있습니다.</p>
+<details class="tts-settings" id="settings-system"><summary>시스템 음성 읽기</summary><p>이 새 프로필에는 언어 목록이 비어 있습니다. 사용 가능한 음성은 브라우저/앱과 설치된 음성에 따라 다르며 모든 환경에 공통인 SSN 음성 목록은 없습니다.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-system.png"><img src="../../docs/images/guides/tts-settings-system.png" alt="실제 SSN 시스템 TTS 제공업체 설정" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="tts-settings" id="settings-kokoro"><summary>Kokoro</summary><p>SSN에서 음성을 선택하세요. 음성을 재생하는 페이지에 모델이 로드됩니다. 미국/영국 영어, 스페인어, 브라질 포르투갈어를 선택할 수 있습니다. 언어 필터로 음성을 찾으세요. Test는 선택한 언어로 짧은 문구를 재생합니다. CPU 사용량을 줄이려면 Piper를 사용해 보세요.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kokoro.png"><img src="../../docs/images/guides/tts-settings-kokoro.png" alt="실제 SSN Kokoro 제공업체 설정" class="guide-image" loading="lazy"></a></figure>
+<details><summary>음성 이름과 URL 값</summary><ul class="guide-list">
+<li>Heart (미국 여성) — <code>af_heart</code></li>
+<li>Alloy (미국 여성) — <code>af_alloy</code></li>
+<li>Aoede (미국 여성) — <code>af_aoede</code></li>
+<li>Bella (미국 여성) — <code>af_bella</code></li>
+<li>Jessica (미국 여성) — <code>af_jessica</code></li>
+<li>Kore (미국 여성) — <code>af_kore</code></li>
+<li>Nicole (미국 여성) — <code>af_nicole</code></li>
+<li>Nova (미국 여성) — <code>af_nova</code></li>
+<li>River (미국 여성) — <code>af_river</code></li>
+<li>Sarah (미국 여성) — <code>af_sarah</code></li>
+<li>Sky (미국 여성) — <code>af_sky</code></li>
+<li>Adam (미국 남성) — <code>am_adam</code></li>
+<li>Echo (미국 남성) — <code>am_echo</code></li>
+<li>Eric (미국 남성) — <code>am_eric</code></li>
+<li>Fenrir (미국 남성) — <code>am_fenrir</code></li>
+<li>Liam (미국 남성) — <code>am_liam</code></li>
+<li>Michael (미국 남성) — <code>am_michael</code></li>
+<li>Onyx (미국 남성) — <code>am_onyx</code></li>
+<li>Puck (미국 남성) — <code>am_puck</code></li>
+<li>Santa (미국 남성) — <code>am_santa</code></li>
+<li>Emma (영국 여성) — <code>bf_emma</code></li>
+<li>Isabella (영국 여성) — <code>bf_isabella</code></li>
+<li>George (영국 남성) — <code>bm_george</code></li>
+<li>Lewis (영국 남성) — <code>bm_lewis</code></li>
+<li>Alice (영국 여성) — <code>bf_alice</code></li>
+<li>Lily (영국 여성) — <code>bf_lily</code></li>
+<li>Daniel (영국 남성) — <code>bm_daniel</code></li>
+<li>Fable (영국 남성) — <code>bm_fable</code></li>
+<li>Dora (스페인어) - <code>ef_dora</code></li>
+<li>Alex (스페인어) - <code>em_alex</code></li>
+<li>Santa (스페인어) - <code>em_santa</code></li>
+<li>Dora (브라질 포르투갈어) - <code>pf_dora</code></li>
+<li>Alex (브라질 포르투갈어) - <code>pm_alex</code></li>
+<li>Santa (브라질 포르투갈어) - <code>pm_santa</code></li>
+</ul></details>
+</details>
+<details class="tts-settings" id="settings-kitten"><summary>Kitten</summary><p>영어 음성 8종: 2, 3, 4, 5번 각각에 남성과 여성 음성이 있습니다. 예시는 Voice 4 (Female)를 사용합니다.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-kitten.png"><img src="../../docs/images/guides/tts-settings-kitten.png" alt="실제 SSN Kitten 제공업체 설정" class="guide-image" loading="lazy"></a></figure>
+<details><summary>음성 이름과 URL 값</summary><ul class="guide-list">
+<li>Voice 2 (남성) — <code>expr-voice-2-m</code></li>
+<li>Voice 2 (여성) — <code>expr-voice-2-f</code></li>
+<li>Voice 3 (남성) — <code>expr-voice-3-m</code></li>
+<li>Voice 3 (여성) — <code>expr-voice-3-f</code></li>
+<li>Voice 4 (남성) — <code>expr-voice-4-m</code></li>
+<li>Voice 4 (여성) — <code>expr-voice-4-f</code></li>
+<li>Voice 5 (남성) — <code>expr-voice-5-m</code></li>
+<li>Voice 5 (여성) — <code>expr-voice-5-f</code></li>
+</ul></details>
+</details>
+<details class="tts-settings" id="settings-piper"><summary>Piper</summary><p>일치하는 언어와 모델을 선택하세요. 예시는 HFC medium을 사용합니다. 언어 설정만으로 음성이 번역되지는 않습니다.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-piper.png"><img src="../../docs/images/guides/tts-settings-piper.png" alt="실제 SSN Piper 제공업체 설정" class="guide-image" loading="lazy"></a></figure>
+<details><summary>음성 이름과 URL 값</summary><ul class="guide-list">
+<li>미국 영어 여성 (HFC) - 중간 — <code>en_US-hfc_female-medium</code></li>
+<li>스페인 스페인어 (DaveFX) - 중간 — <code>es_ES-davefx-medium</code></li>
+<li>멕시코 스페인어 (Ald) - 중간 — <code>es_MX-ald-medium</code></li>
+<li>브라질 포르투갈어 (Faber) - 중간 — <code>pt_BR-faber-medium</code></li>
+<li>브라질 포르투갈어 (Edresson) - 낮음 — <code>pt_BR-edresson-low</code></li>
+<li>포르투갈 포르투갈어 (Tugao) - 중간 — <code>pt_PT-tugÃ£o-medium</code></li>
+</ul></details>
+</details>
+<details class="tts-settings" id="settings-espeak"><summary>eSpeak</summary><p>언어별 음성을 선택하고 필요하면 말하기 속도를 조절하세요. 이 엔진은 원래 로봇 같은 음성을 냅니다.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-espeak.png"><img src="../../docs/images/guides/tts-settings-espeak.png" alt="실제 SSN eSpeak 제공업체 설정" class="guide-image" loading="lazy"></a></figure>
+<details><summary>음성 이름과 URL 값</summary><ul class="guide-list">
+<li>영어 — <code>en</code></li>
+<li>스페인어 — <code>es</code></li>
+<li>브라질 포르투갈어 — <code>pt-br</code></li>
+<li>포르투갈 포르투갈어 — <code>pt-pt</code></li>
+</ul></details>
+</details>
+<details class="tts-settings" id="settings-elevenlabs"><summary>ElevenLabs</summary><p>API 키를 입력한 뒤 List My Available Voices를 사용하여 계정에서 사용할 수 있는 음성 ID를 찾으세요. <a href="https://elevenlabs.io/docs/api-reference/text-to-speech/convert">제공업체 참조</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-elevenlabs.png"><img src="../../docs/images/guides/tts-settings-elevenlabs.png" alt="실제 SSN ElevenLabs 제공업체 설정" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="tts-settings" id="settings-google"><summary>Google Cloud</summary><p>Google Cloud TTS API 키와 정확한 음성 이름, 그에 맞는 언어를 입력하세요. <a href="https://cloud.google.com/text-to-speech/docs/voices">음성 이름과 지원되는 설정</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-google.png"><img src="../../docs/images/guides/tts-settings-google.png" alt="실제 SSN Google Cloud 제공업체 설정" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="tts-settings" id="settings-gemini"><summary>Gemini</summary><p>지원되는 TTS 모델과 음성을 선택하세요. 스타일 지시문으로 전달 방식을 바꿀 수 있습니다. 이는 Google Cloud TTS와 별개인 Gemini API 설정입니다. <a href="https://ai.google.dev/gemini-api/docs/speech-generation">음성 예시와 요구 사항</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-gemini.png"><img src="../../docs/images/guides/tts-settings-gemini.png" alt="실제 SSN Gemini 제공업체 설정" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="tts-settings" id="settings-fish"><summary>Fish Audio</summary>
+<p>선택: <strong>Fish Audio</strong> 를 채팅 도크, 강조 오버레이, TTS 페이지 또는 Flow Actions의 TTS 제공업체 메뉴에서 선택하세요. 본인의 <a href="https://fish.audio/app/api-keys">Fish Audio API 키</a>를 입력한 뒤 기존 Test TTS 버튼을 사용하세요. 선택 항목인 Voice ID로 다음 사이트의 음성을 지정할 수 있습니다: <a href="https://fish.audio/">Fish Audio</a>. 이름이나 페이지 URL이 아닌 음성 모델 ID를 복사하세요. 비워 두면 서비스의 기본 음성을 사용합니다.</p>
+<p>고급 옵션에는 모델과 말하기 속도(0.5–2)가 있습니다. SSN의 기본값: <code>s2.1-pro-free</code>입니다. 무료 등급의 제공 여부와 공정 사용 조건은 Fish Audio에서 정합니다. 유료 모델에는 계정 크레딧이 필요합니다. SSN은 무료 요청이 실패해도 유료 모델로 다시 시도하지 않습니다. 시청자에게 들리는 볼륨은 More TTS options에서 조절하세요. 텍스트는 Fish Audio로 전송되며 언어는 서비스에서 감지합니다.</p>
+<p><strong>OBS / 브라우저 설정:</strong> SSN의 기존 도구인 <a href="../../local-tts-bridge/README.md#fish-audio-for-obs">Fish 모드의 로컬 TTS 브리지</a> 를 OBS 컴퓨터에서 실행하세요. 다음 설정: <code>SSN_TTS_TARGET_BEARER</code> 환경 변수를 Fish API 키로 설정한 뒤 실행하세요: <code>node scripts/local-tts-bridge.cjs --mode fish</code>를 실행하세요. Fish Audio 패널의 설정: <strong>OBS / 브라우저 브리지 URL</strong> 대상: <code>http://127.0.0.1:8124/v1/audio/speech</code>로 설정하세요. 터미널에 표시된 로컬 브리지 토큰을 팝업의 <strong>API 키</strong> 입력란에 붙여 넣으세요. 재시작해도 토큰을 유지하려면 다음 값을 설정하세요: <code>SSN_TTS_BRIDGE_TOKEN</code> 에 길고 무작위인 비밀 값을 지정하세요. 토큰이 포함된 오버레이 링크는 비공개로 유지하세요. 브리지를 계속 실행한 상태에서 음성을 테스트하고 생성된 오버레이 URL을 OBS에서 사용하세요. OBS 믹서에 오디오를 표시하려면 브라우저 소스 설정에서 Control audio via OBS를 켜세요. 호스팅된 브라우저 페이지의 직접 Fish 요청에는 CORS 권한이 없으며, 브리지가 브라우저에서 접근 가능한 오디오 응답을 제공합니다.</p>
+<p>브리지를 사용할 때는 <code>&amp;fishendpoint=http%3A%2F%2F127.0.0.1%3A8124%2Fv1%2Faudio%2Fspeech</code> 를 URL에 추가하고 다음은 생략하세요: <code>fishkey</code> . 브리지에 키가 저장되어 있으면 생략할 수 있습니다.</p>
+<p>URL 매개변수: <code>&amp;ttsprovider=fish&amp;fishkey=YOUR_KEY&amp;voicefish=VOICE_ID&amp;fishmodel=s2.1-pro-free&amp;fishspeed=1</code>을 지정하세요. 평소 사용하던 컨트롤로 TTS를 켜세요. 키가 포함된 생성 URL은 비공개로 유지하세요. 수신 페이지가 Fish Audio를 사용하는 경우 Event Flow의 기존 Speak Text 음성 재정의에 Fish 음성 ID를 입력할 수 있습니다.</p>
+<p><a href="https://docs.fish.audio/api-reference/endpoint/openapi-v1/text-to-speech">Fish Audio API 참조</a> &middot; <a href="https://fish.audio/blog/s2-1-pro-free-api/">무료 모델 공지 및 약관</a></p>
+</details>
+<details class="tts-settings" id="settings-speechify"><summary>Speechify</summary><p><a href="speechify-setup-guide.html"><strong>Speechify 단계별 가이드: API 키, 음성, 속도, 시청자 볼륨.</strong></a></p><p>Speechify API 계정의 API 키와 음성 ID를 입력하세요. <a href="https://docs.speechify.ai/docs/get-started/overview">제공자 설정</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-speechify.png"><img src="../../docs/images/guides/tts-settings-speechify.png" alt="실제 SSN Speechify 제공업체 설정" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="tts-settings" id="settings-openai"><summary>OpenAI</summary><p>지원되는 음성/모델을 선택하고 API 키를 입력하세요. ChatGPT 구독에는 API 크레딧이 포함되지 않습니다. OpenAI에는 기본 엔드포인트를 유지하세요.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-openai.png"><img src="../../docs/images/guides/tts-settings-openai.png" alt="실제 SSN OpenAI 제공업체 설정" class="guide-image" loading="lazy"></a></figure>
+</details>
+<details class="tts-settings" id="settings-customtts"><summary>사용자 지정 / 로컬 TTS</summary><p>이 옵션은 OpenAI 호환 컨트롤을 재사용하므로 제목이 여전히 OpenAI로 표시됩니다. 서버 엔드포인트와 지원되는 음성/모델을 입력하세요. 인증 방식은 서버에 따라 다릅니다. 참고: <a href="local-tts.html">로컬 서버 가이드</a>.</p><figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-customtts.png"><img src="../../docs/images/guides/tts-settings-customtts.png" alt="실제 SSN 사용자 지정 / 로컬 TTS 제공업체 설정" class="guide-image" loading="lazy"></a></figure>
+</details>
+</details>
+            </div>
+
+            <div class="guide-card"><details class="tts-settings"><summary>고급: TTS URL 직접 편집</summary>
+                <p>처음 테스트하기 좋은 음성:</p>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=kokoro</pre>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=piper</pre>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=kitten</pre>
+                <p>포르투갈어 또는 스페인어에는 다음 중 하나로 시작하세요:</p>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=pt-BR&amp;ttsprovider=piper&amp;pipervoice=pt_BR-faber-medium</pre>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=pt-BR&amp;ttsprovider=espeak&amp;espeakvoice=pt-br</pre>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=es-ES&amp;ttsprovider=piper&amp;pipervoice=es_ES-davefx-medium</pre>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=es-ES&amp;ttsprovider=espeak&amp;espeakvoice=es</pre>
+                <p><a href="tts.html">전체 음성 읽기 참고 문서</a> · <a href="local-tts.html">로컬 TTS 서버 가이드</a></p></details></div>
+
+            <div class="guide-card">
+                <details class="tts-settings" id="local-server"><summary>고급: 자체 로컬 TTS 서버 실행</summary>
+                <p>비공개 음성, 특정 음성 모델 또는 Kokoro-FastAPI나 openedai-speech 같은 서버를 사용하려면 로컬 TTS 서버가 유용합니다. TTS를 재생하는 페이지에서 엔드포인트에 접근할 수 있어야 합니다.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/local-tts/tts-bridge-flow.png" alt="OBS 브라우저 소스가 Social Stream Ninja 로컬 TTS 브리지를 통해 TTS 서버로 요청을 보내는 구조도" class="guide-image">
+                    <figcaption>OBS에서는 로컬 브리지를 OBS와 같은 컴퓨터에서 실행하는 방식이 대체로 가장 잘 작동합니다.</figcaption>
+                </figure>
+                <pre>dock.html?session=YOUR_SESSION&amp;speech=en-US&amp;ttsprovider=customtts&amp;openaiendpoint=http://127.0.0.1:8124/v1/audio/speech&amp;voiceopenai=af_bella</pre>
+                <p><code>localhost</code> 는 페이지를 실행하는 컴퓨터를 뜻합니다. TTS 서버가 다른 컴퓨터에 있다면 해당 컴퓨터의 LAN IP를 사용하거나 OBS 컴퓨터에서 브리지를 실행하세요.</p>
+            </details>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 라이선스.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        function revealGuideSection() {
+            var target;
+            try { target = document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) { return; }
+            if (!target) return;
+            for (var node = target; node; node = node.parentElement) {
+                if (node.tagName === "DETAILS") node.open = true;
+            }
+            target.scrollIntoView();
+        }
+        window.addEventListener("hashchange", revealGuideSection);
+        revealGuideSection();
+    </script>
+</body>
+</html>

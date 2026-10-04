@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr" data-site-root="../../" data-site-language="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/fr/docs/standalone-app-modes.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/fr/docs/standalone-app-modes.html">
+    <meta property="og:title" content="Modes de l’application autonome - Social Stream Ninja">
+    <meta property="og:description" content="Guide simple des modes de sources de l’application de bureau Social Stream Ninja : mode Standard, mode WebSocket, préréglages TikTok, fenêtres sources et dépannage courant.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/fr/docs/standalone-app-modes.html">
+    <meta name="twitter:title" content="Modes de l’application autonome - Social Stream Ninja">
+    <meta name="twitter:description" content="Guide simple des modes de sources de l’application de bureau Social Stream Ninja : mode Standard, mode WebSocket, préréglages TikTok, fenêtres sources et dépannage courant.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modes de l’application autonome - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Guide simple des modes de sources de l’application de bureau Social Stream Ninja : mode Standard, mode WebSocket, préréglages TikTok, fenêtres sources et dépannage courant.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="fr">
+<script id="ssn-site-language" type="application/json">{"language":"fr","page":"docs/standalone-app-modes.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Passer au thème clair","Switch to dark theme":"Passer au thème sombre","Light mode":"Mode clair","Dark mode":"Mode sombre","Open navigation menu":"Ouvrir le menu de navigation","Close navigation menu":"Fermer le menu de navigation","Copy this document as Markdown to the clipboard":"Copier ce document au format Markdown dans le presse-papiers","Copy Markdown":"Copier le Markdown","Copying…":"Copie en cours…","Markdown copied":"Markdown copié","Copy failed":"Échec de la copie","Copy comprehensive Markdown for an AI assistant":"Copier le Markdown complet pour un assistant IA","Copy this documentation page as Markdown for an AI assistant":"Copier cette page de documentation en Markdown pour un assistant IA"},"strings":{"A compatibility path that checks for updates instead of using the preferred live socket path.":"Un mode de compatibilité qui vérifie les mises à jour au lieu d’utiliser la connexion socket en direct privilégiée.","Advanced setups.":"Configurations avancées.","App is using the wrong source files:":"L’application utilise les mauvais fichiers sources :","App-native reading and reply-support paths.":"Chemins natifs de l’application pour la lecture et la prise en charge des réponses.","Auto":"Automatique","Chrome is logged in but the app is not:":"Chrome est connecté, mais pas l’application :","Commands & API":"Commandes et API","Common Failure Point":"Point d’échec fréquent","Common Fixes":"Solutions courantes","Confirm the app source is activated.":"Vérifiez que la source est activée dans l’application.","Confirm the dock receives chat with the same session ID.":"Vérifiez que le dock reçoit le chat avec le même identifiant de session.","Confirm the source window is signed in if the platform needs login.":"Vérifiez que la fenêtre source est connectée au compte si la plateforme l’exige.","Download":"Télécharger","Fallback when socket/signing paths fail.":"Solution de repli en cas d’échec des chemins socket/signature.","Features":"Fonctionnalités","First try for most users.":"Premier choix pour la plupart des utilisateurs.","For a normal first attempt, add TikTok, leave the preset on Auto, activate the source, and watch the app status text.":"Pour un premier essai classique, ajoutez TikTok, laissez le préréglage sur Auto, activez la source et observez le texte d’état de l’application.","Guides":"Guides","Hire":"Faire appel à nos services","Home":"Accueil","If Chrome works but the app does not, remember that app sessions and Chrome sessions are separate.":"Si Chrome fonctionne mais pas l’application, rappelez-vous que leurs sessions sont distinctes.","Inspiration":"Inspiration","Less rich than the preferred connector.":"Moins complet que le connecteur privilégié.","Local Signer":"Signataire local (Local Signer)","Login, CAPTCHA, redirected page, or hidden chat.":"Connexion, CAPTCHA, page redirigée ou chat masqué.","Main navigation":"Navigation principale","Mode":"Mode","Mode Names":"Noms des modes","OBS is blank:":"OBS est vide :","Only after the dock works, add or refresh the OBS overlay URL.":"Une fois le dock fonctionnel, ajoutez ou actualisez l’URL de l’incrustation OBS.","Open navigation menu":"Ouvrir le menu de navigation","Overlay Gallery":"Galerie d’incrustations","Plain Meaning":"Explication simple","Plain-English guide to Social Stream Ninja desktop app source modes, Standard mode, WebSocket mode, TikTok presets, source windows, and common app troubleshooting.":"Guide simple des modes de sources de l’application de bureau Social Stream Ninja : mode Standard, mode WebSocket, préréglages TikTok, fenêtres sources et dépannage courant.","Platform Setup Picker":"Sélecteur de configuration de plateforme","Polling/Compatibility":"Interrogation/Compatibilité (Polling/Compatibility)","Polling/Legacy":"Interrogation/Ancien mode (Polling/Legacy)","Provider availability, API key, room ID, or rate limits.":"Disponibilité du fournisseur, clé API, identifiant de salon ou limites de requêtes.","Proxy or custom signing":"Proxy ou signature personnalisée","Related guide:":"Guide associé :","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Some sources have more than one connection mode. The right mode depends on the platform, login state, and whether you need richer events or simple page capture.":"Certaines sources proposent plusieurs modes de connexion. Le bon mode dépend de la plateforme, de l’état de connexion et de vos besoins en événements détaillés ou en simple capture de page.","Source says active but no chat arrives:":"La source est indiquée active, mais aucun message n’arrive :","Standalone App Modes":"Modes de l'application autonome","Standalone App Modes - Social Stream Ninja":"Modes de l’application autonome - Social Stream Ninja","Standalone app Add source sidebar with YouTube, Twitch, Kick, VPZONE, Velora, Instagram Live, Facebook, and TikTok source buttons":"Barre latérale Ajouter une source de l’application autonome avec les boutons YouTube, Twitch, Kick, VPZONE, Velora, Instagram Live, Facebook et TikTok","Standalone app sample source entries showing Standard and WebSocket connection mode controls, plus TikTok connection preset controls":"Exemples de sources dans l’application autonome avec les contrôles de modes de connexion Standard et WebSocket, ainsi que les préréglages de connexion TikTok","Standard":"Standard","Standard and WebSocket are common source modes. TikTok has its own preset selector because it has extra app-specific connection paths.":"Standard et WebSocket sont des modes de source courants. TikTok possède son propre sélecteur de préréglage en raison de ses chemins de connexion supplémentaires propres à l’application.","Standard mode can still fail if the platform changes its page layout, blocks embedded/app browsers, asks for CAPTCHA, or hides chat behind a login.":"Le mode Standard peut tout de même échouer si la plateforme change la disposition de sa page, bloque les navigateurs intégrés/les applications, demande un CAPTCHA ou exige une connexion pour afficher le chat.","Start by adding the platform source you need. The app then creates and manages that source entry.":"Commencez par ajouter la source de la plateforme souhaitée. L’application crée et gère alors cette entrée de source.","Support":"Assistance","Supported Sites":"Sites pris en charge","Switch theme":"Changer de thème","The app TikTok session/cookies must be valid.":"La session et les cookies TikTok de l’application doivent être valides.","The app chooses the best TikTok path and may fall back if one fails.":"L’application choisit le meilleur chemin TikTok et peut basculer sur un autre en cas d’échec.","The app may fall back, so check the status text.":"L’application peut utiliser une solution de repli ; vérifiez donc le texte d’état.","The app opens a normal platform/source page and reads the rendered page.":"L’application ouvre une page normale de la plateforme/source et lit son contenu affiché.","The desktop app manages Social Stream source windows outside your normal browser. It can help with source organization and some browser-tab throttling problems. It is not the same as Chrome, and it does not automatically share your Chrome login or cookies.":"L’application de bureau gère les fenêtres sources Social Stream en dehors de votre navigateur habituel. Elle peut faciliter l’organisation des sources et résoudre certains problèmes de ralentissement des onglets. Elle est distincte de Chrome et ne partage pas automatiquement votre connexion ni vos cookies Chrome.","The newer connector fails or a platform-specific fallback is needed.":"Le nouveau connecteur échoue ou une solution de repli propre à la plateforme est nécessaire.","The platform supports it and you want better background reliability or richer event data.":"La plateforme le prend en charge et vous souhaitez une meilleure fiabilité en arrière-plan ou des données d’événements plus complètes.","The platform works when you can see the live page or popout chat.":"La plateforme fonctionne lorsque la page en direct ou le chat détaché est visible.","The site needs you to sign in, solve a prompt, or keep a visible chat panel open.":"Le site exige une connexion, la validation d’une invite ou le maintien d’un panneau de chat visible.","The source connects through a platform API, socket, or Social Stream source page.":"La source se connecte via une API de plateforme, un socket ou une page source Social Stream.","The source specifically supports WebSocket/API mode.":"La source prend explicitement en charge le mode WebSocket/API.","TikTok Auto":"TikTok Auto","TikTok In The App":"TikTok dans l’application","TikTok Path":"Chemin TikTok","TikTok fails:":"TikTok échoue :","TikTok in the desktop app is not one single mode. Always note which preset is active before troubleshooting.":"TikTok dans l’application de bureau ne correspond pas à un seul mode. Notez toujours le préréglage actif avant le dépannage.","Understand source windows, Standard mode, WebSocket mode, and TikTok presets.":"Comprendre les fenêtres sources, le mode Standard, le mode WebSocket et les préréglages TikTok.","Use Case":"Cas d’utilisation","Use Standard Mode When":"Quand utiliser le mode Standard","Use WebSocket Or API Mode When":"Quand utiliser le mode WebSocket ou API","Use When":"À utiliser quand","Visible TikTok page capture.":"Capture de la page TikTok visible.","WebSocket/API":"WebSocket/API","WebSocket/API mode is not always better. If auth, tokens, provider access, or a platform API is failing, Standard mode may be the faster test.":"Le mode WebSocket/API n’est pas toujours préférable. En cas de problème d’authentification, de jetons, d’accès fournisseur ou d’API de plateforme, le mode Standard peut constituer un test plus rapide.","What The App Is For":"Rôle de l’application","What To Check Before OBS":"Vérifications avant OBS","You are comparing app behavior against the Chrome extension.":"Vous comparez le comportement de l’application à celui de l’extension Chrome.","You are not sure which TikTok mode to use.":"Vous ne savez pas quel mode TikTok utiliser.","You can handle provider tokens, account permissions, API scopes, or source-page setup.":"Vous pouvez gérer les jetons du fournisseur, les autorisations du compte, les portées API ou la configuration de la page source.","You need event families that normal page scraping may not expose.":"Vous avez besoin de familles d’événements que la capture ordinaire de page n’expose pas forcément.","You need the most familiar troubleshooting path: open page, see chat, test dock, then OBS.":"Vous souhaitez le dépannage le plus familier : ouvrir la page, voir le chat, tester le dock, puis OBS.","You need the simplest visible page capture, login, or manual verification.":"Vous avez besoin de la capture visible la plus simple, d’une connexion ou d’une vérification manuelle.","You want a source that can keep working better in the background.":"Vous souhaitez une source qui fonctionne plus efficacement en arrière-plan.","check the mode, source window, live URL/user name, and dock session.":"vérifiez le mode, la fenêtre source, l’URL du direct/le nom d’utilisateur et la session du dock.","check whether the app is using packaged, cached, remote, beta, stable, or local Social Stream assets.":"vérifiez si l’application utilise des ressources Social Stream intégrées, en cache, distantes, bêta, stables ou locales.","record the current preset, status text, app version, and whether the source switched to a fallback mode.":"notez le préréglage actuel, le texte d’état, la version de l’application et tout basculement de la source vers un mode de repli.","sign in to the platform inside the app source window or use the extension as the capture path.":"connectez-vous à la plateforme dans la fenêtre source de l’application ou utilisez l’extension pour la capture.","test the dock first. If the dock is empty, OBS is not the problem yet.":"testez d’abord le dock. S’il est vide, OBS n’est pas encore en cause."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/standalone-app-modes.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/standalone-app-modes.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navigation principale"><a href="../index.html">Accueil</a><a href="features.html">Fonctionnalités</a><a href="inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="download.html">Télécharger</a><a href="guides.html">Guides</a><a href="commands.html">Commandes et API</a><a href="supported-sites.html">Sites pris en charge</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie d’incrustations</a><a href="services.html" class="site-priority-hire">Faire appel à nos services</a><a href="support.html">Assistance</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Français"><span aria-hidden="true">🌐 </span><span lang="fr">Français</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/standalone-app-modes.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/standalone-app-modes.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/standalone-app-modes.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/standalone-app-modes.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="standalone-app-modes.html" lang="fr" hreflang="fr" aria-current="true">Français</a><a class="site-language-link" href="../../de/docs/standalone-app-modes.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/standalone-app-modes.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/standalone-app-modes.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/standalone-app-modes.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/standalone-app-modes.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/standalone-app-modes.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/standalone-app-modes.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/standalone-app-modes.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/standalone-app-modes.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/standalone-app-modes.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/standalone-app-modes.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/standalone-app-modes.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Changer de thème"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Ouvrir le menu de navigation" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Modes de l'application autonome</h1>
+            <p>Comprendre les fenêtres sources, le mode Standard, le mode WebSocket et les préréglages TikTok.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Rôle de l’application</h2>
+                <p>L’application de bureau gère les fenêtres sources Social Stream en dehors de votre navigateur habituel. Elle peut faciliter l’organisation des sources et résoudre certains problèmes de ralentissement des onglets. Elle est distincte de Chrome et ne partage pas automatiquement votre connexion ni vos cookies Chrome.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-standalone-add-source.png" alt="Barre latérale Ajouter une source de l’application autonome avec les boutons YouTube, Twitch, Kick, VPZONE, Velora, Instagram Live, Facebook et TikTok" class="guide-image guide-image-narrow">
+                    <figcaption>Commencez par ajouter la source de la plateforme souhaitée. L’application crée et gère alors cette entrée de source.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Noms des modes</h2>
+                <p>Certaines sources proposent plusieurs modes de connexion. Le bon mode dépend de la plateforme, de l’état de connexion et de vos besoins en événements détaillés ou en simple capture de page.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-standalone-source-modes.png" alt="Exemples de sources dans l’application autonome avec les contrôles de modes de connexion Standard et WebSocket, ainsi que les préréglages de connexion TikTok" class="guide-image">
+                    <figcaption>Standard et WebSocket sont des modes de source courants. TikTok possède son propre sélecteur de préréglage en raison de ses chemins de connexion supplémentaires propres à l’application.</figcaption>
+                </figure>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Mode</th><th>Explication simple</th><th>À utiliser quand</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Mode">Standard</td><td data-label="Plain Meaning">L’application ouvre une page normale de la plateforme/source et lit son contenu affiché.</td><td data-label="Use When">Vous avez besoin de la capture visible la plus simple, d’une connexion ou d’une vérification manuelle.</td></tr>
+                        <tr><td data-label="Mode">WebSocket/API</td><td data-label="Plain Meaning">La source se connecte via une API de plateforme, un socket ou une page source Social Stream.</td><td data-label="Use When">La plateforme le prend en charge et vous souhaitez une meilleure fiabilité en arrière-plan ou des données d’événements plus complètes.</td></tr>
+                        <tr><td data-label="Mode">Interrogation/Ancien mode (Polling/Legacy)</td><td data-label="Plain Meaning">Un mode de compatibilité qui vérifie les mises à jour au lieu d’utiliser la connexion socket en direct privilégiée.</td><td data-label="Use When">Le nouveau connecteur échoue ou une solution de repli propre à la plateforme est nécessaire.</td></tr>
+                        <tr><td data-label="Mode">TikTok Auto</td><td data-label="Plain Meaning">L’application choisit le meilleur chemin TikTok et peut basculer sur un autre en cas d’échec.</td><td data-label="Use When">Vous ne savez pas quel mode TikTok utiliser.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Quand utiliser le mode Standard</h2>
+                <ul class="guide-list">
+                    <li>La plateforme fonctionne lorsque la page en direct ou le chat détaché est visible.</li>
+                    <li>Le site exige une connexion, la validation d’une invite ou le maintien d’un panneau de chat visible.</li>
+                    <li>Vous comparez le comportement de l’application à celui de l’extension Chrome.</li>
+                    <li>Vous souhaitez le dépannage le plus familier : ouvrir la page, voir le chat, tester le dock, puis OBS.</li>
+                </ul>
+                <p>Le mode Standard peut tout de même échouer si la plateforme change la disposition de sa page, bloque les navigateurs intégrés/les applications, demande un CAPTCHA ou exige une connexion pour afficher le chat.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Quand utiliser le mode WebSocket ou API</h2>
+                <ul class="guide-list">
+                    <li>La source prend explicitement en charge le mode WebSocket/API.</li>
+                    <li>Vous souhaitez une source qui fonctionne plus efficacement en arrière-plan.</li>
+                    <li>Vous avez besoin de familles d’événements que la capture ordinaire de page n’expose pas forcément.</li>
+                    <li>Vous pouvez gérer les jetons du fournisseur, les autorisations du compte, les portées API ou la configuration de la page source.</li>
+                </ul>
+                <p>Le mode WebSocket/API n’est pas toujours préférable. En cas de problème d’authentification, de jetons, d’accès fournisseur ou d’API de plateforme, le mode Standard peut constituer un test plus rapide.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2 id="tiktok-in-the-app">TikTok dans l’application</h2>
+                <p>TikTok dans l’application de bureau ne correspond pas à un seul mode. Notez toujours le préréglage actif avant le dépannage.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Chemin TikTok</th><th>Cas d’utilisation</th><th>Point d’échec fréquent</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="TikTok Path">Automatique</td><td data-label="Use Case">Premier choix pour la plupart des utilisateurs.</td><td data-label="Common Failure Point">L’application peut utiliser une solution de repli ; vérifiez donc le texte d’état.</td></tr>
+                        <tr><td data-label="TikTok Path">Standard</td><td data-label="Use Case">Capture de la page TikTok visible.</td><td data-label="Common Failure Point">Connexion, CAPTCHA, page redirigée ou chat masqué.</td></tr>
+                        <tr><td data-label="TikTok Path">Signataire local (Local Signer)</td><td data-label="Use Case">Chemins natifs de l’application pour la lecture et la prise en charge des réponses.</td><td data-label="Common Failure Point">La session et les cookies TikTok de l’application doivent être valides.</td></tr>
+                        <tr><td data-label="TikTok Path">Interrogation/Compatibilité (Polling/Compatibility)</td><td data-label="Use Case">Solution de repli en cas d’échec des chemins socket/signature.</td><td data-label="Common Failure Point">Moins complet que le connecteur privilégié.</td></tr>
+                        <tr><td data-label="TikTok Path">Proxy ou signature personnalisée</td><td data-label="Use Case">Configurations avancées.</td><td data-label="Common Failure Point">Disponibilité du fournisseur, clé API, identifiant de salon ou limites de requêtes.</td></tr>
+                    </tbody>
+                </table>
+                <p>Pour un premier essai classique, ajoutez TikTok, laissez le préréglage sur Auto, activez la source et observez le texte d’état de l’application.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Vérifications avant OBS</h2>
+                <ol class="guide-steps">
+                    <li>Vérifiez que la source est activée dans l’application.</li>
+                    <li>Vérifiez que la fenêtre source est connectée au compte si la plateforme l’exige.</li>
+                    <li>Vérifiez que le dock reçoit le chat avec le même identifiant de session.</li>
+                    <li>Une fois le dock fonctionnel, ajoutez ou actualisez l’URL de l’incrustation OBS.</li>
+                    <li>Si Chrome fonctionne mais pas l’application, rappelez-vous que leurs sessions sont distinctes.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2>Solutions courantes</h2>
+                <ul class="guide-list">
+                    <li><strong>Chrome est connecté, mais pas l’application :</strong> connectez-vous à la plateforme dans la fenêtre source de l’application ou utilisez l’extension pour la capture.</li>
+                    <li><strong>La source est indiquée active, mais aucun message n’arrive :</strong> vérifiez le mode, la fenêtre source, l’URL du direct/le nom d’utilisateur et la session du dock.</li>
+                    <li><strong>L’application utilise les mauvais fichiers sources :</strong> vérifiez si l’application utilise des ressources Social Stream intégrées, en cache, distantes, bêta, stables ou locales.</li>
+                    <li><strong>TikTok échoue :</strong> notez le préréglage actuel, le texte d’état, la version de l’application et tout basculement de la source vers un mode de repli.</li>
+                    <li><strong>OBS est vide :</strong> testez d’abord le dock. S’il est vide, OBS n’est pas encore en cause.</li>
+                </ul>
+                <p>Guide associé : <a href="platform-setup-picker.html">Sélecteur de configuration de plateforme</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

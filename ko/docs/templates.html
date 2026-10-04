@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/ko/docs/templates.html">
+    <meta property="og:title" content="채팅 오버레이 템플릿 및 사용자 지정 스킨 - Social Stream Ninja">
+    <meta property="og:description" content="OBS용 채팅 오버레이 템플릿을 선택하고 모양을 꾸미거나 StreamElements 채팅 스킨을 가져오세요. 미리 보기와 Social Stream Ninja 설정 가이드를 찾아보세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ko/docs/templates.html">
+    <meta name="twitter:title" content="채팅 오버레이 템플릿 및 사용자 지정 스킨 - Social Stream Ninja">
+    <meta name="twitter:description" content="OBS용 채팅 오버레이 템플릿을 선택하고 모양을 꾸미거나 StreamElements 채팅 스킨을 가져오세요. 미리 보기와 Social Stream Ninja 설정 가이드를 찾아보세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>채팅 오버레이 템플릿 및 사용자 지정 스킨 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/templates.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <meta name="description" content="OBS용 채팅 오버레이 템플릿을 선택하고 모양을 꾸미거나 StreamElements 채팅 스킨을 가져오세요. 미리 보기와 Social Stream Ninja 설정 가이드를 찾아보세요.">
+    <link rel="canonical" href="https://socialstream.ninja/ko/docs/templates.html">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/templates.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{", and select the downloaded HTML file.":"를 활성화하고 다운로드한 HTML 파일을 선택하세요.",", enter your session details, then copy the links for OBS. Motion is optional.":"를 선택하고 세션 정보를 입력한 뒤 OBS용 링크를 복사하세요. 움직임은 선택 사항입니다.",", or explore custom templates and imports below.":"를 사용하거나 아래의 사용자 지정 템플릿과 가져오기를 살펴보세요.",", preview it, then download the OBS HTML. Use the original ZIP or files, not a screenshot or overlay URL.":"로 가져와 미리 본 뒤 OBS HTML을 다운로드하세요. 스크린샷이나 오버레이 URL이 아닌 원본 ZIP 또는 파일을 사용하세요.",". In OBS, add a Browser Source, enable":"하세요. OBS에 브라우저 소스를 추가하고 다음을 활성화하세요:","A cheerful corgi on a sky-blue postcard":"하늘색 엽서 위의 밝은 코기","A cheerful corgi on a sky-blue postcard. Includes matching chat, featured-message, and alert styles.":"하늘색 엽서 위의 밝은 코기. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.","A clean, lightweight template with essential features. Perfect starting point for customization.":"필수 기능을 갖춘 깔끔하고 가벼운 템플릿입니다. 사용자 지정을 시작하기에 좋습니다.","A more complete starting point with comments and documentation to help you build your own custom overlays.":"나만의 오버레이를 만들 수 있도록 주석과 문서가 포함된 더 완성된 출발점입니다.","A running feed from your connected platforms. Start with a chat template or":"연결된 플랫폼에서 계속 들어오는 피드입니다. 채팅 템플릿 또는 다음으로 시작하세요:","A sophisticated, fully animated theme with customizable colors and smooth transitions. Perfect for gaming streams.":"색상을 조절할 수 있고 전환이 부드러운 정교한 전체 애니메이션 테마입니다. 게임 방송에 적합합니다.","A storybook frog in a peaceful woodland":"평화로운 숲속 동화 속 개구리","A storybook frog in a peaceful woodland. Includes matching chat, featured-message, and alert styles.":"평화로운 숲속 동화 속 개구리. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.","A tiny dragon with a luminous enchanted crystal":"빛나는 마법 수정과 작은 용","A tiny dragon with a luminous enchanted crystal. Includes matching chat, featured-message, and alert styles.":"빛나는 마법 수정과 작은 용. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.","Add Your SSN Session ID":"SSN 세션 ID 추가","Add Your Session ID":"세션 ID 추가","Add the modified URL as a Browser Source in your streaming software:":"수정한 URL을 방송 소프트웨어의 브라우저 소스로 추가하세요:","Add to OBS/Streamlabs":"OBS/Streamlabs에 추가","Add your CSS in the Browser Source properties":"브라우저 소스 속성에 CSS 추가","Alert guide":"알림 가이드","All Templates":"모든 템플릿","An astronaut bunny drifting through lilac stardust":"연보라 별가루 속을 떠다니는 우주비행사 토끼","An astronaut bunny drifting through lilac stardust. Includes matching chat, featured-message, and alert styles.":"연보라 별가루 속을 떠다니는 우주비행사 토끼. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.","Animated":"애니메이션","Append":"추가할 항목:","Apply your custom CSS through OBS browser source settings":"OBS 브라우저 소스 설정으로 사용자 지정 CSS 적용","Bare Template":"기본 골격 템플릿","Base64 CSS:":"Base64 CSS:","Bluesky":"Bluesky","Bold, high-contrast theme designed for gaming streams with excellent visibility even in fast-paced content.":"빠르게 움직이는 콘텐츠에서도 잘 보이도록 게임 방송에 맞춰 설계한 강렬한 고대비 테마입니다.","Browse Overlay Gallery":"오버레이 갤러리 보기","Browse the":"살펴볼 곳:","Browse the template library and select one that fits your stream style. Use the screenshot gallery to compare designs; most built-in templates work directly from a URL, with no download.":"템플릿 라이브러리에서 방송 스타일에 맞는 것을 선택하세요. 스크린샷 갤러리에서 디자인을 비교하세요. 대부분의 내장 템플릿은 다운로드 없이 URL로 바로 작동합니다.","By Deuk":"제작: Deuk","By LuckyLootTube":"제작: LuckyLootTube","By NeutronStudio":"제작: NeutronStudio","By RetroTech":"제작: RetroTech","By Social Stream Ninja":"제작: Social Stream Ninja","By t3nk3y":"제작: t3nk3y","CSS Snippet":"CSS 코드 조각","CSS copied to clipboard!":"CSS를 클립보드에 복사했습니다!","CSS not found":"CSS를 찾지 못했습니다","Celebrate follows, memberships, and donations. Configure animations and audio in SSN’s alert settings.":"팔로우, 멤버십, 후원을 축하하세요. SSN 알림 설정에서 애니메이션과 오디오를 설정하세요.","Chat Overlay Templates and Custom Skins - Social Stream Ninja":"채팅 오버레이 템플릿 및 사용자 지정 스킨 - Social Stream Ninja","Choose Message History":"메시지 기록 선택","Choose Your Template":"템플릿 선택","Choose a chat overlay template for OBS, customize its appearance, or import a StreamElements chat skin. Find previews and Social Stream Ninja setup guides.":"OBS용 채팅 오버레이 템플릿을 선택하고 모양을 꾸미거나 StreamElements 채팅 스킨을 가져오세요. 미리 보기와 Social Stream Ninja 설정 가이드를 찾아보세요.","Choose a look for your stream":"방송 디자인 선택","Choose a starting point, copy the prompt, and replace the bracketed design details. Attach source files if your AI cannot read links. Leave your private session ID and password out of the conversation.":"출발점을 선택하고 프롬프트를 복사한 뒤 대괄호 안의 디자인 정보를 바꾸세요. AI가 링크를 읽지 못하면 소스 파일을 첨부하세요. 비공개 세션 ID와 비밀번호는 대화에 넣지 마세요.","Clean, modern design with smooth animations and excellent readability. Customizable color schemes.":"부드러운 애니메이션과 뛰어난 가독성을 갖춘 깔끔하고 현대적인 디자인입니다. 색상 구성을 조절할 수 있습니다.","Click":"클릭:","Click OK to add it to your scene":"확인을 클릭하여 장면에 추가하세요","Close":"닫기","Commands & API":"명령 및 API","Community":"커뮤니티","Complete Package":"전체 패키지","Complete themed packages with documentation, sample images, and guides":"문서, 예시 이미지, 가이드가 포함된 완전한 테마 패키지","Configure OBS to use your customized template":"사용자 지정한 템플릿을 사용하도록 OBS 설정","Confirm SSN Is Receiving Chat":"SSN 채팅 수신 확인","Confirm chat reaches the SSN dock and that the session ID and optional password match exactly.":"채팅이 SSN 도크에 도착하고 세션 ID 및 선택적 비밀번호가 정확히 일치하는지 확인하세요.","Consolidates your live social messaging streams and more. Free and open source.":"실시간 소셜 메시지와 다양한 정보를 한데 모읍니다. 무료 오픈 소스입니다.","Contribute":"기여하기","Converting a more complex widget?":"더 복잡한 위젯을 변환하나요?","Copy a working starter and edit its HTML, CSS, and JavaScript.":"작동하는 시작 예제를 복사하고 HTML, CSS, JavaScript를 편집하세요.","Copy the template code to your clipboard":"템플릿 코드를 클립보드에 복사하세요","Copy to Clipboard":"클립보드에 복사","Create a styled SSN consolidated chat overlay from https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html . Receive the normal live feed (dock label), with a bounded message list, configurable count and optional expiry. Preserve platform icons, donation and membership presentation. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html 에서 스타일을 적용한 SSN 통합 채팅 오버레이를 만드세요. 일반 라이브 피드(dock label)를 받고 메시지 목록에 제한을 두며 개수 설정과 선택적 만료를 지원하세요. 플랫폼 아이콘, 후원 및 멤버십 표시를 유지하세요. 먼저 아래의 현재 SSN 소스와 문서를 살펴보세요. 열 수 없다면 파일을 첨부해 달라고 요청하고 전송 방식이나 이벤트 스키마를 추측하지 마세요. 참고: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 및 https://socialstream.ninja/beta/docs/event-reference.html 원본 오버레이의 연결, 세션/비밀번호, label 및 server 옵션, 관리/삭제/지우기 처리, 기존 메시지 필드를 유지하세요. 자격 증명은 실제 값 대신 YOUR_SESSION_ID / YOUR_PASSWORD 자리표시자로 유지하세요. Chrome 80과 OBS에 호환되는 클래식 스크립트를 사용하고 상대 경로의 로컬 종속성을 유지하며 HTML과 함께 제공해야 할 파일을 나열하세요. chatname은 일반 텍스트로 처리하고 textonly는 chatmessage에만 적용하세요. 안전한 이모트/배지, 이미지만 있는 contentimg 메시지, 혼합된 이벤트/메타데이터 트래픽을 보존하되 메타데이터만 있는 업데이트는 채팅으로 표시하지 마세요. 검증되지 않은 HTML을 삽입하거나 새 최상위 페이로드 필드를 만들지 마세요. 디자인: [색상, 분위기, 글꼴, 배치, 움직임을 설명하세요]. 캔버스: [너비 x 높이]. 배경을 투명하게 유지하고 게임 화면 위에서 텍스트를 읽기 쉽게 하며 긴 이름/메시지가 영역을 벗어나지 않게 하고 동작 줄이기 스타일을 제공하세요. 변경된 전체 파일, 간단한 설정 안내, 라이브 세션에 절대 연결하지 않는 가짜 데이터 데모 모드를 반환하세요. 긴 텍스트, 이모지, 이미지만 있는 메시지, 삭제, 지우기, 크기 변경, 재연결을 시험하세요.","Created an awesome template for Social Stream Ninja? Share it with the community by submitting a pull request to our GitHub repository.":"멋진 Social Stream Ninja 템플릿을 만들었나요? GitHub 저장소에 풀 리퀘스트를 제출하여 커뮤니티와 공유하세요.","Creating a Custom Chat Overlay for Social Stream Ninja":"Social Stream Ninja용 사용자 지정 채팅 오버레이 만들기","Custom CSS":"사용자 지정 CSS","Customization Guide":"맞춤 설정 가이드","Customize Your Template":"템플릿 사용자 지정","Customize https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html . Inspect its shared alert dependencies and https://socialstream.ninja/beta/docs/alert-effects.html first. Reuse existing alert type filters, queue, sound library, mute/volume and effect rules. Keep USD thresholds on the existing currency.js conversion path; do not compare formatted currency strings. Support an optional animation and sound for a $100 USD donation rule, respecting enabled state and existing range semantics. Avoid duplicate playback. Use only audio I supply or have permission to use. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html 을 사용자 지정하세요. 먼저 공용 알림 종속성과 https://socialstream.ninja/beta/docs/alert-effects.html 을 살펴보세요. 기존 알림 유형 필터, 대기열, 소리 라이브러리, 음소거/볼륨, 효과 규칙을 재사용하세요. USD 기준값에는 기존 currency.js 환산 경로를 유지하고 서식이 적용된 통화 문자열을 비교하지 마세요. $100 USD 후원 규칙에 선택적 애니메이션과 소리를 지원하되 활성화 상태와 기존 범위 의미를 따르세요. 중복 재생을 방지하세요. 제가 제공하거나 사용 권한을 가진 오디오만 사용하세요. 먼저 아래의 현재 SSN 소스와 문서를 살펴보세요. 열 수 없다면 파일을 첨부해 달라고 요청하고 전송 방식이나 이벤트 스키마를 추측하지 마세요. 참고: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 및 https://socialstream.ninja/beta/docs/event-reference.html 원본 오버레이의 연결, 세션/비밀번호, label 및 server 옵션, 관리/삭제/지우기 처리, 기존 메시지 필드를 유지하세요. 자격 증명은 실제 값 대신 YOUR_SESSION_ID / YOUR_PASSWORD 자리표시자로 유지하세요. Chrome 80과 OBS에 호환되는 클래식 스크립트를 사용하고 상대 경로의 로컬 종속성을 유지하며 HTML과 함께 제공해야 할 파일을 나열하세요. chatname은 일반 텍스트로 처리하고 textonly는 chatmessage에만 적용하세요. 안전한 이모트/배지, 이미지만 있는 contentimg 메시지, 혼합된 이벤트/메타데이터 트래픽을 보존하되 메타데이터만 있는 업데이트는 채팅으로 표시하지 마세요. 검증되지 않은 HTML을 삽입하거나 새 최상위 페이로드 필드를 만들지 마세요. 디자인: [색상, 분위기, 글꼴, 배치, 움직임을 설명하세요]. 캔버스: [너비 x 높이]. 배경을 투명하게 유지하고 게임 화면 위에서 텍스트를 읽기 쉽게 하며 긴 이름/메시지가 영역을 벗어나지 않게 하고 동작 줄이기 스타일을 제공하세요. 변경된 전체 파일, 간단한 설정 안내, 라이브 세션에 절대 연결하지 않는 가짜 데이터 데모 모드를 반환하세요. 긴 텍스트, 이모지, 이미지만 있는 메시지, 삭제, 지우기, 크기 변경, 재연결을 시험하세요.","Customize https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html for a single selected message. Preserve its default featured/overlay routing and clear behavior; do not automatically show every chat message. Explain how to select a message from the SSN dock. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html 을 선택한 메시지 하나를 표시하도록 사용자 지정하세요. 기본 featured/overlay 라우팅과 지우기 동작을 유지하고 모든 채팅 메시지를 자동으로 표시하지 마세요. SSN 도크에서 메시지를 선택하는 방법을 설명하세요. 먼저 아래의 현재 SSN 소스와 문서를 살펴보세요. 열 수 없다면 파일을 첨부해 달라고 요청하고 전송 방식이나 이벤트 스키마를 추측하지 마세요. 참고: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 및 https://socialstream.ninja/beta/docs/event-reference.html 원본 오버레이의 연결, 세션/비밀번호, label 및 server 옵션, 관리/삭제/지우기 처리, 기존 메시지 필드를 유지하세요. 자격 증명은 실제 값 대신 YOUR_SESSION_ID / YOUR_PASSWORD 자리표시자로 유지하세요. Chrome 80과 OBS에 호환되는 클래식 스크립트를 사용하고 상대 경로의 로컬 종속성을 유지하며 HTML과 함께 제공해야 할 파일을 나열하세요. chatname은 일반 텍스트로 처리하고 textonly는 chatmessage에만 적용하세요. 안전한 이모트/배지, 이미지만 있는 contentimg 메시지, 혼합된 이벤트/메타데이터 트래픽을 보존하되 메타데이터만 있는 업데이트는 채팅으로 표시하지 마세요. 검증되지 않은 HTML을 삽입하거나 새 최상위 페이로드 필드를 만들지 마세요. 디자인: [색상, 분위기, 글꼴, 배치, 움직임을 설명하세요]. 캔버스: [너비 x 높이]. 배경을 투명하게 유지하고 게임 화면 위에서 텍스트를 읽기 쉽게 하며 긴 이름/메시지가 영역을 벗어나지 않게 하고 동작 줄이기 스타일을 제공하세요. 변경된 전체 파일, 간단한 설정 안내, 라이브 세션에 절대 연결하지 않는 가짜 데이터 데모 모드를 반환하세요. 긴 텍스트, 이모지, 이미지만 있는 메시지, 삭제, 지우기, 크기 변경, 재연결을 시험하세요.","Demo Preview":"데모 미리 보기 (Demo Preview)","Demo is blank":"데모가 비어 있음","Deuk's Theme":"Deuk의 테마","Developer":"개발자","Developer Templates":"개발자 템플릿","Developer guide":"개발자 가이드","Discord":"Discord","Do not add the session ID or edit the URL in OBS.":"OBS에서 세션 ID를 추가하거나 URL을 편집하지 마세요.","Donate":"후원하기","Download":"다운로드","Download OBS HTML":"OBS HTML 다운로드 (Download OBS HTML)","Download and Add It to OBS":"다운로드 후 OBS에 추가","Editable prompt":"편집 가능한 프롬프트","Elegant design with smooth animations and visual effects. Eye-catching yet not distracting.":"부드러운 애니메이션과 시각 효과의 우아한 디자인입니다. 눈길을 끌면서도 방해하지 않습니다.","Event Flow editor":"이벤트 흐름 편집기","Event fields":"이벤트 필드","FAQ":"자주 묻는 질문","Failed to copy. Try selecting and copying manually.":"복사하지 못했습니다. 직접 선택하여 복사해 보세요.","Featured":"강조","Features":"기능","Filter templates":"템플릿 필터","Find the perfect template for your stream":"방송에 꼭 맞는 템플릿 찾기","Find the sample overlay template (sampleoverlay.html)":"예제 오버레이 템플릿(sampleoverlay.html)을 찾으세요","Follow these simple steps to get started":"간단한 다음 단계로 시작하세요","For inline CSS, use":"인라인 CSS에는 다음을 사용하세요:","For trigger-based behavior, start with the":"트리거 기반 동작은 다음으로 시작하세요:","Friendly ghost, glowing pumpkin and midnight plum":"친근한 유령, 빛나는 호박, 한밤의 자주색","Friendly ghost, glowing pumpkin and midnight plum. Includes matching chat, featured-message, and alert styles.":"친근한 유령, 빛나는 호박, 한밤의 자주색. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.","Gaming":"게임","Get":"가져올 항목:","Get the Original Widget Export":"원본 위젯 내보내기 파일 준비","GitHub":"GitHub","GitHub Repository":"GitHub 저장소","Guides":"가이드","Have a StreamElements chat widget export?":"StreamElements 채팅 위젯 내보내기 파일이 있나요?","Have a Template to Share?":"공유할 템플릿이 있나요?","Headphone raccoon and vinyl in mint and plum":"민트색과 자주색 배경의 헤드폰 쓴 라쿤과 레코드","Headphone raccoon and vinyl in mint and plum. Includes matching chat, featured-message, and alert styles.":"민트색과 자주색 배경의 헤드폰 쓴 라쿤과 레코드. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.","Hire":"작업 의뢰","Home":"홈","Host your files and use their URL with your session and optional password. For a self-contained local export, follow its configuration instructions; OBS Local file has no URL field for session parameters.":"파일을 호스팅하고 URL에 세션과 선택적 비밀번호를 넣어 사용하세요. 모든 것이 포함된 로컬 내보내기 파일은 해당 설정 안내를 따르세요. OBS의 로컬 파일 옵션에는 세션 매개변수를 넣을 URL 입력란이 없습니다.","How to Use Templates":"템플릿 사용법","If the imported widget provides compatible settings, use":"가져온 위젯에 호환 설정이 있다면 다음을 사용하세요:","Import StreamElements Widget":"StreamElements 위젯 가져오기","In OBS, click the + under Sources and select \"Browser\"":"OBS에서 소스 아래의 +를 클릭하고 '브라우저'를 선택하세요","Inspiration":"아이디어","Installation Guide":"설치 가이드","Join our Discord":"Discord 참여","Keep SSN running while streaming; the importer and StreamElements may be closed.":"방송 중에는 SSN을 켜 두세요. 가져오기 도구와 StreamElements는 닫아도 됩니다.","Keep referenced shared scripts, fonts, and images alongside your file with the same relative paths, or ask your AI for a self-contained export. Renaming one HTML file does not bundle its dependencies.":"참조하는 공용 스크립트, 글꼴, 이미지를 같은 상대 경로로 파일 옆에 유지하거나 AI에 모든 것이 포함된 내보내기를 요청하세요. HTML 파일 하나의 이름을 바꿔도 종속성이 포함되지는 않습니다.","Keep the original connection code. Chat and featured overlays receive different feeds; styling a chat feed does not make it a selected-message overlay.":"원래 연결 코드를 유지하세요. 채팅과 강조 오버레이는 서로 다른 피드를 받습니다. 채팅 피드의 스타일을 바꿔도 선택 메시지 오버레이가 되지는 않습니다.","Learn how to create a custom chat overlay with AI assistance":"AI의 도움으로 사용자 지정 채팅 오버레이 만드는 방법 알아보기","Liquid Glass":"리퀴드 글래스","Live Preview":"라이브 미리 보기 (Live Preview)","Live Preview is blank":"라이브 미리 보기가 비어 있음","Local file":"로컬 파일","LuckyLootTube Liquid Glass Theme":"LuckyLootTube 리퀴드 글래스 테마","LuckyLootTube's Theme":"LuckyLootTube의 테마","Main navigation":"기본 탐색 메뉴","Message history":"메시지 기록 (Message history)","Minimal":"최소","Minimal code needed to create your own overlay from scratch. Perfect for developers and LLM-assisted coding.":"나만의 오버레이를 처음부터 만드는 데 필요한 최소 코드입니다. 개발자와 LLM 보조 코딩에 적합합니다.","Modern":"모던","Modern Design":"현대적인 디자인","Name your source and click OK":"소스 이름을 지정하고 확인을 클릭하세요","Neutron Theme":"Neutron 테마","New":"신규","New to importing?":"처음 가져오나요?","No matches. Try another search or choose All Templates.":"일치하는 항목이 없습니다. 다른 검색어를 사용하거나 모든 템플릿을 선택하세요.","Nostalgic Windows 3.1 style chat overlay with classic window design and pixel-perfect detailing.":"고전적인 창 디자인과 정교한 픽셀 디테일을 갖춘 향수를 자극하는 Windows 3.1 스타일 채팅 오버레이입니다.","OBS Custom CSS:":"OBS 사용자 지정 CSS:","OBS is blank":"OBS가 비어 있음","One look across three browser sources. In the gallery, choose":"세 브라우저 소스에서 하나의 통일된 디자인을 사용합니다. 갤러리에서 선택할 항목:","One message you select in the dock. Choose a featured design for interviews, Q&A, or shout-outs.":"도크에서 선택한 메시지 하나입니다. 인터뷰, 질의응답, 소개 방송에는 강조 디자인을 선택하세요.","Open Widget Importer":"위젯 가져오기 도구 열기","Open navigation menu":"탐색 메뉴 열기","Open the Importer":"가져오기 도구 열기","Open the StreamElements converter":"StreamElements 변환기 열기","Open the importer and choose the ZIP, folder, or files. It detects the widget parts and immediately shows a demo preview.":"가져오기 도구를 열고 ZIP, 폴더 또는 파일을 선택하세요. 위젯 구성 요소를 감지하고 즉시 데모 미리 보기를 표시합니다.","Open your platform sources in the SSN app or extension, then send a test message. Continue only after it appears in the SSN dock.":"SSN 앱 또는 확장 프로그램에서 플랫폼 소스를 열고 테스트 메시지를 보내세요. SSN 도크에 나타난 뒤에만 계속 진행하세요.","Opening the importer from the SSN popup fills the session ID and password automatically. If you opened it directly, copy them from":"SSN 팝업에서 가져오기 도구를 열면 세션 ID와 비밀번호가 자동으로 채워집니다. 직접 열었다면 다음에서 복사하세요:","Overlay Gallery":"오버레이 갤러리","Paste your template URL with session ID":"세션 ID가 포함된 템플릿 URL을 붙여 넣으세요","Personalize your overlay with custom CSS in one of these ways:":"다음 중 한 가지 방법으로 사용자 지정 CSS를 적용해 오버레이를 꾸미세요:","Popular":"인기","Pretty Template":"예쁜 템플릿","Preview & use pack":"팩 미리 보기 및 사용","Preview chat, featured-message, and alert overlays, then add your favorite to OBS or Streamlabs.":"채팅, 강조 메시지, 알림 오버레이를 미리 보고 원하는 것을 OBS나 Streamlabs에 추가하세요.","Preview fake data first, then test with your own SSN session. Check selected messages, clearing, long names, images, and transparent backgrounds. Keep SSN running during live use.":"먼저 가짜 데이터로 미리 본 뒤 자신의 SSN 세션으로 시험하세요. 선택 메시지, 지우기, 긴 이름, 이미지, 투명 배경을 확인하세요. 라이브 사용 중에는 SSN을 실행 상태로 유지하세요.","Privacy Policy":"개인정보 처리방침","Prompt copied.":"프롬프트를 복사했습니다.","Prompt selected. Press Ctrl+C (Command+C on Mac) to copy.":"프롬프트를 선택했습니다. Ctrl+C(Mac은 Command+C)를 눌러 복사하세요.","Prompt the AI to modify the CSS for your preferred style":"AI에게 원하는 스타일에 맞게 CSS를 수정하도록 요청하세요","Quick Guide from the Video":"영상의 빠른 가이드","Quick Links":"바로가기","Quick start":"빠른 시작","Read the full chat skin guide":"전체 채팅 스킨 가이드 읽기","Ready-to-use templates that only require your session ID":"세션 ID만 넣으면 바로 사용할 수 있는 템플릿","Replace":"바꿀 값:","Report an Issue":"문제 신고","Resources":"자료","Restyle my existing SSN overlay using CSS only. I will provide its URL and source HTML/CSS. Keep all JavaScript and message routing unchanged. Inspect actual DOM selectors before writing CSS. Deliver CSS for the OBS Browser Source Custom CSS box plus any necessary local font/image assets. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"CSS만 사용하여 기존 SSN 오버레이의 스타일을 바꾸세요. URL과 소스 HTML/CSS를 제공하겠습니다. 모든 JavaScript와 메시지 라우팅을 그대로 유지하세요. CSS를 작성하기 전에 실제 DOM 선택자를 확인하세요. OBS 브라우저 소스의 사용자 지정 CSS 입력란에 넣을 CSS와 필요한 로컬 글꼴/이미지 리소스를 제공하세요. 먼저 아래의 현재 SSN 소스와 문서를 살펴보세요. 열 수 없다면 파일을 첨부해 달라고 요청하고 전송 방식이나 이벤트 스키마를 추측하지 마세요. 참고: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 및 https://socialstream.ninja/beta/docs/event-reference.html 원본 오버레이의 연결, 세션/비밀번호, label 및 server 옵션, 관리/삭제/지우기 처리, 기존 메시지 필드를 유지하세요. 자격 증명은 실제 값 대신 YOUR_SESSION_ID / YOUR_PASSWORD 자리표시자로 유지하세요. Chrome 80과 OBS에 호환되는 클래식 스크립트를 사용하고 상대 경로의 로컬 종속성을 유지하며 HTML과 함께 제공해야 할 파일을 나열하세요. chatname은 일반 텍스트로 처리하고 textonly는 chatmessage에만 적용하세요. 안전한 이모트/배지, 이미지만 있는 contentimg 메시지, 혼합된 이벤트/메타데이터 트래픽을 보존하되 메타데이터만 있는 업데이트는 채팅으로 표시하지 마세요. 검증되지 않은 HTML을 삽입하거나 새 최상위 페이로드 필드를 만들지 마세요. 디자인: [색상, 분위기, 글꼴, 배치, 움직임을 설명하세요]. 캔버스: [너비 x 높이]. 배경을 투명하게 유지하고 게임 화면 위에서 텍스트를 읽기 쉽게 하며 긴 이름/메시지가 영역을 벗어나지 않게 하고 동작 줄이기 스타일을 제공하세요. 변경된 전체 파일, 간단한 설정 안내, 라이브 세션에 절대 연결하지 않는 가짜 데이터 데모 모드를 반환하세요. 긴 텍스트, 이모지, 이미지만 있는 메시지, 삭제, 지우기, 크기 변경, 재연결을 시험하세요.","Retro":"레트로","Retro Style":"레트로 스타일","Review the detected files in the importer and use Advanced file selection if it chose the wrong HTML, CSS, or JavaScript.":"가져오기 도구에서 감지한 파일을 검토하고 HTML, CSS, JavaScript를 잘못 선택했다면 고급 파일 선택을 사용하세요.","Sample Overlay":"예제 오버레이","Sample Overlay Template":"예제 오버레이 템플릿","Sample Template":"예제 템플릿","Scarf-wrapped reindeer and festive evergreen":"목도리 두른 순록과 축제 분위기의 상록수","Scarf-wrapped reindeer and festive evergreen. Includes matching chat, featured-message, and alert styles.":"목도리 두른 순록과 축제 분위기의 상록수. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.","Search templates by name, type, or feature...":"이름, 유형 또는 기능으로 템플릿 검색…","See setup below":"아래 설정 보기","Session Options":"세션 옵션","Set width and height (recommended: 1920×1080)":"너비와 높이를 설정하세요(권장: 1920×1080)","Setup":"설정","Simple Drop-in Templates":"간단히 적용하는 템플릿","Sleek animated liquid-glass style chat overlay with smooth animations and cool emote rendering.":"부드러운 애니메이션과 멋진 이모트 렌더링을 갖춘 세련된 리퀴드 글래스 스타일 채팅 오버레이입니다.","Sleepy calico, strawberry milk and blush stationery":"졸린 삼색 고양이, 딸기 우유, 연분홍 문구류","Sleepy calico, strawberry milk and blush stationery. Includes matching chat, featured-message, and alert styles.":"졸린 삼색 고양이, 딸기 우유, 연분홍 문구류. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. GPLv3.0 라이선스. 제작:","Source Code":"소스 코드","Start with a working overlay, then change its appearance.":"작동하는 오버레이로 시작한 뒤 모양을 바꾸세요.","Starting points for creating your own custom overlays":"나만의 사용자 지정 오버레이를 만들기 위한 출발점","Steve Seguin":"Steve Seguin","StreamElements Setup Guide":"StreamElements 설정 가이드","Submit on GitHub":"GitHub에 제출","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Template Library":"템플릿 라이브러리","Templates":"템플릿","Templates Gallery":"템플릿 갤러리","Templates that work with YouTube CSS styles":"YouTube CSS 스타일을 사용할 수 있는 템플릿","Terms of Service":"서비스 이용약관","Test Before Downloading":"다운로드 전 테스트","Themed Packages":"테마 패키지","This works with both the SSN Windows desktop app and Chrome extension. No code editing is required.":"SSN Windows 데스크톱 앱과 Chrome 확장 프로그램 모두에서 작동하며 코드 편집은 필요하지 않습니다.","URL Parameter:":"URL 매개변수:","Use":"사용:","Use CSS designed for YouTube with our YouTube-structured overlay page. Compatible with Septapus styles.":"YouTube 구조의 오버레이 페이지에서 YouTube용 CSS를 사용하세요. Septapus 스타일과 호환됩니다.","Use OBS Browser Source":"OBS 브라우저 소스 사용","Use a StreamElements Chat Widget with Social Stream Ninja":"Social Stream Ninja에서 StreamElements 채팅 위젯 사용","Use an AI assistant like Claude to help customize it":"Claude 같은 AI 도우미로 사용자 지정하세요","Use matching set":"어울리는 세트 사용","Use the ZIP, folder, or files supplied by the widget designer. A useful export normally contains HTML, CSS, JavaScript, fields/data, and assets. A screenshot or StreamElements overlay URL is not enough.":"위젯 디자이너가 제공한 ZIP, 폴더 또는 파일을 사용하세요. 유용한 내보내기에는 보통 HTML, CSS, JavaScript, fields/data, 리소스가 포함됩니다. 스크린샷이나 StreamElements 오버레이 URL만으로는 부족합니다.","Use the downloaded HTML file, then refresh the OBS Browser Source. The importer page, original ZIP, and StreamElements URL cannot be used as the Browser Source.":"가져오기 도구 페이지, 원본 ZIP 또는 StreamElements URL 대신 다운로드한 HTML 파일을 사용하고 OBS 브라우저 소스를 새로고침하세요.","Use the full StreamElements / Streamlabs conversion prompt":"전체 StreamElements / Streamlabs 변환 프롬프트 사용","Video Tutorial":"영상 튜토리얼","Windows 3.1 Theme":"Windows 3.1 테마","X.com":"X.com","YouTube Compatible":"YouTube 호환","YouTube-CSS Compatible Templates":"YouTube CSS 호환 템플릿","YouTube-CSS Template":"YouTube CSS 템플릿","alert effect rules":"알림 효과 규칙","and":"그리고","before writing a new overlay.":"을 새 오버레이 작성 전에 살펴보세요.","checks the design with sample messages.":"는 예시 메시지로 디자인을 확인합니다.","checks the session using real chat from the running SSN app or extension.":"는 실행 중인 SSN 앱이나 확장 프로그램의 실제 채팅으로 세션을 확인합니다.","complete visual overlay gallery":"전체 시각적 오버레이 갤러리","featured-modern.html":"featured-modern.html","for colors, spacing, and typography. Keep the original SSN URL and connection.":"로 색상, 간격, 글꼴을 꾸미세요. 원래 SSN URL과 연결을 유지하세요.","for consolidated chat,":"은 통합 채팅에,","for events. Download the source and required assets from":"은 이벤트에 사용하세요. 소스와 필요한 리소스는 다음에서 다운로드하세요:","for finding widget files, supported formats, OBS setup and troubleshooting.":"에서 위젯 파일 찾기, 지원 형식, OBS 설정, 문제 해결을 확인하세요.","for selected messages, or":"은 선택 메시지에, 또는","in the app or extension. You enter the session ID once in the importer; it is saved inside the downloaded file.":"에서 복사하세요. 가져오기 도구에 세션 ID를 한 번 입력하면 다운로드한 파일 안에 저장됩니다.","in the template URL with your actual Social Stream Ninja session ID found under Session Options in the SSN app or extension. Include the optional password if your session uses one.":"자리표시자를 SSN 앱 또는 확장 프로그램의 세션 옵션에서 확인한 실제 Social Stream Ninja 세션 ID로 바꾸세요. 세션에 비밀번호를 사용한다면 함께 포함하세요.","multi-alerts.html":"multi-alerts.html","sampleoverlay.html":"sampleoverlay.html","t3nk3y's Theme":"t3nk3y의 테마","the beta repository":"베타 저장소","the dock":"도크","to turn off timed removal or change how many messages stay on screen. This changes widget settings, not its code.":"로 시간에 따른 제거를 끄거나 화면에 유지할 메시지 수를 바꾸세요. 위젯 코드가 아닌 설정을 변경합니다.","to your template URL":"를 템플릿 URL에 추가하세요","with contributions from the community.":". 커뮤니티가 함께 기여했습니다.","{0} templates shown":"템플릿 {0}개 표시","✨ Copy AI Prompts":"✨ AI 프롬프트 복사","✨ Copy a prompt for your AI":"✨ AI용 프롬프트 복사","⭐ Featured message":"⭐ 강조 메시지","🌙 Moon Bunny":"🌙 달토끼","🍄 Moss & Mushrooms":"🍄 이끼와 버섯","🎃 Pumpkin Haunt":"🎃 호박 유령","🎄 Merry Little Reindeer":"🎄 즐거운 꼬마 순록","🎉 Alerts with sound":"🎉 소리가 있는 알림","🎉 Event alerts":"🎉 이벤트 알림","🎨 CSS-only makeover":"🎨 CSS만으로 새 단장","🎨 Change the look":"🎨 모양 바꾸기","🎨 Matching packs":"🎨 어울리는 팩","🎨 Matching theme packs":"🎨 어울리는 테마 팩","🎵 Midnight Mixtape":"🎵 한밤의 믹스테이프","🐉 Crystal Guardian":"🐉 수정 수호자","🐱 Strawberry Cat":"🐱 딸기 고양이","🐶 Good Company":"🐶 좋은 친구","💬 Consolidated chat":"💬 통합 채팅","📋 Copy prompt":"📋 프롬프트 복사","📦 Bring a widget":"📦 위젯 가져오기","🔎 Find a template or theme pack":"🔎 템플릿 또는 테마 팩 찾기","🔧 Files, routing, and testing":"🔧 파일, 라우팅 및 테스트","🚀 Setup":"🚀 설정","🛠️ Make Your Own":"🛠️ 직접 만들기","🛠️ Make your own template":"🛠️ 나만의 템플릿 만들기","🧩 Change behavior":"🧩 동작 바꾸기","🧭 Choose your overlay type":"🧭 오버레이 유형 선택"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/templates.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/templates.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/templates.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/templates.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/templates.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/templates.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/templates.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/templates.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/templates.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/templates.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/templates.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/templates.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/templates.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/templates.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/templates.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/templates.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/templates.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/templates.html">
+<!-- ssn-languages:end --></head>
+<body>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/templates.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/templates.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/templates.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/templates.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/templates.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/templates.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/templates.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/templates.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/templates.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/templates.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/templates.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="templates.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/templates.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/templates.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/templates.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/templates.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/templates.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>템플릿 갤러리</h1>
+            <p>살펴볼 곳: <a href="overlay-gallery.html">전체 시각적 오버레이 갤러리</a>를 사용하거나 아래의 사용자 지정 템플릿과 가져오기를 살펴보세요.</p>
+        </div>
+    </section>
+
+    <section class="template-banner">
+        <div class="container">
+            <h2>방송 디자인 선택</h2>
+            <p>채팅, 강조 메시지, 알림 오버레이를 미리 보고 원하는 것을 OBS나 Streamlabs에 추가하세요.</p>
+            <div class="hero-buttons">
+                <a href="overlay-gallery.html" class="btn btn-primary">오버레이 갤러리 보기</a>
+                <a href="#how-to-use" class="btn btn-secondary">🚀 설정</a>
+                <a href="#make-your-own" class="btn btn-secondary">🛠️ 직접 만들기</a>
+                <a href="#ai-prompts" class="btn btn-secondary">✨ AI 프롬프트 복사</a>
+                <a href="../../streamelements-importer.html" class="btn btn-secondary">StreamElements 위젯 가져오기</a>
+                <a href="streamelements-chat-guide.html" class="btn btn-secondary">StreamElements 설정 가이드</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="template-details" aria-labelledby="choose-overlay">
+        <div class="container">
+            <h2 id="choose-overlay">🧭 오버레이 유형 선택</h2>
+            <div class="template-features">
+                <div class="template-feature"><h3>💬 통합 채팅</h3><p>연결된 플랫폼에서 계속 들어오는 피드입니다. 채팅 템플릿 또는 다음으로 시작하세요: <a href="../../dock.html">도크</a>.</p></div>
+                <div class="template-feature"><h3>⭐ 강조 메시지</h3><p>도크에서 선택한 메시지 하나입니다. 인터뷰, 질의응답, 소개 방송에는 강조 디자인을 선택하세요.</p></div>
+                <div class="template-feature"><h3>🎉 이벤트 알림</h3><p>팔로우, 멤버십, 후원을 축하하세요. SSN 알림 설정에서 애니메이션과 오디오를 설정하세요. <a href="alert-effects.html">알림 가이드</a></p></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="template-library" class="template-library">
+        <div class="container">
+            <h2>템플릿 라이브러리</h2>
+            <p class="section-subtitle">방송에 꼭 맞는 템플릿 찾기</p>
+            
+            <div class="template-search">
+                <label for="template-search-input">🔎 템플릿 또는 테마 팩 찾기</label>
+                <input type="search" id="template-search-input" placeholder="이름, 유형 또는 기능으로 템플릿 검색…">
+            </div>
+            
+            <p id="template-results" role="status"></p>
+            <div class="tag-filters" aria-label="템플릿 필터">
+                <button type="button" class="filter-tag" data-filter="matching" aria-pressed="false">🎨 어울리는 팩</button>
+                <button type="button" class="filter-tag active" data-filter="all" aria-pressed="true">모든 템플릿</button>
+                <button type="button" class="filter-tag" data-filter="gaming" aria-pressed="false">게임</button>
+                <button type="button" class="filter-tag" data-filter="minimal" aria-pressed="false">최소</button>
+                <button type="button" class="filter-tag" data-filter="animated" aria-pressed="false">애니메이션</button>
+                <button type="button" class="filter-tag" data-filter="retro" aria-pressed="false">레트로</button>
+                <button type="button" class="filter-tag" data-filter="modern" aria-pressed="false">모던</button>
+                <button type="button" class="filter-tag" data-filter="youtube-compatible" aria-pressed="false">YouTube 호환</button>
+            </div>
+            
+<div id="matching-packs" class="template-category"><div class="category-header"><h3>🎨 어울리는 테마 팩</h3></div><p>세 브라우저 소스에서 하나의 통일된 디자인을 사용합니다. 갤러리에서 선택할 항목: <strong>어울리는 세트 사용</strong>를 선택하고 세션 정보를 입력한 뒤 OBS용 링크를 복사하세요. 움직임은 선택 사항입니다.</p><div class="templates-main-grid"><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute cat cats kitten">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-cat.webp" loading="lazy" width="640" height="360" alt="졸린 삼색 고양이, 딸기 우유, 연분홍 문구류"></div>
+ <div class="template-content"><h3>🐱 딸기 고양이</h3><p class="template-description">졸린 삼색 고양이, 딸기 우유, 연분홍 문구류. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-cat">팩 미리 보기 및 사용</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute dog dogs corgi puppy">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-dog.webp" loading="lazy" width="640" height="360" alt="하늘색 엽서 위의 밝은 코기"></div>
+ <div class="template-content"><h3>🐶 좋은 친구</h3><p class="template-description">하늘색 엽서 위의 밝은 코기. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-dog">팩 미리 보기 및 사용</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute forest">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-forest.webp" loading="lazy" width="640" height="360" alt="평화로운 숲속 동화 속 개구리"></div>
+ <div class="template-content"><h3>🍄 이끼와 버섯</h3><p class="template-description">평화로운 숲속 동화 속 개구리. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-forest">팩 미리 보기 및 사용</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute space">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-space.webp" loading="lazy" width="640" height="360" alt="연보라 별가루 속을 떠다니는 우주비행사 토끼"></div>
+ <div class="template-content"><h3>🌙 달토끼</h3><p class="template-description">연보라 별가루 속을 떠다니는 우주비행사 토끼. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-space">팩 미리 보기 및 사용</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute dragon">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-dragon.webp" loading="lazy" width="640" height="360" alt="빛나는 마법 수정과 작은 용"></div>
+ <div class="template-content"><h3>🐉 수정 수호자</h3><p class="template-description">빛나는 마법 수정과 작은 용. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-dragon">팩 미리 보기 및 사용</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute music">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-music.webp" loading="lazy" width="640" height="360" alt="민트색과 자주색 배경의 헤드폰 쓴 라쿤과 레코드"></div>
+ <div class="template-content"><h3>🎵 한밤의 믹스테이프</h3><p class="template-description">민트색과 자주색 배경의 헤드폰 쓴 라쿤과 레코드. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-music">팩 미리 보기 및 사용</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute halloween">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-halloween.webp" loading="lazy" width="640" height="360" alt="친근한 유령, 빛나는 호박, 한밤의 자주색"></div>
+ <div class="template-content"><h3>🎃 호박 유령</h3><p class="template-description">친근한 유령, 빛나는 호박, 한밤의 자주색. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-halloween">팩 미리 보기 및 사용</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute christmas">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-christmas.webp" loading="lazy" width="640" height="360" alt="목도리 두른 순록과 축제 분위기의 상록수"></div>
+ <div class="template-content"><h3>🎄 즐거운 꼬마 순록</h3><p class="template-description">목도리 두른 순록과 축제 분위기의 상록수. 어울리는 채팅, 강조 메시지, 알림 스타일을 포함합니다.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-christmas">팩 미리 보기 및 사용</a></div></article></div></div>
+            <div id="themed-packages" class="template-category">
+                <div class="category-header">
+                    <h3>테마 패키지</h3>
+                </div>
+                <p>문서, 예시 이미지, 가이드가 포함된 완전한 테마 패키지</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="gaming animated modern">
+                        <div class="template-badge badge-featured">강조</div>
+                        <div class="template-preview">
+                            <img src="../../media/deuks.png" alt="Deuk의 테마">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">전체 패키지</span>
+                            <h3>Deuk의 테마</h3>
+                            <p class="template-description">색상을 조절할 수 있고 전환이 부드러운 정교한 전체 애니메이션 테마입니다. 게임 방송에 적합합니다.</p>
+                            <div class="template-footer">
+                                <div class="template-author">제작: Deuk</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/tree/main/themes/deuks_overlay" class="btn btn-primary">가져올 항목:</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="retro">
+                        <div class="template-badge badge-new">신규</div>
+                        <div class="template-preview">
+                            <img src="../../media/windows.png" alt="Windows 3.1 테마">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">레트로 스타일</span>
+                            <h3>Windows 3.1 테마</h3>
+                            <p class="template-description">고전적인 창 디자인과 정교한 픽셀 디테일을 갖춘 향수를 자극하는 Windows 3.1 스타일 채팅 오버레이입니다.</p>
+                            <div class="template-footer">
+                                <div class="template-author">제작: RetroTech</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/tree/main/themes/Windows3.1" class="btn btn-primary">가져올 항목:</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="modern animated">
+                        <div class="template-preview">
+                            <img src="../../media/neutron.png" alt="Neutron 테마">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">현대적인 디자인</span>
+                            <h3>Neutron 테마</h3>
+                            <p class="template-description">부드러운 애니메이션과 뛰어난 가독성을 갖춘 깔끔하고 현대적인 디자인입니다. 색상 구성을 조절할 수 있습니다.</p>
+                            <div class="template-footer">
+                                <div class="template-author">제작: NeutronStudio</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/Neutron/" class="btn btn-primary">가져올 항목:</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>간단히 적용하는 템플릿</h3>
+                </div>
+                <p>세션 ID만 넣으면 바로 사용할 수 있는 템플릿</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-badge badge-popular">인기</div>
+                        <div class="template-preview">
+                            <img src="../../media/simple.png" alt="예제 템플릿">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">최소</span>
+                            <h3>예제 템플릿</h3>
+                            <p class="template-description">필수 기능을 갖춘 깔끔하고 가벼운 템플릿입니다. 사용자 지정을 시작하기에 좋습니다.</p>
+                            <div class="template-footer">
+                                <div class="template-author">제작: Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/sampleoverlay.html?session=YOURSESSIONIDHERE" class="btn btn-primary">사용:</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="animated modern">
+                        <div class="template-preview">
+                            <img src="../../media/prettyoverlay.png" alt="예쁜 템플릿">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">애니메이션</span>
+                            <h3>예쁜 템플릿</h3>
+                            <p class="template-description">부드러운 애니메이션과 시각 효과의 우아한 디자인입니다. 눈길을 끌면서도 방해하지 않습니다.</p>
+                            <div class="template-footer">
+                                <div class="template-author">제작: Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONIDHERE" class="btn btn-primary">사용:</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="gaming">
+                        <div class="template-preview">
+                            <img src="../../media/t3nk3y.png" alt="t3nk3y의 테마">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">게임</span>
+                            <h3>t3nk3y의 테마</h3>
+                            <p class="template-description">빠르게 움직이는 콘텐츠에서도 잘 보이도록 게임 방송에 맞춰 설계한 강렬한 고대비 테마입니다.</p>
+                            <div class="template-footer">
+                                <div class="template-author">제작: t3nk3y</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/t3nk3y/?session=YOURSESSIONIDHERE" class="btn btn-primary">사용:</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="template-card" data-tags="liquid-glass">
+                        <div class="template-preview">
+                            <img src="../../media/luckyloottube.png" alt="LuckyLootTube 리퀴드 글래스 테마">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">리퀴드 글래스</span>
+                            <h3>LuckyLootTube의 테마</h3>
+                            <p class="template-description">부드러운 애니메이션과 멋진 이모트 렌더링을 갖춘 세련된 리퀴드 글래스 스타일 채팅 오버레이입니다.</p>
+                            <div class="template-footer">
+                                <div class="template-author">제작: LuckyLootTube</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/LuckyLootTube/luckyloottube.html?session=YOURSESSIONIDHERE&amp;v=3.40.2" class="btn btn-primary" target="_blank" rel="noopener noreferrer">사용:</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>YouTube CSS 호환 템플릿</h3>
+                </div>
+                <p>YouTube CSS 스타일을 사용할 수 있는 템플릿</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="youtube-compatible">
+                        <div class="template-preview">
+                            <img src="../../media/septapus.png" alt="YouTube CSS 템플릿">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">YouTube 호환</span>
+                            <h3>YouTube CSS 템플릿</h3>
+                            <p class="template-description">YouTube 구조의 오버레이 페이지에서 YouTube용 CSS를 사용하세요. Septapus 스타일과 호환됩니다.</p>
+                            <div class="template-footer">
+                                <div class="template-author">제작: Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/septapus" class="btn btn-primary">설정</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>개발자 템플릿</h3>
+                </div>
+                <p>나만의 사용자 지정 오버레이를 만들기 위한 출발점</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-preview">
+                            <img  alt="기본 골격 템플릿">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">개발자</span>
+                            <h3>기본 골격 템플릿</h3>
+                            <p class="template-description">나만의 오버레이를 처음부터 만드는 데 필요한 최소 코드입니다. 개발자와 LLM 보조 코딩에 적합합니다.</p>
+                            <div class="template-footer">
+                                <div class="template-author">제작: Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/blob/main/baretempate.html" target="_blank" class="btn btn-primary">소스 코드</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-preview">
+                            <img src="../../media/simple.png" alt="예제 오버레이">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">개발자</span>
+                            <h3>예제 오버레이 템플릿</h3>
+                            <p class="template-description">나만의 오버레이를 만들 수 있도록 주석과 문서가 포함된 더 완성된 출발점입니다.</p>
+                            <div class="template-footer">
+                                <div class="template-author">제작: Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/blob/main/sampleoverlay.html" class="btn btn-primary">소스 코드</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="submit-template">
+                <h3>공유할 템플릿이 있나요?</h3>
+                <p>멋진 Social Stream Ninja 템플릿을 만들었나요? GitHub 저장소에 풀 리퀘스트를 제출하여 커뮤니티와 공유하세요.</p>
+                <a href="https://github.com/steveseguin/social_stream" target="_blank" class="btn btn-primary">GitHub에 제출</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="streamelements-importer-guide" class="how-to-use">
+        <div class="container">
+            <h2>Social Stream Ninja에서 StreamElements 채팅 위젯 사용</h2>
+            <p>처음 가져오나요? <a href="streamelements-chat-guide.html">전체 채팅 스킨 가이드 읽기</a> 에서 위젯 파일 찾기, 지원 형식, OBS 설정, 문제 해결을 확인하세요.</p>
+            <p class="section-subtitle">SSN Windows 데스크톱 앱과 Chrome 확장 프로그램 모두에서 작동하며 코드 편집은 필요하지 않습니다.</p>
+
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>SSN 채팅 수신 확인</h4>
+                        <p>SSN 앱 또는 확장 프로그램에서 플랫폼 소스를 열고 테스트 메시지를 보내세요. SSN 도크에 나타난 뒤에만 계속 진행하세요.</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>원본 위젯 내보내기 파일 준비</h4>
+                        <p>위젯 디자이너가 제공한 ZIP, 폴더 또는 파일을 사용하세요. 유용한 내보내기에는 보통 HTML, CSS, JavaScript, fields/data, 리소스가 포함됩니다. 스크린샷이나 StreamElements 오버레이 URL만으로는 부족합니다.</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>가져오기 도구 열기</h4>
+                        <p>가져오기 도구를 열고 ZIP, 폴더 또는 파일을 선택하세요. 위젯 구성 요소를 감지하고 즉시 데모 미리 보기를 표시합니다.</p>
+                        <a href="../../streamelements-importer.html" class="btn btn-primary">위젯 가져오기 도구 열기</a>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>SSN 세션 ID 추가</h4>
+						<p>SSN 팝업에서 가져오기 도구를 열면 세션 ID와 비밀번호가 자동으로 채워집니다. 직접 열었다면 다음에서 복사하세요: <strong>세션 옵션</strong> 에서 복사하세요. 가져오기 도구에 세션 ID를 한 번 입력하면 다운로드한 파일 안에 저장됩니다.</p>
+                    </div>
+                </div>
+
+				<div class="step-card">
+					<div class="step-number"></div>
+					<div class="step-content">
+						<h4>메시지 기록 선택</h4>
+						<p>가져온 위젯에 호환 설정이 있다면 다음을 사용하세요: <strong>메시지 기록 (Message history)</strong> 로 시간에 따른 제거를 끄거나 화면에 유지할 메시지 수를 바꾸세요. 위젯 코드가 아닌 설정을 변경합니다.</p>
+					</div>
+				</div>
+
+				<div class="step-card">
+					<div class="step-number"></div>
+					<div class="step-content">
+						<h4>다운로드 전 테스트</h4>
+                        <p><strong>데모 미리 보기 (Demo Preview)</strong> 는 예시 메시지로 디자인을 확인합니다. <strong>라이브 미리 보기 (Live Preview)</strong> 는 실행 중인 SSN 앱이나 확장 프로그램의 실제 채팅으로 세션을 확인합니다.</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>다운로드 후 OBS에 추가</h4>
+						<p>클릭: <strong>OBS HTML 다운로드 (Download OBS HTML)</strong>하세요. OBS에 브라우저 소스를 추가하고 다음을 활성화하세요: <strong>로컬 파일</strong>를 활성화하고 다운로드한 HTML 파일을 선택하세요. <strong>OBS에서 세션 ID를 추가하거나 URL을 편집하지 마세요.</strong> 방송 중에는 SSN을 켜 두세요. 가져오기 도구와 StreamElements는 닫아도 됩니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="template-features" style="margin-top: 2rem;">
+                <div class="template-feature">
+                    <h4>데모가 비어 있음</h4>
+                    <p>가져오기 도구에서 감지한 파일을 검토하고 HTML, CSS, JavaScript를 잘못 선택했다면 고급 파일 선택을 사용하세요.</p>
+                </div>
+                <div class="template-feature">
+                    <h4>라이브 미리 보기가 비어 있음</h4>
+                    <p>채팅이 SSN 도크에 도착하고 세션 ID 및 선택적 비밀번호가 정확히 일치하는지 확인하세요.</p>
+                </div>
+                <div class="template-feature">
+                    <h4>OBS가 비어 있음</h4>
+                    <p>가져오기 도구 페이지, 원본 ZIP 또는 StreamElements URL 대신 다운로드한 HTML 파일을 사용하고 OBS 브라우저 소스를 새로고침하세요.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-to-use" class="how-to-use">
+        <div class="container">
+            <h2>템플릿 사용법</h2>
+            <p class="section-subtitle">간단한 다음 단계로 시작하세요</p>
+            
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>템플릿 선택</h4>
+                        <p>템플릿 라이브러리에서 방송 스타일에 맞는 것을 선택하세요. 스크린샷 갤러리에서 디자인을 비교하세요. 대부분의 내장 템플릿은 다운로드 없이 URL로 바로 작동합니다.</p>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>세션 ID 추가</h4>
+                        <p>바꿀 값: <code>YOURSESSIONID</code> 자리표시자를 SSN 앱 또는 확장 프로그램의 세션 옵션에서 확인한 실제 Social Stream Ninja 세션 ID로 바꾸세요. 세션에 비밀번호를 사용한다면 함께 포함하세요.</p>
+                        <div class="code-block">
+                            <code>https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID</code>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>OBS/Streamlabs에 추가</h4>
+                        <p>수정한 URL을 방송 소프트웨어의 브라우저 소스로 추가하세요:</p>
+                        <ol>
+                            <li>OBS에서 소스 아래의 +를 클릭하고 '브라우저'를 선택하세요</li>
+                            <li>소스 이름을 지정하고 확인을 클릭하세요</li>
+                            <li>세션 ID가 포함된 템플릿 URL을 붙여 넣으세요</li>
+                            <li>너비와 높이를 설정하세요(권장: 1920×1080)</li>
+                            <li>확인을 클릭하여 장면에 추가하세요</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>템플릿 사용자 지정</h4>
+                        <p>다음 중 한 가지 방법으로 사용자 지정 CSS를 적용해 오버레이를 꾸미세요:</p>
+                        <ul>
+                            <li><strong>OBS 사용자 지정 CSS:</strong> 브라우저 소스 속성에 CSS 추가</li>
+                            <li><strong>URL 매개변수:</strong> 추가할 항목: <code>&css=URL_TO_YOUR_CSS_FILE</code> 를 템플릿 URL에 추가하세요</li>
+                            <li><strong>Base64 CSS:</strong> 인라인 CSS에는 다음을 사용하세요: <code>&b64css=YOUR_BASE64_ENCODED_CSS</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="make-your-own" class="how-to-use"><div class="container">
+<h2>🛠️ 나만의 템플릿 만들기</h2><p>작동하는 오버레이로 시작한 뒤 모양을 바꾸세요.</p>
+<div class="template-features">
+<div class="template-feature"><h3>🎨 모양 바꾸기</h3><p>OBS 브라우저 소스 사용 <strong>사용자 지정 CSS</strong> 로 색상, 간격, 글꼴을 꾸미세요. 원래 SSN URL과 연결을 유지하세요.</p></div>
+<div class="template-feature"><h3>📦 위젯 가져오기</h3><p>StreamElements 채팅 위젯 내보내기 파일이 있나요? <a href="../../streamelements-importer.html">StreamElements 변환기 열기</a>로 가져와 미리 본 뒤 OBS HTML을 다운로드하세요. 스크린샷이나 오버레이 URL이 아닌 원본 ZIP 또는 파일을 사용하세요. <a href="#streamelements-importer-guide">아래 설정 보기</a>.</p></div>
+<div class="template-feature"><h3>🧩 동작 바꾸기</h3><p>작동하는 시작 예제를 복사하고 HTML, CSS, JavaScript를 편집하세요. <a href="overlay-template-quick-start.html">빠른 시작</a> · <a href="https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md">개발자 가이드</a> · <a href="event-reference.html">이벤트 필드</a></p></div>
+</div>
+<details class="template-instructions"><summary>🔧 파일, 라우팅 및 테스트</summary><ol>
+<li>사용: <a href="../../sampleoverlay.html">sampleoverlay.html</a> 은 통합 채팅에, <a href="../../themes/featured-styles/featured-modern.html">featured-modern.html</a> 은 선택 메시지에, 또는 <a href="../../multi-alerts.html">multi-alerts.html</a> 은 이벤트에 사용하세요. 소스와 필요한 리소스는 다음에서 다운로드하세요: <a href="https://github.com/steveseguin/social_stream/tree/beta">베타 저장소</a>.</li>
+<li>원래 연결 코드를 유지하세요. 채팅과 강조 오버레이는 서로 다른 피드를 받습니다. 채팅 피드의 스타일을 바꿔도 선택 메시지 오버레이가 되지는 않습니다.</li>
+<li>참조하는 공용 스크립트, 글꼴, 이미지를 같은 상대 경로로 파일 옆에 유지하거나 AI에 모든 것이 포함된 내보내기를 요청하세요. HTML 파일 하나의 이름을 바꿔도 종속성이 포함되지는 않습니다.</li>
+<li>파일을 호스팅하고 URL에 세션과 선택적 비밀번호를 넣어 사용하세요. 모든 것이 포함된 로컬 내보내기 파일은 해당 설정 안내를 따르세요. OBS의 로컬 파일 옵션에는 세션 매개변수를 넣을 URL 입력란이 없습니다.</li>
+<li>먼저 가짜 데이터로 미리 본 뒤 자신의 SSN 세션으로 시험하세요. 선택 메시지, 지우기, 긴 이름, 이미지, 투명 배경을 확인하세요. 라이브 사용 중에는 SSN을 실행 상태로 유지하세요.</li>
+</ol><p>트리거 기반 동작은 다음으로 시작하세요: <a href="../actions/event-flow-guide.html">이벤트 흐름 편집기</a> 그리고 <a href="alert-effects.html">알림 효과 규칙</a> 을 새 오버레이 작성 전에 살펴보세요.</p></details>
+</div></section>
+<section id="ai-prompts" class="how-to-use"><div class="container"><h2>✨ AI용 프롬프트 복사</h2><p>출발점을 선택하고 프롬프트를 복사한 뒤 대괄호 안의 디자인 정보를 바꾸세요. AI가 링크를 읽지 못하면 소스 파일을 첨부하세요. 비공개 세션 ID와 비밀번호는 대화에 넣지 마세요.</p>
+<details class="template-instructions"><summary>💬 통합 채팅</summary><label for="prompt-chat">편집 가능한 프롬프트</label><textarea id="prompt-chat" class="template-prompt" rows="10" spellcheck="false">https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html 에서 스타일을 적용한 SSN 통합 채팅 오버레이를 만드세요. 일반 라이브 피드(dock label)를 받고 메시지 목록에 제한을 두며 개수 설정과 선택적 만료를 지원하세요. 플랫폼 아이콘, 후원 및 멤버십 표시를 유지하세요. 먼저 아래의 현재 SSN 소스와 문서를 살펴보세요. 열 수 없다면 파일을 첨부해 달라고 요청하고 전송 방식이나 이벤트 스키마를 추측하지 마세요. 참고: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 및 https://socialstream.ninja/beta/docs/event-reference.html 원본 오버레이의 연결, 세션/비밀번호, label 및 server 옵션, 관리/삭제/지우기 처리, 기존 메시지 필드를 유지하세요. 자격 증명은 실제 값 대신 YOUR_SESSION_ID / YOUR_PASSWORD 자리표시자로 유지하세요. Chrome 80과 OBS에 호환되는 클래식 스크립트를 사용하고 상대 경로의 로컬 종속성을 유지하며 HTML과 함께 제공해야 할 파일을 나열하세요. chatname은 일반 텍스트로 처리하고 textonly는 chatmessage에만 적용하세요. 안전한 이모트/배지, 이미지만 있는 contentimg 메시지, 혼합된 이벤트/메타데이터 트래픽을 보존하되 메타데이터만 있는 업데이트는 채팅으로 표시하지 마세요. 검증되지 않은 HTML을 삽입하거나 새 최상위 페이로드 필드를 만들지 마세요. 디자인: [색상, 분위기, 글꼴, 배치, 움직임을 설명하세요]. 캔버스: [너비 x 높이]. 배경을 투명하게 유지하고 게임 화면 위에서 텍스트를 읽기 쉽게 하며 긴 이름/메시지가 영역을 벗어나지 않게 하고 동작 줄이기 스타일을 제공하세요. 변경된 전체 파일, 간단한 설정 안내, 라이브 세션에 절대 연결하지 않는 가짜 데이터 데모 모드를 반환하세요. 긴 텍스트, 이모지, 이미지만 있는 메시지, 삭제, 지우기, 크기 변경, 재연결을 시험하세요.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-chat">📋 프롬프트 복사</button></details>
+<details class="template-instructions"><summary>⭐ 강조 메시지</summary><label for="prompt-featured">편집 가능한 프롬프트</label><textarea id="prompt-featured" class="template-prompt" rows="10" spellcheck="false">https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html 을 선택한 메시지 하나를 표시하도록 사용자 지정하세요. 기본 featured/overlay 라우팅과 지우기 동작을 유지하고 모든 채팅 메시지를 자동으로 표시하지 마세요. SSN 도크에서 메시지를 선택하는 방법을 설명하세요. 먼저 아래의 현재 SSN 소스와 문서를 살펴보세요. 열 수 없다면 파일을 첨부해 달라고 요청하고 전송 방식이나 이벤트 스키마를 추측하지 마세요. 참고: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 및 https://socialstream.ninja/beta/docs/event-reference.html 원본 오버레이의 연결, 세션/비밀번호, label 및 server 옵션, 관리/삭제/지우기 처리, 기존 메시지 필드를 유지하세요. 자격 증명은 실제 값 대신 YOUR_SESSION_ID / YOUR_PASSWORD 자리표시자로 유지하세요. Chrome 80과 OBS에 호환되는 클래식 스크립트를 사용하고 상대 경로의 로컬 종속성을 유지하며 HTML과 함께 제공해야 할 파일을 나열하세요. chatname은 일반 텍스트로 처리하고 textonly는 chatmessage에만 적용하세요. 안전한 이모트/배지, 이미지만 있는 contentimg 메시지, 혼합된 이벤트/메타데이터 트래픽을 보존하되 메타데이터만 있는 업데이트는 채팅으로 표시하지 마세요. 검증되지 않은 HTML을 삽입하거나 새 최상위 페이로드 필드를 만들지 마세요. 디자인: [색상, 분위기, 글꼴, 배치, 움직임을 설명하세요]. 캔버스: [너비 x 높이]. 배경을 투명하게 유지하고 게임 화면 위에서 텍스트를 읽기 쉽게 하며 긴 이름/메시지가 영역을 벗어나지 않게 하고 동작 줄이기 스타일을 제공하세요. 변경된 전체 파일, 간단한 설정 안내, 라이브 세션에 절대 연결하지 않는 가짜 데이터 데모 모드를 반환하세요. 긴 텍스트, 이모지, 이미지만 있는 메시지, 삭제, 지우기, 크기 변경, 재연결을 시험하세요.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-featured">📋 프롬프트 복사</button></details>
+<details class="template-instructions"><summary>🎉 소리가 있는 알림</summary><label for="prompt-alerts">편집 가능한 프롬프트</label><textarea id="prompt-alerts" class="template-prompt" rows="10" spellcheck="false">https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html 을 사용자 지정하세요. 먼저 공용 알림 종속성과 https://socialstream.ninja/beta/docs/alert-effects.html 을 살펴보세요. 기존 알림 유형 필터, 대기열, 소리 라이브러리, 음소거/볼륨, 효과 규칙을 재사용하세요. USD 기준값에는 기존 currency.js 환산 경로를 유지하고 서식이 적용된 통화 문자열을 비교하지 마세요. $100 USD 후원 규칙에 선택적 애니메이션과 소리를 지원하되 활성화 상태와 기존 범위 의미를 따르세요. 중복 재생을 방지하세요. 제가 제공하거나 사용 권한을 가진 오디오만 사용하세요. 먼저 아래의 현재 SSN 소스와 문서를 살펴보세요. 열 수 없다면 파일을 첨부해 달라고 요청하고 전송 방식이나 이벤트 스키마를 추측하지 마세요. 참고: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 및 https://socialstream.ninja/beta/docs/event-reference.html 원본 오버레이의 연결, 세션/비밀번호, label 및 server 옵션, 관리/삭제/지우기 처리, 기존 메시지 필드를 유지하세요. 자격 증명은 실제 값 대신 YOUR_SESSION_ID / YOUR_PASSWORD 자리표시자로 유지하세요. Chrome 80과 OBS에 호환되는 클래식 스크립트를 사용하고 상대 경로의 로컬 종속성을 유지하며 HTML과 함께 제공해야 할 파일을 나열하세요. chatname은 일반 텍스트로 처리하고 textonly는 chatmessage에만 적용하세요. 안전한 이모트/배지, 이미지만 있는 contentimg 메시지, 혼합된 이벤트/메타데이터 트래픽을 보존하되 메타데이터만 있는 업데이트는 채팅으로 표시하지 마세요. 검증되지 않은 HTML을 삽입하거나 새 최상위 페이로드 필드를 만들지 마세요. 디자인: [색상, 분위기, 글꼴, 배치, 움직임을 설명하세요]. 캔버스: [너비 x 높이]. 배경을 투명하게 유지하고 게임 화면 위에서 텍스트를 읽기 쉽게 하며 긴 이름/메시지가 영역을 벗어나지 않게 하고 동작 줄이기 스타일을 제공하세요. 변경된 전체 파일, 간단한 설정 안내, 라이브 세션에 절대 연결하지 않는 가짜 데이터 데모 모드를 반환하세요. 긴 텍스트, 이모지, 이미지만 있는 메시지, 삭제, 지우기, 크기 변경, 재연결을 시험하세요.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-alerts">📋 프롬프트 복사</button></details>
+<details class="template-instructions"><summary>🎨 CSS만으로 새 단장</summary><label for="prompt-css">편집 가능한 프롬프트</label><textarea id="prompt-css" class="template-prompt" rows="10" spellcheck="false">CSS만 사용하여 기존 SSN 오버레이의 스타일을 바꾸세요. URL과 소스 HTML/CSS를 제공하겠습니다. 모든 JavaScript와 메시지 라우팅을 그대로 유지하세요. CSS를 작성하기 전에 실제 DOM 선택자를 확인하세요. OBS 브라우저 소스의 사용자 지정 CSS 입력란에 넣을 CSS와 필요한 로컬 글꼴/이미지 리소스를 제공하세요. 먼저 아래의 현재 SSN 소스와 문서를 살펴보세요. 열 수 없다면 파일을 첨부해 달라고 요청하고 전송 방식이나 이벤트 스키마를 추측하지 마세요. 참고: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md 및 https://socialstream.ninja/beta/docs/event-reference.html 원본 오버레이의 연결, 세션/비밀번호, label 및 server 옵션, 관리/삭제/지우기 처리, 기존 메시지 필드를 유지하세요. 자격 증명은 실제 값 대신 YOUR_SESSION_ID / YOUR_PASSWORD 자리표시자로 유지하세요. Chrome 80과 OBS에 호환되는 클래식 스크립트를 사용하고 상대 경로의 로컬 종속성을 유지하며 HTML과 함께 제공해야 할 파일을 나열하세요. chatname은 일반 텍스트로 처리하고 textonly는 chatmessage에만 적용하세요. 안전한 이모트/배지, 이미지만 있는 contentimg 메시지, 혼합된 이벤트/메타데이터 트래픽을 보존하되 메타데이터만 있는 업데이트는 채팅으로 표시하지 마세요. 검증되지 않은 HTML을 삽입하거나 새 최상위 페이로드 필드를 만들지 마세요. 디자인: [색상, 분위기, 글꼴, 배치, 움직임을 설명하세요]. 캔버스: [너비 x 높이]. 배경을 투명하게 유지하고 게임 화면 위에서 텍스트를 읽기 쉽게 하며 긴 이름/메시지가 영역을 벗어나지 않게 하고 동작 줄이기 스타일을 제공하세요. 변경된 전체 파일, 간단한 설정 안내, 라이브 세션에 절대 연결하지 않는 가짜 데이터 데모 모드를 반환하세요. 긴 텍스트, 이모지, 이미지만 있는 메시지, 삭제, 지우기, 크기 변경, 재연결을 시험하세요.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-css">📋 프롬프트 복사</button></details>
+<p>더 복잡한 위젯을 변환하나요? <a href="../../streamelements-importer-prompt.md">전체 StreamElements / Streamlabs 변환 프롬프트 사용</a>.</p><p id="prompt-copy-status" role="status" aria-live="polite"></p></div></section>
+    <section class="guide-section alt">
+        <div class="container">
+            <h2>영상 튜토리얼</h2>
+            <p class="section-subtitle">AI의 도움으로 사용자 지정 채팅 오버레이 만드는 방법 알아보기</p>
+            
+            <div style="max-width: 800px; margin: 0 auto; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+                <iframe width="100%" height="100%" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/GDy5ijQPTkU" title="Social Stream Ninja용 사용자 지정 채팅 오버레이 만들기" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            
+            <div style="max-width: 800px; margin: 3rem auto 0;">
+                <h3>영상의 빠른 가이드</h3>
+                <ol class="guide-steps">
+                    <li>예제 오버레이 템플릿(sampleoverlay.html)을 찾으세요</li>
+                    <li>템플릿 코드를 클립보드에 복사하세요</li>
+                    <li>Claude 같은 AI 도우미로 사용자 지정하세요</li>
+                    <li>AI에게 원하는 스타일에 맞게 CSS를 수정하도록 요청하세요</li>
+                    <li>사용자 지정한 템플릿을 사용하도록 OBS 설정</li>
+                    <li>OBS 브라우저 소스 설정으로 사용자 지정 CSS 적용</li>
+                </ol>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CSS Modal (hidden by default) -->
+    <div id="css-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000; overflow: auto;">
+        <div style="background-color: var(--background-card); margin: 10% auto; padding: 20px; width: 80%; max-width: 800px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 id="css-modal-title" style="margin: 0;">CSS 코드 조각</h2>
+                <button onclick="closeCssModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <pre id="css-modal-content" style="background-color: var(--background-dark); padding: 20px; border-radius: var(--radius-sm); overflow-x: auto; max-height: 60vh;"></pre>
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="copyCss()" class="btn btn-primary">클립보드에 복사</button>
+                <button onclick="closeCssModal()" class="btn btn-secondary">닫기</button>
+            </div>
+        </div>
+    </div>
+
+        <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>실시간 소셜 메시지와 다양한 정보를 한데 모읍니다. 무료 오픈 소스입니다.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+					<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>바로가기</h3>
+                    <ul>
+                        <li><a href="../index.html">홈</a></li>
+                        <li><a href="features.html">기능</a></li>
+                        <li><a href="download.html">다운로드</a></li>
+                        <li><a href="guides.html">가이드</a></li>
+                        <li><a href="commands.html">명령 및 API</a></li>
+                        <li><a href="supported-sites.html">지원 사이트</a></li>
+                        <li><a href="templates.html">템플릿</a></li>
+                        <li><a href="support.html">지원</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>자료</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">설치 가이드</a></li>
+                        <li><a href="guides.html#extension-customization">맞춤 설정 가이드</a></li>
+                        <li><a href="guides.html#faq">자주 묻는 질문</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">문제 신고</a></li>
+                        <li><a href="../privacy.html">개인정보 처리방침</a></li>
+                        <li><a href="../TOS.html">서비스 이용약관</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>커뮤니티</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Discord 참여</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub 저장소</a></li>
+                        <li><a href="support.html#contribute">기여하기</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">후원하기</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 라이선스. 제작: <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> . 커뮤니티가 함께 기여했습니다.</p>
+            </div>
+        </div>
+    </footer>
+	<script src="../../docs/js/main.js"></script>
+    <script src="../../docs/js/templates.js"></script>
+    <script>
+        // Current year for copyright
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        
+        function showCssModal(cssType) {
+            const modal = document.getElementById('css-modal');
+            const title = document.getElementById('css-modal-title');
+            const content = document.getElementById('css-modal-content');
+            
+            title.textContent = cssType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) + ' CSS';
+            content.textContent = cssSnippets[cssType] || 'CSS not found';
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeCssModal() {
+            document.getElementById('css-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+		function copyCss() {
+            const content = document.getElementById('css-modal-content').textContent;
+            navigator.clipboard.writeText(content)
+                .then(() => {
+                    alert(window.SSNSiteTranslate ? window.SSNSiteTranslate('CSS copied to clipboard!') : 'CSS copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Could not copy text: ', err);
+                    alert(window.SSNSiteTranslate ? window.SSNSiteTranslate('Failed to copy. Try selecting and copying manually.') : 'Failed to copy. Try selecting and copying manually.');
+                });
+        }
+		
+		
+        
+       document.addEventListener('DOMContentLoaded', () => {
+            // Number the steps
+			document.querySelectorAll('.steps-container').forEach(container => {
+				container.querySelectorAll('.step-number').forEach((el, index) => {
+					el.textContent = (index + 1).toString();
+				});
+            });
+            
+            // Auto-scroll to sections when clicking nav links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        e.preventDefault();
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
+ </script>
+</body>
+</html>

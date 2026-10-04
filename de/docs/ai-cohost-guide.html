@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="de" data-site-root="../../" data-site-language="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/de/docs/ai-cohost-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="de_DE">
+    <meta property="og:url" content="https://socialstream.ninja/de/docs/ai-cohost-guide.html">
+    <meta property="og:title" content="Anleitung zum KI-Co-Host – Social Stream Ninja">
+    <meta property="og:description" content="Einrichtung und Arbeitsabläufe für den KI-Co-Host, die Dock-Steuerung und das KI-Bühnen-Overlay von Social Stream Ninja.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja-Logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/de/docs/ai-cohost-guide.html">
+    <meta name="twitter:title" content="Anleitung zum KI-Co-Host – Social Stream Ninja">
+    <meta name="twitter:description" content="Einrichtung und Arbeitsabläufe für den KI-Co-Host, die Dock-Steuerung und das KI-Bühnen-Overlay von Social Stream Ninja.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja-Logo">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anleitung zum KI-Co-Host – Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Einrichtung und Arbeitsabläufe für den KI-Co-Host, die Dock-Steuerung und das KI-Bühnen-Overlay von Social Stream Ninja.">
+    <style>
+        .cohost-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin: 22px 0;
+        }
+        .cohost-guide-card {
+            background: var(--card-bg, #fff);
+            border: 1px solid rgba(127, 127, 127, 0.22);
+            border-radius: 8px;
+            padding: 18px;
+        }
+        .cohost-guide-card h3 {
+            margin-top: 0;
+        }
+        .cohost-flow {
+            margin: 18px 0;
+            padding: 18px;
+            border-left: 4px solid #00a6ff;
+            background: rgba(0, 166, 255, 0.08);
+        }
+        .cohost-code {
+            display: block;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            background: #111827;
+            color: #e5e7eb;
+            font-family: Consolas, Monaco, monospace;
+            font-size: 0.92rem;
+            line-height: 1.45;
+        }
+        .dark-mode .cohost-guide-card {
+            background: #161b22;
+        }
+
+        @media (max-width: 700px) {
+            .field-table, .steps-table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="de">
+<script id="ssn-site-language" type="application/json">{"language":"de","page":"docs/ai-cohost-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Zum hellen Design wechseln","Switch to dark theme":"Zum dunklen Design wechseln","Light mode":"Heller Modus","Dark mode":"Dunkler Modus","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Copy this document as Markdown to the clipboard":"Dieses Dokument als Markdown in die Zwischenablage kopieren","Copy Markdown":"Markdown kopieren","Copying…":"Wird kopiert…","Markdown copied":"Markdown kopiert","Copy failed":"Kopieren fehlgeschlagen","Copy comprehensive Markdown for an AI assistant":"Umfassende Markdown-Dokumentation für einen KI-Assistenten kopieren","Copy this documentation page as Markdown for an AI assistant":"Diese Dokumentationsseite als Markdown für einen KI-Assistenten kopieren"},"strings":{"(the default), or explicitly choose":"(Standard) oder wähle ausdrücklich",", add your OpenAI project API key, and use":", gib deinen OpenAI-Projekt-API-Schlüssel ein und verwende",", allow microphone permission, check the operating system's default microphone, confirm internet access, and verify that Chrome Speech Recognition is available.":", erlaube den Mikrofonzugriff, prüfe das Standardmikrofon des Betriebssystems, bestätige den Internetzugang und die Verfügbarkeit der Chrome-Spracherkennung.",", and manual dock actions that send approved lines to":", und manuelle Dock-Aktionen, die freigegebene Texte an",", browser audio permissions, and OBS browser/app audio capture. Use":", die Audioberechtigungen des Browsers und die Browser- oder App-Audioerfassung von OBS. Verwende",", confirm the selected microphone is not muted and allow the first model download to finish.":", prüfe, ob das ausgewählte Mikrofon nicht stummgeschaltet ist, und warte auf den ersten Modell-Download.",", keeping payloads predictable for overlays and automations.":", damit die Daten für Overlays und Automatisierungen berechenbar bleiben.",", open":", öffne",", the volume slider, output-device selector, and":", der Lautstärkeregler, die Auswahl des Ausgabegeräts und",", which uses":", das","- allows overlay TTS even when the co-host controller is already playing audio; this intentionally creates a second voice.":"– erlaubt Overlay-TTS, auch wenn die Co-Host-Steuerung bereits Audio wiedergibt; dadurch entsteht absichtlich eine zweite Stimme.","- controls stage placement.":"– steuert die Position auf der Bühne.","- lets the overlay speak with browser TTS.":"– lässt das Overlay mit Browser-TTS sprechen.","- required for the dock and overlay to share a room.":"– erforderlich, damit Dock und Overlay denselben Raum nutzen.","- scales the overlay.":"– skaliert das Overlay.","- sets the display name on the overlay.":"– legt den Anzeigenamen im Overlay fest.","- sets the overlay target label.":"– legt das Ziel-Label des Overlays fest.","- shows connection/status text on the overlay.":"– zeigt Verbindungs- und Statustext im Overlay.","- uses a custom avatar image.":"– verwendet ein eigenes Avatarbild.",". Add":". Füge hinzu",". Ask “What is chat saying?” to have the same spoken AI discuss recent viewer messages.":". Frage „Was sagt der Chat?“, damit dieselbe sprechende KI auf aktuelle Zuschauernachrichten eingeht.",". Its default context-only mode lets the AI remember recent viewer messages and discuss them when the streamer asks.":". Im standardmäßigen Kontextmodus merkt sich die KI aktuelle Zuschauernachrichten und bespricht sie, wenn der Streamer danach fragt.",". OBS also needs at least one exact scene name in its allowlist.":". Für OBS muss außerdem mindestens ein exakter Szenenname in der Freigabeliste stehen.",". Replies are capped at 512 output tokens; Diagnostics shows cumulative token usage and measured first-output latency. OpenAI automatically truncates unplayed audio when the streamer interrupts. SSN retains at most 20 recent chat messages for up to 90 seconds, including paid-support, membership, moderator, event, and source-channel context, then removes that temporary context. SSN checks quiet sessions, reconnects failed transports, and rolls sessions over before the 60-minute limit. A recovered session reapplies the system instructions and performance settings, but starts without the previous spoken conversation.":". Antworten sind auf 512 Ausgabetokens begrenzt. Diagnostik zeigt den kumulierten Tokenverbrauch und die gemessene Latenz bis zur ersten Ausgabe. OpenAI kürzt noch nicht abgespieltes Audio automatisch, wenn der Streamer unterbricht. SSN hält höchstens 20 aktuelle Chatnachrichten bis zu 90 Sekunden vor, einschließlich Kontext zu bezahlter Unterstützung, Mitgliedschaften, Moderatoren, Events und Quellkanälen, und entfernt diesen vorübergehenden Kontext danach. SSN prüft stille Sitzungen, verbindet ausgefallene Verbindungen neu und erneuert Sitzungen vor der 60-Minuten-Grenze. Eine wiederhergestellte Sitzung übernimmt Systemanweisungen und Leistungseinstellungen, beginnt aber ohne das vorherige gesprochene Gespräch.",". The dock can read the message, ask the AI for an answer, or create a light roast draft.":". Das Dock kann die Nachricht vorlesen, die KI um eine Antwort bitten oder einen harmlosen Roast-Entwurf erstellen.",". The first use downloads about 42 MB; later transcription runs offline.":". Beim ersten Einsatz werden etwa 42 MB heruntergeladen; danach läuft die Transkription offline.",". The menu is hidden until the stage overlay is detected. Dock message rows do not yet expose this context menu to the keyboard; keyboard users can use the typed message field or voice controls on":". Das Menü bleibt verborgen, bis das Bühnen-Overlay erkannt wird. Dieses Kontextmenü der Dock-Nachrichten ist noch nicht per Tastatur erreichbar. Tastaturnutzer können das Texteingabefeld oder die Sprachsteuerung auf",". The standard key stays in the SSN extension/Desktop background; the co-host page receives only a short-lived Realtime client secret.":". Der normale Schlüssel bleibt im Hintergrund der SSN-Erweiterung oder Desktop-App; die Co-Host-Seite erhält nur ein kurzlebiges Realtime-Client-Geheimnis.",". With Desktop Whisper, it should show":". Mit Desktop Whisper sollte dort",": ask it what chat is saying. Questions or All speak automatic replies from the co-host page; they do not post those replies into YouTube, Twitch, or Kick chat.":": Frage, was der Chat sagt. Fragen oder Alle sprechen automatische Antworten auf der Co-Host-Seite; sie veröffentlichen diese Antworten nicht im YouTube-, Twitch- oder Kick-Chat.","AI Co-host Guide":"Anleitung zum KI-Co-Host","AI Co-host Guide - Social Stream Ninja":"Anleitung zum KI-Co-Host – Social Stream Ninja","AI Stage Overlay":"KI-Bühnen-Overlay","Action":"Aktion","Add the AI stage overlay to OBS:":"Füge das KI-Bühnen-Overlay zu OBS hinzu:","Answer":"Antwort","Answer / Light Roast:":"Antwort / Leichter Roast:","Answer and Light Roast use the configured LLM provider through the Private Chat Bot bridge. Read does not require AI.":"Antwort und Leichter Roast verwenden den konfigurierten LLM-Anbieter über die Brücke des privaten Chatbots. Vorlesen benötigt keine KI.","Approval panel draft":"Entwurf im Freigabebereich","Ask directly, for example “switch to BRB,” “feature that last message,” or “clear the featured chat.” Viewer messages cannot authorize tools, and only one stream-changing tool runs per direct streamer request.":"Bitte direkt darum, etwa „Wechsle zu BRB“, „Hebe die letzte Nachricht hervor“ oder „Leere den hervorgehobenen Chat“. Zuschauernachrichten können keine Werkzeuge autorisieren. Pro direkter Streamer-Anfrage wird höchstens ein Werkzeug ausgeführt, das den Stream verändert.","Audio Response":"Audioantwort","Available Actions":"Verfügbare Aktionen","Capture the audio from the co-host browser/app in OBS. The native OpenAI voice plays only from":"Erfasse den Ton des Co-Host-Browsers oder der App in OBS. Die native OpenAI-Stimme wird nur von","Chat Bots and AI services > Chat Bot - Private Interface > Enable private chat bot option":"Chatbots und KI-Dienste > Chatbot – Private Oberfläche > Privaten Chatbot aktivieren","Chat Bots and AI services > Configure LLM Service Provider":"Chatbots und KI-Dienste > LLM-Anbieter konfigurieren","ChatGPT API":"ChatGPT-API","Chrome / Chrome extension link:":"Chrome / Link der Chrome-Erweiterung:","Co-host":"Co-Host","Co-host Stream Controls":"Stream-Steuerung des Co-Hosts","Co-host output":"Co-Host-Ausgabe","Commands & API":"Befehle und API","Connected":"Verbunden","Context only":"Nur Kontext","Context only - answer when asked":"Nur Kontext – auf Nachfrage antworten","Copies the draft without sending it to the overlay.":"Kopiert den Entwurf, ohne ihn an das Overlay zu senden.","Copy":"Kopieren","Creates a short answer draft for streamer approval.":"Erstellt einen kurzen Antwortentwurf zur Freigabe durch den Streamer.","Creates a short, playful, PG draft for streamer approval.":"Erstellt einen kurzen, spielerischen und jugendfreien Entwurf zur Freigabe durch den Streamer.","Design Notes":"Hinweise zum Aufbau","Diagnostics:":"Diagnostik:","Dock Controls":"Dock-Steuerung","Dock Right-click Co-host Setup":"Co-Host per Rechtsklick im Dock einrichten","Download":"Herunterladen","Enable":"Aktivieren","Explicitly choose the microphone you talk into, keep":"Wähle ausdrücklich das Mikrofon aus, in das du sprichst, lasse","Fast waits up to about 2 seconds for the end of a thought; Balanced about 4 seconds; Patient about 8 seconds. Fast feels more responsive but can interrupt a natural pause.":"Schnell wartet bis zu etwa 2 Sekunden auf das Ende eines Gedankens, Ausgewogen etwa 4 Sekunden und Geduldig etwa 8 Sekunden. Schnell wirkt reaktionsfreudiger, kann aber eine natürliche Pause unterbrechen.","Features":"Funktionen","For AI answers, configure an LLM provider in the popup. For quick testing, choose":"Konfiguriere für KI-Antworten einen LLM-Anbieter im Popup. Für einen schnellen Test wähle","For OBS, enter the exact allowed scene names as a comma-separated list and keep":"Gib für OBS die exakten erlaubten Szenennamen als kommagetrennte Liste ein und lasse","For dock/manual text workflows, the overlay is the visual and optional TTS playout source. For native OpenAI voice, capture":"Für Dock- und manuelle Textabläufe ist das Overlay die Quelle für Bild und optionales TTS. Erfasse für die native OpenAI-Stimme","For longer-term use, use your own token or local provider if the trial service is disabled or rate-limited.":"Verwende langfristig dein eigenes Token oder einen lokalen Anbieter, falls der Testdienst deaktiviert oder begrenzt wird.","Generated responses are not auto-spoken; the streamer must approve them first.":"Generierte Antworten werden nicht automatisch gesprochen; der Streamer muss sie zuerst freigeben.","Guides":"Anleitungen","Heard":"Gehört","Hire":"Beauftragen","Home":"Startseite","How The Pages Talk":"So kommunizieren die Seiten","How the dock controls, private chat bot, and AI stage overlay work together.":"So arbeiten Dock-Steuerung, privater Chatbot und KI-Bühnen-Overlay zusammen.","If":"Wenn","If Answer or Light Roast is disabled, the SSN bridge or Private Chat Bot is not available.":"Wenn Antwort oder Leichter Roast deaktiviert ist, ist die SSN-Brücke oder der private Chatbot nicht verfügbar.","If Chrome never fills":"Wenn Chrome nie","If Desktop shows":"Wenn die Desktop-App","If Local Gemma cannot download its model files from the default asset host, set the asset host to your own mirrored Gemma folder.":"Wenn Local Gemma seine Modelldateien nicht vom Standardhost herunterladen kann, stelle den Ressourcenhost auf deinen eigenen gespiegelten Gemma-Ordner um.","If OpenAI Realtime disconnects, leave the co-host running while it retries. Diagnostics identifies the data, peer, provider, or health-check failure. A recovered session keeps the selected system instructions and performance settings but cannot recover the previous spoken conversation.":"Wenn OpenAI Realtime die Verbindung verliert, lasse den Co-Host laufen, während er es erneut versucht. Diagnostik zeigt Fehler bei Daten, Peer, Anbieter oder Zustandsprüfung. Eine wiederhergestellte Sitzung behält Systemanweisungen und Leistungseinstellungen, kann aber das vorherige gesprochene Gespräch nicht zurückholen.","If OpenAI Realtime replies are slow, try Mini, Low reasoning, and Fast turn-taking, then compare the Latency line in Diagnostics. Higher reasoning and Patient turn-taking deliberately trade speed for depth or longer pauses.":"Wenn OpenAI-Realtime-Antworten langsam sind, probiere Mini, niedriges Reasoning und schnellen Sprecherwechsel und vergleiche dann die Latenzzeile in Diagnostik. Höheres Reasoning und geduldiger Sprecherwechsel tauschen bewusst Geschwindigkeit gegen Tiefe oder längere Pausen.","If OpenAI Realtime text appears but no audio plays, verify":"Wenn OpenAI-Realtime-Text erscheint, aber kein Audio spielt, prüfe","If a stream-control tool is unavailable, enable it in both the SSN popup and":"Wenn ein Stream-Werkzeug nicht verfügbar ist, aktiviere es sowohl im SSN-Popup als auch in","If an Answer, Light Roast, or SSN Configured LLM request times out, check that Social Stream is on, the session matches, Private Chat Bot is enabled, and the selected LLM provider is reachable. OpenAI Realtime does not require Private Chat Bot.":"Wenn eine Anfrage für Antwort, Leichter Roast oder SSN Configured LLM abläuft, prüfe, ob Social Stream eingeschaltet ist, die Sitzung stimmt, der private Chatbot aktiviert ist und der gewählte LLM-Anbieter erreichbar ist. OpenAI Realtime benötigt den privaten Chatbot nicht.","If multiple overlays are open, make sure the overlay label matches the dock target. The default label is":"Wenn mehrere Overlays geöffnet sind, muss das Overlay-Label zum Dock-Ziel passen. Das Standard-Label ist","If the Co-host menu is missing, the co-host overlay is not detected in the same session.":"Wenn das Co-Host-Menü fehlt, wird das Co-Host-Overlay in derselben Sitzung nicht erkannt.","If the co-host knows chat but stays quiet, that is expected in":"Wenn der Co-Host den Chat kennt, aber schweigt, ist das im Modus","If the hosted trial AI stops responding, it may be disabled or rate-limited; switch to your own token, Ollama, or Custom API.":"Wenn die gehostete Test-KI nicht mehr antwortet, kann sie deaktiviert oder begrenzt sein. Wechsle zu deinem eigenen Token, Ollama oder Custom API.","In the SSN popup, choose":"Wähle im SSN-Popup","In the SSN popup, enable only the co-host tools you want: Spotify, OBS scenes, or featured chat.":"Aktiviere im SSN-Popup nur die gewünschten Co-Host-Werkzeuge: Spotify, OBS-Szenen oder hervorgehobenen Chat.","Inspiration":"Inspiration","Keep the stage overlay's speech bubble visible, or provide captions, so the AI response is not available through audio alone.":"Lasse die Sprechblase des Bühnen-Overlays sichtbar oder stelle Untertitel bereit, damit die KI-Antwort nicht nur hörbar ist.","Latency reports the time from the end of the turn to first text or audio, and separates model delay when possible. Network conditions and provider load can still vary between otherwise similar requests.":"Die Latenz misst die Zeit vom Ende des Sprecherbeitrags bis zum ersten Text oder Audio und weist nach Möglichkeit die Modellverzögerung getrennt aus. Netzwerkbedingungen und Anbieterauslastung können auch bei ähnlichen Anfragen variieren.","Leave Live Chat on":"Lasse Livechat auf","Leave the endpoint, token, and model blank for the default trial setup.":"Lasse Endpunkt, Token und Modell für die Standard-Testeinrichtung leer.","Light Roast":"Leichter Roast","Listening (Desktop Whisper)":"Hört zu (Desktop Whisper)","Listening (OpenAI WebRTC)":"Hört zu (OpenAI WebRTC)","Main navigation":"Hauptnavigation","Mini is normally faster and costs less. Full quality is more capable and costs more.":"Mini ist normalerweise schneller und günstiger. Volle Qualität ist leistungsfähiger und kostet mehr.","Minimal or Low normally lowers response delay and billed output usage. High or Extra high can improve complex answers but may respond more slowly and cost more. Changes apply while connected.":"Minimal oder Niedrig reduziert normalerweise Antwortverzögerung und berechnete Ausgabenutzung. Hoch oder Sehr hoch kann komplexe Antworten verbessern, aber langsamer und teurer sein. Änderungen gelten auch bei bestehender Verbindung.","Model:":"Modell:","Multimodal Co-host":"Multimodaler Co-Host","Mute co-host voice":"Co-Host-Stimme stummschalten","Mute microphone":"Mikrofon stummschalten","Mute shared system audio":"Geteiltes Systemaudio stummschalten","No Video":"Kein Video","Non-standard command details live inside":"Nicht standardmäßige Befehlsdetails stehen in","On":"Ein","Open":"Öffnen","Open navigation menu":"Navigationsmenü öffnen","Open the Streaming Chat dock with your session:":"Öffne das Streaming-Chat-Dock mit deiner Sitzung:","Open the generated":"Öffne den generierten","OpenAI Realtime":"OpenAI Realtime","OpenAI Realtime Setup":"OpenAI Realtime einrichten","OpenAI Realtime supports the Spotify, OBS scene, and featured-chat tools below. SSN Configured LLM currently supports Spotify only; other co-host providers do not yet expose these tools.":"OpenAI Realtime unterstützt die unten beschriebenen Werkzeuge für Spotify, OBS-Szenen und hervorgehobenen Chat. SSN Configured LLM unterstützt derzeit nur Spotify; andere Co-Host-Anbieter bieten diese Werkzeuge noch nicht.","OpenAI Realtime:":"OpenAI Realtime:","OpenAI Speed, Quality, And Cost":"Geschwindigkeit, Qualität und Kosten von OpenAI","Optional Stream Controls":"Optionale Stream-Steuerung","Optional: leave Video source on":"Optional: Lasse Videoquelle auf","Other browsers:":"Andere Browser:","Overlay Gallery":"Overlay-Galerie","Privacy:":"Datenschutz:","Private Chat Bot":"Privater Chatbot","Private Chat Bot + configured LLM or Hosted Trial LLM":"Privater Chatbot + konfiguriertes LLM oder gehostetes Test-LLM","Read on Co-host":"Im Co-Host vorlesen","Read on Co-host:":"Im Co-Host vorlesen:","Reads the selected chat message on the overlay.":"Liest die ausgewählte Chatnachricht im Overlay vor.","Reasoning effort:":"Reasoning-Aufwand:","Requires":"Erfordert","Result":"Ergebnis","Right-click a dock message and select":"Klicke mit der rechten Maustaste auf eine Dock-Nachricht und wähle","SSN Desktop:":"SSN-Desktop-App:","SSN Hosted Trial LLM":"Gehostetes Test-LLM von SSN","SSN Hosted Trial LLM (experimental)":"Gehostetes Test-LLM von SSN (experimentell)","Screen Share":"Bildschirmfreigabe","Select":"Auswählen","Sends the approved text to the AI stage overlay.":"Sendet den freigegebenen Text an das KI-Bühnen-Overlay.","Setup and workflow guide for the Social Stream Ninja AI co-host, dock controls, and AI stage overlay.":"Einrichtung und Arbeitsabläufe für den KI-Co-Host, die Dock-Steuerung und das KI-Bühnen-Overlay von Social Stream Ninja.","Simple AI Option":"Einfache KI-Option","Skip to main content":"Zum Hauptinhalt springen","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja-Logo","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0-Lizenz.","Speak":"Sprechen","Start Co-host":"Co-Host starten","Status And Troubleshooting":"Status und Fehlerbehebung","Stop speaking":"Sprechen beenden","Streams the microphone selected on":"Überträgt das auf","Support":"Hilfe","Supported Sites":"Unterstützte Websites","Switch theme":"Design wechseln","Test overlay":"Overlay testen","Test selected chat bot":"Ausgewählten Chatbot testen","The":"Der","The dock and overlay use the existing Social Stream session bridge. Messages are sent as":"Dock und Overlay verwenden die bestehende Sitzungsbrücke von Social Stream. Nachrichten werden als","The dock is the control surface, so streamer approval stays off-stream.":"Das Dock ist die Bedienoberfläche; die Freigabe durch den Streamer bleibt somit außerhalb der Übertragung.","The extension opens the hosted co-host page in a Chrome tab. OpenAI Realtime uses WebRTC with a short-lived client secret; text-response providers use Chrome Speech Recognition and may require internet.":"Die Erweiterung öffnet die gehostete Co-Host-Seite in einem Chrome-Tab. OpenAI Realtime nutzt WebRTC mit einem kurzlebigen Client-Geheimnis; Anbieter mit Textantworten nutzen die Chrome-Spracherkennung und benötigen möglicherweise Internet.","The overlay shows the avatar, speech bubble, and optional browser text-to-speech audio. This is the browser source you put in OBS.":"Das Overlay zeigt Avatar, Sprechblase und optional die Sprachausgabe des Browsers. Diese Browserquelle fügst du in OBS ein.","The primary chat bot overlay toggle is optional and does not enable dock right-click co-host actions.":"Der Overlay-Schalter des primären Chatbots ist optional und aktiviert keine Co-Host-Rechtsklickaktionen im Dock.","There are two co-host workflows: a continuous voice companion in":"Es gibt zwei Co-Host-Abläufe: einen durchgehenden Sprachbegleiter in","This uses OpenAI API billing and creates one SSN Realtime conversation over WebRTC, separate from":"Dies verwendet die OpenAI-API-Abrechnung und erstellt eine SSN-Realtime-Unterhaltung über WebRTC, getrennt von","Tip:":"Tipp:","Tool access is allowlisted, not general API access. OBS can select only scenes named in SSN settings. Feature requests use a recent captured chat message and require the Streaming Chat dock; tool replies report delivery, not proof that OBS or the overlay completed the action.":"Der Werkzeugzugriff ist auf erlaubte Funktionen beschränkt und bietet keinen allgemeinen API-Zugriff. OBS kann nur Szenen auswählen, die in den SSN-Einstellungen genannt sind. Hervorhebungsanfragen verwenden eine kürzlich erfasste Chatnachricht und benötigen das Streaming-Chat-Dock. Werkzeugantworten bestätigen die Zustellung, nicht die abgeschlossene Ausführung in OBS oder im Overlay.","Turn-taking speed:":"Geschwindigkeit des Sprecherwechsels:","Use":"Verwende","Use the same":"Verwende denselben","Useful URL Parameters":"Nützliche URL-Parameter","Uses local Whisper with the microphone selected on":"Verwendet lokales Whisper mit dem auf","Voice Conversation Support":"Unterstützung für Sprachgespräche","Voice recognition is not guaranteed. Typed co-host chat, live-chat input, camera/screen input, and configured LLM responses can still work without speech recognition.":"Spracherkennung ist nicht garantiert. Texteingaben an den Co-Host, Livechat-Eingaben, Kamera-/Bildschirmeingaben und Antworten konfigurierter LLMs können auch ohne Spracherkennung funktionieren.","What It Does":"Was es macht","When the stage overlay is connected, right-click a chat message in the dock and choose":"Wenn das Bühnen-Overlay verbunden ist, klicke mit der rechten Maustaste auf eine Chatnachricht im Dock und wähle","With OpenAI Realtime, Diagnostics should show":"Bei OpenAI Realtime sollte Diagnostik","and arm the same tools for that controller.":"und schalte dieselben Werkzeuge für diese Steuerung frei.","and then the recognized text under":"und dann den erkannten Text unter","applies to text-overlay workflows. When native controller audio is active, SSN suppresses duplicate overlay TTS;":"gilt für Text-Overlay-Abläufe. Wenn natives Audio der Steuerungsseite aktiv ist, unterdrückt SSN doppelte Overlay-Sprachausgabe;","as a free simple option for testing while the trial is available.":"als kostenlose einfache Testoption, solange der Testdienst verfügbar ist.","as the popup and that Live Chat is set to Context, Questions, or All.":"wie das Popup verwendet und Livechat auf Kontext, Fragen oder Alle eingestellt ist.","audio separately; the stage overlay does not replay that same WebRTC audio.":"Audio separat; das Bühnen-Overlay spielt denselben WebRTC-Ton nicht erneut ab.","but never fills":", aber nie","cohost.html control page showing media devices, AI provider settings, system instructions, and live chat status":"Steuerungsseite cohost.html mit Mediengeräten, KI-Anbietereinstellungen, Systemanweisungen und Livechat-Status","connected to OBS, or use an OBS browser source with Full Permissions.":"mit OBS verbunden oder verwende eine OBS-Browserquelle mit vollständigen Berechtigungen.","connects to the SSN live chat feed when opened with the same":"verbindet sich mit dem SSN-Livechat-Feed, wenn es mit derselben","control page: pick your camera and microphone, choose an AI provider, set system instructions, and watch the Live Chat status panel.":"Steuerungsseite: Wähle Kamera und Mikrofon, einen KI-Anbieter und Systemanweisungen und beobachte den Livechat-Statusbereich.","control playout.":"steuern die Wiedergabe.","currently shares chat with the AI only for OpenAI Realtime. Other providers monitor the feed without injecting it into the model.":"teilt den Chat derzeit nur bei OpenAI Realtime mit der KI. Andere Anbieter beobachten den Feed, ohne ihn in das Modell einzuspeisen.","deliberately overrides that protection.":"setzt diesen Schutz bewusst außer Kraft.","directly to OpenAI for one native speech-to-speech conversation. The spoken conversation and live-chat context stay in the same co-host session.":"direkt an OpenAI für ein natives Sprachgespräch. Das gesprochene Gespräch und der Livechat-Kontext bleiben in derselben Co-Host-Sitzung.","dock sends a private chatbot request to the SSN background service, shows the AI draft in the dock, then sends it to the overlay only after the streamer clicks Speak.":"sendet das Dock eine Anfrage des privaten Chatbots an den SSN-Hintergrunddienst, zeigt den KI-Entwurf im Dock und sendet ihn erst an das Overlay, nachdem der Streamer auf Sprechen geklickt hat.","dock sends the selected chat message directly to":"sendet das Dock die ausgewählte Chatnachricht direkt an","for isolated OBS routing.":"für getrenntes Audio-Routing in OBS.","is available through":"ist verfügbar über","is not seeing chat, confirm the URL has the same":"keinen Chat sieht, prüfe, ob die URL dieselbe","is separate and appears for screen-capable providers.":"ist getrennt und erscheint bei Anbietern mit Bildschirmunterstützung.","link from the popup. Its private, expiring co-host capability authorizes Realtime without enabling the separate Private Chat Bot option.":"Link aus dem Popup. Seine private, ablaufende Co-Host-Berechtigung autorisiert Realtime, ohne die separate Option für den privaten Chatbot zu aktivieren.","only for a text-response workflow.":"nur für einen Ablauf mit Textantworten.","only for the separate text-overlay workflow.":"nur für den separaten Text-Overlay-Ablauf.","or":"oder","or a camera. OpenAI receives one current image with each direct spoken or typed request rather than continuous video; this can add API cost and latency.":"oder eine Kamera. OpenAI erhält bei jeder direkten gesprochenen oder getippten Anfrage ein aktuelles Bild statt durchgehendem Video. Dies kann API-Kosten und Latenz erhöhen.","payloads and targeted by label.":"Daten gesendet und anhand des Labels adressiert.","receives the avatar and text, not that same audio stream. When supported, choose a virtual cable under":"empfängt Avatar und Text, nicht denselben Audiostream. Wähle bei Unterstützung ein virtuelles Kabel unter","selected, and press":"ausgewählt und drücke","stops audio sent to the co-host.":"stoppt Audio, das an den Co-Host gesendet wird.","the selected microphone, any explicitly selected camera/screen frames, and viewer messages shared by the chosen Live Chat mode are sent to that AI provider. Viewer messages are treated as untrusted context and cannot authorize co-host tools. Open the generated co-host controller link from the popup and keep it private; its private capability expires after 12 hours, is scoped to the current SSN session, and is removed from the address bar after the page loads.":"das ausgewählte Mikrofon, ausdrücklich ausgewählte Kamera-/Bildschirmbilder und vom gewählten Livechat-Modus geteilte Zuschauernachrichten werden an diesen KI-Anbieter gesendet. Zuschauernachrichten gelten als nicht vertrauenswürdiger Kontext und können keine Co-Host-Werkzeuge autorisieren. Öffne den generierten Co-Host-Steuerungslink aus dem Popup und halte ihn privat. Seine private Berechtigung läuft nach 12 Stunden ab, gilt nur für die aktuelle SSN-Sitzung und wird nach dem Laden aus der Adressleiste entfernt.","to send a harmless visible test line, then confirm it appears in the AI Stage Overlay in OBS.":"um eine harmlose sichtbare Testzeile zu senden. Prüfe anschließend, ob sie im KI-Bühnen-Overlay in OBS erscheint.","value for the dock and co-host overlay.":"Wert für Dock und Co-Host-Overlay."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/ai-cohost-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/ai-cohost-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+	<a class="skip-link" href="#main-content">Zum Hauptinhalt springen</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hauptnavigation"><a href="../index.html">Startseite</a><a href="features.html">Funktionen</a><a href="inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="download.html">Herunterladen</a><a href="guides.html">Anleitungen</a><a href="commands.html">Befehle und API</a><a href="supported-sites.html">Unterstützte Websites</a><a href="overlay-gallery.html" class="site-priority-gallery">Overlay-Galerie</a><a href="services.html" class="site-priority-hire">Beauftragen</a><a href="support.html">Hilfe</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Deutsch"><span aria-hidden="true">🌐 </span><span lang="de">Deutsch</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/ai-cohost-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/ai-cohost-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/ai-cohost-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/ai-cohost-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/ai-cohost-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="ai-cohost-guide.html" lang="de" hreflang="de" aria-current="true">Deutsch</a><a class="site-language-link" href="../../ja/docs/ai-cohost-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/ai-cohost-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/ai-cohost-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/ai-cohost-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/ai-cohost-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/ai-cohost-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/ai-cohost-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/ai-cohost-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/ai-cohost-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/ai-cohost-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/ai-cohost-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Design wechseln"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Navigationsmenü öffnen" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Anleitung zum KI-Co-Host</h1>
+            <p>So arbeiten Dock-Steuerung, privater Chatbot und KI-Bühnen-Overlay zusammen.</p>
+        </div>
+    </section>
+
+    <main class="guide-section" id="main-content">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Was es macht</h2>
+				<p>Es gibt zwei Co-Host-Abläufe: einen durchgehenden Sprachbegleiter in <code>cohost.html</code>, und manuelle Dock-Aktionen, die freigegebene Texte an <code>cohost-overlay.html</code>.</p>
+                <div class="cohost-guide-grid">
+                    <div class="cohost-guide-card">
+                        <h3>Dock-Steuerung</h3>
+                        <p>Wenn das Bühnen-Overlay verbunden ist, klicke mit der rechten Maustaste auf eine Chatnachricht im Dock und wähle <strong>Co-Host</strong>. Das Dock kann die Nachricht vorlesen, die KI um eine Antwort bitten oder einen harmlosen Roast-Entwurf erstellen.</p>
+                    </div>
+                    <div class="cohost-guide-card">
+                        <h3>KI-Bühnen-Overlay</h3>
+                        <p>Das Overlay zeigt Avatar, Sprechblase und optional die Sprachausgabe des Browsers. Diese Browserquelle fügst du in OBS ein.</p>
+                    </div>
+                    <div class="cohost-guide-card">
+                        <h3>Privater Chatbot</h3>
+                        <p>Antwort und Leichter Roast verwenden den konfigurierten LLM-Anbieter über die Brücke des privaten Chatbots. Vorlesen benötigt keine KI.</p>
+                    </div>
+                    <div class="cohost-guide-card">
+                        <h3>Multimodaler Co-Host</h3>
+                        <p><code>cohost.html</code> verbindet sich mit dem SSN-Livechat-Feed, wenn es mit derselben <code>session</code>. Im standardmäßigen Kontextmodus merkt sich die KI aktuelle Zuschauernachrichten und bespricht sie, wenn der Streamer danach fragt.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+				<h2>Co-Host per Rechtsklick im Dock einrichten</h2>
+				<ol class="guide-steps">
+					<li>Öffne das Streaming-Chat-Dock mit deiner Sitzung: <code>dock.html?session=YOUR_SESSION_ID</code>.</li>
+					<li>Füge das KI-Bühnen-Overlay zu OBS hinzu: <code>cohost-overlay.html?session=YOUR_SESSION_ID</code>. Füge hinzu <code>&amp;tts</code> nur für einen Ablauf mit Textantworten.</li>
+                    <li>Konfiguriere für KI-Antworten einen LLM-Anbieter im Popup. Für einen schnellen Test wähle <strong>Gehostetes Test-LLM von SSN</strong>, das <code>llm.socialstream.ninja</code>.</li>
+                    <li>Aktivieren <strong>Chatbots und KI-Dienste &gt; Chatbot – Private Oberfläche &gt; Privaten Chatbot aktivieren</strong>.</li>
+					<li>Klicke mit der rechten Maustaste auf eine Dock-Nachricht und wähle <strong>Co-Host</strong>. Das Menü bleibt verborgen, bis das Bühnen-Overlay erkannt wird. Dieses Kontextmenü der Dock-Nachrichten ist noch nicht per Tastatur erreichbar. Tastaturnutzer können das Texteingabefeld oder die Sprachsteuerung auf <code>cohost.html</code>.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-ai-cohost-controls.png" alt="Steuerungsseite cohost.html mit Mediengeräten, KI-Anbietereinstellungen, Systemanweisungen und Livechat-Status" class="guide-image guide-image-medium">
+                    <figcaption>Der <code>cohost.html</code> Steuerungsseite: Wähle Kamera und Mikrofon, einen KI-Anbieter und Systemanweisungen und beobachte den Livechat-Statusbereich.</figcaption>
+                </figure>
+                <div class="guide-note">
+					<p><strong>Tipp:</strong> Verwende denselben <code>session</code> Wert für Dock und Co-Host-Overlay. <code>&amp;tts</code> gilt für Text-Overlay-Abläufe. Wenn natives Audio der Steuerungsseite aktiv ist, unterdrückt SSN doppelte Overlay-Sprachausgabe; <code>&amp;forcetts</code> setzt diesen Schutz bewusst außer Kraft.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Einfache KI-Option</h2>
+                <p><code>llm.socialstream.ninja</code> ist verfügbar über <strong>Gehostetes Test-LLM von SSN</strong> als kostenlose einfache Testoption, solange der Testdienst verfügbar ist.</p>
+                <ul class="guide-list">
+                    <li>Öffnen <strong>Chatbots und KI-Dienste &gt; LLM-Anbieter konfigurieren</strong>.</li>
+                    <li>Auswählen <strong>Gehostetes Test-LLM von SSN (experimentell)</strong>.</li>
+                    <li>Lasse Endpunkt, Token und Modell für die Standard-Testeinrichtung leer.</li>
+                    <li>Verwende langfristig dein eigenes Token oder einen lokalen Anbieter, falls der Testdienst deaktiviert oder begrenzt wird.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>Unterstützung für Sprachgespräche</h2>
+                <ul class="guide-list">
+                    <li><strong>OpenAI Realtime:</strong> Überträgt das auf <code>cohost.html</code> direkt an OpenAI für ein natives Sprachgespräch. Das gesprochene Gespräch und der Livechat-Kontext bleiben in derselben Co-Host-Sitzung.</li>
+                    <li><strong>SSN-Desktop-App:</strong> Verwendet lokales Whisper mit dem auf <code>cohost.html</code>. Beim ersten Einsatz werden etwa 42 MB heruntergeladen; danach läuft die Transkription offline.</li>
+					<li><strong>Chrome / Link der Chrome-Erweiterung:</strong> Die Erweiterung öffnet die gehostete Co-Host-Seite in einem Chrome-Tab. OpenAI Realtime nutzt WebRTC mit einem kurzlebigen Client-Geheimnis; Anbieter mit Textantworten nutzen die Chrome-Spracherkennung und benötigen möglicherweise Internet.</li>
+                    <li><strong>Andere Browser:</strong> Spracherkennung ist nicht garantiert. Texteingaben an den Co-Host, Livechat-Eingaben, Kamera-/Bildschirmeingaben und Antworten konfigurierter LLMs können auch ohne Spracherkennung funktionieren.</li>
+                </ul>
+				<div class="guide-note">
+					<p>Bei OpenAI Realtime sollte Diagnostik <strong>Hört zu (OpenAI WebRTC)</strong>. Mit Desktop Whisper sollte dort <strong>Hört zu (Desktop Whisper)</strong> und dann den erkannten Text unter <strong>Gehört</strong>.</p>
+				</div>
+				<div class="warning-note">
+					<p><strong>Datenschutz:</strong> das ausgewählte Mikrofon, ausdrücklich ausgewählte Kamera-/Bildschirmbilder und vom gewählten Livechat-Modus geteilte Zuschauernachrichten werden an diesen KI-Anbieter gesendet. Zuschauernachrichten gelten als nicht vertrauenswürdiger Kontext und können keine Co-Host-Werkzeuge autorisieren. Öffne den generierten Co-Host-Steuerungslink aus dem Popup und halte ihn privat. Seine private Berechtigung läuft nach 12 Stunden ab, gilt nur für die aktuelle SSN-Sitzung und wird nach dem Laden aus der Adressleiste entfernt.</p>
+				</div>
+            </div>
+
+            <div class="guide-card">
+                <h2>OpenAI Realtime einrichten</h2>
+				<ol class="guide-steps">
+					<li>Wähle im SSN-Popup <strong>ChatGPT-API</strong>, gib deinen OpenAI-Projekt-API-Schlüssel ein und verwende <strong>Ausgewählten Chatbot testen</strong>.</li>
+					<li>Öffne den generierten <code>cohost.html?session=YOUR_SESSION_ID</code> Link aus dem Popup. Seine private, ablaufende Co-Host-Berechtigung autorisiert Realtime, ohne die separate Option für den privaten Chatbot zu aktivieren.</li>
+					<li>Auswählen <strong>OpenAI Realtime</strong>. Der normale Schlüssel bleibt im Hintergrund der SSN-Erweiterung oder Desktop-App; die Co-Host-Seite erhält nur ein kurzlebiges Realtime-Client-Geheimnis.</li>
+					<li>Wähle ausdrücklich das Mikrofon aus, in das du sprichst, lasse <strong>Audioantwort</strong> ausgewählt und drücke <strong>Co-Host starten</strong>.</li>
+					<li>Optional: Lasse Videoquelle auf <strong>Kein Video</strong> (Standard) oder wähle ausdrücklich <strong>Bildschirmfreigabe</strong> oder eine Kamera. OpenAI erhält bei jeder direkten gesprochenen oder getippten Anfrage ein aktuelles Bild statt durchgehendem Video. Dies kann API-Kosten und Latenz erhöhen.</li>
+                    <li>Lasse Livechat auf <strong>Nur Kontext – auf Nachfrage antworten</strong>. Frage „Was sagt der Chat?“, damit dieselbe sprechende KI auf aktuelle Zuschauernachrichten eingeht.</li>
+					<li>Erfasse den Ton des Co-Host-Browsers oder der App in OBS. Die native OpenAI-Stimme wird nur von <code>cohost.html</code>; <code>cohost-overlay.html</code> empfängt Avatar und Text, nicht denselben Audiostream. Wähle bei Unterstützung ein virtuelles Kabel unter <strong>Co-Host-Ausgabe</strong> für getrenntes Audio-Routing in OBS.</li>
+					<li>Lasse die Sprechblase des Bühnen-Overlays sichtbar oder stelle Untertitel bereit, damit die KI-Antwort nicht nur hörbar ist.</li>
+                </ol>
+				<div class="guide-note">
+					<p>Dies verwendet die OpenAI-API-Abrechnung und erstellt eine SSN-Realtime-Unterhaltung über WebRTC, getrennt von <code>chatgpt.com</code>. Antworten sind auf 512 Ausgabetokens begrenzt. Diagnostik zeigt den kumulierten Tokenverbrauch und die gemessene Latenz bis zur ersten Ausgabe. OpenAI kürzt noch nicht abgespieltes Audio automatisch, wenn der Streamer unterbricht. SSN hält höchstens 20 aktuelle Chatnachrichten bis zu 90 Sekunden vor, einschließlich Kontext zu bezahlter Unterstützung, Mitgliedschaften, Moderatoren, Events und Quellkanälen, und entfernt diesen vorübergehenden Kontext danach. SSN prüft stille Sitzungen, verbindet ausgefallene Verbindungen neu und erneuert Sitzungen vor der 60-Minuten-Grenze. Eine wiederhergestellte Sitzung übernimmt Systemanweisungen und Leistungseinstellungen, beginnt aber ohne das vorherige gesprochene Gespräch.</p>
+				</div>
+            </div>
+
+			<div class="guide-card">
+				<h2>Geschwindigkeit, Qualität und Kosten von OpenAI</h2>
+				<ul class="guide-list">
+					<li><strong>Modell:</strong> Mini ist normalerweise schneller und günstiger. Volle Qualität ist leistungsfähiger und kostet mehr.</li>
+					<li><strong>Reasoning-Aufwand:</strong> Minimal oder Niedrig reduziert normalerweise Antwortverzögerung und berechnete Ausgabenutzung. Hoch oder Sehr hoch kann komplexe Antworten verbessern, aber langsamer und teurer sein. Änderungen gelten auch bei bestehender Verbindung.</li>
+					<li><strong>Geschwindigkeit des Sprecherwechsels:</strong> Schnell wartet bis zu etwa 2 Sekunden auf das Ende eines Gedankens, Ausgewogen etwa 4 Sekunden und Geduldig etwa 8 Sekunden. Schnell wirkt reaktionsfreudiger, kann aber eine natürliche Pause unterbrechen.</li>
+					<li><strong>Diagnostik:</strong> Die Latenz misst die Zeit vom Ende des Sprecherbeitrags bis zum ersten Text oder Audio und weist nach Möglichkeit die Modellverzögerung getrennt aus. Netzwerkbedingungen und Anbieterauslastung können auch bei ähnlichen Anfragen variieren.</li>
+				</ul>
+			</div>
+
+			<div class="guide-card">
+				<h2>Optionale Stream-Steuerung</h2>
+				<p>OpenAI Realtime unterstützt die unten beschriebenen Werkzeuge für Spotify, OBS-Szenen und hervorgehobenen Chat. SSN Configured LLM unterstützt derzeit nur Spotify; andere Co-Host-Anbieter bieten diese Werkzeuge noch nicht.</p>
+				<ol class="guide-steps">
+					<li>Aktiviere im SSN-Popup nur die gewünschten Co-Host-Werkzeuge: Spotify, OBS-Szenen oder hervorgehobenen Chat.</li>
+					<li>Gib für OBS die exakten erlaubten Szenennamen als kommagetrennte Liste ein und lasse <code>actions.html</code> mit OBS verbunden oder verwende eine OBS-Browserquelle mit vollständigen Berechtigungen.</li>
+					<li>Ein <code>cohost.html</code>, öffne <strong>Stream-Steuerung des Co-Hosts</strong> und schalte dieselben Werkzeuge für diese Steuerung frei.</li>
+					<li>Bitte direkt darum, etwa „Wechsle zu BRB“, „Hebe die letzte Nachricht hervor“ oder „Leere den hervorgehobenen Chat“. Zuschauernachrichten können keine Werkzeuge autorisieren. Pro direkter Streamer-Anfrage wird höchstens ein Werkzeug ausgeführt, das den Stream verändert.</li>
+				</ol>
+				<div class="warning-note">
+					<p>Der Werkzeugzugriff ist auf erlaubte Funktionen beschränkt und bietet keinen allgemeinen API-Zugriff. OBS kann nur Szenen auswählen, die in den SSN-Einstellungen genannt sind. Hervorhebungsanfragen verwenden eine kürzlich erfasste Chatnachricht und benötigen das Streaming-Chat-Dock. Werkzeugantworten bestätigen die Zustellung, nicht die abgeschlossene Ausführung in OBS oder im Overlay.</p>
+				</div>
+			</div>
+
+            <div class="guide-card">
+                <h2>So kommunizieren die Seiten</h2>
+                <p>Dock und Overlay verwenden die bestehende Sitzungsbrücke von Social Stream. Nachrichten werden als <code>overlayNinja</code> Daten gesendet und anhand des Labels adressiert.</p>
+                <div class="cohost-flow">
+                    <p><strong>Im Co-Host vorlesen:</strong> sendet das Dock die ausgewählte Chatnachricht direkt an <code>cohost-overlay.html</code>.</p>
+                    <p><strong>Antwort / Leichter Roast:</strong> sendet das Dock eine Anfrage des privaten Chatbots an den SSN-Hintergrunddienst, zeigt den KI-Entwurf im Dock und sendet ihn erst an das Overlay, nachdem der Streamer auf Sprechen geklickt hat.</p>
+                </div>
+                <pre class="cohost-code">{
+  "action": "cohostOverlay",
+  "target": "cohost-overlay",
+  "meta": {
+    "command": "say",
+    "text": "The line the avatar should say",
+    "speak": true,
+    "emotion": "happy"
+  }
+}</pre>
+            </div>
+
+            <div class="guide-card">
+                <h2>Verfügbare Aktionen</h2>
+                <table class="field-table">
+                    <thead>
+                        <tr>
+                            <th>Aktion</th>
+                            <th>Erfordert</th>
+                            <th>Ergebnis</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Im Co-Host vorlesen</td>
+                            <td>Verbunden <code>cohost-overlay.html</code></td>
+                            <td>Liest die ausgewählte Chatnachricht im Overlay vor.</td>
+                        </tr>
+                        <tr>
+                            <td>Antwort</td>
+                            <td>Privater Chatbot + konfiguriertes LLM oder gehostetes Test-LLM</td>
+                            <td>Erstellt einen kurzen Antwortentwurf zur Freigabe durch den Streamer.</td>
+                        </tr>
+                        <tr>
+                            <td>Leichter Roast</td>
+                            <td>Privater Chatbot + konfiguriertes LLM oder gehostetes Test-LLM</td>
+                            <td>Erstellt einen kurzen, spielerischen und jugendfreien Entwurf zur Freigabe durch den Streamer.</td>
+                        </tr>
+                        <tr>
+                            <td>Sprechen</td>
+                            <td>Entwurf im Freigabebereich</td>
+                            <td>Sendet den freigegebenen Text an das KI-Bühnen-Overlay.</td>
+                        </tr>
+                        <tr>
+                            <td>Kopieren</td>
+                            <td>Entwurf im Freigabebereich</td>
+                            <td>Kopiert den Entwurf, ohne ihn an das Overlay zu senden.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Status und Fehlerbehebung</h2>
+                <ul class="guide-list">
+                    <li>Wenn das Co-Host-Menü fehlt, wird das Co-Host-Overlay in derselben Sitzung nicht erkannt.</li>
+                    <li>Wenn Antwort oder Leichter Roast deaktiviert ist, ist die SSN-Brücke oder der private Chatbot nicht verfügbar.</li>
+                    <li>Der Overlay-Schalter des primären Chatbots ist optional und aktiviert keine Co-Host-Rechtsklickaktionen im Dock.</li>
+					<li>Wenn <code>cohost.html</code> keinen Chat sieht, prüfe, ob die URL dieselbe <code>session</code> wie das Popup verwendet und Livechat auf Kontext, Fragen oder Alle eingestellt ist.</li>
+					<li><strong>Nur Kontext</strong> teilt den Chat derzeit nur bei OpenAI Realtime mit der KI. Andere Anbieter beobachten den Feed, ohne ihn in das Modell einzuspeisen.</li>
+					<li><strong>Mikrofon stummschalten</strong> stoppt Audio, das an den Co-Host gesendet wird. <strong>Co-Host-Stimme stummschalten</strong>, der Lautstärkeregler, die Auswahl des Ausgabegeräts und <strong>Sprechen beenden</strong> steuern die Wiedergabe. <strong>Geteiltes Systemaudio stummschalten</strong> ist getrennt und erscheint bei Anbietern mit Bildschirmunterstützung.</li>
+					<li>Wenn ein Stream-Werkzeug nicht verfügbar ist, aktiviere es sowohl im SSN-Popup als auch in <strong>Stream-Steuerung des Co-Hosts</strong>. Für OBS muss außerdem mindestens ein exakter Szenenname in der Freigabeliste stehen.</li>
+					<li>Verwende <strong>Overlay testen</strong> um eine harmlose sichtbare Testzeile zu senden. Prüfe anschließend, ob sie im KI-Bühnen-Overlay in OBS erscheint.</li>
+					<li>Wenn der Co-Host den Chat kennt, aber schweigt, ist das im Modus <strong>Nur Kontext</strong>: Frage, was der Chat sagt. Fragen oder Alle sprechen automatische Antworten auf der Co-Host-Seite; sie veröffentlichen diese Antworten nicht im YouTube-, Twitch- oder Kick-Chat.</li>
+					<li>Wenn die Desktop-App <strong>Hört zu (Desktop Whisper)</strong> , aber nie <strong>Gehört</strong>, prüfe, ob das ausgewählte Mikrofon nicht stummgeschaltet ist, und warte auf den ersten Modell-Download.</li>
+					<li>Wenn Chrome nie <strong>Gehört</strong>, erlaube den Mikrofonzugriff, prüfe das Standardmikrofon des Betriebssystems, bestätige den Internetzugang und die Verfügbarkeit der Chrome-Spracherkennung.</li>
+					<li>Wenn OpenAI-Realtime-Text erscheint, aber kein Audio spielt, prüfe <strong>Audioantwort</strong>, die Audioberechtigungen des Browsers und die Browser- oder App-Audioerfassung von OBS. Verwende <code>&amp;tts</code> nur für den separaten Text-Overlay-Ablauf.</li>
+					<li>Wenn OpenAI-Realtime-Antworten langsam sind, probiere Mini, niedriges Reasoning und schnellen Sprecherwechsel und vergleiche dann die Latenzzeile in Diagnostik. Höheres Reasoning und geduldiger Sprecherwechsel tauschen bewusst Geschwindigkeit gegen Tiefe oder längere Pausen.</li>
+					<li>Wenn OpenAI Realtime die Verbindung verliert, lasse den Co-Host laufen, während er es erneut versucht. Diagnostik zeigt Fehler bei Daten, Peer, Anbieter oder Zustandsprüfung. Eine wiederhergestellte Sitzung behält Systemanweisungen und Leistungseinstellungen, kann aber das vorherige gesprochene Gespräch nicht zurückholen.</li>
+					<li>Wenn eine Anfrage für Antwort, Leichter Roast oder SSN Configured LLM abläuft, prüfe, ob Social Stream eingeschaltet ist, die Sitzung stimmt, der private Chatbot aktiviert ist und der gewählte LLM-Anbieter erreichbar ist. OpenAI Realtime benötigt den privaten Chatbot nicht.</li>
+                    <li>Wenn Local Gemma seine Modelldateien nicht vom Standardhost herunterladen kann, stelle den Ressourcenhost auf deinen eigenen gespiegelten Gemma-Ordner um.</li>
+                    <li>Wenn die gehostete Test-KI nicht mehr antwortet, kann sie deaktiviert oder begrenzt sein. Wechsle zu deinem eigenen Token, Ollama oder Custom API.</li>
+                    <li>Wenn mehrere Overlays geöffnet sind, muss das Overlay-Label zum Dock-Ziel passen. Das Standard-Label ist <code>cohost-overlay</code>.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>Nützliche URL-Parameter</h2>
+                <ul class="guide-list">
+                    <li><code>session=YOUR_SESSION_ID</code> – erforderlich, damit Dock und Overlay denselben Raum nutzen.</li>
+					<li><code>tts</code> oder <code>speak=1</code> – lässt das Overlay mit Browser-TTS sprechen.</li>
+					<li><code>forcetts</code> – erlaubt Overlay-TTS, auch wenn die Co-Host-Steuerung bereits Audio wiedergibt; dadurch entsteht absichtlich eine zweite Stimme.</li>
+                    <li><code>label=cohost-overlay</code> – legt das Ziel-Label des Overlays fest.</li>
+                    <li><code>name=NinjaBot</code> – legt den Anzeigenamen im Overlay fest.</li>
+                    <li><code>avatar=https://...</code> – verwendet ein eigenes Avatarbild.</li>
+                    <li><code>position=bottom-right</code> – steuert die Position auf der Bühne.</li>
+                    <li><code>scale=1.2</code> – skaliert das Overlay.</li>
+                    <li><code>status</code> – zeigt Verbindungs- und Statustext im Overlay.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>Hinweise zum Aufbau</h2>
+                <ul class="guide-list">
+					<li>Für Dock- und manuelle Textabläufe ist das Overlay die Quelle für Bild und optionales TTS. Erfasse für die native OpenAI-Stimme <code>cohost.html</code> Audio separat; das Bühnen-Overlay spielt denselben WebRTC-Ton nicht erneut ab.</li>
+                    <li>Das Dock ist die Bedienoberfläche; die Freigabe durch den Streamer bleibt somit außerhalb der Übertragung.</li>
+                    <li>Generierte Antworten werden nicht automatisch gesprochen; der Streamer muss sie zuerst freigeben.</li>
+                    <li>Nicht standardmäßige Befehlsdetails stehen in <code>meta</code>, damit die Daten für Overlays und Automatisierungen berechenbar bleiben.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0-Lizenz.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="pl" data-site-root="../../" data-site-language="pl">
+	<head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/pl/docs/source-types-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="pl_PL">
+    <meta property="og:url" content="https://socialstream.ninja/beta/pl/docs/source-types-guide.html">
+    <meta property="og:title" content="Typy źródeł — Social Stream Ninja">
+    <meta property="og:description" content="Jak działają nazwy typów źródeł Social Stream Ninja w danych, filtrach, Event Flow, źródłach aplikacji komputerowej, własnym przechwytywaniu i odpowiedziach.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/pl/docs/source-types-guide.html">
+    <meta name="twitter:title" content="Typy źródeł — Social Stream Ninja">
+    <meta name="twitter:description" content="Jak działają nazwy typów źródeł Social Stream Ninja w danych, filtrach, Event Flow, źródłach aplikacji komputerowej, własnym przechwytywaniu i odpowiedziach.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem("darkMode");
+				var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+				if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+					document.documentElement.classList.add("dark-mode");
+				}
+			})();
+		</script>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Typy źródeł — Social Stream Ninja</title>
+		<link rel="stylesheet" href="../../docs/css/styles.css" />
+		<link rel="stylesheet" href="../../docs/css/guides.css" />
+		<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon" />
+		<meta name="description" content="Jak działają nazwy typów źródeł Social Stream Ninja w danych, filtrach, Event Flow, źródłach aplikacji komputerowej, własnym przechwytywaniu i odpowiedziach.">
+	<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="pl">
+<script id="ssn-site-language" type="application/json">{"language":"pl","page":"docs/source-types-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Przełącz na jasny motyw","Switch to dark theme":"Przełącz na ciemny motyw","Light mode":"Tryb jasny","Dark mode":"Tryb ciemny","Open navigation menu":"Otwórz menu nawigacji","Close navigation menu":"Zamknij menu nawigacji","Copy this document as Markdown to the clipboard":"Skopiuj ten dokument w formacie Markdown do schowka","Copy Markdown":"Kopiuj Markdown","Copying…":"Kopiowanie…","Markdown copied":"Skopiowano Markdown","Copy failed":"Nie udało się skopiować","Copy comprehensive Markdown for an AI assistant":"Skopiuj pełny Markdown dla asystenta AI","Copy this documentation page as Markdown for an AI assistant":"Skopiuj tę stronę dokumentacji jako Markdown dla asystenta AI"},"strings":{", and":" i",", chooses one or more":", wybiera co najmniej jeden",", opens a source window, and injects shared capture scripts from this project. A Chrome-runtime compatibility bridge carries captured messages and reply commands between the page and app.":", otwiera okno źródła i wstrzykuje wspólne skrypty przechwytywania z tego projektu. Most zgodności z Chrome runtime przenosi przechwycone wiadomości i polecenia odpowiedzi między stroną a aplikacją.",", or":" lub",", or legacy":"lub starsze",", or that capture mode cannot send chat.":"albo ten tryb przechwytywania nie umożliwia wysyłania wiadomości.",", then normally derives a lowercase type from a known platform or the page hostname.":", a następnie zwykle wyprowadza typ zapisany małymi literami ze znanej platformy lub nazwy hosta strony.",", which emits":", który emituje",", while payloads are normalized.":", podczas gdy dane są normalizowane.",". That usually separates incoming matching, outbound routing, and capture duplication.":". Zwykle pozwala to oddzielić dopasowywanie przychodzących danych, routing wychodzący i powielanie przechwytywania.",". Use":". Użyj",". Use the exact lowercase payload value.":". Użyj dokładnej wartości z danych, zapisanej małymi literami.",": canonical fields and platform event names.":": kanoniczne pola i nazwy zdarzeń platform.",": fallback and external capture.":": przechwytywanie awaryjne i zewnętrzne.",": platform names and setup requirements.":": nazwy platform i wymagania konfiguracji.",": source contracts, injection helpers, manifests, and docs.":": kontrakty źródeł, pomocnicze skrypty wstrzykiwania, manifesty i dokumentacja.",": source-window and connection-mode behavior.":": działanie okien źródeł i trybów połączenia.",": target, script, bridge, and reply-only internals.":": wewnętrzne działanie celu, skryptu, mostu i trybu wyłącznie odpowiedzi.",": triggers, actions, templates, reflection handling, and tests.":": wyzwalacze, akcje, szablony, obsługa odbić i testy.","A display label, connection mode, or event name.":"Etykietą wyświetlaną, trybem połączenia ani nazwą zdarzenia.","A guarantee that every emitted payload has the same string.":"Gwarancją, że wszystkie emitowane dane mają ten sam ciąg znaków.","A hostname-derived type is convenient, but not a permanent public contract. Confirm the emitted payload before building filters around it.":"Typ wyprowadzony z nazwy hosta jest wygodny, ale nie stanowi trwałego publicznego kontraktu. Sprawdź emitowane dane, zanim zbudujesz na nim filtry.","A platform type.":"Typem platformy.","A source cannot accept automated input, or a reflection is captured again.":"Źródło nie przyjmuje automatycznego wprowadzania albo odbicie jest przechwytywane ponownie.","A source script's":"Pole skryptu źródła","A target and script filename need not match the payload type. The":"Cel i nazwa pliku skryptu nie muszą odpowiadać typowi danych. Cel","API/WebSocket modes may send through platform APIs instead of typing into the visible page.":"Tryby API/WebSocket mogą wysyłać przez API platformy zamiast wpisywać tekst na widocznej stronie.","Action":"Działanie","Adding a Source":"Dodawanie źródła","An optional channel, room, or source display name.":"Opcjonalna nazwa wyświetlana kanału, pokoju lub źródła.","Asks open sources whether they support that outbound destination.":"Pyta otwarte źródła, czy obsługują ten cel wysyłania.","Bilibili regional choices":"Regionalne warianty Bilibili","Bilibili targets similarly map to shared/regional scripts while emitting":"Cele Bilibili podobnie mapują się na wspólne/regionalne skrypty, emitując","Bot reply-only (no capture)":"Bot tylko do odpowiedzi (bez przechwytywania)","Both:":"Oba:","Broadcasts to routeable sources and excludes the originating":"Wysyła do źródeł, do których można kierować wiadomości, i wyklucza źródłowy","Capture or UI Name":"Nazwa trybu przechwytywania lub w interfejsie","Commands & API":"Polecenia i API","Common Failure":"Częsty problem","Common and Confusing Types":"Częste i mylące typy","Common and confusing names":"Częste i mylące nazwy","Continue with the":"Przejdź do","DOM, API polling, and WebSocket/streaming describe transport, not separate types.":"DOM, odpytywanie API i WebSocket/streaming opisują transport, a nie oddzielne typy.","Desktop App Script Injection":"Wstrzykiwanie skryptów w aplikacji komputerowej","Desktop App Source Windows":"Okna źródeł aplikacji komputerowej","Desktop app":"Aplikacja komputerowa","Desktop app script injection":"Wstrzykiwanie skryptów w aplikacji komputerowej","Desktop targets and scripts may say":"Cele i skrypty aplikacji komputerowej mogą mieć nazwy","Destination":"Cel","Do Not Confuse It With":"Z czym nie należy tego mylić","Do not expect reliable event, moderation, deletion, virtualized-list, or closed shadow-DOM support.":"Nie oczekuj niezawodnej obsługi zdarzeń, moderacji, usuwania, wirtualizowanych list ani zamkniętego shadow DOM.","Download":"Pobierz","Each desktop source keeps its own target, URL, connection mode, and capture script.":"Każde źródło aplikacji komputerowej zachowuje własny cel, adres URL, tryb połączenia i skrypt przechwytywania.","Event Flow Guide":"Przewodnik po Event Flow","Event Flow's":"W Event Flow","Event Reference":"Dokumentacja wydarzeń","Existing filters may intentionally preserve the older name.":"Istniejące filtry mogą celowo zachowywać starszą nazwę.","Features":"Funkcje","From Source":"Ze źródła (From Source)","From Source =":"From Source =","From Source reads the incoming payload type; Relay Chat selects outbound source windows.":"From Source odczytuje typ przychodzących danych; Relay Chat wybiera docelowe okna źródeł.","Generic and Custom Sources":"Źródła ogólne i niestandardowe","Generic capture can find and focus likely inputs, but that does not guarantee the site will accept an automated send.":"Ogólne przechwytywanie może znaleźć prawdopodobne pola wpisywania i ustawić na nich fokus, ale nie gwarantuje to, że witryna zaakceptuje automatyczne wysłanie.","Generic, Custom, and Unnamed Sources":"Źródła ogólne, niestandardowe i bez nazwy","Generic, custom, and unnamed sources":"Źródła ogólne, niestandardowe i bez nazwy","Guides":"Poradniki","Hire":"Zleć pracę","Home":"Strona główna","How It Chooses":"Jak dokonuje wyboru","How Social Stream Ninja source type names work in payloads, filters, Event Flow, desktop app sources, custom capture, and replies.":"Jak działają nazwy typów źródeł Social Stream Ninja w danych, filtrach, Event Flow, źródłach aplikacji komputerowej, własnym przechwytywaniu i odpowiedziach.","If a source has no established platform name, choose one stable lowercase":"Jeśli źródło nie ma ustalonej nazwy platformy, wybierz jedną stałą wartość zapisaną małymi literami","If no stable identity exists yet,":"Jeśli nie istnieje jeszcze stabilna tożsamość,","Important:":"Ważne:","In the desktop app,":"W aplikacji komputerowej","Incoming identity and outbound capability are related, but they are not the same contract.":"Tożsamość przychodzących danych i możliwość wysyłania są ze sobą powiązane, ale nie stanowią tego samego kontraktu.","Incoming matching is exact:":"Dopasowanie danych przychodzących jest dokładne:","Inspiration":"Inspiracje","Instagram Live / InstaFeed live":"Instagram Live / InstaFeed live","Instagram Live and Instagram comments":"Instagram Live i komentarze na Instagramie","Instagram Live vs Instagram Comments":"Instagram Live a komentarze na Instagramie","Instagram post and feed comments use":"Komentarze pod postami i w aktualnościach Instagrama używają","It is distinct for incoming filters and Event Flow relay destinations, while shared YouTube controls still treat both variants as one family where needed.":"Jest odrębny w filtrach przychodzących i celach przekazywania Event Flow, natomiast wspólne ustawienia YouTube w razie potrzeby nadal traktują oba warianty jako jedną rodzinę.","Live chat flow:":"Przepływ czatu na żywo:","Main navigation":"Nawigacja główna","Maintainers can trace setup in the desktop app's":"Opiekunowie projektu mogą prześledzić konfigurację w pliku aplikacji komputerowej","Meaning":"Znaczenie","Name":"Nazwa","No":"Nie","OBS system events":"Zdarzenia systemowe OBS","Older versions grouped both relay destinations, so two actions could send twice to each YouTube window. Update Social Stream Ninja if that happens. A Reflection Filter prevents relay loops, but it does not correct overlapping destination matching in those older versions.":"Starsze wersje grupowały oba cele przekazywania, więc dwie akcje mogły wysyłać dwa razy do każdego okna YouTube. Jeśli tak się dzieje, zaktualizuj Social Stream Ninja. Reflection Filter zapobiega pętlom przekazywania, ale nie naprawia nakładającego się dopasowywania celów w tych starszych wersjach.","On This Page":"Na tej stronie","Once users, overlays, or flows depend on a new type, document it in the":"Gdy użytkownicy, nakładki lub przepływy zaczną zależeć od nowego typu, udokumentuj go w","Open navigation menu":"Otwórz menu nawigacji","Other YouTube-wide controls may intentionally handle both types as one platform family. This does not change the exact Event Flow matching above.":"Inne ustawienia obejmujące całe YouTube mogą celowo traktować oba typy jako jedną rodzinę platformy. Nie zmienia to dokładnego dopasowania Event Flow opisanego powyżej.","Outgoing matching is also exact:":"Dopasowanie danych wychodzących również jest dokładne:","Overlay Gallery":"Galeria nakładek","Payload Type":"Typ danych","Post/comment flow:":"Przepływ postów/komentarzy:","Relay Chat treats them as separate destinations.":"Relay Chat traktuje je jako oddzielne cele.","Relay to a platform":"Przekaż na platformę","Relay to all except source":"Przekaż do wszystkich oprócz źródła","Reply to source":"Odpowiedz do źródła","Replying and Relaying to Sources":"Odpowiadanie i przekazywanie do źródeł","Replying and relaying to sources":"Odpowiadanie i przekazywanie do źródeł","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja Event Flow editor with connected trigger, filter, and action nodes":"Edytor Event Flow Social Stream Ninja z połączonymi węzłami wyzwalacza, filtra i akcji","Social Stream Ninja desktop app source entries showing connection modes":"Wpisy źródeł aplikacji komputerowej Social Stream Ninja pokazujące tryby połączenia","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licencja GPLv3.0.","Source Types":"Typy źródeł","Source Types - Social Stream Ninja":"Typy źródeł — Social Stream Ninja","Source capture changes belong in this repository's":"Zmiany w przechwytywaniu źródeł należy wprowadzać w plikach tego repozytorium","Standalone App Modes":"Tryby samodzielnej aplikacji","Support":"Pomoc","Supported Sites":"Obsługiwane witryny","Switch theme":"Zmień motyw","Test reply support with one source window before building a multi-platform relay.":"Przetestuj obsługę odpowiedzi w jednym oknie źródła, zanim zbudujesz przekaźnik między wieloma platformami.","The desktop app saves a source":"Aplikacja komputerowa zapisuje","The incoming payload source, such as":"Źródło przychodzących danych, na przykład","The originating tab or desktop source-window ID used for reply and source exclusion.":"Identyfikator karty lub okna źródła aplikacji komputerowej, z którego pochodzą dane, używany do odpowiedzi i wykluczania źródła.","The platform that produced it.":"Platforma, która je utworzyła.","The saved category used to choose a URL, mode, and capture script.":"Zapisana kategoria służąca do wyboru adresu URL, trybu i skryptu przechwytywania.","The selected variant has no matching open source window, or the source cannot send chat.":"Wybrany wariant nie ma pasującego otwartego okna źródła lub źródło nie może wysyłać wiadomości.","The stable value used by a From Source trigger.":"Stała wartość używana przez wyzwalacz From Source.","The visible Instagram brand is not enough to choose the type; the content context separates the two.":"Widoczna marka Instagram nie wystarcza do wyboru typu; te dwa warianty rozróżnia kontekst treści.","They are not chat sources, but can enter Event Flow with events such as":"Nie są źródłami czatu, ale mogą trafiać do Event Flow ze zdarzeniami takimi jak","TikFinity":"TikFinity","TikFinity is the connector; the normalized platform remains TikTok.":"TikFinity jest łącznikiem; znormalizowaną platformą pozostaje TikTok.","To reach both, add one action for each destination or relay to all platforms excluding the source.":"Aby dotrzeć do obu, dodaj po jednej akcji dla każdego celu albo przekaż do wszystkich platform z wykluczeniem źródła.","Troubleshooting Older Versions":"Rozwiązywanie problemów ze starszymi wersjami","Use":"Użyj","Use it to prove that an ordinary DOM chat can be captured before writing a dedicated source.":"Użyj go, aby potwierdzić możliwość przechwytywania zwykłego czatu DOM, zanim napiszesz dedykowane źródło.","Use the":"Użyj","Use the payload's exact source name for incoming filters, and understand the destination family before sending chat back out.":"Do filtrów przychodzących używaj dokładnej nazwy źródła z danych, a przed wysyłaniem wiadomości z powrotem poznaj rodzinę celu.","Uses":"Używa","What Is a":"Czym jest","What a type is":"Czym jest typ","What happened, such as":"Co się wydarzyło, na przykład","When debugging, inspect one raw payload and record its":"Podczas diagnozowania sprawdź jeden surowy zestaw danych i zapisz jego","When several scripts are injected, avoid making every helper claim the same outbound destination. Capture identity and reply capability are separate concerns.":"Gdy wstrzykiwanych jest kilka skryptów, nie pozwalaj każdemu skryptowi pomocniczemu deklarować tego samego celu wysyłania. Tożsamość przechwytywania i możliwość odpowiadania to oddzielne kwestie.","Where to Find Exact Details":"Gdzie znaleźć dokładne informacje","Where to find exact details":"Gdzie znaleźć dokładne informacje","Why It May Be Surprising":"Dlaczego może zaskakiwać","X":"X","YouTube Setup Guide":"Poradnik konfiguracji YouTube","YouTube Shorts and Event Flow":"YouTube Shorts i Event Flow","YouTube Shorts live chat":"Czat transmisji YouTube Shorts","YouTube live chat":"Czat na żywo YouTube","and":"i","files are page-context helpers for sockets or page variables. The source wrapper remains responsible for the canonical payload.":"to skrypty pomocnicze działające w kontekście strony, obsługujące gniazda lub zmienne strony. Skrypt opakowujący źródło nadal odpowiada za kanoniczne dane.","files. The desktop app consumes them; its packaged fallback copy is not the source of truth.":". Aplikacja komputerowa z nich korzysta; dołączona do jej pakietu kopia awaryjna nie jest źródłem prawdy.","for injection and bridging.":"do wstrzykiwania i komunikacji przez most.","for live-room chat captured by the Instagram Live or InstaFeed live source. Use":"do czatu pokoju na żywo przechwytywanego przez źródło Instagram Live lub InstaFeed live. Użyj","for non-live feed, post, or static comments.":"do komentarzy w aktualnościach, pod postami lub statycznych, poza transmisją na żywo.","for public platform setup names.":"do publicznych nazw konfiguracji platform.","for regular YouTube live chat.":"do zwykłego czatu transmisji YouTube.","for the field contract and":"do kontraktu pól oraz","for the human-facing room or channel label.":"do czytelnej dla użytkownika etykiety pokoju lub kanału.","from page context.":"z kontekstu strony.","in a From Source trigger for Shorts messages, and":"w wyzwalaczu From Source dla wiadomości Shorts, a","is a broad DOM-capture fallback. It looks for common chat rows, names, messages, avatars, and inputs. It starts with":"jest uniwersalnym awaryjnym przechwytywaniem DOM. Szuka typowych wierszy czatu, nazw, wiadomości, awatarów i pól wpisywania. Zaczyna od","is safer than changing type per message. External integrations commonly use a deliberate value such as":"jest bezpieczniejsze niż zmienianie typu dla każdej wiadomości. Zewnętrzne integracje często używają świadomie wybranej wartości, takiej jak","is the canonical source identifier on an incoming Social Stream payload. Overlays, URL filters, APIs, and Event Flow use it to tell platforms and source variants apart.":"jest kanonicznym identyfikatorem źródła w przychodzących danych Social Stream. Nakładki, filtry URL, API i Event Flow używają go do rozróżniania platform i wariantów źródeł.","keeps a source available for replies/status while suppressing its normal captured messages.":"utrzymuje źródło dostępne dla odpowiedzi i statusu, jednocześnie tłumiąc jego zwykłe przechwycone wiadomości.","or":"lub","rather than silently renaming it.":"zamiast zmieniać jego nazwę bez powiadomienia.","response is an outbound-routeability signal. Shared YouTube controls may group both variants, while Relay Chat adds exact Shorts URL context for destination matching.":"to odpowiedź sygnalizująca możliwość kierowania danych wychodzących. Wspólne ustawienia YouTube mogą grupować oba warianty, natomiast Relay Chat dodaje dokładny kontekst adresu Shorts do dopasowania celu.","sends only to YouTube Shorts live-chat windows.":"wysyła tylko do okien czatu transmisji YouTube Shorts.","sends only to regular YouTube live-chat windows.":"wysyła tylko do zwykłych okien czatu transmisji YouTube.","source-window creation, then":"tworzenie okna źródła, a następnie","target loads":"ładuje","to address the exact originating tab/window.":", aby wskazać dokładną kartę lub okno pochodzenia.","trigger compares its configured value directly with":"wyzwalacz porównuje skonfigurowaną wartość bezpośrednio z","use":"użyj","use two triggers feeding one shared action, or an Any Source trigger followed by a type-aware filter.":"użyj dwóch wyzwalaczy prowadzących do jednej wspólnej akcji albo wyzwalacza Any Source, po którym następuje filtr uwzględniający typ.","with the Twitter-branding option":"z opcją oznaczenia marką Twitter"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/source-types-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/source-types-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/source-types-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/source-types-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/source-types-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/source-types-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/source-types-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/source-types-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/source-types-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/source-types-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/source-types-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/source-types-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/source-types-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/source-types-guide.html">
+<!-- ssn-languages:end --></head>
+	<body>
+		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Nawigacja główna"><a href="../index.html">Strona główna</a><a href="features.html">Funkcje</a><a href="inspiration.html" class="site-priority-inspiration">Inspiracje</a><a href="download.html">Pobierz</a><a href="guides.html">Poradniki</a><a href="commands.html">Polecenia i API</a><a href="supported-sites.html">Obsługiwane witryny</a><a href="overlay-gallery.html" class="site-priority-gallery">Galeria nakładek</a><a href="services.html" class="site-priority-hire">Zleć pracę</a><a href="support.html">Pomoc</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Polski"><span aria-hidden="true">🌐 </span><span lang="pl">Polski</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/source-types-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/source-types-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/source-types-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/source-types-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/source-types-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/source-types-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/source-types-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/source-types-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/source-types-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/source-types-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="source-types-guide.html" lang="pl" hreflang="pl" aria-current="true">Polski</a><a class="site-language-link" href="../../ko/docs/source-types-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/source-types-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/source-types-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/source-types-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/source-types-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/source-types-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Zmień motyw"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otwórz menu nawigacji" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+		<section class="page-hero">
+			<div class="container">
+				<h1>Typy źródeł</h1>
+				<p>Do filtrów przychodzących używaj dokładnej nazwy źródła z danych, a przed wysyłaniem wiadomości z powrotem poznaj rodzinę celu.</p>
+			</div>
+		</section>
+		<main class="guide-section">
+			<div class="container">
+				<div class="guide-card">
+					<h2>Na tej stronie</h2>
+					<ul class="guide-list">
+						<li><a href="#what-is-a-type">Czym jest typ</a></li>
+						<li><a href="#common-and-confusing-types">Częste i mylące nazwy</a></li>
+						<li><a href="#youtube-shorts-event-flow">YouTube Shorts i Event Flow</a></li>
+						<li><a href="#instagram-live">Instagram Live i komentarze na Instagramie</a></li>
+						<li><a href="#generic-and-unnamed-sources">Źródła ogólne, niestandardowe i bez nazwy</a></li>
+						<li><a href="#desktop-app-injection">Wstrzykiwanie skryptów w aplikacji komputerowej</a></li>
+						<li><a href="#replying-to-sources">Odpowiadanie i przekazywanie do źródeł</a></li>
+						<li><a href="#where-to-find-details">Gdzie znaleźć dokładne informacje</a></li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="what-is-a-type">
+					<h2>Czym jest <code>type</code>?</h2>
+					<p><code>type</code> jest kanonicznym identyfikatorem źródła w przychodzących danych Social Stream. Nakładki, filtry URL, API i Event Flow używają go do rozróżniania platform i wariantów źródeł.</p>
+					<pre><code>{
+  "type": "youtubeshorts",
+  "chatname": "Ava",
+  "chatmessage": "Hello from Shorts"
+}</code></pre>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>Nazwa</th>
+								<th>Znaczenie</th>
+								<th>Z czym nie należy tego mylić</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Name"><code>type</code></td>
+								<td data-label="Meaning">Źródło przychodzących danych, na przykład <code>youtube</code> lub <code>instagramlive</code>.</td>
+								<td data-label="Do Not Confuse It With">Etykietą wyświetlaną, trybem połączenia ani nazwą zdarzenia.</td>
+							</tr>
+							<tr>
+								<td data-label="Name"><code>event</code></td>
+								<td data-label="Meaning">Co się wydarzyło, na przykład <code>superchat</code>, <code>gift</code> lub <code>viewer_update</code>.</td>
+								<td data-label="Do Not Confuse It With">Platforma, która je utworzyła.</td>
+							</tr>
+							<tr>
+								<td data-label="Name"><code>sourceName</code></td>
+								<td data-label="Meaning">Opcjonalna nazwa wyświetlana kanału, pokoju lub źródła.</td>
+								<td data-label="Do Not Confuse It With">Stała wartość używana przez wyzwalacz From Source.</td>
+							</tr>
+							<tr>
+								<td data-label="Name"><code>tid</code></td>
+								<td data-label="Meaning">Identyfikator karty lub okna źródła aplikacji komputerowej, z którego pochodzą dane, używany do odpowiedzi i wykluczania źródła.</td>
+								<td data-label="Do Not Confuse It With">Typem platformy.</td>
+							</tr>
+							<tr>
+								<td data-label="Name">Aplikacja komputerowa <code>target</code></td>
+								<td data-label="Meaning">Zapisana kategoria służąca do wyboru adresu URL, trybu i skryptu przechwytywania.</td>
+								<td data-label="Do Not Confuse It With">Gwarancją, że wszystkie emitowane dane mają ten sam ciąg znaków.</td>
+							</tr>
+						</tbody>
+					</table>
+					<p><strong>Ważne:</strong> W Event Flow <em>Ze źródła (From Source)</em> wyzwalacz porównuje skonfigurowaną wartość bezpośrednio z <code>message.type</code>. Użyj dokładnej wartości z danych, zapisanej małymi literami.</p>
+				</div>
+
+				<div class="guide-card" id="common-and-confusing-types">
+					<h2>Częste i mylące typy</h2>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>Nazwa trybu przechwytywania lub w interfejsie</th>
+								<th>Typ danych</th>
+								<th>Dlaczego może zaskakiwać</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Capture or UI Name">Czat na żywo YouTube</td>
+								<td data-label="Payload Type"><code>youtube</code></td>
+								<td data-label="Why It May Be Surprising">DOM, odpytywanie API i WebSocket/streaming opisują transport, a nie oddzielne typy.</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">Czat transmisji YouTube Shorts</td>
+								<td data-label="Payload Type"><code>youtubeshorts</code></td>
+								<td data-label="Why It May Be Surprising">Jest odrębny w filtrach przychodzących i celach przekazywania Event Flow, natomiast wspólne ustawienia YouTube w razie potrzeby nadal traktują oba warianty jako jedną rodzinę.</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">Instagram Live / InstaFeed live</td>
+								<td data-label="Payload Type"><code>instagramlive</code></td>
+								<td data-label="Why It May Be Surprising">Komentarze pod postami i w aktualnościach Instagrama używają <code>instagram</code>.</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">TikFinity</td>
+								<td data-label="Payload Type"><code>tiktok</code></td>
+								<td data-label="Why It May Be Surprising">TikFinity jest łącznikiem; znormalizowaną platformą pozostaje TikTok.</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">X</td>
+								<td data-label="Payload Type"><code>x</code>lub starsze <code>twitter</code> z opcją oznaczenia marką Twitter</td>
+								<td data-label="Why It May Be Surprising">Istniejące filtry mogą celowo zachowywać starszą nazwę.</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">Regionalne warianty Bilibili</td>
+								<td data-label="Payload Type"><code>bilibili</code></td>
+								<td data-label="Why It May Be Surprising">Cele i skrypty aplikacji komputerowej mogą mieć nazwy <code>bilibilicom</code> lub <code>bilibilitv</code>, podczas gdy dane są normalizowane.</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">Zdarzenia systemowe OBS</td>
+								<td data-label="Payload Type"><code>obs</code></td>
+								<td data-label="Why It May Be Surprising">Nie są źródłami czatu, ale mogą trafiać do Event Flow ze zdarzeniami takimi jak <code>scene_changed</code>.</td>
+							</tr>
+						</tbody>
+					</table>
+					<p>Użyj <a href="event-reference.html">Dokumentacja wydarzeń</a> do kontraktu pól oraz <a href="supported-sites.html">Obsługiwane witryny</a> do publicznych nazw konfiguracji platform.</p>
+				</div>
+
+				<div class="guide-card" id="youtube-shorts-event-flow">
+					<h2>YouTube Shorts i Event Flow</h2>
+					<p><strong>Dopasowanie danych przychodzących jest dokładne:</strong> użyj <code>youtubeshorts</code> w wyzwalaczu From Source dla wiadomości Shorts, a <code>youtube</code> do zwykłego czatu transmisji YouTube.</p>
+					<p><strong>Dopasowanie danych wychodzących również jest dokładne:</strong> Relay Chat traktuje je jako oddzielne cele.</p>
+					<ul class="guide-list">
+						<li>Cel <code>youtube</code> wysyła tylko do zwykłych okien czatu transmisji YouTube.</li>
+						<li>Cel <code>youtubeshorts</code> wysyła tylko do okien czatu transmisji YouTube Shorts.</li>
+						<li>Aby dotrzeć do obu, dodaj po jednej akcji dla każdego celu albo przekaż do wszystkich platform z wykluczeniem źródła.</li>
+					</ul>
+					<p>Inne ustawienia obejmujące całe YouTube mogą celowo traktować oba typy jako jedną rodzinę platformy. Nie zmienia to dokładnego dopasowania Event Flow opisanego powyżej.</p>
+					<h3>Rozwiązywanie problemów ze starszymi wersjami</h3>
+					<p>Starsze wersje grupowały oba cele przekazywania, więc dwie akcje mogły wysyłać dwa razy do każdego okna YouTube. Jeśli tak się dzieje, zaktualizuj Social Stream Ninja. Reflection Filter zapobiega pętlom przekazywania, ale nie naprawia nakładającego się dopasowywania celów w tych starszych wersjach.</p>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/guide-event-flow-overview.png" alt="Edytor Event Flow Social Stream Ninja z połączonymi węzłami wyzwalacza, filtra i akcji" class="guide-image" />
+						<figcaption>From Source odczytuje typ przychodzących danych; Relay Chat wybiera docelowe okna źródeł.</figcaption>
+					</figure>
+					<p>Przejdź do <a href="../actions/event-flow-guide.html">Przewodnik po Event Flow</a> lub <a href="youtube-setup-guide.html">Poradnik konfiguracji YouTube</a>.</p>
+				</div>
+
+				<div class="guide-card" id="instagram-live">
+					<h2>Instagram Live a komentarze na Instagramie</h2>
+					<p>Użyj <code>instagramlive</code> do czatu pokoju na żywo przechwytywanego przez źródło Instagram Live lub InstaFeed live. Użyj <code>instagram</code> do komentarzy w aktualnościach, pod postami lub statycznych, poza transmisją na żywo.</p>
+					<ul class="guide-list">
+						<li><strong>Przepływ czatu na żywo:</strong> From Source = <code>instagramlive</code>.</li>
+						<li><strong>Przepływ postów/komentarzy:</strong> From Source = <code>instagram</code>.</li>
+						<li><strong>Oba:</strong> użyj dwóch wyzwalaczy prowadzących do jednej wspólnej akcji albo wyzwalacza Any Source, po którym następuje filtr uwzględniający typ.</li>
+					</ul>
+					<p>Widoczna marka Instagram nie wystarcza do wyboru typu; te dwa warianty rozróżnia kontekst treści.</p>
+				</div>
+
+				<div class="guide-card" id="generic-and-unnamed-sources">
+					<h2>Źródła ogólne, niestandardowe i bez nazwy</h2>
+					<p><code>sources/generic.js</code> jest uniwersalnym awaryjnym przechwytywaniem DOM. Szuka typowych wierszy czatu, nazw, wiadomości, awatarów i pól wpisywania. Zaczyna od <code>generic</code>, a następnie zwykle wyprowadza typ zapisany małymi literami ze znanej platformy lub nazwy hosta strony.</p>
+					<ul class="guide-list">
+						<li>Użyj go, aby potwierdzić możliwość przechwytywania zwykłego czatu DOM, zanim napiszesz dedykowane źródło.</li>
+						<li>Nie oczekuj niezawodnej obsługi zdarzeń, moderacji, usuwania, wirtualizowanych list ani zamkniętego shadow DOM.</li>
+						<li>Typ wyprowadzony z nazwy hosta jest wygodny, ale nie stanowi trwałego publicznego kontraktu. Sprawdź emitowane dane, zanim zbudujesz na nim filtry.</li>
+						<li>Jeśli źródło nie ma ustalonej nazwy platformy, wybierz jedną stałą wartość zapisaną małymi literami <code>type</code>. Użyj <code>sourceName</code> do czytelnej dla użytkownika etykiety pokoju lub kanału.</li>
+						<li>Jeśli nie istnieje jeszcze stabilna tożsamość, <code>generic</code> jest bezpieczniejsze niż zmienianie typu dla każdej wiadomości. Zewnętrzne integracje często używają świadomie wybranej wartości, takiej jak <code>external</code>.</li>
+					</ul>
+					<p>Gdy użytkownicy, nakładki lub przepływy zaczną zależeć od nowego typu, udokumentuj go w <a href="event-reference.html">Dokumentacja wydarzeń</a> zamiast zmieniać jego nazwę bez powiadomienia.</p>
+				</div>
+
+				<div class="guide-card" id="desktop-app-injection">
+					<h2>Wstrzykiwanie skryptów w aplikacji komputerowej</h2>
+					<p>Aplikacja komputerowa zapisuje <code>target</code>, wybiera co najmniej jeden <code>sourceFile</code>/<code>sourceFiles</code>, otwiera okno źródła i wstrzykuje wspólne skrypty przechwytywania z tego projektu. Most zgodności z Chrome runtime przenosi przechwycone wiadomości i polecenia odpowiedzi między stroną a aplikacją.</p>
+					<ul class="guide-list">
+						<li>Cel i nazwa pliku skryptu nie muszą odpowiadać typowi danych. Cel <code>youtubeshorts</code> ładuje <code>sources/youtube.js</code>, który emituje <code>youtube</code> lub <code>youtubeshorts</code> z kontekstu strony.</li>
+						<li>Cele Bilibili podobnie mapują się na wspólne/regionalne skrypty, emitując <code>bilibili</code>.</li>
+						<li><code>sources/inject/*.js</code> to skrypty pomocnicze działające w kontekście strony, obsługujące gniazda lub zmienne strony. Skrypt opakowujący źródło nadal odpowiada za kanoniczne dane.</li>
+						<li>Gdy wstrzykiwanych jest kilka skryptów, nie pozwalaj każdemu skryptowi pomocniczemu deklarować tego samego celu wysyłania. Tożsamość przechwytywania i możliwość odpowiadania to oddzielne kwestie.</li>
+						<li>Zmiany w przechwytywaniu źródeł należy wprowadzać w plikach tego repozytorium <code>sources/</code> . Aplikacja komputerowa z nich korzysta; dołączona do jej pakietu kopia awaryjna nie jest źródłem prawdy.</li>
+					</ul>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/guide-standalone-source-modes.png" alt="Wpisy źródeł aplikacji komputerowej Social Stream Ninja pokazujące tryby połączenia" class="guide-image" />
+						<figcaption>Każde źródło aplikacji komputerowej zachowuje własny cel, adres URL, tryb połączenia i skrypt przechwytywania.</figcaption>
+					</figure>
+					<p>Opiekunowie projektu mogą prześledzić konfigurację w pliku aplikacji komputerowej <code>index.html</code> tworzenie okna źródła, a następnie <code>main.js</code> i <code>preload.js</code> do wstrzykiwania i komunikacji przez most.</p>
+				</div>
+
+				<div class="guide-card" id="replying-to-sources">
+					<h2>Odpowiadanie i przekazywanie do źródeł</h2>
+					<p>Tożsamość przychodzących danych i możliwość wysyłania są ze sobą powiązane, ale nie stanowią tego samego kontraktu.</p>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>Działanie</th>
+								<th>Jak dokonuje wyboru</th>
+								<th>Częsty problem</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Action">Odpowiedz do źródła</td>
+								<td data-label="How It Chooses">Używa <code>tid</code> , aby wskazać dokładną kartę lub okno pochodzenia.</td>
+								<td data-label="Common Failure">Nie <code>tid</code>albo ten tryb przechwytywania nie umożliwia wysyłania wiadomości.</td>
+							</tr>
+							<tr>
+								<td data-label="Action">Przekaż na platformę</td>
+								<td data-label="How It Chooses">Pyta otwarte źródła, czy obsługują ten cel wysyłania.</td>
+								<td data-label="Common Failure">Wybrany wariant nie ma pasującego otwartego okna źródła lub źródło nie może wysyłać wiadomości.</td>
+							</tr>
+							<tr>
+								<td data-label="Action">Przekaż do wszystkich oprócz źródła</td>
+								<td data-label="How It Chooses">Wysyła do źródeł, do których można kierować wiadomości, i wyklucza źródłowy <code>tid</code>.</td>
+								<td data-label="Common Failure">Źródło nie przyjmuje automatycznego wprowadzania albo odbicie jest przechwytywane ponownie.</td>
+							</tr>
+						</tbody>
+					</table>
+					<ul class="guide-list">
+						<li>Pole skryptu źródła <code>getSource</code> to odpowiedź sygnalizująca możliwość kierowania danych wychodzących. Wspólne ustawienia YouTube mogą grupować oba warianty, natomiast Relay Chat dodaje dokładny kontekst adresu Shorts do dopasowania celu.</li>
+						<li>Ogólne przechwytywanie może znaleźć prawdopodobne pola wpisywania i ustawić na nich fokus, ale nie gwarantuje to, że witryna zaakceptuje automatyczne wysłanie.</li>
+						<li>Tryby API/WebSocket mogą wysyłać przez API platformy zamiast wpisywać tekst na widocznej stronie.</li>
+						<li>W aplikacji komputerowej <em>Bot tylko do odpowiedzi (bez przechwytywania)</em> utrzymuje źródło dostępne dla odpowiedzi i statusu, jednocześnie tłumiąc jego zwykłe przechwycone wiadomości.</li>
+						<li>Przetestuj obsługę odpowiedzi w jednym oknie źródła, zanim zbudujesz przekaźnik między wieloma platformami.</li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="where-to-find-details">
+					<h2>Gdzie znaleźć dokładne informacje</h2>
+					<ul class="guide-list">
+						<li><a href="event-reference.html">Dokumentacja wydarzeń</a>: kanoniczne pola i nazwy zdarzeń platform.</li>
+						<li><a href="../actions/event-flow-guide.html">Przewodnik po Event Flow</a>: wyzwalacze, akcje, szablony, obsługa odbić i testy.</li>
+						<li><a href="standalone-app-modes.html">Tryby samodzielnej aplikacji</a>: działanie okien źródeł i trybów połączenia.</li>
+						<li><a href="supported-sites.html">Obsługiwane witryny</a>: nazwy platform i wymagania konfiguracji.</li>
+						<li><a href="../../docs/index.html?file=agents/08-platform-sources/generic-and-custom-sources.md">Źródła ogólne i niestandardowe</a>: przechwytywanie awaryjne i zewnętrzne.</li>
+						<li><a href="../../docs/index.html?file=agents/04-standalone-app-source-windows.md">Okna źródeł aplikacji komputerowej</a>: wewnętrzne działanie celu, skryptu, mostu i trybu wyłącznie odpowiedzi.</li>
+						<li><a href="../../docs/index.html?file=agents/12-development/adding-a-source.md">Dodawanie źródła</a>: kontrakty źródeł, pomocnicze skrypty wstrzykiwania, manifesty i dokumentacja.</li>
+					</ul>
+					<p>Podczas diagnozowania sprawdź jeden surowy zestaw danych i zapisz jego <code>type</code>, <code>event</code>, <code>sourceName</code> i <code>tid</code>. Zwykle pozwala to oddzielić dopasowywanie przychodzących danych, routing wychodzący i powielanie przechwytywania.</p>
+				</div>
+			</div>
+		</main>
+		<footer>
+			<div class="container">
+				<div class="footer-bottom">
+					<p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licencja GPLv3.0.</p>
+				</div>
+			</div>
+		</footer>
+		<script data-copy-markdown src="../../docs/js/main.js"></script>
+		<script>
+			document.getElementById("current-year").textContent = new Date().getFullYear();
+		</script>
+	</body>
+</html>

@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="uk" data-site-root="../../" data-site-language="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Створюйте автоматизації Social Stream Ninja за допомогою тригерів, умов і дій Event Flow. Пов’язуйте події чату наживо зі звуками, медіа, нагородами та керуванням OBS.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="uk_UA">
+    <meta property="og:url" content="https://socialstream.ninja/beta/uk/actions/event-flow-guide.html">
+    <meta property="og:title" content="Посібник з Event Flow — Social Stream Ninja">
+    <meta property="og:description" content="Створюйте автоматизації Social Stream Ninja за допомогою тригерів, умов і дій Event Flow. Пов’язуйте події чату наживо зі звуками, медіа, нагородами та керуванням OBS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Логотип Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/uk/actions/event-flow-guide.html">
+    <meta name="twitter:title" content="Посібник з Event Flow — Social Stream Ninja">
+    <meta name="twitter:description" content="Створюйте автоматизації Social Stream Ninja за допомогою тригерів, умов і дій Event Flow. Пов’язуйте події чату наживо зі звуками, медіа, нагородами та керуванням OBS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Логотип Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Посібник з Event Flow — Social Stream Ninja</title>
+    <link rel="canonical" href="https://socialstream.ninja/beta/uk/actions/event-flow-guide.html">
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1f2937 40%, #312e81 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .guide-shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(4, 12, 38, 0.5);
+        }
+        header {
+            background: radial-gradient(circle at top left, rgba(109,40,217,0.15), transparent),
+                        linear-gradient(135deg, #4c1d95, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+        }
+        header p {
+            font-size: 1.2rem;
+            max-width: 640px;
+            opacity: 0.92;
+        }
+        .content {
+            padding: 45px 55px 65px;
+        }
+        section {
+            margin-bottom: 60px;
+        }
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 18px;
+            color: #312e81;
+        }
+        h3 {
+            font-size: 1.4rem;
+            margin: 25px 0 10px;
+            color: #4338ca;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 25px;
+            margin: 15px 0;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .panel {
+            background: #f7f7fb;
+            border: 1px solid rgba(67,56,202,0.12);
+            border-radius: 12px;
+            padding: 22px 25px;
+            margin: 22px 0;
+        }
+        .panel strong {
+            color: #312e81;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            padding: 22px;
+            border-radius: 14px;
+            margin: 25px 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 22px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+        }
+        .card h4 {
+            margin-bottom: 12px;
+            color: #4c1d95;
+        }
+        code {
+            background: rgba(226,232,240,0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .callout {
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin: 24px 0;
+            border-left: 4px solid;
+        }
+        .callout.tip { background: #eef2ff; border-color: #4338ca; }
+        .callout.warn { background: #fef3c7; border-color: #d97706; }
+        .callout.danger { background: #fee2e2; border-color: #b91c1c; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(255,255,255,0.14);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+        .var-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            font-size: 0.95rem;
+        }
+        .var-table th, .var-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .var-table th {
+            background: #f7f7fb;
+            color: #312e81;
+            font-weight: 600;
+        }
+        .var-table tr:hover {
+            background: rgba(99,102,241,0.04);
+        }
+        .var-table code {
+            background: rgba(99,102,241,0.1);
+            color: #4338ca;
+        }
+        /* ── Custom JS section additions ── */
+        .code-js {
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 18px 22px;
+            border-radius: 10px;
+            margin: 16px 0;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.88rem;
+            line-height: 1.65;
+            overflow-x: auto;
+            white-space: pre;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .snippet-block {
+            margin: 28px 0;
+            border: 1px solid rgba(67,56,202,0.15);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .snippet-label {
+            background: rgba(67,56,202,0.07);
+            padding: 10px 18px;
+            font-weight: 600;
+            color: #312e81;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .snippet-desc {
+            padding: 10px 18px 0;
+            font-size: 0.93rem;
+            color: #475569;
+        }
+        .snippet-block .code-js {
+            border-radius: 0;
+            margin: 0;
+            border: none;
+            border-top: 1px solid rgba(0,0,0,0.15);
+        }
+        figure.screenshot {
+            margin: 24px 0;
+            text-align: center;
+        }
+        figure.screenshot img {
+            max-width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(15,23,42,0.12);
+            box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+        }
+        figure.screenshot figcaption {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #64748b;
+            font-style: italic;
+        }
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 24px 0;
+            align-items: start;
+        }
+        .desktop-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #312e81;
+            color: #e0e7ff;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            padding: 3px 10px;
+            border-radius: 999px;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        .snippet-heading {
+            margin: 28px 0 4px;
+            color: #4c1d95;
+        }
+        @media (max-width: 700px) {
+            header, .content { padding: 35px 20px; }
+            h1 { font-size: 2rem; }
+            .diagram { font-size: 0.85rem; }
+            .var-table { font-size: 0.85rem; display: block; max-width: 100%; overflow-x: auto; }
+            .var-table th, .var-table td { padding: 8px 10px; }
+            .panel code { overflow-wrap: anywhere; }
+            .two-col { grid-template-columns: 1fr; }
+            .code-js { font-size: 0.8rem; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="uk">
+<script id="ssn-site-language" type="application/json">{"language":"uk","page":"actions/event-flow-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Перемкнути на світлу тему","Switch to dark theme":"Перемкнути на темну тему","Light mode":"Світла тема","Dark mode":"Темна тема","Open navigation menu":"Відкрити меню навігації","Close navigation menu":"Закрити меню навігації","Copy this document as Markdown to the clipboard":"Скопіювати цей документ у форматі Markdown до буфера обміну","Copy Markdown":"Скопіювати Markdown","Copying…":"Копіювання…","Markdown copied":"Markdown скопійовано","Copy failed":"Не вдалося скопіювати","Copy comprehensive Markdown for an AI assistant":"Скопіювати повний Markdown для ШІ-асистента","Copy this documentation page as Markdown for an AI assistant":"Скопіювати цю сторінку документації як Markdown для ШІ-асистента"},"strings":{"\"Desktop only\"":"«Лише настільний застосунок»","\"chat message contains !raffle\").":"«повідомлення чату містить !raffle»).","$5.00, 500 bits":"$5.00, 500 bits","(Send Test Event) before pushing a flow live.":"(Send Test Event) перед запуском сценарію наживо.","(Twitch Message, Timers, Manual Trigger, etc.) ignore upstream input. They generate their own payload and always emit":"(Twitch Message, таймери, ручний тригер тощо) ігнорують вхід згори — вони генерують власні дані й завжди видають","(action). They are the escape hatch for anything the built-in nodes cannot express.":"(дія). Вони дають змогу реалізувати те, чого не можуть виразити вбудовані вузли.","(counters, toggles, timers) to track context between events.":"(лічильники, перемикачі, таймери) для відстеження контексту між подіями.","(current flow result state),":"(поточний стан результату сценарію),","(left ports) expect the message context.":"(ліві порти) очікують контекст повідомлення.","(paste into the action's JavaScript Code field):":"(вставте в поле JavaScript Code дії):","(paste into the trigger's JavaScript Code field):":"(вставте в поле JavaScript Code тригера):","(platform, type, chatname, chatmessage, etc.). Attach custom data under":"(platform, type, chatname, chatmessage тощо). Додавайте власні дані в","(right ports) emit the same context plus any edits.":"(праві порти) передають той самий контекст із внесеними змінами.","(see":"(дивіться","(the event payload),":"(дані події),","(top-right of the editor) to send a synthetic message through the pipeline without needing a live stream. Set the chatname to a subscriber, add a message like":"(угорі праворуч редактора), щоб надіслати штучне повідомлення через ланцюжок без трансляції наживо. Укажіть у chatname платного підписника, додайте повідомлення на кшталт","(trigger) and":"(тригер) та","(trigger) or a no-op (action) and logs to the DevTools console. The flow doesn't crash.":"(тригер) або нічого не виконує (дія) і записує повідомлення в консоль DevTools — сценарій не завершується аварійно.","). Treat imported flow files like executable code. Only import flows from sources you trust.":"). Ставтеся до імпортованих файлів сценаріїв як до виконуваного коду — імпортуйте лише з джерел, яким довіряєте.",", a new line, then":", новий рядок, а потім",", and":", і",", and confirm the Relay Chat destination receives the reformatted string.":", і перевірте, що ціль Relay Chat отримує переформатований рядок.",", and the OBS controls need a rendering surface. That surface is the Flow Actions overlay page served from":", та елементам керування OBS потрібне середовище відображення. Ним є сторінка оверлею Flow Actions за адресою",", not when it happens:":", а не коли це відбувається:",", or":", або",", or leave it blank to use the Flow Actions TTS default.":", або залиште порожнім, щоб використовувати стандартний голос TTS Flow Actions.",", plus":", а також",", so the output is":", тому вихід —",", source / filter / mute / text actions will not work until OBS / obs-websocket is upgraded.":", дії джерела / фільтра / вимкнення звуку / тексту не працюватимуть, доки не буде оновлено OBS / obs-websocket.",", then return":", а потім поверніть",". A flow built only from actions chained together looks valid but is permanently idle, because nothing ever starts the chain. Node names describe what the node":". Сценарій лише з послідовно з’єднаних дій виглядає коректним, але завжди неактивний, бо ніщо не запускає цей ланцюжок. Назви вузлів описують, що вузол",". Connect that wire into NOT to invert the result.":". Підключіть цю лінію до NOT, щоб інвертувати результат.",". Drag a wire from the colored output you need (green = true, gray/red = false) to the next node.":". Протягніть лінію від потрібного кольорового виходу (зелений = true, сірий/червоний = false) до наступного вузла.",". Each flow can subscribe to multiple platforms at once.":". Кожен сценарій може одночасно підписуватися на кілька платформ.",". If you're accepting shared flows from others, audit the JS before activating them.":". Якщо приймаєте сценарії від інших, перевіряйте JS перед їх активацією.",". Keep it running in your broadcasting software (OBS/Streamer.bot browser docks/etc.) so Event Flow actions have somewhere to appear.":". Залишайте її запущеною в програмі для трансляцій (OBS/браузерні доки Streamer.bot тощо), щоб дії Event Flow мали де відображатися.",". Keep it wired to something meaningful or disable the node so it does not accidentally unblock a flow.":". Залишайте його підключеним до осмисленого входу або вимкніть вузол, щоб він випадково не розблокував сценарій.",". Open the editor through the":". Відкрийте редактор через",". Paste it into an OBS Browser Source (1920×1080 suggested) or open it in any overlay browser.":". Вставте його в джерело браузера OBS (рекомендовано 1920×1080) або відкрийте в будь-якому браузері оверлеїв.",". Returning the Promise lets Event Flow wait for submission and report errors.":". Повернення Promise дає Event Flow змогу дочекатися надсилання й повідомити про помилки.",". SSApp queues the job silently through the native Windows printer API and uses those saved settings. A flow can override them with options such as":". SSApp непомітно ставить завдання в чергу через нативний API принтера Windows і використовує збережені налаштування. Сценарій може перевизначити їх такими опціями, як",". Scene switching works here, and recording / streaming / replay buffer actions can fall back to it.":". Тут працює перемикання сцен, а дії запису / трансляції / буфера повтору можуть використовувати це як запасний спосіб.",". See the":". Дивіться",". The fields below are always available; platform-specific events may include additional ones.":". Наведені нижче поля доступні завжди; події окремих платформ можуть містити додаткові.",". They can still output an updated payload if you want to keep chaining actions.":". Вони також можуть видавати оновлені дані, якщо ви хочете продовжити ланцюжок дій.",". This controls display on re-ingest, not sending. Follow the":". Це керує відображенням після повторного захоплення, а не надсиланням. Дотримуйтеся",". Use two relay actions when a message should reach both variants. See":". Використовуйте дві дії пересилання, якщо повідомлення має надійти в обидва варіанти. Дивіться","0. Quick Orientation":"0. Короткий огляд","1. What Moves Through a Node?":"1. Що проходить через вузол?","2. Logic Node Cheatsheet":"2. Шпаргалка з логічних вузлів","3. Example Micro-Flows":"3. Приклади мікросценаріїв","4. Preventing Echoes, Loops, and Relay Feedback":"4. Запобігання відлунню, циклам і зворотному пересиланню","5. Inputs, Outputs, and Practical Questions":"5. Входи, виходи та практичні запитання","6. Template Variables Reference":"6. Довідник змінних шаблонів","7. Best Practices Checklist":"7. Перелік рекомендованих практик","8. Further Exploration":"8. Подальше вивчення","9. Custom JavaScript":"9. Власний JavaScript",": add a standard Relay Chat node after the action and configure it to point at your Discord (or other) destination. No custom code is needed here. The reformatted":": додайте стандартний вузол Relay Chat після дії та налаштуйте його на ціль Discord (або іншу). Власний код тут не потрібен — переформатоване",": named triggers, a starter template, workflow discovery, extra data, HTTP/WebSocket/P2P examples, and dial gestures.":": іменовані тригери, початковий шаблон, виявлення сценаріїв, додаткові дані, приклади HTTP/WebSocket/P2P та жести регуляторів.","; see":"— дивіться","; with no trigger on top, nothing starts the chain.":"; без тригера на початку ніщо не запускає ланцюжок.","= continue,":"= продовжити,","= stop). Use":"= зупинити). Використовуйте","A 50/50 coin flip between two audio clips. The RANDOM gate rolls once per matching message: when it passes, sound A plays; when it fails, the NOT gate flips the result and the AND gate lets sound B play instead.":"Підкидання монети 50/50 для вибору одного з двох аудіокліпів. RANDOM виконує одну спробу для кожного відповідного повідомлення: коли пропускає, грає звук A; коли відхиляє, NOT інвертує результат, а AND натомість пропускає звук B.","A Custom Code trigger (blue) and Execute Custom Code action (green) placed on the canvas. Wire the trigger's output port to the action's input port to connect them.":"Тригер Custom Code (синій) і дія Execute Custom Code (зелена) на полотні. З’єднайте вихідний порт тригера з вхідним портом дії.","A bare NOT would output":"Окремий NOT видавав би","A floating NOT node will still output":"Непідключений вузол NOT усе одно видаватиме","A recalculated gate bit (logic nodes) or passthrough bit (actions).":"Переобчислений логічний біт пропуску (логічні вузли) або незмінений біт (дії).","A reflection is an outgoing message captured again from a destination chat. Current Relay Chat actions skip these recognized reflections; there is no separate No Reflections checkbox. To hide or limit their display in the Dock and overlays, use a":"Віддзеркалення — це вихідне повідомлення, повторно захоплене з цільового чату. Поточні дії Relay Chat пропускають розпізнані віддзеркалення; окремого прапорця No Reflections немає. Щоб приховати або обмежити їх показ у доку та оверлеях, використовуйте","A runtime error in your code returns":"Помилка виконання у вашому коді повертає","A. Auto-reply Unless the Message Is a Command":"A. Автовідповідь, якщо повідомлення не є командою","AND":"І (AND)","Action Nodes":"Вузли дій","Action code can call":"Код дії може викликати","Action nodes (green) never run on their own. They only fire when a trigger node (blue) above them evaluates":"Вузли дій (зелені) ніколи не запускаються самі — вони спрацьовують лише коли вузол тригера (синій) вище них повертає","Action panel showing Execute Custom Code under the Integrations group":"Панель дій з Execute Custom Code у групі Integrations","Action properties. Return an object to merge changes back into the flow result.":"Властивості дії. Поверніть об’єкт, щоб об’єднати зміни з результатом сценарію.","Action snippets: return":"Фрагменти дій — повертайте","Actions":"Дії","Add a visual indicator at the end of every message that passes through this action.":"Додавайте візуальний індикатор наприкінці кожного повідомлення, яке проходить через цю дію.","Additional context":"Додатковий контекст","Advanced":"Розширено","Advanced Access Level":"Розширений рівень доступу (Advanced Access Level)","Alias":"Псевдонім","Allow All":"Дозволити всі (Allow All)","Allow First":"Дозволити перше (Allow First)","An error of type":"Помилка типу","Any Message":"Будь-яке повідомлення (Any Message)","Any Message trigger connected to Feature Message and Speak Text actions":"Тригер Any Message, з’єднаний із діями Feature Message та Speak Text","Any Message trigger connected to a Play Audio Clip action":"Тригер Any Message, з’єднаний із дією Play Audio Clip","Any node with a green output emits":"Кожен вузол із зеленим виходом видає","Append a badge or tag to the message":"Додати значок або позначку до повідомлення","Arbitrary structured data attached to the event":"Довільні структуровані дані, прикріплені до події","Attach routing metadata for downstream nodes":"Додати метадані маршрутизації для наступних вузлів","Attached image URL":"URL прикріпленого зображення","Available:":"Доступно:","Avoid duplicate relay systems.":"Уникайте дублювання систем пересилання.","B. Require Multiple Checks with AND":"B. Кілька обов’язкових перевірок через AND","Block All":"Блокувати всі (Block All)","Block message conditionally":"Умовно блокувати повідомлення","Both nodes receive the full event payload as":"Обидва вузли отримують повні дані події як","Break cycles intentionally.":"Свідомо розривайте цикли.","Browser Source API:":"Browser Source API:","Build Social Stream Ninja automations with Event Flow triggers, conditions and actions. Connect live chat events to sounds, media, rewards and OBS controls.":"Створюйте автоматизації Social Stream Ninja за допомогою тригерів, умов і дій Event Flow. Пов’язуйте події чату наживо зі звуками, медіа, нагородами та керуванням OBS.","Build loyalty-based commands, keyword games, or raffle gating with AND/OR/NOT logic.":"Створюйте команди на основі лояльності, ігри з ключовими словами або допуск до розіграшів за допомогою логіки AND/OR/NOT.","Build reliable automations for Social Stream Ninja. This guide walks through the basics, logic nodes, signal flow, and the practical tricks that creators ask about most (like avoiding chat echoes and knowing when to stack AND/NOT blocks).":"Створюйте надійні автоматизації для Social Stream Ninja. Цей посібник пояснює основи, логічні вузли, проходження сигналів і практичні прийоми, про які автори найчастіше запитують: наприклад, як уникати відлуння чату та коли поєднувати блоки AND/NOT.","C. NOT Node to Block Repeat Alerts":"C. Вузол NOT для блокування повторних сповіщень","Call Webhook JSON:":"JSON для Call Webhook:","Can a node emit a payload even if it returns false?":"Чи може вузол видати дані, навіть якщо повертає false?","Can each Speak Text node use a different voice?":"Чи може кожен вузол Speak Text використовувати інший голос?","Canvas showing a Custom Code trigger and Execute Custom Code action side by side":"Полотно з розміщеними поруч тригером Custom Code і дією Execute Custom Code","Chat message text":"Текст повідомлення чату","Check the":"Перевірте","Choose":"Виберіть","Choose Local File":"Вибрати локальний файл (Choose Local File)","Click":"Натисніть","Click this button:":"Натисніть кнопку:","Closing the Flow Actions page pauses every overlay/audio/OBS action in Event Flow. Hide it or put it on a separate monitor instead of closing it outright.":"Закриття сторінки Flow Actions призупиняє всі дії оверлеїв/звуку/OBS в Event Flow. Приховайте її або розмістіть на окремому моніторі замість закриття.","Combine":"Поєднуйте","Combine role check and message content in a single expression that no built-in trigger covers.":"Поєднайте перевірку ролі та вміст повідомлення в одному виразі, якого немає у вбудованих тригерах.","Common Q & A":"Поширені запитання й відповіді","Complete example: VIP feature request bot":"Повний приклад — бот запитів VIP на нові функції","Condition, Compare, Regex, and Logic nodes emit two ports.":"Вузли Condition, Compare, Regex і Logic мають два вихідні порти.","Confirm":"Переконайтеся, що","Continue the flow only when the message contains a specific word or phrase.":"Продовжуйте сценарій, лише коли повідомлення містить певне слово або фразу.","Convert the standard YouTube donation label to EUR, exclude Jewels/Gifts, and select one sound or visual range.":"Перетворіть стандартну позначку донату YouTube на EUR, виключіть Jewels/Gifts і виберіть один діапазон для звуку або візуального ефекту.","CoolViewer123":"CoolViewer123","Copy Local Flow Actions URL for OBS":"Скопіювати локальний URL Flow Actions для OBS (Copy Local Flow Actions URL for OBS)","Copy any of these into the JavaScript Code textarea of the matching node type.":"Скопіюйте будь-який із цих прикладів у текстове поле JavaScript Code відповідного типу вузла.","Core Variables (backward compatible)":"Основні змінні (зворотно сумісні)","Counter target minus current value, clamped at 0":"Ціль лічильника мінус поточне значення, щонайменше 0","Counter target value":"Цільове значення лічильника","Currency conversion:":"Конвертація валют:","Current counter value after a Counter or Check Counter step":"Поточне значення лічильника після кроку Counter або Check Counter","Custom Code":"Власний код (Custom Code)","Custom Code lives under the":"Custom Code розміщений у групі","Custom Code trigger properties panel showing the JavaScript code editor":"Панель властивостей тригера Custom Code з редактором JavaScript","Custom Code: Trigger node":"Custom Code — вузол тригера","Custom JavaScript nodes":"Вузли власного JavaScript","Custom JavaScript nodes are disabled in the browser extension because Chrome's Manifest V3 Content Security Policy blocks":"Вузли власного JavaScript вимкнені в розширенні браузера, оскільки політика безпеки вмісту Chrome Manifest V3 блокує","Custom code runs with renderer-process privileges.":"Власний код виконується з привілеями процесу рендерера.","D. Randomly Play One of Two Sounds":"D. Випадкове відтворення одного з двох звуків","Data type":"Тип даних","Default behavior:":"Стандартна поведінка:","Description":"Опис","Desktop app required.":"Потрібен настільний застосунок.","Disable global Relay all when using equivalent Event Flow routes, and check for other services bridging the same chats. Custom metadata is not guaranteed to survive a trip through a platform chat.":"Вимкніть глобальне Relay all, коли використовуєте еквівалентні маршрути Event Flow, і перевірте, чи інші сервіси не з’єднують ті самі чати. Немає гарантії, що власні метадані збережуться після проходження через чат платформи.","Discord Call Webhook:":"Discord Call Webhook:","Display Media Overlay":"Показати медіаоверлей (Display Media Overlay)","Display name (alternate field)":"Відображуване ім’я (альтернативне поле)","Display name of the sender":"Відображуване ім’я відправника","Display name of the user":"Відображуване ім’я користувача","Do I always need an AND node?":"Чи завжди потрібен вузол AND?","Do I have to use AND for every pair of filters?":"Чи потрібно використовувати AND для кожної пари фільтрів?","Document meta fields.":"Документуйте поля meta.","Donation Alert:":"Сповіщення про донат:","Donation above a threshold":"Донат понад поріг","Donation/tip display label":"Позначка суми донату/чайових","Donation: animation + sound + OBS filter":"Донат: анімація + звук + фільтр OBS","Donation: celebration + voice":"Донат: святкування + голос","Drag":"Перетягніть","Editing code:":"Редагування коду:","Effect":"Ефект","Emits":"Надсилає","Enable audio":"Увімкнути звук","Errors are caught.":"Помилки перехоплюються.","Even if you didn't change anything, returning":"Навіть якщо ви нічого не змінили, повернення","Event Flow":"Потоки подій","Event Flow Editor Guide":"Посібник із редактора потоків подій","Event Flow Editor: empty state":"Редактор Event Flow — порожній стан","Event Flow Guide - Social Stream Ninja":"Посібник з Event Flow — Social Stream Ninja","Event Flow System":"Система Event Flow","Event Flow plays through the":"Event Flow відтворює звук через джерело браузера","Event Payload ─▶ State Check (isAlertMuted) └─false─▶ NOT ─▶ Play Celebration":"Дані події ─▶ Перевірка стану (isAlertMuted)\n└─false─▶ NOT ─▶ Відтворити святковий ефект","Event Reference":"Довідник подій","Event Sources":"Джерела подій","Event type identifier":"Ідентифікатор типу події","Every flow starts with a trigger":"Кожен сценарій починається з тригера","Every message carries a JSON object. Mandatory keys follow":"Кожне повідомлення містить об’єкт JSON. Обов’язкові ключі відповідають","Every project is saved locally until exported. Use":"Кожен проєкт зберігається локально до експорту. Використовуйте","Example":"Приклад","Example Templates":"Приклади шаблонів","Example:":"Приклад:","Execute Custom Code":"Виконати власний код (Execute Custom Code)","Execute Custom Code action properties panel showing the code editor":"Панель властивостей дії Execute Custom Code з редактором коду","Execute Custom Code under the":"Execute Custom Code у групі","Execute Custom Code: Action node":"Execute Custom Code — вузол дії","Export your flow whenever you reach a milestone. Imports are the easiest rollback if an experiment goes sideways.":"Експортуйте сценарій після кожного важливого етапу. Імпорт — найпростіший спосіб повернутися до робочої версії, якщо експеримент не вдасться.","Extended Variables":"Розширені змінні","Feature Message":"Показати вибране повідомлення (Feature Message)","Feeding the trigger into the AND as a second input restricts sound B to matching messages only. The same pattern works for any either/or pair of actions, not just audio.":"Подача тригера до AND як другого входу обмежує звук B лише відповідними повідомленнями. Ця схема підходить для будь-якої пари взаємовиключних дій, а не лише для аудіо.","Field":"Поле","Filter as early as possible to avoid extra processing down the line.":"Фільтруйте якомога раніше, щоб уникати зайвої обробки далі.","Fire only when a donation meets or exceeds a minimum amount.":"Спрацьовувати, лише коли донат дорівнює мінімальній сумі або перевищує її.","Flow Actions":"Flow Actions","Flow Actions Overlay (Action Output)":"Оверлей Flow Actions (вивід дій)","Flow using a RANDOM gate, NOT gate, and AND gate to play one of two audio clips at random":"Сценарій із вузлами RANDOM, NOT та AND для випадкового відтворення одного з двох аудіокліпів","Flow-added fields also work.":"Поля, додані сценарієм, також працюють.","Format a donation announcement":"Форматувати оголошення про донат","Formatted donation string if present":"Форматований рядок донату, якщо є","Gate signal":"Сигнал пропуску","Great for multi-platform triggers: feed Twitch + YouTube message nodes into a single OR, then unify the downstream action.":"Корисно для багатоплатформних тригерів: подайте вузли повідомлень Twitch + YouTube в один OR, а потім об’єднайте подальшу дію.","Group logic near the source.":"Групуйте логіку біля джерела.","Hello everyone!":"Усім привіт!","Here the Regex node emits":"Тут вузол Regex видає","Highlight My Message":"Виділити моє повідомлення","Hook into the":"Підключіться до системи","How do I match TikTok Team members?":"Як визначати учасників TikTok Team?","How do true/false values reach the NOT node?":"Як значення true/false потрапляють до вузла NOT?","How to open it (from the popup/dash):":"Як відкрити (зі спливного вікна/панелі керування):","If a node outputs false:":"Якщо вузол видає false:","If an earlier action adds a top-level value to the message, later templates can read it directly. This is how":"Якщо попередня дія додає до повідомлення значення верхнього рівня, наступні шаблони можуть читати його безпосередньо. Саме так","If an event does not have a particular field (e.g.,":"Якщо подія не має певного поля (наприклад,","If nothing is connected to the NOT input it evaluates to":"Якщо до входу NOT нічого не підключено, він обчислюється як","If two branches feed each other, add a logic node that checks a state variable (\"currentlyRelaying\") so the flow exits early when the flag is set.":"Якщо дві гілки передають дані одна одній, додайте логічний вузол, який перевіряє змінну стану (currentlyRelaying), щоб сценарій завершувався раніше, коли прапорець установлено.","If you do nothing with a":"Якщо нічого не робити з","In a Play Audio Clip or Display Media Overlay action, click":"У дії Play Audio Clip або Display Media Overlay натисніть","Incoming triggers and outgoing Relay Chat destinations both distinguish between":"Тригери вхідних повідомлень і цілі вихідного пересилання Relay Chat розрізняють","Input Expectations":"Очікувані входи","Inputs":"Входи","Inputs: 1 boolean (true/false) derived from the previous node.":"Входи: 1 логічне значення (true/false) від попереднього вузла.","Inputs: two or more boolean signals (A, B, ...). You can leave extra ports empty.":"Входи: два або більше логічних сигналів (A, B, ...). Додаткові порти можна залишити порожніми.","Inside the SSApp, code in Custom JS nodes has full access to the":"У SSApp код вузлів Custom JS має повний доступ до об’єкта","Inspect the content and silently drop the message if a rule matches. This is useful for spam patterns the keyword filter can't express.":"Перевіряйте вміст і мовчки відкидайте повідомлення, якщо правило збігається — корисно для шаблонів спаму, які не може виразити фільтр ключових слів.","Integrations":"Інтеграції","Keep SSApp running. If a selected file moves, return to the action and click":"Залишайте SSApp запущеним. Якщо вибраний файл переміщено, поверніться до дії та натисніть","Keep the overlay open.":"Залишайте оверлей відкритим.","Keyword match (case-insensitive)":"Збіг ключового слова (без урахування регістру)","Launch + Basics":"Запуск і основи","Let the flow continue only for privileged users.":"Продовжувати сценарій лише для користувачів із привілеями.","Listen / Stop":"Слухати / зупинити","Logic nodes may emit both the":"Логічні вузли можуть передавати сигнали як у канал","MEMBERSHIP, new_sponsor":"MEMBERSHIP, new_sponsor","Match messages that start with a command from a defined list (e.g.":"Знаходьте повідомлення, які починаються з команди із заданого списку (наприклад,","Media Files for Event Flow guide":"посібник із медіафайлів для Event Flow","Member for 3 months":"Учасник протягом 3 місяців","Membership state":"Стан членства","Membership state when applicable":"Стан членства, коли застосовно","Message length gate":"Перевірка довжини повідомлення","Minimal safe return:":"Мінімальне безпечне повернення:","Missing variables become empty strings.":"Відсутні змінні стають порожніми рядками.","Mix multiple platforms inside a single automation (Kick + Twitch + YouTube routed through one flow).":"Поєднуйте кілька платформ в одній автоматизації (Kick + Twitch + YouTube через один сценарій).","Most nodes expose one output. Whatever enters (payload + gate) exits unchanged unless the node edits it.":"Більшість вузлів мають один вихід. Усе, що надходить (дані + сигнал пропуску), виходить без змін, якщо вузол цього не редагує.","Most side effects (like sending chat) do not alter the payload, but points actions can attach status fields such as":"Більшість побічних дій (як-от надсилання в чат) не змінюють дані, але дії балів можуть додавати поля стану, як-от","Multi-condition: VIP + keyword":"Кілька умов — VIP + ключове слово","Must return:":"Має повертати:","NOT":"НЕ (NOT)","NOT & empty inputs:":"NOT і порожні входи:","Name & color":"Назвіть і розфарбуйте","Need to remember participants, check later eligibility, run a unique-user draw, or clear one named list? Open the":"Потрібно запам’ятовувати учасників, перевіряти подальший допуск, проводити розіграш серед унікальних користувачів або очищувати один іменований список? Відкрийте","No network sandbox.":"Немає мережевої пісочниці.","No. Many nodes already provide all-in-one filters (for example \"Filter User Level\" + \"Contains Text\"). Use AND only when the built-in options do not cover your combination, or when you want a reusable logic junction that other branches can share.":"Ні. Багато вузлів уже мають комплексні фільтри (наприклад, Filter User Level + Contains Text). Використовуйте AND, лише коли вбудовані опції не охоплюють вашу комбінацію або потрібен багаторазовий логічний вузол, спільний для інших гілок.","No. Many nodes include multiple checks (for example, the basic Message Filter supports keyword + role). Use AND only for advanced combinations or when merging signals from different nodes.":"Ні. Багато вузлів містять кілька перевірок (наприклад, базовий Message Filter підтримує ключове слово + роль). Використовуйте AND лише для складних комбінацій або об’єднання сигналів різних вузлів.","Nodes at a Glance":"Коротко про вузли","Nodes such as":"Таким вузлам, як","OBS Control Guide":"Посібник із керування OBS","OBS WebSocket:":"OBS WebSocket:","OBS control modes:":"Режими керування OBS:","OR":"OR","Old 4.x installs:":"Старі інсталяції 4.x:","Once loaded, that overlay can:":"Після завантаження цей оверлей може:","Only process events from specific platforms.":"Обробляти лише події певних платформ.","Only process messages that have enough content (useful for TTS or relay to avoid single-emoji spam).":"Обробляти лише повідомлення з достатньою кількістю вмісту (корисно для TTS або пересилання, щоб уникати спаму з одного емодзі).","Open":"Відкрити","Open Code Editor":"Відкрити редактор коду (Open Code Editor)","Open the Event Flow editor from the main dashboard's menu (desktop or extension).":"Відкрийте редактор Event Flow з меню головної панелі керування (настільний застосунок або розширення).","Open the main Social Stream Ninja popup (the window loaded from":"Відкрийте головне спливне вікно Social Stream Ninja (вікно, завантажене з","Optional context (state variables, timers) that the node asks for explicitly.":"Необов’язковий контекст (змінні стану, таймери), який вузол явно запитує.","Output Patterns":"Шаблони виходів","Outputs":"Виходи","Outputs:":"Виходи:","Outputs: the inverted boolean plus the untouched payload.":"Виходи: інвертоване логічне значення та незмінені дані.","Overlay diagnostics:":"Діагностика оверлею:","Pass the (possibly mutated) message back so downstream nodes receive your changes.":"Поверніть повідомлення (можливо, змінене), щоб наступні вузли отримали ваші зміни.","Pass-Through vs. Override":"Передавання без змін і перевизначення","Password:":"Пароль:","Payload":"Дані події","Payload Structure":"Структура даних","Place NOT after \"Contains Keyword\" to trigger an alert when a viewer":"Розмістіть NOT після Contains Keyword, щоб запускати сповіщення, коли глядач","Platform filter":"Фільтр платформи","Platform name (capitalized)":"Назва платформи (з великої літери)","Platform name (raw)":"Назва платформи (як є)","Platform user ID":"ID користувача платформи","Platform-aware message prefix":"Префікс повідомлення з урахуванням платформи","Play Audio Clip":"Відтворити аудіокліп (Play Audio Clip)","Play sounds (TTS, audio clips) locally so viewers hear them.":"Відтворювати звуки (TTS, аудіокліпи) локально, щоб глядачі їх чули.","Points & Rewards":"Бали та нагороди","Prepend a platform label when relaying cross-platform so viewers know the source.":"Додавайте назву платформи на початку під час пересилання між платформами, щоб глядачі знали джерело.","Printer Control":"Керування принтером (Printer Control)","Properties panel after placing the trigger. Write any expression that returns":"Панель властивостей після розміщення тригера. Напишіть будь-який вираз, що повертає","Ready for more depth?":"Готові заглибитися?","Recommended diagnostic path:":"Рекомендований шлях діагностики:","Reflection Filter":"Фільтр віддзеркалень (Reflection Filter)","Regex command detection":"Виявлення команд регулярним виразом","Relay Chat":"Переслати чат (Relay Chat)","Relay Chat skips recognized reflections automatically.":"Relay Chat автоматично пропускає розпізнані віддзеркалення.","Relay Chat:":"Relay Chat:","Relay chat between services with filters (e.g., mirror Twitch to Discord but block commands).":"Пересилайте чат між сервісами з фільтрами (наприклад, дублюйте Twitch у Discord, але блокуйте команди).","Relaying chat between surfaces is powerful but can echo infinitely if you listen to your own output. Follow these safeguards:":"Пересилання чату між інтерфейсами дає широкі можливості, але може створювати нескінченне відлуння, якщо ви слухаєте власний вихід. Дотримуйтеся таких запобіжних заходів:","Relink":"Повторно прив’язати (Relink)","Remember:":"Пам’ятайте:","Remove all @username mentions from a message before relaying it to another platform.":"Видаліть із повідомлення всі згадки @username перед пересиланням на іншу платформу.","Return a plain object from your action code. Any fields you include are merged into the flow's":"Поверніть звичайний об’єкт із коду дії. Усі включені поля об’єднуються з об’єктом","Return field":"Поле повернення","Reward name when the source exposes a top-level reward title field":"Назва нагороди, якщо джерело надає поле назви нагороди верхнього рівня","Rewrite the chatmessage into a consistent announcement string when a donation is present.":"Перепишіть chatmessage у послідовно оформлений рядок оголошення, якщо є донат.","Run Test":"Запустити тест (Run Test)","Run custom workflows from Stream Deck or the API":"Запуск власних сценаріїв зі Stream Deck або API","Run the matching action check there before testing the full Event Flow automation.":"Виконайте там перевірку відповідної дії, перш ніж тестувати всю автоматизацію Event Flow.","Running the":"Використовуєте","SSApp / Desktop only":"Лише SSApp / настільний застосунок","SSApp desktop app":"Настільний застосунок SSApp","SSApp desktop app?":"настільний застосунок SSApp?","Save & Close":"Зберегти й закрити (Save & Close)","Save versions.":"Зберігайте версії.","Scroll to the “Flow Actions” card. Use the":"Прокрутіть до картки Flow Actions. Використовуйте кнопку","Secondary context line":"Додатковий рядок контексту","Security considerations":"Питання безпеки","See the dedicated":"Дивіться окремий","Send Message":"Надіслати повідомлення (Send Message)","Sender has VIP status":"Відправник має статус VIP","Sender is a moderator":"Відправник — модератор","Sender is a subscriber":"Відправник — платний підписник","Set":"Установіть","Set OBS Text Source:":"Установити текстове джерело OBS:","Set Text Source:":"Set Text Source:","Several action nodes (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label) support":"Кілька вузлів дій (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label) підтримують","Should return:":"Має повертати:","Show GIPHY or direct media URLs, text, and confetti triggered by your flows.":"Показувати GIPHY або прямі URL медіа, текст і конфеті, запущені вашими сценаріями.","Show Text:":"Show Text:","Signature:":"Сигнатура:","Single Output":"Один вихід","Snippet examples":"Приклади фрагментів","Social Stream Ninja logo":"Логотип Social Stream Ninja","Some nodes (Set Variable, Math, Text Replace) mutate the payload but still forward the":"Деякі вузли (Set Variable, Math, Text Replace) змінюють дані, але все одно передають","Source platform (lowercase)":"Платформа джерела (малими літерами)","Speak Text":"Озвучити текст (Speak Text)","Start with an alert template:":"Почніть із шаблону сповіщення:","State Nodes":"Вузли стану","Step 1: Custom Code trigger":"Крок 1 — тригер Custom Code","Step 2: Execute Custom Code action":"Крок 2 — дія Execute Custom Code","Step 3: Relay Chat action":"Крок 3 — дія Relay Chat","Store repeats in State nodes.":"Зберігайте повтори у вузлах стану.","Strip @mentions":"Видалити @згадки","Structured event data (JSON)":"Структуровані дані події (JSON)","Subscriber / VIP / mod gate":"Перевірка платного підписника / VIP / модератора","Syntax errors too.":"Синтаксичні помилки також.","TTS:":"TTS:","Tag the message with a custom field that a later":"Додайте до повідомлення власне поле, яке наступна","Talk to OBS via the WebSocket settings that live under the Flow Actions section in the popup (scene switching, source toggles, GDI+/FreeType text updates, replay buffer, etc.).":"Керуйте OBS через налаштування WebSocket у розділі Flow Actions спливного вікна (перемикання сцен, джерел, оновлення тексту GDI+/FreeType, буфер повтору тощо).","Template variables work in JSON string values at any nested object or array depth. Object keys are not templated, and a custom body without placeholders is sent unchanged.":"Змінні шаблонів працюють у рядкових значеннях JSON на будь-якій глибині вкладених об’єктів або масивів. Ключі об’єктів не шаблонізуються, а власне тіло без підстановок надсилається без змін.","Test Flow":"Перевірити потік (Test Flow)","Test with the built-in simulator":"Перевіряйте вбудованим симулятором","Testing the flow.":"Перевірка сценарію.","The AND gate is not optional.":"Вузол AND обов’язковий.","The AND node ensures only members using the right keyword relay to Discord. Both branches send their boolean result to the AND node; the payload from the":"Вузол AND гарантує, що до Discord пересилаються лише повідомлення учасників із правильним ключовим словом. Обидві гілки надсилають логічний результат до AND; дані з","The Chrome extension cannot serve disk files by itself. Use Upload or a hosted URL when no desktop companion is available. See the":"Розширення Chrome не може самостійно надавати доступ до файлів із диска. Коли настільний помічник недоступний, використовуйте Upload або розміщений URL. Дивіться","The Event Flow Editor. The left panel lists all available nodes; the dotted canvas is where you build flows; the right panel shows properties for the selected node.":"Редактор Event Flow. Ліва панель перелічує доступні вузли; на крапковому полотні ви створюєте сценарії; права панель показує властивості вибраного вузла.","The Event Flow editor is the “advanced automation” layer for Social Stream Ninja. It sits above the simple popup switches and lets you script your own routing logic. Use it when you need to:":"Редактор Event Flow — це рівень розширеної автоматизації Social Stream Ninja. Він доповнює прості перемикачі спливного вікна й дає змогу створювати власну логіку маршрутизації. Використовуйте його, коли потрібно:","The Event Flow runtime passes two things through every wire:":"Середовище виконання Event Flow передає кожною лінією дві речі:","The Test Flow panel for sending synthetic test events":"Панель Test Flow для надсилання штучних тестових подій","The Test Flow panel. Fill in fields matching your trigger conditions and click":"Панель Test Flow. Заповніть поля відповідно до умов тригера та натисніть","The chat message text (may contain HTML)":"Текст повідомлення чату (може містити HTML)","The editor's Preview button plays locally; live playback needs the overlay open. If the browser blocks autoplay, click":"Кнопка Preview редактора відтворює локально; для відтворення наживо потрібен відкритий оверлей. Якщо браузер блокує автоматичне відтворення, натисніть","The full message payload.":"Повні дані повідомлення.","The gate bit (":"Біт пропуску (","The link looks like":"Посилання має вигляд","The object":"Об’єкт","The same payload unless the node edits it.":"Ті самі дані, якщо вузол їх не редагує.","Thermal Label:":"Термоетикетка:","Thermal Printer Guide":"Посібник із термопринтера","Thermal printing in SSApp:":"Термодрук у SSApp:","These blocks answer the most common \"What does true/false mean?\" questions.":"Ці блоки відповідають на найпоширеніші запитання про значення true/false.","Think of the popup as “quick presets” and Event Flow as the toolkit for bespoke workflows.":"Спливне вікно надає швидкі готові налаштування, а Event Flow — набір інструментів для власних сценаріїв.","This flow is complete and fires on every message, but the sound plays on the Flow Actions overlay page,":"Цей сценарій завершений і спрацьовує на кожне повідомлення, але звук відтворюється на сторінці оверлею Flow Actions,","This flow listens for":"Цей сценарій слухає","This guide is intentionally standalone. Copy it locally, adapt it for your team, and keep experimenting inside the editor.":"Цей посібник навмисно самодостатній — скопіюйте його локально, адаптуйте для своєї команди та продовжуйте експерименти в редакторі.","TikTok Team Member":"Учасник команди TikTok (TikTok Team Member)","Transform & Logic Nodes":"Вузли перетворення та логіки","Trigger custom overlays, audio, OBS scenes, or webhooks based on data you enrich in the flow.":"Запускайте власні оверлеї, аудіо, сцени OBS або вебхуки на основі даних, які ви доповнюєте у сценарії.","Trigger panel showing Custom Code node under the Advanced group":"Панель тригерів із вузлом Custom Code у групі Advanced","Trigger snippets: return":"Фрагменти тригерів — повертайте","Trigger ──▶ RANDOM (50%) ──▶ Play Sound A │ └──▶ NOT ──▶ AND ──▶ Play Sound B Trigger ──────────────────▲":"Тригер ──▶ RANDOM (50%) ──▶ Відтворити звук A\n│ └──▶ NOT ──▶ AND ──▶ Відтворити звук B\nТригер ──────────────────▲","Triggers":"Тригери","True":"True","True/False Outputs":"Виходи True/False","Twitch Message ──▶ Regex Match \"^!\" ─┐ │ ├─false──▶ Auto Reply (\"Thanks for chatting!\") │ └─true──▶ Do nothing":"Повідомлення Twitch ──▶ Збіг Regex «^!» ─┐\n│ ├─false──▶ Автовідповідь («Дякуємо за спілкування!»)\n│ └─true──▶ Нічого не робити","Twitch and YouTube relay walkthrough":"покрокового посібника з пересилання Twitch і YouTube","Twitch, YouTube":"Twitch, YouTube","Two action nodes chained together with no trigger node":"Два вузли дій, з’єднані послідовно без вузла тригера","Two nodes in the Event Flow editor let you write arbitrary JavaScript that runs inside the flow pipeline:":"Два вузли редактора Event Flow дають змогу писати довільний JavaScript, який виконується всередині ланцюжка сценарію:","USD donation equivalent when the source provides one; valid zero values are honored. Event Flow falls back to":"Еквівалент донату в USD, якщо його надає джерело; дійсні нульові значення враховуються. Event Flow інакше використовує","USD donation equivalent, supplied or estimated; Event Flow derives threshold values from normalized":"Еквівалент донату в USD, наданий або оцінений; Event Flow виводить порогові значення з нормалізованих позначок","Unlock":"Розблокувати","Use":"Використовуйте","Use AND when multiple conditions must be satisfied simultaneously (\"is subscriber\"":"Використовуйте AND, коли одночасно має виконуватися кілька умов («є платним підписником»","Use Debounce or Cooldown nodes":"Використовуйте вузли Debounce або Cooldown","Use counters, toggles, and timestamps to avoid double alerts.":"Використовуйте лічильники, перемикачі та часові мітки, щоб уникати подвійних сповіщень.","User Memory guide":"Посібник із пам’яті користувачів","User avatar URL":"URL аватара користувача","User's platform ID":"ID користувача на платформі","Using local media in the standalone app:":"Використання локальних медіа в окремому застосунку:","Variable":"Змінна","Variable matching is case-insensitive.":"Зіставлення змінних не враховує регістр.","Variables + Logic":"Змінні + логіка","Voice Override":"Перевизначення голосу (Voice Override)","What comes into a node?":"Що надходить до вузла?","What is this editor?":"Що це за редактор?","What leaves a node?":"Що виходить із вузла?","What the action returns":"Що повертає дія","When to branch?":"Коли розгалужувати?","When you add custom":"Коли ви додаєте власні","Whenever you want to react differently to":"Щоразу, коли хочете по-різному реагувати на","Work inside canvases called":"Працюйте на полотнах, які називаються","Yes. Enter a provider-supported voice name or ID in":"Так. Введіть підтримувану постачальником назву або ID голосу в","Yes. The payload still travels through the false output; it is up to you to decide where that branch should go.":"Так. Дані все одно проходять через вихід false; ви вирішуєте, куди має вести ця гілка.","YouTube Message ──▶ Contains \"!queue\" ─▶ AND ─▶ Relay to Discord Gifted Membership ─▶ User Role = Member ──▲":"Повідомлення YouTube ──▶ Містить «!queue» ─▶ AND ─▶ Переслати в Discord\nПодароване членство ─▶ Роль користувача = учасник ──▲","YouTube Shorts and Event Flow":"YouTube Shorts і Event Flow","YouTube Shorts destination note:":"Примітка щодо цілі YouTube Shorts:","YouTube Super Chat or Super Sticker in a EUR range":"YouTube Super Chat або Super Sticker в діапазоні EUR","[copy link]":"[копіювати посилання]","a boolean:":"логічне значення —","action can read from a template variable (":"дія може прочитати через змінну шаблону (","action with":"дію з","action.":"дію.","actions":"дії","actions.html":"actions.html","all work the same way.":"працюють однаково.","an object or Promise merged into":"об’єкт або Promise, що об’єднується з","and":"і","and Multi-Alerts now share a library of 17 sounds: applause, drumroll, whoosh, cash register and other effects, four labelled synthetic English phrases, and simple sounds.":"і Multi-Alerts тепер мають спільну бібліотеку з 17 звуків: оплески, барабанний дріб, свист, касовий апарат та інші ефекти, чотири позначені синтетичні фрази англійською та прості звуки.","and use that generated localhost URL instead of the hosted Flow Actions URL.":"і використовуйте створений URL localhost замість розміщеного URL Flow Actions.","any":"будь-який","append":"додайте","at compile time is caught the same way. Check DevTools (F12) if a node appears to do nothing.":"на етапі компіляції перехоплюється так само. Перевірте DevTools (F12), якщо вузол начебто нічого не робить.","available only when":"доступно лише коли","becomes available on the gray/red port.":"стає доступним на сірому/червоному порту.","below), plus":"нижче), а також","bit telling the next node whether to run.":"біт, який повідомляє наступному вузлу, чи слід виконуватися.","boolean":"логічне значення","browser source; Multi-Alerts plays through its own browser source. Keep sound enabled in only one for the same event to avoid duplicate playback. Tab to a flow node and press Enter or Space to edit its properties.":"; Multi-Alerts відтворює через власне джерело браузера. Для тієї самої події залишайте звук увімкненим лише в одному з них, щоб уникати подвійного відтворення. Перейдіть клавішею Tab до вузла сценарію та натисніть Enter або пробіл, щоб редагувати його властивості.","button or click the URL inside the card.":"або натисніть URL усередині картки.","by default. When a condition fails, it emits":"за замовчуванням. Якщо умова не виконується, він видає","channel and an optional":"так і в необов’язковий канал","channel.":".","checks the JavaScript syntax and saves the whole flow;":"перевіряє синтаксис JavaScript і зберігає весь сценарій;","cheer, raid, new_follower":"cheer, raid, new_follower","choose the printer and calibrate its paper width and safe margins under":"виберіть принтер і відкалібруйте ширину паперу та безпечні поля в","connected input is true.":"підключений вхід має значення true.","continues downstream.":"проходять далі.","continues through the green port;":"проходить через зелений порт;","conversion of normalized":"для конвертації нормалізованих позначок","docs/event-reference.html":"docs/event-reference.html","does":"робить","does not use the keyword.":"не використовує ключове слово.","does the same. Cancel leaves the node unchanged.":"робить те саме. Скасування залишає вузол без змін.","doesn't match your trigger.":"не відповідає вашому тригеру.","downstream nodes stop executing unless they receive input on a separate branch (for example, the":"наступні вузли припиняють виконання, якщо не отримують вхід іншою гілкою (наприклад, через","exposes":"надає","false":"false","features a message when the flow reaches it. It does not fire when you feature a message elsewhere.":"показує повідомлення, коли сценарій доходить до нього — він не спрацьовує, коли ви вибираєте повідомлення для показу деінде.","fields. Tells downstream nodes the payload has been edited.":"поля. Повідомляє наступним вузлам, що дані змінено.","fire only when the gate remains":"спрацьовують лише коли сигнал пропуску залишається","first branch":"першої гілки","flows":"сценаріями","flows through automatically.":"проходить автоматично.","for a complete setup.":"для повного налаштування.","for a large editing window.":"для великого вікна редагування.","for a ready-made animation and synthetic thank-you clip, or the advanced":"для готової анімації та синтетичного кліпу подяки або розширений","for alerts that should only fire once every X seconds.":"для сповіщень, які мають спрацьовувати лише раз на X секунд.","for arbitrary logic that no built-in node covers.":"для довільної логіки, якої немає у вбудованих вузлах.","for detailed payload documentation across all platforms.":"для докладної документації даних усіх платформ.","for downstream logic.":"для подальшої логіки.","for every trigger, action, setup step, and tested recipe.":"для всіх тригерів, дій, кроків налаштування та перевірених прикладів.","for printer setup, fixed-size labels, and a complete flow.":"для налаштування принтера, етикеток фіксованого розміру та повного сценарію.","for the full setup.":"для повного налаштування.","for the shared-state model, screenshots, and an importable example.":"щоб ознайомитися з моделлю спільного стану, знімками екрана та прикладом для імпорту.","from subscribers, VIPs, or mods, reformats it as a feature request, and relays it to a second destination (e.g. Discord).":"від платних підписників, VIP або модераторів, переформатовує це як запит на нову функцію та пересилає до другої цілі (наприклад, Discord).","from the":"із групи","group in the":"на панелі","group in the Actions panel.":"на панелі дій.","group in the Triggers panel.":"на панелі тригерів.","https://...":"https://...","if":"якщо","if you are still using obs-websocket 4.x / port":"якщо ви досі використовуєте obs-websocket 4.x / порт","if you changed":"якщо ви змінили","if you want a small live OBS connection badge on the overlay while troubleshooting.":"якщо під час усунення неполадок потрібен невеликий значок поточного підключення OBS на оверлеї.","in the User Role node. It recognizes TikTok Fan Club/team levels and badges on the incoming message and does not depend on Main Chat Overlay settings.":"у вузлі User Role. Він розпізнає рівні й значки TikTok Fan Club/команди у вхідному повідомленні та не залежить від налаштувань головного оверлею чату.","is a legacy alias":"— застарілий псевдонім","is a node-based editor. Each line carries a message payload plus a boolean state (":"— редактор на основі вузлів. Кожна лінія передає дані повідомлення та логічний стан (","is running inside OBS Browser Source with":"працює всередині джерела браузера OBS з увімкненим режимом","keeps it flowing to the next node.":"передає його далі наступному вузлу.","keys, note them so overlays and remote clients stay consistent.":"ключі, документуйте їх, щоб оверлеї та віддалені клієнти працювали узгоджено.","labels for threshold comparisons, including 100 unknown named units = $0.01 USD. It does not parse":"для порогових порівнянь, включно з 100 невідомими іменованими одиницями = $0.01 USD. Він не видобуває суми донатів зі звичайного тексту поля","labels such as value,":"на кшталт: значення,","logic nodes":"логічні вузли","message API":"API повідомлення","not in the editor.":"а не в редакторі.","number / string":"число / рядок","object":"об’єкт","object and any APIs the preload script exposes (e.g.":"та будь-яких API, які надає скрипт попереднього завантаження (наприклад,","object; fields you omit keep their current values.":"; пропущені поля зберігають поточні значення.","obs-websocket-test.html":"obs-websocket-test.html","on a regular chat message), the placeholder is replaced with an empty string rather than showing the literal":"у звичайному повідомленні чату), підстановка замінюється порожнім рядком замість буквального показу","on the Flow Actions page to retry the latest blocked clip. Clicking elsewhere on that page also enables playback. An OBS Browser Source normally allows autoplay.":"на сторінці Flow Actions, щоб повторити останній заблокований кліп. Натискання в іншому місці цієї сторінки також дозволяє відтворення. Джерело браузера OBS зазвичай дозволяє автоматичне відтворення.","only if all connected inputs equal":"лише якщо всі підключені входи дорівнюють","optional. Only append":"необов’язковий. Додавайте лише","or":"або","or the extension icon).":"або значка розширення).","output, the flow simply ends there. That is perfect for filters (\"block everything that fails the check\") but do not forget to connect the":"виходом, сценарій просто завершується на ньому. Це чудово підходить для фільтрів («блокувати все, що не проходить перевірку»), але не забудьте підключити","outputs a value of":"видає значення","panel onto the canvas. It acts as a gate: the flow continues only when your code returns":"на полотно. Він працює як перемикач пропуску: сценарій продовжується, лише коли ваш код повертає","panel. It can mutate the message, block it, or attach metadata that downstream nodes can read.":". Він може змінювати повідомлення, блокувати його або додавати метадані, доступні наступним вузлам.","path if you need fallbacks.":"шлях, якщо потрібні запасні варіанти.","popup.html":"popup.html","previews locally with visible playback status. You can still upload a recording or choose an app-local file. For changing names or messages, use the existing":"відтворює локальний попередній перегляд із видимим станом відтворення. Ви також можете завантажити запис або вибрати локальний файл застосунку. Для змінних імен або повідомлень використовуйте наявну","prose for donation values.":".","read the payload and may rewrite fields, set state, or flip the gate signal to":"читають дані й можуть переписувати поля, задавати стан або змінювати сигнал пропуску на","recommended for consistent control. Social Stream Ninja Flow Actions use the OBS WebSocket v5 API from OBS 28+ and expect the modern request set on port":"рекомендовано для узгодженого керування. Flow Actions Social Stream Ninja використовує API OBS WebSocket v5 з OBS 28+ та очікує сучасний набір запитів на порту","result API":"API результату","select a Custom Code node and click":"виберіть вузол Custom Code і натисніть","socket on a Condition node). That makes it easy to build fallback logic without duplicating whole flows.":"порт вузла Condition). Це спрощує створення запасної логіки без дублювання цілих сценаріїв.","socket to our reply, so regular chatters get an acknowledgement while commands simply pass through.":"порт до нашої відповіді, тож звичайні учасники чату отримують підтвердження, а команди просто проходять далі.","sources":"джерела","state from their input. Others (NOT, AND, OR) recalculate the boolean themselves.":"стан зі свого входу. Інші (NOT, AND, OR) самостійно переобчислюють логічне значення.","string":"рядок","succeed.":"виконуються успішно.","system so viewers can intentionally trigger flows.":", щоб глядачі могли навмисно запускати сценарії.","template variables":"змінні шаблонів","template. New alert templates start disabled so you can configure and test them first. For the OBS template, choose a source and the same normally-off filter in both filter actions.":"шаблон. Нові шаблони сповіщень спочатку вимкнені, щоб ви могли налаштувати й перевірити їх. Для шаблону OBS виберіть джерело та той самий зазвичай вимкнений фільтр в обох діях фільтра.","text.":"текст.","that get replaced with event data at runtime. Wrap variable names in curly braces like":"які під час виконання замінюються даними події. Обрамляйте назви змінних фігурними дужками, наприклад","the object":"об’єкт","to back up or share.":"для резервного копіювання або поширення.","to build queue systems, raffles, or scoring engines.":"для створення систем черги, розіграшів або підрахунку балів.","to continue the flow":"щоб продовжити сценарій","to convert the formatted donation label into EUR. It returns a number, or":"щоб перетворити форматовану позначку донату на EUR. Повертає число або","to enable them. In extension mode the nodes appear greyed-out with the label":"щоб увімкнути їх. У режимі розширення вузли відображаються сірими з позначкою","to filter decisions, and":"для фільтрування рішень, а","to inject events,":"для додавання подій,","to let the flow continue,":"щоб дати сценарію продовжитися,","to make things happen (send chat, control overlays, relay messages, etc.).":"для виконання дій (надсилання чату, керування оверлеями, пересилання повідомлень тощо).","to prevent the message from being displayed or relayed.":"щоб повідомлення не відображалося й не пересилалося.","to stop it.":"щоб його зупинити.","to the Flow Actions URL if your OBS server is configured to require authentication.":"до URL Flow Actions, якщо ваш сервер OBS налаштований вимагати автентифікацію.","to the URL for":"до URL сторінки","to validate the full pipeline.":"для перевірки всього ланцюжка.","trigger (or Message Contains, a regex, a donation event, etc.) starts the chain; both actions then run for each matching message.":"тригер (або Message Contains, регулярний вираз, подія донату тощо) запускає ланцюжок; потім обидві дії виконуються для кожного відповідного повідомлення.","true":"true","twitch, youtube":"twitch, youtube","unless the node itself errors.":"якщо сам вузол не завершується помилкою.","updates OBS Text (GDI+) and Text (FreeType 2) inputs directly and supports Event Flow template variables such as":"безпосередньо оновлює джерела OBS Text (GDI+) і Text (FreeType 2) та підтримує змінні шаблонів Event Flow, як-от","use":"використовуйте","value, value + unit, or compact unit/value. Unknown named virtual units use 100 units = $0.01 USD; unpriced TikTok gifts use one coin per gift ($0.01 each).":"значення, значення + одиниця або скорочений запис одиниця/значення. Для невідомих іменованих віртуальних одиниць використовується 100 одиниць = $0.01 USD; для подарунків TikTok без ціни — одна монета на подарунок ($0.01 кожна).","vs":"проти","when the alert is muted. By inverting that result, the NOT node makes sure we only play the celebration when the flag is":"коли сповіщення вимкнено. Інвертуючи результат, вузол NOT забезпечує відтворення святкового ефекту лише коли прапорець має значення","when the message is a command. We route the":"коли повідомлення є командою. Ми спрямовуємо","when the requested target currency is unsupported. The converter uses Social Stream Ninja's approximate internal rates; it does not contact an external exchange service.":"коли запитана цільова валюта не підтримується. Конвертер використовує приблизні внутрішні курси Social Stream Ninja; він не звертається до зовнішнього обмінного сервісу.","whenever the RANDOM gate sits idle, so sound B would play on every chat message that":"щоразу, коли RANDOM неактивний, тож звук B відтворювався б на кожне повідомлення чату, яке","your code runs as":"ваш код виконується як","your nodes so future-you knows which branch is which.":"свої вузли, щоб пізніше розуміти призначення кожної гілки.","{\"viewers\":100}":"{\"viewers\":100}","– a":"— це","– the event or message data object.":"— об’єкт даних події або повідомлення.","┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│ Relay Chat │ │ │ │ │ │ (to Discord) │ │ Gate: VIP/sub/mod │ │ Reformat message text │ │ │ │ + starts with │ │ → \"📋 Feature Request │ │ │ │ !feature │ │ from {name}: {text}\" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘":"┌─────────────────────────┐   ┌───────────────────────────┐   ┌──────────────────┐\n│ Тригер Custom Code      │──▶│ Дія Execute Custom Code   │──▶│ Relay Chat       │\n│                         │   │                           │   │ (до Discord)     │\n│ Умова: VIP/sub/mod       │   │ Переформатувати текст     │   │                  │\n│ + починається з         │   │ → «📋 Запит на функцію      │   │                  │\n│ !feature                │   │ від {name}: {text}»       │   │                  │\n└─────────────────────────┘   └───────────────────────────┘   └──────────────────┘","✅ Works. An":"✅ Працює. Цей","❌ Never runs. Feature Message and Speak Text are both":"❌ Ніколи не запускається. Feature Message та Speak Text — обидві"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/actions/event-flow-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="guide-shell">
+        <header>
+            <p class="badge">Система Event Flow</p>
+            <h1>Посібник із редактора потоків подій</h1>
+            <p>Створюйте надійні автоматизації для Social Stream Ninja. Цей посібник пояснює основи, логічні вузли, проходження сигналів і практичні прийоми, про які автори найчастіше запитують: наприклад, як уникати відлуння чату та коли поєднувати блоки AND/NOT.</p>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Українська"><span aria-hidden="true">🌐 </span><span lang="uk">Українська</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/event-flow-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/event-flow-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/event-flow-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/event-flow-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/event-flow-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/event-flow-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/event-flow-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/event-flow-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/event-flow-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/event-flow-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/event-flow-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/event-flow-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="event-flow-guide.html" lang="uk" hreflang="uk" aria-current="true">Українська</a><a class="site-language-link" href="../../ar/actions/event-flow-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/event-flow-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/event-flow-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/event-flow-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></header>
+        <div class="content">
+            <section>
+                <h2>0. Короткий огляд</h2>
+                <div class="panel">
+                    <strong>Потоки подій</strong> — редактор на основі вузлів. Кожна лінія передає дані повідомлення та логічний стан (<em>true</em> = продовжити, <em>false</em> = зупинити). Використовуйте <strong>джерела</strong> для додавання подій, <strong>логічні вузли</strong> для фільтрування рішень, а <strong>дії</strong> для виконання дій (надсилання чату, керування оверлеями, пересилання повідомлень тощо).
+                </div>
+                <div class="callout">
+                    Потрібно запам’ятовувати учасників, перевіряти подальший допуск, проводити розіграш серед унікальних користувачів або очищувати один іменований список? Відкрийте <a href="user-memory-guide.html">Посібник із пам’яті користувачів</a> щоб ознайомитися з моделлю спільного стану, знімками екрана та прикладом для імпорту.
+                </div>
+                <h3 id="what-is-event-flow">Що це за редактор?</h3>
+                <p>Редактор Event Flow — це рівень розширеної автоматизації Social Stream Ninja. Він доповнює прості перемикачі спливного вікна й дає змогу створювати власну логіку маршрутизації. Використовуйте його, коли потрібно:</p>
+                <ul>
+                    <li>Пересилайте чат між сервісами з фільтрами (наприклад, дублюйте Twitch у Discord, але блокуйте команди).</li>
+                    <li>Створюйте команди на основі лояльності, ігри з ключовими словами або допуск до розіграшів за допомогою логіки AND/OR/NOT.</li>
+                    <li>Запускайте власні оверлеї, аудіо, сцени OBS або вебхуки на основі даних, які ви доповнюєте у сценарії.</li>
+                    <li>Поєднуйте кілька платформ в одній автоматизації (Kick + Twitch + YouTube через один сценарій).</li>
+                </ul>
+                <p>Спливне вікно надає швидкі готові налаштування, а Event Flow — набір інструментів для власних сценаріїв.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Запуск і основи</h4>
+                        <ul>
+                            <li>Відкрийте редактор Event Flow з меню головної панелі керування (настільний застосунок або розширення).</li>
+                            <li>Кожен проєкт зберігається локально до експорту. Використовуйте <code>Export</code> для резервного копіювання або поширення.</li>
+                            <li>Працюйте на полотнах, які називаються <em>сценаріями</em>. Кожен сценарій може одночасно підписуватися на кілька платформ.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Коротко про вузли</h4>
+                        <ul>
+                            <li><strong>Входи</strong> (ліві порти) очікують контекст повідомлення.</li>
+                            <li><strong>Виходи</strong> (праві порти) передають той самий контекст із внесеними змінами.</li>
+                            <li>Логічні вузли можуть передавати сигнали як у канал <code>true</code> так і в необов’язковий канал <code>false</code> .</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Структура даних</h4>
+                        <p>Кожне повідомлення містить об’єкт JSON. Обов’язкові ключі відповідають <a href="../docs/event-reference.html" target="_blank" rel="noopener">docs/event-reference.html</a> (platform, type, chatname, chatmessage тощо). Додавайте власні дані в <code>meta</code>.</p>
+                    </div>
+                </div>
+                <h3 id="every-flow-needs-a-trigger">Кожен сценарій починається з тригера</h3>
+                <p>Вузли дій (зелені) ніколи не запускаються самі — вони спрацьовують лише коли вузол тригера (синій) вище них повертає <code>true</code>. Сценарій лише з послідовно з’єднаних дій виглядає коректним, але завжди неактивний, бо ніщо не запускає цей ланцюжок. Назви вузлів описують, що вузол <em>робить</em>, а не коли це відбувається: <em>Показати вибране повідомлення (Feature Message)</em> показує повідомлення, коли сценарій доходить до нього — він не спрацьовує, коли ви вибираєте повідомлення для показу деінде.</p>
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-missing-trigger.png" alt="Два вузли дій, з’єднані послідовно без вузла тригера">
+                        <figcaption>❌ Ніколи не запускається. Feature Message та Speak Text — обидві <em>дії</em>; без тригера на початку ніщо не запускає ланцюжок.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-trigger-first.png" alt="Тригер Any Message, з’єднаний із діями Feature Message та Speak Text">
+                        <figcaption>✅ Працює. Цей <em>Будь-яке повідомлення (Any Message)</em> тригер (або Message Contains, регулярний вираз, подія донату тощо) запускає ланцюжок; потім обидві дії виконуються для кожного відповідного повідомлення.</figcaption>
+                    </figure>
+                </div>
+            </section>
+            <section id="flow-actions-overlay">
+                <h2>Оверлей Flow Actions (вивід дій)</h2>
+                <div class="panel">
+                    <strong>Почніть із шаблону сповіщення:</strong>
+                    <p>Виберіть <em>Донат: святкування + голос</em> для готової анімації та синтетичного кліпу подяки або розширений <em>Донат: анімація + звук + фільтр OBS</em> шаблон. Нові шаблони сповіщень спочатку вимкнені, щоб ви могли налаштувати й перевірити їх. Для шаблону OBS виберіть джерело та той самий зазвичай вимкнений фільтр в обох діях фільтра.</p>
+                    <p><em>Відтворити аудіокліп (Play Audio Clip)</em> і Multi-Alerts тепер мають спільну бібліотеку з 17 звуків: оплески, барабанний дріб, свист, касовий апарат та інші ефекти, чотири позначені синтетичні фрази англійською та прості звуки. <em>Слухати / зупинити</em> відтворює локальний попередній перегляд із видимим станом відтворення. Ви також можете завантажити запис або вибрати локальний файл застосунку. Для змінних імен або повідомлень використовуйте наявну <em>Озвучити текст (Speak Text)</em> дію.</p>
+                    <p>Event Flow відтворює звук через джерело браузера <strong>Flow Actions</strong> ; Multi-Alerts відтворює через власне джерело браузера. Для тієї самої події залишайте звук увімкненим лише в одному з них, щоб уникати подвійного відтворення. Перейдіть клавішею Tab до вузла сценарію та натисніть Enter або пробіл, щоб редагувати його властивості.</p>
+                </div>
+                <p>Таким вузлам, як <em>Відтворити аудіокліп (Play Audio Clip)</em>, <em>Показати медіаоверлей (Display Media Overlay)</em>, та елементам керування OBS потрібне середовище відображення. Ним є сторінка оверлею Flow Actions за адресою <a href="../../actions.html" target="_blank" rel="noopener">actions.html</a>. Залишайте її запущеною в програмі для трансляцій (OBS/браузерні доки Streamer.bot тощо), щоб дії Event Flow мали де відображатися.</p>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-audio-overlay.png" alt="Тригер Any Message, з’єднаний із дією Play Audio Clip">
+                    <figcaption>Цей сценарій завершений і спрацьовує на кожне повідомлення, але звук відтворюється на сторінці оверлею Flow Actions, <em>а не в редакторі.</em> Кнопка Preview редактора відтворює локально; для відтворення наживо потрібен відкритий оверлей. Якщо браузер блокує автоматичне відтворення, натисніть <strong>Увімкнути звук</strong> на сторінці Flow Actions, щоб повторити останній заблокований кліп. Натискання в іншому місці цієї сторінки також дозволяє відтворення. Джерело браузера OBS зазвичай дозволяє автоматичне відтворення.</figcaption>
+                </figure>
+                <div class="panel">
+                    <strong>Як відкрити (зі спливного вікна/панелі керування):</strong>
+                    <ol>
+                        <li>Відкрийте головне спливне вікно Social Stream Ninja (вікно, завантажене з <a href="../../popup.html" target="_blank" rel="noopener">popup.html</a> або значка розширення).</li>
+                        <li>Прокрутіть до картки Flow Actions. Використовуйте кнопку <em>[копіювати посилання]</em> або натисніть URL усередині картки.</li>
+                        <li>Посилання має вигляд <code>https://socialstream.ninja/actions.html?session=YOURSESSION</code>. Вставте його в джерело браузера OBS (рекомендовано 1920×1080) або відкрийте в будь-якому браузері оверлеїв.</li>
+                    </ol>
+                </div>
+                <div class="panel">
+                    <strong>Використання локальних медіа в окремому застосунку:</strong>
+                    <ol>
+                        <li>У дії Play Audio Clip або Display Media Overlay натисніть <em>Вибрати локальний файл (Choose Local File)</em>.</li>
+                        <li>Натисніть <em>Скопіювати локальний URL Flow Actions для OBS (Copy Local Flow Actions URL for OBS)</em> і використовуйте створений URL localhost замість розміщеного URL Flow Actions.</li>
+                        <li>Залишайте SSApp запущеним. Якщо вибраний файл переміщено, поверніться до дії та натисніть <em>Повторно прив’язати (Relink)</em>.</li>
+                    </ol>
+                    <p>Розширення Chrome не може самостійно надавати доступ до файлів із диска. Коли настільний помічник недоступний, використовуйте Upload або розміщений URL. Дивіться <a href="../docs/media-hosting-event-flow.html" target="_blank" rel="noopener">посібник із медіафайлів для Event Flow</a> для повного налаштування.</p>
+                </div>
+                <p>Після завантаження цей оверлей може:</p>
+                <ul>
+                    <li>Показувати GIPHY або прямі URL медіа, текст і конфеті, запущені вашими сценаріями.</li>
+                    <li>Відтворювати звуки (TTS, аудіокліпи) локально, щоб глядачі їх чули.</li>
+                    <li>Керуйте OBS через налаштування WebSocket у розділі Flow Actions спливного вікна (перемикання сцен, джерел, оновлення тексту GDI+/FreeType, буфер повтору тощо).</li>
+                </ul>
+                <div class="panel">
+                    <strong>Режими керування OBS:</strong>
+                    <ul>
+                        <li><strong>Browser Source API:</strong> доступно лише коли <code>actions.html</code> працює всередині джерела браузера OBS з увімкненим режимом <em>Розширений рівень доступу (Advanced Access Level)</em>. Тут працює перемикання сцен, а дії запису / трансляції / буфера повтору можуть використовувати це як запасний спосіб.</li>
+                        <li><strong>OBS WebSocket:</strong> рекомендовано для узгодженого керування. Flow Actions Social Stream Ninja використовує API OBS WebSocket v5 з OBS 28+ та очікує сучасний набір запитів на порту <code>4455</code>.</li>
+                        <li><strong>Пароль:</strong> необов’язковий. Додавайте лише <code>&amp;obspw=...</code> до URL Flow Actions, якщо ваш сервер OBS налаштований вимагати автентифікацію.</li>
+                        <li><strong>Діагностика оверлею:</strong> додайте <code>&amp;obsdebug=1</code> до URL сторінки <code>actions.html</code> якщо під час усунення неполадок потрібен невеликий значок поточного підключення OBS на оверлеї.</li>
+                        <li><strong>Set Text Source:</strong> безпосередньо оновлює джерела OBS Text (GDI+) і Text (FreeType 2) та підтримує змінні шаблонів Event Flow, як-от <code>{counterValue}</code> і <code>{counterTarget}</code>.</li>
+                        <li><strong>Старі інсталяції 4.x:</strong> якщо ви досі використовуєте obs-websocket 4.x / порт <code>4444</code>, дії джерела / фільтра / вимкнення звуку / тексту не працюватимуть, доки не буде оновлено OBS / obs-websocket.</li>
+                    </ul>
+                    <p>Дивіться окремий <a href="obs-control-guide.html">Посібник із керування OBS</a> для всіх тригерів, дій, кроків налаштування та перевірених прикладів.</p>
+                </div>
+                <div class="panel">
+                    <strong>Рекомендований шлях діагностики:</strong>
+                    <ol>
+                        <li>Відкрити <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">obs-websocket-test.html</a>.</li>
+                        <li>Переконайтеся, що <code>GetVersion</code>, <code>GetCurrentProgramScene</code>, і <code>GetSceneList</code> виконуються успішно.</li>
+                        <li>Виконайте там перевірку відповідної дії, перш ніж тестувати всю автоматизацію Event Flow.</li>
+                    </ol>
+                </div>
+                <div class="panel warn">
+                    <strong>Залишайте оверлей відкритим.</strong> Закриття сторінки Flow Actions призупиняє всі дії оверлеїв/звуку/OBS в Event Flow. Приховайте її або розмістіть на окремому моніторі замість закриття.
+                </div>
+            </section>
+
+            <section>
+                <h2>1. Що проходить через вузол?</h2>
+                <p>Середовище виконання Event Flow передає кожною лінією дві речі:</p>
+                <ol>
+                    <li><strong>Дані події</strong> — об’єкт даних події або повідомлення.</li>
+                    <li><strong>Сигнал пропуску</strong> — це <em>true</em>/<em>false</em> біт, який повідомляє наступному вузлу, чи слід виконуватися.</li>
+                </ol>
+                <div class="panel">
+                    <strong>Якщо вузол видає false:</strong> наступні вузли припиняють виконання, якщо не отримують вхід іншою гілкою (наприклад, через <code>false</code> порт вузла Condition). Це спрощує створення запасної логіки без дублювання цілих сценаріїв.
+                </div>
+                <h3>Очікувані входи</h3>
+                <ul>
+                    <li><strong>Джерела подій</strong> (Twitch Message, таймери, ручний тригер тощо) ігнорують вхід згори — вони генерують власні дані й завжди видають <code>true</code> якщо сам вузол не завершується помилкою.</li>
+                    <li><strong>Вузли перетворення та логіки</strong> читають дані й можуть переписувати поля, задавати стан або змінювати сигнал пропуску на <code>false</code>.</li>
+                    <li><strong>Вузли дій</strong> спрацьовують лише коли сигнал пропуску залишається <code>true</code>. Вони також можуть видавати оновлені дані, якщо ви хочете продовжити ланцюжок дій.</li>
+                </ul>
+                <h3>Шаблони виходів</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Один вихід</h4>
+                        <p>Більшість вузлів мають один вихід. Усе, що надходить (дані + сигнал пропуску), виходить без змін, якщо вузол цього не редагує.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Виходи True/False</h4>
+                        <p>Вузли Condition, Compare, Regex і Logic мають два вихідні порти. <em>True</em> проходить через зелений порт; <em>false</em> стає доступним на сірому/червоному порту.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Передавання без змін і перевизначення</h4>
+                        <p>Деякі вузли (Set Variable, Math, Text Replace) змінюють дані, але все одно передають <em>true</em>/<em>false</em> стан зі свого входу. Інші (NOT, AND, OR) самостійно переобчислюють логічне значення.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>2. Шпаргалка з логічних вузлів</h2>
+                <p>Ці блоки відповідають на найпоширеніші запитання про значення true/false.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>НЕ (NOT)</h4>
+                        <ul>
+                            <li>Входи: 1 логічне значення (true/false) від попереднього вузла.</li>
+                            <li>Виходи: інвертоване логічне значення та незмінені дані.</li>
+                            <li><strong>Стандартна поведінка:</strong> Якщо до входу NOT нічого не підключено, він обчислюється як <code>false</code>, тому вихід — <code>true</code>.</li>
+                        </ul>
+                        <div class="panel">
+                            <strong>Приклад:</strong> Розмістіть NOT після Contains Keyword, щоб запускати сповіщення, коли глядач <em>не використовує ключове слово.</em>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>І (AND)</h4>
+                        <ul>
+                            <li>Входи: два або більше логічних сигналів (A, B, ...). Додаткові порти можна залишити порожніми.</li>
+                            <li>Виходи: <code>true</code> лише якщо всі підключені входи дорівнюють <code>true</code>.</li>
+                            <li>Використовуйте AND, коли одночасно має виконуватися кілька умов («є платним підписником» <em>і</em> «повідомлення чату містить !raffle»).</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>OR</h4>
+                        <ul>
+                            <li>Надсилає <code>true</code> якщо <strong>будь-який</strong> підключений вхід має значення true.</li>
+                            <li>Корисно для багатоплатформних тригерів: подайте вузли повідомлень Twitch + YouTube в один OR, а потім об’єднайте подальшу дію.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="callout tip">
+                    <strong>Чи завжди потрібен вузол AND?</strong><br>
+                    Ні. Багато вузлів уже мають комплексні фільтри (наприклад, Filter User Level + Contains Text). Використовуйте AND, лише коли вбудовані опції не охоплюють вашу комбінацію або потрібен багаторазовий логічний вузол, спільний для інших гілок.
+                </div>
+                <div class="callout.warn">
+                    <strong>NOT і порожні входи:</strong> Непідключений вузол NOT усе одно видаватиме <code>true</code>. Залишайте його підключеним до осмисленого входу або вимкніть вузол, щоб він випадково не розблокував сценарій.
+                </div>
+            </section>
+
+            <section>
+                <h2>3. Приклади мікросценаріїв</h2>
+                <h3>A. Автовідповідь, якщо повідомлення не є командою</h3>
+                <div class="diagram">
+Повідомлення Twitch ──▶ Збіг Regex «^!» ─┐
+│ ├─false──▶ Автовідповідь («Дякуємо за спілкування!»)
+│ └─true──▶ Нічого не робити
+                </div>
+                <p>Тут вузол Regex видає <code>true</code> коли повідомлення є командою. Ми спрямовуємо <code>false</code> порт до нашої відповіді, тож звичайні учасники чату отримують підтвердження, а команди просто проходять далі.</p>
+                <h3>B. Кілька обов’язкових перевірок через AND</h3>
+                <div class="diagram">
+Повідомлення YouTube ──▶ Містить «!queue» ─▶ AND ─▶ Переслати в Discord
+Подароване членство ─▶ Роль користувача = учасник ──▲
+                </div>
+                <p>Вузол AND гарантує, що до Discord пересилаються лише повідомлення учасників із правильним ключовим словом. Обидві гілки надсилають логічний результат до AND; дані з <em>першої гілки</em> проходять далі.</p>
+                <h3>C. Вузол NOT для блокування повторних сповіщень</h3>
+                <div class="diagram">
+Дані події ─▶ Перевірка стану (isAlertMuted)
+└─false─▶ NOT ─▶ Відтворити святковий ефект
+                </div>
+                <p><code>State Check</code> видає значення <code>true</code> коли сповіщення вимкнено. Інвертуючи результат, вузол NOT забезпечує відтворення святкового ефекту лише коли прапорець має значення <code>false</code>.</p>
+                <h3>D. Випадкове відтворення одного з двох звуків</h3>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-random-two-sounds.png" alt="Сценарій із вузлами RANDOM, NOT та AND для випадкового відтворення одного з двох аудіокліпів">
+                    <figcaption>Підкидання монети 50/50 для вибору одного з двох аудіокліпів. RANDOM виконує одну спробу для кожного відповідного повідомлення: коли пропускає, грає звук A; коли відхиляє, NOT інвертує результат, а AND натомість пропускає звук B.</figcaption>
+                </figure>
+                <div class="diagram">
+Тригер ──▶ RANDOM (50%) ──▶ Відтворити звук A
+│ └──▶ NOT ──▶ AND ──▶ Відтворити звук B
+Тригер ──────────────────▲
+                </div>
+                <p><strong>Вузол AND обов’язковий.</strong> Окремий NOT видавав би <code>true</code> щоразу, коли RANDOM неактивний, тож звук B відтворювався б на кожне повідомлення чату, яке <em>не відповідає вашому тригеру.</em> Подача тригера до AND як другого входу обмежує звук B лише відповідними повідомленнями. Ця схема підходить для будь-якої пари взаємовиключних дій, а не лише для аудіо.</p>
+            </section>
+
+            <section>
+                <h2>4. Запобігання відлунню, циклам і зворотному пересиланню</h2>
+                <p>Пересилання чату між інтерфейсами дає широкі можливості, але може створювати нескінченне відлуння, якщо ви слухаєте власний вихід. Дотримуйтеся таких запобіжних заходів:</p>
+                <div class="callout tip">
+                    <strong>Примітка щодо цілі YouTube Shorts:</strong><br>
+                    Тригери вхідних повідомлень і цілі вихідного пересилання Relay Chat розрізняють <code>youtube</code> і <code>youtubeshorts</code>. Використовуйте дві дії пересилання, якщо повідомлення має надійти в обидва варіанти. Дивіться <a href="../docs/source-types-guide.html#youtube-shorts-event-flow">YouTube Shorts і Event Flow</a>.
+                </div>
+                <div class="callout.danger">
+                    <strong>Relay Chat автоматично пропускає розпізнані віддзеркалення.</strong><br>
+                    Віддзеркалення — це вихідне повідомлення, повторно захоплене з цільового чату. Поточні дії Relay Chat пропускають розпізнані віддзеркалення; окремого прапорця No Reflections немає. Щоб приховати або обмежити їх показ у доку та оверлеях, використовуйте <strong>Фільтр віддзеркалень (Reflection Filter)</strong> дію з <strong>Блокувати всі (Block All)</strong>, <strong>Дозволити перше (Allow First)</strong>, або <strong>Дозволити всі (Allow All)</strong>. Це керує відображенням після повторного захоплення, а не надсиланням. Дотримуйтеся <a href="../docs/chat-relay-guide.html">покрокового посібника з пересилання Twitch і YouTube</a> для повного налаштування.
+                </div>
+                <ul>
+                    <li><strong>Уникайте дублювання систем пересилання.</strong> Вимкніть глобальне Relay all, коли використовуєте еквівалентні маршрути Event Flow, і перевірте, чи інші сервіси не з’єднують ті самі чати. Немає гарантії, що власні метадані збережуться після проходження через чат платформи.</li>
+                    <li><strong>Використовуйте вузли Debounce або Cooldown</strong> для сповіщень, які мають спрацьовувати лише раз на X секунд.</li>
+                    <li><strong>Свідомо розривайте цикли.</strong> Якщо дві гілки передають дані одна одній, додайте логічний вузол, який перевіряє змінну стану (currentlyRelaying), щоб сценарій завершувався раніше, коли прапорець установлено.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>5. Входи, виходи та практичні запитання</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Що надходить до вузла?</h4>
+                        <ul>
+                            <li>Повні дані повідомлення.</li>
+                            <li>Біт пропуску (<code>true</code>/<code>false</code>).</li>
+                            <li>Необов’язковий контекст (змінні стану, таймери), який вузол явно запитує.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Що виходить із вузла?</h4>
+                        <ul>
+                            <li>Ті самі дані, якщо вузол їх не редагує.</li>
+                            <li>Переобчислений логічний біт пропуску (логічні вузли) або незмінений біт (дії).</li>
+                            <li>Більшість побічних дій (як-от надсилання в чат) не змінюють дані, але дії балів можуть додавати поля стану, як-от <code>pointsTotal</code> або <code>pointsSpendError</code> для подальшої логіки.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Коли розгалужувати?</h4>
+                        <p>Щоразу, коли хочете по-різному реагувати на <code>true</code> проти <code>false</code>. Протягніть лінію від потрібного кольорового виходу (зелений = true, сірий/червоний = false) до наступного вузла.</p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <strong>Пам’ятайте:</strong> Якщо нічого не робити з <code>false</code> виходом, сценарій просто завершується на ньому. Це чудово підходить для фільтрів («блокувати все, що не проходить перевірку»), але не забудьте підключити <code>false</code> шлях, якщо потрібні запасні варіанти.
+                </div>
+                <h3>Поширені запитання й відповіді</h3>
+                <ul>
+                    <li><strong>Чи потрібно використовувати AND для кожної пари фільтрів?</strong> Ні. Багато вузлів містять кілька перевірок (наприклад, базовий Message Filter підтримує ключове слово + роль). Використовуйте AND лише для складних комбінацій або об’єднання сигналів різних вузлів.</li>
+                    <li><strong>Як значення true/false потрапляють до вузла NOT?</strong> Кожен вузол із зеленим виходом видає <code>true</code> за замовчуванням. Якщо умова не виконується, він видає <code>false</code>. Підключіть цю лінію до NOT, щоб інвертувати результат.</li>
+                    <li><strong>Чи може вузол видати дані, навіть якщо повертає false?</strong> Так. Дані все одно проходять через вихід false; ви вирішуєте, куди має вести ця гілка.</li>
+					<li><strong>Як визначати учасників TikTok Team?</strong> Виберіть <em>Учасник команди TikTok (TikTok Team Member)</em> у вузлі User Role. Він розпізнає рівні й значки TikTok Fan Club/команди у вхідному повідомленні та не залежить від налаштувань головного оверлею чату.</li>
+					<li><strong>Чи може кожен вузол Speak Text використовувати інший голос?</strong> Так. Введіть підтримувану постачальником назву або ID голосу в <em>Перевизначення голосу (Voice Override)</em>, або залиште порожнім, щоб використовувати стандартний голос TTS Flow Actions.</li>
+                </ul>
+            </section>
+
+            <section id="template-variables">
+                <h2>6. Довідник змінних шаблонів</h2>
+                <p>Кілька вузлів дій (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label) підтримують <strong>змінні шаблонів</strong> які під час виконання замінюються даними події. Обрамляйте назви змінних фігурними дужками, наприклад <code>{username}</code>.</p>
+
+                <h3>Основні змінні (зворотно сумісні)</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>Змінна</th><th>Псевдонім</th><th>Опис</th><th>Приклад</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{username}</code></td><td><code>{chatname}</code></td><td>Відображуване ім’я користувача</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{message}</code></td><td><code>{chatmessage}</code></td><td>Текст повідомлення чату</td><td>Усім привіт!</td></tr>
+                        <tr><td><code>{source}</code></td><td>-</td><td>Назва платформи (з великої літери)</td><td>Twitch, YouTube</td></tr>
+                        <tr><td><code>{type}</code></td><td>-</td><td>Назва платформи (як є)</td><td>twitch, youtube</td></tr>
+                        <tr><td><code>{donation}</code></td><td><code>{hasDonation}</code></td><td>Позначка суми донату/чайових</td><td>$5.00, 500 bits</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Розширені змінні</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>Змінна</th><th>Опис</th><th>Приклад</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{displayname}</code></td><td>Відображуване ім’я (альтернативне поле)</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{donoValue}</code></td><td>Еквівалент донату в USD, наданий або оцінений; Event Flow виводить порогові значення з нормалізованих позначок <code>hasDonation</code> на кшталт: значення, <code>$</code>значення, значення + одиниця або скорочений запис одиниця/значення. Для невідомих іменованих віртуальних одиниць використовується 100 одиниць = $0.01 USD; для подарунків TikTok без ціни — одна монета на подарунок ($0.01 кожна). <code>{donationAmount}</code> — застарілий псевдонім</td><td>5.00</td></tr>
+                        <tr><td><code>{event}</code></td><td>Ідентифікатор типу події</td><td>cheer, raid, new_follower</td></tr>
+                        <tr><td><code>{membership}</code></td><td>Стан членства</td><td>MEMBERSHIP, new_sponsor</td></tr>
+                        <tr><td><code>{subtitle}</code></td><td>Додатковий контекст</td><td>Учасник протягом 3 місяців</td></tr>
+                        <tr><td><code>{userid}</code></td><td>ID користувача на платформі</td><td>12345678</td></tr>
+                        <tr><td><code>{chatimg}</code></td><td>URL аватара користувача</td><td>https://...</td></tr>
+                        <tr><td><code>{contentimg}</code></td><td>URL прикріпленого зображення</td><td>https://...</td></tr>
+                        <tr><td><code>{rewardTitle}</code></td><td>Назва нагороди, якщо джерело надає поле назви нагороди верхнього рівня</td><td>Виділити моє повідомлення</td></tr>
+                        <tr><td><code>{meta}</code></td><td>Структуровані дані події (JSON)</td><td>{"viewers":100}</td></tr>
+                        <tr><td><code>{counterValue}</code></td><td>Поточне значення лічильника після кроку Counter або Check Counter</td><td>12</td></tr>
+                        <tr><td><code>{counterTarget}</code></td><td>Цільове значення лічильника</td><td>30</td></tr>
+                        <tr><td><code>{counterRemaining}</code></td><td>Ціль лічильника мінус поточне значення, щонайменше 0</td><td>18</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>Зіставлення змінних не враховує регістр.</strong> <code>{USERNAME}</code>, <code>{Username}</code>, і <code>{username}</code> працюють однаково.
+                </div>
+                <div class="panel">
+                    <strong>Поля, додані сценарієм, також працюють.</strong> Якщо попередня дія додає до повідомлення значення верхнього рівня, наступні шаблони можуть читати його безпосередньо. Саме так <code>Check Counter</code> надає <code>{counterValue}</code>, <code>{counterTarget}</code>, і <code>{counterRemaining}</code>.
+                </div>
+                <div class="panel">
+                    <strong>JSON для Call Webhook:</strong> Змінні шаблонів працюють у рядкових значеннях JSON на будь-якій глибині вкладених об’єктів або масивів. Ключі об’єктів не шаблонізуються, а власне тіло без підстановок надсилається без змін.
+                </div>
+
+                <h3>Приклади шаблонів</h3>
+                <ul>
+                    <li><strong>Show Text:</strong> <code>{username} just cheered {hasDonation}!</code></li>
+                    <li><strong>Установити текстове джерело OBS:</strong> <code>{username}: now {counterValue}, need {counterTarget}</code></li>
+                    <li><strong>Relay Chat:</strong> <code>[{source}] {username}: {message}</code></li>
+                    <li><strong>TTS:</strong> <code>{username} says {message}</code></li>
+                    <li><strong>Сповіщення про донат:</strong> <code>{username} donated {donation} - {subtitle}</code></li>
+					<li><strong>Термоетикетка:</strong> <code>{username}</code>, новий рядок, а потім <code>{donation}</code>. Дивіться <a href="../docs/thermal-printer-guide.html">Посібник із термопринтера</a> для налаштування принтера, етикеток фіксованого розміру та повного сценарію.</li>
+                    <li><strong>Discord Call Webhook:</strong> <code>{&quot;content&quot;:&quot;{message}&quot;,&quot;username&quot;:&quot;{username}&quot;,&quot;avatar_url&quot;:&quot;{chatimg}&quot;}</code></li>
+                </ul>
+
+                <div class="callout tip">
+                    <strong>Відсутні змінні стають порожніми рядками.</strong> Якщо подія не має певного поля (наприклад, <code>{donation}</code> у звичайному повідомленні чату), підстановка замінюється порожнім рядком замість буквального показу <code>{donation}</code> текст.
+                </div>
+            </section>
+
+            <section>
+                <h2>7. Перелік рекомендованих практик</h2>
+                <ul>
+                    <li><strong>Назвіть і розфарбуйте</strong> свої вузли, щоб пізніше розуміти призначення кожної гілки.</li>
+                    <li><strong>Перевіряйте вбудованим симулятором</strong> (Send Test Event) перед запуском сценарію наживо.</li>
+                    <li><strong>Групуйте логіку біля джерела.</strong> Фільтруйте якомога раніше, щоб уникати зайвої обробки далі.</li>
+                    <li><strong>Зберігайте повтори у вузлах стану.</strong> Використовуйте лічильники, перемикачі та часові мітки, щоб уникати подвійних сповіщень.</li>
+                    <li><strong>Документуйте поля meta.</strong> Коли ви додаєте власні <code>meta</code> ключі, документуйте їх, щоб оверлеї та віддалені клієнти працювали узгоджено.</li>
+                </ul>
+                <div class="callout tip">
+                    <strong>Зберігайте версії.</strong> Експортуйте сценарій після кожного важливого етапу. Імпорт — найпростіший спосіб повернутися до робочої версії, якщо експеримент не вдасться.
+                </div>
+            </section>
+
+            <section>
+                <h2>8. Подальше вивчення</h2>
+                <p><a href="../docs/streamdeck-event-flow.html">Запуск власних сценаріїв зі Stream Deck або API</a>: іменовані тригери, початковий шаблон, виявлення сценаріїв, додаткові дані, приклади HTTP/WebSocket/P2P та жести регуляторів.</p>
+                <p>Готові заглибитися?</p>
+                <ul>
+                    <li>Використовуйте <strong>Вузли стану</strong> (лічильники, перемикачі, таймери) для відстеження контексту між подіями.</li>
+                    <li>Поєднуйте <strong>Змінні + логіка</strong> для створення систем черги, розіграшів або підрахунку балів.</li>
+                    <li>Підключіться до системи <strong>Бали та нагороди</strong> , щоб глядачі могли навмисно запускати сценарії.</li>
+                    <li>Використовуєте <strong>настільний застосунок SSApp?</strong> Розблокувати <a href="#custom-js"><strong>Вузли власного JavaScript</strong></a> для довільної логіки, якої немає у вбудованих вузлах.</li>
+                    <li>Перевірте <a href="../docs/event-reference.html"><strong>Довідник подій</strong></a> для докладної документації даних усіх платформ.</li>
+                </ul>
+                <p>Цей посібник навмисно самодостатній — скопіюйте його локально, адаптуйте для своєї команди та продовжуйте експерименти в редакторі.</p>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 SECTION 9: CUSTOM JAVASCRIPT
+                 Direct link anchors:
+                   #custom-js              → section root
+                   #custom-js-trigger      → Custom Code trigger node
+                   #custom-js-action       → Execute Custom Code action node
+                   #custom-js-message-api  → message object reference table
+                   #custom-js-result-api   → result return object reference
+                   #custom-js-examples     → snippet library
+                   #custom-js-example-flow → complete worked example
+            ══════════════════════════════════════════════════════════════ -->
+            <section id="custom-js">
+                <h2>9. Власний JavaScript <span class="desktop-badge">Лише SSApp / настільний застосунок</span></h2>
+                <p>Два вузли редактора Event Flow дають змогу писати довільний JavaScript, який виконується всередині ланцюжка сценарію: <strong>Власний код (Custom Code)</strong> (тригер) та <strong>Виконати власний код (Execute Custom Code)</strong> (дія). Вони дають змогу реалізувати те, чого не можуть виразити вбудовані вузли.</p>
+
+                <div class="callout warn">
+                    <strong>Потрібен настільний застосунок.</strong> Вузли власного JavaScript вимкнені в розширенні браузера, оскільки політика безпеки вмісту Chrome Manifest V3 блокує <code>new Function()</code> / <code>eval()</code>. Відкрийте редактор через <strong>Настільний застосунок SSApp</strong> щоб увімкнути їх. У режимі розширення вузли відображаються сірими з позначкою <em>«Лише настільний застосунок»</em>.
+                </div>
+
+                <div class="panel">
+                    <strong>Редагування коду:</strong> виберіть вузол Custom Code і натисніть <strong>Відкрити редактор коду (Open Code Editor)</strong> для великого вікна редагування. <strong>Зберегти й закрити (Save &amp; Close)</strong> перевіряє синтаксис JavaScript і зберігає весь сценарій; <code>Ctrl+S</code> або <code>Cmd+S</code> робить те саме. Скасування залишає вузол без змін.
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/editor-overview.png" alt="Редактор Event Flow — порожній стан">
+                    <figcaption>Редактор Event Flow. Ліва панель перелічує доступні вузли; на крапковому полотні ви створюєте сценарії; права панель показує властивості вибраного вузла.</figcaption>
+                </figure>
+
+                <!-- ─── Trigger ─── -->
+                <h3 id="custom-js-trigger">Custom Code — вузол тригера</h3>
+                <p>Перетягніть <strong>Власний код (Custom Code)</strong> із групи <em>Розширено</em> на панелі <strong>Тригери</strong> на полотно. Він працює як перемикач пропуску: сценарій продовжується, лише коли ваш код повертає <code>true</code>.</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/trigger-panel.png" alt="Панель тригерів із вузлом Custom Code у групі Advanced">
+                        <figcaption>Custom Code розміщений у групі <em>Розширено</em> на панелі тригерів.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-trigger-props.png" alt="Панель властивостей тригера Custom Code з редактором JavaScript">
+                        <figcaption>Панель властивостей після розміщення тригера. Напишіть будь-який вираз, що повертає <code>true</code> або <code>false</code>.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>Сигнатура:</strong> ваш код виконується як <code>function(message) { ... }</code><br>
+                    <strong>Має повертати:</strong> логічне значення — <code>true</code> щоб дати сценарію продовжитися, <code>false</code> щоб його зупинити.<br>
+                    <strong>Доступно:</strong> об’єкт <code>message</code> (дивіться <a href="#custom-js-message-api">API повідомлення</a> нижче), а також <code>convertCurrency(value, targetCurrency, source)</code> і <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <!-- ─── Action ─── -->
+                <h3 id="custom-js-action">Execute Custom Code — вузол дії</h3>
+                <p>Перетягніть <strong>Виконати власний код (Execute Custom Code)</strong> із групи <em>Інтеграції</em> на панелі <strong>Дії</strong> . Він може змінювати повідомлення, блокувати його або додавати метадані, доступні наступним вузлам.</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/action-panel.png" alt="Панель дій з Execute Custom Code у групі Integrations">
+                        <figcaption>Execute Custom Code у групі <em>Інтеграції</em> на панелі дій.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-action-props.png" alt="Панель властивостей дії Execute Custom Code з редактором коду">
+                        <figcaption>Властивості дії. Поверніть об’єкт, щоб об’єднати зміни з результатом сценарію.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>Сигнатура:</strong> ваш код виконується як <code>function(message, result) { ... }</code><br>
+                    <strong>Має повертати:</strong> об’єкт або Promise, що об’єднується з <code>result</code>— дивіться <a href="#custom-js-result-api">API результату</a>.<br>
+                    <strong>Доступно:</strong> <code>message</code> (дані події), <code>result</code> (поточний стан результату сценарію), <code>printThermal(html, options)</code>, а також <code>convertCurrency(value, targetCurrency, source)</code> і <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <div class="panel">
+                    <strong>Термодрук у SSApp:</strong> виберіть принтер і відкалібруйте ширину паперу та безпечні поля в <em>Керування принтером (Printer Control)</em>, а потім поверніть <code>printThermal('&lt;strong&gt;' + message.chatname + '&lt;/strong&gt;')</code>. SSApp непомітно ставить завдання в чергу через нативний API принтера Windows і використовує збережені налаштування. Сценарій може перевизначити їх такими опціями, як <code>{ width: '58mm', marginLeft: '3mm', marginRight: '3mm', marginTop: '2mm', marginBottom: '2mm', feed: '3mm', marginType: 'printableArea' }</code>. Повернення Promise дає Event Flow змогу дочекатися надсилання й повідомити про помилки.
+                </div>
+
+                <!-- ─── Both nodes on canvas ─── -->
+                <figure class="screenshot">
+                    <img src="../../actions/img/both-nodes-canvas.png" alt="Полотно з розміщеними поруч тригером Custom Code і дією Execute Custom Code">
+                    <figcaption>Тригер Custom Code (синій) і дія Execute Custom Code (зелена) на полотні. З’єднайте вихідний порт тригера з вхідним портом дії.</figcaption>
+                </figure>
+
+                <!-- ─── message API ─── -->
+                <h3 id="custom-js-message-api">Об’єкт <code>message</code></h3>
+                <p>Обидва вузли отримують повні дані події як <code>message</code>. Наведені нижче поля доступні завжди; події окремих платформ можуть містити додаткові.</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>Поле</th><th>Тип даних</th><th>Опис</th><th>Приклад</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>message.chatmessage</code></td><td>рядок</td><td>Текст повідомлення чату (може містити HTML)</td><td><code>"Hello stream!"</code></td></tr>
+                        <tr><td><code>message.chatname</code></td><td>рядок</td><td>Відображуване ім’я відправника</td><td><code>"CoolViewer"</code></td></tr>
+                        <tr><td><code>message.userid</code></td><td>рядок</td><td>ID користувача платформи</td><td><code>"12345678"</code></td></tr>
+                        <tr><td><code>message.type</code></td><td>рядок</td><td>Платформа джерела (малими літерами)</td><td><code>"twitch"</code>, <code>"youtube"</code>, <code>"kick"</code></td></tr>
+                        <tr><td><code>message.hasDonation</code></td><td>рядок</td><td>Форматований рядок донату, якщо є</td><td><code>"$5.00"</code>, <code>"500 bits"</code></td></tr>
+                        <tr><td><code>message.donoValue</code></td><td>число / рядок</td><td>Еквівалент донату в USD, якщо його надає джерело; дійсні нульові значення враховуються. Event Flow інакше використовує <code>currency.js</code> для конвертації нормалізованих позначок <code>hasDonation</code> для порогових порівнянь, включно з 100 невідомими іменованими одиницями = $0.01 USD. Він не видобуває суми донатів зі звичайного тексту поля <code>chatmessage</code> .</td><td><code>5</code></td></tr>
+                        <tr><td><code>message.event</code></td><td>рядок</td><td>Ідентифікатор типу події</td><td><code>"new_follower"</code>, <code>"cheer"</code>, <code>"raid"</code></td></tr>
+                        <tr><td><code>message.membership</code></td><td>рядок</td><td>Стан членства, коли застосовно</td><td><code>"MEMBERSHIP"</code></td></tr>
+                        <tr><td><code>message.subtitle</code></td><td>рядок</td><td>Додатковий рядок контексту</td><td><code>"Member for 3 months"</code></td></tr>
+                        <tr><td><code>message.mod</code></td><td>логічне значення</td><td>Відправник — модератор</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.subscriber</code></td><td>логічне значення</td><td>Відправник — платний підписник</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.vip</code></td><td>логічне значення</td><td>Відправник має статус VIP</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.chatimg</code></td><td>рядок</td><td>URL аватара користувача</td><td><code>"https://..."</code></td></tr>
+                        <tr><td><code>message.meta</code></td><td>об’єкт</td><td>Довільні структуровані дані, прикріплені до події</td><td><code>{ viewers: 120 }</code></td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>Конвертація валют:</strong> використовуйте <code>convertCurrency(message.hasDonation, 'EUR', message.type)</code> щоб перетворити форматовану позначку донату на EUR. Повертає число або <code>null</code> коли запитана цільова валюта не підтримується. Конвертер використовує приблизні внутрішні курси Social Stream Ninja; він не звертається до зовнішнього обмінного сервісу.
+                </div>
+
+                <!-- ─── result API ─── -->
+                <h3 id="custom-js-result-api">Що повертає дія</h3>
+                <p>Поверніть звичайний об’єкт із коду дії. Усі включені поля об’єднуються з об’єктом <code>result</code> ; пропущені поля зберігають поточні значення.</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>Поле повернення</th><th>Тип даних</th><th>Ефект</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>modified</code></td><td>логічне значення</td><td>Установіть <code>true</code> якщо ви змінили <code>message</code> поля. Повідомляє наступним вузлам, що дані змінено.</td></tr>
+                        <tr><td><code>message</code></td><td>об’єкт</td><td>Поверніть повідомлення (можливо, змінене), щоб наступні вузли отримали ваші зміни.</td></tr>
+                        <tr><td><code>blocked</code></td><td>логічне значення</td><td>Установіть <code>true</code> щоб повідомлення не відображалося й не пересилалося.</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>Мінімальне безпечне повернення:</strong> <code>return { modified: false, message };</code><br>
+                    Навіть якщо ви нічого не змінили, повернення <code>message</code> передає його далі наступному вузлу.
+                </div>
+
+                <!-- ─── Snippet Examples ─── -->
+                <h3 id="custom-js-examples">Приклади фрагментів</h3>
+                <p>Скопіюйте будь-який із цих прикладів у текстове поле JavaScript Code відповідного типу вузла.</p>
+
+                <h4 class="snippet-heading">Фрагменти тригерів — повертайте <code>true</code> щоб продовжити сценарій</h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Збіг ключового слова (без урахування регістру)</div>
+                    <div class="snippet-desc">Продовжуйте сценарій, лише коли повідомлення містить певне слово або фразу.</div>
+                    <div class="code-js">// Matches "!hello" anywhere in the message
+return (message.chatmessage || '').toLowerCase().includes('!hello');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Виявлення команд регулярним виразом</div>
+                    <div class="snippet-desc">Знаходьте повідомлення, які починаються з команди із заданого списку (наприклад, <code>!queue</code>, <code>!raffle</code>, <code>!enter</code>).</div>
+                    <div class="code-js">return /^!(queue|raffle|enter)\b/i.test(message.chatmessage || '');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Донат понад поріг</div>
+                    <div class="snippet-desc">Спрацьовувати, лише коли донат дорівнює мінімальній сумі або перевищує її.</div>
+                    <div class="code-js">const amount = message.donoValue !== undefined && message.donoValue !== null && message.donoValue !== ''
+  ? Number(message.donoValue)
+  : (typeof convertToUSD === 'function' ? convertToUSD(message.hasDonation || '', message.type || '') : Number(String(message.hasDonation || '').replace(/[^0-9.]/g, '') || 0));
+return amount >= 5;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">YouTube Super Chat або Super Sticker в діапазоні EUR</div>
+                    <div class="snippet-desc">Перетворіть стандартну позначку донату YouTube на EUR, виключіть Jewels/Gifts і виберіть один діапазон для звуку або візуального ефекту.</div>
+                    <div class="code-js">var eventName = String(message.event || '').toLowerCase();
+if (eventName !== 'superchat' &amp;&amp; eventName !== 'supersticker') return false;
+
+var eurValue = convertCurrency(message.hasDonation || '', 'EUR', message.type || '');
+if (typeof eurValue !== 'number' || !isFinite(eurValue)) return false;
+
+message.eurValue = eurValue;
+return eurValue &gt;= 10 &amp;&amp; eurValue &lt; 25;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Фільтр платформи</div>
+                    <div class="snippet-desc">Обробляти лише події певних платформ.</div>
+                    <div class="code-js">return ['twitch', 'youtube'].includes(message.type);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Перевірка платного підписника / VIP / модератора</div>
+                    <div class="snippet-desc">Продовжувати сценарій лише для користувачів із привілеями.</div>
+                    <div class="code-js">return !!(message.subscriber || message.vip || message.mod);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Кілька умов — VIP + ключове слово</div>
+                    <div class="snippet-desc">Поєднайте перевірку ролі та вміст повідомлення в одному виразі, якого немає у вбудованих тригерах.</div>
+                    <div class="code-js">const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test(message.chatmessage || '');
+return isPrivileged && isCommand;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Перевірка довжини повідомлення</div>
+                    <div class="snippet-desc">Обробляти лише повідомлення з достатньою кількістю вмісту (корисно для TTS або пересилання, щоб уникати спаму з одного емодзі).</div>
+                    <div class="code-js">return (message.chatmessage || '').replace(/<[^>]+>/g, '').trim().length >= 20;</div>
+                </div>
+
+                <h4 class="snippet-heading" style="margin-top:36px;">Фрагменти дій — повертайте <code>{ modified, message }</code></h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Додати значок або позначку до повідомлення</div>
+                    <div class="snippet-desc">Додавайте візуальний індикатор наприкінці кожного повідомлення, яке проходить через цю дію.</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').trimEnd() + ' ✅';
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Умовно блокувати повідомлення</div>
+                    <div class="snippet-desc">Перевіряйте вміст і мовчки відкидайте повідомлення, якщо правило збігається — корисно для шаблонів спаму, які не може виразити фільтр ключових слів.</div>
+                    <div class="code-js">const text = (message.chatmessage || '').toLowerCase();
+const spamPatterns = ['buy followers', 'free nitro', 'click here'];
+
+if (spamPatterns.some(p => text.includes(p))) {
+    return { blocked: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Видалити @згадки</div>
+                    <div class="snippet-desc">Видаліть із повідомлення всі згадки @username перед пересиланням на іншу платформу.</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').replace(/@\w+/g, '').trim();
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Форматувати оголошення про донат</div>
+                    <div class="snippet-desc">Перепишіть chatmessage у послідовно оформлений рядок оголошення, якщо є донат.</div>
+                    <div class="code-js">const amount = parseFloat(message.donoValue || 0);
+if (amount > 0) {
+    const note = (message.chatmessage || '').trim();
+    message.chatmessage = `💰 ${message.chatname} donated $${amount.toFixed(2)}!`
+        + (note ? ` "${note}"` : '');
+    return { modified: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Додати метадані маршрутизації для наступних вузлів</div>
+                    <div class="snippet-desc">Додайте до повідомлення власне поле, яке наступна <em>Переслати чат (Relay Chat)</em> або <em>Надіслати повідомлення (Send Message)</em> дія може прочитати через змінну шаблону (<code>{meta}</code>).</div>
+                    <div class="code-js">message.meta = message.meta || {};
+
+// Assign a donation tier so the next node can use {meta} to decide overlay colour
+const amount = parseFloat(message.donoValue || 0);
+message.meta.donationTier = amount >= 20 ? 'gold' : amount >= 5 ? 'silver' : 'bronze';
+
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">Префікс повідомлення з урахуванням платформи</div>
+                    <div class="snippet-desc">Додавайте назву платформи на початку під час пересилання між платформами, щоб глядачі знали джерело.</div>
+                    <div class="code-js">const labels = {
+    twitch:  '[Twitch]',
+    youtube: '[YouTube]',
+    kick:    '[Kick]',
+    tiktok:  '[TikTok]',
+};
+const label = labels[message.type] || `[${message.type || 'Chat'}]`;
+message.chatmessage = `${label} ${message.chatname}: ${message.chatmessage || ''}`;
+return { modified: true, message };</div>
+                </div>
+
+                <!-- ─── Complete worked example ─── -->
+                <h3 id="custom-js-example-flow">Повний приклад — бот запитів VIP на нові функції</h3>
+                <p>Цей сценарій слухає <code>!feature &lt;text&gt;</code> від платних підписників, VIP або модераторів, переформатовує це як запит на нову функцію та пересилає до другої цілі (наприклад, Discord).</p>
+
+                <div class="diagram">
+┌─────────────────────────┐   ┌───────────────────────────┐   ┌──────────────────┐
+│ Тригер Custom Code      │──▶│ Дія Execute Custom Code   │──▶│ Relay Chat       │
+│                         │   │                           │   │ (до Discord)     │
+│ Умова: VIP/sub/mod       │   │ Переформатувати текст     │   │                  │
+│ + починається з         │   │ → «📋 Запит на функцію      │   │                  │
+│ !feature                │   │ від {name}: {text}»       │   │                  │
+└─────────────────────────┘   └───────────────────────────┘   └──────────────────┘</div>
+
+                <p><strong>Крок 1 — тригер Custom Code</strong> (вставте в поле JavaScript Code тригера):</p>
+                <div class="code-js">// Only let VIPs, subscribers, and mods through, and only for !feature commands
+const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test((message.chatmessage || '').trim());
+return isPrivileged && isCommand;</div>
+
+                <p><strong>Крок 2 — дія Execute Custom Code</strong> (вставте в поле JavaScript Code дії):</p>
+                <div class="code-js">// Strip the "!feature" command word and format a clean announcement
+const featureText = (message.chatmessage || '')
+    .replace(/^!feature\s*/i, '')
+    .trim();
+
+if (!featureText) {
+    // No text after the command: block rather than relay an empty request
+    return { blocked: true, message };
+}
+
+message.chatmessage = `📋 Feature request from ${message.chatname}: ${featureText}`;
+return { modified: true, message };</div>
+
+                <p><strong>Крок 3 — дія Relay Chat</strong>: додайте стандартний вузол Relay Chat після дії та налаштуйте його на ціль Discord (або іншу). Власний код тут не потрібен — переформатоване <code>message.chatmessage</code> проходить автоматично.</p>
+
+                <div class="callout tip">
+                    <strong>Перевірка сценарію.</strong> Натисніть кнопку: <strong>Перевірити потік (Test Flow)</strong> (угорі праворуч редактора), щоб надіслати штучне повідомлення через ланцюжок без трансляції наживо. Укажіть у chatname платного підписника, додайте повідомлення на кшталт <code>!feature dark mode support</code>, і перевірте, що ціль Relay Chat отримує переформатований рядок.
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/test-panel.png" alt="Панель Test Flow для надсилання штучних тестових подій">
+                    <figcaption>Панель Test Flow. Заповніть поля відповідно до умов тригера та натисніть <em>Запустити тест (Run Test)</em> для перевірки всього ланцюжка.</figcaption>
+                </figure>
+
+                <!-- ─── Security note ─── -->
+                <h3 id="custom-js-security">Питання безпеки</h3>
+                <div class="callout warn">
+                    <strong>Власний код виконується з привілеями процесу рендерера.</strong> У SSApp код вузлів Custom JS має повний доступ до об’єкта <code>window</code> та будь-яких API, які надає скрипт попереднього завантаження (наприклад, <code>window.ninjafy</code>). Ставтеся до імпортованих файлів сценаріїв як до виконуваного коду — імпортуйте лише з джерел, яким довіряєте.
+                </div>
+                <ul>
+                    <li><strong>Немає мережевої пісочниці.</strong> Код дії може викликати <code>fetch()</code>. Якщо приймаєте сценарії від інших, перевіряйте JS перед їх активацією.</li>
+                    <li><strong>Помилки перехоплюються.</strong> Помилка виконання у вашому коді повертає <code>false</code> (тригер) або нічого не виконує (дія) і записує повідомлення в консоль DevTools — сценарій не завершується аварійно.</li>
+                    <li><strong>Синтаксичні помилки також.</strong> Помилка типу <code>SyntaxError</code> на етапі компіляції перехоплюється так само. Перевірте DevTools (F12), якщо вузол начебто нічого не робить.</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

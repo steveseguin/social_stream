@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ja/docs/multiple-overlays-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ja/docs/multiple-overlays-guide.html">
+    <meta property="og:title" content="複数チャンネルと個別のオーバーレイ - Social Stream Ninja">
+    <meta property="og:description" content="1つのドックですべてのチャットを読みながら、視聴者向けの各オーバーレイに表示するプラットフォームを選びます。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ja/docs/multiple-overlays-guide.html">
+    <meta name="twitter:title" content="複数チャンネルと個別のオーバーレイ - Social Stream Ninja">
+    <meta name="twitter:description" content="1つのドックですべてのチャットを読みながら、視聴者向けの各オーバーレイに表示するプラットフォームを選びます。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>複数チャンネルと個別のオーバーレイ - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="1つのドックですべてのチャットを読みながら、視聴者向けの各オーバーレイに表示するプラットフォームを選びます。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/multiple-overlays-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{"(replace an existing":"（既存の","(see":"（参照：",") or percentages (for example,":"）またはパーセント（例：","). Blank width and height fill the browser; blank offsets start at the top-left corner.":"）で設定します。幅と高さを空欄にするとブラウザー全体を埋め、位置を空欄にすると左上から配置します。","). Do not use a platform channel ID here. Tab IDs can change when sources reopen, and sources without a matching tab ID may be excluded. This is a Dock option, not a general Featured Chat channel filter.":"）。ここにプラットフォームのチャンネルIDを使わないでください。ソースを開き直すとタブIDが変わる場合があり、一致するタブIDのないソースは除外されることがあります。これはドックのオプションであり、Featured Chat全般のチャンネルフィルターではありません。",", and":"、および",", and remove":"を置き換え、さらに次を削除します：",", and top to":"、上位置を次に設定します：",", append":"がある場合は、次を追加します：",", height to":"、高さを次に設定します：",", left to":"、左位置を次に設定します：",", then":"、次に",", then use these values under each layer’s":"に設定し、各レイヤーの次の欄で、これらの値を使用します：",". An optional compact starting style is":"。コンパクトな初期スタイルとして、任意で次を使えます：",". Changing an OBS source’s name does not update its saved URL.":"。OBSソースの名前を変えても、保存されたURLは更新されません。",". Enter just the numbers, without commas or “px”. Add the layers in this order, bottom first:":"。カンマや「px」を付けず、数字だけを入力します。下のレイヤーから、次の順で追加してください：",". Keep that Dock as your operator view.":"。そのドックを操作用の表示として使ってください。",". Other layers can stay fullscreen. For Hype above chat and Featured Chat shifted right, use the":"。他のレイヤーは全画面のままで構いません。チャットの上にHypeを置き、Featured Chatを右へ移すには、次を使います：",". Other pages need their own transparent background settings. Some external sites block embedding entirely.":"。他のページには、それぞれの透明背景設定が必要です。外部サイトの中には、埋め込み自体をブロックするものもあります。",". Other scene sizes need different pixel values.":"。シーンの大きさが違う場合、ピクセル値も変える必要があります。",". Pixel sizes stay fixed when the browser changes size; percentages follow the browser’s width or height.":"。ピクセル指定のサイズはブラウザーの大きさが変わっても固定され、パーセント指定はブラウザーの幅や高さに追従します。","1. Combine capture in one session":"1. 1つのセッションで取得をまとめる","1. Live Chat / Dock":"1. ライブチャット／ドック","2. Hype counter":"2. Hypeカウンター","2. Split rolling chat by platform":"2. 流れるチャットをプラットフォーム別に分ける","3. Emoji / Emote Wall":"3. 絵文字／エモートウォール","3. Split selected messages":"3. 選択したメッセージを分ける","4. Featured Chat":"4. 注目チャット（Featured Chat）","4. Two channels on the same platform":"4. 同じプラットフォームの2つのチャンネル","5. NinjaBacker (optional)":"5. NinjaBacker（任意）","5. Verify each audience view":"5. 各視聴者向け表示を確認する","6. Chat and alerts in one browser tab":"6. 1つのブラウザータブにチャットとアラートをまとめる",": 450 + 1470 = 1920. Moving a 1920-wide layer right by 450 would cut off its right edge. Featured Chat still places its message near the bottom of its own area. To center shorter messages within that area, add":"：450 + 1470 = 1920。幅1920のレイヤーを右へ450移動すると、右端が切れます。Featured Chatは引き続き、自分の領域の下部付近にメッセージを配置します。その領域内で短いメッセージを中央に置くには、次を追加します：","; replace existing values rather than duplicating them. Increase the Hype layer’s height if your chosen style needs more room.":"。既存の値は重複して追加せず、置き換えてください。選んだスタイルに余裕が必要な場合、Hypeレイヤーの高さを増やします。","A transparent layer can still block taps. Turn off":"透明なレイヤーでも、タップを妨げる場合があります。次をオフにしてください：","Actual Chromium test with four SSN overlays and an isolated test feed. The image is transparent; a dark background is shown here for readability. Click to see full size. Your fonts, colors, and message spacing come from your own overlay settings.":"4つのSSNオーバーレイと独立したテストフィードを使った、実際のChromiumでのテストです。画像自体は透明で、ここでは見やすくするため暗い背景を表示しています。クリックで原寸を表示できます。フォント、色、メッセージ間隔は、自分のオーバーレイ設定から適用されます。","Add the intended source chats in SSN and confirm one fresh message from each reaches the same unfiltered":"SSNに目的のチャットソースを追加し、それぞれの新しいメッセージが同じフィルターなしの次の表示に届くことを確認します：","All guides":"すべてのガイド","Allow taps and scrolling":"タップとスクロールを許可","Append to its Dock URL":"そのドックURLに追加","Audience view":"視聴者向け表示","Automatic transparency supports":"自動透明化に対応するページ：","Browse all guides":"すべてのガイドを見る","Capture":"取り込み","Center Hype within the column.":"列の中でHypeを中央に配置します。","Clear saved setup":"保存した設定をクリア","Combine overlays":"オーバーレイを組み合わせる","Commands & API":"コマンドとAPI","Confirm both appear in the operator Dock, and each rolling overlay shows only its intended source.":"操作用ドックには両方が表示され、各チャットオーバーレイには目的のソースだけが表示されることを確認します。","Copy combined link":"結合したリンクをコピー","Copy generated links so their session, password, version, and server settings remain intact. Add each audience view as a separate OBS Browser Source. Give OBS sources descriptive names such as":"セッション、パスワード、バージョン、サーバー設定を保持するため、生成されたリンクをコピーしてください。各視聴者向け表示を、個別のOBSブラウザーソースとして追加します。OBSのソースには、次のような分かりやすい名前を付けます：","Copy the new combined link into OBS.":"新しい結合リンクをOBSにコピーします。","Copy them from your existing Browser Source properties, keeping the session, password, styles, and connection settings. Leave":"既存のブラウザーソースのプロパティからコピーし、セッション、パスワード、スタイル、接続設定を保持します。次はそのままにします：","Create test messages":"テストメッセージを作成","Download":"ダウンロード","Each layer is its own browser area. Set the overall OBS Browser Source to":"各レイヤーは独立したブラウザー領域です。OBSブラウザーソース全体を次に設定します：","Event reference":"イベントリファレンス","Everything except Discord":"Discord以外のすべて","Feature each message and test the clear button. Check all visible featured pages after switching platforms.":"各メッセージを注目表示し、クリアボタンをテストします。プラットフォームを切り替えた後は、表示中のすべての注目表示ページを確認してください。","Features":"機能","For a left chat column on a 1920×1080 OBS Browser Source, set the chat layer’s width to":"1920×1080のOBSブラウザーソースで左にチャット列を置く場合、チャットレイヤーの幅を次に設定します：","For advanced Dock filtering,":"ドックの高度なフィルタリングでは、","For example, with a default connection:":"たとえば、既定の接続の場合：","For fully independent productions, use separate capture instances/profiles with distinct sessions and open only each production’s intended sources there. Giving one overlay a different session without matching capture will leave it idle. An overlay’s":"完全に独立した配信には、別の取得インスタンス／プロファイルと異なるセッションを使い、それぞれで対象のソースだけを開いてください。取得側を合わせずにオーバーレイのセッションだけを変えると、何も受信しなくなります。オーバーレイの","For rolling chat, make two copies of your generated":"流れるチャットには、生成した次のURLを2つコピーします：","For selected rather than rolling chat, duplicate your generated":"流れるチャットではなく選択したチャットには、生成した次のURLを複製します：","Guides":"ガイド","Height":"高さ","Hire":"仕事を依頼する","Home":"ホーム","If a layer is blank or covers chat":"レイヤーが空、またはチャットを覆う場合","If a view is blank, remove its filter temporarily. If chat returns, check the exact source type or tab ID. If it remains blank, use":"表示が空の場合、一時的にフィルターを外してください。チャットが戻れば、正確なソースタイプかタブIDを確認します。空のままなら、次を使用してください：","Inspiration":"活用アイデア","Keep Featured Chat clear of the chat column.":"Featured Chatをチャット列と重ならないようにします。","Keep NinjaBacker above Featured Chat.":"NinjaBackerをFeatured Chatより上に配置します。","Keep combined links and QR codes as private as the individual overlay links. SSN capture must still be running, and the phone must be able to reach the servers used by the original URLs. A":"結合リンクとQRコードは、個別のオーバーレイリンクと同様に非公開で扱ってください。SSNの取得処理は動いている必要があり、スマートフォンから元のURLで使うサーバーへ接続できる必要があります。","Layer":"レイヤー","Leave":"次はそのままにします：","Left":"左位置","Left = 450 and Width = 1470 together":"Left = 450とWidth = 1470を一緒に設定","Main navigation":"メインナビゲーション","Mobile browsers may require interaction with a page before playing sound. If needed, enable interaction for that layer and tap it; browser autoplay restrictions still apply. Check audio on the actual phone before relying on it.":"モバイルブラウザーでは、音を出す前にページの操作が必要な場合があります。必要ならそのレイヤーの操作を有効にしてタップしてください。ブラウザーの自動再生制限は引き続き適用されます。使う前に、実際のスマートフォンで音声を確認してください。","Multiple channels and separate overlays":"複数のチャンネルと個別のオーバーレイ","Multiple channels and separate overlays - Social Stream Ninja":"複数チャンネルと個別のオーバーレイ - Social Stream Ninja","OBS layout recipe below":"以下のOBSレイアウト例","OBS recipe: a left chat column with fullscreen effects":"OBSの構成例：左のチャット列と全画面のエフェクト","OBS views":"OBSの表示","On its":"その次のURLで：","On this page":"このページの内容","One SSN session":"1つのSSNセッション","One captured feed can supply several differently filtered views.":"1つの取得フィードから、フィルターの異なる複数の表示を作れます。","Open each original URL separately first. Alerts normally remain empty until an event arrives; combining pages does not capture new events.":"まず元のURLをそれぞれ単独で開いてください。アラートは、通常イベントが届くまで空のままです。ページを組み合わせても、新しいイベントを取得するようにはなりません。","Open navigation menu":"ナビゲーションメニューを開く","Operator Dock sees both":"操作用ドックには両方を表示","Overlay Gallery":"オーバーレイギャラリー","Paste its viewer overlay URL as the last layer, with its existing right-entry animation setting. The combiner controls its area and layer order; the NinjaBacker overlay controls its animation and internal placement. Its background must be transparent and its site must allow embedding. This optional layer was not part of the four-overlay example test.":"既存の右から入るアニメーション設定を付けたまま、視聴者向けオーバーレイURLを最後のレイヤーに貼り付けます。結合ツールは領域とレイヤー順を制御し、NinjaBackerオーバーレイはアニメーションと内部配置を制御します。背景は透明で、サイトが埋め込みを許可している必要があります。この任意のレイヤーは、4オーバーレイのテスト例には含まれていません。","Paste your complete overlay URLs.":"オーバーレイの完全なURLを貼り付けます。","Paste your generated Streaming Chat Dock URL into the bottom layer and your Multi-Stream Alert Box URL into the top layer. Keep the session, password, and connection options in both links.":"生成したStreaming Chat DockのURLを下のレイヤーに、Multi-Stream Alert BoxのURLを上のレイヤーに貼り付けます。両方のリンクで、セッション、パスワード、接続オプションを保持してください。","Performance:":"パフォーマンス：","Preview":"プレビュー（Preview）","Preview at 1920×1080.":"1920×1080でプレビューします。","Read all your chats in one Dock while choosing which platforms appear in each audience overlay.":"1つのドックですべてのチャットを読みながら、視聴者向けの各オーバーレイに表示するプラットフォームを選びます。","Repeat with a real message from each of your own connected sources, since synthetic messages cannot establish actual source-tab IDs.":"合成メッセージでは実際のソースタブIDを確認できないため、自分が接続している各ソースから実際のメッセージを送って、同じ確認を行ってください。","Reset to fullscreen":"全画面にリセット","Select":"選択する項目：","Send a fictional Twitch test message and a fictional YouTube test message into an isolated session using":"次を使って、独立したセッションに架空のTwitchテストメッセージとYouTubeテストメッセージを送ります：","Send a test chat message containing emojis, feature a message from your Dock, and enable Hype data in SSN. Regular chat alone does not select a Featured Chat message. Confirm each overlay works separately if it remains empty.":"絵文字を含むテストチャットを送り、ドックからメッセージを注目表示し、SSNでHypeデータを有効にします。通常のチャットだけではFeatured Chatのメッセージは選択されません。空のままの場合、各オーバーレイが単独で動くか確認してください。","Set":"設定する項目：","Set that Browser Source’s own Width to 1920 and Height to 1080. The combiner’s preview size does not set OBS dimensions. Fit the new source to your scene without cropping. After every layout edit, copy the new combined link again; an older OBS link will keep its old layout.":"そのブラウザーソース自身の幅を1920、高さを1080に設定します。結合ツールのプレビューサイズはOBSの寸法を設定しません。新しいソースを切り抜かず、シーンに合わせてください。レイアウトを編集するたびに、新しい結合リンクをコピーし直します。古いOBSリンクには古いレイアウトが残ります。","Show QR code":"QRコードを表示","Size and position":"サイズと位置","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream Ninja ·":"Social Stream Ninja ·","Source types":"ソースの種類","Streaming Chat Dock":"Streaming Chatドック","Support":"サポート","Supported Sites":"対応サイト","Switch theme":"テーマを切り替え","Tested combined output: Hype centered over a narrow left chat column, emojis across the scene, and a featured message along the bottom to the right of chat.":"テスト済みの結合表示：左の細いチャット列の上にHypeを中央配置し、シーン全体に絵文字、チャットの右側の下部に注目メッセージを表示。","The combined link and QR code contain the complete layout and URLs. Set up on desktop, scan once on mobile, then bookmark the combined view. Opening it also saves that setup in the phone’s browser. Changes on desktop do not automatically update an older link: copy or scan the new link after editing. This feature does not sync settings through your session ID.":"結合リンクとQRコードには、レイアウトとURLがすべて含まれます。デスクトップで設定し、モバイルで一度読み取って、結合表示をブックマークしてください。開くと、スマートフォンのブラウザーにも設定が保存されます。デスクトップで変更しても古いリンクは自動更新されません。編集後は新しいリンクをコピーするか読み取ってください。この機能は、セッションIDによる設定同期を行いません。","The current Featured Chat":"現在のFeatured Chatの","The first 80 pixels are reserved for Hype, leaving a 450-pixel-wide chat column below it. To let chat occupy the full height behind Hype instead, set Live Chat’s height to":"最初の80ピクセルをHype用に空け、その下に幅450ピクセルのチャット列を置きます。代わりに、Hypeの背後までチャットを全高で表示したい場合は、Live Chatの高さを次に設定します：","This filters which selections a featured page accepts. It does not create independent operator queues, and a rejected selection is not a clear command. Clear the featured message explicitly when switching segments so an older accepted selection is not left visible.":"これは注目表示ページが受け付ける選択を絞り込みます。独立した操作用キューを作るものではなく、拒否された選択はクリアコマンドでもありません。前に受け付けたメッセージが残らないよう、コーナーを切り替えるときは注目メッセージを明示的にクリアしてください。","Top":"上位置","Transparent SSN background":"SSNの背景を透明にする","Twitch + YouTube":"Twitch + YouTube","Twitch and YouTube together":"TwitchとYouTubeを一緒に","Twitch chat":"Twitchチャット","Twitch-only and YouTube-only":"TwitchのみとYouTubeのみ","URL, set":"URLで、次を設定します：","URL. Append these options to the respective copies:":"URLを使用します。それぞれのコピーに、次のオプションを追加します：","URL. For centered messages across the whole scene instead, use Left = 0, Width = 1920, and":"URLに追加します。代わりにシーン全体でメッセージを中央に置く場合は、Left = 0、Width = 1920と、次を使用します：","Use":"使う項目：","Use the editable link to reopen the setup with your URLs and placement filled in. To edit a combined link later, add":"編集用リンクを使うと、URLと配置が入力済みの状態で設定を開き直せます。結合リンクを後で編集するには、次を追加します：","Width":"幅","You can add up to eight URLs and use the arrow buttons to move a layer behind or in front of another. Layers fill the browser by default. Expand":"URLを最大8つ追加でき、矢印ボタンでレイヤーを他のレイヤーの後ろや前に移動できます。既定では各レイヤーがブラウザー全体を埋めます。次を展開します：","You do not need CSS for this layout.":"このレイアウトにCSSは必要ありません。","YouTube chat":"YouTubeチャット","Your links and layer options are saved automatically in this browser, including unfinished setups. Reopen":"リンクとレイヤー設定は、未完成のものも含め、このブラウザーに自動保存されます。次を開き直してください：","accepts one source type. The Dock’s comma-separated example above should not be copied into that field on Featured Chat.":"はソースタイプを1つ受け付けます。上記のドック用のカンマ区切りの例を、Featured Chatのその欄へコピーしないでください。","accepts the numeric originating tab ID; comma-separated IDs are supported. Inspect an actual captured payload to obtain its":"は発信元タブの数値IDを受け付け、カンマ区切りの複数IDにも対応します。実際に取得したペイロードで、次を確認してください：","address points to the device opening the link. Very long URLs may exceed QR capacity; the combined link can still be copied.":"アドレスは、そのリンクを開いたデバイスを指します。非常に長いURLはQRコードの容量を超えることがありますが、結合リンク自体はコピーできます。","and":"および","and scan it with your phone’s camera. Or select":"を選んで、スマートフォンのカメラで読み取ります。または、次を選びます：","and top to":"、上位置を次に設定します：","before its":"を、次の前に追加します：","checked. Enable \"Allow taps and scrolling on this layer\" for chat, and disable it for alerts so they do not block chat interaction.":"を有効なままにします。チャットでは「このレイヤーでタップとスクロールを許可」を有効にし、アラートでは無効にして、チャット操作を妨げないようにします。","checked. OBS cropping, transforms, filters, and its Custom CSS field are not part of the URL and do not transfer.":"を有効なままにしてください。OBSの切り抜き、変形、フィルター、カスタムCSS欄はURLに含まれないため、引き継がれません。","clears that layer’s placement. Each overlay retains its own content and settings.":"は、そのレイヤーの配置をリセットします。各オーバーレイ自身の内容と設定は維持されます。","for these pages. Do not assume an option such as":"を、これらのページで使用します。次のようなオプションが、","from another overlay works here. Use":"別のオーバーレイと同じように使えるとは考えないでください。使用するもの：","hidefrom":"hidefrom","identifies a page for routing; it is not a channel filter.":"はルーティング用にページを識別するもので、チャンネルフィルターではありません。","if present). With a URL that already has":"がある場合）。URLにすでに次がある場合：","link and add":"リンクを複製し、次を追加します：","on a layer to set its width, height, left offset, and top offset in pixels (for example,":"をレイヤーで開き、幅、高さ、左位置、上位置をピクセル（例：","on any layer above the chat that does not need interaction.":"を、チャットより上にある操作不要のレイヤーでオフにしてください。","one Browser Source still runs each embedded overlay and its connections. Combining reduces the number of OBS sources, but does not guarantee lower CPU or memory use. Close the browser preview when finished and compare OBS performance with the old sources disabled. M1 macOS/OBS performance and your specific NinjaBacker URL still need checking on your setup. You can keep Live Chat separate and combine only the other overlays if that works better.":"ブラウザーソースを1つにしても、埋め込まれた各オーバーレイとその接続は動きます。結合するとOBSソースの数は減りますが、CPUやメモリ使用量が減るとは限りません。作業後はブラウザーのプレビューを閉じ、以前のソースを無効にしてOBSの性能を比較してください。M1のmacOS／OBSでの性能と、自分のNinjaBacker URLは、自分の環境で確認する必要があります。その方が適していれば、Live Chatは別のままにして、他のオーバーレイだけを結合することもできます。","onlyfrom":"onlyfrom","or":"または","selects Twitch as a platform, not a particular Twitch channel. Channel names and stream titles are metadata, not interchangeable URL filter names. Add":"はプラットフォームとしてTwitchを選ぶもので、特定のTwitchチャンネルを選ぶものではありません。チャンネル名と配信タイトルはメタデータであり、URLのフィルター名の代わりにはなりません。次を追加します：","separately when the capture reports that type. See":"を、取得時にそのタイプが報告される場合に別途指定します。参照：","session and routing troubleshooting":"セッションとルーティングのトラブルシューティング","to continue editing, or select":"で編集を続けるか、次を選択します：","to its":"を次のページの","to layer existing overlay URLs in one tab or one OBS Browser Source. This is useful when reading chat on a phone during an IRL stream.":"で既存のオーバーレイURLを、1つのタブまたは1つのOBSブラウザーソースに重ねます。外配信中にスマートフォンでチャットを読む場合に便利です。","to one copy and":"を一方のコピーに、次を","to paste the result into a browser source. The combined view has no setup controls.":"で結果をブラウザーソースに貼り付けます。結合表示には設定用の操作はありません。","to show channel names when supplied by the source.":"で、ソースから提供されたチャンネル名を表示します。","to start over. Browser storage may be unavailable or temporary in private browsing.":"で最初からやり直せます。プライベートブラウジングでは、ブラウザーの保存領域が使えないか、一時的になる場合があります。","to the other. Keep the operator Dock open to select messages.":"をもう一方に追加します。メッセージを選択できるよう、操作用ドックは開いたままにしてください。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/multiple-overlays-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/multiple-overlays-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション">
+<a href="../index.html">ホーム</a>
+<a href="features.html">機能</a>
+<a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a>
+<a href="download.html">ダウンロード</a>
+<a href="guides.html">ガイド</a>
+<a href="commands.html">コマンドとAPI</a>
+<a href="supported-sites.html">対応サイト</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a>
+<a href="services.html" class="site-priority-hire">仕事を依頼する</a>
+<a href="support.html">サポート</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/multiple-overlays-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/multiple-overlays-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/multiple-overlays-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/multiple-overlays-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/multiple-overlays-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/multiple-overlays-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="multiple-overlays-guide.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/multiple-overlays-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/multiple-overlays-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/multiple-overlays-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/multiple-overlays-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/multiple-overlays-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/multiple-overlays-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/multiple-overlays-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/multiple-overlays-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/multiple-overlays-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/multiple-overlays-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="テーマを切り替え">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>複数のチャンネルと個別のオーバーレイ</h1>
+<p>1つのドックですべてのチャットを読みながら、視聴者向けの各オーバーレイに表示するプラットフォームを選びます。</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="このページの内容">
+<a href="guides.html">すべてのガイド</a>
+<a href="#setup">1. 1つのセッションで取得をまとめる</a>
+<a href="#rolling">2. 流れるチャットをプラットフォーム別に分ける</a>
+<a href="#featured">3. 選択したメッセージを分ける</a>
+<a href="#channels">4. 同じプラットフォームの2つのチャンネル</a>
+<a href="#check">5. 各視聴者向け表示を確認する</a>
+<a href="#combine">6. 1つのブラウザータブにチャットとアラートをまとめる</a>
+</nav>
+<section class="guide-card" id="setup">
+<h2>1. 1つのセッションで取得をまとめる</h2>
+<p>SSNに目的のチャットソースを追加し、それぞれの新しいメッセージが同じフィルターなしの次の表示に届くことを確認します： <strong>Streaming Chatドック</strong>。そのドックを操作用の表示として使ってください。</p>
+<p>セッション、パスワード、バージョン、サーバー設定を保持するため、生成されたリンクをコピーしてください。各視聴者向け表示を、個別のOBSブラウザーソースとして追加します。OBSのソースには、次のような分かりやすい名前を付けます： <strong>Twitchチャット</strong> および <strong>YouTubeチャット</strong>.</p>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>取り込み</strong>
+<span>Twitch + YouTube</span>
+</li>
+<li>
+<strong>1つのSSNセッション</strong>
+<span>操作用ドックには両方を表示</span>
+</li>
+<li>
+<strong>OBSの表示</strong>
+<span>TwitchのみとYouTubeのみ</span>
+</li>
+</ol>
+<figcaption>1つの取得フィードから、フィルターの異なる複数の表示を作れます。</figcaption>
+</figure>
+</section>
+<section class="guide-card" id="rolling">
+<h2>2. 流れるチャットをプラットフォーム別に分ける</h2>
+<p>流れるチャットには、生成した次のURLを2つコピーします： <code>dock.html</code> URLを使用します。それぞれのコピーに、次のオプションを追加します：</p>
+<table class="guide-table guide-table-stack">
+<thead>
+<tr>
+<th scope="col">視聴者向け表示</th>
+<th scope="col">そのドックURLに追加</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td data-label="Audience view">Twitchチャット</td>
+<td data-label="Append to its Dock URL">
+<code>&amp;onlyfrom=twitch&amp;hidemenu</code>
+</td>
+</tr>
+<tr>
+<td data-label="Audience view">YouTubeチャット</td>
+<td data-label="Append to its Dock URL">
+<code>&amp;onlyfrom=youtube&amp;hidemenu</code>
+</td>
+</tr>
+<tr>
+<td data-label="Audience view">TwitchとYouTubeを一緒に</td>
+<td data-label="Append to its Dock URL">
+<code>&amp;onlyfrom=twitch,youtube&amp;hidemenu</code>
+</td>
+</tr>
+<tr>
+<td data-label="Audience view">Discord以外のすべて</td>
+<td data-label="Append to its Dock URL">
+<code>&amp;hidefrom=discord&amp;hidemenu</code>
+</td>
+</tr>
+</tbody>
+</table>
+<p>たとえば、既定の接続の場合：</p>
+<pre>
+<code>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;onlyfrom=twitch&amp;hidemenu</code>
+</pre>
+<p>使う項目： <strong>onlyfrom</strong> および <strong>hidefrom</strong> を、これらのページで使用します。次のようなオプションが、 <code>onlytype</code> 別のオーバーレイと同じように使えるとは考えないでください。使用するもの： <code>youtubeshorts</code> を、取得時にそのタイプが報告される場合に別途指定します。参照： <a href="source-types-guide.html">ソースの種類</a>.</p>
+</section>
+<section class="guide-card" id="featured">
+<h2>3. 選択したメッセージを分ける</h2>
+<p>流れるチャットではなく選択したチャットには、生成した次のURLを複製します： <code>featured.html</code> リンクを複製し、次を追加します： <code>&amp;onlyfrom=twitch</code> を一方のコピーに、次を <code>&amp;onlyfrom=youtube</code> をもう一方に追加します。メッセージを選択できるよう、操作用ドックは開いたままにしてください。</p>
+<p>現在のFeatured Chatの <code>onlyfrom</code> はソースタイプを1つ受け付けます。上記のドック用のカンマ区切りの例を、Featured Chatのその欄へコピーしないでください。</p>
+<div class="guide-note">これは注目表示ページが受け付ける選択を絞り込みます。独立した操作用キューを作るものではなく、拒否された選択はクリアコマンドでもありません。前に受け付けたメッセージが残らないよう、コーナーを切り替えるときは注目メッセージを明示的にクリアしてください。</div>
+</section>
+<section class="guide-card" id="channels">
+<h2>4. 同じプラットフォームの2つのチャンネル</h2>
+<p>
+<code>onlyfrom=twitch</code> はプラットフォームとしてTwitchを選ぶもので、特定のTwitchチャンネルを選ぶものではありません。チャンネル名と配信タイトルはメタデータであり、URLのフィルター名の代わりにはなりません。次を追加します： <code>&amp;showchannelname</code> で、ソースから提供されたチャンネル名を表示します。</p>
+<p>ドックの高度なフィルタリングでは、 <code>&amp;filtertid=123</code> は発信元タブの数値IDを受け付け、カンマ区切りの複数IDにも対応します。実際に取得したペイロードで、次を確認してください： <code>tid</code> （参照： <a href="event-reference.html">イベントリファレンス</a> および <a href="commands.html">コマンドとAPI</a>）。ここにプラットフォームのチャンネルIDを使わないでください。ソースを開き直すとタブIDが変わる場合があり、一致するタブIDのないソースは除外されることがあります。これはドックのオプションであり、Featured Chat全般のチャンネルフィルターではありません。</p>
+<p>完全に独立した配信には、別の取得インスタンス／プロファイルと異なるセッションを使い、それぞれで対象のソースだけを開いてください。取得側を合わせずにオーバーレイのセッションだけを変えると、何も受信しなくなります。オーバーレイの <code>label</code> はルーティング用にページを識別するもので、チャンネルフィルターではありません。</p>
+</section>
+<section class="guide-card" id="check">
+<h2>5. 各視聴者向け表示を確認する</h2>
+<ol class="guide-steps">
+<li>次を使って、独立したセッションに架空のTwitchテストメッセージとYouTubeテストメッセージを送ります： <a href="test-message-guide.html">テストメッセージを作成</a>.</li>
+<li>操作用ドックには両方が表示され、各チャットオーバーレイには目的のソースだけが表示されることを確認します。</li>
+<li>各メッセージを注目表示し、クリアボタンをテストします。プラットフォームを切り替えた後は、表示中のすべての注目表示ページを確認してください。</li>
+<li>合成メッセージでは実際のソースタブIDを確認できないため、自分が接続している各ソースから実際のメッセージを送って、同じ確認を行ってください。</li>
+</ol>
+<p>表示が空の場合、一時的にフィルターを外してください。チャットが戻れば、正確なソースタイプかタブIDを確認します。空のままなら、次を使用してください： <a href="sessions-passwords-relay-modes.html">セッションとルーティングのトラブルシューティング</a>。OBSソースの名前を変えても、保存されたURLは更新されません。</p>
+</section>
+<section class="guide-card" id="combine">
+<h2>6. 1つのブラウザータブにチャットとアラートをまとめる</h2>
+<p>使う項目： <a href="../../combine.html">オーバーレイを組み合わせる</a> で既存のオーバーレイURLを、1つのタブまたは1つのOBSブラウザーソースに重ねます。外配信中にスマートフォンでチャットを読む場合に便利です。</p>
+<ol class="guide-steps">
+<li>生成したStreaming Chat DockのURLを下のレイヤーに、Multi-Stream Alert BoxのURLを上のレイヤーに貼り付けます。両方のリンクで、セッション、パスワード、接続オプションを保持してください。</li>
+<li>次はそのままにします： <strong>SSNの背景を透明にする</strong> を有効なままにします。チャットでは「このレイヤーでタップとスクロールを許可」を有効にし、アラートでは無効にして、チャット操作を妨げないようにします。</li>
+<li>選択する項目： <strong>プレビュー（Preview）</strong>、次に <strong>QRコードを表示</strong> を選んで、スマートフォンのカメラで読み取ります。または、次を選びます： <strong>結合したリンクをコピー</strong> で結果をブラウザーソースに貼り付けます。結合表示には設定用の操作はありません。</li>
+</ol>
+<p>URLを最大8つ追加でき、矢印ボタンでレイヤーを他のレイヤーの後ろや前に移動できます。既定では各レイヤーがブラウザー全体を埋めます。次を展開します： <strong>サイズと位置</strong> をレイヤーで開き、幅、高さ、左位置、上位置をピクセル（例： <code>450</code>）またはパーセント（例： <code>100%</code>）で設定します。幅と高さを空欄にするとブラウザー全体を埋め、位置を空欄にすると左上から配置します。 <strong>全画面にリセット</strong> は、そのレイヤーの配置をリセットします。各オーバーレイ自身の内容と設定は維持されます。</p>
+<p>1920×1080のOBSブラウザーソースで左にチャット列を置く場合、チャットレイヤーの幅を次に設定します： <code>450</code>、高さを次に設定します： <code>1080</code>、左位置を次に設定します： <code>0</code>、上位置を次に設定します： <code>0</code>。他のレイヤーは全画面のままで構いません。チャットの上にHypeを置き、Featured Chatを右へ移すには、次を使います： <a href="#combine-obs">以下のOBSレイアウト例</a>。ピクセル指定のサイズはブラウザーの大きさが変わっても固定され、パーセント指定はブラウザーの幅や高さに追従します。</p>
+<p>編集用リンクを使うと、URLと配置が入力済みの状態で設定を開き直せます。結合リンクを後で編集するには、次を追加します： <code>?edit=1</code> を、次の前に追加します： <code>#</code>.</p>
+<p>リンクとレイヤー設定は、未完成のものも含め、このブラウザーに自動保存されます。次を開き直してください： <a href="../../combine.html">オーバーレイを組み合わせる</a> で編集を続けるか、次を選択します： <strong>保存した設定をクリア</strong> で最初からやり直せます。プライベートブラウジングでは、ブラウザーの保存領域が使えないか、一時的になる場合があります。</p>
+<p>結合リンクとQRコードには、レイアウトとURLがすべて含まれます。デスクトップで設定し、モバイルで一度読み取って、結合表示をブックマークしてください。開くと、スマートフォンのブラウザーにも設定が保存されます。デスクトップで変更しても古いリンクは自動更新されません。編集後は新しいリンクをコピーするか読み取ってください。この機能は、セッションIDによる設定同期を行いません。</p>
+<p>結合リンクとQRコードは、個別のオーバーレイリンクと同様に非公開で扱ってください。SSNの取得処理は動いている必要があり、スマートフォンから元のURLで使うサーバーへ接続できる必要があります。 <code>localhost</code> または <code>127.0.0.1</code> アドレスは、そのリンクを開いたデバイスを指します。非常に長いURLはQRコードの容量を超えることがありますが、結合リンク自体はコピーできます。</p>
+<h3 id="combine-obs">OBSの構成例：左のチャット列と全画面のエフェクト</h3>
+<p><strong>このレイアウトにCSSは必要ありません。</strong> 各レイヤーは独立したブラウザー領域です。OBSブラウザーソース全体を次に設定します： <strong>1920×1080</strong>に設定し、各レイヤーの次の欄で、これらの値を使用します： <strong>サイズと位置</strong>。カンマや「px」を付けず、数字だけを入力します。下のレイヤーから、次の順で追加してください：</p>
+<table class="guide-table guide-table-stack">
+<thead><tr><th scope="col">レイヤー</th><th scope="col">幅</th><th scope="col">高さ</th><th scope="col">左位置</th><th scope="col">上位置</th></tr></thead>
+<tbody>
+<tr><td data-label="Layer">1. ライブチャット／ドック</td><td data-label="Width">450</td><td data-label="Height">1000</td><td data-label="Left">0</td><td data-label="Top">80</td></tr>
+<tr><td data-label="Layer">2. Hypeカウンター</td><td data-label="Width">450</td><td data-label="Height">80</td><td data-label="Left">0</td><td data-label="Top">0</td></tr>
+<tr><td data-label="Layer">3. 絵文字／エモートウォール</td><td data-label="Width">1920</td><td data-label="Height">1080</td><td data-label="Left">0</td><td data-label="Top">0</td></tr>
+<tr><td data-label="Layer">4. 注目チャット（Featured Chat）</td><td data-label="Width">1470</td><td data-label="Height">1080</td><td data-label="Left">450</td><td data-label="Top">0</td></tr>
+<tr><td data-label="Layer">5. NinjaBacker（任意）</td><td data-label="Width">1920</td><td data-label="Height">1080</td><td data-label="Left">0</td><td data-label="Top">0</td></tr>
+</tbody>
+</table>
+<p>最初の80ピクセルをHype用に空け、その下に幅450ピクセルのチャット列を置きます。代わりに、Hypeの背後までチャットを全高で表示したい場合は、Live Chatの高さを次に設定します： <code>1080</code> 、上位置を次に設定します： <code>0</code>。シーンの大きさが違う場合、ピクセル値も変える必要があります。</p>
+<ol class="guide-steps">
+<li><strong>オーバーレイの完全なURLを貼り付けます。</strong> 既存のブラウザーソースのプロパティからコピーし、セッション、パスワード、スタイル、接続設定を保持します。次はそのままにします： <strong>SSNの背景を透明にする</strong> を有効なままにしてください。OBSの切り抜き、変形、フィルター、カスタムCSS欄はURLに含まれないため、引き継がれません。</li>
+<li><strong>列の中でHypeを中央に配置します。</strong> その次のURLで： <code>hype.html</code> URLで、次を設定します： <code>align=center</code> （既存の <code>align=left</code> または <code>align=right</code>を置き換え、さらに次を削除します： <code>alignright</code> がある場合）。URLにすでに次がある場合： <code>?session=...</code>がある場合は、次を追加します： <code>&amp;align=center</code>。コンパクトな初期スタイルとして、任意で次を使えます： <code>&amp;combineall&amp;hidetitle&amp;style=compact&amp;scale=0.75</code>。既存の値は重複して追加せず、置き換えてください。選んだスタイルに余裕が必要な場合、Hypeレイヤーの高さを増やします。</li>
+<li><strong>Featured Chatをチャット列と重ならないようにします。</strong> 設定する項目： <strong>Left = 450とWidth = 1470を一緒に設定</strong>：450 + 1470 = 1920。幅1920のレイヤーを右へ450移動すると、右端が切れます。Featured Chatは引き続き、自分の領域の下部付近にメッセージを配置します。その領域内で短いメッセージを中央に置くには、次を追加します： <code>&amp;center</code> を次のページの <code>featured.html</code> URLに追加します。代わりにシーン全体でメッセージを中央に置く場合は、Left = 0、Width = 1920と、次を使用します： <code>&amp;center</code>.</li>
+<li><strong>NinjaBackerをFeatured Chatより上に配置します。</strong> 既存の右から入るアニメーション設定を付けたまま、視聴者向けオーバーレイURLを最後のレイヤーに貼り付けます。結合ツールは領域とレイヤー順を制御し、NinjaBackerオーバーレイはアニメーションと内部配置を制御します。背景は透明で、サイトが埋め込みを許可している必要があります。この任意のレイヤーは、4オーバーレイのテスト例には含まれていません。</li>
+<li><strong>1920×1080でプレビューします。</strong> 絵文字を含むテストチャットを送り、ドックからメッセージを注目表示し、SSNでHypeデータを有効にします。通常のチャットだけではFeatured Chatのメッセージは選択されません。空のままの場合、各オーバーレイが単独で動くか確認してください。</li>
+<li><strong>新しい結合リンクをOBSにコピーします。</strong> そのブラウザーソース自身の幅を1920、高さを1080に設定します。結合ツールのプレビューサイズはOBSの寸法を設定しません。新しいソースを切り抜かず、シーンに合わせてください。レイアウトを編集するたびに、新しい結合リンクをコピーし直します。古いOBSリンクには古いレイアウトが残ります。</li>
+</ol>
+<figure class="guide-figure">
+<a href="../../docs/images/combined-podcast-scene.png" target="_blank" rel="noopener noreferrer"><img class="guide-image" src="../../docs/images/combined-podcast-scene.png" width="1920" height="1080" loading="lazy" style="background:#181b23" alt="テスト済みの結合表示：左の細いチャット列の上にHypeを中央配置し、シーン全体に絵文字、チャットの右側の下部に注目メッセージを表示。"></a>
+<figcaption>4つのSSNオーバーレイと独立したテストフィードを使った、実際のChromiumでのテストです。画像自体は透明で、ここでは見やすくするため暗い背景を表示しています。クリックで原寸を表示できます。フォント、色、メッセージ間隔は、自分のオーバーレイ設定から適用されます。</figcaption>
+</figure>
+<p><strong>パフォーマンス：</strong> ブラウザーソースを1つにしても、埋め込まれた各オーバーレイとその接続は動きます。結合するとOBSソースの数は減りますが、CPUやメモリ使用量が減るとは限りません。作業後はブラウザーのプレビューを閉じ、以前のソースを無効にしてOBSの性能を比較してください。M1のmacOS／OBSでの性能と、自分のNinjaBacker URLは、自分の環境で確認する必要があります。その方が適していれば、Live Chatは別のままにして、他のオーバーレイだけを結合することもできます。</p>
+<h3>レイヤーが空、またはチャットを覆う場合</h3>
+<ul class="guide-list">
+<li>まず元のURLをそれぞれ単独で開いてください。アラートは、通常イベントが届くまで空のままです。ページを組み合わせても、新しいイベントを取得するようにはなりません。</li>
+<li>自動透明化に対応するページ： <code>dock.html</code>, <code>featured.html</code>, <code>multi-alerts.html</code>、および <code>minecraft.html</code>。他のページには、それぞれの透明背景設定が必要です。外部サイトの中には、埋め込み自体をブロックするものもあります。</li>
+<li>透明なレイヤーでも、タップを妨げる場合があります。次をオフにしてください： <strong>タップとスクロールを許可</strong> を、チャットより上にある操作不要のレイヤーでオフにしてください。</li>
+<li>モバイルブラウザーでは、音を出す前にページの操作が必要な場合があります。必要ならそのレイヤーの操作を有効にしてタップしてください。ブラウザーの自動再生制限は引き続き適用されます。使う前に、実際のスマートフォンで音声を確認してください。</li>
+</ul>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">すべてのガイドを見る</a>
+</p>
+</div>
+</div>
+</footer>
+<script data-copy-markdown src="../../docs/js/main.js">
+</script>
+</body>
+</html>

@@ -1,0 +1,1860 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/tr/docs/guides.html">
+    <meta property="og:title" content="Sohbet, OBS ve Yayın Kurulum Kılavuzları - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja&#x27;yı adım adım kurun. Sohbet kaynakları, OBS katmanları, metinden konuşmaya, yapay zekâ araçları, oyunlar ve yayın otomasyonu kılavuzlarına göz atın.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/tr/docs/guides.html">
+    <meta name="twitter:title" content="Sohbet, OBS ve Yayın Kurulum Kılavuzları - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja&#x27;yı adım adım kurun. Sohbet kaynakları, OBS katmanları, metinden konuşmaya, yapay zekâ araçları, oyunlar ve yayın otomasyonu kılavuzlarına göz atın.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sohbet, OBS ve Yayın Kurulum Kılavuzları - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <meta name="description" content="Social Stream Ninja&#x27;yı adım adım kurun. Sohbet kaynakları, OBS katmanları, metinden konuşmaya, yapay zekâ araçları, oyunlar ve yayın otomasyonu kılavuzlarına göz atın.">
+    <link rel="canonical" href="https://socialstream.ninja/tr/docs/guides.html">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/guides.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{"\"Capture Stream Events\"":"\"Yayın Olaylarını Yakala\" (Capture Stream Events)","(optional) - allows donors to leave a message":"(isteğe bağlı) - bağışçıların mesaj bırakmasına izin verir","(required) - without this field, donations will be rejected":"(zorunlu) - bu alan olmadan bağışlar reddedilir",", any future expiry, any CVC.":", gelecekteki herhangi bir son kullanma tarihi, herhangi bir CVC.",", enable":", şunu etkinleştirin:",", or":", veya",", while Spanish can use Piper":", İspanyolca içinse Piper kullanılabilir:","- Allows viewers to change OBS scenes (with permission)":"- İzleyicilerin OBS sahnelerini değiştirmesine izin verir (izinle)","- Auto-features messages as they appear":"- Mesajları geldikçe otomatik öne çıkarır","- Auto-features messages as they appear (about 2 per 3 seconds)":"- Mesajları geldikçe otomatik öne çıkarır (3 saniyede yaklaşık 2 mesaj)","- Auto-greets viewers":"- İzleyicileri otomatik selamlar","- Auto-hides selected messages after 20 seconds":"- Seçilen mesajları 20 saniye sonra otomatik gizler","- Centers featured messages on screen":"- Öne çıkarılan mesajları ekranda ortalar","- Doubles the size/resolution of all elements":"- Tüm öğelerin boyutunu/çözünürlüğünü iki katına çıkarır","- Enables dark mode for the dashboard":"- Kontrol paneli için koyu modu etkinleştirir","- Flows the message beside the name while keeping normal spacing":"- Normal boşluğu koruyarak mesajı adın yanından akıtır","- Hides platform icons (YouTube, Twitch, etc.)":"- Platform simgelerini gizler (YouTube, Twitch vb.)","- Makes featured messages fade in instead of popping up":"- Öne çıkarılan mesajların aniden görünmek yerine yavaşça belirmesini sağlar","- Makes featured messages swipe in from the left":"- Öne çıkarılan mesajların soldan kayarak gelmesini sağlar","- Removes spacing between name and message":"- Ad ile mesaj arasındaki boşluğu kaldırır","- Sends a random geeky dad joke":"- Rastgele, teknoloji meraklılarına yönelik bir baba şakası gönderir","- Shows the platform icons next to usernames":"- Platform simgelerini kullanıcı adlarının yanında gösterir",". For Kick reward sounds or media, use the":". Kick ödül sesleri veya medyası için şunu kullanın:",". It also explains which sources require the “Capture Stream Events” toggle, login permissions, or additional scopes to receive data.":". Hangi kaynakların veri almak için “Capture Stream Events” anahtarına, oturum açma izinlerine veya ek kapsamlara ihtiyaç duyduğunu da açıklar.",". You can also report issues on the":". Sorunları şurada da bildirebilirsiniz:","1. Installation":"1. Kurulum","126 ideas for gaming, music, teaching, making, live sales, and community events.":"Oyun, müzik, eğitim, üretim, canlı satış ve topluluk etkinlikleri için 126 fikir.","2. Basic Setup":"2. Temel Ayarlar","3. Connecting to Different Platforms":"3. Farklı Platformlara Bağlanma","4. Video Tutorial":"4. Videolu Eğitim","A blue debugging bar appears or automated responses don't work when trying to use bot commands or auto-responses.":"Bot komutlarını veya otomatik yanıtları kullanmaya çalışırken mavi bir hata ayıklama çubuğu görünüyor ya da otomatik yanıtlar çalışmıyor.","AI And TTS":"Yapay Zekâ ve TTS","AI Cohosts, Chat Bots, and Browser Companions":"Yapay Zekâ Yardımcı Sunucuları, Sohbet Botları ve Tarayıcı Yardımcıları","AI chat bot setup":"Yapay zekâ sohbet botu kurulumu","AI overlay builder":"Yapay zekâ katman oluşturucusu","AI processing:":"Yapay zekâ işlemleri:","API key, voice selection, reading speed, and viewer volume in OBS.":"API anahtarı, ses seçimi, okuma hızı ve OBS'de izleyiciye giden ses düzeyi.","API project and OAuth setup.":"API projesi ve OAuth kurulumu.","API, commands, Event Flow, webhooks":"API, komutlar, Etkinlik Akışı, webhook'lar","Absolutely! Social Stream Ninja is designed to work perfectly with OBS Studio and other streaming software. Simply add the overlay URL as a browser source in your streaming software. You can customize the appearance using CSS directly in OBS or via URL parameters.":"Kesinlikle! Social Stream Ninja, OBS Studio ve diğer yayın yazılımlarıyla sorunsuz çalışacak şekilde tasarlanmıştır. Katman URL'sini yayın yazılımınıza tarayıcı kaynağı olarak eklemeniz yeterlidir. Görünümü doğrudan OBS'de CSS ile veya URL parametreleriyle özelleştirebilirsiniz.","Add":"Ekleyin:","Add CSS directly through the app's menu:":"Uygulamanın menüsünden doğrudan CSS ekleyin:","Add CSS directly through the extension menu:":"Eklenti menüsünden doğrudan CSS ekleyin:","Add a \"Contains Keyword\" node to detect your command (e.g., \"!social\")":"Komutunuzu algılamak için \"Contains Keyword\" düğümü ekleyin (ör. \"!social\")","Add action nodes to respond (Send Chat, Play Audio, Display Overlay)":"Yanıt vermek için işlem düğümleri ekleyin (Send Chat, Play Audio, Display Overlay)","Add custom fields to your payment link:":"Ödeme bağlantınıza özel alanlar ekleyin:","Add it as a Browser Source in OBS (1920×1080 recommended)":"OBS'ye Tarayıcı Kaynağı olarak ekleyin (1920×1080 önerilir)","Add it to your donation platform's webhook configuration":"Bağış platformunuzun webhook yapılandırmasına ekleyin","Add logic nodes to filter (Contains Keyword, User Role, etc.)":"Filtrelemek için mantık düğümleri ekleyin (Contains Keyword, User Role vb.)","Add the Flow Actions URL as a browser source in OBS for audio/overlay actions to work. Find the URL in the app's \"Flow Actions\" section.":"Ses/katman işlemlerinin çalışması için Flow Actions URL'sini OBS'ye tarayıcı kaynağı olarak ekleyin. URL'yi uygulamanın \"Flow Actions\" bölümünde bulabilirsiniz.","Add the app's overlay URL as a Browser Source in OBS":"Uygulamanın katman URL'sini OBS'ye Tarayıcı Kaynağı olarak ekleyin","Add the template URL as a browser source in OBS":"Şablon URL'sini OBS'ye tarayıcı kaynağı olarak ekleyin","Add your overlay as a Browser Source in OBS":"Katmanınızı OBS'ye Tarayıcı Kaynağı olarak ekleyin","Adjust window transparency for overlay effects":"Katman efektleri için pencere saydamlığını ayarlayın","Advanced Features":"Gelişmiş Özellikler","Advanced Features (Browser Extension)":"Gelişmiş Özellikler (Tarayıcı Eklentisi)","Advanced Features (Standalone App)":"Gelişmiş Özellikler (Bağımsız Uygulama)","Advanced support index":"Gelişmiş destek dizini","All overlay URLs, dock APIs, WebSocket commands, and automation hooks are documented in the":"Tüm katman URL'leri, panel API'leri, WebSocket komutları ve otomasyon bağlantı noktaları şu belgede açıklanır:","All provider parameters and audio routing notes.":"Tüm sağlayıcı parametreleri ve ses yönlendirme notları.","All public platform setup notes.":"Herkese açık tüm platform kurulum notları.","Also disable":"Şunu da devre dışı bırakın:","Alternative Approaches":"Alternatif Yaklaşımlar","Any HTTP POST service":"Herhangi bir HTTP POST hizmeti","App-Specific Features":"Uygulamaya Özgü Özellikler","Apply CSS via OBS custom CSS or URL params like":"CSS'yi OBS özel CSS alanıyla veya şu tür URL parametreleriyle uygulayın:","Arrange windows so they're not minimized; even a small visible portion can prevent throttling.":"Pencereleri simge durumuna küçülmeyecek şekilde düzenleyin; küçük bir bölümlerinin görünmesi bile kısıtlamayı önleyebilir.","Authentication Problems":"Kimlik Doğrulama Sorunları","Auto, Standard, signer, polling, proxy modes.":"Auto, Standard, imzalayıcı, sorgulama ve vekil modları.","Auto-Update:":"Otomatik Güncelleme:","Auto-responder works best with Chromium-based browsers (Chrome, Edge, Brave)":"Otomatik yanıtlayıcı en iyi Chromium tabanlı tarayıcılarda çalışır (Chrome, Edge, Brave)","Auto-responses work best with Chromium-based browsers. Chat windows must remain visible, and you must have permission to post on the platform.":"Otomatik yanıtlar en iyi Chromium tabanlı tarayıcılarda çalışır. Sohbet pencereleri görünür kalmalı ve platformda mesaj gönderme izniniz olmalıdır.","Automatically receive the latest features and fixes":"En yeni özellikleri ve düzeltmeleri otomatik alın","Automation And Integrations":"Otomasyon ve Entegrasyonlar","Available Actions:":"Kullanılabilir İşlemler:","Avoids browser throttling issues":"Tarayıcı kısıtlama sorunlarını önler","Back up settings, update safely, and recover a session.":"Ayarları yedekleyin, güvenle güncelleyin ve bir oturumu kurtarın.","Background Transparency:":"Arka Plan Saydamlığı:","Before you can use Social Stream Ninja, you'll need to install it first. There are multiple ways to install the browser extension:":"Social Stream Ninja'yı kullanmadan önce yüklemeniz gerekir. Tarayıcı eklentisini yüklemenin birden fazla yolu vardır:","Better Performance:":"Daha İyi Performans:","Bits/Cheers and channel point redemptions":"Bits/Cheers ve kanal puanı kullanımları","Blue Bar Appears / Auto-Responder Not Working":"Mavi Çubuk Görünüyor / Otomatik Yanıtlayıcı Çalışmıyor","Bluesky":"Bluesky","Bot Commands & Auto-Response":"Bot komutları ve otomatik yanıt","Bot accounts for replies":"Yanıtlar için bot hesapları","Bring your own fonts to":"Kendi yazı tiplerinizi şuraya ekleyin:","Browse our":"Şuna göz atın:","Browse the game gallery":"Oyun galerisine göz atın","Browser Compatibility":"Tarayıcı Uyumluluğu","Browser Extension":"Tarayıcı uzantısı","Browser extension setup":"Tarayıcı eklentisi kurulumu","Browser extension troubleshooting":"Tarayıcı eklentisi sorun giderme","Build custom commands":"Özel komutlar oluşturun","Build powerful automations with the node-based Event Flow Editor.":"Düğüm tabanlı Etkinlik Akışı Düzenleyicisi ile güçlü otomasyonlar oluşturun.","Built-in Commands:":"Yerleşik Komutlar:","Built-in browser AI, excellent quality:":"Yerleşik tarayıcı yapay zekâsı, mükemmel kalite —","Buy Me A Coffee":"Buy Me A Coffee","Buy Me A Coffee:":"Buy Me A Coffee:","CSS Customization":"CSS Özelleştirmesi","Can I send messages back to multiple platforms at once?":"Aynı anda birden fazla platforma mesaj gönderebilir miyim?","Capture non-chat events like new followers, subscriptions, raids, and donations from your streaming platforms.":"Yayın platformlarınızdan yeni takipçiler, abonelikler, baskınlar ve bağışlar gibi sohbet dışı olayları yakalayın.","Capture non-chat events like new followers, subscriptions, raids, and donations.":"Yeni takipçiler, abonelikler, baskınlar ve bağışlar gibi sohbet dışı olayları yakalayın.","Capture or experimentally relay live chat into an open ChatGPT tab without an API key.":"API anahtarı olmadan açık bir ChatGPT sekmesinde sohbeti yakalayın veya canlı sohbeti deneysel olarak bu sekmeye aktarın.","Capture supported chats from a browser or OBS without installing the full app.":"Tam uygulamayı yüklemeden tarayıcıdan veya OBS'den desteklenen sohbetleri yakalayın.","Channel slug, OAuth scopes, official events, and common failures.":"Kanal kısa adı, OAuth kapsamları, resmî olaylar ve yaygın hatalar.","Chat Stops When Background/Minimized":"Arka Planda/Simge Durumunda Sohbet Duruyor","Chat messages are sent as POST requests with JSON payload":"Sohbet mesajları JSON yükü içeren POST istekleri olarak gönderilir","Chat messages stop appearing when browser windows are in the background or minimized. This happens because browsers throttle background tabs to save resources.":"Tarayıcı pencereleri arka plandayken veya simge durumuna küçültüldüğünde sohbet mesajları görünmeyi durdurur. Bunun nedeni, tarayıcıların kaynak tasarrufu için arka plan sekmelerini kısıtlamasıdır.","Chat sources":"Sohbet kaynakları","ChatGPT browser companion":"ChatGPT tarayıcı yardımcısı","ChatGPT browser companion:":"ChatGPT tarayıcı yardımcısı:","Check Chat Window Visibility":"Sohbet Penceresinin Görünürlüğünü Kontrol Edin","Check if you need to grant additional permissions to the app":"Uygulamaya ek izinler vermeniz gerekip gerekmediğini kontrol edin","Check if your antivirus is blocking file writes":"Antivirüsünüzün dosya yazmayı engelleyip engellemediğini kontrol edin","Check the \"Custom CSS\" option":"\"Custom CSS\" seçeneğini işaretleyin","Check your internet connection":"İnternet bağlantınızı kontrol edin","Choose a voice cohost, ChatGPT browser companion, chat bot, moderation, RAG, translation, or overlay builder.":"Sesli yardımcı sunucu, ChatGPT tarayıcı yardımcısı, sohbet botu, moderasyon, RAG, çeviri veya katman oluşturucusu seçin.","Choose an AI Setup":"Yapay Zekâ Kurulumu Seçin","Choose browser, popout, app, or source page.":"Tarayıcı, açılır pencere, uygulama veya kaynak sayfası seçin.","Choose from pre-styled templates that include CSS built-in:":"Yerleşik CSS içeren hazır biçimli şablonlardan seçim yapın:","Choose the highlight, badge, and beep options that match your overlay.":"Katmanınıza uygun vurgu, rozet ve bip seçeneklerini seçin.","Choose the local relay, automation API, headless hosting, or media service.":"Yerel aktarımı, otomasyon API'sini, arayüzsüz barındırmayı veya medya hizmetini seçin.","Chrome Web Store:":"Chrome Web Store:","Chrome/Edge/Brave:":"Chrome/Edge/Brave:","Clear":"Temizle","Click \"Activate source\" or \"Select Live Sources\" to connect":"Bağlanmak için \"Activate source\" veya \"Select Live Sources\" düğmesine tıklayın","Click \"Activate source\" to connect":"Bağlanmak için \"Activate source\" düğmesine tıklayın","Click \"Auto-find & Activate\" for live streams":"Canlı yayınlar için \"Auto-find & Activate\" düğmesine tıklayın","Click \"Enable Extension\" to turn it on (the icon should turn green)":"Etkinleştirmek için \"Enable Extension\" düğmesine tıklayın (simge yeşile dönmelidir)","Click \"Twitch Username\" in the left sidebar":"Sol kenar çubuğunda \"Twitch Username\" seçeneğine tıklayın","Click \"YouTube Username\" in the left sidebar":"Sol kenar çubuğunda \"YouTube Username\" seçeneğine tıklayın","Click the \"Next in Queue\" button to display them one by one":"Mesajları tek tek göstermek için \"Next in Queue\" düğmesine tıklayın","Click the \"Pop out chat\" button in the top-right corner":"Sağ üst köşedeki \"Pop out chat\" düğmesine tıklayın","Click the Social Stream Ninja extension icon":"Social Stream Ninja eklenti simgesine tıklayın","Click the Social Stream Ninja extension icon in your browser toolbar":"Tarayıcı araç çubuğunuzdaki Social Stream Ninja eklenti simgesine tıklayın","Click the button corresponding to the platform you want to add in the left sidebar":"Sol kenar çubuğunda eklemek istediğiniz platformun düğmesine tıklayın","Click the gear icon and select \"Pop out chat\"":"Dişli simgesine tıklayın ve \"Pop out chat\" seçeneğini seçin","Click the respective platform button":"İlgili platform düğmesine tıklayın","Collect chat entries, draw a winner, and show the result in OBS.":"Sohbetten katılımları toplayın, bir kazanan çekin ve sonucu OBS'de gösterin.","Collect participants and supporters, configure OBS, and trigger the ending roll.":"Katılımcıları ve destekçileri toplayın, OBS'yi yapılandırın ve kapanış akışını tetikleyin.","Commands & API":"Komutlar ve API","Commands and API":"Komutlar ve API","Commerce & monetization overlays":"Ticaret ve gelir elde etme katmanları","Common fixes for auth windows closing, missed chat, duplicate chat, and throttling":"Kapanan kimlik doğrulama pencereleri, kaçırılan sohbet, yinelenen sohbet ve hız kısıtlaması için yaygın çözümler","Community":"Topluluk","Compare the Twitch WebSocket and reply-only source methods.":"Twitch WebSocket ve yalnızca yanıt kaynağı yöntemlerini karşılaştırın.","Complete AI guide":"Tam yapay zekâ kılavuzu","Configure an outbound webhook URL in settings":"Ayarlarda giden webhook URL'sini yapılandırın","Connect TikTok, choose dock activity, and capture it in SSN.":"TikTok'u bağlayın, panel etkinliğini seçin ve SSN'de yakalayın.","Connect a \"Send Chat\" action with your response":"Yanıtınızı içeren bir \"Send Chat\" işlemi bağlayın","Connect action nodes (Send Chat, Play Audio, Display Overlay)":"İşlem düğümlerini bağlayın (Send Chat, Play Audio, Display Overlay)","Connect external donation platforms and services.":"Harici bağış platformlarını ve hizmetleri bağlayın.","Connect external donation platforms to display tips and purchases in your stream overlay.":"Bahşişleri ve satın alımları yayın katmanınızda göstermek için harici bağış platformlarını bağlayın.","Connect logic nodes to filter messages (Contains Keyword, User Role, etc.)":"Mesajları filtrelemek için mantık düğümleri bağlayın (Contains Keyword, User Role vb.)","Connect the desktop app to a local AI tool or same-machine script.":"Masaüstü uygulamasını yerel bir yapay zekâ aracına veya aynı bilgisayardaki betiğe bağlayın.","Connect your MIDI device":"MIDI aygıtınızı bağlayın","Connect your MIDI device (Stream Deck, MIDI controller, etc.)":"MIDI aygıtınızı bağlayın (Stream Deck, MIDI denetleyicisi vb.)","Connection Issues":"Bağlantı Sorunları","Connection modes and common failures.":"Bağlantı modları ve yaygın hatalar.","Consolidates your live social messaging streams and more. Free and open source.":"Canlı sosyal mesaj akışlarınızı ve daha fazlasını birleştirir. Ücretsiz ve açık kaynaklıdır.","Contribute":"Katkıda bulunun","Control OBS":"OBS'yi kontrol edin","Control Social Stream Ninja directly from Stream Deck, MIDI controllers, or keyboard hotkeys.":"Social Stream Ninja'yı doğrudan Stream Deck, MIDI denetleyicileri veya klavye kısayollarıyla kontrol edin.","Control the app directly from Stream Deck, MIDI controllers, or keyboard shortcuts.":"Uygulamayı doğrudan Stream Deck, MIDI denetleyicileri veya klavye kısayollarıyla kontrol edin.","Copy the \"Streaming Chat\" link and add it as a Browser Source in OBS":"\"Streaming Chat\" bağlantısını kopyalayın ve OBS'ye Tarayıcı Kaynağı olarak ekleyin","Copy the Hype Train Top Bar URL from the popup.":"Açılır menüden Hype Train Top Bar URL'sini kopyalayın.","Copy the dedicated Hype Train Top Bar link from the popup.":"Açılır menüden özel Hype Train Top Bar bağlantısını kopyalayın.","Create a":"Şunu oluşturun:","Create a flow with source nodes (Message, Timer, Manual Trigger)":"Kaynak düğümleri (Message, Timer, Manual Trigger) içeren bir akış oluşturun","Create a new flow and add source nodes (e.g., \"Twitch Message\")":"Yeni akış oluşturun ve kaynak düğümleri ekleyin (ör. \"Twitch Message\")","Create a new flow with a Message source":"Message kaynağıyla yeni bir akış oluşturun","Create interactive bot commands and automated responses for your chat.":"Sohbetiniz için etkileşimli bot komutları ve otomatik yanıtlar oluşturun.","Create raffles and games":"Çekilişler ve oyunlar oluşturun","Create raffles and giveaways":"Çekilişler ve hediye kampanyaları oluşturun","Create test messages":"Test mesajları oluşturun","Creating Custom Commands:":"Özel Komutlar Oluşturma:","Creator store setup":"İçerik üreticisi mağazası kurulumu","Credits roll":"Kayan jenerik","Credits, featured chat, timer, and waitlist buttons in OBS.":"OBS'de katkıda bulunanlar, öne çıkarılan sohbet, zamanlayıcı ve bekleme listesi düğmeleri.","Current Relay Chat actions skip recognized reflections automatically. Use a":"Mevcut Relay Chat işlemleri tanınan geri yansımaları otomatik atlar. Şunu kullanın:","Custom Webhooks:":"Özel Webhook'lar:","Custom fonts":"Özel yazı tipleri","Customization":"Özelleştirme","Customization (Browser Extension)":"Özelleştirme (Tarayıcı Eklentisi)","Customization (Standalone App)":"Özelleştirme (Bağımsız Uygulama)","Customization Guide":"Özelleştirme kılavuzu","Customize alignment, scale, opacity, and background settings.":"Hizalamayı, ölçeği, opaklığı ve arka plan ayarlarını özelleştirin.","Customize voice settings with parameters like":"Ses ayarlarını şu tür parametrelerle özelleştirin:","Customize your graphical poll":"Customize your graphical poll","Dashboard Parameters:":"Kontrol Paneli Parametreleri:","Debug Bar Issue":"Hata Ayıklama Çubuğu Sorunu","Dedicated Twitch hype train overlay.":"Twitch Hype Train için özel katman.","Dedicated setup help for TikTok, including replies, mode selection, and TikFinity fallback.":"Yanıtlar, mod seçimi ve TikFinity yedeği dahil TikTok'a özel kurulum yardımı.","Design your own overlays":"Design your own overlays","Desktop app setup":"Masaüstü uygulaması kurulumu","Desktop app troubleshooting":"Masaüstü uygulaması sorun giderme","Desktop app walkthrough":"Masaüstü uygulaması adım adım kullanım","Desktop app will not open":"Masaüstü uygulaması açılmıyor","Detailed Event Flow guide":"Ayrıntılı Etkinlik Akışı kılavuzu","Detailed guide sections":"Ayrıntılı kılavuz bölümleri","Different chat name colors":"Farklı sohbet adı renkleri","Different colors for chat names":"Sohbet adları için farklı renkler","Disable \"Throttle Javascript timers in background\"":"\"Throttle Javascript timers in background\" seçeneğini devre dışı bırakın","Disable Browser Throttling":"Tarayıcı Kısıtlamasını Devre Dışı Bırakma","Disable Performance Throttling:":"Performans Kısıtlamasını Devre Dışı Bırakma:","Disable VPN if it's interfering with connections":"Bağlantıları etkiliyorsa VPN'i devre dışı bırakın","Discord":"Discord","Discord StreamKit and TikFinity":"Discord StreamKit ve TikFinity","Discord, GitHub issues, contribution paths.":"Discord, GitHub sorunları ve katkı yolları.","Discord, Slack, WhatsApp, etc.":"Discord, Slack, WhatsApp vb.","Display Name":"Görünen Ad","Do I need an API key or login credentials for each platform?":"Her platform için API anahtarı veya oturum açma bilgileri gerekiyor mu?","Do not uninstall":"Kaldırmayın","Dock":"Panel","Dock controls, moderation, relays, and participation":"Panel kontrolleri, moderasyon, aktarımlar ve katılım","Does it work with OBS and other streaming software?":"OBS ve diğer yayın yazılımlarıyla çalışır mı?","Donate":"Bağış yapın","Donation alerts":"Bağış uyarıları","Donation goals, Hype scoring, memberships, and gifted memberships.":"Bağış hedefleri, Hype puanlaması, üyelikler ve hediye üyelikler.","Donation-style events (Super Chats, Bits, Tips) forward automatically regardless of this toggle. The toggle is primarily for follower/subscriber alerts.":"Bağış türündeki olaylar (Super Chats, Bits, Tips) bu anahtardan bağımsız olarak otomatik iletilir. Anahtar öncelikle takipçi/abone uyarıları içindir.","Donations (Super Chats, Bits, Tips) forward automatically. The toggle is primarily for follower/subscriber alerts.":"Bağışlar (Super Chats, Bits, Tips) otomatik iletilir. Anahtar öncelikle takipçi/abone uyarıları içindir.","Download":"İndir","Download and run the installer for Windows 10/11 (x64)":"Windows 10/11 (x64) yükleyicisini indirin ve çalıştırın","Download and run the macOS application":"macOS uygulamasını indirin ve çalıştırın","Download page":"İndirme sayfası","Earning, balances, sticker redemptions, and points backups.":"Puan kazanma, bakiyeler, çıkartma kullanımları ve puan yedekleri.","ElevenLabs:":"ElevenLabs:","Enable hosted server routes for chat and replies, or use SSApp's advanced local relay.":"Sohbet ve yanıtlar için barındırılan sunucu yollarını etkinleştirin veya SSApp'in gelişmiş yerel aktarımını kullanın.","Enable it to start receiving alerts":"Uyarıları almaya başlamak için etkinleştirin","Enable the commands you want to use":"Kullanmak istediğiniz komutları etkinleştirin","Ensure the Social Stream Ninja extension is enabled (green icon)":"Social Stream Ninja eklentisinin etkin olduğundan emin olun (yeşil simge)","Ensure the app has write permissions in its installation directory":"Uygulamanın kurulum dizininde yazma izni olduğundan emin olun","Ensure you're connected to WiFi or Ethernet (not mobile data)":"Wi-Fi veya Ethernet'e bağlı olduğunuzdan emin olun (mobil veri değil)","Ensure you're logged into the platform with posting permissions":"Platforma mesaj gönderme izniyle giriş yaptığınızdan emin olun","Ensure you're using the same login credentials as your browser":"Tarayıcınızdakiyle aynı oturum açma bilgilerini kullandığınızdan emin olun","Enter your Twitch username":"Twitch kullanıcı adınızı girin","Enter your channel name or Video ID":"Kanal adınızı veya Video ID'nizi girin","Enter your custom CSS in the text box":"Özel CSS'nizi metin kutusuna girin","Enter your custom CSS or JavaScript":"Özel CSS veya JavaScript'inizi girin","Enter your username, Video ID, or URL as prompted":"İstendiğinde kullanıcı adınızı, Video ID'nizi veya URL'yi girin","Event Flow Editor":"Etkinlik Akışı düzenleyicisi","Event Flow Guide":"Etkinlik Akışı Kılavuzu","Event Flow media hosting":"Etkinlik Akışı medya barındırma","Event Flow overview":"Etkinlik Akışı genel bakış","Event Flow recipes":"Etkinlik Akışı tarifleri","Event Reference":"Etkinlik başvuru kaynağı","Event Type":"Olay Türü","Event reference":"Olay referansı","Events Captured by Platform:":"Platforma Göre Yakalanan Olaylar:","Events Captured:":"Yakalanan Olaylar:","Events and alerts compatibility":"Olaylar ve uyarı uyumluluğu","Events appear automatically in your dashboard and flows":"Olaylar kontrol panelinizde ve akışlarınızda otomatik görünür","Example:":"Örnek:","Execute Event Flow triggers":"Etkinlik Akışı tetikleyicilerini çalıştırın","Export Settings":"Ayarları Dışa Aktar","Export Social Stream Ninja and OBS settings for review.":"İnceleme için Social Stream Ninja ve OBS ayarlarını dışa aktarın.","Export settings for support":"Destek için ayarları dışa aktarın","Exporting Chat via Webhook:":"Sohbeti Webhook ile Dışa Aktarma:","Extension and desktop app downloads.":"Eklenti ve masaüstü uygulaması indirmeleri.","FAQ":"SSS","Facebook":"Facebook","Facebook, TikTok, Instagram":"Facebook, TikTok, Instagram","Fast, lightweight neural TTS:":"Hızlı, hafif sinir ağı TTS —","Feature, clear, queue, pin, reply, and manage busy chat.":"Mesajları öne çıkarın, temizleyin, kuyruğa alın, sabitleyin, yanıtlayın ve yoğun sohbeti yönetin.","Featured chat and alerts on stream":"Yayında öne çıkarılan sohbet ve uyarılar","Features":"Özellikler","Filter":"Filtre","Find A Guide":"Kılavuz Bulun","Find ideas for your stream":"Yayınınız için fikirler bulun","Find the":"Şunu bulun:","Find the CSS/JavaScript settings section":"CSS/JavaScript ayarları bölümünü bulun","Find the MIDI settings section":"MIDI ayarları bölümünü bulun","Find your webhook relay URL in the app settings":"Uygulama ayarlarında webhook aktarım URL'nizi bulun","Firefox has limited support for extension features":"Firefox'un eklenti özellikleri desteği sınırlıdır","First, enable these platforms in the extension settings (toggle switch)":"Önce eklenti ayarlarında bu platformları etkinleştirin (aç/kapat anahtarı)","First-Time Chatters":"İlk Kez Yazanlar","First-time chatters":"İlk kez yazanlar","Flow Actions Overlay:":"Flow Actions Katmanı:","Followers and follower count":"Takipçiler ve takipçi sayısı","Followers and gifts (TikTok)":"Takipçiler ve hediyeler (TikTok)","Followers, gifts, viewer counts":"Takipçiler, hediyeler, izleyici sayıları","For Facebook, TikTok, and Instagram, use the \"Sign in\" button first":"Facebook, TikTok ve Instagram için önce \"Sign in\" düğmesini kullanın","For TikTok connection modes, replies, and TikFinity fallback, jump to the":"TikTok bağlantı modları, yanıtlar ve TikFinity yedeği için şuraya geçin:","For a complete list of event payloads and data fields, see the":"Olay yükleri ve veri alanlarının tam listesi için bkz.","For audio, media overlays, and OBS actions to work, you need to add the Flow Actions page as a browser source in OBS:":"Ses, medya katmanları ve OBS işlemlerinin çalışması için Flow Actions sayfasını OBS'ye tarayıcı kaynağı olarak eklemelisiniz:","For detailed documentation, see the":"Ayrıntılı belgeler için bkz.","For detailed installation instructions, please visit the":"Ayrıntılı kurulum talimatları için lütfen şu sayfayı ziyaret edin:","For easier URL management, try our":"URL'leri daha kolay yönetmek için şunu deneyin:","For more complex commands, use the Event Flow Editor:":"Daha karmaşık komutlar için Etkinlik Akışı Düzenleyicisini kullanın:","For other languages, use a provider and voice that supports that language. For example, Portuguese can use Piper":"Diğer diller için o dili destekleyen bir sağlayıcı ve ses kullanın. Örneğin Portekizce için Piper kullanılabilir:","For some platforms, you may need to keep the main window open alongside the pop-out":"Bazı platformlarda açılır pencerenin yanında ana pencereyi de açık tutmanız gerekebilir","For the best experience, keep chat windows visible (not minimized) when using the browser extension.":"En iyi deneyim için tarayıcı eklentisini kullanırken sohbet pencerelerini görünür tutun (simge durumuna küçültmeyin).","For the browser extension:":"Tarayıcı eklentisi için:","For the most up-to-date version, install manually in developer mode.":"En güncel sürüm için geliştirici modunda elle yükleyin.","For the standalone app:":"Bağımsız uygulama için:","Fourthwall":"Fourthwall","Free Local TTS Options (no API key):":"Ücretsiz Yerel TTS Seçenekleri (API anahtarı gerekmez):","Frequently Asked Questions":"Sık sorulan sorular","Full TTS reference":"Tam TTS referansı","Full editor and action-flow reference.":"Tam düzenleyici ve işlem akışı referansı.","Full step-by-step guide body. Collapse this if you only want the directory.":"Tam adım adım kılavuz içeriği. Yalnızca dizini istiyorsanız bu bölümü daraltın.","Getting Started":"Başlarken","Getting Started (Browser Extension)":"Başlarken (Tarayıcı Eklentisi)","Getting Started (Standalone App)":"Başlarken (Bağımsız Uygulama)","Getting Started:":"Başlarken:","GitHub":"GitHub","GitHub Repository":"GitHub deposu","GitHub repository":"GitHub deposu","Go to":"Şuraya gidin:","Go to settings and find":"Ayarlara gidin ve şunu bulun:","Google Cloud TTS:":"Google Cloud TTS:","Guides":"Kılavuzlar","Guides by type, downloads, session IDs, local OBS setup, and safe AI prompts.":"Guides by type, downloads, session IDs, local OBS setup, and safe AI prompts.","Has better performance and stability":"Daha iyi performans ve kararlılık sunar","Having trouble connecting to specific platforms in the standalone app.":"Bağımsız uygulamada belirli platformlara bağlanırken sorun yaşanıyor.","Headless home server or VPS":"Arayüzsüz ev sunucusu veya VPS","Highlight brand-new chatters, add the optional leaf badge, or use a first-time-only dock beep.":"İlk kez yazanları vurgulayın, isteğe bağlı yaprak rozeti ekleyin veya yalnızca ilk mesajda panel bip sesi kullanın.","Highlight new viewers in chat.":"Sohbette yeni izleyicileri vurgulayın.","Hire":"Hizmet alın","Hold ALT while clicking a message in the dashboard":"Kontrol panelindeki bir mesaja tıklarken ALT tuşunu basılı tutun","Hold CTRL (or Cmd on Mac) while clicking messages in the dashboard":"Kontrol panelindeki mesajlara tıklarken CTRL (Mac'te Cmd) tuşunu basılı tutun","Home":"Ana sayfa","Host your .woff2/.ttf/.otf files and load them with":".woff2/.ttf/.otf dosyalarınızı barındırın ve şununla yükleyin:","Hosted WebSocket and Local Server modes":"Barındırılan WebSocket ve Yerel Sunucu modları","How Social Stream Ninja fits together":"Social Stream Ninja bileşenleri nasıl birlikte çalışır","How do I update Social Stream Ninja?":"Social Stream Ninja'yı nasıl güncellerim?","How to Enable:":"Nasıl Etkinleştirilir:","How to reply to TikTok chat from SSN":"SSN'den TikTok sohbetine nasıl yanıt verilir","How to send replies to TikTok chat from SSN":"SSN'den TikTok sohbetine nasıl yanıt gönderilir","How to use TikFinity OBS Dock as a fallback through Other chat sites":"Other chat sites üzerinden TikFinity OBS Dock yedek olarak nasıl kullanılır","How to use TikFinity OBS Dock through":"TikFinity OBS Dock şu yolla nasıl kullanılır:","Hype Train Top Bar":"Hype Train Üst Çubuğu","Hype train top bar":"Hype Train üst çubuğu","If you want the desktop app to use your own YouTube API quota, use the dedicated setup guide. It covers Google Cloud setup, exact redirect URLs, API key restrictions, and basic security guidance.":"Masaüstü uygulamasının kendi YouTube API kotanızı kullanmasını istiyorsanız özel kurulum kılavuzuna bakın. Google Cloud kurulumu, tam yönlendirme URL'leri, API anahtarı kısıtlamaları ve temel güvenlik bilgilerini kapsar.","Import a custom chat theme, preview it, and download an OBS overlay.":"Özel sohbet temasını içe aktarın, önizleyin ve OBS katmanını indirin.","Import settings if they're lost after an update":"Güncellemeden sonra kaybolursa ayarları içe aktarın","Important:":"Önemli:","In OBS, you can add custom CSS to the browser source:":"OBS'de tarayıcı kaynağına özel CSS ekleyebilirsiniz:","In the popup, find the \"Flow Actions\" section and copy the URL":"Açılır menüde \"Flow Actions\" bölümünü bulun ve URL'yi kopyalayın","Inspiration":"İlham","Install or update":"Yükleme veya güncelleme","Install the plugin, connect your session, and test a control.":"Eklentiyi yükleyin, oturumunuzu bağlayın ve bir kontrolü test edin.","Install via Chrome Web Store for the easiest setup experience.":"En kolay kurulum için Chrome Web Store üzerinden yükleyin.","Install, connect a source, open the dock, then add TTS and OBS audio.":"Yükleyin, bir kaynak bağlayın, paneli açın, ardından TTS ve OBS sesini ekleyin.","Install, connect chat, add OBS overlays":"Yükleyin, sohbeti bağlayın, OBS katmanları ekleyin","Installation Guide":"Kurulum kılavuzu","Is Social Stream Ninja really free?":"Social Stream Ninja gerçekten ücretsiz mi?","Join Discord Community":"Discord topluluğuna katılın","Join our Discord":"Discord sunucumuza katılın","Join our community Discord server where the developer and other users can help you troubleshoot issues.":"Geliştiricinin ve diğer kullanıcıların sorun gidermenize yardımcı olabileceği topluluk Discord sunucumuza katılın.","Keep Social Stream Ninja enabled":"Social Stream Ninja'yı etkin tutun","Keep Windows Visible:":"Pencereleri Görünür Tutun:","Keep source, Dock, overlay, read, and reply routing aligned.":"Kaynak, panel, katman, okuma ve yanıt yönlendirmesini uyumlu tutun.","Keep the app window always on top":"Uygulama penceresini her zaman üstte tutun","Keep the local message database enabled.":"Yerel mesaj veritabanını etkin tutun.","Keep the overlay open (hidden is fine, but don't close it)":"Katmanı açık tutun (gizli olabilir, ancak kapatmayın)","Keep your chat window visible (not minimized) for responses to work":"Yanıtların çalışması için sohbet pencerenizi görünür tutun (simge durumuna küçültmeyin)","Keep your session ID private. Anyone with your session ID can send fake donation events to your overlay.":"Oturum kimliğinizi gizli tutun. Oturum kimliğinizi bilen herkes katmanınıza sahte bağış olayları gönderebilir.","Kick Channel Points / Rewards guide":"Kick Kanal Puanları / Ödüller kılavuzu","Kick rewards sounds/media":"Kick ödül sesleri/medyası","Kick setup and authentication":"Kick kurulumu ve kimlik doğrulaması","Kick:":"Kick:","Kitten TTS:":"Kitten TTS:","Knowledge base":"Bilgi tabanı","Ko-Fi":"Ko-Fi","Ko-Fi:":"Ko-Fi:","Kokoro TTS:":"Kokoro TTS:","LLM Integration":"LLM Entegrasyonu","Launch the Social Stream Ninja application":"Social Stream Ninja uygulamasını başlatın","Learn how to set up, customize, and get the most out of Social Stream Ninja":"Social Stream Ninja'yı kurmayı, özelleştirmeyi ve en verimli şekilde kullanmayı öğrenin","Lightweight language fallback, including Portuguese":"Portekizce dahil diller için hafif yedek seçenek","Linux:":"Linux:","Lite setup":"Lite kurulumu","Live chat, static comments, API/OAuth choices.":"Canlı sohbet, statik yorumlar, API/OAuth seçenekleri.","Local AI TTS":"Yerel yapay zekâ TTS'si","Local AI TTS Guide":"Yerel yapay zekâ TTS kılavuzu","Local Control API and MCP":"Yerel Kontrol API'si ve MCP","Local servers and services":"Yerel sunucular ve hizmetler","Loyalty points and rewards":"Sadakat puanları ve ödüller","MIDI":"MIDI","MIDI & Hotkey Control":"MIDI ve kısayol tuşlarıyla kontrol","MIDI is perfect for hands-free stream control. Use a foot pedal to trigger alerts or a knob to adjust volume levels.":"MIDI, eller serbest yayın kontrolü için idealdir. Uyarıları tetiklemek için ayak pedalı veya ses düzeylerini ayarlamak için döner düğme kullanın.","Main navigation":"Ana gezinme","Managed source windows instead of tabs.":"Sekmeler yerine yönetilen kaynak pencereleri.","Manual Installation (recommended):":"Elle Kurulum (önerilir):","Map MIDI notes to actions":"MIDI notalarını işlemlere eşleyin","Map MIDI notes to specific actions":"MIDI notalarını belirli işlemlere eşleyin","Membership upgrades and milestones":"Üyelik yükseltmeleri ve dönüm noktaları","Memberships, Super Chats, subscriber counts":"Üyelikler, Super Chats, abone sayıları","Message":"Mesaj","Message - Styling":"Mesaj - Biçimlendirme","Message - Visibility":"Mesaj - Görünürlük","Messages appear simultaneously across all connected platforms":"Mesajlar bağlı tüm platformlarda aynı anda görünür","Messages will appear in your overlay in the order they were queued":"Mesajlar katmanınızda kuyruğa alındıkları sırayla görünür","Method 1: OBS Browser Source CSS":"Yöntem 1: OBS Tarayıcı Kaynağı CSS'si","Method 2: App Menu Settings":"Yöntem 2: Uygulama Menüsü Ayarları","Method 2: Extension Menu Settings":"Yöntem 2: Eklenti Menüsü Ayarları","Method 3: Use Custom Templates":"Yöntem 3: Özel Şablonlar Kullanma","Microphone conversation, live-chat questions, spoken replies, and stage overlay.":"Mikrofonla konuşma, canlı sohbet soruları, sesli yanıtlar ve sahne katmanı.","Minimized Window Issue":"Simge Durumuna Küçültülmüş Pencere Sorunu","Missing chat, blank overlays, deeper support docs":"Eksik sohbet, boş katmanlar, ayrıntılı destek belgeleri","Missing chat, permissions, throttling, toggles.":"Eksik sohbet, izinler, kısıtlama, aç/kapat seçenekleri.","Mode picker help: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy, and Euler Signing":"Mod seçici yardımı: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy ve Euler Signing","Moderate, feature, and reply":"Modere edin, öne çıkarın ve yanıtlayın","Moderation and message filtering":"Moderasyon ve mesaj filtreleme","Multiple channels and separate overlays":"Birden fazla kanal ve ayrı katmanlar","Name colors need two settings: a general color source under":"Ad renkleri iki ayar gerektirir: genel renk kaynağı şu bölümde:","Natural-sounding premium voices":"Doğal duyulan ücretli sesler","Navigate to your live stream within the app window":"Uygulama penceresinde canlı yayınınıza gidin","Need help with TikTok setup, replies, connection modes, or TikFinity fallback? Use the dedicated TikTok guide.":"TikTok kurulumu, yanıtlar, bağlantı modları veya TikFinity yedeği için yardıma mı ihtiyacınız var? Özel TikTok kılavuzunu kullanın.","Need to use it on multiple computers":"Birden fazla bilgisayarda kullanmanız gerekiyorsa","Network Issues":"Ağ Sorunları","New memberships and membership gifts":"Yeni üyelikler ve hediye üyelikler","New subscribers, resubs, and gift subs":"Yeni aboneler, yeniden abonelikler ve hediye abonelikler","No matching guides found.":"Eşleşen kılavuz bulunamadı.","No signature verification needed (keep your session ID private instead)":"İmza doğrulaması gerekmez (bunun yerine oturum kimliğinizi gizli tutun)","No! One of the biggest advantages of Social Stream Ninja is that it doesn't require API keys or login credentials for most platforms. It works by capturing the chat data directly from the browser window or app interface. However, you do need to be logged into each platform to see the chat normally.":"Hayır! Social Stream Ninja'nın en büyük avantajlarından biri, çoğu platform için API anahtarı veya oturum açma bilgisi gerektirmemesidir. Sohbet verilerini doğrudan tarayıcı penceresinden veya uygulama arayüzünden yakalar. Ancak sohbeti normal şekilde görebilmek için her platformda oturum açmış olmanız gerekir.","Note your Session ID from the extension popup":"Eklenti açılır menüsündeki Oturum Kimliğinizi not edin","Note:":"Not:","OBS CSS, AI design prompts, and editing poll.html locally.":"OBS CSS, AI design prompts, and editing poll.html locally.","OBS control dock":"OBS kontrol paneli","OBS overlay":"OBS katmanı","OBS quick start":"OBS hızlı başlangıç","OBS troubleshooting":"OBS sorun giderme","OBS, TikTok, TTS, API...":"OBS, TikTok, TTS, API...","Offers window pinning and transparency features":"Pencereyi üstte tutma ve saydamlık özellikleri sunar","On Windows, use Win+Tab to create two virtual desktops, with chat windows on one and OBS on the other.":"Windows'ta Win+Tab ile iki sanal masaüstü oluşturun; sohbet pencerelerini birine, OBS'yi diğerine yerleştirin.","On-screen chat while gaming":"Oyun oynarken ekranda sohbet","Once installed, follow these steps to start using Social Stream Ninja:":"Yükledikten sonra Social Stream Ninja'yı kullanmaya başlamak için şu adımları izleyin:","Once installed, follow these steps to start using the Social Stream Ninja standalone app:":"Yükledikten sonra Social Stream Ninja bağımsız uygulamasını kullanmaya başlamak için şu adımları izleyin:","One operator Dock with separate platform and source views.":"Ayrı platform ve kaynak görünümleri olan tek bir operatör paneli.","One session ID connects everything: use the same":"Tek bir oturum kimliği her şeyi bağlar: aynı kimliği kullanın:","Only for a confirmed OBS and Social Stream privilege mismatch.":"Yalnızca OBS ile Social Stream arasında doğrulanmış bir yetki uyuşmazlığı için.","Only one API toggle is needed:":"Yalnızca bir API anahtarı seçeneği gerekir:","Open":"Açın:","Open Twitch chat for your channel":"Kanalınızın Twitch sohbetini açın","Open YouTube Live chat":"YouTube Live sohbetini açın","Open chat, dock, and overlay links.":"Sohbet, panel ve katman bağlantılarını açın.","Open navigation menu":"Gezinme menüsünü aç","Open settings and find the MIDI section":"Ayarları açın ve MIDI bölümünü bulun","Open the \"Dashboard Link\" provided in the extension popup":"Eklenti açılır menüsündeki \"Dashboard Link\" bağlantısını açın","Open the \"Overlay Link\" in OBS as a browser source":"\"Overlay Link\" bağlantısını OBS'de tarayıcı kaynağı olarak açın","Open the Complete AI Guide":"Tam Yapay Zekâ Kılavuzunu Açın","Open the Event Flow editor from the app's menu":"Uygulama menüsünden Etkinlik Akışı düzenleyicisini açın","Open the Event Flow editor from the main dashboard menu":"Ana kontrol paneli menüsünden Etkinlik Akışı düzenleyicisini açın","Open the First-Time Chatters Guide":"İlk Kez Yazanlar Kılavuzunu Açın","Open the Hype Train Top Bar Guide":"Hype Train Üst Çubuğu Kılavuzunu Açın","Open the Social Stream Ninja app":"Social Stream Ninja uygulamasını açın","Open the Social Stream Ninja popup":"Social Stream Ninja açılır menüsünü açın","Open the TikTok Guide":"TikTok Kılavuzunu Açın","Open the YouTube Project Setup Guide":"YouTube Projesi Kurulum Kılavuzunu Açın","Open the app's settings menu":"Uygulamanın ayarlar menüsünü açın","Open the chat name colors guide":"Sohbet adı renkleri kılavuzunu açın","Open the extension popup and find the Bot/Auto-Response section":"Eklenti açılır menüsünü açın ve Bot/Auto-Response bölümünü bulun","Open the full TikTok guide":"Tam TikTok kılavuzunu açın","Open the self-hosted fonts guide":"Kendi barındırdığınız yazı tipleri kılavuzunu açın","Open the web versions of these platforms in your browser":"Bu platformların web sürümlerini tarayıcınızda açın","Open your Facebook Live broadcast (as a viewer or publisher)":"Facebook Live yayınınızı açın (izleyici veya yayıncı olarak)","Open your streaming platform's chat in a browser (or use the pop-out chat feature if available)":"Yayın platformunuzun sohbetini tarayıcıda açın (varsa açılır sohbet özelliğini kullanabilirsiniz)","Optionally add User Role filters for mod-only commands":"Yalnızca moderatörlerin kullanacağı komutlar için isteğe bağlı User Role filtreleri ekleyin","Orders, gifts, donations and new subscriptions":"Siparişler, hediyeler, bağışlar ve yeni abonelikler","Organize how messages appear in your overlay:":"Mesajların katmanınızda nasıl görüneceğini düzenleyin:","Other chat sites":"Diğer sohbet siteleri","Overlay Gallery":"Katman galerisi","Overlay Parameters:":"Katman Parametreleri:","Overlays And Customization":"Katmanlar ve Özelleştirme","Participation lists, eligibility checks, prize draws, persistence, and targeted resets.":"Katılım listeleri, uygunluk kontrolleri, ödül çekilişleri, kalıcılık ve hedefli sıfırlamalar.","Passwords, fresh links, and server read/reply fallback.":"Parolalar, yeni bağlantılar ve sunucu okuma/yanıt yedeği.","Payload fields for alerts and overlays.":"Uyarılar ve katmanlar için yük alanları.","Payload names, YouTube Shorts, Instagram Live, generic capture, and replies.":"Yük adları, YouTube Shorts, Instagram Live, genel yakalama ve yanıtlar.","Payment events":"Ödeme olayları","Permission Issues":"İzin Sorunları","Pick a template and add it to OBS.":"Bir şablon seçin ve OBS'ye ekleyin.","Pinning Messages:":"Mesajları Sabitleme:","Piper TTS:":"Piper TTS:","Platform":"Platform","Platform Connection Issues":"Platform Bağlantı Sorunları","Platform Guides":"Platform Kılavuzları","Platform setup picker":"Platform kurulum seçicisi","Play audio clips":"Ses klipleri çalın","Play audio clips or TTS":"Ses klipleri veya TTS çalın","Poll SRT, RTMP, or media-server stats and show bitrate in the Dock.":"SRT, RTMP veya medya sunucusu istatistiklerini sorgulayın ve panelde bit hızını gösterin.","Polls, giveaways, and waitlists":"Anketler, çekilişler ve bekleme listeleri","Prefer not to install additional software":"Ek yazılım yüklememeyi tercih ediyorsanız","Premium Cloud TTS Options:":"Ücretli Bulut TTS Seçenekleri:","Prerequisites:":"Ön Koşullar:","Preview six packs; set point prices, cooldowns, custom images, and GIPHY GIF rewards.":"Altı paketi önizleyin; puan fiyatlarını, bekleme sürelerini, özel resimleri ve GIPHY GIF ödüllerini ayarlayın.","Primary and private bots:":"Ana ve özel botlar:","Primary chat bot:":"Ana sohbet botu:","Print names, donations, purchases, receipts, and fixed-size stickers from Event Flow.":"Etkinlik Akışından adları, bağışları, satın alımları, fişleri ve sabit boyutlu çıkartmaları yazdırın.","Privacy Policy":"Gizlilik politikası","Private browser and server voice options.":"Özel tarayıcı ve sunucu sesi seçenekleri.","Private monitor overlay, pinning, transparency, hotkeys, and launch commands.":"Özel monitör katmanı, üstte tutma, saydamlık, kısayol tuşları ve başlatma komutları.","Processing tools:":"İşleme araçları:","Professional-quality voices (requires Google API key)":"Profesyonel kalitede sesler (Google API anahtarı gerektirir)","Prompt, preview, and add generated overlays.":"İstem yazın, önizleyin ve oluşturulan katmanları ekleyin.","Provider choice:":"Sağlayıcı seçimi:","Providers, Primary bot controls, safe testing, and missing replies.":"Sağlayıcılar, ana bot kontrolleri, güvenli test ve eksik yanıtlar.","Provides automatic updates":"Otomatik güncellemeler sağlar","Public tips, memberships, shop orders and commissions":"Herkese açık bahşişler, üyelikler, mağaza siparişleri ve özel siparişler","Queuing Messages:":"Mesajları Kuyruğa Alma:","Queuing and Pinning Messages":"Mesajları Kuyruğa Alma ve Sabitleme","Quick Links":"Hızlı bağlantılar","Raids with viewer count":"İzleyici sayısını içeren baskınlar","Ready-made overlay layouts.":"Hazır katman düzenleri.","Reflection Filter":"Yansıma filtresi","Relay chat":"Sohbeti aktarın","Relay chat between platforms":"Platformlar arasında sohbet aktarın","Reload the dock once if it was already open":"Panel zaten açıksa bir kez yeniden yükleyin","Remote API control enabled while the other API transport toggles remain off":"Uzak API kontrolü açıkken diğer API aktarım anahtarları kapalı kalır","Remove the grey Dock background":"Gri panel arka planını kaldırın","Replace":"Değiştirin:","Replace saved URLs, refresh cache, and fix blank overlays.":"Kayıtlı URL'leri değiştirin, önbelleği yenileyin ve boş katmanları düzeltin.","Report an Issue":"Sorun bildirin","Required settings, color modes, screenshots, and CSS.":"Gerekli ayarlar, renk modları, ekran görüntüleri ve CSS.","Requirements:":"Gereksinimler:","Resources":"Kaynaklar","Restart your browser":"Tarayıcınızı yeniden başlatın","Reward-triggered action flow setup.":"Ödülle tetiklenen işlem akışı kurulumu.","Run Kokoro-FastAPI or openedai-speech locally via Docker:":"Kokoro-FastAPI veya openedai-speech'i Docker ile yerelde çalıştırın —","Run a vote, draw a winner, or advance a viewer queue.":"Oylama yapın, kazanan çekin veya izleyici kuyruğunu ilerletin.","Run the app as administrator (Windows) if needed":"Gerekirse uygulamayı yönetici olarak çalıştırın (Windows)","Run the complete desktop app on Linux with Xvfb and remote control.":"Tam masaüstü uygulamasını Linux'ta Xvfb ve uzaktan kontrolle çalıştırın.","Running Your Stream":"Yayınınızı Yönetme","Safe updates and recovery":"Güvenli güncellemeler ve kurtarma","Save the exported file to a secure location":"Dışa aktarılan dosyayı güvenli bir konuma kaydedin","Screenshots and quick previews of every game and chat interaction.":"Her oyun ve sohbet etkileşiminin ekran görüntüleri ve hızlı önizlemeleri.","Search settings, URL options, defaults, and supported pages.":"Ayarları, URL seçeneklerini, varsayılanları ve desteklenen sayfaları arayın.","Search, or open one category. Start with OBS if you just need chat on screen.":"Arayın veya bir kategori açın. Yalnızca ekranda sohbet istiyorsanız OBS ile başlayın.","Security Note:":"Güvenlik notu:","See the":"Bkz.","Select a template that matches your stream's style":"Yayınınızın tarzına uygun bir şablon seçin","Select event:":"Olayı seçin:","Select your MIDI device from the dropdown":"Açılır listeden MIDI aygıtınızı seçin","Select your device from the dropdown":"Açılır listeden aygıtınızı seçin","Self-hosted fonts & styling":"Kendi barındırdığınız yazı tipleri ve biçimlendirme","Self-hosted fonts and CSS examples.":"Kendi barındırdığınız yazı tipleri ve CSS örnekleri.","Self-hosted server:":"Kendi barındırdığınız sunucu:","Send SSN chat into the VDO.Ninja mobile app.":"SSN sohbetini VDO.Ninja mobil uygulamasına gönderin.","Send chat messages":"Sohbet mesajları gönderin","Send fake chat, donation, membership, raid, reward, and other event payloads.":"Sahte sohbet, bağış, üyelik, baskın, ödül ve diğer olay yüklerini gönderin.","Send messages directly from the dashboard":"Doğrudan kontrol panelinden mesaj gönderin","Send predefined chat messages":"Önceden tanımlanmış sohbet mesajları gönderin","Session and routing troubleshooting":"Oturum ve yönlendirme sorun giderme","Session, dock, overlay, browser source.":"Oturum, panel, katman, tarayıcı kaynağı.","Sessions, passwords, and server fallback":"Oturumlar, parolalar ve sunucu yedeği","Set URL to:":"URL'yi şuna ayarlayın:","Set to \"Disabled\"":"\"Disabled\" olarak ayarlayın","Set up Social Stream Ninja step by step. Browse guides for chat sources, OBS overlays, text-to-speech, AI tools, games and stream automation.":"Social Stream Ninja'yı adım adım kurun. Sohbet kaynakları, OBS katmanları, metinden konuşmaya, yapay zekâ araçları, oyunlar ve yayın otomasyonu kılavuzlarına göz atın.","Setting Up Auto-Response:":"Otomatik Yanıt Kurulumu:","Setting Up MIDI:":"MIDI Kurulumu:","Setting Up TTS:":"TTS Kurulumu:","Setting Up:":"Kurulum:","Settings Issue":"Ayar Sorunu","Settings Not Saving":"Ayarlar Kaydedilmiyor","Settings and URL reference":"Ayarlar ve URL referansı","Setup Guides for Chat, OBS and Streaming - Social Stream Ninja":"Sohbet, OBS ve Yayın Kurulum Kılavuzları - Social Stream Ninja","Setup:":"Kurulum:","Short fixes for common problems.":"Yaygın sorunlar için kısa çözümler.","Should I use the browser extension or standalone app?":"Tarayıcı eklentisini mi bağımsız uygulamayı mı kullanmalıyım?","Show Twitch Hype Train and Treasure Train progress as a Twitch-style top bar in OBS.":"Twitch Hype Train ve Treasure Train ilerlemesini OBS'de Twitch tarzı üst çubuk olarak gösterin.","Sign server errors, rate limits, Euler API keys.":"İmzalama sunucusu hataları, hız sınırları, Euler API anahtarları.","Simple OBS-safe voice setup with screenshots.":"Ekran görüntüleriyle basit, OBS'ye uygun ses kurulumu.","Simple live setup with screenshots.":"Ekran görüntüleriyle basit canlı yayın kurulumu.","Smallest footprint, CPU-only:":"En düşük kaynak kullanımı, yalnızca CPU —","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja can read chat messages aloud using Text-to-Speech technology:":"Social Stream Ninja, Metinden Konuşmaya teknolojisiyle sohbet mesajlarını sesli okuyabilir:","Social Stream Ninja can use AI in several different ways. Choose the workflow before choosing a provider.":"Social Stream Ninja yapay zekâyı birkaç farklı şekilde kullanabilir. Sağlayıcı seçmeden önce iş akışını seçin.","Social Stream Ninja has an active community on Discord where you can get help directly from the developer and other users. Join at":"Social Stream Ninja'nın Discord'da, doğrudan geliştiriciden ve diğer kullanıcılardan yardım alabileceğiniz etkin bir topluluğu vardır. Katılın:","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja supports 100+ platforms including YouTube, Twitch, Facebook, Instagram, TikTok, Discord, Zoom, Google Meet, X (Twitter), WhatsApp, Telegram, and many more. For a complete list, see the":"Social Stream Ninja; YouTube, Twitch, Facebook, Instagram, TikTok, Discord, Zoom, Google Meet, X (Twitter), WhatsApp, Telegram ve daha pek çoğu dahil 100'den fazla platformu destekler. Tam liste için bkz.","Social Stream Ninja works with 100+ platforms. Here's how to connect to the most popular ones:":"Social Stream Ninja 100'den fazla platformla çalışır. En popülerlerine şöyle bağlanabilirsiniz:","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. GPLv3.0 Lisansı. Geliştiren:","Solutions for common issues with the browser extension":"Tarayıcı eklentisindeki yaygın sorunların çözümleri","Solutions for common issues with the standalone application":"Bağımsız uygulamadaki yaygın sorunların çözümleri","Sounds, rewards, media, webhooks, OBS actions.":"Sesler, ödüller, medya, webhook'lar, OBS işlemleri.","Source types":"Kaynak türleri","Source windows, updates, setup checks.":"Kaynak pencereleri, güncellemeler, kurulum kontrolleri.","Speechify setup guide":"Speechify kurulum kılavuzu","Speechify:":"Speechify:","Standalone App":"Bağımsız uygulama","Standalone app TikTok mode notes.":"Bağımsız uygulama TikTok modu notları.","Standalone app modes":"Bağımsız uygulama modları","Standard, WebSocket, TikTok presets, source windows.":"Standard, WebSocket, TikTok hazır ayarları, kaynak pencereleri.","Start Here":"Buradan başlayın","Start here: your first chat in SSN":"Buradan başlayın: SSN'deki ilk sohbetiniz","Steve Seguin":"Steve Seguin","Sticker packs and loyalty rewards":"Çıkartma paketleri ve sadakat ödülleri","Still Need Help?":"Hâlâ Yardıma mı İhtiyacınız Var?","Stream Deck setup":"Stream Deck kurulumu","Stream Events Capture":"Yayın Olaylarını Yakalama","StreamElements / Streamlabs chat skins":"StreamElements / Streamlabs sohbet görünümleri","Stripe":"Stripe","Stripe Payment Link":"Stripe Ödeme Bağlantısı","Stripe Setup:":"Stripe Kurulumu:","Stripe Webhooks":"Stripe Webhook'ları","Stripe, Ko-fi, Fourthwall, and more.":"Stripe, Ko-fi, Fourthwall ve daha fazlası.","Stripe:":"Stripe:","Subscriber and viewer counts":"Abone ve izleyici sayıları","Subscribers, followers, bits, raids, channel points":"Aboneler, takipçiler, bits, baskınlar, kanal puanları","Subscriptions and tips (Kick)":"Abonelikler ve bahşişler (Kick)","Subscriptions, tips, follow alerts":"Abonelikler, bahşişler, takip uyarıları","Super Chat and Super Sticker donations":"Super Chat ve Super Sticker bağışları","Support":"Destek","Support page":"Destek sayfası","Support workflows and AI agents.":"Destek iş akışları ve yapay zekâ ajanları.","Supported Integrations:":"Desteklenen Entegrasyonlar:","Supported Platforms":"Desteklenen platformlar","Supported Platforms:":"Desteklenen Platformlar:","Supported Sites":"Desteklenen siteler","Supported sites list":"Desteklenen siteler listesi","Switch OBS scenes":"OBS sahnelerini değiştirin","Switch theme":"Temayı değiştir","TTS setup guide":"TTS kurulum kılavuzu","Template quick start":"Şablonla hızlı başlangıç","Templates":"Şablonlar","Templates Gallery":"Şablon Galerisi","Templates gallery":"Şablon galerisi","Templates, style options, fonts, events":"Şablonlar, stil seçenekleri, yazı tipleri, olaylar","Terms of Service":"Hizmet koşulları","Test it with the Fake Hype Train button before going live.":"Canlı yayına geçmeden önce Fake Hype Train düğmesiyle test edin.","Test or persist matching privileges for OBS and Social Stream.":"OBS ve Social Stream için eşleşen yetkileri test edin veya kalıcı yapın.","Test with the built-in simulator before going live":"Canlı yayına geçmeden önce yerleşik simülatörle test edin","Test with the simulator before going live":"Canlı yayına geçmeden önce simülatörle test edin","Testing:":"Test:","Text-to-Speech":"Metinden konuşma","The CSS will be appended to the URL as base64 encoded data":"CSS, URL'ye base64 kodlu veri olarak eklenir","The Event Flow Editor is a powerful node-based automation system for building custom workflows. It's the \"advanced automation\" layer that lets you script your own routing logic.":"Etkinlik Akışı Düzenleyicisi, özel iş akışları oluşturmak için güçlü, düğüm tabanlı bir otomasyon sistemidir. Kendi yönlendirme mantığınızı yazmanızı sağlayan “gelişmiş otomasyon” katmanıdır.","The Social Stream Ninja desktop app avoids many browser throttling issues.":"Social Stream Ninja masaüstü uygulaması birçok tarayıcı kısıtlama sorununu önler.","The app will update automatically when you restart it. You can also check for updates manually from the app's menu.":"Uygulamayı yeniden başlattığınızda otomatik güncellenir. Uygulama menüsünden güncellemeleri elle de kontrol edebilirsiniz.","The browser extension is better if you:":"Şu durumlarda tarayıcı eklentisi daha uygundur:","The desktop app supports the same provider-backed AI tools, including:":"Masaüstü uygulaması, aynı sağlayıcı destekli yapay zekâ araçlarını destekler. Bunlar arasında:","The extension or desktop app merges every chat into one session":"Eklenti veya masaüstü uygulaması tüm sohbetleri tek oturumda birleştirir","The message will stay pinned at the top of the dashboard":"Mesaj kontrol panelinin üstünde sabitlenmiş olarak kalır","The normalized donation is shared with chat, alerts, Event Flow, and the Tip Jar/Goal Meter.":"Normalleştirilmiş bağış; sohbet, uyarılar, Etkinlik Akışı ve Bağış Kavanozu/Hedef Göstergesi ile paylaşılır.","The standalone app avoids many browser limitations like throttling and provides additional features like window pinning.":"Bağımsız uygulama, hız kısıtlaması gibi birçok tarayıcı sınırlamasını önler ve pencereyi üstte tutma gibi ek özellikler sunar.","The standalone app has the most TikTok options in SSN, so the guide lives on its own page now.":"SSN'deki en fazla TikTok seçeneği bağımsız uygulamadadır; bu nedenle kılavuz artık ayrı bir sayfadadır.","The standalone app includes additional features not available in the browser extension:":"Bağımsız uygulama, tarayıcı eklentisinde bulunmayan ek özellikler içerir:","The standalone app is recommended for most users as it:":"Bağımsız uygulama çoğu kullanıcı için önerilir, çünkü:","The standalone app provides a simpler installation process compared to the browser extension:":"Bağımsız uygulama, tarayıcı eklentisine kıyasla daha basit bir kurulum sunar:","The standalone app simplifies connection to various platforms:":"Bağımsız uygulama çeşitli platformlara bağlantıyı kolaylaştırır:","The standalone app supports the same CSS customization methods as the extension:":"Bağımsız uygulama eklentiyle aynı CSS özelleştirme yöntemlerini destekler:","The standalone app supports the same URL parameters as the browser extension. You can customize both the dashboard and overlay:":"Bağımsız uygulama tarayıcı eklentisiyle aynı URL parametrelerini destekler. Hem kontrol panelini hem katmanı özelleştirebilirsiniz:","The standalone app supports two-way chat messaging for supported platforms:":"Bağımsız uygulama desteklenen platformlarda iki yönlü sohbet mesajlaşmasını destekler:","There are several ways to customize the appearance with CSS:":"Görünümü CSS ile özelleştirmenin birkaç yolu vardır:","Thermal printers and stream labels":"Termal yazıcılar ve yayın etiketleri","TikFinity fallback setup":"TikFinity yedek kurulumu","TikTok":"TikTok","TikTok (Standalone App)":"TikTok (Bağımsız Uygulama)","TikTok Guide":"TikTok kılavuzu","TikTok app modes":"TikTok uygulama modları","TikTok guide":"TikTok kılavuzu","TikTok in the desktop app":"Masaüstü uygulamasında TikTok","TikTok quick start":"TikTok hızlı başlangıç","TikTok signing":"TikTok imzalama","TikTok, Kick, & Others":"TikTok, Kick ve Diğerleri","TikTok, YouTube, Twitch, Kick, supported sites":"TikTok, YouTube, Twitch, Kick, desteklenen siteler","TikTok:":"TikTok:","Tip Jar and Goal Meter":"Bağış Kavanozu ve Hedef Göstergesi","Tip:":"İpucu:","Tips":"Bahşişler","Tips, memberships, shop orders, commissions and wishlist funding":"Bahşişler, üyelikler, mağaza siparişleri, özel siparişler ve istek listesi fonlama","To unpin, hold ALT and click the pinned message again":"Sabitlemeyi kaldırmak için ALT'yi basılı tutup sabitlenmiş mesaja yeniden tıklayın","To update the manually installed extension, download the latest version, replace the old files with the new ones, and then reload the extension or restart your browser.":"Elle yüklenmiş eklentiyi güncellemek için en son sürümü indirin, eski dosyaları yenileriyle değiştirin ve ardından eklentiyi yeniden yükleyin veya tarayıcınızı yeniden başlatın.","Transparency and hidden-menu settings for MELD and other non-OBS apps.":"MELD ve diğer OBS dışı uygulamalar için saydamlık ve gizli menü ayarları.","Trigger custom overlays and media":"Özel katmanları ve medyayı tetikleyin","Trigger local MIDI actions from chat.":"Sohbetten yerel MIDI işlemleri tetikleyin.","Trigger overlays and audio":"Katmanları ve sesi tetikleyin","Trigger overlays and media":"Katmanları ve medyayı tetikleyin","Troubleshooting":"Sorun giderme","Troubleshooting (Browser Extension)":"Sorun Giderme (Tarayıcı Eklentisi)","Troubleshooting (Standalone App)":"Sorun Giderme (Bağımsız Uygulama)","Troubleshooting And Support":"Sorun Giderme ve Destek","Try the Standalone App:":"Bağımsız Uygulamayı Deneyin:","Try using a different DNS provider":"Farklı bir DNS sağlayıcısı kullanmayı deneyin","Turn on First-time chatter detection.":"İlk kez yazanları algılamayı açın.","Twitch":"Twitch","Twitch and YouTube flows, sender accounts, and echo troubleshooting.":"Twitch ve YouTube akışları, gönderen hesapları ve yankı sorun giderme.","Twitch setup and EventSub":"Twitch kurulumu ve EventSub","Twitch:":"Twitch:","Two-Way Chat":"İki Yönlü Sohbet","URL Parameter Editor Tool":"URL Parametresi Düzenleme Aracı","URL Parameters":"URL Parametreleri","Ultra-realistic voices with custom voice training":"Özel ses eğitimiyle son derece gerçekçi sesler","Under":"Şu bölümde:","Understand which SSApp local service matches your goal.":"Hangi SSApp yerel hizmetinin amacınıza uygun olduğunu öğrenin.","Upload, local files, or larger cloud libraries.":"Yükleme, yerel dosyalar veya daha büyük bulut kütüphaneleri.","Use Stripe's Test Mode with card":"Stripe Test Modunda şu kartı kullanın:","Use Virtual Desktops:":"Sanal Masaüstleri Kullanın:","Use bot commands and automated responses":"Bot komutları ve otomatik yanıtlar kullanın","Use first-time chatter detection to highlight new viewers, show the leaf badge, or trigger first-time-only beeps.":"Yeni izleyicileri vurgulamak, yaprak rozeti göstermek veya yalnızca ilk mesajda bip sesi tetiklemek için ilk kez yazanları algılamayı kullanın.","Use the":"Şunu kullanın:","Use the \"Sign in\" button to authenticate if needed":"Gerekirse kimlik doğrulamak için \"Sign in\" düğmesini kullanın","Use the AppImage file for most Linux distributions":"Çoğu Linux dağıtımı için AppImage dosyasını kullanın","Use the Fake Hype Train button to test it.":"Test etmek için Fake Hype Train düğmesini kullanın.","Use the dedicated Hype Train Top Bar link to show Twitch Hype Train and Treasure Train progress in OBS.":"Twitch Hype Train ve Treasure Train ilerlemesini OBS'de göstermek için özel Hype Train Top Bar bağlantısını kullanın.","Use the export feature to save your settings":"Ayarlarınızı kaydetmek için dışa aktarma özelliğini kullanın","Use the guide for setup steps, screenshots, and troubleshooting.":"Kurulum adımları, ekran görüntüleri ve sorun giderme için kılavuzu kullanın.","Use third-party overlay links as read-only chat sources.":"Üçüncü taraf katman bağlantılarını salt okunur sohbet kaynakları olarak kullanın.","Use this to log chats, trigger external automations, or sync with other tools":"Sohbetleri kaydetmek, harici otomasyonları tetiklemek veya diğer araçlarla eşitlemek için kullanın","Use your normal generated dock and overlay links; do not add":"Normal oluşturulmuş panel ve katman bağlantılarınızı kullanın; şunu eklemeyin:","User Memory guide":"Kullanıcı Belleği kılavuzu","Username":"Kullanıcı adı","Users, words, bots, commands, and global versus page filters.":"Kullanıcılar, sözcükler, botlar, komutlar ve genel filtrelerle sayfa filtrelerinin farkı.","Using the Dock during a stream":"Yayın sırasında Panel kullanımı","VDO native app + SSN":"VDO yerel uygulaması + SSN","Video guide, first source, key features, and help.":"Videolu kılavuz, ilk kaynak, temel özellikler ve yardım.","Video stats and bitrate":"Video istatistikleri ve bit hızı","View Troubleshooting Guide":"Sorun Giderme Kılavuzunu Görüntüle","Viewer counts across most platforms":"Çoğu platformda izleyici sayıları","Visual guides: products, spot boards, recent sales, gifts and tips.":"Görsel kılavuzlar: ürünler, spot panoları, son satışlar, hediyeler ve bahşişler.","Voice AI cohost":"Sesli yapay zekâ yardımcı sunucusu","Voice cohost:":"Sesli yardımcı sunucu:","Voice cohosts, browser companions, bots, local models, TTS":"Sesli yardımcı sunucular, tarayıcı yardımcıları, botlar, yerel modeller, TTS","Want the latest updates immediately (manual installation)":"En yeni güncellemeleri hemen istiyorsanız (elle kurulum)","Want to keep it local and private?":"Yerel ve özel kalmasını mı istiyorsunuz?","Watch this video for a visual walkthrough of the standalone app:":"Bağımsız uygulamanın görsel anlatımı için bu videoyu izleyin:","We maintain a canonical list of every event payload (followers, memberships, raids, viewer counts, donations, and more) in the":"Tüm olay yüklerinin (takipçiler, üyelikler, baskınlar, izleyici sayıları, bağışlar ve daha fazlası) temel listesini şu belgede tutuyoruz:","WebSocket actions and examples.":"WebSocket işlemleri ve örnekleri.","WebSocket source, OAuth, scopes, and event checks.":"WebSocket kaynağı, OAuth, kapsamlar ve olay kontrolleri.","Webhook URL":"Webhook URL'si","Webhooks":"Webhook'lar","Webhooks & Integrations":"Webhook'lar ve Entegrasyonlar","What You Can Do:":"Yapabilecekleriniz:","What platforms does Social Stream Ninja support?":"Social Stream Ninja hangi platformları destekler?","What stream event data, like new followers, is supported?":"Yeni takipçiler gibi hangi yayın olayı verileri desteklenir?","What the node editor can do, at a glance.":"Düğüm düzenleyicisinin yapabileceklerine kısa bakış.","What to try when TikTok says you are offline, misses messages, duplicates chat, or closes auth windows":"TikTok çevrimdışı olduğunuzu söylediğinde, mesajları kaçırdığında, sohbeti çoğalttığında veya kimlik doğrulama pencerelerini kapattığında denenebilecekler","When using YouTube or Twitch, make sure the pop-out chat window is open and visible":"YouTube veya Twitch kullanırken açılır sohbet penceresinin açık ve görünür olduğundan emin olun","When using the app's overlay URL in OBS:":"Uygulamanın katman URL'sini OBS'de kullanırken:","Where can I find the API and automation documentation?":"API ve otomasyon belgelerini nerede bulabilirim?","Where can I get help if I'm having problems?":"Sorun yaşıyorsam nereden yardım alabilirim?","Which mode to use: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy, or Euler Signing":"Hangi mod kullanılmalı: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy veya Euler Signing","Window Pinning:":"Pencereyi Üstte Tutma:","Windows administrator mode":"Windows yönetici modu","Windows, macOS, and Linux security warnings.":"Windows, macOS ve Linux güvenlik uyarıları.","Windows:":"Windows:","Works the same in the Chrome extension, Electron app, and hosted pages.":"Chrome eklentisinde, Electron uygulamasında ve barındırılan sayfalarda aynı şekilde çalışır.","X.com":"X.com","Yes! Social Stream Ninja supports two-way chat functionality for most platforms. When you're logged into a platform and have the appropriate permissions, you can send messages from the dashboard or via API commands that will appear in all connected chats simultaneously.":"Evet! Social Stream Ninja çoğu platform için iki yönlü sohbeti destekler. Bir platformda oturum açmış ve gerekli izinlere sahipseniz kontrol panelinden veya API komutlarıyla gönderdiğiniz mesajlar bağlı tüm sohbetlerde aynı anda görünür.","Yes, Social Stream Ninja is completely free and open source under the GPLv3.0 License. There are no subscriptions, no hidden fees, and no feature limitations. The project is maintained by Steve Seguin with contributions from the community.":"Evet, Social Stream Ninja GPLv3.0 Lisansı altında tamamen ücretsiz ve açık kaynaklıdır. Abonelik, gizli ücret veya özellik kısıtlaması yoktur. Projeyi topluluğun katkılarıyla Steve Seguin geliştirip sürdürür.","You can also export chat data to external services:":"Sohbet verilerini harici hizmetlere de aktarabilirsiniz:","You can customize both the dashboard and overlay by adding parameters to their URL. Some examples:":"Hem kontrol panelini hem katmanı URL'lerine parametre ekleyerek özelleştirebilirsiniz. Bazı örnekler:","YouTube":"YouTube","YouTube Custom Project Setup":"YouTube Özel Proje Kurulumu","YouTube project setup":"YouTube projesi kurulumu","YouTube setup guide":"YouTube kurulum kılavuzu","YouTube video player":"YouTube video oynatıcısı","YouTube, Twitch, TikTok, and 100+ more platforms":"YouTube, Twitch, TikTok ve 100'den fazla başka platform","YouTube, Twitch, and Kick events across alerts, TTS, goals, and Event Flow.":"Uyarılar, TTS, hedefler ve Etkinlik Akışı genelinde YouTube, Twitch ve Kick olayları.","YouTube:":"YouTube:","Your configuration or settings aren't being saved between sessions.":"Yapılandırmanız veya ayarlarınız oturumlar arasında kaydedilmiyor.","Your first giveaway":"İlk çekilişiniz","and Spanish":"ve İspanyolca","and create a new endpoint":"ve yeni bir uç nokta oluşturun","and the Dock display toggle under":"; paneldeki görüntüleme anahtarı ise şu bölümde:","answer selected viewers in an overlay, through TTS, or back into supported chats.":"seçilen izleyicileri katmanda, TTS ile veya desteklenen sohbetlere geri yazarak yanıtlar.","based on events or keywords":"olaylara veya anahtar sözcüklere göre","based on specific events or keywords":"belirli olaylara veya anahtar sözcüklere göre","between platforms with smart filters":"akıllı filtrelerle platformlar arasında","capture or experimentally relay chat into an open":"açık bir sekmede sohbeti yakalar veya deneysel olarak aktarır:","chat relay walkthrough":"sohbet aktarımı adım adım anlatımı","combine microphone conversation, live-chat questions, and spoken responses.":"mikrofonla konuşmayı, canlı sohbet sorularını ve sesli yanıtları birleştirir.","discord.socialstream.ninja":"discord.socialstream.ninja","documentation.":"belgeleri.","eSpeak-NG:":"eSpeak-NG:","for Fourthwall, Ko-fi and Buy Me a Coffee, including receiver status, isolated previews and product import.":"Fourthwall, Ko-fi ve Buy Me a Coffee için; alıcı durumu, yalıtılmış önizlemeler ve ürün içe aktarma dahil.","for complete event payload documentation.":"tam olay yükü belgeleri için.","for donation webhooks":"bağış webhook'ları için","for full setup instructions including self-hosted server options and OBS audio capture.":"kendi barındırdığınız sunucu seçenekleri ve OBS ses yakalama dahil tam kurulum talimatları için.","for screenshots, color choices, troubleshooting, and CSS examples.":"ekran görüntüleri, renk seçenekleri, sorun giderme ve CSS örnekleri için.","for setup. For detailed documentation, see the":"kurulum için. Ayrıntılı belgeler için bkz.","for step-by-step hosting and CSS examples.":"adım adım barındırma ve CSS örnekleri için.","illustrated setup guide":"resimli kurulum kılavuzu","in the template URL with your session ID":"şablon URL'sinde oturum kimliğinizle değiştirin","local models, self-hosted endpoints, or supported cloud APIs.":"yerel modeller, kendi barındırdığınız uç noktalar veya desteklenen bulut API'leri.","macOS:":"macOS:","moderation, translation, summaries, RAG knowledge search, and AI-built overlays.":"moderasyon, çeviri, özetler, RAG bilgi araması ve yapay zekâyla oluşturulan katmanlar.","moderation, translation, summaries, and RAG knowledge search.":"moderasyon, çeviri, özetler ve RAG bilgi araması.","node to control whether captured echoes appear in the Dock and overlays. See the":"düğümüyle yakalanan yankıların panelde ve katmanlarda görünüp görünmeyeceğini kontrol edin. Bkz.","or":"veya","or eSpeak":"veya eSpeak","page.":"sayfası.","page. It's the best starting point when you want to script custom behaviors or integrate Social Stream Ninja with other tools.":"sayfası. Özel davranışlar yazmak veya Social Stream Ninja'yı diğer araçlarla entegre etmek için en iyi başlangıç noktasıdır.","public chat replies or a separate one-on-one helper.":"herkese açık sohbet yanıtları veya ayrı bire bir yardımcı.","remote API control lets the background script normalize donation webhooks and deliver them like normal messages. The other API transport toggles can remain off.":"uzak API kontrolü, arka plan betiğinin bağış webhook'larını normalleştirip normal mesajlar gibi iletmesini sağlar. Diğer API aktarım anahtarları kapalı kalabilir.","remote API control of extension":"uzantının uzaktan API kontrolü","scenes and sources automatically":"sahneleri ve kaynakları otomatik olarak","tab without an API key.":"sekmesine API anahtarı olmadan.","talk by microphone while live-chat questions enter the same cohost session.":"canlı sohbet soruları aynı yardımcı sunucu oturumuna girerken mikrofonla konuşun.","the extension if you want to keep your settings. If using the Chrome Web Store version, it will update automatically but less frequently.":"ayarlarınızı korumak istiyorsanız eklentiyi. Chrome Web Store sürümünü kullanıyorsanız otomatik ama daha seyrek güncellenir.","to your featured.html or dock.html URL":"featured.html veya dock.html URL'nize","toggle in settings":"ayarlardaki anahtarı","value in your dock and overlay URLs.":"değerini panel ve katman URL'lerinizde.","with AND/OR/NOT logic gates":"AND/OR/NOT mantık kapılarıyla","with contributions from the community.":"topluluğun katkılarıyla.","with logic gates (AND/OR/NOT)":"mantık kapılarıyla (AND/OR/NOT)","with queue management":"kuyruk yönetimiyle","with smart filters (e.g., mirror Twitch to Discord but block commands)":"akıllı filtrelerle (ör. Twitch'i Discord'a yansıtın ancak komutları engelleyin)","without relying on Google/System fonts.":"Google/Sistem yazı tiplerine bağımlı olmadan."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/guides.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/guides.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/guides.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/guides.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/guides.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/guides.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/guides.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/guides.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/guides.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/guides.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/guides.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/guides.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/guides.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/guides.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/guides.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/guides.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/guides.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/guides.html">
+<!-- ssn-languages:end --></head>
+<body class="guides-page">
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme"><a href="../index.html">Ana sayfa</a><a href="features.html">Özellikler</a><a href="inspiration.html" class="site-priority-inspiration">İlham</a><a href="download.html">İndir</a><a href="guides.html" aria-current="page">Kılavuzlar</a><a href="commands.html">Komutlar ve API</a><a href="supported-sites.html">Desteklenen siteler</a><a href="overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a><a href="services.html" class="site-priority-hire">Hizmet alın</a><a href="support.html">Destek</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/guides.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/guides.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/guides.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/guides.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/guides.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/guides.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/guides.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/guides.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/guides.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/guides.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/guides.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/guides.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/guides.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/guides.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="guides.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/guides.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/guides.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Kılavuzlar</h1>
+            <p>Social Stream Ninja'yı kurmayı, özelleştirmeyi ve en verimli şekilde kullanmayı öğrenin</p>
+        </div>
+    </section>
+
+    <section class="guide-flow-section" aria-label="Social Stream Ninja bileşenleri nasıl birlikte çalışır">
+        <div class="container">
+            <div class="guide-flow">
+                <div class="guide-flow-step">
+                    <div class="guide-flow-icons">
+                        <i class="fab fa-youtube" aria-hidden="true"></i>
+                        <i class="fab fa-twitch" aria-hidden="true"></i>
+                        <i class="fab fa-tiktok" aria-hidden="true"></i>
+                        <i class="fas fa-comment-dots" aria-hidden="true"></i>
+                    </div>
+                    <strong>Sohbet kaynakları</strong>
+                    <small>YouTube, Twitch, TikTok ve 100'den fazla başka platform</small>
+                </div>
+                <div class="guide-flow-arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
+                <div class="guide-flow-step">
+                    <div class="guide-flow-icons">
+                        <i class="fas fa-user-ninja" aria-hidden="true"></i>
+                    </div>
+                    <strong>Social Stream Ninja</strong>
+                    <small>Eklenti veya masaüstü uygulaması tüm sohbetleri tek oturumda birleştirir</small>
+                </div>
+                <div class="guide-flow-arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
+                <div class="guide-flow-outputs">
+                    <div class="guide-flow-step guide-flow-step-mini">
+                        <div class="guide-flow-icons"><i class="fas fa-columns" aria-hidden="true"></i></div>
+                        <strong>Panel</strong>
+                        <small>Modere edin, öne çıkarın ve yanıtlayın</small>
+                    </div>
+                    <div class="guide-flow-step guide-flow-step-mini">
+                        <div class="guide-flow-icons"><i class="fas fa-tv" aria-hidden="true"></i></div>
+                        <strong>OBS katmanı</strong>
+                        <small>Yayında öne çıkarılan sohbet ve uyarılar</small>
+                    </div>
+                </div>
+            </div>
+            <p class="guide-flow-caption">Tek bir oturum kimliği her şeyi bağlar: aynı kimliği kullanın: <code>?session=</code> değerini panel ve katman URL'lerinizde.</p>
+        </div>
+    </section>
+
+	<section id="guide-directory" class="guide-directory">
+		<div class="container">
+			<div class="guide-directory-header">
+				<div>
+					<h2>Kılavuz Bulun</h2>
+					<p class="section-subtitle">Arayın veya bir kategori açın. Yalnızca ekranda sohbet istiyorsanız OBS ile başlayın.</p>
+				</div>
+				<div class="guide-filter">
+					<label for="guide-filter-input">Filtre</label>
+					<input id="guide-filter-input" type="search" placeholder="OBS, TikTok, TTS, API..." autocomplete="off">
+					<button id="guide-filter-clear" type="button">Temizle</button>
+				</div>
+			</div>
+			<div class="guide-tree">
+				<details class="guide-tree-group" open>
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-rocket" aria-hidden="true"></i> Buradan başlayın</span>
+						<small>Yükleyin, sohbeti bağlayın, OBS katmanları ekleyin</small>
+					</summary>
+					<ul>
+						<li><a href="getting-started.html"><i class="fas fa-play-circle" aria-hidden="true"></i><span><strong>Buradan başlayın: SSN'deki ilk sohbetiniz</strong><small>Yükleyin, bir kaynak bağlayın, paneli açın, ardından TTS ve OBS sesini ekleyin.</small></span></a></li>
+						<li><a href="download.html"><i class="fas fa-download" aria-hidden="true"></i><span><strong>Yükleme veya güncelleme</strong><small>Eklenti ve masaüstü uygulaması indirmeleri.</small></span></a></li>
+						<li><a href="monetization.html"><i class="fas fa-gift" aria-hidden="true"></i><span><strong>Ticaret ve gelir elde etme katmanları</strong><small>Görsel kılavuzlar: ürünler, spot panoları, son satışlar, hediyeler ve bahşişler.</small></span></a></li>
+<li><a href="games-gallery.html"><i class="fas fa-gamepad" aria-hidden="true"></i><span><strong>Oyun galerisine göz atın</strong><small>Her oyun ve sohbet etkileşiminin ekran görüntüleri ve hızlı önizlemeleri.</small></span></a></li>
+<li><a href="inspiration.html"><i class="fas fa-lightbulb" aria-hidden="true"></i><span><strong>Yayınınız için fikirler bulun</strong><small>Oyun, müzik, eğitim, üretim, canlı satış ve topluluk etkinlikleri için 126 fikir.</small></span></a></li>
+						<li><a href="desktop-app-wont-open.html"><i class="fas fa-shield-alt" aria-hidden="true"></i><span><strong>Masaüstü uygulaması açılmıyor</strong><small>Windows, macOS ve Linux güvenlik uyarıları.</small></span></a></li>
+						<li><a href="windows-administrator-mode.html"><i class="fas fa-user-shield" aria-hidden="true"></i><span><strong>Windows yönetici modu</strong><small>OBS ve Social Stream için eşleşen yetkileri test edin veya kalıcı yapın.</small></span></a></li>
+						<li><a href="safe-updates-backups.html"><i class="fas fa-shield-alt" aria-hidden="true"></i><span><strong>Güvenli güncellemeler ve kurtarma</strong><small>Ayarları yedekleyin, güvenle güncelleyin ve bir oturumu kurtarın.</small></span></a></li>
+						<li><a href="obs-quick-start.html"><i class="fas fa-desktop" aria-hidden="true"></i><span><strong>OBS hızlı başlangıç</strong><small>Oturum, panel, katman, tarayıcı kaynağı.</small></span></a></li>
+						<li><a href="sessions-passwords-relay-modes.html"><i class="fas fa-key" aria-hidden="true"></i><span><strong>Oturumlar, parolalar ve sunucu yedeği</strong><small>Kaynak, panel, katman, okuma ve yanıt yönlendirmesini uyumlu tutun.</small></span></a></li>
+						<li><a href="platform-setup-picker.html"><i class="fas fa-map-signs" aria-hidden="true"></i><span><strong>Platform kurulum seçicisi</strong><small>Tarayıcı, açılır pencere, uygulama veya kaynak sayfası seçin.</small></span></a></li>
+						<li><a href="../lite/guide.html"><i class="fas fa-feather" aria-hidden="true"></i><span><strong>Lite kurulumu</strong><small>Tam uygulamayı yüklemeden tarayıcıdan veya OBS'den desteklenen sohbetleri yakalayın.</small></span></a></li>
+						<li><a href="standalone-app-modes.html"><i class="fas fa-window-restore" aria-hidden="true"></i><span><strong>Bağımsız uygulama modları</strong><small>Standard, WebSocket, TikTok hazır ayarları, kaynak pencereleri.</small></span></a></li>
+						<li><a href="local-services-guide.html"><i class="fas fa-network-wired" aria-hidden="true"></i><span><strong>Yerel sunucular ve hizmetler</strong><small>Yerel aktarımı, otomasyon API'sini, arayüzsüz barındırmayı veya medya hizmetini seçin.</small></span></a></li>
+						<li><a href="ssapp.html"><i class="fas fa-book-open" aria-hidden="true"></i><span><strong>Masaüstü uygulaması adım adım kullanım</strong><small>Videolu kılavuz, ilk kaynak, temel özellikler ve yardım.</small></span></a></li>
+						<li><a href="settings.html"><i class="fas fa-sliders-h" aria-hidden="true"></i><span><strong>Ayarlar ve URL referansı</strong><small>Ayarları, URL seçeneklerini, varsayılanları ve desteklenen sayfaları arayın.</small></span></a></li>
+						<li><a href="vdo-native-social-stream-guide.html"><i class="fas fa-mobile-alt" aria-hidden="true"></i><span><strong>VDO yerel uygulaması + SSN</strong><small>SSN sohbetini VDO.Ninja mobil uygulamasına gönderin.</small></span></a></li>
+						<li><a href="#extension-getting-started"><i class="fas fa-puzzle-piece" aria-hidden="true"></i><span><strong>Tarayıcı eklentisi kurulumu</strong><small>Sohbet, panel ve katman bağlantılarını açın.</small></span></a></li>
+						<li><a href="#standalone-getting-started"><i class="fas fa-window-restore" aria-hidden="true"></i><span><strong>Masaüstü uygulaması kurulumu</strong><small>Sekmeler yerine yönetilen kaynak pencereleri.</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary><span class="guide-tree-title"><i class="fas fa-broadcast-tower" aria-hidden="true"></i> Yayınınızı Yönetme</span><small>Panel kontrolleri, moderasyon, aktarımlar ve katılım</small></summary>
+					<ul>
+						<li><a href="dock-live-guide.html"><i class="fas fa-columns" aria-hidden="true"></i><span><strong>Yayın sırasında Panel kullanımı</strong><small>Mesajları öne çıkarın, temizleyin, kuyruğa alın, sabitleyin, yanıtlayın ve yoğun sohbeti yönetin.</small></span></a></li>
+						<li><a href="moderation-filtering-guide.html"><i class="fas fa-shield-alt" aria-hidden="true"></i><span><strong>Moderasyon ve mesaj filtreleme</strong><small>Kullanıcılar, sözcükler, botlar, komutlar ve genel filtrelerle sayfa filtrelerinin farkı.</small></span></a></li>
+						<li><a href="chat-relay-guide.html"><i class="fas fa-exchange-alt" aria-hidden="true"></i><span><strong>Platformlar arasında sohbet aktarın</strong><small>Twitch ve YouTube akışları, gönderen hesapları ve yankı sorun giderme.</small></span></a></li>
+						<li><a href="polls-giveaways-waitlists-guide.html"><i class="fas fa-vote-yea" aria-hidden="true"></i><span><strong>Anketler, çekilişler ve bekleme listeleri</strong><small>Oylama yapın, kazanan çekin veya izleyici kuyruğunu ilerletin.</small></span></a></li>
+						<li><a href="giveaway-guide.html"><i class="fas fa-gift" aria-hidden="true"></i><span><strong>İlk çekilişiniz</strong><small>Sohbetten katılımları toplayın, bir kazanan çekin ve sonucu OBS'de gösterin.</small></span></a></li>
+						<li><a href="loyalty-points-guide.html"><i class="fas fa-coins" aria-hidden="true"></i><span><strong>Sadakat puanları ve ödüller</strong><small>Puan kazanma, bakiyeler, çıkartma kullanımları ve puan yedekleri.</small></span></a></li>
+						<li><a href="multiple-overlays-guide.html"><i class="fas fa-layer-group" aria-hidden="true"></i><span><strong>Birden fazla kanal ve ayrı katmanlar</strong><small>Ayrı platform ve kaynak görünümleri olan tek bir operatör paneli.</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-layer-group" aria-hidden="true"></i> Katmanlar ve Özelleştirme</span>
+						<small>Şablonlar, stil seçenekleri, yazı tipleri, olaylar</small>
+					</summary>
+					<ul>
+						<li><a href="templates.html"><i class="fas fa-th-large" aria-hidden="true"></i><span><strong>Şablon galerisi</strong><small>Hazır katman düzenleri.</small></span></a></li>
+						<li><a href="streamelements-chat-guide.html"><i class="fas fa-file-import" aria-hidden="true"></i><span><strong>StreamElements / Streamlabs sohbet görünümleri</strong><small>Özel sohbet temasını içe aktarın, önizleyin ve OBS katmanını indirin.</small></span></a></li>
+						<li><a href="overlay-template-quick-start.html"><i class="fas fa-images" aria-hidden="true"></i><span><strong>Şablonla hızlı başlangıç</strong><small>Bir şablon seçin ve OBS'ye ekleyin.</small></span></a></li>
+						<li><a href="on-screen-chat-overlay.html"><i class="fas fa-gamepad" aria-hidden="true"></i><span><strong>Oyun oynarken ekranda sohbet</strong><small>Özel monitör katmanı, üstte tutma, saydamlık, kısayol tuşları ve başlatma komutları.</small></span></a></li>
+						<li><a href="transparent-dock-non-obs.html"><i class="fas fa-adjust" aria-hidden="true"></i><span><strong>Gri panel arka planını kaldırın</strong><small>MELD ve diğer OBS dışı uygulamalar için saydamlık ve gizli menü ayarları.</small></span></a></li>
+						<li><a href="overlay-customization-guide.html"><i class="fas fa-paint-brush" aria-hidden="true"></i><span><strong>Design your own overlays</strong><small>Guides by type, downloads, session IDs, local OBS setup, and safe AI prompts.</small></span></a></li>
+						<li><a href="poll-customization-guide.html"><i class="fas fa-vote-yea" aria-hidden="true"></i><span><strong>Customize your graphical poll</strong><small>OBS CSS, AI design prompts, and editing poll.html locally.</small></span></a></li>
+						<li><a href="name-colors.html"><i class="fas fa-palette" aria-hidden="true"></i><span><strong>Farklı sohbet adı renkleri</strong><small>Gerekli ayarlar, renk modları, ekran görüntüleri ve CSS.</small></span></a></li>
+						<li><a href="tip-jar-goal-meter.html"><i class="fas fa-donate" aria-hidden="true"></i><span><strong>Bağış Kavanozu ve Hedef Göstergesi</strong><small>Bağış hedefleri, Hype puanlaması, üyelikler ve hediye üyelikler.</small></span></a></li>
+						<li><a href="credits-roll-guide.html"><i class="fas fa-film" aria-hidden="true"></i><span><strong>Kayan jenerik</strong><small>Katılımcıları ve destekçileri toplayın, OBS'yi yapılandırın ve kapanış akışını tetikleyin.</small></span></a></li>
+						<li><a href="custom-fonts.html"><i class="fas fa-font" aria-hidden="true"></i><span><strong>Özel yazı tipleri</strong><small>Kendi barındırdığınız yazı tipleri ve CSS örnekleri.</small></span></a></li>
+						<li><a href="events-alerts-compatibility.html"><i class="fas fa-bell" aria-hidden="true"></i><span><strong>Olaylar ve uyarı uyumluluğu</strong><small>Uyarılar, TTS, hedefler ve Etkinlik Akışı genelinde YouTube, Twitch ve Kick olayları.</small></span></a></li>
+						<li><a href="event-reference.html"><i class="fas fa-list-alt" aria-hidden="true"></i><span><strong>Olay referansı</strong><small>Uyarılar ve katmanlar için yük alanları.</small></span></a></li>
+						<li><a href="#extension-hype-train-top-bar"><i class="fas fa-fire" aria-hidden="true"></i><span><strong>Hype Train üst çubuğu</strong><small>Twitch Hype Train için özel katman.</small></span></a></li>
+						<li><a href="#extension-first-time-chatters"><i class="fas fa-user-plus" aria-hidden="true"></i><span><strong>İlk kez yazanlar</strong><small>Sohbette yeni izleyicileri vurgulayın.</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-cogs" aria-hidden="true"></i> Otomasyon ve Entegrasyonlar</span>
+						<small>API, komutlar, Etkinlik Akışı, webhook'lar</small>
+					</summary>
+					<ul>
+						<li><a href="../streamdeck/index.html"><i class="fas fa-th" aria-hidden="true"></i><span><strong>Stream Deck kurulumu</strong><small>Eklentiyi yükleyin, oturumunuzu bağlayın ve bir kontrolü test edin.</small></span></a></li>
+						<li><a href="thermal-printer-guide.html"><i class="fas fa-print" aria-hidden="true"></i><span><strong>Termal yazıcılar ve yayın etiketleri</strong><small>Etkinlik Akışından adları, bağışları, satın alımları, fişleri ve sabit boyutlu çıkartmaları yazdırın.</small></span></a></li>
+						<li><a href="sticker-gallery.html"><i class="fas fa-star" aria-hidden="true"></i><span><strong>Çıkartma paketleri ve sadakat ödülleri</strong><small>Altı paketi önizleyin; puan fiyatlarını, bekleme sürelerini, özel resimleri ve GIPHY GIF ödüllerini ayarlayın.</small></span></a></li>
+						<li><a href="local-services-guide.html"><i class="fas fa-network-wired" aria-hidden="true"></i><span><strong>Yerel sunucular ve hizmetler</strong><small>Hangi SSApp yerel hizmetinin amacınıza uygun olduğunu öğrenin.</small></span></a></li>
+						<li><a href="local-websocket-server-guide.html"><i class="fas fa-exchange-alt" aria-hidden="true"></i><span><strong>Barındırılan WebSocket ve Yerel Sunucu modları</strong><small>Sohbet ve yanıtlar için barındırılan sunucu yollarını etkinleştirin veya SSApp'in gelişmiş yerel aktarımını kullanın.</small></span></a></li>
+						<li><a href="llm-control-guide.html"><i class="fas fa-robot" aria-hidden="true"></i><span><strong>Yerel Kontrol API'si ve MCP</strong><small>Masaüstü uygulamasını yerel bir yapay zekâ aracına veya aynı bilgisayardaki betiğe bağlayın.</small></span></a></li>
+						<li><a href="headless-server-guide.html"><i class="fas fa-server" aria-hidden="true"></i><span><strong>Arayüzsüz ev sunucusu veya VPS</strong><small>Tam masaüstü uygulamasını Linux'ta Xvfb ve uzaktan kontrolle çalıştırın.</small></span></a></li>
+						<li><a href="test-message-guide.html"><i class="fas fa-vial" aria-hidden="true"></i><span><strong>Test mesajları oluşturun</strong><small>Sahte sohbet, bağış, üyelik, baskın, ödül ve diğer olay yüklerini gönderin.</small></span></a></li>
+						<li><a href="commands.html"><i class="fas fa-terminal" aria-hidden="true"></i><span><strong>Komutlar ve API</strong><small>WebSocket işlemleri ve örnekleri.</small></span></a></li>
+						<li><a href="obs-control-dock-guide.html"><i class="fas fa-sliders-h" aria-hidden="true"></i><span><strong>OBS kontrol paneli</strong><small>OBS'de katkıda bulunanlar, öne çıkarılan sohbet, zamanlayıcı ve bekleme listesi düğmeleri.</small></span></a></li>
+						<li><a href="event-flow-recipes.html"><i class="fas fa-project-diagram" aria-hidden="true"></i><span><strong>Etkinlik Akışı tarifleri</strong><small>Sesler, ödüller, medya, webhook'lar, OBS işlemleri.</small></span></a></li>
+						<li><a href="media-hosting-event-flow.html"><i class="fas fa-photo-video" aria-hidden="true"></i><span><strong>Etkinlik Akışı medya barındırma</strong><small>Yükleme, yerel dosyalar veya daha büyük bulut kütüphaneleri.</small></span></a></li>
+						<li><a href="video-stats-bitrate.html"><i class="fas fa-tachometer-alt" aria-hidden="true"></i><span><strong>Video istatistikleri ve bit hızı</strong><small>SRT, RTMP veya medya sunucusu istatistiklerini sorgulayın ve panelde bit hızını gösterin.</small></span></a></li>
+						<li><a href="#extension-event-flow"><i class="fas fa-project-diagram" aria-hidden="true"></i><span><strong>Etkinlik Akışı genel bakış</strong><small>Düğüm düzenleyicisinin yapabileceklerine kısa bakış.</small></span></a></li>
+						<li><a href="../actions/event-flow-guide.html"><i class="fas fa-sitemap" aria-hidden="true"></i><span><strong>Ayrıntılı Etkinlik Akışı kılavuzu</strong><small>Tam düzenleyici ve işlem akışı referansı.</small></span></a></li>
+						<li><a href="../actions/user-memory-guide.html"><i class="fas fa-users" aria-hidden="true"></i><span><strong>Kullanıcı Belleği kılavuzu</strong><small>Katılım listeleri, uygunluk kontrolleri, ödül çekilişleri, kalıcılık ve hedefli sıfırlamalar.</small></span></a></li>
+						<li><a href="../../docs/index.html?file=kick-channel-points-event-flow.md"><i class="fas fa-gift" aria-hidden="true"></i><span><strong>Kick ödül sesleri/medyası</strong><small>Ödülle tetiklenen işlem akışı kurulumu.</small></span></a></li>
+						<li><a href="#extension-webhooks"><i class="fas fa-link" aria-hidden="true"></i><span><strong>Webhook'lar</strong><small>Stripe, Ko-fi, Fourthwall ve daha fazlası.</small></span></a></li>
+						<li><a href="#extension-midi"><i class="fas fa-sliders-h" aria-hidden="true"></i><span><strong>MIDI</strong><small>Sohbetten yerel MIDI işlemleri tetikleyin.</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-robot" aria-hidden="true"></i> Yapay Zekâ ve TTS</span>
+						<small>Sesli yardımcı sunucular, tarayıcı yardımcıları, botlar, yerel modeller, TTS</small>
+					</summary>
+					<ul>
+						<li><a href="ai-modes-guide.html"><i class="fas fa-robot" aria-hidden="true"></i><span><strong>Tam yapay zekâ kılavuzu</strong><small>Sesli yardımcı sunucu, ChatGPT tarayıcı yardımcısı, sohbet botu, moderasyon, RAG, çeviri veya katman oluşturucusu seçin.</small></span></a></li>
+						<li><a href="ai-modes-guide.html#browser-companion"><i class="fas fa-window-restore" aria-hidden="true"></i><span><strong>ChatGPT tarayıcı yardımcısı</strong><small>API anahtarı olmadan açık bir ChatGPT sekmesinde sohbeti yakalayın veya canlı sohbeti deneysel olarak bu sekmeye aktarın.</small></span></a></li>
+						<li><a href="tts-setup-guide.html"><i class="fas fa-volume-up" aria-hidden="true"></i><span><strong>TTS kurulum kılavuzu</strong><small>Ekran görüntüleriyle basit, OBS'ye uygun ses kurulumu.</small></span></a></li>
+						<li><a href="speechify-setup-guide.html"><i class="fas fa-volume-up" aria-hidden="true"></i><span><strong>Speechify kurulum kılavuzu</strong><small>API anahtarı, ses seçimi, okuma hızı ve OBS'de izleyiciye giden ses düzeyi.</small></span></a></li>
+						<li><a href="tts.html"><i class="fas fa-book" aria-hidden="true"></i><span><strong>Tam TTS referansı</strong><small>Tüm sağlayıcı parametreleri ve ses yönlendirme notları.</small></span></a></li>
+						<li><a href="local-tts.html"><i class="fas fa-microphone-alt" aria-hidden="true"></i><span><strong>Yerel yapay zekâ TTS'si</strong><small>Özel tarayıcı ve sunucu sesi seçenekleri.</small></span></a></li>
+						<li><a href="chatbot-basics-guide.html"><i class="fas fa-comments" aria-hidden="true"></i><span><strong>Yapay zekâ sohbet botu kurulumu</strong><small>Sağlayıcılar, ana bot kontrolleri, güvenli test ve eksik yanıtlar.</small></span></a></li>
+						<li><a href="ai-cohost-guide.html"><i class="fas fa-brain" aria-hidden="true"></i><span><strong>Sesli yapay zekâ yardımcı sunucusu</strong><small>Mikrofonla konuşma, canlı sohbet soruları, sesli yanıtlar ve sahne katmanı.</small></span></a></li>
+						<li><a href="ai-overlay-builder-guide.html"><i class="fas fa-magic" aria-hidden="true"></i><span><strong>Yapay zekâ katman oluşturucusu</strong><small>İstem yazın, önizleyin ve oluşturulan katmanları ekleyin.</small></span></a></li>
+						<li><a href="twitch-bot-account-chatbot.html"><i class="fas fa-user-astronaut" aria-hidden="true"></i><span><strong>Yanıtlar için bot hesapları</strong><small>Twitch WebSocket ve yalnızca yanıt kaynağı yöntemlerini karşılaştırın.</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-broadcast-tower" aria-hidden="true"></i> Platform Kılavuzları</span>
+						<small>TikTok, YouTube, Twitch, Kick, desteklenen siteler</small>
+					</summary>
+					<ul>
+						<li><a href="source-types-guide.html"><i class="fas fa-tags" aria-hidden="true"></i><span><strong>Kaynak türleri</strong><small>Yük adları, YouTube Shorts, Instagram Live, genel yakalama ve yanıtlar.</small></span></a></li>
+						<li><a href="external-overlay-sources.html"><i class="fas fa-link" aria-hidden="true"></i><span><strong>Discord StreamKit ve TikFinity</strong><small>Üçüncü taraf katman bağlantılarını salt okunur sohbet kaynakları olarak kullanın.</small></span></a></li>
+						<li><a href="tiktok-quick-start.html"><i class="fab fa-tiktok" aria-hidden="true"></i><span><strong>TikTok hızlı başlangıç</strong><small>Ekran görüntüleriyle basit canlı yayın kurulumu.</small></span></a></li>
+						<li><a href="tikfinity-setup.html"><i class="fab fa-tiktok" aria-hidden="true"></i><span><strong>TikFinity yedek kurulumu</strong><small>TikTok'u bağlayın, panel etkinliğini seçin ve SSN'de yakalayın.</small></span></a></li>
+						<li><a href="tiktok-guide.html"><i class="fas fa-comment-dots" aria-hidden="true"></i><span><strong>TikTok kılavuzu</strong><small>Bağlantı modları ve yaygın hatalar.</small></span></a></li>
+						<li><a href="tiktok-app-modes-guide.html"><i class="fas fa-mobile-alt" aria-hidden="true"></i><span><strong>TikTok uygulama modları</strong><small>Auto, Standard, imzalayıcı, sorgulama ve vekil modları.</small></span></a></li>
+						<li><a href="tiktok-signing.html"><i class="fas fa-signature" aria-hidden="true"></i><span><strong>TikTok imzalama</strong><small>İmzalama sunucusu hataları, hız sınırları, Euler API anahtarları.</small></span></a></li>
+						<li><a href="standalone-app-modes.html#tiktok-in-the-app"><i class="fas fa-mobile-alt" aria-hidden="true"></i><span><strong>Masaüstü uygulamasında TikTok</strong><small>Bağımsız uygulama TikTok modu notları.</small></span></a></li>
+						<li><a href="youtube-setup-guide.html"><i class="fab fa-youtube" aria-hidden="true"></i><span><strong>YouTube kurulum kılavuzu</strong><small>Canlı sohbet, statik yorumlar, API/OAuth seçenekleri.</small></span></a></li>
+						<li><a href="youtube-project-setup.html"><i class="fab fa-youtube" aria-hidden="true"></i><span><strong>YouTube projesi kurulumu</strong><small>API projesi ve OAuth kurulumu.</small></span></a></li>
+						<li><a href="twitch-eventsub-setup.html"><i class="fab fa-twitch" aria-hidden="true"></i><span><strong>Twitch kurulumu ve EventSub</strong><small>WebSocket kaynağı, OAuth, kapsamlar ve olay kontrolleri.</small></span></a></li>
+						<li><a href="kick-setup-authentication.html"><i class="fas fa-bolt" aria-hidden="true"></i><span><strong>Kick kurulumu ve kimlik doğrulaması</strong><small>Kanal kısa adı, OAuth kapsamları, resmî olaylar ve yaygın hatalar.</small></span></a></li>
+						<li><a href="supported-sites.html"><i class="fas fa-globe" aria-hidden="true"></i><span><strong>Desteklenen siteler listesi</strong><small>Herkese açık tüm platform kurulum notları.</small></span></a></li>
+					</ul>
+				</details>
+				<details class="guide-tree-group">
+					<summary>
+						<span class="guide-tree-title"><i class="fas fa-life-ring" aria-hidden="true"></i> Sorun Giderme ve Destek</span>
+						<small>Eksik sohbet, boş katmanlar, ayrıntılı destek belgeleri</small>
+					</summary>
+					<ul>
+						<li><a href="knowledge-base.html"><i class="fas fa-life-ring" aria-hidden="true"></i><span><strong>Bilgi tabanı</strong><small>Yaygın sorunlar için kısa çözümler.</small></span></a></li>
+						<li><a href="obs-troubleshooting.html"><i class="fas fa-tools" aria-hidden="true"></i><span><strong>OBS sorun giderme</strong><small>Kayıtlı URL'leri değiştirin, önbelleği yenileyin ve boş katmanları düzeltin.</small></span></a></li>
+						<li><a href="sessions-passwords-relay-modes.html"><i class="fas fa-key" aria-hidden="true"></i><span><strong>Oturum ve yönlendirme sorun giderme</strong><small>Parolalar, yeni bağlantılar ve sunucu okuma/yanıt yedeği.</small></span></a></li>
+						<li><a href="windows-administrator-mode.html"><i class="fas fa-user-shield" aria-hidden="true"></i><span><strong>Windows yönetici modu</strong><small>Yalnızca OBS ile Social Stream arasında doğrulanmış bir yetki uyuşmazlığı için.</small></span></a></li>
+						<li><a href="export-settings-for-support.html"><i class="fas fa-file-export" aria-hidden="true"></i><span><strong>Destek için ayarları dışa aktarın</strong><small>İnceleme için Social Stream Ninja ve OBS ayarlarını dışa aktarın.</small></span></a></li>
+						<li><a href="#extension-troubleshooting"><i class="fas fa-tools" aria-hidden="true"></i><span><strong>Tarayıcı eklentisi sorun giderme</strong><small>Eksik sohbet, izinler, kısıtlama, aç/kapat seçenekleri.</small></span></a></li>
+						<li><a href="#standalone-troubleshooting"><i class="fas fa-wrench" aria-hidden="true"></i><span><strong>Masaüstü uygulaması sorun giderme</strong><small>Kaynak pencereleri, güncellemeler, kurulum kontrolleri.</small></span></a></li>
+						<li><a href="support.html"><i class="fas fa-headset" aria-hidden="true"></i><span><strong>Destek sayfası</strong><small>Discord, GitHub sorunları ve katkı yolları.</small></span></a></li>
+						<li><a href="../../docs/index.html?file=agents/common-guides.md"><i class="fas fa-book-open" aria-hidden="true"></i><span><strong>Gelişmiş destek dizini</strong><small>Destek iş akışları ve yapay zekâ ajanları.</small></span></a></li>
+					</ul>
+				</details>
+			</div>
+			<p class="guide-filter-empty" id="guide-filter-empty">Eşleşen kılavuz bulunamadı.</p>
+		</div>
+	</section>
+
+	<details class="guide-details" id="detailed-guides">
+		<summary>
+			<span><i class="fas fa-book" aria-hidden="true"></i> Ayrıntılı kılavuz bölümleri</span>
+			<small>Tam adım adım kılavuz içeriği. Yalnızca dizini istiyorsanız bu bölümü daraltın.</small>
+		</summary>
+
+	<section class="navigation" id="guides-nav">
+		<div class="container">
+			<div class="guide-tabs">
+				<button class="tab-btn active" data-tab="extension-guides">Tarayıcı uzantısı</button>
+				<button class="tab-btn" data-tab="standalone-guides">Bağımsız uygulama</button>
+			</div>
+			<div class="nav-links" id="extension-nav" data-section="extension">
+				<a href="#extension-getting-started" class="nav-link active">
+					<i class="fas fa-rocket"></i> Başlarken
+				</a>
+				<a href="#extension-customization" class="nav-link">
+					<i class="fas fa-paint-brush"></i> Özelleştirme
+				</a>
+				<a href="#extension-advanced" class="nav-link">
+					<i class="fas fa-sliders-h"></i> Gelişmiş Özellikler
+				</a>
+				<a href="#extension-troubleshooting" class="nav-link">
+					<i class="fas fa-tools"></i> Sorun giderme
+				</a>
+				<a href="#faq" class="nav-link">
+					<i class="fas fa-question-circle"></i> SSS
+				</a>
+			</div>
+			<div class="nav-links" id="standalone-nav" data-section="standalone" style="display: none;">
+				<a href="#standalone-getting-started" class="nav-link active">
+					<i class="fas fa-rocket"></i> Başlarken
+				</a>
+				<a href="#standalone-tiktok" class="nav-link">
+					<i class="fas fa-comment-dots"></i> TikTok
+				</a>
+				<a href="#standalone-customization" class="nav-link">
+					<i class="fas fa-paint-brush"></i> Özelleştirme
+				</a>
+				<a href="#standalone-advanced" class="nav-link">
+					<i class="fas fa-sliders-h"></i> Gelişmiş Özellikler
+				</a>
+				<a href="#standalone-troubleshooting" class="nav-link">
+					<i class="fas fa-tools"></i> Sorun giderme
+				</a>
+				<a href="#faq" class="nav-link">
+					<i class="fas fa-question-circle"></i> SSS
+				</a>
+			</div>
+		</div>
+	</section>
+
+	<!-- Extension Guides -->
+	<div id="extension-guides" class="guide-section-wrapper">
+		<section id="extension-getting-started" class="guide-section">
+			<div class="container">
+				<h2>Başlarken (Tarayıcı Eklentisi)</h2>
+				
+				<div class="guide-card">
+					<h3>1. Kurulum</h3>
+					<p>Social Stream Ninja'yı kullanmadan önce yüklemeniz gerekir. Tarayıcı eklentisini yüklemenin birden fazla yolu vardır:</p>
+					<ul class="guide-list">
+						<li><strong>Elle Kurulum (önerilir):</strong> En güncel sürüm için geliştirici modunda elle yükleyin.</li>
+						<li><strong>Chrome Web Store:</strong> En kolay kurulum için Chrome Web Store üzerinden yükleyin.</li>
+					</ul>
+					<p>Ayrıntılı kurulum talimatları için lütfen şu sayfayı ziyaret edin: <a href="download.html">İndirme sayfası</a>.</p>
+				</div>
+				
+				<div class="guide-card">
+					<h3>2. Temel Ayarlar</h3>
+					<p>Yükledikten sonra Social Stream Ninja'yı kullanmaya başlamak için şu adımları izleyin:</p>
+					<ol class="guide-steps">
+						<li>Yayın platformunuzun sohbetini tarayıcıda açın (varsa açılır sohbet özelliğini kullanabilirsiniz)</li>
+						<li>Tarayıcı araç çubuğunuzdaki Social Stream Ninja eklenti simgesine tıklayın</li>
+						<li>Etkinleştirmek için "Enable Extension" düğmesine tıklayın (simge yeşile dönmelidir)</li>
+						<li>Eklenti açılır menüsündeki "Dashboard Link" bağlantısını açın</li>
+						<li>"Overlay Link" bağlantısını OBS'de tarayıcı kaynağı olarak açın</li>
+					</ol>
+					<div class="guide-note">
+						<p><strong>Not:</strong> En iyi deneyim için tarayıcı eklentisini kullanırken sohbet pencerelerini görünür tutun (simge durumuna küçültmeyin).</p>
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>3. Farklı Platformlara Bağlanma</h3>
+					<p>Social Stream Ninja 100'den fazla platformla çalışır. En popülerlerine şöyle bağlanabilirsiniz:</p>
+					
+					<div class="platform-guide">
+						<h4>YouTube</h4>
+						<ul class="guide-list">
+							<li>YouTube Live sohbetini açın</li>
+							<li>Sağ üst köşedeki "Pop out chat" düğmesine tıklayın</li>
+							<li>Social Stream Ninja eklentisinin etkin olduğundan emin olun (yeşil simge)</li>
+						</ul>
+					</div>
+					
+					<div class="platform-guide">
+						<h4>Twitch</h4>
+						<ul class="guide-list">
+							<li>Kanalınızın Twitch sohbetini açın</li>
+							<li>Dişli simgesine tıklayın ve "Pop out chat" seçeneğini seçin</li>
+							<li>Social Stream Ninja eklentisinin etkin olduğundan emin olun (yeşil simge)</li>
+						</ul>
+					</div>
+					
+					<div class="platform-guide">
+						<h4>Facebook</h4>
+						<ul class="guide-list">
+							<li>Facebook Live yayınınızı açın (izleyici veya yayıncı olarak)</li>
+							<li>Wi-Fi veya Ethernet'e bağlı olduğunuzdan emin olun (mobil veri değil)</li>
+							<li>Social Stream Ninja eklentisinin etkin olduğundan emin olun (yeşil simge)</li>
+						</ul>
+					</div>
+					
+					<div class="platform-guide">
+						<h4>Discord, Slack, WhatsApp vb.</h4>
+						<ul class="guide-list">
+							<li>Önce eklenti ayarlarında bu platformları etkinleştirin (aç/kapat anahtarı)</li>
+							<li>Bu platformların web sürümlerini tarayıcınızda açın</li>
+							<li>Social Stream Ninja eklentisinin etkin olduğundan emin olun (yeşil simge)</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section id="extension-customization" class="guide-section alt">
+			<div class="container">
+				<h2>Özelleştirme (Tarayıcı Eklentisi)</h2>
+				
+				<div class="guide-card">
+					<h3>URL Parametreleri</h3>
+					<p>Hem kontrol panelini hem katmanı URL'lerine parametre ekleyerek özelleştirebilirsiniz. Bazı örnekler:</p>
+					
+					<h4>Kontrol Paneli Parametreleri:</h4>
+					<div class="code-block">
+						<code>&darkmode</code> - Kontrol paneli için koyu modu etkinleştirir<br>
+						<code>&scale=2</code> - Tüm öğelerin boyutunu/çözünürlüğünü iki katına çıkarır<br>
+						<code>&hidesource</code> - Platform simgelerini gizler (YouTube, Twitch vb.)<br>
+						<code>&compact</code> - Ad ile mesaj arasındaki boşluğu kaldırır<br>
+						<code>&inline</code> - Normal boşluğu koruyarak mesajı adın yanından akıtır<br>
+						<code>&autoshow</code> - Mesajları geldikçe otomatik öne çıkarır (3 saniyede yaklaşık 2 mesaj)
+					</div>
+					
+					<h4>Katman Parametreleri:</h4>
+					<div class="code-block">
+						<code>&showtime=20000</code> - Seçilen mesajları 20 saniye sonra otomatik gizler<br>
+						<code>&showsource</code> - Platform simgelerini kullanıcı adlarının yanında gösterir<br>
+						<code>&fade</code> - Öne çıkarılan mesajların aniden görünmek yerine yavaşça belirmesini sağlar<br>
+						<code>&swipe</code> - Öne çıkarılan mesajların soldan kayarak gelmesini sağlar<br>
+						<code>&center</code> - Öne çıkarılan mesajları ekranda ortalar
+					</div>
+					
+					<p>URL'leri daha kolay yönetmek için şunu deneyin: <a href="https://socialstream.ninja/urleditor.html" target="_blank">URL Parametresi Düzenleme Aracı</a>.</p>
+				</div>
+				
+				<div class="guide-card">
+					<h3>CSS Özelleştirmesi</h3>
+					<p>Görünümü CSS ile özelleştirmenin birkaç yolu vardır:</p>
+					
+					<h4>Yöntem 1: OBS Tarayıcı Kaynağı CSS'si</h4>
+					<p>OBS'de tarayıcı kaynağına özel CSS ekleyebilirsiniz:</p>
+					<ol class="guide-steps">
+						<li>Katmanınızı OBS'ye Tarayıcı Kaynağı olarak ekleyin</li>
+						<li>"Custom CSS" seçeneğini işaretleyin</li>
+						<li>Özel CSS'nizi metin kutusuna girin</li>
+					</ol>
+					
+					<div class="code-block">
+						<pre>body { background-color: rgba(0, 0, 0, 0); margin: 0px auto; overflow: hidden; }
+
+:root {
+    --comment-color: #090;
+    --comment-bg-color: #DDD;
+    --comment-border-radius: 10px;
+    --comment-font-size: 30px;
+    --author-border-radius: 10px;
+    --author-bg-color: #FF0000;
+    --author-avatar-border-color: #FF0000;
+    --author-font-size: 32px;
+    --author-color: blue;
+    --font-family: "Arial", sans-serif;
+}
+
+.hl-name {
+    padding: 2px 10px !important;
+}</pre>
+					</div>
+					
+					<h4>Yöntem 2: Eklenti Menüsü Ayarları</h4>
+					<p>Eklenti menüsünden doğrudan CSS ekleyin:</p>
+					<ol class="guide-steps">
+						<li>Social Stream Ninja eklenti simgesine tıklayın</li>
+						<li>CSS/JavaScript ayarları bölümünü bulun</li>
+						<li>Özel CSS veya JavaScript'inizi girin</li>
+						<li>CSS, URL'ye base64 kodlu veri olarak eklenir</li>
+					</ol>
+					
+					<h4>Yöntem 3: Özel Şablonlar Kullanma</h4>
+					<p>Yerleşik CSS içeren hazır biçimli şablonlardan seçim yapın:</p>
+					<ul class="guide-list">
+						<li>Şuna göz atın: <a href="templates.html">Şablon Galerisi</a></li>
+						<li>Yayınınızın tarzına uygun bir şablon seçin</li>
+						<li>Değiştirin: <code>YOURSESSIONID</code> şablon URL'sinde oturum kimliğinizle değiştirin</li>
+						<li>Şablon URL'sini OBS'ye tarayıcı kaynağı olarak ekleyin</li>
+					</ul>
+					<div class="guide-note">
+						<p><strong>Örnek:</strong> <code>https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID</code></p>
+					</div>
+				</div>
+
+				<div class="guide-card">
+					<h3>Sohbet adları için farklı renkler</h3>
+					<p>Ad renkleri iki ayar gerektirir: genel renk kaynağı şu bölümde: <strong>Mesaj - Biçimlendirme</strong> ; paneldeki görüntüleme anahtarı ise şu bölümde: <strong>Mesaj - Görünürlük</strong>.</p>
+					<div class="guide-note">
+						<p><a href="name-colors.html">Sohbet adı renkleri kılavuzunu açın</a> ekran görüntüleri, renk seçenekleri, sorun giderme ve CSS örnekleri için.</p>
+					</div>
+				</div>
+
+				<div class="guide-card">
+					<h3>Kendi barındırdığınız yazı tipleri ve biçimlendirme</h3>
+					<p>Kendi yazı tiplerinizi şuraya ekleyin: <code>dock.html</code> veya <code>featured.html</code> Google/Sistem yazı tiplerine bağımlı olmadan.</p>
+					<ul class="guide-list">
+						<li>.woff2/.ttf/.otf dosyalarınızı barındırın ve şununla yükleyin: <code>@font-face</code>.</li>
+						<li>CSS'yi OBS özel CSS alanıyla veya şu tür URL parametreleriyle uygulayın: <code>&amp;css=</code>, <code>&amp;b64css=</code>, <code>&amp;font=</code>, veya <code>&amp;googlefont=</code>.</li>
+						<li>Chrome eklentisinde, Electron uygulamasında ve barındırılan sayfalarda aynı şekilde çalışır.</li>
+					</ul>
+					<div class="guide-note">
+						<p><a href="custom-fonts.html">Kendi barındırdığınız yazı tipleri kılavuzunu açın</a> adım adım barındırma ve CSS örnekleri için.</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section id="extension-advanced" class="guide-section">
+			<div class="container">
+				<h2>Gelişmiş Özellikler (Tarayıcı Eklentisi)</h2>
+
+				<div class="guide-card">
+					<h3>Metinden konuşma</h3>
+					<p>Social Stream Ninja, Metinden Konuşmaya teknolojisiyle sohbet mesajlarını sesli okuyabilir:</p>
+
+					<h4>TTS Kurulumu:</h4>
+					<ol class="guide-steps">
+						<li>Ekleyin: <code>&speech=en-US</code> featured.html veya dock.html URL'nize</li>
+						<li>Diğer diller için o dili destekleyen bir sağlayıcı ve ses kullanın. Örneğin Portekizce için Piper kullanılabilir: <code>&pipervoice=pt_BR-faber-medium</code> veya eSpeak <code>&espeakvoice=pt-br</code>, İspanyolca içinse Piper kullanılabilir: <code>&pipervoice=es_ES-davefx-medium</code> veya eSpeak <code>&espeakvoice=es</code>.</li>
+						<li>Ses ayarlarını şu tür parametrelerle özelleştirin: <code>&pitch=1&volume=1&rate=1</code></li>
+					</ol>
+
+					<h4>Ücretsiz Yerel TTS Seçenekleri (API anahtarı gerekmez):</h4>
+					<ul class="guide-list">
+						<li><strong>Kokoro TTS:</strong> Yerleşik tarayıcı yapay zekâsı, mükemmel kalite — <code>&ttsprovider=kokoro</code></li>
+						<li><strong>Piper TTS:</strong> Hızlı, hafif sinir ağı TTS — <code>&ttsprovider=piper</code></li>
+						<li><strong>eSpeak-NG:</strong> Portekizce dahil diller için hafif yedek seçenek <code>&espeakvoice=pt-br</code> ve İspanyolca <code>&espeakvoice=es</code></li>
+						<li><strong>Kitten TTS:</strong> En düşük kaynak kullanımı, yalnızca CPU — <code>&ttsprovider=kitten</code></li>
+						<li><strong>Kendi barındırdığınız sunucu:</strong> Kokoro-FastAPI veya openedai-speech'i Docker ile yerelde çalıştırın — <code>&ttsprovider=openai&openaiendpoint=http://localhost:8880/v1/audio/speech</code></li>
+					</ul>
+
+					<h4>Ücretli Bulut TTS Seçenekleri:</h4>
+					<ul class="guide-list">
+						<li><strong>Google Cloud TTS:</strong> Profesyonel kalitede sesler (Google API anahtarı gerektirir)</li>
+						<li><strong>ElevenLabs:</strong> Özel ses eğitimiyle son derece gerçekçi sesler</li>
+						<li><strong>Speechify:</strong> Doğal duyulan ücretli sesler</li>
+					</ul>
+
+					<div class="guide-note">
+						<p><strong>Yerel ve özel kalmasını mı istiyorsunuz?</strong> Bkz. <a href="local-tts.html"><strong>Yerel yapay zekâ TTS kılavuzu</strong></a> kendi barındırdığınız sunucu seçenekleri ve OBS ses yakalama dahil tam kurulum talimatları için.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="extension-ai">
+					<h3>Yapay Zekâ Yardımcı Sunucuları, Sohbet Botları ve Tarayıcı Yardımcıları</h3>
+					<p>Social Stream Ninja yapay zekâyı birkaç farklı şekilde kullanabilir. Sağlayıcı seçmeden önce iş akışını seçin.</p>
+					<ul class="guide-list">
+						<li><strong>Sesli yardımcı sunucu:</strong> canlı sohbet soruları aynı yardımcı sunucu oturumuna girerken mikrofonla konuşun.</li>
+						<li><strong>ChatGPT tarayıcı yardımcısı:</strong> açık bir sekmede sohbeti yakalar veya deneysel olarak aktarır: <code>chatgpt.com</code> sekmesine API anahtarı olmadan.</li>
+						<li><strong>Ana sohbet botu:</strong> seçilen izleyicileri katmanda, TTS ile veya desteklenen sohbetlere geri yazarak yanıtlar.</li>
+						<li><strong>İşleme araçları:</strong> moderasyon, çeviri, özetler, RAG bilgi araması ve yapay zekâyla oluşturulan katmanlar.</li>
+					</ul>
+					<p><a href="ai-modes-guide.html" class="btn btn-primary">Yapay Zekâ Kurulumu Seçin</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h3>Mesajları Kuyruğa Alma ve Sabitleme</h3>
+					<p>Mesajların katmanınızda nasıl görüneceğini düzenleyin:</p>
+
+					<h4>Mesajları Kuyruğa Alma:</h4>
+					<ol class="guide-steps">
+						<li>Kontrol panelindeki mesajlara tıklarken CTRL (Mac'te Cmd) tuşunu basılı tutun</li>
+						<li>Mesajları tek tek göstermek için "Next in Queue" düğmesine tıklayın</li>
+						<li>Mesajlar katmanınızda kuyruğa alındıkları sırayla görünür</li>
+					</ol>
+
+					<h4>Mesajları Sabitleme:</h4>
+					<ol class="guide-steps">
+						<li>Kontrol panelindeki bir mesaja tıklarken ALT tuşunu basılı tutun</li>
+						<li>Mesaj kontrol panelinin üstünde sabitlenmiş olarak kalır</li>
+						<li>Sabitlemeyi kaldırmak için ALT'yi basılı tutup sabitlenmiş mesaja yeniden tıklayın</li>
+					</ol>
+				</div>
+
+				<div class="guide-card" id="extension-stream-events">
+					<h3>Yayın Olaylarını Yakalama</h3>
+					<p>Yayın platformlarınızdan yeni takipçiler, abonelikler, baskınlar ve bağışlar gibi sohbet dışı olayları yakalayın.</p>
+
+					<h4>Nasıl Etkinleştirilir:</h4>
+					<ol class="guide-steps">
+						<li>Social Stream Ninja eklenti simgesine tıklayın</li>
+						<li>Şunu bulun: <strong>"Yayın Olaylarını Yakala" (Capture Stream Events)</strong> ayarlardaki anahtarı</li>
+						<li>Uyarıları almaya başlamak için etkinleştirin</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>Not:</strong> Bağış türündeki olaylar (Super Chats, Bits, Tips) bu anahtardan bağımsız olarak otomatik iletilir. Anahtar öncelikle takipçi/abone uyarıları içindir.</p>
+					</div>
+
+					<h4>Platforma Göre Yakalanan Olaylar:</h4>
+					<div class="platform-guide">
+						<h4>YouTube</h4>
+						<ul class="guide-list">
+							<li>Yeni üyelikler ve hediye üyelikler</li>
+							<li>Üyelik yükseltmeleri ve dönüm noktaları</li>
+							<li>Super Chat ve Super Sticker bağışları</li>
+							<li>Abone ve izleyici sayıları</li>
+						</ul>
+					</div>
+
+					<div class="platform-guide">
+						<h4>Twitch</h4>
+						<ul class="guide-list">
+							<li>Yeni aboneler, yeniden abonelikler ve hediye abonelikler</li>
+							<li>Takipçiler ve takipçi sayısı</li>
+							<li>Bits/Cheers ve kanal puanı kullanımları</li>
+							<li>İzleyici sayısını içeren baskınlar</li>
+						</ul>
+					</div>
+
+					<div class="platform-guide">
+						<h4>TikTok, Kick ve Diğerleri</h4>
+						<ul class="guide-list">
+							<li>Takipçiler ve hediyeler (TikTok)</li>
+							<li>Abonelikler ve bahşişler (Kick)</li>
+							<li>Çoğu platformda izleyici sayıları</li>
+						</ul>
+					</div>
+
+					<p>Olay yükleri ve veri alanlarının tam listesi için bkz. <a href="event-reference.html">Etkinlik başvuru kaynağı</a> belgeleri.</p>
+				</div>
+
+				<div class="guide-card" id="extension-hype-train-top-bar">
+					<h3>Hype Train Üst Çubuğu</h3>
+					<p>Twitch Hype Train ve Treasure Train ilerlemesini OBS'de Twitch tarzı üst çubuk olarak gösterin.</p>
+					<ul class="guide-list">
+						<li>Açılır menüden özel Hype Train Top Bar bağlantısını kopyalayın.</li>
+						<li>Canlı yayına geçmeden önce Fake Hype Train düğmesiyle test edin.</li>
+						<li>Kurulum adımları, ekran görüntüleri ve sorun giderme için kılavuzu kullanın.</li>
+					</ul>
+					<p><a href="hype-train-top-bar.html" class="btn btn-primary">Hype Train Üst Çubuğu Kılavuzunu Açın</a></p>
+				</div>
+
+				<div class="guide-card" id="extension-first-time-chatters">
+					<h3>İlk Kez Yazanlar</h3>
+					<p>İlk kez yazanları vurgulayın, isteğe bağlı yaprak rozeti ekleyin veya yalnızca ilk mesajda panel bip sesi kullanın.</p>
+					<ul class="guide-list">
+						<li>Yerel mesaj veritabanını etkin tutun.</li>
+						<li>İlk kez yazanları algılamayı açın.</li>
+						<li>Katmanınıza uygun vurgu, rozet ve bip seçeneklerini seçin.</li>
+					</ul>
+					<p><a href="first-time-chatters.html" class="btn btn-primary">İlk Kez Yazanlar Kılavuzunu Açın</a></p>
+				</div>
+
+				<div class="guide-card" id="extension-event-flow">
+					<h3>Etkinlik Akışı düzenleyicisi</h3>
+					<p>Etkinlik Akışı Düzenleyicisi, özel iş akışları oluşturmak için güçlü, düğüm tabanlı bir otomasyon sistemidir. Kendi yönlendirme mantığınızı yazmanızı sağlayan “gelişmiş otomasyon” katmanıdır.</p>
+
+					<h4>Yapabilecekleriniz:</h4>
+					<ul class="guide-list">
+						<li><strong>Platformlar arasında sohbet aktarın</strong> akıllı filtrelerle (ör. Twitch'i Discord'a yansıtın ancak komutları engelleyin)</li>
+						<li><strong>Özel komutlar oluşturun</strong> AND/OR/NOT mantık kapılarıyla</li>
+						<li><strong>Katmanları ve sesi tetikleyin</strong> belirli olaylara veya anahtar sözcüklere göre</li>
+						<li><strong>OBS'yi kontrol edin</strong> sahneleri ve kaynakları otomatik olarak</li>
+						<li><strong>Çekilişler ve hediye kampanyaları oluşturun</strong> kuyruk yönetimiyle</li>
+					</ul>
+
+					<h4>Başlarken:</h4>
+					<ol class="guide-steps">
+						<li>Ana kontrol paneli menüsünden Etkinlik Akışı düzenleyicisini açın</li>
+						<li>Yeni akış oluşturun ve kaynak düğümleri ekleyin (ör. "Twitch Message")</li>
+						<li>Mesajları filtrelemek için mantık düğümleri bağlayın (Contains Keyword, User Role vb.)</li>
+						<li>Yanıt vermek için işlem düğümleri ekleyin (Send Chat, Play Audio, Display Overlay)</li>
+						<li>Canlı yayına geçmeden önce yerleşik simülatörle test edin</li>
+					</ol>
+
+					<h4>Flow Actions Katmanı:</h4>
+					<p>Ses, medya katmanları ve OBS işlemlerinin çalışması için Flow Actions sayfasını OBS'ye tarayıcı kaynağı olarak eklemelisiniz:</p>
+					<ol class="guide-steps">
+						<li>Açılır menüde "Flow Actions" bölümünü bulun ve URL'yi kopyalayın</li>
+						<li>OBS'ye Tarayıcı Kaynağı olarak ekleyin (1920×1080 önerilir)</li>
+						<li>Katmanı açık tutun (gizli olabilir, ancak kapatmayın)</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>Önemli:</strong> Mevcut Relay Chat işlemleri tanınan geri yansımaları otomatik atlar. Şunu kullanın: <strong>Yansıma filtresi</strong> düğümüyle yakalanan yankıların panelde ve katmanlarda görünüp görünmeyeceğini kontrol edin. Bkz. <a href="chat-relay-guide.html">sohbet aktarımı adım adım anlatımı</a> kurulum için. Ayrıntılı belgeler için bkz. <a href="../actions/event-flow-guide.html">Etkinlik Akışı Kılavuzu</a>. Kick ödül sesleri veya medyası için şunu kullanın: <a href="../../docs/index.html?file=kick-channel-points-event-flow.md">Kick Kanal Puanları / Ödüller kılavuzu</a>.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="extension-midi">
+					<h3>MIDI ve kısayol tuşlarıyla kontrol</h3>
+					<p>Social Stream Ninja'yı doğrudan Stream Deck, MIDI denetleyicileri veya klavye kısayollarıyla kontrol edin.</p>
+
+					<h4>MIDI Kurulumu:</h4>
+					<ol class="guide-steps">
+						<li>MIDI aygıtınızı bağlayın (Stream Deck, MIDI denetleyicisi vb.)</li>
+						<li>Social Stream Ninja açılır menüsünü açın</li>
+						<li>MIDI ayarları bölümünü bulun</li>
+						<li>Açılır listeden MIDI aygıtınızı seçin</li>
+						<li>MIDI notalarını belirli işlemlere eşleyin</li>
+					</ol>
+
+					<h4>Kullanılabilir İşlemler:</h4>
+					<ul class="guide-list">
+						<li>Özel katmanları ve medyayı tetikleyin</li>
+						<li>Önceden tanımlanmış sohbet mesajları gönderin</li>
+						<li>OBS sahnelerini değiştirin</li>
+						<li>Ses klipleri veya TTS çalın</li>
+						<li>Etkinlik Akışı tetikleyicilerini çalıştırın</li>
+					</ul>
+
+					<div class="guide-note">
+						<p><strong>İpucu:</strong> MIDI, eller serbest yayın kontrolü için idealdir. Uyarıları tetiklemek için ayak pedalı veya ses düzeylerini ayarlamak için döner düğme kullanın.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="extension-bot-commands">
+					<h3>Bot komutları ve otomatik yanıt</h3>
+					<p>Sohbetiniz için etkileşimli bot komutları ve otomatik yanıtlar oluşturun.</p>
+
+					<h4>Yerleşik Komutlar:</h4>
+					<ul class="guide-list">
+						<li><code>!joke</code> - Rastgele, teknoloji meraklılarına yönelik bir baba şakası gönderir</li>
+						<li><code>!hi</code> - İzleyicileri otomatik selamlar</li>
+						<li><code>!cycle</code> - İzleyicilerin OBS sahnelerini değiştirmesine izin verir (izinle)</li>
+					</ul>
+
+					<h4>Otomatik Yanıt Kurulumu:</h4>
+					<ol class="guide-steps">
+						<li>Eklenti açılır menüsünü açın ve Bot/Auto-Response bölümünü bulun</li>
+						<li>Kullanmak istediğiniz komutları etkinleştirin</li>
+						<li>Yanıtların çalışması için sohbet pencerenizi görünür tutun (simge durumuna küçültmeyin)</li>
+						<li>Platforma mesaj gönderme izniyle giriş yaptığınızdan emin olun</li>
+					</ol>
+
+					<h4>Özel Komutlar Oluşturma:</h4>
+					<p>Daha karmaşık komutlar için Etkinlik Akışı Düzenleyicisini kullanın:</p>
+					<ol class="guide-steps">
+						<li>Message kaynağıyla yeni bir akış oluşturun</li>
+						<li>Komutunuzu algılamak için "Contains Keyword" düğümü ekleyin (ör. "!social")</li>
+						<li>Yanıtınızı içeren bir "Send Chat" işlemi bağlayın</li>
+						<li>Yalnızca moderatörlerin kullanacağı komutlar için isteğe bağlı User Role filtreleri ekleyin</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>Gereksinimler:</strong> Otomatik yanıtlar en iyi Chromium tabanlı tarayıcılarda çalışır. Sohbet pencereleri görünür kalmalı ve platformda mesaj gönderme izniniz olmalıdır.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="extension-webhooks">
+					<h3>Webhook'lar ve Entegrasyonlar</h3>
+					<p>Bahşişleri ve satın alımları yayın katmanınızda göstermek için harici bağış platformlarını bağlayın.</p>
+
+					<h4>Ön Koşullar:</h4>
+					<ol class="guide-steps">
+						<li>Eklenti açılır menüsündeki Oturum Kimliğinizi not edin</li>
+						<li>Social Stream Ninja'yı etkin tutun</li>
+						<li>Şu bölümde: <code>Global settings and tools</code> &rarr; <code>Mechanics</code>, şunu etkinleştirin: <strong>uzantının uzaktan API kontrolü</strong></li>
+						<li>Normal oluşturulmuş panel ve katman bağlantılarınızı kullanın; şunu eklemeyin: <code>&server</code>, <code>&server2</code>, veya <code>&server3</code> bağış webhook'ları için</li>
+						<li>Panel zaten açıksa bir kez yeniden yükleyin</li>
+					</ol>
+					<div class="guide-note">
+						<strong>Yalnızca bir API anahtarı seçeneği gerekir:</strong> uzak API kontrolü, arka plan betiğinin bağış webhook'larını normalleştirip normal mesajlar gibi iletmesini sağlar. Diğer API aktarım anahtarları kapalı kalabilir.
+						<p>Normalleştirilmiş bağış; sohbet, uyarılar, Etkinlik Akışı ve Bağış Kavanozu/Hedef Göstergesi ile paylaşılır.</p>
+						<figure class="guide-figure">
+							<img src="../../docs/images/api/enable-remote-api-control.png" alt="Uzak API kontrolü açıkken diğer API aktarım anahtarları kapalı kalır" class="guide-image guide-image-narrow">
+						</figure>
+					</div>
+
+					<h4>Desteklenen Platformlar:</h4>
+					<table class="guide-table">
+						<thead>
+							<tr>
+								<th>Platform</th>
+								<th>Webhook URL'si</th>
+								<th>Olay Türü</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><strong>Stripe</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/stripe</code></td>
+								<td><code>checkout.session.completed</code></td>
+							</tr>
+							<tr>
+								<td><strong>Ko-Fi</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/kofi</code></td>
+								<td>Herkese açık bahşişler, üyelikler, mağaza siparişleri ve özel siparişler</td>
+							</tr>
+							<tr>
+								<td><strong>Buy Me A Coffee</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/bmac</code></td>
+								<td>Bahşişler, üyelikler, mağaza siparişleri, özel siparişler ve istek listesi fonlama</td>
+							</tr>
+							<tr>
+								<td><strong>Fourthwall</strong></td>
+								<td><code>https://io.socialstream.ninja/{sessionID}/fourthwall</code></td>
+								<td>Siparişler, hediyeler, bağışlar ve yeni abonelikler</td>
+							</tr>
+						</tbody>
+					</table>
+
+					<h4>Stripe Kurulumu:</h4>
+					<ol class="guide-steps">
+						<li>Şunu oluşturun: <a href="https://dashboard.stripe.com/payment-links" target="_blank">Stripe Ödeme Bağlantısı</a></li>
+						<li><strong>Önemli:</strong> Ödeme bağlantınıza özel alanlar ekleyin:
+							<ul>
+								<li><strong>Görünen Ad</strong> veya <strong>Kullanıcı adı</strong> (zorunlu) - bu alan olmadan bağışlar reddedilir</li>
+								<li><strong>Mesaj</strong> (isteğe bağlı) - bağışçıların mesaj bırakmasına izin verir</li>
+							</ul>
+						</li>
+						<li>Şuraya gidin: <a href="https://dashboard.stripe.com/webhooks" target="_blank">Stripe Webhook'ları</a> ve yeni bir uç nokta oluşturun</li>
+						<li>URL'yi şuna ayarlayın: <code>https://io.socialstream.ninja/YOUR_SESSION_ID/stripe</code></li>
+						<li>Olayı seçin: <code>checkout.session.completed</code></li>
+						<li>İmza doğrulaması gerekmez (bunun yerine oturum kimliğinizi gizli tutun)</li>
+					</ol>
+					<p><strong>Test:</strong> Stripe Test Modunda şu kartı kullanın: <code>4242 4242 4242 4242</code>, gelecekteki herhangi bir son kullanma tarihi, herhangi bir CVC.</p>
+
+                    <h4>İçerik üreticisi mağazası kurulumu</h4><p>Şunu kullanın: <a href="creator-store-setup.html">resimli kurulum kılavuzu</a> Fourthwall, Ko-fi ve Buy Me a Coffee için; alıcı durumu, yalıtılmış önizlemeler ve ürün içe aktarma dahil.</p>
+					<div class="warning-note">
+						<strong>Güvenlik notu:</strong> Oturum kimliğinizi gizli tutun. Oturum kimliğinizi bilen herkes katmanınıza sahte bağış olayları gönderebilir.
+					</div>
+
+					<h4>Sohbeti Webhook ile Dışa Aktarma:</h4>
+					<p>Sohbet verilerini harici hizmetlere de aktarabilirsiniz:</p>
+					<ul class="guide-list">
+						<li>Ayarlarda giden webhook URL'sini yapılandırın</li>
+						<li>Sohbet mesajları JSON yükü içeren POST istekleri olarak gönderilir</li>
+						<li>Sohbetleri kaydetmek, harici otomasyonları tetiklemek veya diğer araçlarla eşitlemek için kullanın</li>
+					</ul>
+				</div>
+			</div>
+		</section>
+		
+
+		<section id="extension-troubleshooting" class="guide-section alt">
+			<div class="container">
+				<h2>Sorun Giderme (Tarayıcı Eklentisi)</h2>
+				<p class="section-subtitle">Tarayıcı eklentisindeki yaygın sorunların çözümleri</p>
+				
+				<div class="troubleshooting-grid">
+					<div class="troubleshooting-card">
+						<div class="issue-header">
+							<div class="issue-icon">
+								<img src="../../icons/minimized.svg" alt="Simge Durumuna Küçültülmüş Pencere Sorunu">
+							</div>
+							<h3>Arka Planda/Simge Durumunda Sohbet Duruyor</h3>
+						</div>
+						<div class="issue-content">
+							<p class="issue-description">Tarayıcı pencereleri arka plandayken veya simge durumuna küçültüldüğünde sohbet mesajları görünmeyi durdurur. Bunun nedeni, tarayıcıların kaynak tasarrufu için arka plan sekmelerini kısıtlamasıdır.</p>
+							
+							<div class="solutions">
+								<div class="solution">
+									<h5>Tarayıcı Kısıtlamasını Devre Dışı Bırakma</h5>
+									<ul class="solution-steps">
+										<li>
+											<strong>Chrome/Edge/Brave:</strong> 
+											<ol>
+												<li>Açın: <code>chrome://flags/#enable-throttle-display-none-and-visibility-hidden-cross-origin-iframes</code></li>
+												<li>"Disabled" olarak ayarlayın</li>
+												<li>Şunu da devre dışı bırakın: <code>chrome://flags/#calculate-native-win-occlusion</code></li>
+												<li>Tarayıcınızı yeniden başlatın</li>
+											</ol>
+										</li>
+										<li>
+											<strong>Performans Kısıtlamasını Devre Dışı Bırakma:</strong>
+											<ol>
+												<li>Şuraya gidin: <code>chrome://settings/performance</code></li>
+												<li>"Throttle Javascript timers in background" seçeneğini devre dışı bırakın</li>
+											</ol>
+										</li>
+									</ul>
+								</div>
+								
+								<div class="solution">
+									<h5>Alternatif Yaklaşımlar</h5>
+									<ul class="solution-steps">
+										<li>
+											<strong>Pencereleri Görünür Tutun:</strong> Pencereleri simge durumuna küçülmeyecek şekilde düzenleyin; küçük bir bölümlerinin görünmesi bile kısıtlamayı önleyebilir.
+										</li>
+										<li>
+											<strong>Sanal Masaüstleri Kullanın:</strong> Windows'ta Win+Tab ile iki sanal masaüstü oluşturun; sohbet pencerelerini birine, OBS'yi diğerine yerleştirin.
+										</li>
+										<li>
+											<strong>Bağımsız Uygulamayı Deneyin:</strong> Social Stream Ninja masaüstü uygulaması birçok tarayıcı kısıtlama sorununu önler.
+										</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					
+					<div class="troubleshooting-card">
+						<div class="issue-header">
+							<div class="issue-icon">
+								<img src="../../icons/debug.svg" alt="Hata Ayıklama Çubuğu Sorunu">
+							</div>
+							<h3>Mavi Çubuk Görünüyor / Otomatik Yanıtlayıcı Çalışmıyor</h3>
+						</div>
+						<div class="issue-content">
+							<p class="issue-description">Bot komutlarını veya otomatik yanıtları kullanmaya çalışırken mavi bir hata ayıklama çubuğu görünüyor ya da otomatik yanıtlar çalışmıyor.</p>
+							
+							<div class="solutions">
+								<div class="solution">
+									<h5>Sohbet Penceresinin Görünürlüğünü Kontrol Edin</h5>
+									<ul class="solution-steps">
+										<li>YouTube veya Twitch kullanırken açılır sohbet penceresinin açık ve görünür olduğundan emin olun</li>
+										<li>Bazı platformlarda açılır pencerenin yanında ana pencereyi de açık tutmanız gerekebilir</li>
+									</ul>
+								</div>
+								
+								<div class="solution">
+									<h5>Tarayıcı Uyumluluğu</h5>
+									<ul class="solution-steps">
+										<li>Otomatik yanıtlayıcı en iyi Chromium tabanlı tarayıcılarda çalışır (Chrome, Edge, Brave)</li>
+										<li>Firefox'un eklenti özellikleri desteği sınırlıdır</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</div>
+
+	<!-- Standalone App Guides -->
+	<div id="standalone-guides" class="guide-section-wrapper" style="display: none;">
+		<section id="standalone-getting-started" class="guide-section">
+			<div class="container">
+				<h2>Başlarken (Bağımsız Uygulama)</h2>
+				
+				<div class="guide-card">
+					<h3>1. Kurulum</h3>
+					<p>Bağımsız uygulama, tarayıcı eklentisine kıyasla daha basit bir kurulum sunar:</p>
+					<ul class="guide-list">
+						<li><strong>Windows:</strong> Windows 10/11 (x64) yükleyicisini indirin ve çalıştırın</li>
+						<li><strong>macOS:</strong> macOS uygulamasını indirin ve çalıştırın</li>
+						<li><strong>Linux:</strong> Çoğu Linux dağıtımı için AppImage dosyasını kullanın</li>
+					</ul>
+					<p>Ayrıntılı kurulum talimatları için lütfen şu sayfayı ziyaret edin: <a href="download.html#standalone">İndirme sayfası</a>.</p>
+				</div>
+				
+				<div class="guide-card">
+					<h3>2. Temel Ayarlar</h3>
+					<p>Yükledikten sonra Social Stream Ninja bağımsız uygulamasını kullanmaya başlamak için şu adımları izleyin:</p>
+					<ol class="guide-steps">
+						<li>Social Stream Ninja uygulamasını başlatın</li>
+						<li>Sol kenar çubuğunda eklemek istediğiniz platformun düğmesine tıklayın</li>
+						<li>İstendiğinde kullanıcı adınızı, Video ID'nizi veya URL'yi girin</li>
+						<li>Bağlanmak için "Activate source" veya "Select Live Sources" düğmesine tıklayın</li>
+						<li>"Streaming Chat" bağlantısını kopyalayın ve OBS'ye Tarayıcı Kaynağı olarak ekleyin</li>
+					</ol>
+					<div class="guide-note">
+						<p><strong>Not:</strong> Bağımsız uygulama, hız kısıtlaması gibi birçok tarayıcı sınırlamasını önler ve pencereyi üstte tutma gibi ek özellikler sunar.</p>
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>3. Farklı Platformlara Bağlanma</h3>
+					<p>Bağımsız uygulama çeşitli platformlara bağlantıyı kolaylaştırır:</p>
+					
+					<div class="platform-guide">
+						<h4>YouTube</h4>
+						<ul class="guide-list">
+							<li>Sol kenar çubuğunda "YouTube Username" seçeneğine tıklayın</li>
+							<li>Kanal adınızı veya Video ID'nizi girin</li>
+							<li>Canlı yayınlar için "Auto-find &amp; Activate" düğmesine tıklayın</li>
+						</ul>
+					</div>
+					
+					<div class="platform-guide">
+						<h4>Twitch</h4>
+						<ul class="guide-list">
+							<li>Sol kenar çubuğunda "Twitch Username" seçeneğine tıklayın</li>
+							<li>Twitch kullanıcı adınızı girin</li>
+							<li>Bağlanmak için "Activate source" düğmesine tıklayın</li>
+						</ul>
+					</div>
+					
+					<div class="platform-guide">
+						<h4>Facebook, TikTok, Instagram</h4>
+						<ul class="guide-list">
+							<li>İlgili platform düğmesine tıklayın</li>
+							<li>Gerekirse kimlik doğrulamak için "Sign in" düğmesini kullanın</li>
+							<li>Uygulama penceresinde canlı yayınınıza gidin</li>
+							<li>TikTok bağlantı modları, yanıtlar ve TikFinity yedeği için şuraya geçin: <a href="#standalone-tiktok">TikTok kılavuzu</a></li>
+						</ul>
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>4. Videolu Eğitim</h3>
+					<p>Bağımsız uygulamanın görsel anlatımı için bu videoyu izleyin:</p>
+					<div class="video-container">
+						<iframe 
+							src="https://www.youtube.com/embed/VpD2pnZVYF0" 
+							title="YouTube video oynatıcısı" 
+							frameborder="0" 
+							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+							allowfullscreen>
+						</iframe>
+					</div>
+				</div>
+
+				<div class="guide-card">
+					<h3>TikTok kılavuzu</h3>
+					<p>TikTok kurulumu, yanıtlar, bağlantı modları veya TikFinity yedeği için yardıma mı ihtiyacınız var? Özel TikTok kılavuzunu kullanın.</p>
+					<ul class="guide-list">
+						<li>Hangi mod kullanılmalı: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy veya Euler Signing</li>
+						<li>SSN'den TikTok sohbetine nasıl yanıt verilir</li>
+						<li>Other chat sites üzerinden TikFinity OBS Dock yedek olarak nasıl kullanılır</li>
+						<li>TikTok çevrimdışı olduğunuzu söylediğinde, mesajları kaçırdığında, sohbeti çoğalttığında veya kimlik doğrulama pencerelerini kapattığında denenebilecekler</li>
+					</ul>
+					<p><a href="tiktok-guide.html" class="btn btn-primary">TikTok Kılavuzunu Açın</a></p>
+				</div>
+			</div>
+		</section>
+
+		<section id="standalone-tiktok" class="guide-section alt">
+			<div class="container">
+				<h2>TikTok (Bağımsız Uygulama)</h2>
+				<p class="section-subtitle">Yanıtlar, mod seçimi ve TikFinity yedeği dahil TikTok'a özel kurulum yardımı.</p>
+
+				<div class="guide-card">
+					<h3>Tam TikTok kılavuzunu açın</h3>
+					<p>SSN'deki en fazla TikTok seçeneği bağımsız uygulamadadır; bu nedenle kılavuz artık ayrı bir sayfadadır.</p>
+					<ul class="guide-list">
+						<li>Mod seçici yardımı: TikTok WS + Auto, Standard, Local Signer, Polling, Euler Proxy ve Euler Signing</li>
+						<li>SSN'den TikTok sohbetine nasıl yanıt gönderilir</li>
+						<li>TikFinity OBS Dock şu yolla nasıl kullanılır: <strong>Diğer sohbet siteleri</strong></li>
+						<li>Kapanan kimlik doğrulama pencereleri, kaçırılan sohbet, yinelenen sohbet ve hız kısıtlaması için yaygın çözümler</li>
+					</ul>
+					<p><a href="tiktok-guide.html" class="btn btn-primary">TikTok Kılavuzunu Açın</a></p>
+				</div>
+			</div>
+		</section>
+
+		<section id="standalone-customization" class="guide-section alt">
+			<div class="container">
+				<h2>Özelleştirme (Bağımsız Uygulama)</h2>
+				
+				<div class="guide-card">
+					<h3>URL Parametreleri</h3>
+					<p>Bağımsız uygulama tarayıcı eklentisiyle aynı URL parametrelerini destekler. Hem kontrol panelini hem katmanı özelleştirebilirsiniz:</p>
+					
+					<h4>Kontrol Paneli Parametreleri:</h4>
+					<div class="code-block">
+						<code>&darkmode</code> - Kontrol paneli için koyu modu etkinleştirir<br>
+						<code>&scale=2</code> - Tüm öğelerin boyutunu/çözünürlüğünü iki katına çıkarır<br>
+						<code>&hidesource</code> - Platform simgelerini gizler (YouTube, Twitch vb.)<br>
+						<code>&compact</code> - Ad ile mesaj arasındaki boşluğu kaldırır<br>
+						<code>&inline</code> - Normal boşluğu koruyarak mesajı adın yanından akıtır<br>
+						<code>&autoshow</code> - Mesajları geldikçe otomatik öne çıkarır
+					</div>
+					
+					<h4>Katman Parametreleri:</h4>
+					<div class="code-block">
+						<code>&showtime=20000</code> - Seçilen mesajları 20 saniye sonra otomatik gizler<br>
+						<code>&showsource</code> - Platform simgelerini kullanıcı adlarının yanında gösterir<br>
+						<code>&fade</code> - Öne çıkarılan mesajların aniden görünmek yerine yavaşça belirmesini sağlar<br>
+						<code>&swipe</code> - Öne çıkarılan mesajların soldan kayarak gelmesini sağlar<br>
+						<code>&center</code> - Öne çıkarılan mesajları ekranda ortalar
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>CSS Özelleştirmesi</h3>
+					<p>Bağımsız uygulama eklentiyle aynı CSS özelleştirme yöntemlerini destekler:</p>
+					
+					<h4>Yöntem 1: OBS Tarayıcı Kaynağı CSS'si</h4>
+					<p>Uygulamanın katman URL'sini OBS'de kullanırken:</p>
+					<ol class="guide-steps">
+						<li>Uygulamanın katman URL'sini OBS'ye Tarayıcı Kaynağı olarak ekleyin</li>
+						<li>"Custom CSS" seçeneğini işaretleyin</li>
+						<li>Özel CSS'nizi metin kutusuna girin</li>
+					</ol>
+					
+					<h4>Yöntem 2: Uygulama Menüsü Ayarları</h4>
+					<p>Uygulamanın menüsünden doğrudan CSS ekleyin:</p>
+					<ol class="guide-steps">
+						<li>Uygulamanın ayarlar menüsünü açın</li>
+						<li>CSS/JavaScript ayarları bölümünü bulun</li>
+						<li>Özel CSS veya JavaScript'inizi girin</li>
+						<li>CSS, URL'ye base64 kodlu veri olarak eklenir</li>
+					</ol>
+					
+					<h4>Yöntem 3: Özel Şablonlar Kullanma</h4>
+					<p>Yerleşik CSS içeren hazır biçimli şablonlardan seçim yapın:</p>
+					<ul class="guide-list">
+						<li>Şuna göz atın: <a href="templates.html">Şablon Galerisi</a></li>
+						<li>Yayınınızın tarzına uygun bir şablon seçin</li>
+						<li>Değiştirin: <code>YOURSESSIONID</code> şablon URL'sinde oturum kimliğinizle değiştirin</li>
+						<li>Şablon URL'sini OBS'ye tarayıcı kaynağı olarak ekleyin</li>
+					</ul>
+					<div class="guide-note">
+						<p><strong>Örnek:</strong> <code>https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID</code></p>
+					</div>
+				</div>
+				
+				<div class="guide-card">
+					<h3>Uygulamaya Özgü Özellikler</h3>
+					<p>Bağımsız uygulama, tarayıcı eklentisinde bulunmayan ek özellikler içerir:</p>
+					<ul class="guide-list">
+						<li><strong>Pencereyi Üstte Tutma:</strong> Uygulama penceresini her zaman üstte tutun</li>
+						<li><strong>Arka Plan Saydamlığı:</strong> Katman efektleri için pencere saydamlığını ayarlayın</li>
+						<li><strong>Otomatik Güncelleme:</strong> En yeni özellikleri ve düzeltmeleri otomatik alın</li>
+						<li><strong>Daha İyi Performans:</strong> Tarayıcı kısıtlama sorunlarını önler</li>
+					</ul>
+				</div>
+			</div>
+		</section>
+
+		<section id="standalone-advanced" class="guide-section">
+			<div class="container">
+				<h2>Gelişmiş Özellikler (Bağımsız Uygulama)</h2>
+
+				<div class="guide-card">
+					<h3>İki Yönlü Sohbet</h3>
+					<p>Bağımsız uygulama desteklenen platformlarda iki yönlü sohbet mesajlaşmasını destekler:</p>
+					<ul class="guide-list">
+						<li>Doğrudan kontrol panelinden mesaj gönderin</li>
+						<li>Mesajlar bağlı tüm platformlarda aynı anda görünür</li>
+						<li>Bot komutları ve otomatik yanıtlar kullanın</li>
+					</ul>
+				</div>
+
+				<div class="guide-card">
+					<h3>YouTube Özel Proje Kurulumu</h3>
+					<p>Masaüstü uygulamasının kendi YouTube API kotanızı kullanmasını istiyorsanız özel kurulum kılavuzuna bakın. Google Cloud kurulumu, tam yönlendirme URL'leri, API anahtarı kısıtlamaları ve temel güvenlik bilgilerini kapsar.</p>
+					<p><a href="youtube-project-setup.html" target="_blank" rel="noopener">YouTube Projesi Kurulum Kılavuzunu Açın</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h3>Hype Train Üst Çubuğu</h3>
+					<p>Twitch Hype Train ve Treasure Train ilerlemesini OBS'de göstermek için özel Hype Train Top Bar bağlantısını kullanın.</p>
+					<ul class="guide-list">
+						<li>Açılır menüden Hype Train Top Bar URL'sini kopyalayın.</li>
+						<li>Hizalamayı, ölçeği, opaklığı ve arka plan ayarlarını özelleştirin.</li>
+						<li>Test etmek için Fake Hype Train düğmesini kullanın.</li>
+					</ul>
+					<p><a href="hype-train-top-bar.html" class="btn btn-primary">Hype Train Üst Çubuğu Kılavuzunu Açın</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h3>İlk Kez Yazanlar</h3>
+					<p>Yeni izleyicileri vurgulamak, yaprak rozeti göstermek veya yalnızca ilk mesajda bip sesi tetiklemek için ilk kez yazanları algılamayı kullanın.</p>
+					<ul class="guide-list">
+						<li>Yerel mesaj veritabanını etkin tutun.</li>
+						<li>İlk kez yazanları algılamayı açın.</li>
+						<li>Kurulum adımları, ekran görüntüleri ve sorun giderme için kılavuzu kullanın.</li>
+					</ul>
+					<p><a href="first-time-chatters.html" class="btn btn-primary">İlk Kez Yazanlar Kılavuzunu Açın</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h3>LLM Entegrasyonu</h3>
+					<p>Masaüstü uygulaması, aynı sağlayıcı destekli yapay zekâ araçlarını destekler. Bunlar arasında:</p>
+					<ul class="guide-list">
+						<li><strong>Sesli yardımcı sunucu:</strong> mikrofonla konuşmayı, canlı sohbet sorularını ve sesli yanıtları birleştirir.</li>
+						<li><strong>Ana ve özel botlar:</strong> herkese açık sohbet yanıtları veya ayrı bire bir yardımcı.</li>
+						<li><strong>Yapay zekâ işlemleri:</strong> moderasyon, çeviri, özetler ve RAG bilgi araması.</li>
+						<li><strong>Sağlayıcı seçimi:</strong> yerel modeller, kendi barındırdığınız uç noktalar veya desteklenen bulut API'leri.</li>
+					</ul>
+					<p><a href="ai-modes-guide.html" class="btn btn-primary">Tam Yapay Zekâ Kılavuzunu Açın</a></p>
+				</div>
+
+				<div class="guide-card" id="standalone-stream-events">
+					<h3>Yayın Olaylarını Yakalama</h3>
+					<p>Yeni takipçiler, abonelikler, baskınlar ve bağışlar gibi sohbet dışı olayları yakalayın.</p>
+
+					<h4>Nasıl Etkinleştirilir:</h4>
+					<ol class="guide-steps">
+						<li>Social Stream Ninja uygulamasını açın</li>
+						<li>Ayarlara gidin ve şunu bulun: <strong>"Yayın Olaylarını Yakala" (Capture Stream Events)</strong></li>
+						<li>Uyarıları almaya başlamak için etkinleştirin</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>Not:</strong> Bağışlar (Super Chats, Bits, Tips) otomatik iletilir. Anahtar öncelikle takipçi/abone uyarıları içindir.</p>
+					</div>
+
+					<h4>Yakalanan Olaylar:</h4>
+					<ul class="guide-list">
+						<li><strong>YouTube:</strong> Üyelikler, Super Chats, abone sayıları</li>
+						<li><strong>Twitch:</strong> Aboneler, takipçiler, bits, baskınlar, kanal puanları</li>
+						<li><strong>TikTok:</strong> Takipçiler, hediyeler, izleyici sayıları</li>
+						<li><strong>Kick:</strong> Abonelikler, bahşişler, takip uyarıları</li>
+					</ul>
+
+					<p>Bkz. <a href="event-reference.html">Etkinlik başvuru kaynağı</a> tam olay yükü belgeleri için.</p>
+				</div>
+
+				<div class="guide-card" id="standalone-event-flow">
+					<h3>Etkinlik Akışı düzenleyicisi</h3>
+					<p>Düğüm tabanlı Etkinlik Akışı Düzenleyicisi ile güçlü otomasyonlar oluşturun.</p>
+
+					<h4>Yapabilecekleriniz:</h4>
+					<ul class="guide-list">
+						<li><strong>Sohbeti aktarın</strong> akıllı filtrelerle platformlar arasında</li>
+						<li><strong>Katmanları ve sesi tetikleyin</strong> olaylara veya anahtar sözcüklere göre</li>
+						<li><strong>OBS'yi kontrol edin</strong> sahneleri ve kaynakları otomatik olarak</li>
+						<li><strong>Özel komutlar oluşturun</strong> mantık kapılarıyla (AND/OR/NOT)</li>
+						<li><strong>Çekilişler ve oyunlar oluşturun</strong> kuyruk yönetimiyle</li>
+					</ul>
+
+					<h4>Başlarken:</h4>
+					<ol class="guide-steps">
+						<li>Uygulama menüsünden Etkinlik Akışı düzenleyicisini açın</li>
+						<li>Kaynak düğümleri (Message, Timer, Manual Trigger) içeren bir akış oluşturun</li>
+						<li>Filtrelemek için mantık düğümleri ekleyin (Contains Keyword, User Role vb.)</li>
+						<li>İşlem düğümlerini bağlayın (Send Chat, Play Audio, Display Overlay)</li>
+						<li>Canlı yayına geçmeden önce simülatörle test edin</li>
+					</ol>
+
+					<h4>Flow Actions Katmanı:</h4>
+					<p>Ses/katman işlemlerinin çalışması için Flow Actions URL'sini OBS'ye tarayıcı kaynağı olarak ekleyin. URL'yi uygulamanın "Flow Actions" bölümünde bulabilirsiniz.</p>
+
+					<div class="guide-note">
+						<p>Ayrıntılı belgeler için bkz. <a href="../actions/event-flow-guide.html">Etkinlik Akışı Kılavuzu</a>. Kick ödül sesleri veya medyası için şunu kullanın: <a href="../../docs/index.html?file=kick-channel-points-event-flow.md">Kick Kanal Puanları / Ödüller kılavuzu</a>.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="standalone-midi">
+					<h3>MIDI ve kısayol tuşlarıyla kontrol</h3>
+					<p>Uygulamayı doğrudan Stream Deck, MIDI denetleyicileri veya klavye kısayollarıyla kontrol edin.</p>
+
+					<h4>Kurulum:</h4>
+					<ol class="guide-steps">
+						<li>MIDI aygıtınızı bağlayın</li>
+						<li>Ayarları açın ve MIDI bölümünü bulun</li>
+						<li>Açılır listeden aygıtınızı seçin</li>
+						<li>MIDI notalarını işlemlere eşleyin</li>
+					</ol>
+
+					<h4>Kullanılabilir İşlemler:</h4>
+					<ul class="guide-list">
+						<li>Katmanları ve medyayı tetikleyin</li>
+						<li>Sohbet mesajları gönderin</li>
+						<li>OBS sahnelerini değiştirin</li>
+						<li>Ses klipleri çalın</li>
+						<li>Etkinlik Akışı tetikleyicilerini çalıştırın</li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="standalone-webhooks">
+					<h3>Webhook'lar ve Entegrasyonlar</h3>
+					<p>Harici bağış platformlarını ve hizmetleri bağlayın.</p>
+
+					<h4>Desteklenen Entegrasyonlar:</h4>
+					<ul class="guide-list">
+						<li><strong>Stripe:</strong> Ödeme olayları</li>
+						<li><strong>Ko-Fi:</strong> Bağış uyarıları</li>
+						<li><strong>Buy Me A Coffee:</strong> Bahşişler</li>
+						<li><strong>Özel Webhook'lar:</strong> Herhangi bir HTTP POST hizmeti</li>
+					</ul>
+
+					<h4>Kurulum:</h4>
+					<ol class="guide-steps">
+						<li>Uygulama ayarlarında webhook aktarım URL'nizi bulun</li>
+						<li>Bağış platformunuzun webhook yapılandırmasına ekleyin</li>
+						<li>Olaylar kontrol panelinizde ve akışlarınızda otomatik görünür</li>
+					</ol>
+				</div>
+			</div>
+		</section>
+
+		<section id="standalone-troubleshooting" class="guide-section alt">
+			<div class="container">
+				<h2>Sorun Giderme (Bağımsız Uygulama)</h2>
+				<p class="section-subtitle">Bağımsız uygulamadaki yaygın sorunların çözümleri</p>
+				
+				<div class="troubleshooting-grid">
+					<div class="troubleshooting-card">
+						<div class="issue-header">
+							<div class="issue-icon">
+								<img src="../../icons/issues.svg" alt="Bağlantı Sorunları">
+							</div>
+							<h3>Platform Bağlantı Sorunları</h3>
+						</div>
+						<div class="issue-content">
+							<p class="issue-description">Bağımsız uygulamada belirli platformlara bağlanırken sorun yaşanıyor.</p>
+							
+							<div class="solutions">
+								<div class="solution">
+									<h5>Kimlik Doğrulama Sorunları</h5>
+									<ul class="solution-steps">
+										<li>Facebook, TikTok ve Instagram için önce "Sign in" düğmesini kullanın</li>
+										<li>Tarayıcınızdakiyle aynı oturum açma bilgilerini kullandığınızdan emin olun</li>
+										<li>Uygulamaya ek izinler vermeniz gerekip gerekmediğini kontrol edin</li>
+									</ul>
+								</div>
+								
+								<div class="solution">
+									<h5>Ağ Sorunları</h5>
+									<ul class="solution-steps">
+										<li>İnternet bağlantınızı kontrol edin</li>
+										<li>Bağlantıları etkiliyorsa VPN'i devre dışı bırakın</li>
+										<li>Farklı bir DNS sağlayıcısı kullanmayı deneyin</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="troubleshooting-card">
+						<div class="issue-header">
+							<div class="issue-icon">
+								<img src="../../icons/main_msg_save.png" alt="Ayar Sorunu">
+							</div>
+							<h3>Ayarlar Kaydedilmiyor</h3>
+						</div>
+						<div class="issue-content">
+							<p class="issue-description">Yapılandırmanız veya ayarlarınız oturumlar arasında kaydedilmiyor.</p>
+							
+							<div class="solutions">
+								<div class="solution">
+									<h5>İzin Sorunları</h5>
+									<ul class="solution-steps">
+										<li>Uygulamanın kurulum dizininde yazma izni olduğundan emin olun</li>
+										<li>Gerekirse uygulamayı yönetici olarak çalıştırın (Windows)</li>
+										<li>Antivirüsünüzün dosya yazmayı engelleyip engellemediğini kontrol edin</li>
+									</ul>
+								</div>
+								
+								<div class="solution">
+									<h5>Ayarları Dışa Aktar</h5>
+									<ul class="solution-steps">
+										<li>Ayarlarınızı kaydetmek için dışa aktarma özelliğini kullanın</li>
+										<li>Dışa aktarılan dosyayı güvenli bir konuma kaydedin</li>
+										<li>Güncellemeden sonra kaybolursa ayarları içe aktarın</li>
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+	</div>
+	
+
+	<!-- FAQ Section (common to both) -->
+	<section id="faq" class="guide-section">
+		<div class="container">
+			<h2>Sık sorulan sorular</h2>
+			
+			<div class="accordion">
+				<div class="accordion-item">
+					<button class="accordion-header">
+						Social Stream Ninja hangi platformları destekler?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>Social Stream Ninja; YouTube, Twitch, Facebook, Instagram, TikTok, Discord, Zoom, Google Meet, X (Twitter), WhatsApp, Telegram ve daha pek çoğu dahil 100'den fazla platformu destekler. Tam liste için bkz. <a href="supported-sites.html">Desteklenen platformlar</a> sayfası.</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						Tarayıcı eklentisini mi bağımsız uygulamayı mı kullanmalıyım?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>Bağımsız uygulama çoğu kullanıcı için önerilir, çünkü:</span>
+						<ul>
+							<li>Tarayıcı kısıtlama sorunlarını önler</li>
+							<li>Otomatik güncellemeler sağlar</li>
+							<li>Pencereyi üstte tutma ve saydamlık özellikleri sunar</li>
+							<li>Daha iyi performans ve kararlılık sunar</li>
+						</ul>
+						<span>Şu durumlarda tarayıcı eklentisi daha uygundur:</span>
+						<ul>
+							<li>Birden fazla bilgisayarda kullanmanız gerekiyorsa</li>
+							<li>Ek yazılım yüklememeyi tercih ediyorsanız</li>
+							<li>En yeni güncellemeleri hemen istiyorsanız (elle kurulum)</li>
+						</ul>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						Her platform için API anahtarı veya oturum açma bilgileri gerekiyor mu?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>Hayır! Social Stream Ninja'nın en büyük avantajlarından biri, çoğu platform için API anahtarı veya oturum açma bilgisi gerektirmemesidir. Sohbet verilerini doğrudan tarayıcı penceresinden veya uygulama arayüzünden yakalar. Ancak sohbeti normal şekilde görebilmek için her platformda oturum açmış olmanız gerekir.</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						Social Stream Ninja'yı nasıl güncellerim?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span><strong>Tarayıcı eklentisi için:</strong> Elle yüklenmiş eklentiyi güncellemek için en son sürümü indirin, eski dosyaları yenileriyle değiştirin ve ardından eklentiyi yeniden yükleyin veya tarayıcınızı yeniden başlatın. <strong>Kaldırmayın</strong> ayarlarınızı korumak istiyorsanız eklentiyi. Chrome Web Store sürümünü kullanıyorsanız otomatik ama daha seyrek güncellenir.</span>
+						<span><strong>Bağımsız uygulama için:</strong> Uygulamayı yeniden başlattığınızda otomatik güncellenir. Uygulama menüsünden güncellemeleri elle de kontrol edebilirsiniz.</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						Aynı anda birden fazla platforma mesaj gönderebilir miyim?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>Evet! Social Stream Ninja çoğu platform için iki yönlü sohbeti destekler. Bir platformda oturum açmış ve gerekli izinlere sahipseniz kontrol panelinden veya API komutlarıyla gönderdiğiniz mesajlar bağlı tüm sohbetlerde aynı anda görünür.</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						OBS ve diğer yayın yazılımlarıyla çalışır mı?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>Kesinlikle! Social Stream Ninja, OBS Studio ve diğer yayın yazılımlarıyla sorunsuz çalışacak şekilde tasarlanmıştır. Katman URL'sini yayın yazılımınıza tarayıcı kaynağı olarak eklemeniz yeterlidir. Görünümü doğrudan OBS'de CSS ile veya URL parametreleriyle özelleştirebilirsiniz.</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						Social Stream Ninja gerçekten ücretsiz mi?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>Evet, Social Stream Ninja GPLv3.0 Lisansı altında tamamen ücretsiz ve açık kaynaklıdır. Abonelik, gizli ücret veya özellik kısıtlaması yoktur. Projeyi topluluğun katkılarıyla Steve Seguin geliştirip sürdürür.</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						Yeni takipçiler gibi hangi yayın olayı verileri desteklenir?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>Tüm olay yüklerinin (takipçiler, üyelikler, baskınlar, izleyici sayıları, bağışlar ve daha fazlası) temel listesini şu belgede tutuyoruz: <a href="event-reference.html">Etkinlik başvuru kaynağı</a>. Hangi kaynakların veri almak için “Capture Stream Events” anahtarına, oturum açma izinlerine veya ek kapsamlara ihtiyaç duyduğunu da açıklar.</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						API ve otomasyon belgelerini nerede bulabilirim?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>Tüm katman URL'leri, panel API'leri, WebSocket komutları ve otomasyon bağlantı noktaları şu belgede açıklanır: <a href="commands.html">Komutlar ve API</a> sayfası. Özel davranışlar yazmak veya Social Stream Ninja'yı diğer araçlarla entegre etmek için en iyi başlangıç noktasıdır.</span>
+					</div>
+				</div>
+				
+				<div class="accordion-item">
+					<button class="accordion-header">
+						Sorun yaşıyorsam nereden yardım alabilirim?
+						<span class="accordion-icon"></span>
+					</button>
+					<div class="accordion-content">
+						<span>Social Stream Ninja'nın Discord'da, doğrudan geliştiriciden ve diğer kullanıcılardan yardım alabileceğiniz etkin bir topluluğu vardır. Katılın: <a href="https://discord.socialstream.ninja" target="_blank">discord.socialstream.ninja</a>. Sorunları şurada da bildirebilirsiniz: <a href="https://github.com/steveseguin/social_stream/issues" target="_blank">GitHub deposu</a>.</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	</details>
+
+	<section class="get-started">
+		<div class="container">
+			<h2>Hâlâ Yardıma mı İhtiyacınız Var?</h2>
+			<p>Geliştiricinin ve diğer kullanıcıların sorun gidermenize yardımcı olabileceği topluluk Discord sunucumuza katılın.</p>
+			<div class="get-started-cta">
+				<a href="https://discord.socialstream.ninja" target="_blank" class="btn btn-primary">Discord topluluğuna katılın</a>
+				<a href="#extension-troubleshooting" class="btn btn-secondary">Sorun Giderme Kılavuzunu Görüntüle</a>
+			</div>
+		</div>
+	</section>
+
+	<footer>
+		<div class="container">
+			<div class="footer-columns">
+				<div class="footer-column">
+					<h3>Social Stream Ninja</h3>
+					<p>Canlı sosyal mesaj akışlarınızı ve daha fazlasını birleştirir. Ücretsiz ve açık kaynaklıdır.</p>
+					<div class="social-links">
+						<a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+						<a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+						<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+					</div>
+				</div>
+				<div class="footer-column">
+					<h3>Hızlı bağlantılar</h3>
+					<ul>
+						<li><a href="../index.html">Ana sayfa</a></li>
+						<li><a href="features.html">Özellikler</a></li>
+						<li><a href="download.html">İndir</a></li>
+						<li><a href="guides.html">Kılavuzlar</a></li>
+						<li><a href="commands.html">Komutlar ve API</a></li>
+						<li><a href="supported-sites.html">Desteklenen siteler</a></li>
+						<li><a href="templates.html">Şablonlar</a></li>
+						<li><a href="support.html">Destek</a></li>
+					</ul>
+				</div>
+				<div class="footer-column">
+					<h3>Kaynaklar</h3>
+					<ul>
+						<li><a href="guides.html#extension-getting-started">Kurulum kılavuzu</a></li>
+						<li><a href="guides.html#extension-customization">Özelleştirme kılavuzu</a></li>
+						<li><a href="guides.html#faq">SSS</a></li>
+						<li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Sorun bildirin</a></li>
+						<li><a href="../privacy.html">Gizlilik politikası</a></li>
+						<li><a href="../TOS.html">Hizmet koşulları</a></li>
+					</ul>
+				</div>
+				<div class="footer-column">
+					<h3>Topluluk</h3>
+					<ul>
+						<li><a href="https://discord.socialstream.ninja" target="_blank">Discord sunucumuza katılın</a></li>
+						<li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub deposu</a></li>
+						<li><a href="support.html#contribute">Katkıda bulunun</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">Bağış yapın</a></li>
+					</ul>
+				</div>
+			</div>
+			<div class="footer-bottom">
+				<p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 Lisansı. Geliştiren: <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> topluluğun katkılarıyla.</p>
+			</div>
+		</div>
+	</footer>
+
+	<script src="../../docs/js/main.js"></script>
+	<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		const tabButtons = document.querySelectorAll('.tab-btn');
+		const guideSections = document.querySelectorAll('.guide-section-wrapper');
+		const navSections = document.querySelectorAll('.nav-links');
+		const faqSection = document.getElementById('faq');
+		const guideFilterInput = document.getElementById('guide-filter-input');
+		const guideFilterClear = document.getElementById('guide-filter-clear');
+		const guideFilterEmpty = document.getElementById('guide-filter-empty');
+		const guideTreeGroups = document.querySelectorAll('.guide-tree-group');
+		const detailedGuides = document.getElementById('detailed-guides');
+
+		guideTreeGroups.forEach(group => {
+			group.setAttribute('data-default-open', group.open ? 'true' : 'false');
+		});
+
+		function filterGuideDirectory(query) {
+			const term = (query || '').trim().toLowerCase();
+			let visibleCount = 0;
+
+			guideTreeGroups.forEach(group => {
+				const links = group.querySelectorAll('li');
+				let groupHasMatch = false;
+
+				links.forEach(item => {
+					const text = item.textContent.toLowerCase();
+					const isMatch = !term || text.indexOf(term) !== -1;
+					item.classList.toggle('guide-filter-hidden', !isMatch);
+					if (isMatch) {
+						groupHasMatch = true;
+						visibleCount += 1;
+					}
+				});
+
+				group.classList.toggle('guide-filter-hidden', !groupHasMatch);
+				if (term) {
+					group.open = groupHasMatch;
+				} else {
+					group.open = group.getAttribute('data-default-open') === 'true';
+				}
+			});
+
+			if (guideFilterEmpty) {
+				guideFilterEmpty.style.display = visibleCount ? 'none' : 'block';
+			}
+		}
+
+		if (guideFilterInput) {
+			guideFilterInput.addEventListener('input', function() {
+				filterGuideDirectory(this.value);
+			});
+		}
+
+		if (guideFilterClear) {
+			guideFilterClear.addEventListener('click', function() {
+				guideFilterInput.value = '';
+				filterGuideDirectory('');
+				guideFilterInput.focus();
+			});
+		}
+
+		// Anchor alias mapping for generic links (e.g., #getting-started -> #extension-getting-started)
+		const anchorAliases = {
+			'getting-started': 'extension-getting-started',
+			'installation': 'extension-getting-started',
+			'tiktok': 'standalone-tiktok',
+			'customization': 'extension-customization',
+			'advanced': 'extension-advanced',
+			'troubleshooting': 'extension-troubleshooting',
+			'stream-events': 'extension-stream-events',
+			'event-flow': 'extension-event-flow',
+			'midi': 'extension-midi',
+			'bot-commands': 'extension-bot-commands',
+			'webhooks': 'extension-webhooks'
+		};
+
+		function switchTab(tabId, updateHash = false) {
+			// Remove active class from all buttons
+			tabButtons.forEach(btn => btn.classList.remove('active'));
+
+			// Find and activate the correct tab button
+			const targetButton = document.querySelector(`[data-tab="${tabId}"]`);
+			if (targetButton) {
+				targetButton.classList.add('active');
+			}
+
+			// Hide all guide sections
+			guideSections.forEach(section => section.style.display = 'none');
+
+			// Hide all nav sections
+			navSections.forEach(nav => nav.style.display = 'none');
+
+			// Show the selected sections
+			document.getElementById(tabId).style.display = 'block';
+
+			if (tabId === 'extension-guides') {
+				document.getElementById('extension-nav').style.display = 'flex';
+			} else {
+				document.getElementById('standalone-nav').style.display = 'flex';
+			}
+
+			// Make sure FAQ is visible when either tab is active
+			faqSection.style.display = 'block';
+		}
+
+		function scrollToSection(sectionId) {
+			const targetElement = document.getElementById(sectionId);
+			if (targetElement) {
+				const headerHeight = document.querySelector('header').offsetHeight;
+				const navHeight = document.querySelector('.navigation').offsetHeight;
+				const offsetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight - navHeight - 20;
+
+				window.scrollTo({
+					top: offsetPosition,
+					behavior: 'smooth'
+				});
+			}
+		}
+
+		function handleHash(hash, updateUrl = true) {
+			if (!hash) return;
+
+			// Remove the # if present
+			hash = hash.replace(/^#/, '');
+
+			if (detailedGuides) {
+				detailedGuides.open = true;
+			}
+
+			// Check if it's an alias
+			if (anchorAliases[hash]) {
+				hash = anchorAliases[hash];
+			}
+
+			// Determine which tab to show based on the hash
+			let tabToShow = 'extension-guides';
+			if (hash.startsWith('standalone-')) {
+				tabToShow = 'standalone-guides';
+			}
+
+			// Switch to the appropriate tab
+			switchTab(tabToShow);
+
+			// Update URL hash
+			if (updateUrl) {
+				history.replaceState(null, null, '#' + hash);
+			}
+
+			// Scroll to the section after a brief delay for tab switch
+			setTimeout(() => {
+				scrollToSection(hash);
+
+				// Update active nav link
+				const currentNavLinks = tabToShow === 'extension-guides' ?
+					document.querySelectorAll('#extension-nav .nav-link') :
+					document.querySelectorAll('#standalone-nav .nav-link');
+
+				currentNavLinks.forEach(link => {
+					link.classList.remove('active');
+					if (link.getAttribute('href') === '#' + hash) {
+						link.classList.add('active');
+					}
+				});
+			}, 100);
+		}
+
+		document.querySelectorAll('.guide-tree a[href^="#"], .get-started a[href^="#"]').forEach(anchor => {
+			anchor.addEventListener('click', function(e) {
+				e.preventDefault();
+				e.stopImmediatePropagation();
+				handleHash(this.getAttribute('href'), true);
+			}, true);
+		});
+
+		tabButtons.forEach(button => {
+			button.addEventListener('click', () => {
+				if (detailedGuides) {
+					detailedGuides.open = true;
+				}
+				const tabId = button.getAttribute('data-tab');
+				switchTab(tabId);
+
+				// Update URL hash to reflect tab change
+				const defaultSection = tabId === 'extension-guides' ? 'extension-getting-started' : 'standalone-getting-started';
+				history.replaceState(null, null, '#' + defaultSection);
+			});
+		});
+
+		// Smooth scroll for guide navigation
+		document.querySelectorAll('.nav-link').forEach(anchor => {
+			anchor.addEventListener('click', function(e) {
+				e.preventDefault();
+				e.stopPropagation();
+
+				const targetId = this.getAttribute('href').replace(/^#/, '');
+
+				// Check if we need to switch tabs first
+				const isExtensionSection = targetId.includes('extension-');
+				const isStandaloneSection = targetId.includes('standalone-');
+
+				if (isExtensionSection && document.getElementById('extension-guides').style.display === 'none') {
+					switchTab('extension-guides');
+				} else if (isStandaloneSection && document.getElementById('standalone-guides').style.display === 'none') {
+					switchTab('standalone-guides');
+				}
+
+				// Update URL hash
+				history.replaceState(null, null, '#' + targetId);
+
+				// Wait for tab switch to complete if needed
+				setTimeout(() => {
+					scrollToSection(targetId);
+
+					// Update active class on navigation
+					const parentNav = this.closest('.nav-links');
+					parentNav.querySelectorAll('.nav-link').forEach(link => {
+						link.classList.remove('active');
+					});
+					this.classList.add('active');
+				}, isExtensionSection || isStandaloneSection ? 100 : 0);
+			});
+		});
+
+		// Auto-activate menu items based on scroll position
+		function updateActiveNav() {
+			const scrollPosition = window.scrollY;
+			const headerHeight = document.querySelector('header').offsetHeight;
+			const navElement = document.getElementById('guides-nav');
+			const navHeight = navElement ? navElement.offsetHeight : 0;
+			const offset = headerHeight + navHeight + 50;
+
+			// Determine which tab is currently active
+			const isExtensionView = document.getElementById('extension-guides').style.display !== 'none';
+			const currentNavLinks = isExtensionView ?
+				document.querySelectorAll('#extension-nav .nav-link') :
+				document.querySelectorAll('#standalone-nav .nav-link');
+
+			let activeSet = false;
+			let activeSection = null;
+
+			// Loop through each section to find which one is in view
+			document.querySelectorAll('.guide-section').forEach(section => {
+				const sectionTop = section.offsetTop - offset;
+				const sectionBottom = sectionTop + section.offsetHeight;
+				const sectionId = section.getAttribute('id');
+
+				// Check if this section is in view
+				if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+					currentNavLinks.forEach(link => {
+						link.classList.remove('active');
+						if (link.getAttribute('href') === `#${sectionId}`) {
+							link.classList.add('active');
+							activeSet = true;
+							activeSection = sectionId;
+						}
+					});
+				}
+			});
+
+			// If no section is active (user scrolled to top), activate first link
+			if (!activeSet && currentNavLinks.length > 0) {
+				if (scrollPosition < 1000){
+					currentNavLinks[0].classList.add('active');
+				}
+			}
+		}
+
+		// Debounce scroll event for better performance
+		let scrollTimeout;
+		window.addEventListener('scroll', function() {
+			if (scrollTimeout) {
+				window.cancelAnimationFrame(scrollTimeout);
+			}
+			scrollTimeout = window.requestAnimationFrame(function() {
+				updateActiveNav();
+			});
+		});
+
+		// Handle hash changes (browser back/forward)
+		window.addEventListener('hashchange', function() {
+			handleHash(window.location.hash, false);
+		});
+
+		// Sticky navigation on scroll
+		const guideNav = document.getElementById('guides-nav');
+		if (guideNav) {
+			let navOffset = guideNav.offsetTop;
+			function refreshGuideNavOffset() {
+				navOffset = guideNav.offsetTop;
+			}
+
+			if (detailedGuides) {
+				detailedGuides.addEventListener('toggle', function() {
+					setTimeout(refreshGuideNavOffset, 0);
+				});
+			}
+
+			window.addEventListener('scroll', function() {
+				if (window.pageYOffset >= navOffset) {
+					guideNav.classList.add('sticky');
+				} else {
+					guideNav.classList.remove('sticky');
+				}
+			});
+		}
+
+		// Accordion functionality
+		const accordionHeaders = document.querySelectorAll('.accordion-header');
+
+		accordionHeaders.forEach(header => {
+			header.addEventListener('click', () => {
+				const accordionItem = header.parentElement;
+				accordionItem.classList.toggle('active');
+			});
+		});
+
+		// Handle initial hash on page load
+		if (window.location.hash) {
+			handleHash(window.location.hash, false);
+		} else {
+			// Default to extension guides
+			switchTab('extension-guides');
+		}
+
+		// Update active nav on page load
+		updateActiveNav();
+	});
+	</script>
+</body>
+</html>

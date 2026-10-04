@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="es" data-site-root="../../" data-site-language="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Conecta OBS WebSocket a Event Flow de Social Stream Ninja. Configura acciones y eventos de OBS, prueba la conexión y resuelve problemas de automatización.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="es_ES">
+    <meta property="og:url" content="https://socialstream.ninja/es/actions/obs-control-guide.html">
+    <meta property="og:title" content="Guía de control de OBS - Social Stream Ninja">
+    <meta property="og:description" content="Conecta OBS WebSocket a Event Flow de Social Stream Ninja. Configura acciones y eventos de OBS, prueba la conexión y resuelve problemas de automatización.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logotipo de Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/es/actions/obs-control-guide.html">
+    <meta name="twitter:title" content="Guía de control de OBS - Social Stream Ninja">
+    <meta name="twitter:description" content="Conecta OBS WebSocket a Event Flow de Social Stream Ninja. Configura acciones y eventos de OBS, prueba la conexión y resuelve problemas de automatización.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logotipo de Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de control de OBS - Social Stream Ninja</title>
+    <link rel="canonical" href="https://socialstream.ninja/es/actions/obs-control-guide.html">
+    <style>
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
+            color: #172033;
+            background: linear-gradient(145deg, #090d18, #172554 48%, #3b0764);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        }
+        .shell {
+            max-width: 1160px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 20px;
+            background: #fbfcff;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+        }
+        header {
+            padding: 58px 58px 48px;
+            color: #fff;
+            background: radial-gradient(circle at 85% 10%, rgba(168, 85, 247, 0.5), transparent 32%),
+                        linear-gradient(135deg, #172554, #5b21b6);
+        }
+        header h1 { margin: 0 0 12px; font-size: 2.8rem; line-height: 1.08; }
+        header p { max-width: 720px; margin: 0; font-size: 1.15rem; line-height: 1.6; opacity: 0.94; }
+        .quick-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+        .quick-links a {
+            padding: 9px 13px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 999px;
+            color: #fff;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        main { padding: 44px 58px 70px; }
+        section { margin: 0 0 58px; }
+        h2 { margin: 0 0 16px; color: #312e81; font-size: 2rem; }
+        h3 { margin: 28px 0 10px; color: #4c1d95; font-size: 1.35rem; }
+        p, li { line-height: 1.62; }
+        p { margin: 0 0 13px; }
+        ol, ul { margin: 14px 0; padding-left: 25px; }
+        li { margin: 7px 0; }
+        a { color: #4338ca; }
+        code {
+            padding: 2px 6px;
+            border-radius: 5px;
+            color: #3730a3;
+            background: #eef2ff;
+            font-family: Consolas, "Courier New", monospace;
+            overflow-wrap: anywhere;
+        }
+        .lead {
+            margin: -8px 0 24px;
+            color: #475569;
+            font-size: 1.08rem;
+        }
+        .panel, .callout {
+            margin: 20px 0;
+            padding: 20px 23px;
+            border-radius: 13px;
+            border: 1px solid #dbe3f3;
+            background: #f7f9ff;
+        }
+        .callout { border-left: 5px solid #4f46e5; }
+        .callout.warning { border-left-color: #d97706; background: #fffbeb; }
+        .callout.danger { border-left-color: #dc2626; background: #fef2f2; }
+        .diagram {
+            margin: 22px 0;
+            padding: 20px 22px;
+            overflow-x: auto;
+            border-radius: 13px;
+            color: #e0e7ff;
+            background: #111827;
+            font-family: Consolas, "Courier New", monospace;
+            line-height: 1.65;
+            white-space: pre;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .card {
+            padding: 20px;
+            border: 1px solid #e1e7f2;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(30, 41, 59, 0.07);
+        }
+        .card h3 { margin-top: 0; }
+        .table-wrap { margin: 20px 0; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 720px; }
+        th, td { padding: 12px 14px; border-bottom: 1px solid #dde4f0; text-align: left; vertical-align: top; line-height: 1.5; }
+        th { color: #312e81; background: #eef2ff; }
+        tbody tr:nth-child(even) { background: #fafbff; }
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 999px;
+            color: #155e75;
+            background: #cffafe;
+            font-size: 0.78rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        figure { margin: 24px 0; text-align: center; }
+        figure img {
+            max-width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            box-shadow: 0 12px 34px rgba(30, 41, 59, 0.14);
+        }
+        figcaption { margin-top: 9px; color: #64748b; font-size: 0.9rem; }
+        footer { padding: 23px 58px; color: #c7d2fe; background: #111827; }
+        footer a { color: #a5f3fc; }
+        @media (max-width: 720px) {
+            body { padding: 0; }
+            .shell { border-radius: 0; }
+            header, main, footer { padding-left: 22px; padding-right: 22px; }
+            header { padding-top: 40px; }
+            header h1 { font-size: 2.15rem; }
+            h2 { font-size: 1.65rem; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="es">
+<script id="ssn-site-language" type="application/json">{"language":"es","page":"actions/obs-control-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Cambiar al tema claro","Switch to dark theme":"Cambiar al tema oscuro","Light mode":"Modo claro","Dark mode":"Modo oscuro","Open navigation menu":"Abrir el menú de navegación","Close navigation menu":"Cerrar el menú de navegación","Copy this document as Markdown to the clipboard":"Copiar este documento en Markdown al portapapeles","Copy Markdown":"Copiar Markdown","Copying…":"Copiando…","Markdown copied":"Markdown copiado","Copy failed":"No se pudo copiar","Copy comprehensive Markdown for an AI assistant":"Copiar el contenido completo en Markdown para un asistente de IA","Copy this documentation page as Markdown for an AI assistant":"Copiar esta página de documentación en Markdown para un asistente de IA"},"strings":{"(filter to":"(filtra por",", and":", y",", and password matches. Port":", y la contraseña coincide. El puerto",", keep Social Stream and the destination chat connected, then save and enable the flow":", mantén conectados Social Stream y el chat de destino, y guarda y activa el flujo",", plus values added by earlier flow nodes such as":", además de valores añadidos por nodos anteriores del flujo como",". It starts disabled and contains three branches in one flow:":". Empieza desactivado y contiene tres ramas en un solo flujo:",". Otherwise OBS may continue displaying the file contents instead of the text sent by Event Flow.":". De lo contrario, OBS puede seguir mostrando el contenido del archivo en vez del texto enviado por Event Flow.",". The switch waits for an OBS start event; loading it during an existing stream does not turn it ON. Restarting Social Stream also resets the switch to OFF.":". El interruptor espera un evento de inicio de OBS; cargarlo durante una transmisión existente no lo pone en ON. Reiniciar Social Stream también restablece el interruptor a OFF.",". Use":". Usa","1. Connect Flow Actions to OBS":"1. Conecta Flow Actions a OBS","2. Add OBS nodes to a flow":"2. Añade nodos de OBS a un flujo","3. OBS triggers":"3. Activadores de OBS","4. OBS actions":"4. Acciones de OBS","5. Useful recipes":"5. Recetas útiles","6. Other built-in OBS controls":"6. Otros controles integrados de OBS","7. Troubleshooting":"7. Solución de problemas","; OBS-specific details are under":"; los detalles específicos de OBS están en","; a separate trusted command runs":"; un comando de confianza independiente ejecuta","; set a password if wanted.":"; establece una contraseña si lo deseas.","A media input finishes playback. Optionally filter by exact Media Source Name.":"Una entrada multimedia termina de reproducirse. Opcionalmente, filtra por el nombre exacto de la fuente multimedia.","Action":"Acción","Actions":"Acciones","Actions stop when a scene changes":"Las acciones se detienen al cambiar de escena","Add":"Añade","Both Set Gate State actions already target the same switch, which defaults to OFF. Edit":"Ambas acciones Establecer estado de puerta ya apuntan al mismo interruptor, cuyo valor predeterminado es OFF. Edita","Change Scene":"Cambiar escena (Change Scene)","Chat / stream event │ ▼ Social Stream Ninja Event Flow │ same session ID ▼ Flow Actions page (actions.html) │ OBS WebSocket v5 · ws://127.0.0.1:4455 ▼ OBS Studio":"Evento de chat / transmisión │ ▼ Event Flow de Social Stream Ninja │ mismo ID de sesión ▼ Página Flow Actions (actions.html) │ OBS WebSocket v5 · ws://127.0.0.1:4455 ▼ OBS Studio","Chat-controlled media restart":"Reinicio de medios controlado por el chat","Check":"Comprueba","Checks version, connection, scenes, and individual requests before using Event Flow.":"Comprueba la versión, conexión, escenas y solicitudes individuales antes de utilizar Event Flow.","Configuration and behavior":"Configuración y comportamiento","Connect Flow Actions to OBS":"Conecta Flow Actions a OBS","Connect OBS WebSocket to Social Stream Ninja Event Flow. Configure OBS actions and events, test your connection and troubleshoot automation.":"Conecta OBS WebSocket a Event Flow de Social Stream Ninja. Configura acciones y eventos de OBS, prueba la conexión y resuelve problemas de automatización.","Connect the trigger to the action, configure the exact OBS scene/source names, save, and enable the flow.":"Conecta el activador a la acción, configura los nombres exactos de escenas/fuentes de OBS, guarda y activa el flujo.","Connection":"Conexión","Control Media Source":"Controlar fuente multimedia (Control Media Source)","Control Media Source: Restart":"Controlar fuente multimedia: Reiniciar","Control OBS directly from Event Flow without Streamer.bot. This guide covers setup, every OBS trigger and action, practical recipes, and the older dock/browser-source controls.":"Controla OBS directamente desde Event Flow, sin necesitar Streamer.bot. Esta guía cubre la configuración, todos los activadores y acciones de OBS, recetas prácticas y los controles antiguos de panel/fuente de navegador.","Control Replay Buffer":"Controlar búfer de repetición (Control Replay Buffer)","Control Replay Buffer: Start":"Controlar búfer de repetición: Iniciar","Copy the Flow Actions URL and keep it open. An OBS Browser Source is recommended for overlay/audio actions.":"Copia la URL de Flow Actions y mantenla abierta. Se recomienda una fuente de navegador de OBS para acciones de superposición/audio.","Copy the exact OBS name. For visibility, set Scene or Group when the item is nested or outside the current scene.":"Copia el nombre exacto de OBS. Para la visibilidad, configura Escena o Grupo cuando el elemento esté anidado o fuera de la escena actual.","Counter text in OBS":"Texto del contador en OBS","Current OBS scene indicator":"Indicador de la escena actual de OBS","Cycles to the next OBS scene, rate-limited to once per 10 seconds.":"Pasa a la siguiente escena de OBS, limitado a una vez cada 10 segundos.","Diagnostic order: open the":"Orden de diagnóstico: abre el","Direct URL example":"Ejemplo de URL directa","Disable":"Desactiva","Displays scenes and can switch scenes or toggle streaming/recording when the target OBS dock grants the required control level.":"Muestra escenas y puede cambiarlas o alternar transmisión/grabación cuando el panel de OBS de destino concede el nivel de control requerido.","Dock loaded inside OBS with read permission.":"Panel cargado dentro de OBS con permiso de lectura.","Drag a trigger onto the canvas.":"Arrastra un activador al lienzo.","Duck music for an alert":"Bajar la música durante una alerta","Enable Replay Buffer in OBS Output settings and start it before saving.":"Activa el búfer de repetición en los ajustes de Salida de OBS e inícialo antes de guardar.","Enable the WebSocket server. Keep the default port":"Activa el servidor WebSocket. Mantén el puerto predeterminado","Enable the popup option; dock loaded inside OBS with Advanced access.":"Activa la opción de la ventana emergente; panel cargado dentro de OBS con acceso avanzado.","Enable the popup option; dock loaded inside OBS with Full/Advanced control permission.":"Activa la opción de la ventana emergente; panel cargado dentro de OBS con permiso de control completo/avanzado.","Enable, disable, or toggle a named source filter.":"Activa, desactiva o alterna un filtro de fuente por su nombre.","Event Flow Editor":"Editor de Event Flow","Event Flow Guide":"Guía de Event Flow","Every trigger and action in this guide.":"Todos los activadores y acciones de esta guía.","Expand":"Despliega","Fallback for scene changes, start/stop streaming, start/stop recording, and saving replay buffer.":"Alternativa para cambios de escena, inicio/fin de transmisión, inicio/fin de grabación y guardado del búfer de repetición.","First enable Replay Buffer in":"Primero activa el búfer de repetición en","Flow Actions":"Flow Actions","Flow Actions loaded inside OBS with Advanced Access Level. Source, filter, text, volume, media, refresh, and media-ended features still require WebSocket.":"Flow Actions cargado dentro de OBS con nivel de acceso avanzado. Las funciones de fuentes, filtros, texto, volumen, medios, actualización y fin de medios siguen requiriendo WebSocket.","Flow is saved and enabled; Flow Actions is open; both use the same session ID.":"El flujo está guardado y activado; Flow Actions está abierto; ambos utilizan el mismo ID de sesión.","For a Text (GDI+) or Text (FreeType 2) source, turn off":"Para una fuente Texto (GDI+) o Texto (FreeType 2), desactiva","Guests can use !cycle":"Los invitados pueden usar !cycle","Guide sections":"Secciones de la guía","Hourly message while OBS is live":"Mensaje cada hora mientras OBS transmite en vivo","In OBS, open":"En OBS, abre","In Social Stream Ninja, open the":"En Social Stream Ninja, abre el","In the Event Flow editor, choose":"En el editor Event Flow, elige","It is the bridge that receives Event Flow actions and sends OBS WebSocket requests. If it is an OBS Browser Source, turn off":"Es el puente que recibe acciones de Event Flow y envía solicitudes OBS WebSocket. Si es una fuente de navegador de OBS, desactiva","Keep the Flow Actions page running.":"Mantén la página Flow Actions en ejecución.","Live-output warning:":"Aviso sobre la salida en vivo:","Media Ended never fires":"Fin de medios nunca se activa","Media Source controls":"Controles de fuente multimedia","Message Equals":"El mensaje es igual a (Message Equals)","Mode":"Modo","More help:":"Más ayuda:","Moves through playlist-capable inputs, such as VLC Video Source. A single-file Media Source may ignore these actions.":"Avanza por entradas con listas de reproducción, como Fuente de video VLC. Una fuente multimedia de un solo archivo puede ignorar estas acciones.","Mute, unmute, or toggle an input.":"Silencia, activa el sonido o alterna una entrada.","Mute/Unmute Audio":"Silenciar/activar audio (Mute/Unmute Audio)","Next / Previous":"Siguiente / Anterior","Next/Previous does nothing":"Siguiente/Anterior no hace nada","Nothing happens":"No ocurre nada","OBS 28+, WebSocket server enabled, Flow Actions page open.":"OBS 28 o posterior, servidor WebSocket activado, página Flow Actions abierta.","OBS Browser Source API":"API de fuentes de navegador de OBS","OBS Control Guide - Social Stream Ninja":"Guía de control de OBS - Social Stream Ninja","OBS Control with Social Stream Ninja":"Control de OBS con Social Stream Ninja","OBS Media Ended":"Medios de OBS finalizados (OBS Media Ended)","OBS Recording Started":"Grabación de OBS iniciada (OBS Recording Started)","OBS Recording Stopped":"Grabación de OBS detenida (OBS Recording Stopped)","OBS Replay Buffer Saved":"Búfer de repetición de OBS guardado (OBS Replay Buffer Saved)","OBS Scene Changed":"Escena de OBS cambiada (OBS Scene Changed)","OBS Settings → Output":"Ajustes de OBS → Salida","OBS Stream Started":"Transmisión de OBS iniciada (OBS Stream Started)","OBS Stream Started → Set Gate State: ON":"Transmisión de OBS iniciada → Estado de puerta: ON","OBS Stream Stopped":"Transmisión de OBS detenida (OBS Stream Stopped)","OBS Stream Stopped → Set Gate State: OFF":"Transmisión de OBS detenida → Estado de puerta: OFF","OBS Studio":"OBS Studio","OBS Studio action list in the Social Stream Ninja Event Flow Editor":"Lista de acciones de OBS Studio en el editor Event Flow de Social Stream Ninja","OBS WebSocket Tester":"Probador de OBS WebSocket","OBS WebSocket v5":"OBS WebSocket v5","OBS WebSocket v5 is built into OBS 28 and newer. Social Stream Ninja uses it for full OBS control and media events.":"OBS WebSocket v5 está integrado en OBS 28 y versiones posteriores. Social Stream Ninja lo utiliza para el control completo de OBS y eventos multimedia.","OBS event payload reference":"Referencia de datos de eventos de OBS","OBS finishes saving a replay.":"OBS termina de guardar una repetición.","OBS names must match exactly, including spaces and punctuation. Source actions target the OBS input name, not the scene-item label if it was renamed independently.":"Los nombres de OBS deben coincidir exactamente, incluidos espacios y puntuación. Las acciones de fuentes se dirigen al nombre de la entrada de OBS, no a la etiqueta del elemento de escena si se cambió por separado.","OBS will not connect":"OBS no se conecta","Open tester":"Abrir probador","Open the":"Abre:","Option":"Opción","Other controls":"Otros controles","Pause":"Pausar","Place":"Coloca","Play":"Reproducir","Play / Pause":"Reproducir / Pausar","Play/resume, pause, restart, stop, next, or previous.":"Reproducir/reanudar, pausar, reiniciar, detener, siguiente o anterior.","Privileged users can use !start / !stop":"Los usuarios autorizados pueden usar !start / !stop","Problem":"Problema","Read from file":"Leer desde archivo (Read from file)","Recipes":"Ejemplos prácticos","Recording starts.":"La grabación comienza.","Recording stops.":"La grabación se detiene.","Refresh Browser Source":"Actualizar fuente de navegador (Refresh Browser Source)","Refresh an alert page":"Actualizar una página de alertas","Reloads a Browser Source without cache.":"Recarga una fuente de navegador sin caché.","Remote OBS control panel":"Panel remoto de control de OBS","Replay Buffer":"Búfer de repetición","Replay save fails":"Falla el guardado de la repetición","Replay workflow":"Flujo de repetición","Requirement":"Requisito","Restart":"Reiniciar","Restart / Stop":"Reiniciar / Detener","Run something after a video":"Ejecutar algo después de un video","Save Replay Buffer":"Guardar búfer de repetición (Save Replay Buffer)","Saves the currently running replay buffer.":"Guarda el búfer de repetición que está en ejecución.","Scene/source/filter is not found":"No se encuentra la escena/fuente/filtro","Send Message":"Enviar mensaje (Send Message)","Set Source Volume":"Establecer volumen de fuente (Set Source Volume)","Set Text Source":"Establecer fuente de texto (Set Text Source)","Set Text Source and flow variables":"Establecer fuente de texto y variables del flujo","Set Text Source properties with counter template variables":"Propiedades de Establecer fuente de texto con variables de plantilla de contador","Set Text Source writes the resolved value straight into the named OBS text input.":"Establecer fuente de texto escribe el valor resuelto directamente en la entrada de texto de OBS indicada.","Sets an input from":"Establece una entrada desde","Setup":"Configuración","Show, hide, or toggle a scene item. Scene and Group are optional targeting fields.":"Muestra, oculta o alterna un elemento de escena. Escena y Grupo son campos opcionales para especificar el destino.","Shows the active scene in the Streaming Chat dock.":"Muestra la escena activa en el panel de chat de la transmisión.","Shutdown source when not visible":"Apagar fuente cuando no sea visible (Shutdown source when not visible)","Social Stream Ninja also has older OBS Browser Source controls in the Streaming Chat dock. These do not use the Flow Actions WebSocket bridge.":"Social Stream Ninja también tiene controles antiguos de fuentes de navegador de OBS en el panel de chat. No utilizan el puente WebSocket de Flow Actions.","Social Stream Ninja logo":"Logotipo de Social Stream Ninja","Start Recording":"Iniciar grabación (Start Recording)","Start Streaming":"Iniciar transmisión (Start Streaming)","Start with a template → Intermediate → Hourly message while OBS is live":"Empezar con una plantilla → Intermedio → Mensaje cada hora mientras OBS transmite en vivo","Start, stop, or toggle the replay buffer.":"Inicia, detiene o alterna el búfer de repetición.","Start/Stop Streaming and Start/Stop Recording act immediately. Use restrictive triggers, permissions, and cooldowns so ordinary chat messages cannot fire them accidentally.":"Iniciar/Detener transmisión e Iniciar/Detener grabación actúan inmediatamente. Utiliza activadores restrictivos, permisos y tiempos de espera para que los mensajes normales del chat no los activen accidentalmente.","Starts OBS recording.":"Inicia la grabación de OBS.","Starts or stops streaming from trusted chat users.":"Inicia o detiene la transmisión desde usuarios de chat de confianza.","Starts the configured OBS stream output.":"Inicia la salida de transmisión configurada en OBS.","Stop":"Detener","Stop Recording":"Detener grabación (Stop Recording)","Stop Streaming":"Detener transmisión (Stop Streaming)","Stops OBS recording.":"Detiene la grabación de OBS.","Stops the OBS stream output.":"Detiene la salida de transmisión de OBS.","Streaming Chat dock paired to a dock running inside OBS.":"Panel de chat emparejado con un panel ejecutado dentro de OBS.","Streaming reaches the started state.":"La transmisión alcanza el estado iniciado.","Streaming reaches the stopped state.":"La transmisión alcanza el estado detenido.","Switches the active program scene by exact scene name.":"Cambia la escena activa del programa por su nombre exacto.","Text does not change":"El texto no cambia","The OBS Studio group contains scene, source, text, media, audio, filter, output, and replay-buffer controls.":"El grupo OBS Studio contiene controles de escenas, fuentes, texto, medios, audio, filtros, salida y búfer de repetición.","The active program scene changes.":"Cambia la escena activa del programa.","The text field supports normal message placeholders such as":"El campo de texto admite los marcadores habituales de mensajes como","These start a flow when OBS reports a matching event. They arrive as":"Inician un flujo cuando OBS informa de un evento coincidente. Llegan como","Time Interval (3600 seconds) → ON/OFF Switch → Send Message":"Intervalo de tiempo (3600 segundos) → Interruptor ON/OFF → Enviar mensaje","Timing:":"Tiempos:","Toggle Filter":"Alternar filtro (Toggle Filter)","Toggle Source":"Alternar fuente (Toggle Source)","Tools → WebSocket Server Settings":"Herramientas → Ajustes del servidor WebSocket","Trigger":"Disparador","Triggers":"Disparadores","Troubleshooting":"Solución de problemas","Two OBS connection modes":"Dos modos de conexión de OBS","Updates Text (GDI+) or Text (FreeType 2), with template placeholders.":"Actualiza Texto (GDI+) o Texto (FreeType 2), con marcadores de plantilla.","Use OBS WebSocket v5 and a real media input. Looping media does not reach an ended state.":"Utiliza OBS WebSocket v5 y una entrada multimedia real. Los medios en bucle no alcanzan el estado finalizado.","Use Text (GDI+) or Text (FreeType 2), confirm the input name, and disable":"Utiliza Texto (GDI+) o Texto (FreeType 2), confirma el nombre de la entrada y desactiva","Use a playlist-capable source such as VLC Video Source.":"Utiliza una fuente compatible con listas de reproducción, como Fuente de video VLC.","Use the":"Usa:","Useful data":"Datos útiles","Volume, mute, and filters":"Volumen, silencio y filtros","WebSocket":"WebSocket","WebSocket or Browser Source API fallback":"WebSocket o alternativa de la API de fuente de navegador","WebSocket server is enabled, URL is":"El servidor WebSocket está activado, la URL es","What it does":"Qué hace","What it supports":"Qué admite","When it fires":"Cuándo se activa","after the counter/check path and use:":"después de la ruta de contador/comprobación y utiliza:","and create or edit a flow.":"y crea o edita un flujo.","before starting your stream":"antes de iniciar tu transmisión","dB.":"dB.","ends playback and resets the input.":"termina la reproducción y restablece la entrada.","holds its current position.":"conserva su posición actual.","in the Actions list and drag in the OBS action you need.":"en la lista de acciones y arrastra la acción de OBS que necesites.","is effectively silent. Mute is a separate state. Toggle Filter changes only the enabled state of an existing filter; it does not edit filter settings.":"equivale prácticamente a silencio. Silenciar es un estado independiente. Alternar filtro solo cambia la activación de un filtro existente; no edita sus ajustes.","is the obsolete v4 default.":"es el valor predeterminado obsoleto de v4.","is unchanged gain, negative values are quieter, and":"mantiene la ganancia; los valores negativos reducen el volumen y","on the Flow Actions Browser Source, or keep the page open elsewhere.":"en la fuente de navegador de Flow Actions, o mantén la página abierta en otro lugar.","only when OBS requires authentication. Add":"solo cuando OBS requiera autenticación. Añade","resumes paused media.":"reanuda medios pausados.","section and set the OBS WebSocket URL and optional password.":"sección y configura la URL de OBS WebSocket y la contraseña opcional.","starts from the beginning.":"empieza desde el principio.","tester":"probador","the interval runs on its own schedule, so the first reminder may arrive sooner than one hour after streaming starts. Later reminders repeat every hour while the switch is ON. Change the Time Interval value for a different frequency; it is measured in seconds.":"el intervalo sigue su propio horario, así que el primer recordatorio puede llegar antes de que pase una hora desde el inicio de la transmisión. Los siguientes se repiten cada hora mientras el interruptor está en ON. Cambia el valor de Intervalo de tiempo para otra frecuencia; se mide en segundos.","to":"a","to choose your chat platform (the example uses Twitch) and message. Choose a platform or All Platforms; Reply to Source cannot reply to an OBS event or timer tick.":"para elegir tu plataforma de chat (el ejemplo usa Twitch) y el mensaje. Elige una plataforma o Todas las plataformas; Responder a la fuente no puede responder a un evento de OBS ni a un temporizador.","to confirm the connection before building a flow.":"para confirmar la conexión antes de crear un flujo.","to show a small connection-status badge while diagnosing problems.":"para mostrar una pequeña insignia de estado de conexión durante el diagnóstico.","to start/stop it, then":"para iniciarlo/detenerlo, luego","to write the recent buffered segment to disk.":"para escribir en disco el segmento reciente almacenado en el búfer.","uses dB, matching the OBS mixer scale:":"utiliza dB, igual que la escala del mezclador de OBS:","when the source must keep controlling OBS while hidden.":"cuando la fuente deba seguir controlando OBS mientras esté oculta.","→ alert action → Delay → restore to":"→ acción de alerta → Espera → restaurar a","→ confirm":"→ confirma","→ confirm scenes/inputs → test the individual request → test the full Event Flow.":"→ confirma escenas/entradas → prueba la solicitud individual → prueba el Event Flow completo.","→ moderator condition →":"→ condición de moderador →","→ permission condition →":"→ condición de permisos →"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/actions/obs-control-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="shell">
+        <header>
+            <h1>Control de OBS con Social Stream Ninja</h1>
+            <p>Controla OBS directamente desde Event Flow, sin necesitar Streamer.bot. Esta guía cubre la configuración, todos los activadores y acciones de OBS, recetas prácticas y los controles antiguos de panel/fuente de navegador.</p>
+            <nav class="quick-links" aria-label="Secciones de la guía">
+                <a href="#setup">Configuración</a>
+                <a href="#triggers">Disparadores</a>
+                <a href="#actions">Acciones</a>
+                <a href="#recipes">Ejemplos prácticos</a>
+                <a href="#other-controls">Otros controles</a>
+                <a href="#troubleshooting">Solución de problemas</a>
+            </nav>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Español"><span aria-hidden="true">🌐 </span><span lang="es">Español</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/obs-control-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="obs-control-guide.html" lang="es" hreflang="es" aria-current="true">Español</a><a class="site-language-link" href="../../pt-br/actions/obs-control-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/obs-control-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/obs-control-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/obs-control-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/obs-control-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/obs-control-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/obs-control-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/obs-control-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/obs-control-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/obs-control-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/obs-control-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/obs-control-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/obs-control-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/obs-control-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/obs-control-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></header>
+
+        <main>
+            <section id="setup">
+                <h2>1. Conecta Flow Actions a OBS</h2>
+                <p class="lead">OBS WebSocket v5 está integrado en OBS 28 y versiones posteriores. Social Stream Ninja lo utiliza para el control completo de OBS y eventos multimedia.</p>
+                <ol>
+                    <li>En OBS, abre <strong>Herramientas → Ajustes del servidor WebSocket</strong>.</li>
+                    <li>Activa el servidor WebSocket. Mantén el puerto predeterminado <code>4455</code>; establece una contraseña si lo deseas.</li>
+                    <li>En Social Stream Ninja, abre el <strong>Flow Actions</strong> sección y configura la URL de OBS WebSocket y la contraseña opcional.</li>
+                    <li>Copia la URL de Flow Actions y mantenla abierta. Se recomienda una fuente de navegador de OBS para acciones de superposición/audio.</li>
+                    <li>Usa: <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">Probador de OBS WebSocket</a> para confirmar la conexión antes de crear un flujo.</li>
+                </ol>
+
+                <div class="panel">
+                    <strong>Ejemplo de URL directa</strong><br>
+                    <code>https://socialstream.ninja/actions.html?session=YOUR_SESSION&amp;obsws=ws://127.0.0.1:4455</code><br><br>
+                    Añade <code>&amp;obspw=YOUR_PASSWORD</code> solo cuando OBS requiera autenticación. Añade <code>&amp;obsdebug=1</code> para mostrar una pequeña insignia de estado de conexión durante el diagnóstico.
+                </div>
+
+                <div class="callout warning">
+                    <strong>Mantén la página Flow Actions en ejecución.</strong> Es el puente que recibe acciones de Event Flow y envía solicitudes OBS WebSocket. Si es una fuente de navegador de OBS, desactiva <em>Apagar fuente cuando no sea visible (Shutdown source when not visible)</em> cuando la fuente deba seguir controlando OBS mientras esté oculta.
+                </div>
+
+                <div class="diagram">Evento de chat / transmisión │ ▼ Event Flow de Social Stream Ninja │ mismo ID de sesión ▼ Página Flow Actions (actions.html) │ OBS WebSocket v5 · ws://127.0.0.1:4455 ▼ OBS Studio</div>
+
+                <h3>Dos modos de conexión de OBS</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Modo</th><th>Qué admite</th><th>Requisito</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>OBS WebSocket v5</strong></td><td>Todos los activadores y acciones de esta guía.</td><td>OBS 28 o posterior, servidor WebSocket activado, página Flow Actions abierta.</td></tr>
+                            <tr><td><strong>API de fuentes de navegador de OBS</strong></td><td>Alternativa para cambios de escena, inicio/fin de transmisión, inicio/fin de grabación y guardado del búfer de repetición.</td><td>Flow Actions cargado dentro de OBS con nivel de acceso avanzado. Las funciones de fuentes, filtros, texto, volumen, medios, actualización y fin de medios siguen requiriendo WebSocket.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="build-flow">
+                <h2>2. Añade nodos de OBS a un flujo</h2>
+                <ol>
+                    <li>Abre: <a href="../../actions/index.html" target="_blank" rel="noopener">Editor de Event Flow</a> y crea o edita un flujo.</li>
+                    <li>Arrastra un activador al lienzo.</li>
+                    <li>Despliega <strong>OBS Studio</strong> en la lista de acciones y arrastra la acción de OBS que necesites.</li>
+                    <li>Conecta el activador a la acción, configura los nombres exactos de escenas/fuentes de OBS, guarda y activa el flujo.</li>
+                </ol>
+                <figure>
+                    <img src="../../actions/img/obs-control-actions.png" alt="Lista de acciones de OBS Studio en el editor Event Flow de Social Stream Ninja">
+                    <figcaption>El grupo OBS Studio contiene controles de escenas, fuentes, texto, medios, audio, filtros, salida y búfer de repetición.</figcaption>
+                </figure>
+                <div class="callout">
+                    Los nombres de OBS deben coincidir exactamente, incluidos espacios y puntuación. Las acciones de fuentes se dirigen al nombre de la entrada de OBS, no a la etiqueta del elemento de escena si se cambió por separado.
+                </div>
+            </section>
+
+            <section id="triggers">
+                <h2>3. Activadores de OBS</h2>
+                <p>Inician un flujo cuando OBS informa de un evento coincidente. Llegan como <code>type: "obs"</code>; los detalles específicos de OBS están en <code>meta</code>.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Disparador</th><th>Cuándo se activa</th><th>Datos útiles</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Transmisión de OBS iniciada (OBS Stream Started)</strong></td><td>La transmisión alcanza el estado iniciado.</td><td><code>meta.outputState</code>, <code>meta.outputActive</code></td></tr>
+                            <tr><td><strong>Transmisión de OBS detenida (OBS Stream Stopped)</strong></td><td>La transmisión alcanza el estado detenido.</td><td><code>meta.outputState</code>, <code>meta.outputActive</code></td></tr>
+                            <tr><td><strong>Grabación de OBS iniciada (OBS Recording Started)</strong></td><td>La grabación comienza.</td><td><code>meta.outputState</code></td></tr>
+                            <tr><td><strong>Grabación de OBS detenida (OBS Recording Stopped)</strong></td><td>La grabación se detiene.</td><td><code>meta.outputState</code></td></tr>
+                            <tr><td><strong>Escena de OBS cambiada (OBS Scene Changed)</strong></td><td>Cambia la escena activa del programa.</td><td><code>meta.sceneName</code></td></tr>
+                            <tr><td><strong>Medios de OBS finalizados (OBS Media Ended)</strong> <span class="tag">WebSocket</span></td><td>Una entrada multimedia termina de reproducirse. Opcionalmente, filtra por el nombre exacto de la fuente multimedia.</td><td><code>meta.inputName</code>, <code>meta.inputUuid</code></td></tr>
+                            <tr><td><strong>Búfer de repetición de OBS guardado (OBS Replay Buffer Saved)</strong></td><td>OBS termina de guardar una repetición.</td><td><code>meta.savedReplayPath</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="actions">
+                <h2>4. Acciones de OBS</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Acción</th><th>Configuración y comportamiento</th><th>Conexión</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Cambiar escena (Change Scene)</strong></td><td>Cambia la escena activa del programa por su nombre exacto.</td><td>WebSocket o alternativa de la API de fuente de navegador</td></tr>
+                            <tr><td><strong>Alternar fuente (Toggle Source)</strong></td><td>Muestra, oculta o alterna un elemento de escena. Escena y Grupo son campos opcionales para especificar el destino.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Establecer fuente de texto (Set Text Source)</strong></td><td>Actualiza Texto (GDI+) o Texto (FreeType 2), con marcadores de plantilla.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Controlar fuente multimedia (Control Media Source)</strong></td><td>Reproducir/reanudar, pausar, reiniciar, detener, siguiente o anterior.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Establecer volumen de fuente (Set Source Volume)</strong></td><td>Establece una entrada desde <code>-100</code> a <code>+26</code> dB.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Actualizar fuente de navegador (Refresh Browser Source)</strong></td><td>Recarga una fuente de navegador sin caché.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Alternar filtro (Toggle Filter)</strong></td><td>Activa, desactiva o alterna un filtro de fuente por su nombre.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Silenciar/activar audio (Mute/Unmute Audio)</strong></td><td>Silencia, activa el sonido o alterna una entrada.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Iniciar grabación (Start Recording)</strong></td><td>Inicia la grabación de OBS.</td><td>WebSocket o alternativa de la API de fuente de navegador</td></tr>
+                            <tr><td><strong>Detener grabación (Stop Recording)</strong></td><td>Detiene la grabación de OBS.</td><td>WebSocket o alternativa de la API de fuente de navegador</td></tr>
+                            <tr><td><strong>Iniciar transmisión (Start Streaming)</strong></td><td>Inicia la salida de transmisión configurada en OBS.</td><td>WebSocket o alternativa de la API de fuente de navegador</td></tr>
+                            <tr><td><strong>Detener transmisión (Stop Streaming)</strong></td><td>Detiene la salida de transmisión de OBS.</td><td>WebSocket o alternativa de la API de fuente de navegador</td></tr>
+                            <tr><td><strong>Controlar búfer de repetición (Control Replay Buffer)</strong></td><td>Inicia, detiene o alterna el búfer de repetición.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Guardar búfer de repetición (Save Replay Buffer)</strong></td><td>Guarda el búfer de repetición que está en ejecución.</td><td>WebSocket o alternativa de la API de fuente de navegador</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Establecer fuente de texto y variables del flujo</h3>
+                <p>El campo de texto admite los marcadores habituales de mensajes como <code>{username}</code>, <code>{message}</code>, <code>{source}</code>, y <code>{donation}</code>, además de valores añadidos por nodos anteriores del flujo como <code>{counterValue}</code>, <code>{counterTarget}</code>, y <code>{counterRemaining}</code>.</p>
+                <div class="panel"><code>{username}: now {counterValue}, need {counterTarget}</code></div>
+                <figure>
+                    <img src="../../actions/img/obs-set-text-properties.png" alt="Propiedades de Establecer fuente de texto con variables de plantilla de contador">
+                    <figcaption>Establecer fuente de texto escribe el valor resuelto directamente en la entrada de texto de OBS indicada.</figcaption>
+                </figure>
+                <div class="callout warning">
+                    Para una fuente Texto (GDI+) o Texto (FreeType 2), desactiva <em>Leer desde archivo (Read from file)</em>. De lo contrario, OBS puede seguir mostrando el contenido del archivo en vez del texto enviado por Event Flow.
+                </div>
+
+                <h3>Controles de fuente multimedia</h3>
+                <div class="grid">
+                    <div class="card"><h3>Reproducir / Pausar</h3><p><strong>Reproducir</strong> reanuda medios pausados. <strong>Pausar</strong> conserva su posición actual.</p></div>
+                    <div class="card"><h3>Reiniciar / Detener</h3><p><strong>Reiniciar</strong> empieza desde el principio. <strong>Detener</strong> termina la reproducción y restablece la entrada.</p></div>
+                    <div class="card"><h3>Siguiente / Anterior</h3><p>Avanza por entradas con listas de reproducción, como Fuente de video VLC. Una fuente multimedia de un solo archivo puede ignorar estas acciones.</p></div>
+                </div>
+
+                <h3>Volumen, silencio y filtros</h3>
+                <p><strong>Establecer volumen de fuente (Set Source Volume)</strong> utiliza dB, igual que la escala del mezclador de OBS: <code>0 dB</code> mantiene la ganancia; los valores negativos reducen el volumen y <code>-100 dB</code> equivale prácticamente a silencio. Silenciar es un estado independiente. Alternar filtro solo cambia la activación de un filtro existente; no edita sus ajustes.</p>
+
+                <h3>Búfer de repetición</h3>
+                <p>Primero activa el búfer de repetición en <strong>Ajustes de OBS → Salida</strong>. Usa <strong>Controlar búfer de repetición (Control Replay Buffer)</strong> para iniciarlo/detenerlo, luego <strong>Guardar búfer de repetición (Save Replay Buffer)</strong> para escribir en disco el segmento reciente almacenado en el búfer.</p>
+
+                <div class="callout danger">
+                    <strong>Aviso sobre la salida en vivo:</strong> Iniciar/Detener transmisión e Iniciar/Detener grabación actúan inmediatamente. Utiliza activadores restrictivos, permisos y tiempos de espera para que los mensajes normales del chat no los activen accidentalmente.
+                </div>
+            </section>
+
+            <section id="recipes">
+                <h2>5. Recetas útiles</h2>
+                <div class="panel" id="hourly-message">
+                    <h3>Mensaje cada hora mientras OBS transmite en vivo</h3>
+                    <p>En el editor Event Flow, elige <strong>Empezar con una plantilla → Intermedio → Mensaje cada hora mientras OBS transmite en vivo</strong>. Empieza desactivado y contiene tres ramas en un solo flujo:</p>
+                    <ul>
+                        <li><strong>Transmisión de OBS iniciada → Estado de puerta: ON</strong></li>
+                        <li><strong>Intervalo de tiempo (3600 segundos) → Interruptor ON/OFF → Enviar mensaje</strong></li>
+                        <li><strong>Transmisión de OBS detenida → Estado de puerta: OFF</strong></li>
+                    </ul>
+                    <p>Ambas acciones Establecer estado de puerta ya apuntan al mismo interruptor, cuyo valor predeterminado es OFF. Edita <strong>Enviar mensaje (Send Message)</strong> para elegir tu plataforma de chat (el ejemplo usa Twitch) y el mensaje. Elige una plataforma o Todas las plataformas; Responder a la fuente no puede responder a un evento de OBS ni a un temporizador.</p>
+                    <p><a href="#setup">Conecta Flow Actions a OBS</a>, mantén conectados Social Stream y el chat de destino, y guarda y activa el flujo <strong>antes de iniciar tu transmisión</strong>. El interruptor espera un evento de inicio de OBS; cargarlo durante una transmisión existente no lo pone en ON. Reiniciar Social Stream también restablece el interruptor a OFF.</p>
+                    <p><strong>Tiempos:</strong> el intervalo sigue su propio horario, así que el primer recordatorio puede llegar antes de que pase una hora desde el inicio de la transmisión. Los siguientes se repiten cada hora mientras el interruptor está en ON. Cambia el valor de Intervalo de tiempo para otra frecuencia; se mide en segundos.</p>
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <h3>Texto del contador en OBS</h3>
+                        <p>Coloca <strong>Establecer fuente de texto (Set Text Source)</strong> después de la ruta de contador/comprobación y utiliza:</p>
+                        <p><code>{username}: now {counterValue}, need {counterTarget}</code></p>
+                    </div>
+                    <div class="card">
+                        <h3>Ejecutar algo después de un video</h3>
+                        <p><strong>Medios de OBS finalizados (OBS Media Ended)</strong> (filtra por <code>Intro Video</code>) → <strong>Cambiar escena (Change Scene)</strong> a <code>Main</code>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Reinicio de medios controlado por el chat</h3>
+                        <p><strong>El mensaje es igual a (Message Equals)</strong> <code>!replayintro</code> → condición de permisos → <strong>Controlar fuente multimedia: Reiniciar</strong>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Actualizar una página de alertas</h3>
+                        <p><strong>El mensaje es igual a (Message Equals)</strong> <code>!refreshalerts</code> → condición de moderador → <strong>Actualizar fuente de navegador (Refresh Browser Source)</strong>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Bajar la música durante una alerta</h3>
+                        <p><strong>Establecer volumen de fuente (Set Source Volume)</strong> a <code>-24 dB</code> → acción de alerta → Espera → restaurar a <code>0 dB</code>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Flujo de repetición</h3>
+                        <p><strong>Transmisión de OBS iniciada (OBS Stream Started)</strong> → <strong>Controlar búfer de repetición: Iniciar</strong>; un comando de confianza independiente ejecuta <strong>Guardar búfer de repetición (Save Replay Buffer)</strong>.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="other-controls">
+                <h2>6. Otros controles integrados de OBS</h2>
+                <p>Social Stream Ninja también tiene controles antiguos de fuentes de navegador de OBS en el panel de chat. No utilizan el puente WebSocket de Flow Actions.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Opción</th><th>Qué hace</th><th>Requisito</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Indicador de la escena actual de OBS</strong></td><td>Muestra la escena activa en el panel de chat de la transmisión.</td><td>Panel cargado dentro de OBS con permiso de lectura.</td></tr>
+                            <tr><td><strong>Los invitados pueden usar !cycle</strong></td><td>Pasa a la siguiente escena de OBS, limitado a una vez cada 10 segundos.</td><td>Activa la opción de la ventana emergente; panel cargado dentro de OBS con acceso avanzado.</td></tr>
+                            <tr><td><strong>Los usuarios autorizados pueden usar !start / !stop</strong></td><td>Inicia o detiene la transmisión desde usuarios de chat de confianza.</td><td>Activa la opción de la ventana emergente; panel cargado dentro de OBS con permiso de control completo/avanzado.</td></tr>
+                            <tr><td><strong>Panel remoto de control de OBS</strong></td><td>Muestra escenas y puede cambiarlas o alternar transmisión/grabación cuando el panel de OBS de destino concede el nivel de control requerido.</td><td>Panel de chat emparejado con un panel ejecutado dentro de OBS.</td></tr>
+                            <tr><td><strong>Probador de OBS WebSocket</strong></td><td>Comprueba la versión, conexión, escenas y solicitudes individuales antes de utilizar Event Flow.</td><td><a href="../../obs-websocket-test.html" target="_blank" rel="noopener">Abrir probador</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>7. Solución de problemas</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Problema</th><th>Comprueba</th></tr></thead>
+                        <tbody>
+                            <tr><td>No ocurre nada</td><td>El flujo está guardado y activado; Flow Actions está abierto; ambos utilizan el mismo ID de sesión.</td></tr>
+                            <tr><td>OBS no se conecta</td><td>El servidor WebSocket está activado, la URL es <code>ws://127.0.0.1:4455</code>, y la contraseña coincide. El puerto <code>4444</code> es el valor predeterminado obsoleto de v4.</td></tr>
+                            <tr><td>No se encuentra la escena/fuente/filtro</td><td>Copia el nombre exacto de OBS. Para la visibilidad, configura Escena o Grupo cuando el elemento esté anidado o fuera de la escena actual.</td></tr>
+                            <tr><td>El texto no cambia</td><td>Utiliza Texto (GDI+) o Texto (FreeType 2), confirma el nombre de la entrada y desactiva <em>Leer desde archivo (Read from file)</em>.</td></tr>
+                            <tr><td>Fin de medios nunca se activa</td><td>Utiliza OBS WebSocket v5 y una entrada multimedia real. Los medios en bucle no alcanzan el estado finalizado.</td></tr>
+                            <tr><td>Siguiente/Anterior no hace nada</td><td>Utiliza una fuente compatible con listas de reproducción, como Fuente de video VLC.</td></tr>
+                            <tr><td>Falla el guardado de la repetición</td><td>Activa el búfer de repetición en los ajustes de Salida de OBS e inícialo antes de guardar.</td></tr>
+                            <tr><td>Las acciones se detienen al cambiar de escena</td><td>Desactiva <em>Apagar fuente cuando no sea visible (Shutdown source when not visible)</em> en la fuente de navegador de Flow Actions, o mantén la página abierta en otro lugar.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="panel">
+                    Orden de diagnóstico: abre el <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">probador</a> → confirma <code>GetVersion</code> → confirma escenas/entradas → prueba la solicitud individual → prueba el Event Flow completo.
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            Más ayuda: <a href="event-flow-guide.html">Guía de Event Flow</a> · <a href="../docs/event-reference.html#obs-flow-actions">Referencia de datos de eventos de OBS</a> · <a href="../../obs-websocket-test.html">Probador de OBS WebSocket</a>
+        </footer>
+    </div>
+</body>
+</html>

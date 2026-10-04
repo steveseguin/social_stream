@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/cs/docs/obs-quick-start.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/cs/docs/obs-quick-start.html">
+    <meta property="og:title" content="Rychlý start OBS - Social Stream Ninja">
+    <meta property="og:description" content="Rychlý průvodce nastavením překryvů chatu Social Stream Ninja v OBS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/cs/docs/obs-quick-start.html">
+    <meta name="twitter:title" content="Rychlý start OBS - Social Stream Ninja">
+    <meta name="twitter:description" content="Rychlý průvodce nastavením překryvů chatu Social Stream Ninja v OBS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rychlý start OBS - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Rychlý průvodce nastavením překryvů chatu Social Stream Ninja v OBS.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/obs-quick-start.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"1. Pick One Session ID":"1. Zvolte jedno ID relace","2. Start A Chat Source":"2. Spusťte zdroj chatu","3. Open The Dock":"3. Otevřete dok","4. Add An OBS Browser Source":"4. Přidejte zdroj prohlížeče OBS","5. If OBS Is Blank":"5. Pokud je OBS prázdné","A browser source can show a featured message like this after chat is reaching the dock.":"Jakmile chat dorazí do doku, může zdroj prohlížeče zobrazit takto vybranou zprávu.","Check one thing at a time, in this order.":"Kontrolujte vždy jednu věc v tomto pořadí.","Check that the source chat page or app source window is still running.":"Ověřte, že zdrojová stránka chatu nebo okno zdroje aplikace stále běží.","Commands & API":"Příkazy a API","Confirm the OBS URL has the same":"Ověřte, že URL v OBS obsahuje stejné","Confirm the dock receives messages first. If the dock is empty, OBS is not the problem yet.":"Nejprve ověřte, že dok přijímá zprávy. Pokud je prázdný, problém zatím není v OBS.","Download":"Stáhnout","Featured message overlay preview with a sample chat message and donation badge":"Náhled překryvu vybrané zprávy s ukázkovou zprávou a odznakem příspěvku","Features":"Funkce","For regular chat overlay layouts, use a template from the":"Pro běžná rozvržení překryvu chatu použijte šablonu z","Get chat into OBS with the fewest moving parts.":"Dostaňte chat do OBS co nejjednodušeji.","Guides":"Návody","Hire":"Najmout odborníka","Home":"Domů","If messages appear here, Social Stream Ninja is receiving chat. Use the same session ID in OBS.":"Pokud se zde zobrazují zprávy, Social Stream Ninja přijímá chat. V OBS použijte stejné ID relace.","In OBS, add a Browser Source and paste the overlay URL.":"V OBS přidejte zdroj prohlížeče a vložte URL překryvu.","Inspiration":"Inspirace","Install or open Social Stream Ninja.":"Nainstalujte nebo otevřete Social Stream Ninja.","Main navigation":"Hlavní navigace","Make up one short session ID and use it everywhere. It is how your chat source, dock, and OBS overlay find each other.":"Vymyslete jedno krátké ID relace a používejte ho všude. Podle něj se propojí zdroj chatu, dok a překryv OBS.","More details:":"Další podrobnosti:","Not sure which source mode to use? See the":"Nevíte, který režim zdroje použít? Podívejte se na","OBS Quick Start":"Rychlý start s OBS","OBS Quick Start - Social Stream Ninja":"Rychlý start OBS - Social Stream Ninja","Open navigation menu":"Otevřít navigační nabídku","Open the chat source for your platform and leave it open.":"Otevřete zdroj chatu své platformy a nechte ho otevřený.","Overlay Gallery":"Galerie překryvů","Platform Setup Picker":"Výběr nastavení platformy","Quick setup guide for using Social Stream Ninja chat overlays in OBS.":"Rychlý průvodce nastavením překryvů chatu Social Stream Ninja v OBS.","Refresh the OBS browser source after changing URL options.":"Po změně možností URL obnovte zdroj prohlížeče v OBS.","Send or wait for one chat message so you know the source is working.":"Odešlete jednu zprávu nebo na ni počkejte, abyste věděli, že zdroj funguje.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja dock showing three received chat messages":"Dok Social Stream Ninja se třemi přijatými zprávami chatu","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","Templates Gallery":"Galerie šablon","The dock is your test screen. Open it before changing OBS settings.":"Dok slouží jako testovací obrazovka. Otevřete ho před změnou nastavení OBS.","Troubleshooting":"Řešení potíží"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/obs-quick-start.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-quick-start.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-quick-start.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/obs-quick-start.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-quick-start.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-quick-start.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-quick-start.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-quick-start.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/obs-quick-start.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-quick-start.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-quick-start.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-quick-start.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/obs-quick-start.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/obs-quick-start.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/obs-quick-start.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/obs-quick-start.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="obs-quick-start.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/obs-quick-start.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Rychlý start s OBS</h1>
+            <p>Dostaňte chat do OBS co nejjednodušeji.</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>1. Zvolte jedno ID relace</h3>
+                <p>Vymyslete jedno krátké ID relace a používejte ho všude. Podle něj se propojí zdroj chatu, dok a překryv OBS.</p>
+                <pre>YOUR_SESSION_ID</pre>
+            </div>
+
+            <div class="guide-card">
+                <h3>2. Spusťte zdroj chatu</h3>
+                <ol class="guide-steps">
+                    <li>Nainstalujte nebo otevřete Social Stream Ninja.</li>
+                    <li>Otevřete zdroj chatu své platformy a nechte ho otevřený.</li>
+                    <li>Odešlete jednu zprávu nebo na ni počkejte, abyste věděli, že zdroj funguje.</li>
+                </ol>
+                <p>Nevíte, který režim zdroje použít? Podívejte se na <a href="platform-setup-picker.html">Výběr nastavení platformy</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>3. Otevřete dok</h3>
+                <p>Dok slouží jako testovací obrazovka. Otevřete ho před změnou nastavení OBS.</p>
+                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID</pre>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-dock-message-check.png" alt="Dok Social Stream Ninja se třemi přijatými zprávami chatu" class="guide-image">
+                    <figcaption>Pokud se zde zobrazují zprávy, Social Stream Ninja přijímá chat. V OBS použijte stejné ID relace.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>4. Přidejte zdroj prohlížeče OBS</h3>
+                <p>V OBS přidejte zdroj prohlížeče a vložte URL překryvu.</p>
+                <pre>https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID</pre>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-featured-overlay-preview.png" alt="Náhled překryvu vybrané zprávy s ukázkovou zprávou a odznakem příspěvku" class="guide-image">
+                    <figcaption>Jakmile chat dorazí do doku, může zdroj prohlížeče zobrazit takto vybranou zprávu.</figcaption>
+                </figure>
+                <p>Pro běžná rozvržení překryvu chatu použijte šablonu z <a href="templates.html">Galerie šablon</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>5. Pokud je OBS prázdné</h3>
+                <p>Kontrolujte vždy jednu věc v tomto pořadí.</p>
+                <ul class="guide-list">
+                    <li>Nejprve ověřte, že dok přijímá zprávy. Pokud je prázdný, problém zatím není v OBS.</li>
+                    <li>Ověřte, že URL v OBS obsahuje stejné <code>session</code>.</li>
+                    <li>Po změně možností URL obnovte zdroj prohlížeče v OBS.</li>
+                    <li>Ověřte, že zdrojová stránka chatu nebo okno zdroje aplikace stále běží.</li>
+                </ul>
+                <p>Další podrobnosti: <a href="guides.html#extension-troubleshooting">Řešení potíží</a>.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

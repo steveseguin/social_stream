@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="将 OBS WebSocket 连接到 Social Stream Ninja Event Flow。配置 OBS 操作和事件、测试连接，并排查自动化问题。">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/zh-cn/actions/obs-control-guide.html">
+    <meta property="og:title" content="OBS 控制指南 - Social Stream Ninja">
+    <meta property="og:description" content="将 OBS WebSocket 连接到 Social Stream Ninja Event Flow。配置 OBS 操作和事件、测试连接，并排查自动化问题。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-cn/actions/obs-control-guide.html">
+    <meta name="twitter:title" content="OBS 控制指南 - Social Stream Ninja">
+    <meta name="twitter:description" content="将 OBS WebSocket 连接到 Social Stream Ninja Event Flow。配置 OBS 操作和事件、测试连接，并排查自动化问题。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS 控制指南 - Social Stream Ninja</title>
+    <link rel="canonical" href="https://socialstream.ninja/zh-cn/actions/obs-control-guide.html">
+    <style>
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
+            color: #172033;
+            background: linear-gradient(145deg, #090d18, #172554 48%, #3b0764);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        }
+        .shell {
+            max-width: 1160px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 20px;
+            background: #fbfcff;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+        }
+        header {
+            padding: 58px 58px 48px;
+            color: #fff;
+            background: radial-gradient(circle at 85% 10%, rgba(168, 85, 247, 0.5), transparent 32%),
+                        linear-gradient(135deg, #172554, #5b21b6);
+        }
+        header h1 { margin: 0 0 12px; font-size: 2.8rem; line-height: 1.08; }
+        header p { max-width: 720px; margin: 0; font-size: 1.15rem; line-height: 1.6; opacity: 0.94; }
+        .quick-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+        .quick-links a {
+            padding: 9px 13px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 999px;
+            color: #fff;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        main { padding: 44px 58px 70px; }
+        section { margin: 0 0 58px; }
+        h2 { margin: 0 0 16px; color: #312e81; font-size: 2rem; }
+        h3 { margin: 28px 0 10px; color: #4c1d95; font-size: 1.35rem; }
+        p, li { line-height: 1.62; }
+        p { margin: 0 0 13px; }
+        ol, ul { margin: 14px 0; padding-left: 25px; }
+        li { margin: 7px 0; }
+        a { color: #4338ca; }
+        code {
+            padding: 2px 6px;
+            border-radius: 5px;
+            color: #3730a3;
+            background: #eef2ff;
+            font-family: Consolas, "Courier New", monospace;
+            overflow-wrap: anywhere;
+        }
+        .lead {
+            margin: -8px 0 24px;
+            color: #475569;
+            font-size: 1.08rem;
+        }
+        .panel, .callout {
+            margin: 20px 0;
+            padding: 20px 23px;
+            border-radius: 13px;
+            border: 1px solid #dbe3f3;
+            background: #f7f9ff;
+        }
+        .callout { border-left: 5px solid #4f46e5; }
+        .callout.warning { border-left-color: #d97706; background: #fffbeb; }
+        .callout.danger { border-left-color: #dc2626; background: #fef2f2; }
+        .diagram {
+            margin: 22px 0;
+            padding: 20px 22px;
+            overflow-x: auto;
+            border-radius: 13px;
+            color: #e0e7ff;
+            background: #111827;
+            font-family: Consolas, "Courier New", monospace;
+            line-height: 1.65;
+            white-space: pre;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .card {
+            padding: 20px;
+            border: 1px solid #e1e7f2;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(30, 41, 59, 0.07);
+        }
+        .card h3 { margin-top: 0; }
+        .table-wrap { margin: 20px 0; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 720px; }
+        th, td { padding: 12px 14px; border-bottom: 1px solid #dde4f0; text-align: left; vertical-align: top; line-height: 1.5; }
+        th { color: #312e81; background: #eef2ff; }
+        tbody tr:nth-child(even) { background: #fafbff; }
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 999px;
+            color: #155e75;
+            background: #cffafe;
+            font-size: 0.78rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        figure { margin: 24px 0; text-align: center; }
+        figure img {
+            max-width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            box-shadow: 0 12px 34px rgba(30, 41, 59, 0.14);
+        }
+        figcaption { margin-top: 9px; color: #64748b; font-size: 0.9rem; }
+        footer { padding: 23px 58px; color: #c7d2fe; background: #111827; }
+        footer a { color: #a5f3fc; }
+        @media (max-width: 720px) {
+            body { padding: 0; }
+            .shell { border-radius: 0; }
+            header, main, footer { padding-left: 22px; padding-right: 22px; }
+            header { padding-top: 40px; }
+            header h1 { font-size: 2.15rem; }
+            h2 { font-size: 1.65rem; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"actions/obs-control-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{"(filter to":"（筛选为",", and":"，以及",", and password matches. Port":"，并且密码匹配。端口",", keep Social Stream and the destination chat connected, then save and enable the flow":"，保持 Social Stream 和目标聊天连接，然后保存并启用流程",", plus values added by earlier flow nodes such as":"，以及前面流程节点添加的值，例如",". It starts disabled and contains three branches in one flow:":"。它初始为禁用状态，在一个流程中包含三个分支：",". Otherwise OBS may continue displaying the file contents instead of the text sent by Event Flow.":"。否则 OBS 可能继续显示文件内容，而不是 Event Flow 发送的文本。",". The switch waits for an OBS start event; loading it during an existing stream does not turn it ON. Restarting Social Stream also resets the switch to OFF.":"。开关会等待 OBS 开始事件；在直播已经进行时加载它不会将其设为 ON。重启 Social Stream 也会将开关重置为 OFF。",". Use":"。使用","1. Connect Flow Actions to OBS":"1. 将 Flow Actions 连接到 OBS","2. Add OBS nodes to a flow":"2. 向流程添加 OBS 节点","3. OBS triggers":"3. OBS 触发器","4. OBS actions":"4. OBS 操作","5. Useful recipes":"5. 实用方案","6. Other built-in OBS controls":"6. 其他内置 OBS 控件","7. Troubleshooting":"7. 故障排查","; OBS-specific details are under":"；OBS 专属详情位于","; a separate trusted command runs":"；另一个可信命令运行","; set a password if wanted.":"；如果需要，可设置密码。","A media input finishes playback. Optionally filter by exact Media Source Name.":"媒体输入完成播放。可按精确的 Media Source Name 进行筛选。","Action":"操作","Actions":"操作","Actions stop when a scene changes":"场景变化时操作停止","Add":"添加","Both Set Gate State actions already target the same switch, which defaults to OFF. Edit":"两个 Set Gate State 操作已经指向同一个开关，其默认值为 OFF。编辑","Change Scene":"切换场景（Change Scene）","Chat / stream event │ ▼ Social Stream Ninja Event Flow │ same session ID ▼ Flow Actions page (actions.html) │ OBS WebSocket v5 · ws://127.0.0.1:4455 ▼ OBS Studio":"Chat / stream event │ ▼ Social Stream Ninja Event Flow │ same session ID ▼ Flow Actions page (actions.html) │ OBS WebSocket v5 · ws://127.0.0.1:4455 ▼ OBS Studio","Chat-controlled media restart":"由聊天控制的媒体重启","Check":"检查","Checks version, connection, scenes, and individual requests before using Event Flow.":"在使用 Event Flow 之前检查版本、连接、场景和单独请求。","Configuration and behavior":"配置和行为","Connect Flow Actions to OBS":"将 Flow Actions 连接到 OBS","Connect OBS WebSocket to Social Stream Ninja Event Flow. Configure OBS actions and events, test your connection and troubleshoot automation.":"将 OBS WebSocket 连接到 Social Stream Ninja Event Flow。配置 OBS 操作和事件、测试连接，并排查自动化问题。","Connect the trigger to the action, configure the exact OBS scene/source names, save, and enable the flow.":"将触发器连接到操作，配置精确的 OBS 场景/来源名称，保存并启用流程。","Connection":"连接","Control Media Source":"控制媒体源（Control Media Source）","Control Media Source: Restart":"控制媒体源：重新开始（Control Media Source: Restart）","Control OBS directly from Event Flow without Streamer.bot. This guide covers setup, every OBS trigger and action, practical recipes, and the older dock/browser-source controls.":"直接从 Event Flow 控制 OBS，无需 Streamer.bot。本指南涵盖设置、所有 OBS 触发器和操作、实用方案，以及旧版停靠面板/浏览器源控件。","Control Replay Buffer":"控制回放缓冲区（Control Replay Buffer）","Control Replay Buffer: Start":"控制回放缓冲区：开始（Control Replay Buffer: Start）","Copy the Flow Actions URL and keep it open. An OBS Browser Source is recommended for overlay/audio actions.":"复制 Flow Actions URL 并保持打开。对于叠加层/音频操作，建议使用 OBS 浏览器源。","Copy the exact OBS name. For visibility, set Scene or Group when the item is nested or outside the current scene.":"复制精确的 OBS 名称。对于可见性，如果项目嵌套或不在当前场景中，请设置 Scene or Group。","Counter text in OBS":"OBS 中的计数器文本","Current OBS scene indicator":"当前 OBS 场景指示器","Cycles to the next OBS scene, rate-limited to once per 10 seconds.":"循环切换到下一个 OBS 场景，频率限制为每 10 秒一次。","Diagnostic order: open the":"诊断顺序：打开","Direct URL example":"直接 URL 示例","Disable":"禁用","Displays scenes and can switch scenes or toggle streaming/recording when the target OBS dock grants the required control level.":"当目标 OBS 停靠面板授予所需控制级别时，显示场景，并可切换场景或切换直播/录制。","Dock loaded inside OBS with read permission.":"以读取权限加载在 OBS 内的停靠面板。","Drag a trigger onto the canvas.":"将触发器拖到画布上。","Duck music for an alert":"提醒期间降低音乐音量","Enable Replay Buffer in OBS Output settings and start it before saving.":"在 OBS 输出设置中启用回放缓冲区，并在保存前启动它。","Enable the WebSocket server. Keep the default port":"启用 WebSocket 服务器。保留默认端口","Enable the popup option; dock loaded inside OBS with Advanced access.":"启用弹出窗口选项；停靠面板以 Advanced 权限加载在 OBS 内。","Enable the popup option; dock loaded inside OBS with Full/Advanced control permission.":"启用弹出窗口选项；停靠面板以 Full/Advanced 控制权限加载在 OBS 内。","Enable, disable, or toggle a named source filter.":"启用、禁用或切换指定名称的来源滤镜。","Event Flow Editor":"Event Flow 编辑器","Event Flow Guide":"Event Flow 指南","Every trigger and action in this guide.":"本指南中的每个触发器和操作。","Expand":"展开","Fallback for scene changes, start/stop streaming, start/stop recording, and saving replay buffer.":"用于场景切换、开始/停止直播、开始/停止录制和保存回放缓冲区的回退方式。","First enable Replay Buffer in":"首先在以下位置启用回放缓冲区：","Flow Actions":"Flow Actions","Flow Actions loaded inside OBS with Advanced Access Level. Source, filter, text, volume, media, refresh, and media-ended features still require WebSocket.":"以 Advanced Access Level 加载在 OBS 内的 Flow Actions。来源、滤镜、文本、音量、媒体、刷新和媒体结束功能仍需要 WebSocket。","Flow is saved and enabled; Flow Actions is open; both use the same session ID.":"流程已保存并启用；Flow Actions 已打开；两者使用相同的会话 ID。","For a Text (GDI+) or Text (FreeType 2) source, turn off":"对于 Text (GDI+) 或 Text (FreeType 2) 来源，关闭","Guests can use !cycle":"访客可以使用 !cycle","Guide sections":"指南章节","Hourly message while OBS is live":"OBS 直播期间每小时发送消息","In OBS, open":"在 OBS 中，打开","In Social Stream Ninja, open the":"在 Social Stream Ninja 中，打开","In the Event Flow editor, choose":"在 Event Flow 编辑器中，选择","It is the bridge that receives Event Flow actions and sends OBS WebSocket requests. If it is an OBS Browser Source, turn off":"它是接收 Event Flow 操作并发送 OBS WebSocket 请求的桥接。如果它是 OBS 浏览器源，请关闭","Keep the Flow Actions page running.":"保持 Flow Actions 页面运行。","Live-output warning:":"直播输出警告：","Media Ended never fires":"Media Ended 从不触发","Media Source controls":"媒体源控件","Message Equals":"消息等于（Message Equals）","Mode":"模式","More help:":"更多帮助：","Moves through playlist-capable inputs, such as VLC Video Source. A single-file Media Source may ignore these actions.":"在支持播放列表的输入（例如 VLC Video Source）中移动。单文件 Media Source 可能忽略这些操作。","Mute, unmute, or toggle an input.":"将输入静音、取消静音或切换静音。","Mute/Unmute Audio":"静音/取消音频静音（Mute/Unmute Audio）","Next / Previous":"下一个 / 上一个（Next / Previous）","Next/Previous does nothing":"Next/Previous 没有效果","Nothing happens":"没有任何反应","OBS 28+, WebSocket server enabled, Flow Actions page open.":"OBS 28+、已启用 WebSocket 服务器、Flow Actions 页面已打开。","OBS Browser Source API":"OBS 浏览器源 API","OBS Control Guide - Social Stream Ninja":"OBS 控制指南 - Social Stream Ninja","OBS Control with Social Stream Ninja":"使用 Social Stream Ninja 控制 OBS","OBS Media Ended":"OBS 媒体结束（OBS Media Ended）","OBS Recording Started":"OBS 录制开始（OBS Recording Started）","OBS Recording Stopped":"OBS 录制停止（OBS Recording Stopped）","OBS Replay Buffer Saved":"OBS 回放缓冲区已保存（OBS Replay Buffer Saved）","OBS Scene Changed":"OBS 场景已更改（OBS Scene Changed）","OBS Settings → Output":"OBS 设置 → 输出（Settings → Output）","OBS Stream Started":"OBS 直播开始（OBS Stream Started）","OBS Stream Started → Set Gate State: ON":"OBS Stream Started → Set Gate State: ON","OBS Stream Stopped":"OBS 直播停止（OBS Stream Stopped）","OBS Stream Stopped → Set Gate State: OFF":"OBS Stream Stopped → Set Gate State: OFF","OBS Studio":"OBS Studio","OBS Studio action list in the Social Stream Ninja Event Flow Editor":"Social Stream Ninja Event Flow 编辑器中的 OBS Studio 操作列表","OBS WebSocket Tester":"OBS WebSocket 测试器","OBS WebSocket v5":"OBS WebSocket v5","OBS WebSocket v5 is built into OBS 28 and newer. Social Stream Ninja uses it for full OBS control and media events.":"OBS WebSocket v5 内置于 OBS 28 及更新版本。Social Stream Ninja 使用它进行完整的 OBS 控制并接收媒体事件。","OBS event payload reference":"OBS 事件载荷参考","OBS finishes saving a replay.":"OBS 完成保存回放。","OBS names must match exactly, including spaces and punctuation. Source actions target the OBS input name, not the scene-item label if it was renamed independently.":"OBS 名称必须完全匹配，包括空格和标点符号。来源操作以 OBS 输入名称为目标，而不是独立重命名后的场景项目标签。","OBS will not connect":"OBS 无法连接","Open tester":"打开测试器","Open the":"打开","Option":"选项","Other controls":"其他控件","Pause":"暂停（Pause）","Place":"放置","Play":"播放（Play）","Play / Pause":"播放 / 暂停（Play / Pause）","Play/resume, pause, restart, stop, next, or previous.":"播放/继续、暂停、重新开始、停止、下一个或上一个。","Privileged users can use !start / !stop":"特权用户可以使用 !start / !stop","Problem":"问题","Read from file":"从文件读取（Read from file）","Recipes":"实用方案","Recording starts.":"录制开始。","Recording stops.":"录制停止。","Refresh Browser Source":"刷新浏览器源（Refresh Browser Source）","Refresh an alert page":"刷新提醒页面","Reloads a Browser Source without cache.":"重新加载浏览器源，不使用缓存。","Remote OBS control panel":"远程 OBS 控制面板","Replay Buffer":"回放缓冲区","Replay save fails":"保存回放失败","Replay workflow":"回放工作流","Requirement":"要求","Restart":"重新开始（Restart）","Restart / Stop":"重新开始 / 停止（Restart / Stop）","Run something after a video":"视频结束后运行某项操作","Save Replay Buffer":"保存回放缓冲区（Save Replay Buffer）","Saves the currently running replay buffer.":"保存当前正在运行的回放缓冲区。","Scene/source/filter is not found":"找不到场景/来源/滤镜","Send Message":"发送消息（Send Message）","Set Source Volume":"设置来源音量（Set Source Volume）","Set Text Source":"设置文本源（Set Text Source）","Set Text Source and flow variables":"Set Text Source 和流程变量","Set Text Source properties with counter template variables":"Set Text Source 属性，带有计数器模板变量","Set Text Source writes the resolved value straight into the named OBS text input.":"Set Text Source 将解析后的值直接写入指定名称的 OBS 文本输入。","Sets an input from":"将输入设置为从","Setup":"设置","Show, hide, or toggle a scene item. Scene and Group are optional targeting fields.":"显示、隐藏或切换场景项目。Scene 和 Group 是可选的目标字段。","Shows the active scene in the Streaming Chat dock.":"在 Streaming Chat 停靠面板中显示当前场景。","Shutdown source when not visible":"不可见时关闭来源（Shutdown source when not visible）","Social Stream Ninja also has older OBS Browser Source controls in the Streaming Chat dock. These do not use the Flow Actions WebSocket bridge.":"Social Stream Ninja 在 Streaming Chat 停靠面板中也有旧版 OBS 浏览器源控件。这些控件不使用 Flow Actions WebSocket 桥接。","Social Stream Ninja logo":"Social Stream Ninja 标志","Start Recording":"开始录制（Start Recording）","Start Streaming":"开始直播（Start Streaming）","Start with a template → Intermediate → Hourly message while OBS is live":"从模板开始 → 中级 → OBS 直播期间每小时发送消息（Start with a template → Intermediate → Hourly message while OBS is live）","Start, stop, or toggle the replay buffer.":"启动、停止或切换回放缓冲区。","Start/Stop Streaming and Start/Stop Recording act immediately. Use restrictive triggers, permissions, and cooldowns so ordinary chat messages cannot fire them accidentally.":"Start/Stop Streaming 和 Start/Stop Recording 会立即执行。使用严格的触发器、权限和冷却时间，防止普通聊天消息意外触发它们。","Starts OBS recording.":"开始 OBS 录制。","Starts or stops streaming from trusted chat users.":"由可信聊天用户启动或停止直播。","Starts the configured OBS stream output.":"启动已配置的 OBS 直播输出。","Stop":"停止（Stop）","Stop Recording":"停止录制（Stop Recording）","Stop Streaming":"停止直播（Stop Streaming）","Stops OBS recording.":"停止 OBS 录制。","Stops the OBS stream output.":"停止 OBS 直播输出。","Streaming Chat dock paired to a dock running inside OBS.":"与 OBS 内运行的停靠面板配对的 Streaming Chat 停靠面板。","Streaming reaches the started state.":"直播达到启动状态。","Streaming reaches the stopped state.":"直播达到停止状态。","Switches the active program scene by exact scene name.":"按精确的场景名称切换当前节目场景。","Text does not change":"文本没有变化","The OBS Studio group contains scene, source, text, media, audio, filter, output, and replay-buffer controls.":"OBS Studio 分组包含场景、来源、文本、媒体、音频、滤镜、输出和回放缓冲区控件。","The active program scene changes.":"当前节目场景发生变化。","The text field supports normal message placeholders such as":"文本字段支持普通消息占位符，例如","These start a flow when OBS reports a matching event. They arrive as":"OBS 报告匹配事件时，这些触发器会启动流程。它们以以下形式到达：","Time Interval (3600 seconds) → ON/OFF Switch → Send Message":"Time Interval (3600 seconds) → ON/OFF Switch → Send Message","Timing:":"时序：","Toggle Filter":"切换滤镜（Toggle Filter）","Toggle Source":"切换来源（Toggle Source）","Tools → WebSocket Server Settings":"工具 → WebSocket 服务器设置（Tools → WebSocket Server Settings）","Trigger":"触发器","Triggers":"触发器","Troubleshooting":"故障排除","Two OBS connection modes":"两种 OBS 连接模式","Updates Text (GDI+) or Text (FreeType 2), with template placeholders.":"使用模板占位符更新 Text (GDI+) 或 Text (FreeType 2)。","Use OBS WebSocket v5 and a real media input. Looping media does not reach an ended state.":"使用 OBS WebSocket v5 和真实媒体输入。循环媒体不会达到结束状态。","Use Text (GDI+) or Text (FreeType 2), confirm the input name, and disable":"使用 Text (GDI+) 或 Text (FreeType 2)，确认输入名称，并禁用","Use a playlist-capable source such as VLC Video Source.":"使用支持播放列表的来源，例如 VLC Video Source。","Use the":"使用","Useful data":"实用数据","Volume, mute, and filters":"音量、静音和滤镜","WebSocket":"WebSocket","WebSocket or Browser Source API fallback":"WebSocket 或浏览器源 API 回退方式","WebSocket server is enabled, URL is":"WebSocket 服务器已启用，URL 为","What it does":"功能","What it supports":"支持内容","When it fires":"触发时机","after the counter/check path and use:":"放在计数器/检查路径之后，并使用：","and create or edit a flow.":"并创建或编辑流程。","before starting your stream":"在开始直播之前","dB.":"dB.","ends playback and resets the input.":"结束播放并重置输入。","holds its current position.":"保持当前位置。","in the Actions list and drag in the OBS action you need.":"在 Actions 列表中，并拖入所需的 OBS 操作。","is effectively silent. Mute is a separate state. Toggle Filter changes only the enabled state of an existing filter; it does not edit filter settings.":"实际相当于静音。Mute 是单独的状态。Toggle Filter 仅更改现有滤镜的启用状态，不会编辑滤镜设置。","is the obsolete v4 default.":"是已过时的 v4 默认值。","is unchanged gain, negative values are quieter, and":"表示增益不变，负值更安静，而","on the Flow Actions Browser Source, or keep the page open elsewhere.":"在 Flow Actions 浏览器源上，或在其他位置保持页面打开。","only when OBS requires authentication. Add":"仅当 OBS 要求身份验证时。添加","resumes paused media.":"继续播放暂停的媒体。","section and set the OBS WebSocket URL and optional password.":"部分，并设置 OBS WebSocket URL 和可选密码。","starts from the beginning.":"从头开始。","tester":"测试器","the interval runs on its own schedule, so the first reminder may arrive sooner than one hour after streaming starts. Later reminders repeat every hour while the switch is ON. Change the Time Interval value for a different frequency; it is measured in seconds.":"间隔按自己的计划运行，因此第一次提醒可能在开播后一小时以内到达。之后，当开关为 ON 时，提醒每小时重复。更改 Time Interval 值可调整频率；单位为秒。","to":"为","to choose your chat platform (the example uses Twitch) and message. Choose a platform or All Platforms; Reply to Source cannot reply to an OBS event or timer tick.":"以选择聊天平台（示例使用 Twitch）和消息。选择某个平台或 All Platforms；Reply to Source 无法回复 OBS 事件或计时器触发。","to confirm the connection before building a flow.":"在构建流程之前确认连接。","to show a small connection-status badge while diagnosing problems.":"在诊断问题时显示小型连接状态徽章。","to start/stop it, then":"以启动/停止它，然后","to write the recent buffered segment to disk.":"将最近缓冲的片段写入磁盘。","uses dB, matching the OBS mixer scale:":"使用 dB，与 OBS 混音器刻度一致：","when the source must keep controlling OBS while hidden.":"当来源必须在隐藏时继续控制 OBS。","→ alert action → Delay → restore to":"→ 提醒操作 → Delay → 恢复到","→ confirm":"→ 确认","→ confirm scenes/inputs → test the individual request → test the full Event Flow.":"→ 确认场景/输入 → 测试单独请求 → 测试完整 Event Flow。","→ moderator condition →":"→ 版主条件 →","→ permission condition →":"→ 权限条件 →"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/actions/obs-control-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="shell">
+        <header>
+            <h1>使用 Social Stream Ninja 控制 OBS</h1>
+            <p>直接从 Event Flow 控制 OBS，无需 Streamer.bot。本指南涵盖设置、所有 OBS 触发器和操作、实用方案，以及旧版停靠面板/浏览器源控件。</p>
+            <nav class="quick-links" aria-label="指南章节">
+                <a href="#setup">设置</a>
+                <a href="#triggers">触发器</a>
+                <a href="#actions">操作</a>
+                <a href="#recipes">实用方案</a>
+                <a href="#other-controls">其他控件</a>
+                <a href="#troubleshooting">故障排除</a>
+            </nav>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/obs-control-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/obs-control-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/obs-control-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/obs-control-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/obs-control-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/obs-control-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/obs-control-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="obs-control-guide.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/obs-control-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/obs-control-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/obs-control-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/obs-control-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/obs-control-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/obs-control-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/obs-control-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/obs-control-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/obs-control-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></header>
+
+        <main>
+            <section id="setup">
+                <h2>1. 将 Flow Actions 连接到 OBS</h2>
+                <p class="lead">OBS WebSocket v5 内置于 OBS 28 及更新版本。Social Stream Ninja 使用它进行完整的 OBS 控制并接收媒体事件。</p>
+                <ol>
+                    <li>在 OBS 中，打开 <strong>工具 → WebSocket 服务器设置（Tools → WebSocket Server Settings）</strong>.</li>
+                    <li>启用 WebSocket 服务器。保留默认端口 <code>4455</code>；如果需要，可设置密码。</li>
+                    <li>在 Social Stream Ninja 中，打开 <strong>Flow Actions</strong> 部分，并设置 OBS WebSocket URL 和可选密码。</li>
+                    <li>复制 Flow Actions URL 并保持打开。对于叠加层/音频操作，建议使用 OBS 浏览器源。</li>
+                    <li>使用 <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">OBS WebSocket 测试器</a> 在构建流程之前确认连接。</li>
+                </ol>
+
+                <div class="panel">
+                    <strong>直接 URL 示例</strong><br>
+                    <code>https://socialstream.ninja/actions.html?session=YOUR_SESSION&amp;obsws=ws://127.0.0.1:4455</code><br><br>
+                    添加 <code>&amp;obspw=YOUR_PASSWORD</code> 仅当 OBS 要求身份验证时。添加 <code>&amp;obsdebug=1</code> 在诊断问题时显示小型连接状态徽章。
+                </div>
+
+                <div class="callout warning">
+                    <strong>保持 Flow Actions 页面运行。</strong> 它是接收 Event Flow 操作并发送 OBS WebSocket 请求的桥接。如果它是 OBS 浏览器源，请关闭 <em>不可见时关闭来源（Shutdown source when not visible）</em> 当来源必须在隐藏时继续控制 OBS。
+                </div>
+
+                <div class="diagram">Chat / stream event
+        │
+        ▼
+Social Stream Ninja Event Flow
+        │  same session ID
+        ▼
+Flow Actions page (actions.html)
+        │  OBS WebSocket v5 · ws://127.0.0.1:4455
+        ▼
+OBS Studio</div>
+
+                <h3>两种 OBS 连接模式</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>模式</th><th>支持内容</th><th>要求</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>OBS WebSocket v5</strong></td><td>本指南中的每个触发器和操作。</td><td>OBS 28+、已启用 WebSocket 服务器、Flow Actions 页面已打开。</td></tr>
+                            <tr><td><strong>OBS 浏览器源 API</strong></td><td>用于场景切换、开始/停止直播、开始/停止录制和保存回放缓冲区的回退方式。</td><td>以 Advanced Access Level 加载在 OBS 内的 Flow Actions。来源、滤镜、文本、音量、媒体、刷新和媒体结束功能仍需要 WebSocket。</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="build-flow">
+                <h2>2. 向流程添加 OBS 节点</h2>
+                <ol>
+                    <li>打开 <a href="../../actions/index.html" target="_blank" rel="noopener">Event Flow 编辑器</a> 并创建或编辑流程。</li>
+                    <li>将触发器拖到画布上。</li>
+                    <li>展开 <strong>OBS Studio</strong> 在 Actions 列表中，并拖入所需的 OBS 操作。</li>
+                    <li>将触发器连接到操作，配置精确的 OBS 场景/来源名称，保存并启用流程。</li>
+                </ol>
+                <figure>
+                    <img src="../../actions/img/obs-control-actions.png" alt="Social Stream Ninja Event Flow 编辑器中的 OBS Studio 操作列表">
+                    <figcaption>OBS Studio 分组包含场景、来源、文本、媒体、音频、滤镜、输出和回放缓冲区控件。</figcaption>
+                </figure>
+                <div class="callout">
+                    OBS 名称必须完全匹配，包括空格和标点符号。来源操作以 OBS 输入名称为目标，而不是独立重命名后的场景项目标签。
+                </div>
+            </section>
+
+            <section id="triggers">
+                <h2>3. OBS 触发器</h2>
+                <p>OBS 报告匹配事件时，这些触发器会启动流程。它们以以下形式到达： <code>type: "obs"</code>；OBS 专属详情位于 <code>meta</code>.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>触发器</th><th>触发时机</th><th>实用数据</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>OBS 直播开始（OBS Stream Started）</strong></td><td>直播达到启动状态。</td><td><code>meta.outputState</code>, <code>meta.outputActive</code></td></tr>
+                            <tr><td><strong>OBS 直播停止（OBS Stream Stopped）</strong></td><td>直播达到停止状态。</td><td><code>meta.outputState</code>, <code>meta.outputActive</code></td></tr>
+                            <tr><td><strong>OBS 录制开始（OBS Recording Started）</strong></td><td>录制开始。</td><td><code>meta.outputState</code></td></tr>
+                            <tr><td><strong>OBS 录制停止（OBS Recording Stopped）</strong></td><td>录制停止。</td><td><code>meta.outputState</code></td></tr>
+                            <tr><td><strong>OBS 场景已更改（OBS Scene Changed）</strong></td><td>当前节目场景发生变化。</td><td><code>meta.sceneName</code></td></tr>
+                            <tr><td><strong>OBS 媒体结束（OBS Media Ended）</strong> <span class="tag">WebSocket</span></td><td>媒体输入完成播放。可按精确的 Media Source Name 进行筛选。</td><td><code>meta.inputName</code>, <code>meta.inputUuid</code></td></tr>
+                            <tr><td><strong>OBS 回放缓冲区已保存（OBS Replay Buffer Saved）</strong></td><td>OBS 完成保存回放。</td><td><code>meta.savedReplayPath</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="actions">
+                <h2>4. OBS 操作</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>操作</th><th>配置和行为</th><th>连接</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>切换场景（Change Scene）</strong></td><td>按精确的场景名称切换当前节目场景。</td><td>WebSocket 或浏览器源 API 回退方式</td></tr>
+                            <tr><td><strong>切换来源（Toggle Source）</strong></td><td>显示、隐藏或切换场景项目。Scene 和 Group 是可选的目标字段。</td><td>WebSocket</td></tr>
+                            <tr><td><strong>设置文本源（Set Text Source）</strong></td><td>使用模板占位符更新 Text (GDI+) 或 Text (FreeType 2)。</td><td>WebSocket</td></tr>
+                            <tr><td><strong>控制媒体源（Control Media Source）</strong></td><td>播放/继续、暂停、重新开始、停止、下一个或上一个。</td><td>WebSocket</td></tr>
+                            <tr><td><strong>设置来源音量（Set Source Volume）</strong></td><td>将输入设置为从 <code>-100</code> 为 <code>+26</code> dB.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>刷新浏览器源（Refresh Browser Source）</strong></td><td>重新加载浏览器源，不使用缓存。</td><td>WebSocket</td></tr>
+                            <tr><td><strong>切换滤镜（Toggle Filter）</strong></td><td>启用、禁用或切换指定名称的来源滤镜。</td><td>WebSocket</td></tr>
+                            <tr><td><strong>静音/取消音频静音（Mute/Unmute Audio）</strong></td><td>将输入静音、取消静音或切换静音。</td><td>WebSocket</td></tr>
+                            <tr><td><strong>开始录制（Start Recording）</strong></td><td>开始 OBS 录制。</td><td>WebSocket 或浏览器源 API 回退方式</td></tr>
+                            <tr><td><strong>停止录制（Stop Recording）</strong></td><td>停止 OBS 录制。</td><td>WebSocket 或浏览器源 API 回退方式</td></tr>
+                            <tr><td><strong>开始直播（Start Streaming）</strong></td><td>启动已配置的 OBS 直播输出。</td><td>WebSocket 或浏览器源 API 回退方式</td></tr>
+                            <tr><td><strong>停止直播（Stop Streaming）</strong></td><td>停止 OBS 直播输出。</td><td>WebSocket 或浏览器源 API 回退方式</td></tr>
+                            <tr><td><strong>控制回放缓冲区（Control Replay Buffer）</strong></td><td>启动、停止或切换回放缓冲区。</td><td>WebSocket</td></tr>
+                            <tr><td><strong>保存回放缓冲区（Save Replay Buffer）</strong></td><td>保存当前正在运行的回放缓冲区。</td><td>WebSocket 或浏览器源 API 回退方式</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Set Text Source 和流程变量</h3>
+                <p>文本字段支持普通消息占位符，例如 <code>{username}</code>, <code>{message}</code>, <code>{source}</code>，以及 <code>{donation}</code>，以及前面流程节点添加的值，例如 <code>{counterValue}</code>, <code>{counterTarget}</code>，以及 <code>{counterRemaining}</code>.</p>
+                <div class="panel"><code>{username}: now {counterValue}, need {counterTarget}</code></div>
+                <figure>
+                    <img src="../../actions/img/obs-set-text-properties.png" alt="Set Text Source 属性，带有计数器模板变量">
+                    <figcaption>Set Text Source 将解析后的值直接写入指定名称的 OBS 文本输入。</figcaption>
+                </figure>
+                <div class="callout warning">
+                    对于 Text (GDI+) 或 Text (FreeType 2) 来源，关闭 <em>从文件读取（Read from file）</em>。否则 OBS 可能继续显示文件内容，而不是 Event Flow 发送的文本。
+                </div>
+
+                <h3>媒体源控件</h3>
+                <div class="grid">
+                    <div class="card"><h3>播放 / 暂停（Play / Pause）</h3><p><strong>播放（Play）</strong> 继续播放暂停的媒体。 <strong>暂停（Pause）</strong> 保持当前位置。</p></div>
+                    <div class="card"><h3>重新开始 / 停止（Restart / Stop）</h3><p><strong>重新开始（Restart）</strong> 从头开始。 <strong>停止（Stop）</strong> 结束播放并重置输入。</p></div>
+                    <div class="card"><h3>下一个 / 上一个（Next / Previous）</h3><p>在支持播放列表的输入（例如 VLC Video Source）中移动。单文件 Media Source 可能忽略这些操作。</p></div>
+                </div>
+
+                <h3>音量、静音和滤镜</h3>
+                <p><strong>设置来源音量（Set Source Volume）</strong> 使用 dB，与 OBS 混音器刻度一致： <code>0 dB</code> 表示增益不变，负值更安静，而 <code>-100 dB</code> 实际相当于静音。Mute 是单独的状态。Toggle Filter 仅更改现有滤镜的启用状态，不会编辑滤镜设置。</p>
+
+                <h3>回放缓冲区</h3>
+                <p>首先在以下位置启用回放缓冲区： <strong>OBS 设置 → 输出（Settings → Output）</strong>。使用 <strong>控制回放缓冲区（Control Replay Buffer）</strong> 以启动/停止它，然后 <strong>保存回放缓冲区（Save Replay Buffer）</strong> 将最近缓冲的片段写入磁盘。</p>
+
+                <div class="callout danger">
+                    <strong>直播输出警告：</strong> Start/Stop Streaming 和 Start/Stop Recording 会立即执行。使用严格的触发器、权限和冷却时间，防止普通聊天消息意外触发它们。
+                </div>
+            </section>
+
+            <section id="recipes">
+                <h2>5. 实用方案</h2>
+                <div class="panel" id="hourly-message">
+                    <h3>OBS 直播期间每小时发送消息</h3>
+                    <p>在 Event Flow 编辑器中，选择 <strong>从模板开始 → 中级 → OBS 直播期间每小时发送消息（Start with a template → Intermediate → Hourly message while OBS is live）</strong>。它初始为禁用状态，在一个流程中包含三个分支：</p>
+                    <ul>
+                        <li><strong>OBS Stream Started → Set Gate State: ON</strong></li>
+                        <li><strong>Time Interval (3600 seconds) → ON/OFF Switch → Send Message</strong></li>
+                        <li><strong>OBS Stream Stopped → Set Gate State: OFF</strong></li>
+                    </ul>
+                    <p>两个 Set Gate State 操作已经指向同一个开关，其默认值为 OFF。编辑 <strong>发送消息（Send Message）</strong> 以选择聊天平台（示例使用 Twitch）和消息。选择某个平台或 All Platforms；Reply to Source 无法回复 OBS 事件或计时器触发。</p>
+                    <p><a href="#setup">将 Flow Actions 连接到 OBS</a>，保持 Social Stream 和目标聊天连接，然后保存并启用流程 <strong>在开始直播之前</strong>。开关会等待 OBS 开始事件；在直播已经进行时加载它不会将其设为 ON。重启 Social Stream 也会将开关重置为 OFF。</p>
+                    <p><strong>时序：</strong> 间隔按自己的计划运行，因此第一次提醒可能在开播后一小时以内到达。之后，当开关为 ON 时，提醒每小时重复。更改 Time Interval 值可调整频率；单位为秒。</p>
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <h3>OBS 中的计数器文本</h3>
+                        <p>放置 <strong>设置文本源（Set Text Source）</strong> 放在计数器/检查路径之后，并使用：</p>
+                        <p><code>{username}: now {counterValue}, need {counterTarget}</code></p>
+                    </div>
+                    <div class="card">
+                        <h3>视频结束后运行某项操作</h3>
+                        <p><strong>OBS 媒体结束（OBS Media Ended）</strong> （筛选为 <code>Intro Video</code>) → <strong>切换场景（Change Scene）</strong> 为 <code>Main</code>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>由聊天控制的媒体重启</h3>
+                        <p><strong>消息等于（Message Equals）</strong> <code>!replayintro</code> → 权限条件 → <strong>控制媒体源：重新开始（Control Media Source: Restart）</strong>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>刷新提醒页面</h3>
+                        <p><strong>消息等于（Message Equals）</strong> <code>!refreshalerts</code> → 版主条件 → <strong>刷新浏览器源（Refresh Browser Source）</strong>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>提醒期间降低音乐音量</h3>
+                        <p><strong>设置来源音量（Set Source Volume）</strong> 为 <code>-24 dB</code> → 提醒操作 → Delay → 恢复到 <code>0 dB</code>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>回放工作流</h3>
+                        <p><strong>OBS 直播开始（OBS Stream Started）</strong> → <strong>控制回放缓冲区：开始（Control Replay Buffer: Start）</strong>；另一个可信命令运行 <strong>保存回放缓冲区（Save Replay Buffer）</strong>.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="other-controls">
+                <h2>6. 其他内置 OBS 控件</h2>
+                <p>Social Stream Ninja 在 Streaming Chat 停靠面板中也有旧版 OBS 浏览器源控件。这些控件不使用 Flow Actions WebSocket 桥接。</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>选项</th><th>功能</th><th>要求</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>当前 OBS 场景指示器</strong></td><td>在 Streaming Chat 停靠面板中显示当前场景。</td><td>以读取权限加载在 OBS 内的停靠面板。</td></tr>
+                            <tr><td><strong>访客可以使用 !cycle</strong></td><td>循环切换到下一个 OBS 场景，频率限制为每 10 秒一次。</td><td>启用弹出窗口选项；停靠面板以 Advanced 权限加载在 OBS 内。</td></tr>
+                            <tr><td><strong>特权用户可以使用 !start / !stop</strong></td><td>由可信聊天用户启动或停止直播。</td><td>启用弹出窗口选项；停靠面板以 Full/Advanced 控制权限加载在 OBS 内。</td></tr>
+                            <tr><td><strong>远程 OBS 控制面板</strong></td><td>当目标 OBS 停靠面板授予所需控制级别时，显示场景，并可切换场景或切换直播/录制。</td><td>与 OBS 内运行的停靠面板配对的 Streaming Chat 停靠面板。</td></tr>
+                            <tr><td><strong>OBS WebSocket 测试器</strong></td><td>在使用 Event Flow 之前检查版本、连接、场景和单独请求。</td><td><a href="../../obs-websocket-test.html" target="_blank" rel="noopener">打开测试器</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>7. 故障排查</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>问题</th><th>检查</th></tr></thead>
+                        <tbody>
+                            <tr><td>没有任何反应</td><td>流程已保存并启用；Flow Actions 已打开；两者使用相同的会话 ID。</td></tr>
+                            <tr><td>OBS 无法连接</td><td>WebSocket 服务器已启用，URL 为 <code>ws://127.0.0.1:4455</code>，并且密码匹配。端口 <code>4444</code> 是已过时的 v4 默认值。</td></tr>
+                            <tr><td>找不到场景/来源/滤镜</td><td>复制精确的 OBS 名称。对于可见性，如果项目嵌套或不在当前场景中，请设置 Scene or Group。</td></tr>
+                            <tr><td>文本没有变化</td><td>使用 Text (GDI+) 或 Text (FreeType 2)，确认输入名称，并禁用 <em>从文件读取（Read from file）</em>.</td></tr>
+                            <tr><td>Media Ended 从不触发</td><td>使用 OBS WebSocket v5 和真实媒体输入。循环媒体不会达到结束状态。</td></tr>
+                            <tr><td>Next/Previous 没有效果</td><td>使用支持播放列表的来源，例如 VLC Video Source。</td></tr>
+                            <tr><td>保存回放失败</td><td>在 OBS 输出设置中启用回放缓冲区，并在保存前启动它。</td></tr>
+                            <tr><td>场景变化时操作停止</td><td>禁用 <em>不可见时关闭来源（Shutdown source when not visible）</em> 在 Flow Actions 浏览器源上，或在其他位置保持页面打开。</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="panel">
+                    诊断顺序：打开 <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">测试器</a> → 确认 <code>GetVersion</code> → 确认场景/输入 → 测试单独请求 → 测试完整 Event Flow。
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            更多帮助： <a href="event-flow-guide.html">Event Flow 指南</a> · <a href="../docs/event-reference.html#obs-flow-actions">OBS 事件载荷参考</a> · <a href="../../obs-websocket-test.html">OBS WebSocket 测试器</a>
+        </footer>
+    </div>
+</body>
+</html>

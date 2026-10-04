@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="OBS WebSocket&#x27;i Social Stream Ninja Etkinlik Akışı&#x27;na bağlayın. OBS eylem ve etkinliklerini yapılandırın, bağlantıyı test edin ve otomasyon sorunlarını giderin.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/tr/actions/obs-control-guide.html">
+    <meta property="og:title" content="OBS Kontrol Rehberi - Social Stream Ninja">
+    <meta property="og:description" content="OBS WebSocket&#x27;i Social Stream Ninja Etkinlik Akışı&#x27;na bağlayın. OBS eylem ve etkinliklerini yapılandırın, bağlantıyı test edin ve otomasyon sorunlarını giderin.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/tr/actions/obs-control-guide.html">
+    <meta name="twitter:title" content="OBS Kontrol Rehberi - Social Stream Ninja">
+    <meta name="twitter:description" content="OBS WebSocket&#x27;i Social Stream Ninja Etkinlik Akışı&#x27;na bağlayın. OBS eylem ve etkinliklerini yapılandırın, bağlantıyı test edin ve otomasyon sorunlarını giderin.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Kontrol Rehberi - Social Stream Ninja</title>
+    <link rel="canonical" href="https://socialstream.ninja/tr/actions/obs-control-guide.html">
+    <style>
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
+            color: #172033;
+            background: linear-gradient(145deg, #090d18, #172554 48%, #3b0764);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        }
+        .shell {
+            max-width: 1160px;
+            margin: 0 auto;
+            overflow: hidden;
+            border-radius: 20px;
+            background: #fbfcff;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.45);
+        }
+        header {
+            padding: 58px 58px 48px;
+            color: #fff;
+            background: radial-gradient(circle at 85% 10%, rgba(168, 85, 247, 0.5), transparent 32%),
+                        linear-gradient(135deg, #172554, #5b21b6);
+        }
+        header h1 { margin: 0 0 12px; font-size: 2.8rem; line-height: 1.08; }
+        header p { max-width: 720px; margin: 0; font-size: 1.15rem; line-height: 1.6; opacity: 0.94; }
+        .quick-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+        .quick-links a {
+            padding: 9px 13px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 999px;
+            color: #fff;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        main { padding: 44px 58px 70px; }
+        section { margin: 0 0 58px; }
+        h2 { margin: 0 0 16px; color: #312e81; font-size: 2rem; }
+        h3 { margin: 28px 0 10px; color: #4c1d95; font-size: 1.35rem; }
+        p, li { line-height: 1.62; }
+        p { margin: 0 0 13px; }
+        ol, ul { margin: 14px 0; padding-left: 25px; }
+        li { margin: 7px 0; }
+        a { color: #4338ca; }
+        code {
+            padding: 2px 6px;
+            border-radius: 5px;
+            color: #3730a3;
+            background: #eef2ff;
+            font-family: Consolas, "Courier New", monospace;
+            overflow-wrap: anywhere;
+        }
+        .lead {
+            margin: -8px 0 24px;
+            color: #475569;
+            font-size: 1.08rem;
+        }
+        .panel, .callout {
+            margin: 20px 0;
+            padding: 20px 23px;
+            border-radius: 13px;
+            border: 1px solid #dbe3f3;
+            background: #f7f9ff;
+        }
+        .callout { border-left: 5px solid #4f46e5; }
+        .callout.warning { border-left-color: #d97706; background: #fffbeb; }
+        .callout.danger { border-left-color: #dc2626; background: #fef2f2; }
+        .diagram {
+            margin: 22px 0;
+            padding: 20px 22px;
+            overflow-x: auto;
+            border-radius: 13px;
+            color: #e0e7ff;
+            background: #111827;
+            font-family: Consolas, "Courier New", monospace;
+            line-height: 1.65;
+            white-space: pre;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .card {
+            padding: 20px;
+            border: 1px solid #e1e7f2;
+            border-radius: 14px;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(30, 41, 59, 0.07);
+        }
+        .card h3 { margin-top: 0; }
+        .table-wrap { margin: 20px 0; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 720px; }
+        th, td { padding: 12px 14px; border-bottom: 1px solid #dde4f0; text-align: left; vertical-align: top; line-height: 1.5; }
+        th { color: #312e81; background: #eef2ff; }
+        tbody tr:nth-child(even) { background: #fafbff; }
+        .tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 999px;
+            color: #155e75;
+            background: #cffafe;
+            font-size: 0.78rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        figure { margin: 24px 0; text-align: center; }
+        figure img {
+            max-width: 100%;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            box-shadow: 0 12px 34px rgba(30, 41, 59, 0.14);
+        }
+        figcaption { margin-top: 9px; color: #64748b; font-size: 0.9rem; }
+        footer { padding: 23px 58px; color: #c7d2fe; background: #111827; }
+        footer a { color: #a5f3fc; }
+        @media (max-width: 720px) {
+            body { padding: 0; }
+            .shell { border-radius: 0; }
+            header, main, footer { padding-left: 22px; padding-right: 22px; }
+            header { padding-top: 40px; }
+            header h1 { font-size: 2.15rem; }
+            h2 { font-size: 1.65rem; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"actions/obs-control-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{"(filter to":"(şuna göre filtrele:",", and":", ve",", and password matches. Port":", ve parola eşleşiyor. Şu bağlantı noktası:",", keep Social Stream and the destination chat connected, then save and enable the flow":", Social Stream'i ve hedef sohbeti bağlı tutun, ardından akışı kaydedip etkinleştirin",", plus values added by earlier flow nodes such as":", ayrıca önceki akış düğümlerinin eklediği şu gibi değerler:",". It starts disabled and contains three branches in one flow:":". Devre dışı başlar ve tek akışta üç dal içerir:",". Otherwise OBS may continue displaying the file contents instead of the text sent by Event Flow.":". Aksi halde OBS, Etkinlik Akışı'nın gönderdiği metin yerine dosya içeriğini göstermeyi sürdürebilir.",". The switch waits for an OBS start event; loading it during an existing stream does not turn it ON. Restarting Social Stream also resets the switch to OFF.":". Anahtar OBS başlangıç etkinliğini bekler; devam eden yayında yüklemek onu AÇIK yapmaz. Social Stream'i yeniden başlatmak da anahtarı KAPALI olarak sıfırlar.",". Use":". Kullanın:","1. Connect Flow Actions to OBS":"1. Akış Eylemleri'ni OBS'ye bağlayın","2. Add OBS nodes to a flow":"2. Akışa OBS düğümleri ekleyin","3. OBS triggers":"3. OBS tetikleyicileri","4. OBS actions":"4. OBS eylemleri","5. Useful recipes":"5. Kullanışlı tarifler","6. Other built-in OBS controls":"6. Diğer yerleşik OBS kontrolleri","7. Troubleshooting":"7. Sorun giderme","; OBS-specific details are under":"; OBS'ye özel ayrıntılar şu alandadır:","; a separate trusted command runs":"; ayrı güvenilir komut şunu çalıştırır:","; set a password if wanted.":"; isterseniz parola ayarlayın.","A media input finishes playback. Optionally filter by exact Media Source Name.":"Medya girişinin oynatılması biter. İsteğe bağlı olarak tam Medya Kaynağı Adı ile filtreleyin.","Action":"İşlem","Actions":"Eylemler","Actions stop when a scene changes":"Sahne değişince eylemler duruyor","Add":"Ekleyin:","Both Set Gate State actions already target the same switch, which defaults to OFF. Edit":"Her iki Geçit Durumunu Ayarla eylemi de varsayılanı KAPALI olan aynı anahtarı hedefler. Şunu düzenleyin:","Change Scene":"Sahne Değiştir","Chat / stream event │ ▼ Social Stream Ninja Event Flow │ same session ID ▼ Flow Actions page (actions.html) │ OBS WebSocket v5 · ws://127.0.0.1:4455 ▼ OBS Studio":"Sohbet / yayın etkinliği │ ▼ Social Stream Ninja Etkinlik Akışı │ aynı oturum kimliği ▼ Akış Eylemleri sayfası (actions.html) │ OBS WebSocket v5 · ws://127.0.0.1:4455 ▼ OBS Studio","Chat-controlled media restart":"Sohbet kontrollü medya yeniden başlatma","Check":"Kontrol edin:","Checks version, connection, scenes, and individual requests before using Event Flow.":"Etkinlik Akışı'nı kullanmadan önce sürümü, bağlantıyı, sahneleri ve tek tek istekleri kontrol eder.","Configuration and behavior":"Yapılandırma ve davranış","Connect Flow Actions to OBS":"Akış Eylemleri'ni OBS'ye bağlayın","Connect OBS WebSocket to Social Stream Ninja Event Flow. Configure OBS actions and events, test your connection and troubleshoot automation.":"OBS WebSocket'i Social Stream Ninja Etkinlik Akışı'na bağlayın. OBS eylem ve etkinliklerini yapılandırın, bağlantıyı test edin ve otomasyon sorunlarını giderin.","Connect the trigger to the action, configure the exact OBS scene/source names, save, and enable the flow.":"Tetikleyiciyi eyleme bağlayın, OBS sahne/kaynak adlarını tam olarak yapılandırın, kaydedin ve akışı etkinleştirin.","Connection":"Bağlantı","Control Media Source":"Medya Kaynağını Kontrol Et","Control Media Source: Restart":"Medya Kaynağını Kontrol Et: Yeniden Başlat","Control OBS directly from Event Flow without Streamer.bot. This guide covers setup, every OBS trigger and action, practical recipes, and the older dock/browser-source controls.":"OBS'yi doğrudan Etkinlik Akışı'ndan kontrol edin — Streamer.bot gerekmez. Bu rehber kurulumu, tüm OBS tetikleyici ve eylemlerini, pratik tarifleri ve eski panel/tarayıcı kaynağı kontrollerini kapsar.","Control Replay Buffer":"Tekrar Arabelleğini Kontrol Et","Control Replay Buffer: Start":"Tekrar Arabelleğini Kontrol Et: Başlat","Copy the Flow Actions URL and keep it open. An OBS Browser Source is recommended for overlay/audio actions.":"Akış Eylemleri URL'sini kopyalayıp açık tutun. Katman/ses eylemleri için OBS Tarayıcı Kaynağı önerilir.","Copy the exact OBS name. For visibility, set Scene or Group when the item is nested or outside the current scene.":"OBS adını aynen kopyalayın. Görünürlük için öğe iç içeyse veya mevcut sahne dışındaysa Sahne veya Grup ayarlayın.","Counter text in OBS":"OBS'de sayaç metni","Current OBS scene indicator":"Mevcut OBS sahnesi göstergesi","Cycles to the next OBS scene, rate-limited to once per 10 seconds.":"10 saniyede birle sınırlı olarak sonraki OBS sahnesine geçer.","Diagnostic order: open the":"Tanılama sırası: şunu açın:","Direct URL example":"Doğrudan URL örneği","Disable":"Devre dışı bırak","Displays scenes and can switch scenes or toggle streaming/recording when the target OBS dock grants the required control level.":"Hedef OBS paneli gereken kontrol düzeyini veriyorsa sahneleri gösterir, sahne değiştirebilir veya yayını/kaydı açıp kapatabilir.","Dock loaded inside OBS with read permission.":"OBS içinde okuma izniyle yüklü panel.","Drag a trigger onto the canvas.":"Tuvale bir tetikleyici sürükleyin.","Duck music for an alert":"Uyarı sırasında müziği kısın","Enable Replay Buffer in OBS Output settings and start it before saving.":"OBS Çıkış ayarlarında Tekrar Arabelleği'ni etkinleştirin ve kaydetmeden önce başlatın.","Enable the WebSocket server. Keep the default port":"WebSocket sunucusunu etkinleştirin. Varsayılan bağlantı noktasını koruyun:","Enable the popup option; dock loaded inside OBS with Advanced access.":"Açılır pencere seçeneğini etkinleştirin; panel OBS içinde Gelişmiş erişimle yüklü olmalıdır.","Enable the popup option; dock loaded inside OBS with Full/Advanced control permission.":"Açılır pencere seçeneğini etkinleştirin; panel OBS içinde Tam/Gelişmiş kontrol izniyle yüklü olmalıdır.","Enable, disable, or toggle a named source filter.":"Adlandırılmış kaynak filtresini etkinleştirin, devre dışı bırakın veya durumunu değiştirin.","Event Flow Editor":"Etkinlik Akışı düzenleyicisi","Event Flow Guide":"Etkinlik Akışı Kılavuzu","Every trigger and action in this guide.":"Bu rehberdeki her tetikleyici ve eylem.","Expand":"Şunu genişletin:","Fallback for scene changes, start/stop streaming, start/stop recording, and saving replay buffer.":"Sahne değiştirme, yayın başlatma/durdurma, kayıt başlatma/durdurma ve tekrar arabelleğini kaydetme için alternatif.","First enable Replay Buffer in":"Önce şurada Tekrar Arabelleği'ni etkinleştirin:","Flow Actions":"Flow Actions","Flow Actions loaded inside OBS with Advanced Access Level. Source, filter, text, volume, media, refresh, and media-ended features still require WebSocket.":"OBS içinde Gelişmiş Erişim Düzeyi ile yüklü Akış Eylemleri. Kaynak, filtre, metin, ses seviyesi, medya, yenileme ve medya bitişi özellikleri yine WebSocket gerektirir.","Flow is saved and enabled; Flow Actions is open; both use the same session ID.":"Akış kayıtlı ve etkin; Akış Eylemleri açık; ikisi aynı oturum kimliğini kullanıyor.","For a Text (GDI+) or Text (FreeType 2) source, turn off":"Metin (GDI+) veya Metin (FreeType 2) kaynağında şunu kapatın:","Guests can use !cycle":"Misafirler !cycle kullanabilir","Guide sections":"Kılavuz bölümleri","Hourly message while OBS is live":"OBS yayındayken saatlik mesaj","In OBS, open":"OBS'de şunu açın:","In Social Stream Ninja, open the":"Social Stream Ninja'da şunu açın:","In the Event Flow editor, choose":"Etkinlik Akışı düzenleyicisinde şunu seçin:","It is the bridge that receives Event Flow actions and sends OBS WebSocket requests. If it is an OBS Browser Source, turn off":"Etkinlik Akışı eylemlerini alan ve OBS WebSocket isteklerini gönderen köprüdür. OBS Tarayıcı Kaynağı ise şunu kapatın:","Keep the Flow Actions page running.":"Akış Eylemleri sayfasını çalışır tutun.","Live-output warning:":"Canlı çıkış uyarısı:","Media Ended never fires":"Medya Bitti hiç tetiklenmiyor","Media Source controls":"Medya Kaynağı kontrolleri","Message Equals":"Mesaj Eşittir","Mode":"Mod","More help:":"Daha fazla yardım:","Moves through playlist-capable inputs, such as VLC Video Source. A single-file Media Source may ignore these actions.":"VLC Video Kaynağı gibi çalma listesi destekleyen girişler arasında geçer. Tek dosyalı Medya Kaynağı bu eylemleri yok sayabilir.","Mute, unmute, or toggle an input.":"Girişi sessize alın, sesini açın veya durumunu değiştirin.","Mute/Unmute Audio":"Sesi Kapat/Aç","Next / Previous":"Sonraki / Önceki","Next/Previous does nothing":"Sonraki/Önceki hiçbir şey yapmıyor","Nothing happens":"Hiçbir şey olmuyor","OBS 28+, WebSocket server enabled, Flow Actions page open.":"OBS 28+, WebSocket sunucusu etkin, Akış Eylemleri sayfası açık.","OBS Browser Source API":"OBS Tarayıcı Kaynağı API'si","OBS Control Guide - Social Stream Ninja":"OBS Kontrol Rehberi - Social Stream Ninja","OBS Control with Social Stream Ninja":"Social Stream Ninja ile OBS Kontrolü","OBS Media Ended":"OBS Medya Bitti","OBS Recording Started":"OBS Kayıt Başladı","OBS Recording Stopped":"OBS Kayıt Durdu","OBS Replay Buffer Saved":"OBS Tekrar Arabelleği Kaydedildi","OBS Scene Changed":"OBS Sahne Değişti","OBS Settings → Output":"OBS Ayarlar → Çıkış","OBS Stream Started":"OBS Yayın Başladı","OBS Stream Started → Set Gate State: ON":"OBS Yayın Başladı → Geçit Durumunu Ayarla: AÇIK","OBS Stream Stopped":"OBS Yayın Durdu","OBS Stream Stopped → Set Gate State: OFF":"OBS Yayın Durdu → Geçit Durumunu Ayarla: KAPALI","OBS Studio":"OBS Studio","OBS Studio action list in the Social Stream Ninja Event Flow Editor":"Social Stream Ninja Etkinlik Akışı Düzenleyicisi'ndeki OBS Studio eylem listesi","OBS WebSocket Tester":"OBS WebSocket Test Aracı","OBS WebSocket v5":"OBS WebSocket v5","OBS WebSocket v5 is built into OBS 28 and newer. Social Stream Ninja uses it for full OBS control and media events.":"OBS WebSocket v5, OBS 28 ve daha yeni sürümlere yerleşiktir. Social Stream Ninja bunu tam OBS kontrolü ve medya etkinlikleri için kullanır.","OBS event payload reference":"OBS etkinlik verisi referansı","OBS finishes saving a replay.":"OBS tekrar kaydını tamamlar.","OBS names must match exactly, including spaces and punctuation. Source actions target the OBS input name, not the scene-item label if it was renamed independently.":"OBS adları boşluk ve noktalama dahil tam eşleşmelidir. Kaynak eylemleri, ayrı yeniden adlandırılmış sahne öğesi etiketini değil OBS giriş adını hedefler.","OBS will not connect":"OBS bağlanmıyor","Open tester":"Test aracını aç","Open the":"Şunu açın:","Option":"Seçenek","Other controls":"Diğer kontroller","Pause":"Duraklat","Place":"Yerleştirin:","Play":"Oynat","Play / Pause":"Oynat / Duraklat","Play/resume, pause, restart, stop, next, or previous.":"Oynat/devam et, duraklat, yeniden başlat, durdur, sonraki veya önceki.","Privileged users can use !start / !stop":"Ayrıcalıklı kullanıcılar !start / !stop kullanabilir","Problem":"Sorun","Read from file":"Dosyadan oku","Recipes":"Tarifler","Recording starts.":"Kayıt başlar.","Recording stops.":"Kayıt durur.","Refresh Browser Source":"Tarayıcı Kaynağını Yenile","Refresh an alert page":"Uyarı sayfasını yenileyin","Reloads a Browser Source without cache.":"Tarayıcı Kaynağı'nı önbelleksiz yeniden yükler.","Remote OBS control panel":"Uzaktan OBS kontrol paneli","Replay Buffer":"Tekrar Arabelleği","Replay save fails":"Tekrar kaydı başarısız","Replay workflow":"Tekrar iş akışı","Requirement":"Gereksinim","Restart":"Yeniden Başlat","Restart / Stop":"Yeniden Başlat / Durdur","Run something after a video":"Videodan sonra bir şey çalıştırın","Save Replay Buffer":"Tekrar Arabelleğini Kaydet","Saves the currently running replay buffer.":"Çalışan mevcut tekrar arabelleğini kaydeder.","Scene/source/filter is not found":"Sahne/kaynak/filtre bulunamıyor","Send Message":"Mesaj Gönder","Set Source Volume":"Kaynak Ses Seviyesini Ayarla","Set Text Source":"Metin Kaynağını Ayarla","Set Text Source and flow variables":"Metin Kaynağını Ayarla ve akış değişkenleri","Set Text Source properties with counter template variables":"Sayaç şablon değişkenlerini içeren Metin Kaynağını Ayarla özellikleri","Set Text Source writes the resolved value straight into the named OBS text input.":"Metin Kaynağını Ayarla, çözümlenen değeri doğrudan adlandırılmış OBS metin girişine yazar.","Sets an input from":"Girişi şu aralıktan ayarlar:","Setup":"Kurulum","Show, hide, or toggle a scene item. Scene and Group are optional targeting fields.":"Sahne öğesini gösterin, gizleyin veya durumunu değiştirin. Sahne ve Grup isteğe bağlı hedefleme alanlarıdır.","Shows the active scene in the Streaming Chat dock.":"Yayın Sohbeti panelinde etkin sahneyi gösterir.","Shutdown source when not visible":"Görünür değilken kaynağı kapat","Social Stream Ninja also has older OBS Browser Source controls in the Streaming Chat dock. These do not use the Flow Actions WebSocket bridge.":"Social Stream Ninja'nın Yayın Sohbeti panelinde eski OBS Tarayıcı Kaynağı kontrolleri de vardır. Bunlar Akış Eylemleri WebSocket köprüsünü kullanmaz.","Social Stream Ninja logo":"Social Stream Ninja logosu","Start Recording":"Kaydı Başlat","Start Streaming":"Yayını Başlat","Start with a template → Intermediate → Hourly message while OBS is live":"Şablonla başla → Orta Düzey → OBS yayındayken saatlik mesaj","Start, stop, or toggle the replay buffer.":"Tekrar arabelleğini başlatın, durdurun veya durumunu değiştirin.","Start/Stop Streaming and Start/Stop Recording act immediately. Use restrictive triggers, permissions, and cooldowns so ordinary chat messages cannot fire them accidentally.":"Yayını Başlat/Durdur ve Kaydı Başlat/Durdur hemen uygulanır. Sıradan sohbet mesajlarının yanlışlıkla tetiklememesi için kısıtlayıcı tetikleyiciler, izinler ve bekleme süreleri kullanın.","Starts OBS recording.":"OBS kaydını başlatır.","Starts or stops streaming from trusted chat users.":"Güvenilir sohbet kullanıcılarından yayını başlatır veya durdurur.","Starts the configured OBS stream output.":"Yapılandırılmış OBS yayın çıkışını başlatır.","Stop":"Durdur","Stop Recording":"Kaydı Durdur","Stop Streaming":"Yayını Durdur","Stops OBS recording.":"OBS kaydını durdurur.","Stops the OBS stream output.":"OBS yayın çıkışını durdurur.","Streaming Chat dock paired to a dock running inside OBS.":"OBS içinde çalışan panele eşlenmiş Yayın Sohbeti paneli.","Streaming reaches the started state.":"Yayın başladı durumuna ulaşır.","Streaming reaches the stopped state.":"Yayın durdu durumuna ulaşır.","Switches the active program scene by exact scene name.":"Tam sahne adıyla etkin program sahnesini değiştirir.","Text does not change":"Metin değişmiyor","The OBS Studio group contains scene, source, text, media, audio, filter, output, and replay-buffer controls.":"OBS Studio grubu; sahne, kaynak, metin, medya, ses, filtre, çıkış ve tekrar arabelleği kontrollerini içerir.","The active program scene changes.":"Etkin program sahnesi değişir.","The text field supports normal message placeholders such as":"Metin alanı şu gibi normal mesaj yer tutucularını destekler:","These start a flow when OBS reports a matching event. They arrive as":"OBS eşleşen etkinliği bildirdiğinde akış başlatırlar. Şu türde gelirler:","Time Interval (3600 seconds) → ON/OFF Switch → Send Message":"Zaman Aralığı (3600 saniye) → AÇ/KAPAT Anahtarı → Mesaj Gönder","Timing:":"Zamanlama:","Toggle Filter":"Filtre Durumunu Değiştir","Toggle Source":"Kaynak Durumunu Değiştir","Tools → WebSocket Server Settings":"Araçlar → WebSocket Sunucusu Ayarları","Trigger":"Tetikleyici","Triggers":"Tetikleyiciler","Troubleshooting":"Sorun giderme","Two OBS connection modes":"İki OBS bağlantı modu","Updates Text (GDI+) or Text (FreeType 2), with template placeholders.":"Şablon yer tutucularıyla Metin (GDI+) veya Metin (FreeType 2) girişini günceller.","Use OBS WebSocket v5 and a real media input. Looping media does not reach an ended state.":"OBS WebSocket v5 ve gerçek medya girişi kullanın. Döngülü medya bitmiş durumuna ulaşmaz.","Use Text (GDI+) or Text (FreeType 2), confirm the input name, and disable":"Metin (GDI+) veya Metin (FreeType 2) kullanın, giriş adını doğrulayın ve şunu kapatın:","Use a playlist-capable source such as VLC Video Source.":"VLC Video Kaynağı gibi çalma listesi destekleyen kaynak kullanın.","Use the":"Şunu kullanın:","Useful data":"Kullanışlı veriler","Volume, mute, and filters":"Ses seviyesi, sessize alma ve filtreler","WebSocket":"WebSocket","WebSocket or Browser Source API fallback":"WebSocket veya alternatif Tarayıcı Kaynağı API'si","WebSocket server is enabled, URL is":"WebSocket sunucusu etkin, URL şu:","What it does":"Ne yapar","What it supports":"Neleri destekler","When it fires":"Ne zaman tetiklenir","after the counter/check path and use:":"sayaç/kontrol yolundan sonra ve şunu kullanın:","and create or edit a flow.":"ve akış oluşturun veya düzenleyin.","before starting your stream":"yayınınızı başlatmadan önce","dB.":"dB.","ends playback and resets the input.":"oynatmayı bitirir ve girişi sıfırlar.","holds its current position.":"mevcut konumunu korur.","in the Actions list and drag in the OBS action you need.":"Eylemler listesinde ve gereken OBS eylemini sürükleyin.","is effectively silent. Mute is a separate state. Toggle Filter changes only the enabled state of an existing filter; it does not edit filter settings.":"pratikte sessizdir. Sessize alma ayrı durumdur. Filtre Durumunu Değiştir yalnızca mevcut filtrenin etkinliğini değiştirir; filtre ayarlarını düzenlemez.","is the obsolete v4 default.":"artık kullanılmayan v4 varsayılanıdır.","is unchanged gain, negative values are quieter, and":"kazancı değiştirmez; negatif değerler daha kısık, şu değer ise:","on the Flow Actions Browser Source, or keep the page open elsewhere.":"Akış Eylemleri Tarayıcı Kaynağı'nda veya sayfayı başka yerde açık tutun.","only when OBS requires authentication. Add":"yalnızca OBS kimlik doğrulama gerektiriyorsa. Şunu ekleyin:","resumes paused media.":"duraklatılan medyayı sürdürür.","section and set the OBS WebSocket URL and optional password.":"bölümünü ve OBS WebSocket URL'sini ve isteğe bağlı parolayı ayarlayın.","starts from the beginning.":"baştan başlatır.","tester":"test aracı","the interval runs on its own schedule, so the first reminder may arrive sooner than one hour after streaming starts. Later reminders repeat every hour while the switch is ON. Change the Time Interval value for a different frequency; it is measured in seconds.":"aralık kendi zamanlamasıyla çalışır; ilk hatırlatma yayın başladıktan sonra bir saat dolmadan gelebilir. Sonraki hatırlatmalar anahtar AÇIK olduğu sürece her saat tekrarlanır. Farklı sıklık için Zaman Aralığı değerini değiştirin; saniye olarak ölçülür.","to":"şu değere:","to choose your chat platform (the example uses Twitch) and message. Choose a platform or All Platforms; Reply to Source cannot reply to an OBS event or timer tick.":"sohbet platformunuzu (örnekte Twitch) ve mesajı seçmek için. Bir platform veya Tüm Platformlar'ı seçin; Kaynağa Yanıtla OBS etkinliğine veya zamanlayıcı tetiklemesine yanıt veremez.","to confirm the connection before building a flow.":"akış oluşturmadan önce bağlantıyı doğrulamak için.","to show a small connection-status badge while diagnosing problems.":"sorunları incelerken küçük bağlantı durumu rozeti göstermek için.","to start/stop it, then":"başlatmak/durdurmak için, ardından","to write the recent buffered segment to disk.":"son arabelleğe alınmış bölümü diske yazmak için.","uses dB, matching the OBS mixer scale:":"OBS mikseri ölçeğiyle eşleşen dB kullanır:","when the source must keep controlling OBS while hidden.":"kaynağın gizliyken OBS'yi kontrol etmeyi sürdürmesi gerektiğinde.","→ alert action → Delay → restore to":"→ uyarı eylemi → Gecikme → şu değere geri getir:","→ confirm":"→ doğrula:","→ confirm scenes/inputs → test the individual request → test the full Event Flow.":"→ sahneleri/girişleri doğrula → tek isteği test et → tüm Etkinlik Akışı'nı test et.","→ moderator condition →":"→ moderatör koşulu →","→ permission condition →":"→ izin koşulu →"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/actions/obs-control-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/actions/obs-control-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="shell">
+        <header>
+            <h1>Social Stream Ninja ile OBS Kontrolü</h1>
+            <p>OBS'yi doğrudan Etkinlik Akışı'ndan kontrol edin — Streamer.bot gerekmez. Bu rehber kurulumu, tüm OBS tetikleyici ve eylemlerini, pratik tarifleri ve eski panel/tarayıcı kaynağı kontrollerini kapsar.</p>
+            <nav class="quick-links" aria-label="Kılavuz bölümleri">
+                <a href="#setup">Kurulum</a>
+                <a href="#triggers">Tetikleyiciler</a>
+                <a href="#actions">Eylemler</a>
+                <a href="#recipes">Tarifler</a>
+                <a href="#other-controls">Diğer kontroller</a>
+                <a href="#troubleshooting">Sorun giderme</a>
+            </nav>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/obs-control-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/obs-control-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/obs-control-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/obs-control-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/obs-control-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/obs-control-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/obs-control-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/obs-control-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/obs-control-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/obs-control-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/obs-control-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/obs-control-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/obs-control-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/obs-control-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="obs-control-guide.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/actions/obs-control-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/obs-control-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></header>
+
+        <main>
+            <section id="setup">
+                <h2>1. Akış Eylemleri'ni OBS'ye bağlayın</h2>
+                <p class="lead">OBS WebSocket v5, OBS 28 ve daha yeni sürümlere yerleşiktir. Social Stream Ninja bunu tam OBS kontrolü ve medya etkinlikleri için kullanır.</p>
+                <ol>
+                    <li>OBS'de şunu açın: <strong>Araçlar → WebSocket Sunucusu Ayarları</strong>.</li>
+                    <li>WebSocket sunucusunu etkinleştirin. Varsayılan bağlantı noktasını koruyun: <code>4455</code>; isterseniz parola ayarlayın.</li>
+                    <li>Social Stream Ninja'da şunu açın: <strong>Flow Actions</strong> bölümünü ve OBS WebSocket URL'sini ve isteğe bağlı parolayı ayarlayın.</li>
+                    <li>Akış Eylemleri URL'sini kopyalayıp açık tutun. Katman/ses eylemleri için OBS Tarayıcı Kaynağı önerilir.</li>
+                    <li>Şunu kullanın: <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">OBS WebSocket Test Aracı</a> akış oluşturmadan önce bağlantıyı doğrulamak için.</li>
+                </ol>
+
+                <div class="panel">
+                    <strong>Doğrudan URL örneği</strong><br>
+                    <code>https://socialstream.ninja/actions.html?session=YOUR_SESSION&amp;obsws=ws://127.0.0.1:4455</code><br><br>
+                    Ekleyin: <code>&amp;obspw=YOUR_PASSWORD</code> yalnızca OBS kimlik doğrulama gerektiriyorsa. Şunu ekleyin: <code>&amp;obsdebug=1</code> sorunları incelerken küçük bağlantı durumu rozeti göstermek için.
+                </div>
+
+                <div class="callout warning">
+                    <strong>Akış Eylemleri sayfasını çalışır tutun.</strong> Etkinlik Akışı eylemlerini alan ve OBS WebSocket isteklerini gönderen köprüdür. OBS Tarayıcı Kaynağı ise şunu kapatın: <em>Görünür değilken kaynağı kapat</em> kaynağın gizliyken OBS'yi kontrol etmeyi sürdürmesi gerektiğinde.
+                </div>
+
+                <div class="diagram">Sohbet / yayın etkinliği │ ▼ Social Stream Ninja Etkinlik Akışı │ aynı oturum kimliği ▼ Akış Eylemleri sayfası (actions.html) │ OBS WebSocket v5 · ws://127.0.0.1:4455 ▼ OBS Studio</div>
+
+                <h3>İki OBS bağlantı modu</h3>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Mod</th><th>Neleri destekler</th><th>Gereksinim</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>OBS WebSocket v5</strong></td><td>Bu rehberdeki her tetikleyici ve eylem.</td><td>OBS 28+, WebSocket sunucusu etkin, Akış Eylemleri sayfası açık.</td></tr>
+                            <tr><td><strong>OBS Tarayıcı Kaynağı API'si</strong></td><td>Sahne değiştirme, yayın başlatma/durdurma, kayıt başlatma/durdurma ve tekrar arabelleğini kaydetme için alternatif.</td><td>OBS içinde Gelişmiş Erişim Düzeyi ile yüklü Akış Eylemleri. Kaynak, filtre, metin, ses seviyesi, medya, yenileme ve medya bitişi özellikleri yine WebSocket gerektirir.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="build-flow">
+                <h2>2. Akışa OBS düğümleri ekleyin</h2>
+                <ol>
+                    <li>Şunu açın: <a href="../../actions/index.html" target="_blank" rel="noopener">Etkinlik Akışı düzenleyicisi</a> ve akış oluşturun veya düzenleyin.</li>
+                    <li>Tuvale bir tetikleyici sürükleyin.</li>
+                    <li>Şunu genişletin: <strong>OBS Studio</strong> Eylemler listesinde ve gereken OBS eylemini sürükleyin.</li>
+                    <li>Tetikleyiciyi eyleme bağlayın, OBS sahne/kaynak adlarını tam olarak yapılandırın, kaydedin ve akışı etkinleştirin.</li>
+                </ol>
+                <figure>
+                    <img src="../../actions/img/obs-control-actions.png" alt="Social Stream Ninja Etkinlik Akışı Düzenleyicisi&#x27;ndeki OBS Studio eylem listesi">
+                    <figcaption>OBS Studio grubu; sahne, kaynak, metin, medya, ses, filtre, çıkış ve tekrar arabelleği kontrollerini içerir.</figcaption>
+                </figure>
+                <div class="callout">
+                    OBS adları boşluk ve noktalama dahil tam eşleşmelidir. Kaynak eylemleri, ayrı yeniden adlandırılmış sahne öğesi etiketini değil OBS giriş adını hedefler.
+                </div>
+            </section>
+
+            <section id="triggers">
+                <h2>3. OBS tetikleyicileri</h2>
+                <p>OBS eşleşen etkinliği bildirdiğinde akış başlatırlar. Şu türde gelirler: <code>type: "obs"</code>; OBS'ye özel ayrıntılar şu alandadır: <code>meta</code>.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Tetikleyici</th><th>Ne zaman tetiklenir</th><th>Kullanışlı veriler</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>OBS Yayın Başladı</strong></td><td>Yayın başladı durumuna ulaşır.</td><td><code>meta.outputState</code>, <code>meta.outputActive</code></td></tr>
+                            <tr><td><strong>OBS Yayın Durdu</strong></td><td>Yayın durdu durumuna ulaşır.</td><td><code>meta.outputState</code>, <code>meta.outputActive</code></td></tr>
+                            <tr><td><strong>OBS Kayıt Başladı</strong></td><td>Kayıt başlar.</td><td><code>meta.outputState</code></td></tr>
+                            <tr><td><strong>OBS Kayıt Durdu</strong></td><td>Kayıt durur.</td><td><code>meta.outputState</code></td></tr>
+                            <tr><td><strong>OBS Sahne Değişti</strong></td><td>Etkin program sahnesi değişir.</td><td><code>meta.sceneName</code></td></tr>
+                            <tr><td><strong>OBS Medya Bitti</strong> <span class="tag">WebSocket</span></td><td>Medya girişinin oynatılması biter. İsteğe bağlı olarak tam Medya Kaynağı Adı ile filtreleyin.</td><td><code>meta.inputName</code>, <code>meta.inputUuid</code></td></tr>
+                            <tr><td><strong>OBS Tekrar Arabelleği Kaydedildi</strong></td><td>OBS tekrar kaydını tamamlar.</td><td><code>meta.savedReplayPath</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="actions">
+                <h2>4. OBS eylemleri</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>İşlem</th><th>Yapılandırma ve davranış</th><th>Bağlantı</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Sahne Değiştir</strong></td><td>Tam sahne adıyla etkin program sahnesini değiştirir.</td><td>WebSocket veya alternatif Tarayıcı Kaynağı API'si</td></tr>
+                            <tr><td><strong>Kaynak Durumunu Değiştir</strong></td><td>Sahne öğesini gösterin, gizleyin veya durumunu değiştirin. Sahne ve Grup isteğe bağlı hedefleme alanlarıdır.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Metin Kaynağını Ayarla</strong></td><td>Şablon yer tutucularıyla Metin (GDI+) veya Metin (FreeType 2) girişini günceller.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Medya Kaynağını Kontrol Et</strong></td><td>Oynat/devam et, duraklat, yeniden başlat, durdur, sonraki veya önceki.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Kaynak Ses Seviyesini Ayarla</strong></td><td>Girişi şu aralıktan ayarlar: <code>-100</code> şu değere: <code>+26</code> dB.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Tarayıcı Kaynağını Yenile</strong></td><td>Tarayıcı Kaynağı'nı önbelleksiz yeniden yükler.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Filtre Durumunu Değiştir</strong></td><td>Adlandırılmış kaynak filtresini etkinleştirin, devre dışı bırakın veya durumunu değiştirin.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Sesi Kapat/Aç</strong></td><td>Girişi sessize alın, sesini açın veya durumunu değiştirin.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Kaydı Başlat</strong></td><td>OBS kaydını başlatır.</td><td>WebSocket veya alternatif Tarayıcı Kaynağı API'si</td></tr>
+                            <tr><td><strong>Kaydı Durdur</strong></td><td>OBS kaydını durdurur.</td><td>WebSocket veya alternatif Tarayıcı Kaynağı API'si</td></tr>
+                            <tr><td><strong>Yayını Başlat</strong></td><td>Yapılandırılmış OBS yayın çıkışını başlatır.</td><td>WebSocket veya alternatif Tarayıcı Kaynağı API'si</td></tr>
+                            <tr><td><strong>Yayını Durdur</strong></td><td>OBS yayın çıkışını durdurur.</td><td>WebSocket veya alternatif Tarayıcı Kaynağı API'si</td></tr>
+                            <tr><td><strong>Tekrar Arabelleğini Kontrol Et</strong></td><td>Tekrar arabelleğini başlatın, durdurun veya durumunu değiştirin.</td><td>WebSocket</td></tr>
+                            <tr><td><strong>Tekrar Arabelleğini Kaydet</strong></td><td>Çalışan mevcut tekrar arabelleğini kaydeder.</td><td>WebSocket veya alternatif Tarayıcı Kaynağı API'si</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>Metin Kaynağını Ayarla ve akış değişkenleri</h3>
+                <p>Metin alanı şu gibi normal mesaj yer tutucularını destekler: <code>{username}</code>, <code>{message}</code>, <code>{source}</code>, ve <code>{donation}</code>, ayrıca önceki akış düğümlerinin eklediği şu gibi değerler: <code>{counterValue}</code>, <code>{counterTarget}</code>, ve <code>{counterRemaining}</code>.</p>
+                <div class="panel"><code>{username}: now {counterValue}, need {counterTarget}</code></div>
+                <figure>
+                    <img src="../../actions/img/obs-set-text-properties.png" alt="Sayaç şablon değişkenlerini içeren Metin Kaynağını Ayarla özellikleri">
+                    <figcaption>Metin Kaynağını Ayarla, çözümlenen değeri doğrudan adlandırılmış OBS metin girişine yazar.</figcaption>
+                </figure>
+                <div class="callout warning">
+                    Metin (GDI+) veya Metin (FreeType 2) kaynağında şunu kapatın: <em>Dosyadan oku</em>. Aksi halde OBS, Etkinlik Akışı'nın gönderdiği metin yerine dosya içeriğini göstermeyi sürdürebilir.
+                </div>
+
+                <h3>Medya Kaynağı kontrolleri</h3>
+                <div class="grid">
+                    <div class="card"><h3>Oynat / Duraklat</h3><p><strong>Oynat</strong> duraklatılan medyayı sürdürür. <strong>Duraklat</strong> mevcut konumunu korur.</p></div>
+                    <div class="card"><h3>Yeniden Başlat / Durdur</h3><p><strong>Yeniden Başlat</strong> baştan başlatır. <strong>Durdur</strong> oynatmayı bitirir ve girişi sıfırlar.</p></div>
+                    <div class="card"><h3>Sonraki / Önceki</h3><p>VLC Video Kaynağı gibi çalma listesi destekleyen girişler arasında geçer. Tek dosyalı Medya Kaynağı bu eylemleri yok sayabilir.</p></div>
+                </div>
+
+                <h3>Ses seviyesi, sessize alma ve filtreler</h3>
+                <p><strong>Kaynak Ses Seviyesini Ayarla</strong> OBS mikseri ölçeğiyle eşleşen dB kullanır: <code>0 dB</code> kazancı değiştirmez; negatif değerler daha kısık, şu değer ise: <code>-100 dB</code> pratikte sessizdir. Sessize alma ayrı durumdur. Filtre Durumunu Değiştir yalnızca mevcut filtrenin etkinliğini değiştirir; filtre ayarlarını düzenlemez.</p>
+
+                <h3>Tekrar Arabelleği</h3>
+                <p>Önce şurada Tekrar Arabelleği'ni etkinleştirin: <strong>OBS Ayarlar → Çıkış</strong>. Kullanın: <strong>Tekrar Arabelleğini Kontrol Et</strong> başlatmak/durdurmak için, ardından <strong>Tekrar Arabelleğini Kaydet</strong> son arabelleğe alınmış bölümü diske yazmak için.</p>
+
+                <div class="callout danger">
+                    <strong>Canlı çıkış uyarısı:</strong> Yayını Başlat/Durdur ve Kaydı Başlat/Durdur hemen uygulanır. Sıradan sohbet mesajlarının yanlışlıkla tetiklememesi için kısıtlayıcı tetikleyiciler, izinler ve bekleme süreleri kullanın.
+                </div>
+            </section>
+
+            <section id="recipes">
+                <h2>5. Kullanışlı tarifler</h2>
+                <div class="panel" id="hourly-message">
+                    <h3>OBS yayındayken saatlik mesaj</h3>
+                    <p>Etkinlik Akışı düzenleyicisinde şunu seçin: <strong>Şablonla başla → Orta Düzey → OBS yayındayken saatlik mesaj</strong>. Devre dışı başlar ve tek akışta üç dal içerir:</p>
+                    <ul>
+                        <li><strong>OBS Yayın Başladı → Geçit Durumunu Ayarla: AÇIK</strong></li>
+                        <li><strong>Zaman Aralığı (3600 saniye) → AÇ/KAPAT Anahtarı → Mesaj Gönder</strong></li>
+                        <li><strong>OBS Yayın Durdu → Geçit Durumunu Ayarla: KAPALI</strong></li>
+                    </ul>
+                    <p>Her iki Geçit Durumunu Ayarla eylemi de varsayılanı KAPALI olan aynı anahtarı hedefler. Şunu düzenleyin: <strong>Mesaj Gönder</strong> sohbet platformunuzu (örnekte Twitch) ve mesajı seçmek için. Bir platform veya Tüm Platformlar'ı seçin; Kaynağa Yanıtla OBS etkinliğine veya zamanlayıcı tetiklemesine yanıt veremez.</p>
+                    <p><a href="#setup">Akış Eylemleri'ni OBS'ye bağlayın</a>, Social Stream'i ve hedef sohbeti bağlı tutun, ardından akışı kaydedip etkinleştirin <strong>yayınınızı başlatmadan önce</strong>. Anahtar OBS başlangıç etkinliğini bekler; devam eden yayında yüklemek onu AÇIK yapmaz. Social Stream'i yeniden başlatmak da anahtarı KAPALI olarak sıfırlar.</p>
+                    <p><strong>Zamanlama:</strong> aralık kendi zamanlamasıyla çalışır; ilk hatırlatma yayın başladıktan sonra bir saat dolmadan gelebilir. Sonraki hatırlatmalar anahtar AÇIK olduğu sürece her saat tekrarlanır. Farklı sıklık için Zaman Aralığı değerini değiştirin; saniye olarak ölçülür.</p>
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <h3>OBS'de sayaç metni</h3>
+                        <p>Yerleştirin: <strong>Metin Kaynağını Ayarla</strong> sayaç/kontrol yolundan sonra ve şunu kullanın:</p>
+                        <p><code>{username}: now {counterValue}, need {counterTarget}</code></p>
+                    </div>
+                    <div class="card">
+                        <h3>Videodan sonra bir şey çalıştırın</h3>
+                        <p><strong>OBS Medya Bitti</strong> (şuna göre filtrele: <code>Intro Video</code>) → <strong>Sahne Değiştir</strong> şu değere: <code>Main</code>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Sohbet kontrollü medya yeniden başlatma</h3>
+                        <p><strong>Mesaj Eşittir</strong> <code>!replayintro</code> → izin koşulu → <strong>Medya Kaynağını Kontrol Et: Yeniden Başlat</strong>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Uyarı sayfasını yenileyin</h3>
+                        <p><strong>Mesaj Eşittir</strong> <code>!refreshalerts</code> → moderatör koşulu → <strong>Tarayıcı Kaynağını Yenile</strong>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Uyarı sırasında müziği kısın</h3>
+                        <p><strong>Kaynak Ses Seviyesini Ayarla</strong> şu değere: <code>-24 dB</code> → uyarı eylemi → Gecikme → şu değere geri getir: <code>0 dB</code>.</p>
+                    </div>
+                    <div class="card">
+                        <h3>Tekrar iş akışı</h3>
+                        <p><strong>OBS Yayın Başladı</strong> → <strong>Tekrar Arabelleğini Kontrol Et: Başlat</strong>; ayrı güvenilir komut şunu çalıştırır: <strong>Tekrar Arabelleğini Kaydet</strong>.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="other-controls">
+                <h2>6. Diğer yerleşik OBS kontrolleri</h2>
+                <p>Social Stream Ninja'nın Yayın Sohbeti panelinde eski OBS Tarayıcı Kaynağı kontrolleri de vardır. Bunlar Akış Eylemleri WebSocket köprüsünü kullanmaz.</p>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Seçenek</th><th>Ne yapar</th><th>Gereksinim</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Mevcut OBS sahnesi göstergesi</strong></td><td>Yayın Sohbeti panelinde etkin sahneyi gösterir.</td><td>OBS içinde okuma izniyle yüklü panel.</td></tr>
+                            <tr><td><strong>Misafirler !cycle kullanabilir</strong></td><td>10 saniyede birle sınırlı olarak sonraki OBS sahnesine geçer.</td><td>Açılır pencere seçeneğini etkinleştirin; panel OBS içinde Gelişmiş erişimle yüklü olmalıdır.</td></tr>
+                            <tr><td><strong>Ayrıcalıklı kullanıcılar !start / !stop kullanabilir</strong></td><td>Güvenilir sohbet kullanıcılarından yayını başlatır veya durdurur.</td><td>Açılır pencere seçeneğini etkinleştirin; panel OBS içinde Tam/Gelişmiş kontrol izniyle yüklü olmalıdır.</td></tr>
+                            <tr><td><strong>Uzaktan OBS kontrol paneli</strong></td><td>Hedef OBS paneli gereken kontrol düzeyini veriyorsa sahneleri gösterir, sahne değiştirebilir veya yayını/kaydı açıp kapatabilir.</td><td>OBS içinde çalışan panele eşlenmiş Yayın Sohbeti paneli.</td></tr>
+                            <tr><td><strong>OBS WebSocket Test Aracı</strong></td><td>Etkinlik Akışı'nı kullanmadan önce sürümü, bağlantıyı, sahneleri ve tek tek istekleri kontrol eder.</td><td><a href="../../obs-websocket-test.html" target="_blank" rel="noopener">Test aracını aç</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>7. Sorun giderme</h2>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Sorun</th><th>Kontrol edin:</th></tr></thead>
+                        <tbody>
+                            <tr><td>Hiçbir şey olmuyor</td><td>Akış kayıtlı ve etkin; Akış Eylemleri açık; ikisi aynı oturum kimliğini kullanıyor.</td></tr>
+                            <tr><td>OBS bağlanmıyor</td><td>WebSocket sunucusu etkin, URL şu: <code>ws://127.0.0.1:4455</code>, ve parola eşleşiyor. Şu bağlantı noktası: <code>4444</code> artık kullanılmayan v4 varsayılanıdır.</td></tr>
+                            <tr><td>Sahne/kaynak/filtre bulunamıyor</td><td>OBS adını aynen kopyalayın. Görünürlük için öğe iç içeyse veya mevcut sahne dışındaysa Sahne veya Grup ayarlayın.</td></tr>
+                            <tr><td>Metin değişmiyor</td><td>Metin (GDI+) veya Metin (FreeType 2) kullanın, giriş adını doğrulayın ve şunu kapatın: <em>Dosyadan oku</em>.</td></tr>
+                            <tr><td>Medya Bitti hiç tetiklenmiyor</td><td>OBS WebSocket v5 ve gerçek medya girişi kullanın. Döngülü medya bitmiş durumuna ulaşmaz.</td></tr>
+                            <tr><td>Sonraki/Önceki hiçbir şey yapmıyor</td><td>VLC Video Kaynağı gibi çalma listesi destekleyen kaynak kullanın.</td></tr>
+                            <tr><td>Tekrar kaydı başarısız</td><td>OBS Çıkış ayarlarında Tekrar Arabelleği'ni etkinleştirin ve kaydetmeden önce başlatın.</td></tr>
+                            <tr><td>Sahne değişince eylemler duruyor</td><td>Devre dışı bırak <em>Görünür değilken kaynağı kapat</em> Akış Eylemleri Tarayıcı Kaynağı'nda veya sayfayı başka yerde açık tutun.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="panel">
+                    Tanılama sırası: şunu açın: <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">test aracı</a> → doğrula: <code>GetVersion</code> → sahneleri/girişleri doğrula → tek isteği test et → tüm Etkinlik Akışı'nı test et.
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            Daha fazla yardım: <a href="event-flow-guide.html">Etkinlik Akışı Kılavuzu</a> · <a href="../docs/event-reference.html#obs-flow-actions">OBS etkinlik verisi referansı</a> · <a href="../../obs-websocket-test.html">OBS WebSocket Test Aracı</a>
+        </footer>
+    </div>
+</body>
+</html>

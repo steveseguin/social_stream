@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ar" data-site-root="../../" data-site-language="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="استخدم عقد الحالة في Event Flow ضمن Social Stream Ninja لتتبع القيم وتطبيق فترات الانتظار وتنسيق الإجراءات عبر أحداث الدردشة الواردة.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ar/actions/state-nodes-guide.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ar_AR">
+    <meta property="og:url" content="https://socialstream.ninja/ar/actions/state-nodes-guide.html">
+    <meta property="og:title" content="دليل استخدام عقد الحالة - Social Stream Ninja">
+    <meta property="og:description" content="استخدم عقد الحالة في Event Flow ضمن Social Stream Ninja لتتبع القيم وتطبيق فترات الانتظار وتنسيق الإجراءات عبر أحداث الدردشة الواردة.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="شعار Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ar/actions/state-nodes-guide.html">
+    <meta name="twitter:title" content="دليل استخدام عقد الحالة - Social Stream Ninja">
+    <meta name="twitter:description" content="استخدم عقد الحالة في Event Flow ضمن Social Stream Ninja لتتبع القيم وتطبيق فترات الانتظار وتنسيق الإجراءات عبر أحداث الدردشة الواردة.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="شعار Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دليل استخدام عقد الحالة - Social Stream Ninja</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: radial-gradient(circle at top, #4338ca 0%, #0f172a 55%, #020617 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 35px 80px rgba(3, 7, 18, 0.55);
+        }
+        header {
+            background: linear-gradient(135deg, #4c1d95, #312e81, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.7rem;
+            margin-bottom: 12px;
+        }
+        header p {
+            font-size: 1.15rem;
+            max-width: 680px;
+            opacity: 0.92;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 11px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.06em;
+            margin-bottom: 18px;
+        }
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        nav a {
+            color: #f8fafc;
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 999px;
+            padding: 6px 16px;
+            transition: background 0.2s;
+        }
+        nav a:hover {
+            background: rgba(15,23,42,0.25);
+        }
+        .content {
+            padding: 50px 55px 70px;
+        }
+        section {
+            margin-bottom: 70px;
+        }
+        h2 {
+            font-size: 2rem;
+            color: #312e81;
+            margin-bottom: 18px;
+        }
+        h3 {
+            font-size: 1.35rem;
+            color: #4338ca;
+            margin: 20px 0 10px;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 24px;
+            margin: 12px 0;
+        }
+        li {
+            margin: 6px 0;
+        }
+        .panel {
+            border-radius: 16px;
+            padding: 22px;
+            margin: 18px 0;
+        }
+        .panel.info {
+            background: #eef2ff;
+            border: 1px solid rgba(67,56,202,0.2);
+        }
+        .panel.warn {
+            background: #fff7ed;
+            border: 1px solid rgba(234,88,12,0.25);
+        }
+        .panel.success {
+            background: #ecfdf5;
+            border: 1px solid rgba(5,150,105,0.2);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 18px;
+            margin: 20px 0;
+        }
+        .card {
+            border-radius: 18px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+            padding: 20px 22px;
+            background: #fff;
+        }
+        .card h4 {
+            margin-bottom: 10px;
+            color: #4c1d95;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono','Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            border-radius: 14px;
+            padding: 18px;
+            margin: 16px 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .recipe {
+            border-left: 4px solid #312e81;
+            padding-left: 18px;
+            margin: 18px 0;
+        }
+        .recipe h4 {
+            margin-bottom: 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        table th, table td {
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            text-align: left;
+        }
+        table th {
+            background: #f1f5f9;
+            color: #312e81;
+        }
+        code {
+            background: rgba(15,23,42,0.06);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono','Courier New', monospace;
+        }
+        @media (max-width: 720px) {
+            table { display: block; max-width: 100%; overflow-x: auto; }
+            header, .content {
+                padding: 35px 20px;
+            }
+            nav {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="ar">
+<script id="ssn-site-language" type="application/json">{"language":"ar","page":"actions/state-nodes-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"التبديل إلى السمة الفاتحة","Switch to dark theme":"التبديل إلى السمة الداكنة","Light mode":"الوضع الفاتح","Dark mode":"الوضع الداكن","Open navigation menu":"فتح قائمة التنقل","Close navigation menu":"إغلاق قائمة التنقل","Copy this document as Markdown to the clipboard":"نسخ هذا المستند بصيغة Markdown إلى الحافظة","Copy Markdown":"نسخ Markdown","Copying…":"جارٍ النسخ…","Markdown copied":"تم نسخ Markdown","Copy failed":"تعذّر النسخ","Copy comprehensive Markdown for an AI assistant":"نسخ Markdown شامل لمساعد ذكاء اصطناعي","Copy this documentation page as Markdown for an AI assistant":"نسخ صفحة التوثيق هذه بصيغة Markdown لمساعد ذكاء اصطناعي"},"strings":{"!hello ──▶ Switch (ON?) ─▶ Send Reply ─▶ Set Gate: OFF ─▶ Delay 15s ─▶ Set Gate: ON":"!hello ──▶ مفتاح (ON؟) ─▶ إرسال رد ─▶ ضبط البوابة: OFF ─▶ تأخير 15 ثانية ─▶ ضبط البوابة: ON","(OFF) referencing “helloCooldown”.":"(OFF) مع الإشارة إلى “helloCooldown”.","(ON) for “helloCooldown”.":"(ON) لـ “helloCooldown”.","01 · Quick Orientation":"01 · نظرة سريعة","02 · On/Off Switch (Gate)":"02 · مفتاح تشغيل وإيقاف (بوابة)","03 · Counter":"03 · العداد","04 · Rate Limiter (Throttle)":"04 · محدد المعدل (Throttle)","05 · User Memory":"05 · ذاكرة المستخدمين","06 · Problem Kits":"06 · حلول جاهزة للمشكلات","07 · Troubleshooting & FAQ":"07 · استكشاف الأخطاء والأسئلة الشائعة","08 · Next Steps":"08 · الخطوات التالية",": add or subtract custom amounts.":"— إضافة أو طرح مقادير مخصصة.",": flip ON or OFF.":"— التبديل إلى ON أو OFF.",": jump to a specific number.":"— الانتقال إلى رقم محدد.",": revert to default (usually ON).":"— العودة إلى الافتراضي (عادةً ON).",": revert to the default start value.":"— العودة إلى قيمة البداية الافتراضية.","A User Memory operation has no dashed link.":"عملية ذاكرة مستخدمين بلا رابط متقطع.","Actions":"الإجراءات","Add a":"أضف","Add a chat message “Cooldown active” on the false output if desired.":"أضف رسالة دردشة «فترة الانتظار نشطة» إلى مخرج false إن رغبت.","Add another":"أضف عقدة أخرى من نوع","Add the State node first, give it a unique name, then select it from each matching operation. Without the base node, state actions have nothing to update.":"أضف عقدة الحالة أولًا، وامنحها اسمًا فريدًا، ثم اخترها من كل عملية مطابقة. من دون العقدة الأساسية، لا تجد إجراءات الحالة ما تحدّثه.","Add the switch node first and confirm the dropdown references it.":"أضف عقدة المفتاح أولًا وتأكد من أن القائمة المنسدلة تشير إليها.","After your action, add":"بعد الإجراء، أضف","All overlay triggers pass through the switch.":"تمر جميع مشغّلات التراكب عبر المفتاح.","Any Message ─▶ Counter (name: hype5) ─▶ Condition (value % 5 === 0?) ─▶ Play Celebration":"أي رسالة ─▶ عداد (الاسم: hype5) ─▶ شرط (value % 5 === 0؟) ─▶ تشغيل احتفال","Auto increment:":"زيادة تلقائية:","Best for":"الأنسب لـ","Build Steps":"خطوات الإنشاء","Can live anywhere in the flow. Just pick the matching node name.":"يمكن أن توجد في أي مكان من التدفق — اختر فقط اسم العقدة المطابقة.","Choose the named memory in the operation's properties or drag its purple side connector onto the memory.":"اختر الذاكرة المسماة في خصائص العملية أو اسحب موصلها الجانبي الأرجواني إلى الذاكرة.","Choose the time window (seconds).":"اختر النافذة الزمنية (بالثواني).","Combine state nodes with the rest of the Event Flow toolkit:":"ادمج عقد الحالة مع بقية أدوات Event Flow:","Command Cooldown":"فترة انتظار الأمر","Configuration":"الضبط","Connect your trigger → switch → actions.":"اربط المشغّل → المفتاح → الإجراءات.","Cooldowns for chat commands.":"فترات انتظار لأوامر الدردشة.","Counter":"العداد","Counter default 0, target 3.":"عداد بقيمة افتراضية 0 وهدف 3.","Counter never increments.":"العداد لا يزيد أبدًا.","Counters track numbers across messages. They increment automatically when a message flows through, and you can adjust values manually with actions.":"تتتبع العدادات الأرقام عبر الرسائل. وتزيد تلقائيًا عندما تمر رسالة عبرها، ويمكنك تعديل القيم يدويًا باستخدام الإجراءات.","Decide whether to queue or discard overflow.":"قرر وضع الأحداث الزائدة في قائمة الانتظار أو تجاهلها.","Delay":"تأخير (Delay)","Drop the switch node, name it “helloCooldown”, default ON.":"أضف عقدة المفتاح وسمّها “helloCooldown”، مع الحالة الافتراضية ON.","Ensure":"تأكد من","Event Flow Guide":"دليل Event Flow","Event Flow System":"نظام Event Flow","Every Nth chatter triggers a prize.":"كل مشارك رقم N في الدردشة يفعّل جائزة.","Every time a payload passes through the Counter node it adds 1 (unless you pause it with the “Only count when gate is true” option).":"في كل مرة تمر حمولة عبر عقدة العداد، تضيف 1 (إلا إذا أوقفتها مؤقتًا بخيار «Only count when gate is true»).","Example Flow Charts":"أمثلة مخططات التدفق","Example: 15s Cooldown":"مثال: فترة انتظار 15 ثانية","Example: Celebrate Every 5 Messages":"مثال: الاحتفال كل 5 رسائل","Export working patterns as templates so your team can re-import them later.":"صدّر الأنماط التي تعمل كقوالب حتى يتمكن فريقك من استيرادها لاحقًا.","Fix":"الحل","Gate, Counter, and Rate Limiter can run in the normal event path.":"يمكن تشغيل البوابة والعداد ومحدد المعدل في مسار الأحداث العادي.","Gift-based or badge-based eligibility.":"أهلية قائمة على الهدايا أو الشارات.","Great When You Need":"مفيد عندما تحتاج إلى","Guide buttons don’t open.":"أزرار الدليل لا تفتح.","Heads up:":"تنبيه:","Holds the value (ON/OFF, count, timestamps, or users).":"تحتفظ بالقيمة (ON/OFF أو العدد أو الطوابع الزمنية أو المستخدمين).","Increment after each redemption.":"زِد بعد كل استبدال.","Inside the Condition node, compare":"داخل عقدة الشرط، قارن","Keep experimenting! The new":"واصل التجربة! الدليل الجديد","Key Actions":"الإجراءات الأساسية","Label branches (e.g., “false → cooldown active”) so you can follow the path visually.":"سمِّ الفروع (مثل «false → فترة الانتظار نشطة») لتتمكن من تتبع المسار بصريًا.","Likely Cause":"السبب المحتمل","Limited Freebies":"هدايا مجانية محدودة","Lives on the canvas.":"توجد على مساحة العمل.","Maintenance windows (pause features during BRB scenes).":"فترات الصيانة (إيقاف الميزات مؤقتًا أثناء مشاهد سأعود قريبًا).","Make sure the trigger wire passes through the counter and the gate output is true.":"تأكد من مرور سلك المشغّل عبر العداد وأن خرج البوابة true.","Manual toggles (enable/disable overlays).":"مفاتيح تبديل يدوية (تفعيل التراكبات وتعطيلها).","No matching switch node exists (or the names differ).":"لا توجد عقدة مفتاح مطابقة (أو تختلف الأسماء).","No target memory is selected.":"لم تُحدَّد ذاكرة مستهدفة.","On/Off Switch":"مفتاح تشغيل وإيقاف","Operations":"العمليات","Overview":"نظرة عامة","Participation Trigger ──▶ Remember User ······▶ User Memory: Entrants Draw Command ───────────▶ Pick Random User ···▶ User Memory: Entrants Reset Command ──────────▶ Clear All Users ·····▶ User Memory: Entrants":"مشغّل المشاركة ──▶ تذكّر المستخدم ······▶ ذاكرة المستخدمين: Entrants أمر السحب ───────────▶ اختيار مستخدم عشوائي ···▶ ذاكرة المستخدمين: Entrants أمر إعادة الضبط ──────────▶ مسح جميع المستخدمين ·····▶ ذاكرة المستخدمين: Entrants","Pick a scenario and follow the steps.":"اختر سيناريو واتبع الخطوات.","Placed downstream.":"توضع لاحقًا في المسار.","Problem Kits":"حلول جاهزة للمشكلات","Rate Limiter":"محدد المعدل (Rate Limiter)","Reads or changes the stored value (set ON, add +1, remember, draw, reset, etc.).":"تقرأ القيمة المخزّنة أو تغيّرها (الضبط على ON أو إضافة +1 أو التذكر أو السحب أو إعادة الضبط، وغيرها).","Redeem Reward ─▶ Counter ticketsSold ├─value \u003c 50 ─▶ Approve Redemption └─value ≥ 50 ─▶ Deny + Refund points":"استبدال مكافأة ─▶ العداد ticketsSold ├─value \u003c 50 ─▶ الموافقة على الاستبدال └─value ≥ 50 ─▶ الرفض + إعادة النقاط","Relax the limit and drop a Reset State Node action before retesting.":"خفف الحد وأضف إجراء Reset State Node قبل إعادة الاختبار.","Remember:":"تذكّر:","Remembering viewers who liked, entered, or participated.":"تذكّر المشاهدين الذين أعجبوا أو دخلوا السحب أو شاركوا.","Reset state nodes between tests so you are not reading stale data.":"أعِد ضبط عقد الحالة بين الاختبارات حتى لا تقرأ بيانات قديمة.","Running inside the extension without web_accessible resources updated.":"التشغيل داخل الإضافة دون تحديث موارد web_accessible.","See the dedicated":"راجع","Separate lists for separate campaigns.":"قوائم منفصلة لحملات منفصلة.","Set Gate OFF → Delay → Set Gate ON.":"ضبط البوابة OFF → تأخير → ضبط البوابة ON.","Set Gate State":"ضبط حالة البوابة (Set Gate State)","Set Gate State action won’t save.":"إجراء Set Gate State لا يُحفظ.","Set the maximum events allowed.":"اضبط أقصى عدد مسموح به من الأحداث.","Social Stream Ninja logo":"شعار Social Stream Ninja","Solid teal wires carry events. Dashed purple links show which shared memory an operation uses. Each User Memory has its own count, persistence mode, and reset policy, so clearing one list does not affect another.":"تحمل الأسلاك المتصلة بلون أزرق مخضر الأحداث. وتوضح الروابط الأرجوانية المتقطعة الذاكرة المشتركة التي تستخدمها العملية. لكل ذاكرة مستخدمين عددها الخاص ووضع الاحتفاظ وسياسة إعادة الضبط، لذا لا يؤثر مسح قائمة في أخرى.","State Action":"إجراء الحالة","State Node":"عقدة الحالة","State Nodes Playbook":"دليل استخدام عقد الحالة","State Nodes Playbook - Social Stream Ninja":"دليل استخدام عقد الحالة - Social Stream Ninja","State nodes give Social Stream Ninja memory. Use them to build cooldowns, toggles, counters, throttles, participant lists, and prize draws that keep automations predictable.":"تمنح عقد الحالة Social Stream Ninja ذاكرة. استخدمها لإنشاء فترات انتظار ومفاتيح تبديل وعدادات وحدود معدلات وقوائم مشاركين وسحوبات جوائز تُبقي الأتمتة قابلة للتوقع.","State tools have an object that owns the value and operations that read or change it:":"تتضمن أدوات الحالة كائنًا يملك القيمة وعمليات تقرؤها أو تغيّرها:","Store points redeemed via commands.":"تخزين النقاط المستبدلة عبر الأوامر.","Store state-driven metadata under":"خزّن البيانات الوصفية المعتمدة على الحالة ضمن","Switch named “overlayToggle”.":"مفتاح اسمه “overlayToggle”.","Switch node named “commandCooldown”.":"عقدة مفتاح اسمها “commandCooldown”.","Symptom":"العَرَض","Temporarily shorten cooldowns (2 seconds) or lower counter targets while verifying.":"قصّر فترات الانتظار مؤقتًا إلى ثانيتين أو اخفض أهداف العدادات أثناء التحقق.","Testing Checklist":"قائمة فحص الاختبار","The flow bypasses the counter node or the gate is false.":"يتجاوز التدفق عقدة العداد أو تكون البوابة false.","The switch is a boolean guard. When ON, messages pass through; when OFF, the flow halts at this node.":"المفتاح حارس منطقي. عند ON تمر الرسائل؛ وعند OFF يتوقف التدفق عند هذه العقدة.","The throttle remembers timestamps and refuses new events until the rate you specify is respected.":"يتذكر محدد المعدل الطوابع الزمنية ويرفض الأحداث الجديدة حتى يُراعى المعدل الذي تحدده.","Throttle blocks everything forever.":"محدد المعدل يمنع كل شيء إلى الأبد.","Throttles do not auto-reset when you edit the flow. Use":"لا تعيد محددات المعدل ضبط نفسها تلقائيًا عند تعديل التدفق. استخدم","Track progress to a community goal.":"تتبع التقدم نحو هدف مجتمعي.","Trigger → switch → reply.":"مشغّل → مفتاح → رد.","Trigger ─▶ Switch (overlayToggle) ─▶ If ON → Show Overlay └─false─▶ Notify moderator “Overlay disabled”":"مشغّل ─▶ مفتاح (overlayToggle) ─▶ عند ON → إظهار التراكب └─false─▶ إخطار المشرف «التراكب معطل»","Troubleshooting":"استكشاف المشكلات وإصلاحها","Unique-entry prize draws.":"سحوبات جوائز بمشاركات فريدة.","Use Cases":"حالات الاستخدام","Use Reset action at the end of stream.":"استخدم إجراء إعادة الضبط في نهاية البث.","Use logic gates (AND/OR/NOT) before a switch to decide who can toggle it.":"استخدم البوابات المنطقية (AND/OR/NOT) قبل المفتاح لتحديد من يمكنه تبديله.","Use state nodes in Social Stream Ninja Event Flow to track values, apply cooldowns and coordinate actions across incoming chat events.":"استخدم عقد الحالة في Event Flow ضمن Social Stream Ninja لتتبع القيم وتطبيق فترات الانتظار وتنسيق الإجراءات عبر أحداث الدردشة الواردة.","Use the Event Flow “Send Test Event” tool to simulate commands.":"استخدم أداة «Send Test Event» في Event Flow لمحاكاة الأوامر.","User Memory":"ذاكرة المستخدمين (User Memory)","User Memory guide":"دليل ذاكرة المستخدم","User Memory is a shared hub referenced by other nodes.":"ذاكرة المستخدمين مركز مشترك تشير إليه عقد أخرى.","User Memory owns one named list of unique people. Remember users when they participate, check that list on later messages, remove a person, choose a random winner, or clear only that list.":"تملك ذاكرة المستخدمين قائمة مسماة واحدة من أشخاص فريدين. تذكّر المستخدمين عند مشاركتهم، وتحقق من تلك القائمة عند وصول رسائل لاحقة، أو أزل شخصًا، أو اختر فائزًا عشوائيًا، أو امسح تلك القائمة وحدها.","Viewer Toggle":"مفتاح تبديل للمشاهدين","When value ≥ 3, branch to “Sorry, all gone”.":"عندما تكون القيمة ≥ 3، انتقل إلى فرع «عذرًا، نفدت الكمية».","Window too strict or leftover state from testing.":"النافذة الزمنية صارمة جدًا أو هناك حالة متبقية من الاختبار.","and":"و","command → Set Gate OFF.":"أمر → ضبط البوابة OFF.","command → Set Gate ON.":"أمر → ضبط البوابة ON.","for reviewed screenshots, a downloadable draw flow, TikTok eligibility, participation examples, and reset details.":"للقطات شاشة مُراجعة وتدفق سحب قابل للتنزيل وأهلية TikTok وأمثلة المشاركة وتفاصيل إعادة الضبط.","if you need a clean slate during testing.":"إذا احتجت إلى حالة نظيفة أثناء الاختبار.","node (15 seconds).":"(15 ثانية).","or":"أو","or simply use the built-in “Trigger when value matches Target” option from the Counter node’s properties.":"أو استخدم ببساطة خيار «Trigger when value matches Target» المدمج في خصائص عقدة العداد.","pairs with this playbook so you can master both logic and state layers.":"يكمل هذا الدليل لتتمكن من إتقان طبقتي المنطق والحالة.","ships via manifest and reload the extension.":"مضمَّن عبر manifest، ثم أعِد تحميل الإضافة.","so overlays know why a branch fired.":"حتى تعرف التراكبات سبب تشغيل الفرع.","“Drop alerts if the overlay is already busy.”":"«تجاهل التنبيهات إذا كان التراكب مشغولًا بالفعل.»","“One API call per 10 seconds.”":"«استدعاء API واحد كل 10 ثوانٍ.»","“Only five raffle entries per minute.”":"«خمس مشاركات فقط في السحب في الدقيقة.»"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/actions/state-nodes-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="shell">
+        <header>
+            <div class="badge">نظام Event Flow<!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="العربية"><span aria-hidden="true">🌐 </span><span lang="ar">العربية</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/state-nodes-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/state-nodes-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/state-nodes-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/state-nodes-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/state-nodes-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/state-nodes-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/state-nodes-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/state-nodes-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/state-nodes-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/state-nodes-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/state-nodes-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/state-nodes-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/state-nodes-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="state-nodes-guide.html" lang="ar" hreflang="ar" aria-current="true">العربية</a><a class="site-language-link" href="../../tr/actions/state-nodes-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/state-nodes-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/state-nodes-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+            <h1>دليل استخدام عقد الحالة</h1>
+            <p>تمنح عقد الحالة Social Stream Ninja ذاكرة. استخدمها لإنشاء فترات انتظار ومفاتيح تبديل وعدادات وحدود معدلات وقوائم مشاركين وسحوبات جوائز تُبقي الأتمتة قابلة للتوقع.</p>
+            <nav>
+                <a href="#overview">نظرة عامة</a>
+                <a href="#switch">مفتاح تشغيل وإيقاف</a>
+                <a href="#counter">العداد</a>
+                <a href="#throttle">محدد المعدل (Rate Limiter)</a>
+                <a href="#user-memory">ذاكرة المستخدمين (User Memory)</a>
+                <a href="#recipes">حلول جاهزة للمشكلات</a>
+                <a href="#troubleshooting">استكشاف المشكلات وإصلاحها</a>
+            </nav>
+        </header>
+        <div class="content">
+            <section id="overview">
+                <h2>01 · نظرة سريعة</h2>
+                <p>تتضمن أدوات الحالة كائنًا يملك القيمة وعمليات تقرؤها أو تغيّرها:</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>عقدة الحالة</h4>
+                        <ul>
+                            <li>توجد على مساحة العمل.</li>
+                            <li>تحتفظ بالقيمة (ON/OFF أو العدد أو الطوابع الزمنية أو المستخدمين).</li>
+                            <li>يمكن تشغيل البوابة والعداد ومحدد المعدل في مسار الأحداث العادي.</li>
+                            <li>ذاكرة المستخدمين مركز مشترك تشير إليه عقد أخرى.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>إجراء الحالة</h4>
+                        <ul>
+                            <li>توضع لاحقًا في المسار.</li>
+                            <li>تقرأ القيمة المخزّنة أو تغيّرها (الضبط على ON أو إضافة +1 أو التذكر أو السحب أو إعادة الضبط، وغيرها).</li>
+                            <li>يمكن أن توجد في أي مكان من التدفق — اختر فقط اسم العقدة المطابقة.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel info">
+                    <strong>تذكّر:</strong> أضف عقدة الحالة أولًا، وامنحها اسمًا فريدًا، ثم اخترها من كل عملية مطابقة. من دون العقدة الأساسية، لا تجد إجراءات الحالة ما تحدّثه.
+                </div>
+            </section>
+
+            <section id="switch">
+                <h2>02 · مفتاح تشغيل وإيقاف (بوابة)</h2>
+                <p>المفتاح حارس منطقي. عند ON تمر الرسائل؛ وعند OFF يتوقف التدفق عند هذه العقدة.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>الأنسب لـ</h4>
+                        <ul>
+                            <li>فترات انتظار لأوامر الدردشة.</li>
+                            <li>مفاتيح تبديل يدوية (تفعيل التراكبات وتعطيلها).</li>
+                            <li>فترات الصيانة (إيقاف الميزات مؤقتًا أثناء مشاهد سأعود قريبًا).</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>الإجراءات الأساسية</h4>
+                        <ul>
+                            <li><code>Set Gate State</code>— التبديل إلى ON أو OFF.</li>
+                            <li><code>Reset State Node</code>— العودة إلى الافتراضي (عادةً ON).</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>مثال: فترة انتظار 15 ثانية</h3>
+                <div class="diagram">
+!hello ──▶ مفتاح (ON؟) ─▶ إرسال رد ─▶ ضبط البوابة: OFF ─▶ تأخير 15 ثانية ─▶ ضبط البوابة: ON
+                </div>
+                <div class="recipe">
+                    <h4>خطوات الإنشاء</h4>
+                    <ol>
+                        <li>أضف عقدة المفتاح وسمّها “helloCooldown”، مع الحالة الافتراضية ON.</li>
+                        <li>اربط المشغّل → المفتاح → الإجراءات.</li>
+                        <li>بعد الإجراء، أضف <em>ضبط حالة البوابة (Set Gate State)</em> (OFF) مع الإشارة إلى “helloCooldown”.</li>
+                        <li>أضف <em>تأخير (Delay)</em> (15 ثانية).</li>
+                        <li>أضف عقدة أخرى من نوع <em>ضبط حالة البوابة (Set Gate State)</em> (ON) لـ “helloCooldown”.</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section id="counter">
+                <h2>03 · العداد</h2>
+                <p>تتتبع العدادات الأرقام عبر الرسائل. وتزيد تلقائيًا عندما تمر رسالة عبرها، ويمكنك تعديل القيم يدويًا باستخدام الإجراءات.</p>
+                <div class="panel success">
+                    <strong>زيادة تلقائية:</strong> في كل مرة تمر حمولة عبر عقدة العداد، تضيف 1 (إلا إذا أوقفتها مؤقتًا بخيار «Only count when gate is true»).
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <h4>حالات الاستخدام</h4>
+                        <ul>
+                            <li>كل مشارك رقم N في الدردشة يفعّل جائزة.</li>
+                            <li>تتبع التقدم نحو هدف مجتمعي.</li>
+                            <li>تخزين النقاط المستبدلة عبر الأوامر.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>الإجراءات</h4>
+                        <ul>
+                            <li><code>Increment Counter</code>— إضافة أو طرح مقادير مخصصة.</li>
+                            <li><code>Set Counter Value</code>— الانتقال إلى رقم محدد.</li>
+                            <li><code>Reset State Node</code>— العودة إلى قيمة البداية الافتراضية.</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>مثال: الاحتفال كل 5 رسائل</h3>
+                <div class="diagram">
+أي رسالة ─▶ عداد (الاسم: hype5) ─▶ شرط (value % 5 === 0؟) ─▶ تشغيل احتفال
+                </div>
+                <p>داخل عقدة الشرط، قارن <code>state.hype5.value</code> أو استخدم ببساطة خيار «Trigger when value matches Target» المدمج في خصائص عقدة العداد.</p>
+            </section>
+
+            <section id="throttle">
+                <h2>04 · محدد المعدل (Throttle)</h2>
+                <p>يتذكر محدد المعدل الطوابع الزمنية ويرفض الأحداث الجديدة حتى يُراعى المعدل الذي تحدده.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>مفيد عندما تحتاج إلى</h4>
+                        <ul>
+                            <li>«خمس مشاركات فقط في السحب في الدقيقة.»</li>
+                            <li>«استدعاء API واحد كل 10 ثوانٍ.»</li>
+                            <li>«تجاهل التنبيهات إذا كان التراكب مشغولًا بالفعل.»</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>الضبط</h4>
+                        <ul>
+                            <li>اضبط أقصى عدد مسموح به من الأحداث.</li>
+                            <li>اختر النافذة الزمنية (بالثواني).</li>
+                            <li>قرر وضع الأحداث الزائدة في قائمة الانتظار أو تجاهلها.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel warn">
+                    <strong>تنبيه:</strong> لا تعيد محددات المعدل ضبط نفسها تلقائيًا عند تعديل التدفق. استخدم <code>Reset State Node</code> إذا احتجت إلى حالة نظيفة أثناء الاختبار.
+                </div>
+            </section>
+
+            <section id="user-memory">
+                <h2>05 · ذاكرة المستخدمين</h2>
+                <p>تملك ذاكرة المستخدمين قائمة مسماة واحدة من أشخاص فريدين. تذكّر المستخدمين عند مشاركتهم، وتحقق من تلك القائمة عند وصول رسائل لاحقة، أو أزل شخصًا، أو اختر فائزًا عشوائيًا، أو امسح تلك القائمة وحدها.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>الأنسب لـ</h4>
+                        <ul>
+                            <li>أهلية قائمة على الهدايا أو الشارات.</li>
+                            <li>تذكّر المشاهدين الذين أعجبوا أو دخلوا السحب أو شاركوا.</li>
+                            <li>سحوبات جوائز بمشاركات فريدة.</li>
+                            <li>قوائم منفصلة لحملات منفصلة.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>العمليات</h4>
+                        <ul>
+                            <li><code>Remember User</code> و <code>Forget User</code>.</li>
+                            <li><code>User Is Remembered</code>.</li>
+                            <li><code>Pick Random User</code>.</li>
+                            <li><code>Clear All Users</code> أو <code>Reset State Node</code>.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="diagram">
+مشغّل المشاركة ──▶ تذكّر المستخدم ······▶ ذاكرة المستخدمين: Entrants أمر السحب ───────────▶ اختيار مستخدم عشوائي ···▶ ذاكرة المستخدمين: Entrants أمر إعادة الضبط ──────────▶ مسح جميع المستخدمين ·····▶ ذاكرة المستخدمين: Entrants
+                </div>
+                <p>تحمل الأسلاك المتصلة بلون أزرق مخضر الأحداث. وتوضح الروابط الأرجوانية المتقطعة الذاكرة المشتركة التي تستخدمها العملية. لكل ذاكرة مستخدمين عددها الخاص ووضع الاحتفاظ وسياسة إعادة الضبط، لذا لا يؤثر مسح قائمة في أخرى.</p>
+                <div class="panel success">
+                    راجع <a href="user-memory-guide.html">دليل ذاكرة المستخدم</a> للقطات شاشة مُراجعة وتدفق سحب قابل للتنزيل وأهلية TikTok وأمثلة المشاركة وتفاصيل إعادة الضبط.
+                </div>
+            </section>
+
+            <section id="recipes">
+                <h2>06 · حلول جاهزة للمشكلات</h2>
+                <p>اختر سيناريو واتبع الخطوات.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>فترة انتظار الأمر</h4>
+                        <ol>
+                            <li>عقدة مفتاح اسمها “commandCooldown”.</li>
+                            <li>مشغّل → مفتاح → رد.</li>
+                            <li>ضبط البوابة OFF → تأخير → ضبط البوابة ON.</li>
+                            <li>أضف رسالة دردشة «فترة الانتظار نشطة» إلى مخرج false إن رغبت.</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>هدايا مجانية محدودة</h4>
+                        <ol>
+                            <li>عداد بقيمة افتراضية 0 وهدف 3.</li>
+                            <li>زِد بعد كل استبدال.</li>
+                            <li>عندما تكون القيمة ≥ 3، انتقل إلى فرع «عذرًا، نفدت الكمية».</li>
+                            <li>استخدم إجراء إعادة الضبط في نهاية البث.</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>مفتاح تبديل للمشاهدين</h4>
+                        <ol>
+                            <li>مفتاح اسمه “overlayToggle”.</li>
+                            <li><code>!overlay on</code> أمر → ضبط البوابة ON.</li>
+                            <li><code>!overlay off</code> أمر → ضبط البوابة OFF.</li>
+                            <li>تمر جميع مشغّلات التراكب عبر المفتاح.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <h3>أمثلة مخططات التدفق</h3>
+                <div class="diagram">
+مشغّل ─▶ مفتاح (overlayToggle) ─▶ عند ON → إظهار التراكب └─false─▶ إخطار المشرف «التراكب معطل»
+                </div>
+                <div class="diagram">
+استبدال مكافأة ─▶ العداد ticketsSold ├─value &lt; 50 ─▶ الموافقة على الاستبدال └─value ≥ 50 ─▶ الرفض + إعادة النقاط
+                </div>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>07 · استكشاف الأخطاء والأسئلة الشائعة</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>العَرَض</th>
+                            <th>السبب المحتمل</th>
+                            <th>الحل</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>إجراء Set Gate State لا يُحفظ.</td>
+                            <td>لا توجد عقدة مفتاح مطابقة (أو تختلف الأسماء).</td>
+                            <td>أضف عقدة المفتاح أولًا وتأكد من أن القائمة المنسدلة تشير إليها.</td>
+                        </tr>
+                        <tr>
+                            <td>العداد لا يزيد أبدًا.</td>
+                            <td>يتجاوز التدفق عقدة العداد أو تكون البوابة false.</td>
+                            <td>تأكد من مرور سلك المشغّل عبر العداد وأن خرج البوابة true.</td>
+                        </tr>
+                        <tr>
+                            <td>محدد المعدل يمنع كل شيء إلى الأبد.</td>
+                            <td>النافذة الزمنية صارمة جدًا أو هناك حالة متبقية من الاختبار.</td>
+                            <td>خفف الحد وأضف إجراء Reset State Node قبل إعادة الاختبار.</td>
+                        </tr>
+                        <tr>
+                            <td>عملية ذاكرة مستخدمين بلا رابط متقطع.</td>
+                            <td>لم تُحدَّد ذاكرة مستهدفة.</td>
+                            <td>اختر الذاكرة المسماة في خصائص العملية أو اسحب موصلها الجانبي الأرجواني إلى الذاكرة.</td>
+                        </tr>
+                        <tr>
+                            <td>أزرار الدليل لا تفتح.</td>
+                            <td>التشغيل داخل الإضافة دون تحديث موارد web_accessible.</td>
+                            <td>تأكد من <code>actions/state-nodes-guide.html</code> مضمَّن عبر manifest، ثم أعِد تحميل الإضافة.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h3>قائمة فحص الاختبار</h3>
+                <ul>
+                    <li>استخدم أداة «Send Test Event» في Event Flow لمحاكاة الأوامر.</li>
+                    <li>قصّر فترات الانتظار مؤقتًا إلى ثانيتين أو اخفض أهداف العدادات أثناء التحقق.</li>
+                    <li>أعِد ضبط عقد الحالة بين الاختبارات حتى لا تقرأ بيانات قديمة.</li>
+                    <li>سمِّ الفروع (مثل «false → فترة الانتظار نشطة») لتتمكن من تتبع المسار بصريًا.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>08 · الخطوات التالية</h2>
+                <p>ادمج عقد الحالة مع بقية أدوات Event Flow:</p>
+                <ul>
+                    <li>استخدم البوابات المنطقية (AND/OR/NOT) قبل المفتاح لتحديد من يمكنه تبديله.</li>
+                    <li>خزّن البيانات الوصفية المعتمدة على الحالة ضمن <code>meta</code> حتى تعرف التراكبات سبب تشغيل الفرع.</li>
+                    <li>صدّر الأنماط التي تعمل كقوالب حتى يتمكن فريقك من استيرادها لاحقًا.</li>
+                </ul>
+                <div class="panel info">
+                    واصل التجربة! الدليل الجديد <a href="event-flow-guide.html">دليل Event Flow</a> يكمل هذا الدليل لتتمكن من إتقان طبقتي المنطق والحالة.
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

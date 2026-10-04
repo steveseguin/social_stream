@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/obs-quick-start.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/obs-quick-start.html">
+    <meta property="og:title" content="OBS 빠른 시작 - Social Stream Ninja">
+    <meta property="og:description" content="OBS에서 Social Stream Ninja 채팅 오버레이를 사용하는 빠른 설정 가이드입니다.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/obs-quick-start.html">
+    <meta name="twitter:title" content="OBS 빠른 시작 - Social Stream Ninja">
+    <meta name="twitter:description" content="OBS에서 Social Stream Ninja 채팅 오버레이를 사용하는 빠른 설정 가이드입니다.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS 빠른 시작 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="OBS에서 Social Stream Ninja 채팅 오버레이를 사용하는 빠른 설정 가이드입니다.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/obs-quick-start.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"1. Pick One Session ID":"1. 세션 ID 하나 선택","2. Start A Chat Source":"2. 채팅 소스 시작","3. Open The Dock":"3. 도크 열기","4. Add An OBS Browser Source":"4. OBS 브라우저 소스 추가","5. If OBS Is Blank":"5. OBS가 비어 있는 경우","A browser source can show a featured message like this after chat is reaching the dock.":"채팅이 도크에 도착하면 브라우저 소스에 이와 같은 강조 메시지를 표시할 수 있습니다.","Check one thing at a time, in this order.":"이 순서대로 한 번에 하나씩 확인하세요.","Check that the source chat page or app source window is still running.":"소스 채팅 페이지 또는 앱 소스 창이 여전히 실행 중인지 확인하세요.","Commands & API":"명령 및 API","Confirm the OBS URL has the same":"OBS URL에 같은 값이 있는지 확인하세요:","Confirm the dock receives messages first. If the dock is empty, OBS is not the problem yet.":"도크가 메시지를 받는지 먼저 확인하세요. 도크가 비어 있다면 아직 OBS의 문제가 아닙니다.","Download":"다운로드","Featured message overlay preview with a sample chat message and donation badge":"예시 채팅 메시지와 후원 배지가 있는 강조 메시지 오버레이 미리 보기","Features":"기능","For regular chat overlay layouts, use a template from the":"일반 채팅 오버레이 배치는 다음의 템플릿을 사용하세요:","Get chat into OBS with the fewest moving parts.":"최소한의 설정으로 채팅을 OBS에 표시하세요.","Guides":"가이드","Hire":"작업 의뢰","Home":"홈","If messages appear here, Social Stream Ninja is receiving chat. Use the same session ID in OBS.":"여기에 메시지가 나타나면 Social Stream Ninja가 채팅을 받고 있는 것입니다. OBS에서도 같은 세션 ID를 사용하세요.","In OBS, add a Browser Source and paste the overlay URL.":"OBS에 브라우저 소스를 추가하고 오버레이 URL을 붙여 넣으세요.","Inspiration":"아이디어","Install or open Social Stream Ninja.":"Social Stream Ninja를 설치하거나 여세요.","Main navigation":"기본 탐색 메뉴","Make up one short session ID and use it everywhere. It is how your chat source, dock, and OBS overlay find each other.":"짧은 세션 ID 하나를 정하고 모든 곳에서 사용하세요. 채팅 소스, 도크, OBS 오버레이가 서로를 찾는 데 사용합니다.","More details:":"자세한 내용:","Not sure which source mode to use? See the":"어떤 소스 모드를 사용할지 모르겠다면 다음을 참고하세요:","OBS Quick Start":"OBS 빠른 시작","OBS Quick Start - Social Stream Ninja":"OBS 빠른 시작 - Social Stream Ninja","Open navigation menu":"탐색 메뉴 열기","Open the chat source for your platform and leave it open.":"사용하는 플랫폼의 채팅 소스를 열고 열어 두세요.","Overlay Gallery":"오버레이 갤러리","Platform Setup Picker":"플랫폼 설정 선택기","Quick setup guide for using Social Stream Ninja chat overlays in OBS.":"OBS에서 Social Stream Ninja 채팅 오버레이를 사용하는 빠른 설정 가이드입니다.","Refresh the OBS browser source after changing URL options.":"URL 옵션을 변경한 뒤 OBS 브라우저 소스를 새로고침하세요.","Send or wait for one chat message so you know the source is working.":"채팅 메시지를 하나 보내거나 도착할 때까지 기다려 소스가 작동하는지 확인하세요.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja dock showing three received chat messages":"받은 채팅 메시지 세 개를 보여 주는 Social Stream Ninja 도크","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Templates Gallery":"템플릿 갤러리","The dock is your test screen. Open it before changing OBS settings.":"도크는 테스트 화면입니다. OBS 설정을 변경하기 전에 여세요.","Troubleshooting":"문제 해결"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/obs-quick-start.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/obs-quick-start.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-quick-start.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-quick-start.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/obs-quick-start.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-quick-start.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-quick-start.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-quick-start.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-quick-start.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/obs-quick-start.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-quick-start.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-quick-start.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-quick-start.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="obs-quick-start.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/obs-quick-start.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/obs-quick-start.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/obs-quick-start.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/obs-quick-start.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/obs-quick-start.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>OBS 빠른 시작</h1>
+            <p>최소한의 설정으로 채팅을 OBS에 표시하세요.</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>1. 세션 ID 하나 선택</h3>
+                <p>짧은 세션 ID 하나를 정하고 모든 곳에서 사용하세요. 채팅 소스, 도크, OBS 오버레이가 서로를 찾는 데 사용합니다.</p>
+                <pre>YOUR_SESSION_ID</pre>
+            </div>
+
+            <div class="guide-card">
+                <h3>2. 채팅 소스 시작</h3>
+                <ol class="guide-steps">
+                    <li>Social Stream Ninja를 설치하거나 여세요.</li>
+                    <li>사용하는 플랫폼의 채팅 소스를 열고 열어 두세요.</li>
+                    <li>채팅 메시지를 하나 보내거나 도착할 때까지 기다려 소스가 작동하는지 확인하세요.</li>
+                </ol>
+                <p>어떤 소스 모드를 사용할지 모르겠다면 다음을 참고하세요: <a href="platform-setup-picker.html">플랫폼 설정 선택기</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>3. 도크 열기</h3>
+                <p>도크는 테스트 화면입니다. OBS 설정을 변경하기 전에 여세요.</p>
+                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID</pre>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-dock-message-check.png" alt="받은 채팅 메시지 세 개를 보여 주는 Social Stream Ninja 도크" class="guide-image">
+                    <figcaption>여기에 메시지가 나타나면 Social Stream Ninja가 채팅을 받고 있는 것입니다. OBS에서도 같은 세션 ID를 사용하세요.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>4. OBS 브라우저 소스 추가</h3>
+                <p>OBS에 브라우저 소스를 추가하고 오버레이 URL을 붙여 넣으세요.</p>
+                <pre>https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID</pre>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-featured-overlay-preview.png" alt="예시 채팅 메시지와 후원 배지가 있는 강조 메시지 오버레이 미리 보기" class="guide-image">
+                    <figcaption>채팅이 도크에 도착하면 브라우저 소스에 이와 같은 강조 메시지를 표시할 수 있습니다.</figcaption>
+                </figure>
+                <p>일반 채팅 오버레이 배치는 다음의 템플릿을 사용하세요: <a href="templates.html">템플릿 갤러리</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h3>5. OBS가 비어 있는 경우</h3>
+                <p>이 순서대로 한 번에 하나씩 확인하세요.</p>
+                <ul class="guide-list">
+                    <li>도크가 메시지를 받는지 먼저 확인하세요. 도크가 비어 있다면 아직 OBS의 문제가 아닙니다.</li>
+                    <li>OBS URL에 같은 값이 있는지 확인하세요: <code>session</code>.</li>
+                    <li>URL 옵션을 변경한 뒤 OBS 브라우저 소스를 새로고침하세요.</li>
+                    <li>소스 채팅 페이지 또는 앱 소스 창이 여전히 실행 중인지 확인하세요.</li>
+                </ul>
+                <p>자세한 내용: <a href="guides.html#extension-troubleshooting">문제 해결</a>.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 라이선스.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

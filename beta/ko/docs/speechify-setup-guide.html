@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/speechify-setup-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/speechify-setup-guide.html">
+    <meta property="og:title" content="Speechify 설정 가이드 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja에서 Speechify를 설정하고 음성을 선택하며 읽기 속도와 볼륨을 조절하세요. 필요하면 OBS를 통해 오디오를 전송하세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/speechify-setup-guide.html">
+    <meta name="twitter:title" content="Speechify 설정 가이드 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja에서 Speechify를 설정하고 음성을 선택하며 읽기 속도와 볼륨을 조절하세요. 필요하면 OBS를 통해 오디오를 전송하세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speechify 설정 가이드 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <style>
+        .tts-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+        .tts-preview { border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.6rem; min-width: 0; }
+        .tts-preview h3 { margin-top: 0; }
+        .tts-preview audio { width: 100%; margin: .8rem 0; }
+        .tts-settings { margin: 1.2rem 0; }
+        .tts-settings summary { cursor: pointer; font-weight: 600; padding: .8rem 0; }
+        .tts-settings summary:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+        .tts-settings img { max-width: 52rem; }
+        .tts-preview code { overflow-wrap: anywhere; }
+        .guide-card[id] { scroll-margin-top: 10rem; }
+        .guide-image-medium { max-width: 52rem; }
+        @media (max-width: 700px) { .tts-preview-grid { grid-template-columns: 1fr; } }
+    </style>
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja에서 Speechify를 설정하고 음성을 선택하며 읽기 속도와 볼륨을 조절하세요. 필요하면 OBS를 통해 오디오를 전송하세요.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/speechify-setup-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"(100%). Update the dock URL again. If you lowered the dock's own volume slider, turn it back up.":"(100%)로 설정하세요. 도크 URL을 다시 업데이트하세요. 도크 자체의 볼륨 슬라이더를 낮췄다면 다시 올리세요.","+3 dB":"+3 dB",", add a":"를 열고 다음을 추가하세요:",", and":", 그리고",", or the SSN extension popup.":"또는 SSN 확장 프로그램 팝업을 여세요.",", then click":"한 다음 클릭합니다:",", then expand":"를 찾은 뒤 다음을 펼치세요:",", then open the updated dock link. Speechify lists":"를 변경한 뒤 업데이트한 도크 링크를 여세요. Speechify에서 예시로 제공하는 음성:",", turn on the switch beside":"에서 다음 옆의 스위치를 켜세요:",". Avoid":"로 설정하세요. 피할 옵션:",". Copy an existing key, or create one if needed.":"를 여세요. 기존 키를 복사하거나 필요하면 새로 만드세요.",". For a first English voice, enter":"에 키를 붙여 넣으세요. 처음 시험할 영어 음성으로는",". Installing the Speechify reading app alone does not connect it to SSN. Check API access and usage charges in your Speechify account. Chat selected for speech is sent to Speechify.":"가 필요합니다. Speechify 읽기 앱만 설치해도 SSN에 연결되는 것은 아닙니다. Speechify 계정에서 API 접근과 사용 요금을 확인하세요. 음성으로 읽도록 선택한 채팅은 Speechify로 전송됩니다.",". Its voice-list API returns the voices your account can use; copy the selected voice's":"를 참고하세요. 음성 목록 API가 계정에서 사용할 수 있는 음성을 반환합니다. 선택한 음성의",". Keep only one copy speaking to avoid doubled voices.":"를 사용하세요. 음성이 중복되지 않도록 한 페이지만 읽게 하세요.",". Keep your chosen voice ID; Henry and Carly were tested with the current models. The legacy models remain available for existing configurations.":"를 선택할 수 있습니다. 선택한 음성 ID는 유지하세요. Henry와 Carly는 현재 모델로 시험했습니다. 기존 설정에는 이전 모델도 계속 사용할 수 있습니다.",". Name the source":"를 선택하세요. 소스 이름은",". You can also search settings for":"를 펼치세요. 설정에서 다음을 검색해도 됩니다:","0.0 dB":"0.0 dB","0.5 to 3.0":"0.5~3.0","1. Get your Speechify API key":"1. Speechify API 키 받기","2. Select Speechify in SSN":"2. SSN에서 Speechify 선택","3. Open the updated dock link":"3. 업데이트한 도크 링크 열기","API Keys":"API 키 (API Keys)","Advanced Audio Properties":"고급 오디오 속성 (Advanced Audio Properties)","After changing voice, speed, or provider, copy the link again.":"음성, 속도 또는 제공업체를 변경하면 링크를 다시 복사하세요.","An OBS custom dock is a control panel. For these instructions, use a":"OBS 사용자 지정 도크는 제어 패널입니다. 이 안내에서는 다음을 사용하세요:","Audio Mixer":"오디오 믹서","Audio Monitoring":"오디오 모니터링 (Audio Monitoring)","Back to the general TTS guide":"일반 음성 읽기 가이드로 돌아가기","Before you start":"시작하기 전","Browser Source in your scene":"장면의 브라우저 소스","Change":"변경할 항목:","Change the settings under":"다음의 설정을 변경하세요:","Change voice":"음성 변경","Choose a voice instructions":"음성 선택 안내","Choose another voice":"다른 음성 선택","Commands & API":"명령 및 API","Connect Speechify to SSN, choose a voice, and adjust speech speed and volume.":"Speechify를 SSN에 연결하고 음성을 선택하며 읽기 속도와 볼륨을 조절하세요.","Connect your first chat source":"첫 채팅 소스 연결","Control audio via OBS":"OBS를 통해 오디오 제어(Control audio via OBS)","Copy the updated dock link and replace the URL in your browser or OBS source. Compare the same short sentence at both settings.":"업데이트한 도크 링크를 복사하여 브라우저 또는 OBS 소스의 URL을 교체하세요. 두 설정에서 같은 짧은 문장을 비교하세요.","Download":"다운로드","Echo or repeated speech:":"울림 또는 음성 반복:","Enable TTS in dock":"도크에서 TTS 활성화","Enable chat reading in the dock section.":"도크 섹션에서 채팅 읽기를 활성화하세요.","Example: Henry with Speed enabled at 1.2 and Model set to Simba 3.0. The API key is omitted.":"예: Henry 음성, Speed 활성화 및 1.2, Model은 Simba 3.0. API 키는 생략했습니다.","Features":"기능","Filters":"필터 (Filters)","Find":"찾기:","For audio without visible chat, keep the Browser Source active and position it outside the visible canvas. Do not rely on a source that is shut down when hidden to keep reading.":"채팅을 보이지 않고 소리만 내려면 브라우저 소스를 활성화한 채 표시되는 캔버스 밖에 배치하세요. 숨겨질 때 종료되는 소스가 계속 읽을 것이라고 기대하지 마세요.","For help, share your app version, voice ID, what step failed, and whether audio runs in SSApp, a browser, or OBS. Remove API keys and private session links from screenshots.":"도움이 필요하면 앱 버전, 음성 ID, 실패한 단계, 오디오가 SSApp/브라우저/OBS 중 어디에서 재생되는지 알려 주세요. 스크린샷에서 API 키와 비공개 세션 링크를 제거하세요.","Gain":"게인 (Gain)","Gain and other audio filters here":"게인 및 기타 오디오 필터 안내","Get a key":"키 받기","Guides":"가이드","Hire":"작업 의뢰","Home":"홈","If it is still too quiet, open that audio source's":"여전히 너무 작으면 해당 오디오 소스의","If something does not work":"작동하지 않을 때","In OBS, unmute":"OBS에서 다음의 음소거를 해제하세요:","In SSN's dock TTS settings, enable":"SSN의 도크 음성 읽기 설정에서 다음을 활성화하세요:","In a normal browser, click inside the dock once if audio is blocked.":"일반 브라우저에서 오디오가 차단되면 도크 안을 한 번 클릭하세요.","In the scene you use for streaming, go to":"방송에 사용하는 장면에서 다음으로 이동하세요:","Inspiration":"아이디어","Keep the key ready to paste into SSN. You do not need to install an SDK or run code.":"SSN에 붙여 넣을 수 있도록 키를 준비하세요. SDK를 설치하거나 코드를 실행할 필요는 없습니다.","Keep the source connected and the TTS dock open. New eligible messages are read in sequence; filters and TTS controls can exclude messages. Busy chat can build a queue.":"소스를 연결하고 음성 읽기 도크를 열어 두세요. 조건을 충족하는 새 메시지를 순서대로 읽으며 필터와 음성 읽기 제어에 따라 메시지가 제외될 수 있습니다. 채팅이 많으면 대기열이 쌓일 수 있습니다.","Keep your key and generated SSN link private.":"키와 생성된 SSN 링크를 비공개로 유지하세요.","Leave Speed at its default for your first test. Leave the optional Model and language switches off; SSN uses Simba 3.0 by default.":"첫 테스트에서는 Speed를 기본값으로 두세요. 선택적 Model 및 언어 스위치는 꺼 두세요. SSN은 기본적으로 Simba 3.0을 사용합니다.","Main chat overlay & control dock":"기본 채팅 오버레이 및 제어 도크","Main navigation":"기본 탐색 메뉴","Make a short recording and play it back to confirm the voice is in the output.":"짧게 녹화하고 재생하여 출력에 음성이 포함되는지 확인하세요.","Make it louder for viewers":"시청자에게 더 크게 들리게 하기","Make it read faster":"더 빠르게 읽기","Message: Text to Speech":"메시지 — 음성 읽기","Model unavailable?":"모델을 사용할 수 없나요?","Monitor Only (mute output)":"모니터링만(출력 음소거) (Monitor Only (mute output))","Monitor and Output":"모니터링 및 출력","No text in the dock:":"도크에 텍스트가 없음:","OBS Browser Source documentation":"OBS 브라우저 소스 문서","OBS Browser Source properties showing the URL field and Control audio via OBS checkbox":"URL 입력란과 OBS를 통해 오디오 제어 체크박스가 표시된 OBS 브라우저 소스 속성","OBS audio":"OBS 오디오","OK":"확인","Open":"열기","Open navigation menu":"탐색 메뉴 열기","Open that newly copied link in the browser where you want speech to play. If using OBS, follow the next OBS section.":"음성을 재생할 브라우저에서 방금 복사한 링크를 여세요. OBS를 사용한다면 다음 OBS 섹션을 따르세요.","Open the":"다음을 여세요:","Open the desktop app's":"데스크톱 앱의 다음을 여세요:","Optional: send Speechify audio through OBS":"선택 사항: OBS를 통해 Speechify 오디오 전송","Overlay Gallery":"오버레이 갤러리","Paste the updated SSN dock link into":"업데이트한 SSN 도크 링크를 다음에 붙여 넣으세요:","Paste your key into":"키를 다음에 붙여 넣으세요:","Read faster":"더 빠르게 읽기","Read your chat with Speechify":"Speechify로 채팅 읽기","Record speech alongside your microphone and background audio. Listen back and adjust the balance. Reduce gain if speech distorts or the meter reaches the red end.":"마이크와 배경 오디오를 함께 녹음하세요. 다시 듣고 균형을 조절하세요. 음성이 왜곡되거나 미터가 빨간 끝에 닿으면 게인을 낮추세요.","Reference:":"참고:","Replace the example OBS URL with your SSN link and tick Control audio via OBS. This reference screenshot shows the checkbox before it is enabled.":"예제 OBS URL을 SSN 링크로 교체하고 OBS를 통해 오디오 제어를 선택하세요. 이 참고 스크린샷은 체크박스를 활성화하기 전 모습입니다.","Replace the old URL wherever speech plays. Refreshing a page that still has the old URL can keep the old settings.":"음성이 재생되는 모든 곳에서 이전 URL을 교체하세요. 이전 URL이 남아 있는 페이지를 새로고침하면 이전 설정이 유지될 수 있습니다.","Route the TTS audio to an input that app can capture. The setup depends on your operating system and the app's audio controls.":"음성 읽기 오디오를 해당 앱이 캡처할 수 있는 입력으로 보내세요. 설정은 운영체제와 앱의 오디오 제어에 따라 다릅니다.","SSN Speechify":"SSN Speechify","SSN settings showing the Enable TTS in dock switch":"도크에서 음성 읽기 활성화 스위치가 표시된 SSN 설정","SSN's volume stops at 100%; extra boost belongs in your outgoing audio mix. Turning up your headphones alone does not make the stream louder. OBS documents":"SSN의 볼륨은 최대 100%입니다. 추가 증폭은 송출 오디오 믹스에서 해야 합니다. 헤드폰 볼륨만 올려도 방송 소리가 커지지는 않습니다. OBS 문서의","Select Simba 3.0 or Simba 3.2 and use a voice your Speechify account supports. Speechify is retiring the older English and Multilingual models; see its":"Simba 3.0 또는 Simba 3.2를 선택하고 Speechify 계정이 지원하는 음성을 사용하세요. Speechify는 이전 English 및 Multilingual 모델을 종료하고 있습니다. 참고:","Send a short chat message and look for movement in that source's":"짧은 채팅 메시지를 보내고 해당 소스의 다음 미터가 움직이는지 확인하세요:","Send a short message in your own connected chat. Confirm the new message appears and is spoken.":"직접 연결한 채팅에서 짧은 메시지를 보내세요. 새 메시지가 나타나고 읽히는지 확인하세요.","Set":"설정:","Set up SSN":"SSN 설정","Set up Speechify in Social Stream Ninja, choose a voice, adjust reading speed and volume, and optionally send audio through OBS.":"Social Stream Ninja에서 Speechify를 설정하고 음성을 선택하며 읽기 속도와 볼륨을 조절하세요. 필요하면 OBS를 통해 오디오를 전송하세요.","Simba 3.0":"Simba 3.0","Simba 3.2 (English)":"Simba 3.2 (영어)","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Sources and Settings":"소스 및 설정","Sources → + → Browser":"소스 → + → 브라우저","Speaking faster is different from starting sooner.":"말하는 속도가 빠른 것과 재생 시작이 빠른 것은 다릅니다.","Speechify":"Speechify","Speechify API Key":"Speechify API 키 (Speechify API Key)","Speechify API account and key":"Speechify API 계정 및 키","Speechify Setup Guide - Social Stream Ninja":"Speechify 설정 가이드 - Social Stream Ninja","Speechify TTS Options":"Speechify TTS 옵션","Speechify Voice ID":"Speechify 음성 ID (Speechify Voice ID)","Speechify developer platform":"Speechify 개발자 플랫폼","Speechify options: API Key, Voice ID, Speed switch and value, Model, and language":"Speechify 옵션: API 키, 음성 ID, 속도 스위치와 값, 모델, 언어","Speechify's official quickstart":"Speechify 공식 빠른 시작","Speed":"속도 (Speed)","Speed does not remove the time Speechify needs to generate the audio. Shorter messages and turning off username reading can help the queue keep up.":"속도를 높여도 Speechify가 오디오를 생성하는 데 필요한 시간은 없어지지 않습니다. 메시지를 짧게 하고 사용자 이름 읽기를 끄면 대기열 처리에 도움이 될 수 있습니다.","Speed or model does not change:":"속도나 모델이 바뀌지 않음:","Start with chat connected in SSN. If you have not set that up yet, follow the":"먼저 SSN에서 채팅을 연결하세요. 아직 설정하지 않았다면 다음을 따르세요:","Still the old voice:":"여전히 이전 음성이 나옴:","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","TTS Service Provider":"TTS 서비스 제공자","Text arrives but no speech:":"텍스트는 도착하지만 음성이 없음:","The link can contain your API key. Do not post it in chat or include it in screenshots.":"링크에 API 키가 포함될 수 있습니다. 채팅에 게시하거나 스크린샷에 포함하지 마세요.","The switch must be on for the setting to be included in the link. Use":"설정이 링크에 포함되려면 스위치가 켜져 있어야 합니다. 사용할 값:","These account steps follow":"이 계정 단계는 다음을 따릅니다:","Tick":"선택할 체크박스:","To find more, use Speechify's":"더 찾으려면 Speechify의 다음 안내를 사용하세요:","Troubleshooting":"문제 해결","Try":"사용해 보세요:","Turn on":"켜기:","URL":"URL","Under":"다음 항목 아래에서:","Use":"사용:","Using another streaming app?":"다른 방송 앱을 사용하나요?","Viewer volume":"시청자 볼륨","Volume of speech":"읽기 음량 (Volume of speech)","Want to hear it yourself too?":"본인도 듣고 싶으신가요?","You hear it but viewers do not:":"본인에게는 들리지만 시청자에게는 안 들림:","You need internet access and a":"인터넷 접근과 다음이 필요합니다:","and raise its mixer fader toward":"의 음소거를 해제하고 믹서 페이더를 다음 쪽으로 올리세요:","and set it to":"를 활성화하고 값을 다음으로 설정하세요:","and sign in or create an account.":"에서 로그인하거나 계정을 만드세요.","as a modest increase from the normal value of":"로 일반 값보다 조금 높여 보세요. 일반 값:","as built-in examples. Use an exact API voice ID, not just a display name from the reading app.":"등이 내장 예시입니다. 읽기 앱의 표시 이름만이 아닌 정확한 API 음성 ID를 사용하세요.","audio filter, and try a small boost such as":"오디오 필터를 추가하고 다음처럼 조금 증폭해 보세요:","beside":"(다음 항목 옆에 있음):","by default. For English, you can enable the Model switch and choose":"을 기본적으로 사용합니다. 영어에는 Model 스위치를 켜고 다음을 선택할 수 있습니다:","check the OBS source meter, mute state, output track, and monitoring mode. Test a recording.":"OBS 소스 미터, 음소거 상태, 출력 트랙, 모니터링 모드를 확인하세요. 녹화로 시험하세요.","check the TTS switch, API key, account access/usage limits, and voice ID. In a normal browser, click the page once.":"음성 읽기 스위치, API 키, 계정 접근/사용 한도, 음성 ID를 확인하세요. 일반 브라우저에서는 페이지를 한 번 클릭하세요.","check you changed the dock's settings, selected Speechify, and replaced the old URL. Close or mute any other speaking copies.":"도크 설정을 변경하고 Speechify를 선택하고 이전 URL을 교체했는지 확인하세요. 음성을 내는 다른 사본은 닫거나 음소거하세요.","copy link":"링크 복사","current model reference":"현재 모델 참고 문서","fix source capture first. Speechify cannot read messages SSN has not received.":"먼저 소스 캡처를 해결하세요. SSN이 받지 않은 메시지는 Speechify가 읽을 수 없습니다.","for normal speed, a higher number for faster speech, or a lower number for slower speech. The supported range is":"은 일반 속도이며 숫자가 높으면 더 빠르고 낮으면 더 느립니다. 지원 범위:","from the Audio Mixer and set that source's":"을 오디오 믹서에서 열고 해당 소스의","getting-started guide":"시작하기 가이드","if it was turned down.":"쪽으로 낮아진 페이더를 올리세요.","if that is the page reading chat. Featured Chat and the chat bot have separate TTS settings.":"에서 채팅을 읽고 있다면 해당 설정을 변경하세요. 강조 채팅과 챗봇에는 별도의 음성 읽기 설정이 있습니다.","in":"위치:","into SSN. Match the voice to the model supported by your SSN settings. SSN uses":"를 SSN에 복사하세요. SSN 설정에서 지원하는 모델에 음성을 맞추세요. SSN은","leave one TTS page speaking and avoid capturing both its direct output and monitoring audio.":"음성 읽기 페이지 하나만 읽게 하고 직접 출력과 모니터링 오디오를 동시에 캡처하지 마세요.","meter.":"미터입니다.","text to speech":"text to speech","to":"대상:","turn on its switch and copy the updated link. Older SSN settings pages had a bug that could send these controls to the wrong overlay. Reload settings to get the updated controls.":"스위치를 켜고 업데이트한 링크를 복사하세요. 이전 SSN 설정 페이지에는 이 제어가 잘못된 오버레이로 전달될 수 있는 버그가 있었습니다. 설정을 다시 로드하면 업데이트된 제어를 받습니다.","when viewers should hear it. Avoid capturing the monitoring device a second time.":"는 시청자에게 들려야 할 때 피하세요. 모니터링 장치를 다시 캡처하지 마세요."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/speechify-setup-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/speechify-setup-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/speechify-setup-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/speechify-setup-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/speechify-setup-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/speechify-setup-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/speechify-setup-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/speechify-setup-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/speechify-setup-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/speechify-setup-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/speechify-setup-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/speechify-setup-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="speechify-setup-guide.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/speechify-setup-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/speechify-setup-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/speechify-setup-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/speechify-setup-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/speechify-setup-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero"><div class="container">
+        <h1>Speechify로 채팅 읽기</h1>
+        <p>Speechify를 SSN에 연결하고 음성을 선택하며 읽기 속도와 볼륨을 조절하세요.</p>
+    </div></section>
+    <main class="guide-section"><div class="container">
+        <div class="guide-card">
+            <h2>시작하기 전</h2>
+            <p>먼저 SSN에서 채팅을 연결하세요. 아직 설정하지 않았다면 다음을 따르세요: <a href="getting-started.html">시작하기 가이드</a>.</p>
+            <p>인터넷 접근과 다음이 필요합니다: <strong>Speechify API 계정 및 키</strong>가 필요합니다. Speechify 읽기 앱만 설치해도 SSN에 연결되는 것은 아닙니다. Speechify 계정에서 API 접근과 사용 요금을 확인하세요. 음성으로 읽도록 선택한 채팅은 Speechify로 전송됩니다.</p>
+            <p><a href="#account">키 받기</a> &middot; <a href="#setup">SSN 설정</a> &middot; <a href="#voice">음성 변경</a> &middot; <a href="#speed">더 빠르게 읽기</a> &middot; <a href="#obs">OBS 오디오</a> &middot; <a href="#volume">시청자 볼륨</a> &middot; <a href="#help">문제 해결</a></p>
+        </div>
+        <div class="guide-card" id="account">
+            <h2>1. Speechify API 키 받기</h2>
+            <ol class="guide-steps">
+                <li>다음을 여세요: <a href="https://platform.speechify.ai/">Speechify 개발자 플랫폼</a> 에서 로그인하거나 계정을 만드세요.</li>
+                <li>열기 <a href="https://platform.speechify.ai/api-keys">API 키 (API Keys)</a>를 여세요. 기존 키를 복사하거나 필요하면 새로 만드세요.</li>
+                <li>SSN에 붙여 넣을 수 있도록 키를 준비하세요. SDK를 설치하거나 코드를 실행할 필요는 없습니다.</li>
+            </ol>
+            <p>이 계정 단계는 다음을 따릅니다: <a href="https://docs.speechify.ai/docs/get-started/quickstart">Speechify 공식 빠른 시작</a>.</p>
+            <p><strong>키와 생성된 SSN 링크를 비공개로 유지하세요.</strong> 링크에 API 키가 포함될 수 있습니다. 채팅에 게시하거나 스크린샷에 포함하지 마세요.</p>
+        </div>
+        <div class="guide-card" id="setup">
+            <h2>2. SSN에서 Speechify 선택</h2>
+            <ol class="guide-steps">
+                <li>데스크톱 앱의 다음을 여세요: <strong>소스 및 설정</strong>또는 SSN 확장 프로그램 팝업을 여세요.</li>
+                <li>찾기: <strong>기본 채팅 오버레이 및 제어 도크</strong>를 찾은 뒤 다음을 펼치세요: <strong>메시지 — 음성 읽기</strong>를 펼치세요. 설정에서 다음을 검색해도 됩니다: <strong>text to speech</strong>.</li>
+                <li>켜기: <strong>도크에서 TTS 활성화</strong>.</li>
+                <li>설정: <strong>TTS 서비스 제공자</strong> 대상: <strong>Speechify</strong>.</li>
+                <li>키를 다음에 붙여 넣으세요: <strong>Speechify API 키 (Speechify API Key)</strong>에 키를 붙여 넣으세요. 처음 시험할 영어 음성으로는 <code>henry</code> 위치: <strong>Speechify 음성 ID (Speechify Voice ID)</strong>.</li>
+                <li>첫 테스트에서는 Speed를 기본값으로 두세요. 선택적 Model 및 언어 스위치는 꺼 두세요. SSN은 기본적으로 Simba 3.0을 사용합니다.</li>
+            </ol>
+            <figure class="guide-figure"><a href="../../docs/images/guides/tts-enable-dock-popup.png"><img src="../../docs/images/guides/tts-enable-dock-popup.png" alt="도크에서 음성 읽기 활성화 스위치가 표시된 SSN 설정" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>도크 섹션에서 채팅 읽기를 활성화하세요.</figcaption></figure>
+            <figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-speechify.png"><img src="../../docs/images/guides/tts-settings-speechify.png" alt="Speechify 옵션: API 키, 음성 ID, 속도 스위치와 값, 모델, 언어" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>예: Henry 음성, Speed 활성화 및 1.2, Model은 Simba 3.0. API 키는 생략했습니다.</figcaption></figure>
+        </div>
+        <div class="guide-card" id="open-link">
+            <h2>3. 업데이트한 도크 링크 열기</h2>
+            <ol class="guide-steps">
+                <li>사용: <strong>링크 복사</strong> (다음 항목 옆에 있음): <strong>기본 채팅 오버레이 및 제어 도크</strong>.</li>
+                <li>음성을 재생할 브라우저에서 방금 복사한 링크를 여세요. OBS를 사용한다면 다음 OBS 섹션을 따르세요.</li>
+                <li>일반 브라우저에서 오디오가 차단되면 도크 안을 한 번 클릭하세요.</li>
+                <li>직접 연결한 채팅에서 짧은 메시지를 보내세요. 새 메시지가 나타나고 읽히는지 확인하세요.</li>
+            </ol>
+            <p>소스를 연결하고 음성 읽기 도크를 열어 두세요. 조건을 충족하는 새 메시지를 순서대로 읽으며 필터와 음성 읽기 제어에 따라 메시지가 제외될 수 있습니다. 채팅이 많으면 대기열이 쌓일 수 있습니다.</p>
+            <p><strong>음성, 속도 또는 제공업체를 변경하면 링크를 다시 복사하세요.</strong> 음성이 재생되는 모든 곳에서 이전 URL을 교체하세요. 이전 URL이 남아 있는 페이지를 새로고침하면 이전 설정이 유지될 수 있습니다.</p>
+        </div>
+        <div class="guide-card" id="voice">
+            <h2>다른 음성 선택</h2>
+            <p>변경할 항목: <strong>Speechify 음성 ID (Speechify Voice ID)</strong>를 변경한 뒤 업데이트한 도크 링크를 여세요. Speechify에서 예시로 제공하는 음성: <code>henry</code>, <code>george</code>, <code>carly</code>, 그리고 <code>sabrina</code> 등이 내장 예시입니다. 읽기 앱의 표시 이름만이 아닌 정확한 API 음성 ID를 사용하세요.</p>
+            <p>더 찾으려면 Speechify의 다음 안내를 사용하세요: <a href="https://docs.speechify.ai/build/text-to-speech-api#choose-a-voice">음성 선택 안내</a>를 참고하세요. 음성 목록 API가 계정에서 사용할 수 있는 음성을 반환합니다. 선택한 음성의 <code>id</code> 를 SSN에 복사하세요. SSN 설정에서 지원하는 모델에 음성을 맞추세요. SSN은 <strong>Simba 3.0</strong> 을 기본적으로 사용합니다. 영어에는 Model 스위치를 켜고 다음을 선택할 수 있습니다: <strong>Simba 3.2 (영어)</strong>를 선택할 수 있습니다. 선택한 음성 ID는 유지하세요. Henry와 Carly는 현재 모델로 시험했습니다. 기존 설정에는 이전 모델도 계속 사용할 수 있습니다.</p>
+            <p>다음의 설정을 변경하세요: <strong>기본 채팅 오버레이 및 제어 도크</strong> 에서 채팅을 읽고 있다면 해당 설정을 변경하세요. 강조 채팅과 챗봇에는 별도의 음성 읽기 설정이 있습니다.</p>
+        </div>
+        <div class="guide-card" id="speed">
+            <h2>더 빠르게 읽기</h2>
+            <ol class="guide-steps">
+                <li>다음 항목 아래에서: <strong>Speechify TTS 옵션</strong>에서 다음 옆의 스위치를 켜세요: <strong>속도 (Speed)</strong>.</li>
+                <li>사용해 보세요: <strong>1.2</strong> 로 일반 값보다 조금 높여 보세요. 일반 값: <strong>1.0</strong>.</li>
+                <li>업데이트한 도크 링크를 복사하여 브라우저 또는 OBS 소스의 URL을 교체하세요. 두 설정에서 같은 짧은 문장을 비교하세요.</li>
+            </ol>
+            <p>설정이 링크에 포함되려면 스위치가 켜져 있어야 합니다. 사용할 값: <strong>1.0</strong> 은 일반 속도이며 숫자가 높으면 더 빠르고 낮으면 더 느립니다. 지원 범위: <strong>0.5~3.0</strong>.</p>
+            <p><strong>말하는 속도가 빠른 것과 재생 시작이 빠른 것은 다릅니다.</strong> 속도를 높여도 Speechify가 오디오를 생성하는 데 필요한 시간은 없어지지 않습니다. 메시지를 짧게 하고 사용자 이름 읽기를 끄면 대기열 처리에 도움이 될 수 있습니다.</p>
+        </div>
+        <div class="guide-card" id="obs">
+            <h2>선택 사항: OBS를 통해 Speechify 오디오 전송</h2>
+            <ol class="guide-steps">
+                <li>방송에 사용하는 장면에서 다음으로 이동하세요: <strong>소스 → + → 브라우저</strong>를 선택하세요. 소스 이름은 <strong>SSN Speechify</strong>.</li>
+                <li>업데이트한 SSN 도크 링크를 다음에 붙여 넣으세요: <strong>URL</strong>.</li>
+                <li>선택할 체크박스: <strong>OBS를 통해 오디오 제어(Control audio via OBS)</strong>한 다음 클릭합니다: <strong>확인</strong>.</li>
+                <li>짧은 채팅 메시지를 보내고 해당 소스의 다음 미터가 움직이는지 확인하세요: <strong>오디오 믹서</strong> 미터입니다.</li>
+                <li>짧게 녹화하고 재생하여 출력에 음성이 포함되는지 확인하세요.</li>
+            </ol>
+            <figure class="guide-figure"><a href="../../docs/images/guides/obs-browser-source-properties.png"><img src="../../docs/images/guides/obs-browser-source-properties.png" alt="URL 입력란과 OBS를 통해 오디오 제어 체크박스가 표시된 OBS 브라우저 소스 속성" class="guide-image" loading="lazy"></a><figcaption>예제 OBS URL을 SSN 링크로 교체하고 OBS를 통해 오디오 제어를 선택하세요. 이 참고 스크린샷은 체크박스를 활성화하기 전 모습입니다.</figcaption></figure>
+            <p>채팅을 보이지 않고 소리만 내려면 브라우저 소스를 활성화한 채 표시되는 캔버스 밖에 배치하세요. 숨겨질 때 종료되는 소스가 계속 읽을 것이라고 기대하지 마세요.</p>
+            <p><strong>본인도 듣고 싶으신가요?</strong> 열기 <strong>고급 오디오 속성 (Advanced Audio Properties)</strong> 을 오디오 믹서에서 열고 해당 소스의 <strong>오디오 모니터링 (Audio Monitoring)</strong> 대상: <strong>모니터링 및 출력</strong>로 설정하세요. 피할 옵션: <strong>모니터링만(출력 음소거) (Monitor Only (mute output))</strong> 는 시청자에게 들려야 할 때 피하세요. 모니터링 장치를 다시 캡처하지 마세요.</p>
+            <p>OBS 사용자 지정 도크는 제어 패널입니다. 이 안내에서는 다음을 사용하세요: <strong>장면의 브라우저 소스</strong>를 사용하세요. 음성이 중복되지 않도록 한 페이지만 읽게 하세요.</p>
+            <p>참고: <a href="https://obsproject.com/kb/browser-source">OBS 브라우저 소스 문서</a>.</p>
+        </div>
+        <div class="guide-card" id="volume">
+            <h2>시청자에게 더 크게 들리게 하기</h2>
+            <ol class="guide-steps">
+                <li>SSN의 도크 음성 읽기 설정에서 다음을 활성화하세요: <strong>읽기 음량 (Volume of speech)</strong> 를 활성화하고 값을 다음으로 설정하세요: <strong>1.0</strong> (100%)로 설정하세요. 도크 URL을 다시 업데이트하세요. 도크 자체의 볼륨 슬라이더를 낮췄다면 다시 올리세요.</li>
+                <li>OBS에서 다음의 음소거를 해제하세요: <strong>SSN Speechify</strong> 의 음소거를 해제하고 믹서 페이더를 다음 쪽으로 올리세요: <strong>0.0 dB</strong> 쪽으로 낮아진 페이더를 올리세요.</li>
+                <li>여전히 너무 작으면 해당 오디오 소스의 <strong>필터 (Filters)</strong>를 열고 다음을 추가하세요: <strong>게인 (Gain)</strong> 오디오 필터를 추가하고 다음처럼 조금 증폭해 보세요: <strong>+3 dB</strong>.</li>
+                <li>마이크와 배경 오디오를 함께 녹음하세요. 다시 듣고 균형을 조절하세요. 음성이 왜곡되거나 미터가 빨간 끝에 닿으면 게인을 낮추세요.</li>
+            </ol>
+            <p>SSN의 볼륨은 최대 100%입니다. 추가 증폭은 송출 오디오 믹스에서 해야 합니다. 헤드폰 볼륨만 올려도 방송 소리가 커지지는 않습니다. OBS 문서의 <a href="https://obsproject.com/kb/filters-guide">게인 및 기타 오디오 필터 안내</a>.</p>
+            <p><strong>다른 방송 앱을 사용하나요?</strong> 음성 읽기 오디오를 해당 앱이 캡처할 수 있는 입력으로 보내세요. 설정은 운영체제와 앱의 오디오 제어에 따라 다릅니다.</p>
+        </div>
+        <div class="guide-card" id="help">
+            <h2>작동하지 않을 때</h2>
+            <ul>
+                <li><strong>도크에 텍스트가 없음:</strong> 먼저 소스 캡처를 해결하세요. SSN이 받지 않은 메시지는 Speechify가 읽을 수 없습니다.</li>
+                <li><strong>여전히 이전 음성이 나옴:</strong> 도크 설정을 변경하고 Speechify를 선택하고 이전 URL을 교체했는지 확인하세요. 음성을 내는 다른 사본은 닫거나 음소거하세요.</li>
+                <li><strong>텍스트는 도착하지만 음성이 없음:</strong> 음성 읽기 스위치, API 키, 계정 접근/사용 한도, 음성 ID를 확인하세요. 일반 브라우저에서는 페이지를 한 번 클릭하세요.</li>
+                <li><strong>본인에게는 들리지만 시청자에게는 안 들림:</strong> OBS 소스 미터, 음소거 상태, 출력 트랙, 모니터링 모드를 확인하세요. 녹화로 시험하세요.</li>
+                <li><strong>울림 또는 음성 반복:</strong> 음성 읽기 페이지 하나만 읽게 하고 직접 출력과 모니터링 오디오를 동시에 캡처하지 마세요.</li>
+                <li><strong>속도나 모델이 바뀌지 않음:</strong> 스위치를 켜고 업데이트한 링크를 복사하세요. 이전 SSN 설정 페이지에는 이 제어가 잘못된 오버레이로 전달될 수 있는 버그가 있었습니다. 설정을 다시 로드하면 업데이트된 제어를 받습니다.</li>
+            </ul>
+            <p><strong>모델을 사용할 수 없나요?</strong> Simba 3.0 또는 Simba 3.2를 선택하고 Speechify 계정이 지원하는 음성을 사용하세요. Speechify는 이전 English 및 Multilingual 모델을 종료하고 있습니다. 참고: <a href="https://docs.speechify.ai/build/guides/concepts/models">현재 모델 참고 문서</a>.</p>
+            <p>도움이 필요하면 앱 버전, 음성 ID, 실패한 단계, 오디오가 SSApp/브라우저/OBS 중 어디에서 재생되는지 알려 주세요. 스크린샷에서 API 키와 비공개 세션 링크를 제거하세요.</p>
+            <p><a href="tts-setup-guide.html">일반 음성 읽기 가이드로 돌아가기</a> &middot; <a href="getting-started.html">첫 채팅 소스 연결</a></p>
+        </div>
+    </div></main>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 라이선스.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        function revealGuideSection() {
+            var target;
+            try { target = document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) { return; }
+            if (!target) return;
+            for (var node = target; node; node = node.parentElement) {
+                if (node.tagName === "DETAILS") node.open = true;
+            }
+            target.scrollIntoView();
+        }
+        window.addEventListener("hashchange", revealGuideSection);
+        revealGuideSection();
+    </script>
+</body>
+</html>

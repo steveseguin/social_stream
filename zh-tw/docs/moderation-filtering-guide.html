@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-tw/docs/moderation-filtering-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/zh-tw/docs/moderation-filtering-guide.html">
+    <meta property="og:title" content="管理與訊息篩選 - Social Stream Ninja">
+    <meta property="og:description" content="選擇哪些內容可進入 SSN 輸出，以及哪些內容可在單一停駐面板或疊加畫面中顯示。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-tw/docs/moderation-filtering-guide.html">
+    <meta name="twitter:title" content="管理與訊息篩選 - Social Stream Ninja">
+    <meta name="twitter:description" content="選擇哪些內容可進入 SSN 輸出，以及哪些內容可在單一停駐面板或疊加畫面中顯示。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>管理與訊息篩選 - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="選擇哪些內容可進入 SSN 輸出，以及哪些內容可在單一停駐面板或疊加畫面中顯示。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/moderation-filtering-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{", use":"，使用",". A platform suffix limits classification to that source type.":"。平台後綴會將分類限制在該來源類型。",". Censoring replaces matched text; blocking removes the whole message. Choose the behavior you want before testing.":"。審查會取代符合的文字；封鎖會移除整則訊息。測試前先選擇所需行為。",". Enter, for example,":"。例如，輸入",". For example:":"。例如：",". Matching is case-insensitive and checks both message text and the chatter’s name. A short fragment can match inside a longer word. If blur mode is enabled, matches can be blurred instead of removed.":"。比對不區分大小寫，同時檢查訊息文字和發言者姓名。較短片段可能符合較長單字中的部分內容。如果啟用了模糊模式，符合內容可被模糊處理，而非移除。",". This removes that user’s messages and adds them to the SSN hide-user list.":"。這會移除該使用者的訊息，並將其加入 SSN 隱藏使用者清單。",". Use menu search to find the exact labels below.":"。使用選單搜尋尋找下方的準確標籤。",". Use this on your personal Dock; a separate OBS Dock without the option uses the existing behavior of removing deleted messages. This cannot show messages that were blocked before SSN captured them.":". Use this on your personal Dock; a separate OBS Dock without the option uses the existing behavior of removing deleted messages. This cannot show messages that were blocked before SSN captured them.","1. Choose where to filter":"1. 選擇篩選位置","2. Block or restore a user":"2. 封鎖或恢復使用者","3. Filter words and commands":"3. 篩選詞語和指令","4. Handle bots and trusted links":"4. 處理機器人和受信任連結","5. Verify the boundary":"5. 驗證作用範圍",": a normal line, a blocked phrase, a command, and a bot message. Local filters should affect only the configured page; global filters should affect downstream outputs. Test manual and automatic featuring separately.":"：一則普通訊息、一則包含被封鎖片語的訊息、一個指令和一則機器人訊息。局部篩選器應只影響設定的頁面；全域篩選器應影響下游輸出。請分別測試手動和自動精選。","Add":"新增","All guides":"所有指南","Block messages that contain swear words":"Block messages that contain swear words","Blocked users":"已封鎖使用者","Browse all guides":"瀏覽所有指南","Captured source messages":"擷取的來源訊息","Censor":"Censor","Changes that generated Dock URL. Other open Docks and overlays keep their own options.":"變更產生的該停駐面板 URL。其他已開啟的停駐面板和疊加畫面保留各自的選項。","Choose what reaches SSN outputs and what appears in an individual Dock or overlay.":"選擇哪些內容可進入 SSN 輸出，以及哪些內容可在單一停駐面板或疊加畫面中顯示。","Commands & API":"指令與 API","Contains text or name":"包含文字或姓名","Controls the original platform chat. Hiding someone inside SSN does not establish a native platform ban.":"控制原始平台聊天。在 SSN 內隱藏某人，不等於在原平台封鎖該使用者。","Copy the updated Dock link and replace the URL wherever that Dock is open. For command clutter, the Dock supports":"複製更新後的停駐面板連結，並在該面板開啟的所有位置取代 URL。若指令過於雜亂，停駐面板支援","Deleted":"Deleted","Download":"下載","Drops or changes captured messages for downstream SSN outputs. Use when something should not reach any output.":"為下游 SSN 輸出捨棄或變更擷取到的訊息。適用於不希望某些內容到達任何輸出的情況。","Each page applies its own URL options":"每個頁面套用各自的 URL 選項","Effect":"效果","Features":"功能","Filter before distribution":"分發前篩選","For a custom Dock-only phrase list, find":"如需僅針對停駐面板自訂片語清單，請找到","For a message already in the Dock, right-click and open":"對於已經在停駐面板中的訊息，以滑鼠右鍵點選並開啟","For a prepared list, find":"如需預先準備的清單，請找到","For global profanity handling, search for":"如需全域處理髒話，請搜尋","Global filtering happens before distribution. A Dock URL filter affects only that Dock.":"全域篩選發生在分發之前。停駐面板 URL 篩選器只影響該停駐面板。","Global settings":"全域設定","Global settings and tools → Message - Visibility":"全域設定與工具 → 訊息 - 可見性","Guides":"指南","Hire":"聘用","Home":"首頁","Identify by name who are bots":"按名稱識別機器人","If too much disappears, turn off the last filter you added, check the blocked-user list, and check donation/member/queue-only toolbar modes. Old OBS URLs retain old options. For a reviewed-message workflow, see":"如果消失的內容過多，請關閉最後新增的篩選器，檢查封鎖使用者清單，以及工具列中的僅贊助／會員／佇列模式。舊 OBS URL 會保留舊選項。有關審核訊息後再展示的流程，請參閱","Incoming chat":"傳入聊天","Individual pages":"各個頁面","Inspiration":"靈感","Main navigation":"主導覽","Message - Visibility → Assign roles/classes to certain users":"訊息 - 可見性 → 為特定使用者分配角色／類別","Moderation and message filtering":"內容管理和訊息篩選","Moderation and message filtering - Social Stream Ninja":"管理與訊息篩選 - Social Stream Ninja","Native platform moderation":"原平台管理","On this page":"本頁內容","Open SSN’s popup or desktop":"開啟 SSN 彈出選單或桌面端的","Open navigation menu":"開啟導覽選單","Open one unfiltered Dock and one filtered Dock on the same session. Send fictional":"在相同工作階段中開啟一個未篩選的停駐面板和一個已篩選的停駐面板。傳送虛構的","Overlay Gallery":"疊加畫面圖庫","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja ·":"Social Stream Ninja ·","Sources and Settings":"來源與設定","Streaming Chat Dock link options":"直播聊天停駐面板連結選項","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","The bot must be identified first. Assigning an SSN role does not grant privileges on Twitch or another platform. See the":"必須先識別機器人。分配 SSN 角色不會授予 Twitch 或其他平台上的權限。請參閱","Then choose a global bot-hiding option if no output needs those messages, or add":"如果所有輸出都不需要這些訊息，請選擇全域隱藏機器人的選項；也可以加入","This example changes a Dock’s presentation. It does not disable commands in Points, Waitlist, or Event Flow.":"此範例只變更停駐面板的呈現方式，不會停用點數、等候名單或 Event Flow 中的指令。","To keep messages visible after the Dock receives a deletion, add":"To keep messages visible after the Dock receives a deletion, add","To unblock, remove the username from that list. Test with a new message; previously removed rows do not automatically return.":"要解除封鎖，請從清單中移除使用者名稱。使用新訊息測試；先前移除的項目不會自動恢復。","Under global":"在全域的","Use the platform’s own moderation tools when you need to ban or time out someone on the source platform. SSN’s visibility and role lists are not a substitute for platform permissions.":"需要在來源平台封鎖某人或暫時禁言時，請使用平台本身的管理工具。SSN 的可見性和角色清單不能取代平台權限。","User Actions → Block User":"使用者動作 → 封鎖使用者","Using the Dock":"使用停駐面板","Where":"位置","in the Streaming Chat Dock options. Turn it on, enter a word or phrase, and select":"，位於直播聊天停駐面板選項中。啟用它，輸入詞語或片語，然後選擇","label and dimmed text. For example:":"label and dimmed text. For example:","or":"或","role controls reference":"角色控制參考","test messages":"測試訊息","to a Dock URL to hide them only there. To replace ordinary links while allowing bot links, use:":"到停駐面板 URL，僅在該面板隱藏它們。要取代普通連結而允許機器人連結，請使用：","to that Dock’s URL. Deleted messages stay readable with a":"to that Dock’s URL. Deleted messages stay readable with a","under global Message - Visibility. Enable its switch and enter comma-separated usernames.":"，位於全域「訊息 - 可見性」下。啟用開關，並輸入以逗號分隔的使用者名稱。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/moderation-filtering-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="主導覽">
+<a href="../index.html">首頁</a>
+<a href="features.html">功能</a>
+<a href="inspiration.html" class="site-priority-inspiration">靈感</a>
+<a href="download.html">下載</a>
+<a href="guides.html">指南</a>
+<a href="commands.html">指令與 API</a>
+<a href="supported-sites.html">支援的網站</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a>
+<a href="services.html" class="site-priority-hire">聘用</a>
+<a href="support.html">支援</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/moderation-filtering-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/moderation-filtering-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/moderation-filtering-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/moderation-filtering-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/moderation-filtering-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/moderation-filtering-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/moderation-filtering-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/moderation-filtering-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="moderation-filtering-guide.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/moderation-filtering-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/moderation-filtering-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/moderation-filtering-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/moderation-filtering-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/moderation-filtering-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/moderation-filtering-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/moderation-filtering-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/moderation-filtering-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="切換主題">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>內容管理和訊息篩選</h1>
+<p>選擇哪些內容可進入 SSN 輸出，以及哪些內容可在單一停駐面板或疊加畫面中顯示。</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="本頁內容">
+<a href="guides.html">所有指南</a>
+<a href="#scope">1. 選擇篩選位置</a>
+<a href="#users">2. 封鎖或恢復使用者</a>
+<a href="#words">3. 篩選詞語和指令</a>
+<a href="#roles">4. 處理機器人和受信任連結</a>
+<a href="#check">5. 驗證作用範圍</a>
+</nav>
+<section class="guide-card" id="scope">
+<h2>1. 選擇篩選位置</h2>
+<p>開啟 SSN 彈出選單或桌面端的 <strong>來源與設定</strong>。使用選單搜尋尋找下方的準確標籤。</p>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>傳入聊天</strong>
+<span>擷取的來源訊息</span>
+</li>
+<li>
+<strong>全域設定</strong>
+<span>分發前篩選</span>
+</li>
+<li>
+<strong>各個頁面</strong>
+<span>每個頁面套用各自的 URL 選項</span>
+</li>
+</ol>
+<figcaption>全域篩選發生在分發之前。停駐面板 URL 篩選器只影響該停駐面板。</figcaption>
+</figure>
+<table class="guide-table guide-table-stack">
+<thead>
+<tr>
+<th scope="col">位置</th>
+<th scope="col">效果</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td data-label="Where">
+<strong>全域設定與工具 → 訊息 - 可見性</strong>
+</td>
+<td data-label="Effect">為下游 SSN 輸出捨棄或變更擷取到的訊息。適用於不希望某些內容到達任何輸出的情況。</td>
+</tr>
+<tr>
+<td data-label="Where">
+<strong>直播聊天停駐面板連結選項</strong>
+</td>
+<td data-label="Effect">變更產生的該停駐面板 URL。其他已開啟的停駐面板和疊加畫面保留各自的選項。</td>
+</tr>
+<tr>
+<td data-label="Where">
+<strong>原平台管理</strong>
+</td>
+<td data-label="Effect">控制原始平台聊天。在 SSN 內隱藏某人，不等於在原平台封鎖該使用者。</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="guide-card" id="users">
+<h2>2. 封鎖或恢復使用者</h2>
+<ol class="guide-steps">
+<li>對於已經在停駐面板中的訊息，以滑鼠右鍵點選並開啟 <strong>使用者動作 → 封鎖使用者</strong>。這會移除該使用者的訊息，並將其加入 SSN 隱藏使用者清單。</li>
+<li>如需預先準備的清單，請找到 <strong>已封鎖使用者</strong> ，位於全域「訊息 - 可見性」下。啟用開關，並輸入以逗號分隔的使用者名稱。</li>
+<li>要解除封鎖，請從清單中移除使用者名稱。使用新訊息測試；先前移除的項目不會自動恢復。</li>
+</ol>
+<p>需要在來源平台封鎖某人或暫時禁言時，請使用平台本身的管理工具。SSN 的可見性和角色清單不能取代平台權限。</p>
+<p>To keep messages visible after the Dock receives a deletion, add <code>&amp;showdeleted</code> to that Dock’s URL. Deleted messages stay readable with a <strong>Deleted</strong> label and dimmed text. For example: <code>dock.html?session=YOUR_SESSION_ID&amp;showdeleted</code>. Use this on your personal Dock; a separate OBS Dock without the option uses the existing behavior of removing deleted messages. This cannot show messages that were blocked before SSN captured them.</p>
+</section>
+<section class="guide-card" id="words">
+<h2>3. 篩選詞語和指令</h2>
+<p>如需全域處理髒話，請搜尋 <strong>Censor</strong> 或 <strong>Block messages that contain swear words</strong>。審查會取代符合的文字；封鎖會移除整則訊息。測試前先選擇所需行為。</p>
+<p>如需僅針對停駐面板自訂片語清單，請找到 <strong>包含文字或姓名</strong> ，位於直播聊天停駐面板選項中。啟用它，輸入詞語或片語，然後選擇 <strong>新增</strong>。比對不區分大小寫，同時檢查訊息文字和發言者姓名。較短片段可能符合較長單字中的部分內容。如果啟用了模糊模式，符合內容可被模糊處理，而非移除。</p>
+<p>複製更新後的停駐面板連結，並在該面板開啟的所有位置取代 URL。若指令過於雜亂，停駐面板支援 <code>&amp;hidecommands</code>。例如：</p>
+<pre>
+<code>dock.html?session=YOUR_SESSION_ID&amp;hidecommands&amp;blockedwords=spoiler</code>
+</pre>
+<p>此範例只變更停駐面板的呈現方式，不會停用點數、等候名單或 Event Flow 中的指令。</p>
+</section>
+<section class="guide-card" id="roles">
+<h2>4. 處理機器人和受信任連結</h2>
+<p>在全域的 <strong>訊息 - 可見性 → 為特定使用者分配角色／類別</strong>，使用 <strong>按名稱識別機器人</strong>。例如，輸入 <code>moobot:twitch,nightbot:twitch</code>。平台後綴會將分類限制在該來源類型。</p>
+<p>如果所有輸出都不需要這些訊息，請選擇全域隱藏機器人的選項；也可以加入 <code>&amp;hidebots</code> 到停駐面板 URL，僅在該面板隱藏它們。要取代普通連結而允許機器人連結，請使用：</p>
+<pre>
+<code>dock.html?session=YOUR_SESSION_ID&amp;striplinks&amp;allowbotlinks</code>
+</pre>
+<p>必須先識別機器人。分配 SSN 角色不會授予 Twitch 或其他平台上的權限。請參閱 <a href="../../docs/index.html?file=role-based-controls.md">角色控制參考</a>.</p>
+</section>
+<section class="guide-card" id="check">
+<h2>5. 驗證作用範圍</h2>
+<p>在相同工作階段中開啟一個未篩選的停駐面板和一個已篩選的停駐面板。傳送虛構的 <a href="test-message-guide.html">測試訊息</a>：一則普通訊息、一則包含被封鎖片語的訊息、一個指令和一則機器人訊息。局部篩選器應只影響設定的頁面；全域篩選器應影響下游輸出。請分別測試手動和自動精選。</p>
+<p>如果消失的內容過多，請關閉最後新增的篩選器，檢查封鎖使用者清單，以及工具列中的僅贊助／會員／佇列模式。舊 OBS URL 會保留舊選項。有關審核訊息後再展示的流程，請參閱 <a href="dock-live-guide.html">使用停駐面板</a>.</p>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">瀏覽所有指南</a>
+</p>
+</div>
+</div>
+</footer>
+<script data-copy-markdown src="../../docs/js/main.js">
+</script>
+</body>
+</html>

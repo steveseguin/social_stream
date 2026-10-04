@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ko/docs/tiktok-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/ko/docs/tiktok-guide.html">
+    <meta property="og:title" content="TikTok 가이드 - Social Stream Ninja">
+    <meta property="og:description" content="Standard 모드, TikTok WS, 답변, Polling, Euler 옵션, TikFinity 대체 연결을 포함한 Social Stream Ninja의 TikTok 사용 방법.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ko/docs/tiktok-guide.html">
+    <meta name="twitter:title" content="TikTok 가이드 - Social Stream Ninja">
+    <meta name="twitter:description" content="Standard 모드, TikTok WS, 답변, Polling, Euler 옵션, TikFinity 대체 연결을 포함한 Social Stream Ninja의 TikTok 사용 방법.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TikTok 가이드 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Standard 모드, TikTok WS, 답변, Polling, Euler 옵션, TikFinity 대체 연결을 포함한 Social Stream Ninja의 TikTok 사용 방법.">
+    <style>
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .setup-grid .guide-card {
+            margin-bottom: 0;
+        }
+
+        .mini-label {
+            display: inline-block;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .callout-box {
+            background: rgba(26, 115, 232, 0.08);
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 1.6rem;
+            margin: 2rem 0;
+        }
+
+        .callout-box.warning {
+            background: rgba(251, 188, 5, 0.14);
+            border-left-color: #f9ab00;
+        }
+
+        .dark-mode .callout-box {
+            background: rgba(26, 115, 232, 0.18);
+        }
+
+        .dark-mode .callout-box.warning {
+            background: rgba(251, 188, 5, 0.2);
+        }
+
+        .steps-table-wrap {
+            overflow-x: auto;
+            margin-top: 1.5rem;
+        }
+
+        .steps-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .steps-table th,
+        .steps-table td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .steps-table th {
+            color: var(--primary-color);
+        }
+
+        .steps-table code,
+        .guide-card code,
+        .callout-box code {
+            word-break: break-word;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            margin-top: 2rem;
+        }
+
+        .footer-links a {
+            text-decoration: none;
+        }
+
+        @media (max-width: 700px) {
+            .field-table, .steps-table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/tiktok-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"\"I keep getting rate-limited\"":"\"계속 요청 속도 제한에 걸려요\"","\"It says I am offline\"":"\"오프라인이라고 나와요\"","\"Messages are missing\"":"\"메시지가 누락돼요\"","\"Messages duplicate after reconnects\"":"\"다시 연결하면 메시지가 중복돼요\"","\"The auth window closes\"":"\"인증 창이 닫혀요\"","\"What should I try first?\"":"\"무엇부터 해 봐야 하나요?\"",". For event payload details, see the":"를 참고하세요. 이벤트 페이로드의 자세한 내용:","Activate source":"소스 활성화(Activate source)","Activate the new source and keep TikFinity open while live.":"새 소스를 활성화하고 방송 중에는 TikFinity를 열어 두세요.","Advanced signing options for users with their own API key or custom setup.":"자체 API 키나 사용자 지정 구성을 사용하는 사용자를 위한 고급 서명 옵션입니다.","Auto for reading":"읽기에는 Auto","Auto, Polling, TikFinity fallback":"Auto, Polling, TikFinity 대체 연결","Back To Guides":"가이드로 돌아가기","Best default for most users. Uses WebSocket first, then falls back to Polling if needed.":"대부분의 사용자에게 권장하는 기본값입니다. 먼저 WebSocket을 사용하고 필요하면 Polling으로 전환합니다.","Best for":"적합한 대상","Best reply mode:":"권장 답변 모드:","Best when you want to send replies from SSN and use the live TikTok page inside the app.":"SSN에서 답변을 보내고 앱 안에서 실제 TikTok 라이브 페이지를 사용하려는 경우에 적합합니다.","Bluesky":"Bluesky","Choose the TikTok mode or preset you want.":"원하는 TikTok 모드나 프리셋을 선택하세요.","Click":"클릭:","Click the":"다음을 클릭하세요:","Close extra TikTok tabs or apps on the same device if possible.":"가능하다면 같은 기기의 다른 TikTok 탭이나 앱을 닫으세요.","Close other TikTok tabs, apps, or duplicate viewers on the same device.":"같은 기기의 다른 TikTok 탭, 앱, 중복 시청 창을 닫으세요.","Commands & API":"명령 및 API","Common TikTok problems":"자주 발생하는 TikTok 문제","Community":"커뮤니티","Compatibility mode. Slower, but useful when WebSocket paths fail.":"호환성 모드입니다. 속도는 느리지만 WebSocket 연결이 실패할 때 유용합니다.","Connect TikTok in SSN":"SSN에 TikTok 연결","Consolidates your live social messaging streams and more. Free and open source.":"실시간 소셜 메시지와 다양한 정보를 한데 모읍니다. 무료 오픈 소스입니다.","Contribute":"기여하기","Copy the dock URL.":"도크 URL을 복사하세요.","Customization Guide":"맞춤 설정 가이드","Discord":"Discord","Discord StreamKit and TikFinity Sources":"Discord StreamKit 및 TikFinity 소스","Donate":"후원하기","Download":"다운로드","Download Desktop App":"데스크톱 앱 다운로드","Enter the TikTok username, live URL, or requested value.":"TikTok 사용자 이름, 라이브 URL 또는 요청된 값을 입력하세요.","Euler Proxy / Euler Signing":"Euler Proxy / Euler Signing","Event Reference":"이벤트 참고 문서","Extension":"확장 프로그램","FAQ":"자주 묻는 질문","Fallback":"대체 연결","Fallback reply mode:":"대체 답변 모드:","Fallback when Standard is flaky but you still want replies.":"Standard가 불안정하지만 답변 기능이 필요한 경우의 대안입니다.","Features":"기능","For a complete walkthrough of this fallback and Discord StreamKit, see":"이 대체 연결과 Discord StreamKit의 전체 안내:","GitHub":"GitHub","GitHub Repository":"GitHub 저장소","Go live first, then try":"먼저 방송을 시작한 뒤 다음을 시도하세요:","Go to":"이동할 위치:","Guides":"가이드","Hire":"작업 의뢰","Home":"홈","How to connect TikTok in Social Stream Ninja, choose the right mode, send replies, and use TikFinity as a fallback when needed.":"Social Stream Ninja에 TikTok을 연결하고 적절한 모드를 선택하여 답변을 보내는 방법과 필요한 경우 TikFinity를 대안으로 사용하는 방법.","How to send replies to TikTok chat":"TikTok 채팅에 답변 보내기","How to use TikFinity OBS Dock":"TikFinity OBS 도크 사용 방법","How to use TikTok with Social Stream Ninja, including Standard mode, TikTok WS, replies, Polling, Euler options, and TikFinity fallback.":"Standard 모드, TikTok WS, 답변, Polling, Euler 옵션, TikFinity 대체 연결을 포함한 Social Stream Ninja의 TikTok 사용 방법.","If Standard is flaky, try":"Standard가 불안정하다면 다음을 시도하세요:","If Standard is unstable":"Standard가 불안정할 때","If TikTok keeps missing chat, use":"TikTok 채팅이 계속 누락된다면 다음을 사용하세요:","If TikTok still misses too much chat, switch to the TikFinity fallback below.":"TikTok 채팅이 여전히 많이 누락된다면 아래의 TikFinity 대체 연결로 전환하세요.","If WebSocket still fails, try":"WebSocket이 계속 실패한다면 다음을 시도하세요:","If it still duplicates, switch modes or use TikFinity temporarily.":"계속 중복된다면 모드를 변경하거나 임시로 TikFinity를 사용하세요.","If you already use TikFinity activity-feed widgets, SSN can also work with supported TikFinity widget pages in browser-based workflows.":"이미 TikFinity 활동 피드 위젯을 사용하고 있다면, 브라우저 기반 구성에서도 지원되는 TikFinity 위젯 페이지를 SSN과 함께 사용할 수 있습니다.","If you need replies":"답변 기능이 필요할 때","If you need to reply, switch to":"답변을 보내려면 다음으로 전환하세요:","If you use the browser extension instead":"브라우저 확장 프로그램을 사용하는 경우","Important:":"중요:","In SSN, click":"SSN에서 다음을 클릭하세요:","Inspiration":"아이디어","Installation Guide":"설치 가이드","Join our Discord":"Discord 참여","Keep the signer window open.":"서명 창을 열어 두세요.","Local Signer":"로컬 서명기 (Local Signer)","Local Signer if Standard is unstable":"Standard가 불안정하면 Local Signer","Main navigation":"기본 탐색 메뉴","Make sure you are logged into the TikTok account that should send messages.":"메시지를 보낼 TikTok 계정에 로그인되어 있는지 확인하세요.","Modes":"모드","No":"아니요","Not meant for replies:":"답변용이 아닌 모드:","Open":"열기","Open TikFinity.":"TikFinity를 여세요.","Open navigation menu":"탐색 메뉴 열기","Open the broadcaster's TikTok live page in your browser and keep the extension enabled.":"브라우저에서 방송 진행자의 TikTok 라이브 페이지를 열고 확장 프로그램을 활성화해 두세요.","Open the standalone app.":"독립 실행형 앱을 여세요.","Option":"옵션","Other chat sites":"다른 채팅 사이트","Overlay -> OBS Docks":"Overlay -> OBS Docks","Overlay Gallery":"오버레이 갤러리","Overview":"개요","Paste the TikFinity dock URL.":"TikFinity 도크 URL을 붙여 넣으세요.","Pick a dock slot and configure it for chat.":"도크 슬롯을 선택하고 채팅용으로 설정하세요.","Polling":"폴링 (Polling)","Practical rule:":"선택 기준:","Privacy Policy":"개인정보 처리방침","Quick Links":"바로가기","Quick recommendation:":"빠른 추천:","Read-only fallback when TikTok native modes miss too much chat or fail to connect.":"TikTok 자체 연결 모드에서 채팅이 많이 누락되거나 연결되지 않을 때 사용하는 읽기 전용 대안입니다.","Reload":"다시 로드 (Reload)","Replies":"답변","Reply support depends on having a valid signed-in TikTok session.":"답변을 보내려면 유효한 TikTok 로그인 세션이 있어야 합니다.","Report an Issue":"문제 신고","Resources":"자료","Show capture page":"캡처 페이지 표시 (Show capture page)","Sign in":"로그인","Sign in if you need authenticated-only or host-only page events on your own live.":"본인 방송에서 로그인 사용자나 호스트 전용 페이지 이벤트가 필요하다면 로그인하세요.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. GPLv3.0 라이선스. 제작:","Standard":"표준 (Standard)","Standard for replies":"답변에는 Standard","Start here":"여기서 시작하세요","Start with":"다음으로 시작하세요:","Step 1":"1단계","Step 2":"2단계","Step 3":"3단계","Steve Seguin":"Steve Seguin","Stop the source fully, then reconnect cleanly.":"소스를 완전히 중지한 뒤 새로 연결하세요.","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Templates":"템플릿","Terms of Service":"서비스 이용약관","Testing after a stream ends will often fail.":"방송 종료 후 테스트하면 실패하는 경우가 많습니다.","The Supported Sites entry for TikTok Live: use a":"지원 사이트 목록의 TikTok Live 안내: 다음 형식의 주소를 사용하세요:","The standalone app still offers the widest TikTok mode selection and the cleanest fallback options.":"독립 실행형 앱은 여전히 가장 다양한 TikTok 모드와 간편한 대체 연결 옵션을 제공합니다.","This can be a TikTok-side limitation, not always an SSN bug.":"항상 SSN 버그인 것은 아니며 TikTok 측 제한일 수 있습니다.","This is a backup reader, not a reply tool.":"예비 읽기 소스이며 답변 도구는 아닙니다.","TikFinity OBS Dock":"TikFinity OBS Dock","TikFinity activity-feed pages can also work in browser-based SSN setups.":"TikFinity 활동 피드 페이지는 브라우저 기반 SSN 구성에서도 사용할 수 있습니다.","TikFinity can work as a backup source when TikTok itself is dropping or hiding too much chat.":"TikTok 자체에서 채팅을 많이 누락하거나 숨기는 경우 TikFinity를 예비 소스로 사용할 수 있습니다.","TikFinity if TikTok itself is the problem":"TikTok 자체의 문제라면 TikFinity","TikTok":"TikTok","TikTok Guide":"TikTok 가이드","TikTok Guide - Social Stream Ninja":"TikTok 가이드 - Social Stream Ninja","TikTok Live setup instructions modal from the Supported Sites page":"지원 사이트 페이지의 TikTok Live 설정 안내 창","TikTok WS + Auto":"TikTok WS + Auto","TikTok WS + Local Signer":"TikTok WS + Local Signer","TikTok chat only works when the account is actually live.":"TikTok 채팅은 해당 계정이 실제로 방송 중일 때만 작동합니다.","TikTok is one of the hardest platforms to keep stable because TikTok changes behavior often and not every account sees the same thing.":"TikTok은 동작 방식이 자주 바뀌고 계정마다 다르게 작동하므로 안정적인 연결을 유지하기 가장 어려운 플랫폼 중 하나입니다.","TikTok issues are not always caused by SSN. Missing messages, auth failures, and throttling can be caused by TikTok itself, by account state, or by region-specific restrictions.":"TikTok 문제의 원인이 항상 SSN에 있는 것은 아닙니다. 메시지 누락, 인증 실패, 속도 제한은 TikTok 자체, 계정 상태 또는 지역별 제한 때문에 발생할 수 있습니다.","Troubleshooting":"문제 해결","Try":"사용해 보세요:","Try another mode before deciding one path is permanently best.":"한 가지 방식이 언제나 가장 좋다고 판단하기 전에 다른 모드도 사용해 보세요.","Try another mode or signing path.":"다른 모드나 서명 경로를 시도하세요.","URL and keep the chat page open while the extension captures it.":". 확장 프로그램이 캡처하는 동안 채팅 페이지를 열어 두세요.","Update to the newest app build first.":"먼저 최신 앱 버전으로 업데이트하세요.","Use":"사용:","Use TikFinity as a fallback if it is behaving better for your account.":"본인 계정에서 TikFinity가 더 잘 작동한다면 대안으로 사용하세요.","Usually No":"대개 불가","Wait a few minutes before retrying.":"몇 분 기다린 뒤 다시 시도하세요.","Which TikTok option should I use?":"어떤 TikTok 옵션을 사용해야 하나요?","X.com":"X.com","Yes":"예","after sign-in.":"를 로그인 후 사용하세요.","button in the left sidebar.":"버튼은 왼쪽 사이드바에 있습니다.","if needed.":"(필요한 경우).","if reading reliability matters most, start with Auto or Polling. If replying matters most, use Standard or Local Signer.":"안정적인 읽기가 가장 중요하면 Auto나 Polling으로 시작하세요. 답변이 가장 중요하면 Standard나 Local Signer를 사용하세요.","mode first.":"모드를 먼저 사용하세요.","so you can see sign-in or CAPTCHA.":"를 사용하면 로그인이나 CAPTCHA 화면을 볼 수 있습니다.","through":"경로:","with contributions from the community.":". 커뮤니티가 함께 기여했습니다."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/tiktok-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/tiktok-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tiktok-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tiktok-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tiktok-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tiktok-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tiktok-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tiktok-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tiktok-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tiktok-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tiktok-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tiktok-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tiktok-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="tiktok-guide.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/tiktok-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tiktok-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tiktok-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tiktok-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tiktok-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>TikTok 가이드</h1>
+            <p>Social Stream Ninja에 TikTok을 연결하고 적절한 모드를 선택하여 답변을 보내는 방법과 필요한 경우 TikFinity를 대안으로 사용하는 방법.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <span class="mini-label">개요</span>
+                    <h3>여기서 시작하세요</h3>
+                    <p>TikTok은 동작 방식이 자주 바뀌고 계정마다 다르게 작동하므로 안정적인 연결을 유지하기 가장 어려운 플랫폼 중 하나입니다.</p>
+                    <div class="callout-box">
+                        <strong>빠른 추천:</strong>
+                        <ul class="guide-list">
+                            <li>다음으로 시작하세요: <strong>TikTok WS + Auto</strong>.</li>
+                            <li>답변을 보내려면 다음으로 전환하세요: <strong>표준 (Standard)</strong>.</li>
+                            <li>Standard가 불안정하다면 다음을 시도하세요: <strong>로컬 서명기 (Local Signer)</strong>.</li>
+                            <li>TikTok 채팅이 계속 누락된다면 다음을 사용하세요: <strong>TikFinity OBS Dock</strong> 경로: <strong>다른 채팅 사이트</strong>.</li>
+                        </ul>
+                    </div>
+                    <div class="callout-box warning">
+                        <strong>중요:</strong> TikTok 문제의 원인이 항상 SSN에 있는 것은 아닙니다. 메시지 누락, 인증 실패, 속도 제한은 TikTok 자체, 계정 상태 또는 지역별 제한 때문에 발생할 수 있습니다.
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">모드</span>
+                    <h3>어떤 TikTok 옵션을 사용해야 하나요?</h3>
+                    <div class="steps-table-wrap">
+                    <table class="steps-table">
+                        <thead>
+                            <tr>
+                                <th>옵션</th>
+                                <th>적합한 대상</th>
+                                <th>답변</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>TikTok WS + Auto</strong></td>
+                                <td>대부분의 사용자에게 권장하는 기본값입니다. 먼저 WebSocket을 사용하고 필요하면 Polling으로 전환합니다.</td>
+                                <td>아니요</td>
+                            </tr>
+                            <tr>
+                                <td><strong>표준 (Standard)</strong></td>
+                                <td>SSN에서 답변을 보내고 앱 안에서 실제 TikTok 라이브 페이지를 사용하려는 경우에 적합합니다.</td>
+                                <td>예</td>
+                            </tr>
+                            <tr>
+                                <td><strong>TikTok WS + Local Signer</strong></td>
+                                <td>Standard가 불안정하지만 답변 기능이 필요한 경우의 대안입니다.</td>
+                                <td>예</td>
+                            </tr>
+                            <tr>
+                                <td><strong>폴링 (Polling)</strong></td>
+                                <td>호환성 모드입니다. 속도는 느리지만 WebSocket 연결이 실패할 때 유용합니다.</td>
+                                <td>아니요</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Euler Proxy / Euler Signing</strong></td>
+                                <td>자체 API 키나 사용자 지정 구성을 사용하는 사용자를 위한 고급 서명 옵션입니다.</td>
+                                <td>대개 불가</td>
+                            </tr>
+                            <tr>
+                                <td><strong>TikFinity OBS Dock</strong></td>
+                                <td>TikTok 자체 연결 모드에서 채팅이 많이 누락되거나 연결되지 않을 때 사용하는 읽기 전용 대안입니다.</td>
+                                <td>아니요</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    </div>
+                </div>
+
+                <div class="setup-grid">
+                    <div class="guide-card">
+                        <span class="mini-label">1단계</span>
+                        <h3>SSN에 TikTok 연결</h3>
+                        <ol class="guide-steps">
+                            <li>독립 실행형 앱을 여세요.</li>
+                            <li>다음을 클릭하세요: <strong>TikTok</strong> 버튼은 왼쪽 사이드바에 있습니다.</li>
+                            <li>TikTok 사용자 이름, 라이브 URL 또는 요청된 값을 입력하세요.</li>
+                            <li>원하는 TikTok 모드나 프리셋을 선택하세요.</li>
+                            <li>클릭: <strong>소스 활성화(Activate source)</strong>.</li>
+                        </ol>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">2단계</span>
+                        <h3>답변 기능이 필요할 때</h3>
+                        <ol class="guide-steps">
+                            <li>사용: <strong>표준 (Standard)</strong> 모드를 먼저 사용하세요.</li>
+                            <li>클릭: <strong>로그인</strong> (필요한 경우).</li>
+                            <li>열기 <strong>캡처 페이지 표시 (Show capture page)</strong>.</li>
+                            <li>메시지를 보낼 TikTok 계정에 로그인되어 있는지 확인하세요.</li>
+                        </ol>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">3단계</span>
+                        <h3>Standard가 불안정할 때</h3>
+                        <ol class="guide-steps">
+                            <li>사용해 보세요: <strong>로컬 서명기 (Local Signer)</strong>.</li>
+                            <li>서명 창을 열어 두세요.</li>
+                            <li>WebSocket이 계속 실패한다면 다음을 시도하세요: <strong>폴링 (Polling)</strong>.</li>
+                            <li>TikTok 채팅이 여전히 많이 누락된다면 아래의 TikFinity 대체 연결로 전환하세요.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">답변</span>
+                    <h3>TikTok 채팅에 답변 보내기</h3>
+                    <p>답변을 보내려면 유효한 TikTok 로그인 세션이 있어야 합니다.</p>
+                    <ul class="guide-list">
+                        <li><strong>권장 답변 모드:</strong> <strong>표준 (Standard)</strong></li>
+                        <li><strong>대체 답변 모드:</strong> <strong>로컬 서명기 (Local Signer)</strong></li>
+                        <li><strong>답변용이 아닌 모드:</strong> Auto, Polling, TikFinity 대체 연결</li>
+                    </ul>
+                    <div class="callout-box">
+                        <strong>선택 기준:</strong> 안정적인 읽기가 가장 중요하면 Auto나 Polling으로 시작하세요. 답변이 가장 중요하면 Standard나 Local Signer를 사용하세요.
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">대체 연결</span>
+                    <h3>TikFinity OBS 도크 사용 방법</h3>
+                    <p>TikTok 자체에서 채팅을 많이 누락하거나 숨기는 경우 TikFinity를 예비 소스로 사용할 수 있습니다.</p>
+                    <ol class="guide-steps">
+                        <li>TikFinity를 여세요.</li>
+                        <li>이동할 위치: <strong>Overlay -&gt; OBS Docks</strong>.</li>
+                        <li>도크 슬롯을 선택하고 채팅용으로 설정하세요.</li>
+                        <li>도크 URL을 복사하세요.</li>
+                        <li>SSN에서 다음을 클릭하세요: <strong>다른 채팅 사이트</strong>.</li>
+                        <li>TikFinity 도크 URL을 붙여 넣으세요.</li>
+                        <li>새 소스를 활성화하고 방송 중에는 TikFinity를 열어 두세요.</li>
+                    </ol>
+                    <ul class="guide-list">
+                        <li>예비 읽기 소스이며 답변 도구는 아닙니다.</li>
+                        <li>이미 TikFinity 활동 피드 위젯을 사용하고 있다면, 브라우저 기반 구성에서도 지원되는 TikFinity 위젯 페이지를 SSN과 함께 사용할 수 있습니다.</li>
+                    </ul>
+                    <p>이 대체 연결과 Discord StreamKit의 전체 안내: <a href="external-overlay-sources.html#tikfinity">Discord StreamKit 및 TikFinity 소스</a>를 참고하세요. 이벤트 페이로드의 자세한 내용: <a href="event-reference.html">이벤트 참고 문서</a>.</p>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">문제 해결</span>
+                    <h3>자주 발생하는 TikTok 문제</h3>
+                    <div class="setup-grid">
+                        <div class="guide-card">
+                            <h4>"오프라인이라고 나와요"</h4>
+                            <ul class="guide-list">
+                                <li>TikTok 채팅은 해당 계정이 실제로 방송 중일 때만 작동합니다.</li>
+                                <li>먼저 방송을 시작한 뒤 다음을 시도하세요: <strong>다시 로드 (Reload)</strong>.</li>
+                                <li>방송 종료 후 테스트하면 실패하는 경우가 많습니다.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>"인증 창이 닫혀요"</h4>
+                            <ul class="guide-list">
+                                <li>사용: <strong>캡처 페이지 표시 (Show capture page)</strong> 를 사용하면 로그인이나 CAPTCHA 화면을 볼 수 있습니다.</li>
+                                <li>사용해 보세요: <strong>다시 로드 (Reload)</strong> 를 로그인 후 사용하세요.</li>
+                                <li>가능하다면 같은 기기의 다른 TikTok 탭이나 앱을 닫으세요.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>"메시지가 누락돼요"</h4>
+                            <ul class="guide-list">
+                                <li>항상 SSN 버그인 것은 아니며 TikTok 측 제한일 수 있습니다.</li>
+                                <li>한 가지 방식이 언제나 가장 좋다고 판단하기 전에 다른 모드도 사용해 보세요.</li>
+                                <li>본인 계정에서 TikFinity가 더 잘 작동한다면 대안으로 사용하세요.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>"다시 연결하면 메시지가 중복돼요"</h4>
+                            <ul class="guide-list">
+                                <li>먼저 최신 앱 버전으로 업데이트하세요.</li>
+                                <li>소스를 완전히 중지한 뒤 새로 연결하세요.</li>
+                                <li>계속 중복된다면 모드를 변경하거나 임시로 TikFinity를 사용하세요.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>"계속 요청 속도 제한에 걸려요"</h4>
+                            <ul class="guide-list">
+                                <li>같은 기기의 다른 TikTok 탭, 앱, 중복 시청 창을 닫으세요.</li>
+                                <li>몇 분 기다린 뒤 다시 시도하세요.</li>
+                                <li>다른 모드나 서명 경로를 시도하세요.</li>
+                            </ul>
+                        </div>
+                        <div class="guide-card">
+                            <h4>"무엇부터 해 봐야 하나요?"</h4>
+                            <ul class="guide-list">
+                                <li>읽기에는 Auto</li>
+                                <li>답변에는 Standard</li>
+                                <li>Standard가 불안정하면 Local Signer</li>
+                                <li>TikTok 자체의 문제라면 TikFinity</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">확장 프로그램</span>
+                    <h3>브라우저 확장 프로그램을 사용하는 경우</h3>
+                    <ul class="guide-list">
+                        <li>브라우저에서 방송 진행자의 TikTok 라이브 페이지를 열고 확장 프로그램을 활성화해 두세요.</li>
+                        <li>본인 방송에서 로그인 사용자나 호스트 전용 페이지 이벤트가 필요하다면 로그인하세요.</li>
+                        <li>TikFinity 활동 피드 페이지는 브라우저 기반 SSN 구성에서도 사용할 수 있습니다.</li>
+                        <li>독립 실행형 앱은 여전히 가장 다양한 TikTok 모드와 간편한 대체 연결 옵션을 제공합니다.</li>
+                    </ul>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/tiktok-live-setup-modal.png" alt="지원 사이트 페이지의 TikTok Live 설정 안내 창" class="guide-image guide-image-medium">
+                        <figcaption>지원 사이트 목록의 TikTok Live 안내: 다음 형식의 주소를 사용하세요: <code>tiktok.com/*/live</code> . 확장 프로그램이 캡처하는 동안 채팅 페이지를 열어 두세요.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="footer-links">
+                    <a href="guides.html#standalone-tiktok" class="btn btn-secondary">가이드로 돌아가기</a>
+                    <a href="download.html#standalone" class="btn btn-primary">데스크톱 앱 다운로드</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>실시간 소셜 메시지와 다양한 정보를 한데 모읍니다. 무료 오픈 소스입니다.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+                        <a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+                        <a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>바로가기</h3>
+                    <ul>
+                        <li><a href="../index.html">홈</a></li>
+                        <li><a href="features.html">기능</a></li>
+                        <li><a href="download.html">다운로드</a></li>
+                        <li><a href="guides.html">가이드</a></li>
+                        <li><a href="commands.html">명령 및 API</a></li>
+                        <li><a href="supported-sites.html">지원 사이트</a></li>
+                        <li><a href="templates.html">템플릿</a></li>
+                        <li><a href="support.html">지원</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>자료</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">설치 가이드</a></li>
+                        <li><a href="guides.html#extension-customization">맞춤 설정 가이드</a></li>
+                        <li><a href="guides.html#faq">자주 묻는 질문</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">문제 신고</a></li>
+                        <li><a href="../privacy.html">개인정보 처리방침</a></li>
+                        <li><a href="../TOS.html">서비스 이용약관</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>커뮤니티</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Discord 참여</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub 저장소</a></li>
+                        <li><a href="support.html#contribute">기여하기</a></li>
+                        <li><a href="https://github.com/sponsors/steveseguin" target="_blank">후원하기</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 라이선스. 제작: <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> . 커뮤니티가 함께 기여했습니다.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

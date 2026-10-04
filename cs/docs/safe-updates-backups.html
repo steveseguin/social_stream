@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/cs/docs/safe-updates-backups.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/cs/docs/safe-updates-backups.html">
+    <meta property="og:title" content="Aktualizace, zálohy a obnova - Social Stream Ninja">
+    <meta property="og:description" content="Bezpečně aktualizujte Social Stream Ninja, exportujte nastavení rozšíření nebo desktopové aplikace a obnovte relaci bez zhoršení ztráty dat.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/cs/docs/safe-updates-backups.html">
+    <meta name="twitter:title" content="Aktualizace, zálohy a obnova - Social Stream Ninja">
+    <meta name="twitter:description" content="Bezpečně aktualizujte Social Stream Ninja, exportujte nastavení rozšíření nebo desktopové aplikace a obnovte relaci bez zhoršení ztráty dat.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aktualizace, zálohy a obnova - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Bezpečně aktualizujte Social Stream Ninja, exportujte nastavení rozšíření nebo desktopové aplikace a obnovte relaci bez zhoršení ztráty dat.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/safe-updates-backups.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"## Verified maintainer context - Desktop app verification: `npm run test:settings-transfer` passed against SSApp 0.4.7. It confirmed the Settings Backup menu, Advanced Full Session Transfer menu, settings export/import round trip, encrypted `.ssappbk` round trip, and creation of a `pre-restore-*` directory. - Current desktop normal backup recognizes cached `streamID`, `password`, `state`, and `settings`, plus selected app-local settings such as `socialStreamState`, `settings`, `betaMode`, language, and supported YouTube/TikTok mode flags. - Desktop cached-state recovery also maintains guarded copies such as `savedSync.json` and backup/mirror state. Do not tell a user to delete the profile while attempting recovery. - `Clear All Sources` is intentionally narrower than Full Reset. It removes configured sources/groups while preserving sessions, cookies, and settings. - The dock-link recovery helper reconstructs only the session/password and URL parameters present in the pasted URL.":"## Ověřený kontext správce projektu\n\n- Ověření desktopové aplikace: `npm run test:settings-transfer` prošel proti SSApp 0.4.7. Potvrdil nabídku zálohování nastavení, pokročilý úplný přenos relace, export a opětovný import nastavení, obousměrný přenos šifrovaného `.ssappbk` a vytvoření adresáře `pre-restore-*`.\n- Současná běžná záloha desktopu rozpoznává uložené `streamID`, `password`, `state` a `settings` spolu s vybranými místními nastaveními aplikace, například `socialStreamState`, `settings`, `betaMode`, jazykem a podporovanými příznaky režimů YouTube/TikTok.\n- Obnova uloženého stavu desktopu také uchovává chráněné kopie, například `savedSync.json` a záložní/zrcadlený stav. Při pokusu o obnovu neradit uživateli, aby smazal profil.\n- `Clear All Sources` je záměrně užší než úplný reset. Odstraní nastavené zdroje/skupiny, ale zachová relace, cookies a nastavení.\n- Pomocník obnovy z odkazu doku obnoví pouze relaci/heslo a parametry URL přítomné ve vložené URL.",", choose a safe location, and keep the":", vyberte bezpečné umístění a zachovejte",". It is narrower than Full Reset and is designed to preserve sessions, cookies, and settings.":". Má menší rozsah než úplný reset a je navržen tak, aby zachoval relace, cookies a nastavení.",". Keep the unpacked folder in place and reload open chat tabs. See":". Ponechte rozbalenou složku na místě a obnovte otevřené karty chatu. Viz","A browser-extension":"Záloha rozšíření prohlížeče","A settings export can contain a session password, webhook or source URLs, and other private configuration. Do not post it publicly.":"Export nastavení může obsahovat heslo relace, URL webhooků či zdrojů a další soukromou konfiguraci. Nezveřejňujte ho.","Advanced Full Session Transfer":"Pokročilý úplný přenos relace","After updating, reload the source pages.":"Po aktualizaci obnovte stránky zdrojů.","Backup":"Záloha","Browser Extension Backup (Chrome, Edge, Firefox)":"Záloha rozšíření prohlížeče (Chrome, Edge, Firefox)","Chrome Web Store and other store-installed extensions:":"Rozšíření instalovaná z Chrome Web Store a dalších obchodů:","Clear All Sources":"Vymazat všechny zdroje","Commands & API":"Příkazy a API","Confirm that the saved":"Ověřte, že uložený","Desktop App Backup":"Záloha desktopové aplikace","Do not overwrite your only backup while troubleshooting a damaged setup.":"Při řešení poškozeného nastavení nepřepisujte svou jedinou zálohu.","Do not uninstall the browser extension just to update it.":"Neodinstalovávejte rozšíření prohlížeče jen kvůli aktualizaci.","Download":"Stáhnout","Export / import":"Export / import","Export settings first.":"Nejprve exportujte nastavení.","Export to disk":"Exportovat na disk (Export to disk)","Features":"Funkce","File → Advanced Full Session Transfer":"Soubor → Pokročilý úplný přenos relace","File → Settings Backup → Export Settings…":"Soubor → Záloha nastavení → Exportovat nastavení…","For a desktop whole-profile backup, use":"Pro zálohu celého desktopového profilu použijte","Full Session Transfer":"Úplný přenos relace","Global settings and tools":"Globální nastavení a nástroje","Guides":"Návody","Hire":"Najmout odborníka","Home":"Domů","If Settings Already Disappeared":"Pokud už nastavení zmizelo","If only the desktop source list is damaged, try":"Pokud je poškozený pouze seznam desktopových zdrojů, zkuste","If the app or extension still has useful state, export it before doing anything else.":"Pokud aplikace nebo rozšíření stále obsahuje užitečný stav, nejprve ho exportujte.","If you have no export but still have an old dock URL, the":"Pokud nemáte export, ale stále máte starou URL doku,","Import Settings…":"Importovat nastavení…","Import settings":"Importovat nastavení","Import the newest known-good":"Importujte nejnovější ověřenou funkční","Inspiration":"Inspirace","Installing a newer version over the existing installation should preserve the existing profile. Still export first, especially before reinstalling, moving between portable and installed builds, changing channels, or trying a reset.":"Instalace novější verze přes stávající by měla zachovat profil. Přesto nejprve exportujte, zejména před přeinstalací, přechodem mezi přenosnou a instalovanou verzí, změnou distribuční větve nebo pokusem o reset.","Keep backup files private.":"Záložní soubory uchovávejte soukromě.","Keep one working copy.":"Ponechte jednu funkční kopii.","Keep the exported file somewhere outside the app or unpacked-extension folder.":"Exportovaný soubor uložte mimo složku aplikace nebo rozbaleného rozšíření.","Main navigation":"Hlavní navigace","Make one usable backup before updating, reinstalling, resetting, or changing release channels.":"Před aktualizací, přeinstalací, resetem nebo změnou distribuční větve vytvořte jednu použitelnou zálohu.","Manual unpacked update:":"Ruční aktualizace rozbaleného rozšíření:","Menu":"Nabídka","More changes can overwrite the best recovery copy.":"Další změny mohou přepsat nejlepší kopii pro obnovu.","Moving or preserving the whole desktop profile, including local sessions and sign-in state. It creates an encrypted":"Přesun nebo uchování celého desktopového profilu včetně místních relací a přihlášení. Vytváří šifrovaný","Normal updates, settings moves, and first-line recovery. Imports through":"Běžné aktualizace, přesun nastavení a prvotní obnova. Import přes","Open":"Otevřít","Open navigation menu":"Otevřít navigační nabídku","Open the Social Stream Ninja control panel and scroll to":"Otevřete ovládací panel Social Stream Ninja a přejděte na","Overlay Gallery":"Galerie překryvů","Reload":"Znovu načíst","Reopen generated dock/overlay links and refresh saved OBS Browser Sources when their URLs changed.":"Znovu otevřete vygenerované odkazy doků/překryvů a obnovte uložené zdroje prohlížeče OBS, pokud se změnily jejich URL.","Safe Updates, Backups, and Recovery":"Bezpečné aktualizace, zálohy a obnova","Safe Updates, Backups, and Settings Recovery - Social Stream Ninja":"Aktualizace, zálohy a obnova - Social Stream Ninja","Safely update Social Stream Ninja, export extension or desktop app settings, and recover a session without making data loss worse.":"Bezpečně aktualizujte Social Stream Ninja, exportujte nastavení rozšíření nebo desktopové aplikace a obnovte relaci bez zhoršení ztráty dat.","Select":"Vyberte","Selected desktop preferences used by the app.":"Vybrané desktopové předvolby používané aplikací.","Settings Backup":"Záloha nastavení","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja Export and import section showing Reset all settings, Export to disk, Import settings, and the dock-link recovery helper":"Část exportu a importu Social Stream Ninja s možnostmi Resetovat všechna nastavení, Exportovat na disk, Importovat nastavení a pomocníkem obnovy z odkazu doku","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Source and global settings represented in the saved state.":"Nastavení zdrojů a globální nastavení zahrnutá v uloženém stavu.","Stop resetting and reinstalling.":"Přestaňte resetovat a přeinstalovávat.","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","The Safe Rule":"Bezpečné pravidlo","The Social Stream session ID and optional session password.":"ID relace Social Stream a volitelné heslo relace.","The current Export / import panel. Export before using Reset all settings.":"Současný panel Export / import. Před použitím Resetovat všechna nastavení proveďte export.","The current desktop settings-transfer test verifies a round trip for the cached Social Stream state and selected app settings. The browser extension export includes its session ID, optional password, state, and settings object.":"Současný test přenosu nastavení desktopu ověřuje export a opětovný import uloženého stavu Social Stream a vybraných nastavení aplikace. Export rozšíření prohlížeče obsahuje ID relace, volitelné heslo, stav a objekt nastavení.","The desktop app does not update itself automatically.":"Desktopová aplikace se neaktualizuje automaticky.","The normal settings export is the right choice for most updates. Full Session Transfer is available only in the desktop app; it is larger and replaces the target profile during restore. The app first keeps a":"Běžný export nastavení je správnou volbou pro většinu aktualizací. Úplný přenos relace je dostupný pouze v desktopové aplikaci; je větší a při obnově nahrazuje cílový profil. Aplikace nejprve uchová","Uninstalling removes that extension installation's stored settings.":"Odinstalace odstraní uložená nastavení dané instalace rozšíření.","Use":"Použijte","Use Full Reset only after making a backup or after accepting a complete local cleanup.":"Úplný reset použijte až po vytvoření zálohy nebo přijetí úplného místního vyčištění.","Use It For":"Použití","What A Normal Settings Backup Covers":"Co zahrnuje běžná záloha nastavení","backup does not include browser cookies or site login sessions. In the desktop app, a normal settings export also does not copy every cookie or site login; use the desktop-only Full Session Transfer when the entire app profile must move.":"neobsahuje cookies prohlížeče ani přihlášení na weby. Běžný export nastavení desktopové aplikace také nekopíruje všechny cookies a přihlášení; pro přesun celého profilu použijte Úplný přenos relace dostupný jen na desktopu.","can rebuild the session ID, password, and URL-driven settings found in that link. It cannot recreate settings or source accounts that were never present in the URL.":"může obnovit ID relace, heslo a nastavení řízená URL, která tento odkaz obsahuje. Nemůže obnovit nastavení ani účty zdrojů, které v URL nikdy nebyly.","copy of the current profile.":"kopii aktuálního profilu.","dock-link recovery helper":"pomocník obnovy z odkazu doku","download and extract the new build, replace the old extension files, then select":"stáhněte a rozbalte novou verzi, nahraďte staré soubory rozšíření a potom vyberte","extension on the filename.":"příponu názvu souboru.","file is present before updating, uninstalling, or resetting anything.":"soubor existuje, než cokoli aktualizujete, odinstalujete nebo resetujete.","file.":"soubor.","manual installation":"ruční instalace","on":"na","or":"nebo","settings backup.":"zálohu nastavení.","to restore that file later.":"pro pozdější obnovení tohoto souboru.","updates normally install in place and preserve settings. Do not uninstall and reinstall the extension just to force an update.":"aktualizace se obvykle instalují na místo a zachovávají nastavení. Kvůli vynucení aktualizace rozšíření neodinstalovávejte a znovu neinstalujte."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/safe-updates-backups.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/safe-updates-backups.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/safe-updates-backups.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/safe-updates-backups.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/safe-updates-backups.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/safe-updates-backups.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/safe-updates-backups.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/safe-updates-backups.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/safe-updates-backups.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/safe-updates-backups.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/safe-updates-backups.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/safe-updates-backups.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/safe-updates-backups.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/safe-updates-backups.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/safe-updates-backups.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/safe-updates-backups.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/safe-updates-backups.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="safe-updates-backups.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/safe-updates-backups.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Bezpečné aktualizace, zálohy a obnova</h1>
+            <p>Před aktualizací, přeinstalací, resetem nebo změnou distribuční větve vytvořte jednu použitelnou zálohu.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Bezpečné pravidlo</h2>
+                <ol class="guide-steps">
+                    <li><strong>Nejprve exportujte nastavení.</strong> Exportovaný soubor uložte mimo složku aplikace nebo rozbaleného rozšíření.</li>
+                    <li><strong>Neodinstalovávejte rozšíření prohlížeče jen kvůli aktualizaci.</strong> Odinstalace odstraní uložená nastavení dané instalace rozšíření.</li>
+                    <li><strong>Ponechte jednu funkční kopii.</strong> Při řešení poškozeného nastavení nepřepisujte svou jedinou zálohu.</li>
+                    <li><strong>Po aktualizaci obnovte stránky zdrojů.</strong> Znovu otevřete vygenerované odkazy doků/překryvů a obnovte uložené zdroje prohlížeče OBS, pokud se změnily jejich URL.</li>
+                </ol>
+            </div>
+
+            <div class="guide-card">
+                <h2>Záloha rozšíření prohlížeče (Chrome, Edge, Firefox)</h2>
+                <ol class="guide-steps">
+                    <li>Otevřete ovládací panel Social Stream Ninja a přejděte na <strong>Globální nastavení a nástroje</strong>.</li>
+                    <li>Otevřít <strong>Export / import</strong>.</li>
+                    <li>Vyberte <strong>Exportovat na disk (Export to disk)</strong>, vyberte bezpečné umístění a zachovejte <code>.data</code> příponu názvu souboru.</li>
+                    <li>Ověřte, že uložený <code>.data</code> soubor existuje, než cokoli aktualizujete, odinstalujete nebo resetujete.</li>
+                    <li>Použijte <strong>Importovat nastavení</strong> pro pozdější obnovení tohoto souboru.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/settings-backup-export-recovery.png" alt="Část exportu a importu Social Stream Ninja s možnostmi Resetovat všechna nastavení, Exportovat na disk, Importovat nastavení a pomocníkem obnovy z odkazu doku" class="guide-image">
+                    <figcaption>Současný panel Export / import. Před použitím Resetovat všechna nastavení proveďte export.</figcaption>
+                </figure>
+                <div class="guide-note">
+                    <p><strong>Rozšíření instalovaná z Chrome Web Store a dalších obchodů:</strong> aktualizace se obvykle instalují na místo a zachovávají nastavení. Kvůli vynucení aktualizace rozšíření neodinstalovávejte a znovu neinstalujte.</p>
+                </div>
+                <div class="guide-note">
+                    <p><strong>Ruční aktualizace rozbaleného rozšíření:</strong> stáhněte a rozbalte novou verzi, nahraďte staré soubory rozšíření a potom vyberte <strong>Znovu načíst</strong> na <code>chrome://extensions</code>. Ponechte rozbalenou složku na místě a obnovte otevřené karty chatu. Viz <a href="download.html#manual-install">ruční instalace</a>.</p>
+                </div>
+                <div class="warning-note"><strong>Záložní soubory uchovávejte soukromě.</strong> Export nastavení může obsahovat heslo relace, URL webhooků či zdrojů a další soukromou konfiguraci. Nezveřejňujte ho.</div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Záloha desktopové aplikace</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Záloha</th><th>Nabídka</th><th>Použití</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Backup">Záloha nastavení</td>
+                            <td data-label="Menu"><strong>Soubor → Záloha nastavení → Exportovat nastavení…</strong></td>
+                            <td data-label="Use It For">Běžné aktualizace, přesun nastavení a prvotní obnova. Import přes <strong>Importovat nastavení…</strong>.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Backup">Úplný přenos relace</td>
+                            <td data-label="Menu"><strong>Soubor → Pokročilý úplný přenos relace</strong></td>
+                            <td data-label="Use It For">Přesun nebo uchování celého desktopového profilu včetně místních relací a přihlášení. Vytváří šifrovaný <code>.ssappbk</code> soubor.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>Běžný export nastavení je správnou volbou pro většinu aktualizací. Úplný přenos relace je dostupný pouze v desktopové aplikaci; je větší a při obnově nahrazuje cílový profil. Aplikace nejprve uchová <code>pre-restore-*</code> kopii aktuálního profilu.</p>
+                <div class="guide-note">
+                    <p><strong>Desktopová aplikace se neaktualizuje automaticky.</strong> Instalace novější verze přes stávající by měla zachovat profil. Přesto nejprve exportujte, zejména před přeinstalací, přechodem mezi přenosnou a instalovanou verzí, změnou distribuční větve nebo pokusem o reset.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Pokud už nastavení zmizelo</h2>
+                <ol class="guide-steps">
+                    <li><strong>Přestaňte resetovat a přeinstalovávat.</strong> Další změny mohou přepsat nejlepší kopii pro obnovu.</li>
+                    <li>Pokud aplikace nebo rozšíření stále obsahuje užitečný stav, nejprve ho exportujte.</li>
+                    <li>Importujte nejnovější ověřenou funkční <code>.data</code> nebo <code>.json</code> zálohu nastavení.</li>
+                    <li>Pro zálohu celého desktopového profilu použijte <strong>Pokročilý úplný přenos relace</strong>.</li>
+                    <li>Pokud je poškozený pouze seznam desktopových zdrojů, zkuste <strong>Vymazat všechny zdroje</strong>. Má menší rozsah než úplný reset a je navržen tak, aby zachoval relace, cookies a nastavení.</li>
+                    <li>Úplný reset použijte až po vytvoření zálohy nebo přijetí úplného místního vyčištění.</li>
+                </ol>
+                <p>Pokud nemáte export, ale stále máte starou URL doku, <a href="../../recover.html">pomocník obnovy z odkazu doku</a> může obnovit ID relace, heslo a nastavení řízená URL, která tento odkaz obsahuje. Nemůže obnovit nastavení ani účty zdrojů, které v URL nikdy nebyly.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Co zahrnuje běžná záloha nastavení</h2>
+                <p>Současný test přenosu nastavení desktopu ověřuje export a opětovný import uloženého stavu Social Stream a vybraných nastavení aplikace. Export rozšíření prohlížeče obsahuje ID relace, volitelné heslo, stav a objekt nastavení.</p>
+                <ul class="guide-list">
+                    <li>Nastavení zdrojů a globální nastavení zahrnutá v uloženém stavu.</li>
+                    <li>ID relace Social Stream a volitelné heslo relace.</li>
+                    <li>Vybrané desktopové předvolby používané aplikací.</li>
+                </ul>
+                <p>Záloha rozšíření prohlížeče <code>.data</code> neobsahuje cookies prohlížeče ani přihlášení na weby. Běžný export nastavení desktopové aplikace také nekopíruje všechny cookies a přihlášení; pro přesun celého profilu použijte Úplný přenos relace dostupný jen na desktopu.</p>
+            </div>
+
+            <template data-copy-markdown-extra>
+## Ověřený kontext správce projektu
+
+- Ověření desktopové aplikace: `npm run test:settings-transfer` prošel proti SSApp 0.4.7. Potvrdil nabídku zálohování nastavení, pokročilý úplný přenos relace, export a opětovný import nastavení, obousměrný přenos šifrovaného `.ssappbk` a vytvoření adresáře `pre-restore-*`.
+- Současná běžná záloha desktopu rozpoznává uložené `streamID`, `password`, `state` a `settings` spolu s vybranými místními nastaveními aplikace, například `socialStreamState`, `settings`, `betaMode`, jazykem a podporovanými příznaky režimů YouTube/TikTok.
+- Obnova uloženého stavu desktopu také uchovává chráněné kopie, například `savedSync.json` a záložní/zrcadlený stav. Při pokusu o obnovu neradit uživateli, aby smazal profil.
+- `Clear All Sources` je záměrně užší než úplný reset. Odstraní nastavené zdroje/skupiny, ale zachová relace, cookies a nastavení.
+- Pomocník obnovy z odkazu doku obnoví pouze relaci/heslo a parametry URL přítomné ve vložené URL.
+            </template>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. Licence GPLv3.0.</p></div></div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-site-root="../../" data-site-language="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/pt-br/docs/custom-fonts.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:url" content="https://socialstream.ninja/pt-br/docs/custom-fonts.html">
+    <meta property="og:title" content="Fontes e estilos auto-hospedados - Social Stream Ninja">
+    <meta property="og:description" content="Aprenda a hospedar fontes e personalizar overlays do Social Stream Ninja, como dock.html e featured.html, com CSS próprio.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logotipo do Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/pt-br/docs/custom-fonts.html">
+    <meta name="twitter:title" content="Fontes e estilos auto-hospedados - Social Stream Ninja">
+    <meta name="twitter:description" content="Aprenda a hospedar fontes e personalizar overlays do Social Stream Ninja, como dock.html e featured.html, com CSS próprio.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logotipo do Social Stream Ninja">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fontes e estilos auto-hospedados - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Aprenda a hospedar fontes e personalizar overlays do Social Stream Ninja, como dock.html e featured.html, com CSS próprio.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="pt-br">
+<script id="ssn-site-language" type="application/json">{"language":"pt-br","page":"docs/custom-fonts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Mudar para o tema claro","Switch to dark theme":"Mudar para o tema escuro","Light mode":"Modo claro","Dark mode":"Modo escuro","Open navigation menu":"Abrir menu de navegação","Close navigation menu":"Fechar menu de navegação","Copy this document as Markdown to the clipboard":"Copiar este documento em Markdown para a área de transferência","Copy Markdown":"Copiar Markdown","Copying…":"Copiando…","Markdown copied":"Markdown copiado","Copy failed":"Falha ao copiar","Copy comprehensive Markdown for an AI assistant":"Copiar Markdown completo para um assistente de IA","Copy this documentation page as Markdown for an AI assistant":"Copiar esta página de documentação como Markdown para um assistente de IA"},"strings":{"(both pages support these).":"; as duas páginas aceitam essas opções.",", and":", e",", and row colors (":", e cores de linhas (",", or":", ou",", plus the":", além de",". The browser will fall back automatically if a glyph is missing.":". O navegador usará uma alternativa automaticamente se faltar um caractere.","1) Host your font files":"1) Hospede seus arquivos de fonte","2) Build the CSS":"2) Crie o CSS","3) Apply it to dock.html or featured.html":"3) Aplique a dock.html ou featured.html","4) Tune the overlay text":"4) Ajuste o texto do overlay","5) Troubleshooting":"5) Solução de problemas","; mismatches are the most common issue.":"; nomes diferentes são o problema mais comum.","API Reference":"Referência da API","About":"Sobre","Commands & API":"Comandos e API","Community":"Comunidade","Contribute":"Contribuir","Core typography variables used by both pages:":"Variáveis principais de tipografia usadas nas duas páginas:","Custom Overlays":"Sobreposições personalizadas","Customization Guide":"Guia de personalização","Define the font with":"Defina a fonte com","Discord":"Discord","Dock-only extras:":"Extras só do dock:","Donate":"Doar","Download":"Baixar","Durable options:":"Opções duradouras:","Featured layout tweaks:":"Ajustes do layout de destaque:","Features":"Recursos","For quick tests you can pass CSS directly with":"Para testes rápidos, você pode passar CSS diretamente com","GitHub":"GitHub","GitHub Pages, Cloudflare Pages, Netlify, your own web server.":"GitHub Pages, Cloudflare Pages, Netlify ou seu próprio servidor web.","GitHub Repository":"Repositório no GitHub","Guides":"Guias","Hire":"Contratar","Home":"Início","How to host .ttf, .otf, or .woff2 files yourself (no Google or system font required).":"Como hospedar arquivos .ttf, .otf ou .woff2 por conta própria, sem depender de fontes do Google ou do sistema.","How to load those fonts in":"Como carregar essas fontes em","If the font does not appear, open the font URL directly in a browser to confirm it downloads and is served with HTTPS.":"Se a fonte não aparecer, abra sua URL diretamente no navegador para confirmar o download e o uso de HTTPS.","Inline URL param:":"Parâmetro direto na URL:","Inspiration":"Inspiração","Join our Discord":"Entre no nosso Discord","Keep font-family names consistent between the":"Mantenha o mesmo nome de font-family entre os blocos","Learn how to self-host fonts and customize Social Stream Ninja overlays like dock.html and featured.html with custom CSS.":"Aprenda a hospedar fontes e personalizar overlays do Social Stream Ninja, como dock.html e featured.html, com CSS próprio.","Main navigation":"Navegação principal","Need multiple fonts (for Armenian + Russian + Latin)? Declare each font-face and list them in":"Precisa de várias fontes, por exemplo armênio, russo e latim? Declare cada font-face e liste em","OBS Browser Source:":"Fonte de navegador do OBS:","Only host fonts you are licensed to redistribute. WOFF2 files are smaller and load faster than TTF/OTF when available.":"Hospede apenas fontes cuja licença permita redistribuição. Arquivos WOFF2 são menores e carregam mais rápido que TTF/OTF quando disponíveis.","Open navigation menu":"Abrir menu de navegação","Open your dock/featured URL in OBS > Browser Source > Custom CSS and paste the CSS block above.":"Abra sua URL de dock ou destaque em OBS > Fonte de navegador > CSS personalizado e cole o bloco CSS acima.","Overlay Gallery":"Galeria de overlays","Pair CSS changes with existing URL options like":"Combine alterações de CSS com opções de URL existentes, como","Privacy Policy":"Política de privacidade","Product":"Produto","Quick fallbacks if you want to keep using Google Fonts or installed system fonts.":"Alternativas rápidas se quiser continuar usando Google Fonts ou fontes instaladas no sistema.","Quick font switches:":"Trocas rápidas de fonte:","Quick options:":"Opções rápidas:","Reload the OBS Browser Source or refresh the dock/featured tab after changing CSS so cached fonts are re-requested.":"Recarregue a fonte de navegador do OBS ou atualize a aba do dock/destaque após alterar o CSS para solicitar novamente as fontes em cache.","Report an Issue":"Relatar um problema","Resources":"Recursos","Self-Hosted Fonts & Overlay Styling":"Fontes auto-hospedadas e estilos de overlay","Self-Hosted Fonts & Styling - Social Stream Ninja":"Fontes e estilos auto-hospedados - Social Stream Ninja","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja lets you capture, mix, and display chat from over 100 platforms in real time. Built by Steve Seguin.":"O Social Stream Ninja captura, mistura e exibe chats de mais de 100 plataformas em tempo real. Criado por Steve Seguin.","Social Stream Ninja logo":"Logotipo do Social Stream Ninja","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. Licença GPLv3.0. Criado por","Some hosts block hotlinking; switch to a host that allows direct file access or set the proper CORS headers.":"Alguns hosts bloqueiam carregamento externo; use um que permita acesso direto ao arquivo ou configure os cabeçalhos CORS corretos.","Steve Seguin":"Steve Seguin","Support":"Suporte","Supported Sites":"Sites compatíveis","Switch theme":"Alternar tema","Templates":"Modelos","Terms of Service":"Termos de serviço","The same":"O mesmo","These options work the same in the Chrome extension, Electron app, and the hosted site because they all load the same":"Essas opções funcionam igual na extensão do Chrome, no aplicativo Electron e no site hospedado, pois todos carregam os mesmos arquivos","URL parameter (hosted CSS):":"Parâmetro de URL para CSS hospedado:","Upload the CSS to the same host as your fonts, then append":"Envie o CSS ao mesmo host das fontes e acrescente","Use":"Use","Use your own fonts with dock.html and featured.html, whether you load them in OBS Browser Source, the Chrome extension, or the desktop app.":"Use suas próprias fontes em dock.html e featured.html, no OBS, na extensão do Chrome ou no aplicativo de desktop.","What this guide covers":"O que este guia cobre","Which CSS variables adjust text sizing and layout on both pages.":"Quais variáveis CSS ajustam tamanho do texto e layout nas duas páginas.","X":"X","You need a direct HTTPS link to the font file. Pick a host that allows hotlinking/CORS so the browser inside OBS or the app can fetch it.":"Você precisa de um link HTTPS direto para o arquivo de fonte. Escolha um host que permita carregamento externo/CORS para o navegador do OBS ou aplicativo buscar o arquivo.","adjust":"ajuste","and point it at your hosted file, then set the overlay to use it via":"e aponte para seu arquivo hospedado. Depois configure o overlay para usá-la com","applied. Self-hosted fonts work the same way via":"aplicado; fontes auto-hospedadas funcionam da mesma forma por","blocks and":"e","catbox.moe, 0x0.st, file.io (short-lived).":"catbox.moe, 0x0.st, file.io, com curta duração.","featured.html overlay message rendered in the Pacifico font with an avatar and name tag":"Mensagem do overlay featured.html renderizada com fonte Pacifico, avatar e etiqueta de nome","files.":".","like":"como","loads Google Fonts if you prefer not to self-host.":"carrega Google Fonts se preferir não hospedar por conta própria.","or":"ou","or base64 encode it with":"ou codifique em base64 com","overlay with":"overlay com","to confirm a system font is visible when testing":"para confirmar que uma fonte do sistema está visível ao testar","to reposition the lower-third block without editing the HTML.":"para reposicionar o bloco inferior sem editar o HTML.","to the page URL:":"à URL da página:","uses a system font name, while":"usa o nome de uma fonte do sistema, enquanto","using URL parameters or OBS custom CSS.":"usando parâmetros de URL ou CSS personalizado do OBS.","variants).":"variantes).","when you need layout adjustments in the dock.":"quando precisar ajustar o layout no dock.","with contributions from the community.":"com contribuições da comunidade."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/custom-fonts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/custom-fonts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/custom-fonts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/custom-fonts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/custom-fonts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/custom-fonts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/custom-fonts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/custom-fonts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/custom-fonts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/custom-fonts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/custom-fonts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/custom-fonts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/custom-fonts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/custom-fonts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/custom-fonts.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navegação principal"><a href="../index.html">Início</a><a href="features.html">Recursos</a><a href="inspiration.html" class="site-priority-inspiration">Inspiração</a><a href="download.html">Baixar</a><a href="guides.html">Guias</a><a href="commands.html">Comandos e API</a><a href="supported-sites.html">Sites compatíveis</a><a href="overlay-gallery.html" class="site-priority-gallery">Galeria de overlays</a><a href="services.html" class="site-priority-hire">Contratar</a><a href="support.html">Suporte</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Português (Brasil)"><span aria-hidden="true">🌐 </span><span lang="pt-br">Português (Brasil)</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/custom-fonts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/custom-fonts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="custom-fonts.html" lang="pt-br" hreflang="pt-br" aria-current="true">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/custom-fonts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/custom-fonts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/custom-fonts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/custom-fonts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/custom-fonts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/custom-fonts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/custom-fonts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/custom-fonts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/custom-fonts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/custom-fonts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/custom-fonts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/custom-fonts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/custom-fonts.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/custom-fonts.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Alternar tema"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Fontes auto-hospedadas e estilos de overlay</h1>
+            <p>Use suas próprias fontes em dock.html e featured.html, no OBS, na extensão do Chrome ou no aplicativo de desktop.</p>
+        </div>
+    </section>
+
+    <section class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h3>O que este guia cobre</h3>
+                <ul class="guide-list">
+                    <li>Como hospedar arquivos .ttf, .otf ou .woff2 por conta própria, sem depender de fontes do Google ou do sistema.</li>
+                    <li>Como carregar essas fontes em <code>dock.html</code> ou <code>featured.html</code> usando parâmetros de URL ou CSS personalizado do OBS.</li>
+                    <li>Quais variáveis CSS ajustam tamanho do texto e layout nas duas páginas.</li>
+                    <li>Alternativas rápidas se quiser continuar usando Google Fonts ou fontes instaladas no sistema.</li>
+                </ul>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/custom-font-featured-demo.png" alt="Mensagem do overlay featured.html renderizada com fonte Pacifico, avatar e etiqueta de nome" class="guide-image">
+                    <figcaption>O mesmo <code>featured.html</code> overlay com <code>&amp;googlefont=Pacifico</code> aplicado; fontes auto-hospedadas funcionam da mesma forma por <code>@font-face</code>.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h3>1) Hospede seus arquivos de fonte</h3>
+                <p>Você precisa de um link HTTPS direto para o arquivo de fonte. Escolha um host que permita carregamento externo/CORS para o navegador do OBS ou aplicativo buscar o arquivo.</p>
+                <ul class="guide-list">
+                    <li><strong>Opções rápidas:</strong> catbox.moe, 0x0.st, file.io, com curta duração.</li>
+                    <li><strong>Opções duradouras:</strong> GitHub Pages, Cloudflare Pages, Netlify ou seu próprio servidor web.</li>
+                    <li>Hospede apenas fontes cuja licença permita redistribuição. Arquivos WOFF2 são menores e carregam mais rápido que TTF/OTF quando disponíveis.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h3>2) Crie o CSS</h3>
+                <p>Defina a fonte com <code>@font-face</code> e aponte para seu arquivo hospedado. Depois configure o overlay para usá-la com <code>--font-family</code>.</p>
+                <div class="code-block">
+<pre>@font-face {
+  font-family: 'MyDockFont';
+  src: url('https://your-site.example/fonts/MyDockFont.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* Optional second weight */
+@font-face {
+  font-family: 'MyDockFont';
+  src: url('https://your-site.example/fonts/MyDockFont-Bold.woff2') format('woff2');
+  font-style: normal;
+  font-weight: 700;
+}
+
+:root {
+  --font-family: 'MyDockFont', 'Segoe UI', 'Arial Unicode MS', sans-serif;
+  --comment-font-size: 28px;
+  --author-font-size: 24px;
+  --message-line-height: 32px;
+}</pre>
+                </div>
+                <div class="guide-note">
+                    <p>Precisa de várias fontes, por exemplo armênio, russo e latim? Declare cada font-face e liste em <code>--font-family</code> como <code>'FontA', 'FontB', 'FontC', sans-serif</code>. O navegador usará uma alternativa automaticamente se faltar um caractere.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h3>3) Aplique a dock.html ou featured.html</h3>
+                <ul class="guide-list">
+                    <li><strong>Fonte de navegador do OBS:</strong> Abra sua URL de dock ou destaque em OBS &gt; Fonte de navegador &gt; CSS personalizado e cole o bloco CSS acima.</li>
+                    <li><strong>Parâmetro de URL para CSS hospedado:</strong> Envie o CSS ao mesmo host das fontes e acrescente <code>&css=https://your-site.example/my-font.css</code> à URL da página:
+                        <div class="code-block"><pre>https://socialstream.ninja/dock.html?session=YOURSESSION&css=https://your-site.example/my-font.css
+https://socialstream.ninja/featured.html?session=YOURSESSION&css=https://your-site.example/my-font.css</pre></div>
+                    </li>
+                    <li><strong>Parâmetro direto na URL:</strong> Para testes rápidos, você pode passar CSS diretamente com <code>&css=</code> ou codifique em base64 com <code>&b64css=</code> ; as duas páginas aceitam essas opções.</li>
+                    <li><strong>Trocas rápidas de fonte:</strong> <code>&font=YourInstalledFont</code> usa o nome de uma fonte do sistema, enquanto <code>&googlefont=Noto+Sans+Armenian,Noto+Sans</code> carrega Google Fonts se preferir não hospedar por conta própria.</li>
+                </ul>
+                <div class="guide-note">
+                    <p>Essas opções funcionam igual na extensão do Chrome, no aplicativo Electron e no site hospedado, pois todos carregam os mesmos arquivos <code>dock.html</code>/<code>featured.html</code> .</p>
+                </div>
+			</div>
+
+			<div class="guide-card">
+				<h3>4) Ajuste o texto do overlay</h3>
+				<p>Variáveis principais de tipografia usadas nas duas páginas:</p>
+				<div class="code-block">
+<pre>:root {
+  --font-family: 'MyDockFont', 'FontB', sans-serif;
+  --comment-font-size: 28px;  /* message text size */
+  --author-font-size: 24px;   /* name text size */
+  --comment-font-weight: 600; /* featured.html */
+  --author-font-weight: 700;  /* featured.html */
+  --message-font-weight: 500; /* dock.html */
+  --name-font-weight: 700;    /* dock.html */
+  --comment-color: #ffffff;
+  --author-color: #ffe08a;
+  --comment-bg-color: #161616;
+  --author-bg-color: #202020;
+}</pre>
+				</div>
+				<p><strong>Extras só do dock:</strong> <code>--stylized-emoji</code>, <code>--stylized-img</code>, <code>--text-stroke-width</code>, <code>--text-shadow</code>, e cores de linhas (<code>--highlight-base</code>, <code>--highlight-base2</code>, além de <code>compact</code> variantes).</p>
+				<p><strong>Ajustes do layout de destaque:</strong> ajuste <code>--comment-width</code>, <code>--comment-padding</code>, <code>--comment-area-bottom</code>, e <code>--comment-area-height</code> para reposicionar o bloco inferior sem editar o HTML.</p>
+				<p>Combine alterações de CSS com opções de URL existentes, como <code>&scale</code>, <code>&compact</code>, ou <code>&hidesource</code> quando precisar ajustar o layout no dock.</p>
+			</div>
+
+            <div class="guide-card">
+                <h3>5) Solução de problemas</h3>
+                <ul class="guide-list">
+                    <li>Se a fonte não aparecer, abra sua URL diretamente no navegador para confirmar o download e o uso de HTTPS.</li>
+                    <li>Alguns hosts bloqueiam carregamento externo; use um que permita acesso direto ao arquivo ou configure os cabeçalhos CORS corretos.</li>
+                    <li>Recarregue a fonte de navegador do OBS ou atualize a aba do dock/destaque após alterar o CSS para solicitar novamente as fontes em cache.</li>
+                    <li>Use <code>https://socialstream.ninja/fonts.html</code> para confirmar que uma fonte do sistema está visível ao testar <code>&font=</code>.</li>
+                    <li>Mantenha o mesmo nome de font-family entre os blocos <code>@font-face</code> e <code>--font-family</code>; nomes diferentes são o problema mais comum.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Sobre</h3>
+                    <p>O Social Stream Ninja captura, mistura e exibe chats de mais de 100 plataformas em tempo real. Criado por Steve Seguin.</p>
+                    <div class="social-links">
+                        <a href="https://discord.socialstream.ninja" target="_blank" aria-label="Discord">
+                            <img src="../../icons/discord.svg" alt="Discord">
+                        </a>
+                        <a href="https://x.com/ninjafytools" target="_blank" aria-label="X">
+                            <img src="../../icons/x.svg" alt="X">
+                        </a>
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank" aria-label="GitHub">
+                            <img src="../../icons/github.svg" alt="GitHub">
+                        </a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Produto</h3>
+                    <ul>
+                        <li><a href="../index.html">Início</a></li>
+                        <li><a href="features.html">Recursos</a></li>
+                        <li><a href="download.html">Baixar</a></li>
+                        <li><a href="guides.html">Guias</a></li>
+                        <li><a href="commands.html">Comandos e API</a></li>
+                        <li><a href="supported-sites.html">Sites compatíveis</a></li>
+                        <li><a href="templates.html">Modelos</a></li>
+                        <li><a href="support.html">Suporte</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Recursos</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-customization">Guia de personalização</a></li>
+                        <li><a href="../../docs/customoverlays.md">Sobreposições personalizadas</a></li>
+                        <li><a href="../../api.md">Referência da API</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Relatar um problema</a></li>
+                        <li><a href="../privacy.html">Política de privacidade</a></li>
+                        <li><a href="../TOS.html">Termos de serviço</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Comunidade</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Entre no nosso Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">Repositório no GitHub</a></li>
+                        <li><a href="support.html#contribute">Contribuir</a></li>
+                        <li><a href="https://github.com/sponsors/steveseguin" target="_blank">Doar</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licença GPLv3.0. Criado por <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> com contribuições da comunidade.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

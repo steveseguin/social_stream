@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/tr/docs/tts.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/tr/docs/tts.html">
+    <meta property="og:title" content="Social Stream Ninja - TTS Ses Rehberi">
+    <meta property="og:description" content="Social Stream Ninja metinden konuşma sağlayıcılarını, seslerini, URL parametrelerini, tarayıcı desteğini, OBS ses yakalamasını ve sorun gidermeyi yapılandırın.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/tr/docs/tts.html">
+    <meta name="twitter:title" content="Social Stream Ninja - TTS Ses Rehberi">
+    <meta name="twitter:description" content="Social Stream Ninja metinden konuşma sağlayıcılarını, seslerini, URL parametrelerini, tarayıcı desteğini, OBS ses yakalamasını ve sorun gidermeyi yapılandırın.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream Ninja - TTS Ses Rehberi</title>
+    <meta name="description" content="Social Stream Ninja metinden konuşma sağlayıcılarını, seslerini, URL parametrelerini, tarayıcı desteğini, OBS ses yakalamasını ve sorun gidermeyi yapılandırın.">
+    <script src="../../docs/js/standalone-theme.js"></script>
+    <script defer src="../../docs/js/copy-markdown.js"></script>
+    <style>
+        :root {
+            --primary-color: #1565C0;
+            --on-primary: #FFFFFF;
+            --secondary-color: #1976D2;
+            --accent-color: #996000;
+            --text-color: #212121;
+            --text-light: #757575;
+            --bg-color: #FFFFFF;
+            --card-bg: #F5F5F5;
+            --border-color: #E0E0E0;
+            --code-bg: #263238;
+            --code-text: #ECEFF1;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #64B5F6;
+            --on-primary: #10283B;
+            --secondary-color: #42A5F5;
+            --accent-color: #FFB74D;
+            --text-color: #E0E0E0;
+            --text-light: #BDBDBD;
+            --bg-color: #121212;
+            --card-bg: #1E1E1E;
+            --border-color: #424242;
+            --code-bg: #000000;
+            --code-text: #ECEFF1;
+        }
+
+        html[data-theme="dark"],
+        body[data-theme="dark"] {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .voice-card,
+        [data-theme="dark"] .tts-test {
+            color: var(--text-color);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: var(--on-primary);
+            padding: 40px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 2px solid currentColor;
+            color: var(--on-primary);
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            margin-top: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .warning {
+            background-color: #FFF3E0;
+            border-left: 4px solid var(--accent-color);
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        [data-theme="dark"] .warning {
+            background-color: #5D4037;
+            color: #FFCC80;
+        }
+
+        .info {
+            background-color: #E3F2FD;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        [data-theme="dark"] .info {
+            background-color: #1565C0;
+            color: #BBDEFB;
+        }
+
+        .info a {
+            color: inherit;
+            text-decoration: underline;
+        }
+
+        .code {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+            white-space: pre-line;
+        }
+
+        code {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: var(--on-primary);
+        }
+
+        tr:nth-child(even) {
+            background-color: #F9F9F9;
+        }
+
+        [data-theme="dark"] tr:nth-child(even) {
+            background-color: #2A2A2A;
+        }
+
+        .browser-support {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .browser-card {
+            text-align: center;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .supported {
+            color: #267A2B;
+        }
+
+        [data-theme="dark"] .supported {
+            color: #81C784;
+        }
+
+        .partial {
+            color: var(--accent-color);
+        }
+
+        .not-supported {
+            color: #F44336;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin: 10px 0;
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .tts-test {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: var(--on-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .parameter-table td:first-child {
+            font-family: monospace;
+            background-color: #F5F5F5;
+        }
+
+        [data-theme="dark"] .parameter-table td:first-child {
+            background-color: #2A2A2A;
+        }
+
+        @media (max-width: 700px) {
+            table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        nav {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        nav li {
+            margin: 5px 0;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background-color: var(--card-bg);
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/tts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{"&pitch\u003c":"&pitch\u003c","&pitch=1.2":"&pitch=1.2","&rate\u003c":"&rate\u003c","&rate=1.5":"&rate=1.5","&readevents\u003c":"&readevents\u003c","&simpletts2\u003c":"&simpletts2\u003c","&simpletts\u003c":"&simpletts\u003c","&skipmessages=3":"&skipmessages=3","&speech\u003c":"&speech\u003c","&speech=en-US":"&speech=en-US","&ttscommand\u003c":"&ttscommand\u003c","&ttsprovider\u003c":"&ttsprovider\u003c","&ttsprovider=customtts":"&ttsprovider=customtts","&voice\u003c":"&voice\u003c","&voice=google":"&voice=google","&volume\u003c":"&volume\u003c","&volume=0.8":"&volume=0.8","(default), or":"(varsayılan) veya","(range 0.5 to 3.0; normal is 1.0).":"(0,5–3,0 aralığında; normal değer 1,0).",", click":", şuna tıklayın:",", language:":", dil:",", mixer mute, and output tracks, or capture the external browser that is speaking":", mikserin sessiz durumunu ve çıkış parçalarını kontrol edin veya konuşan harici tarayıcının sesini yakalayın",", speed:":", hız:",", while openedai-speech/OpenAI-style voices may look like":", openedai-speech/OpenAI tarzı sesler ise şöyle görünebilir:",". It does not test OBS, a separate SSN app window, or providers such as Kokoro. An empty list does not mean SSN’s other TTS providers are unavailable.":". OBS'yi, ayrı bir SSN uygulama penceresini veya Kokoro gibi sağlayıcıları test etmez. Boş liste, SSN'nin diğer TTS sağlayıcılarının kullanılamadığı anlamına gelmez.",". Keep this page open and connected; only one copy should speak.":". Bu sayfayı açık ve bağlı tutun; yalnızca bir kopya konuşmalıdır.",". This defaults to System TTS. For a free OBS provider, also add":". Varsayılan olarak Sistem TTS kullanılır. Ücretsiz OBS sağlayıcısı için şunu da ekleyin:",". Use a voice name your server supports; Kokoro voices look like":". Sunucunuzun desteklediği bir ses adı kullanın; Kokoro sesleri şöyle görünür:","; this page covers voice options and advanced settings.":"; bu sayfa ses seçeneklerini ve gelişmiş ayarları kapsar.","A missing voice is different from speech playing outside OBS’s audio capture. Audio routing cannot fix missing speech support.":"Sesin mevcut olmaması, konuşmanın OBS'nin ses yakalaması dışında çalmasından farklıdır. Ses yönlendirmesi, eksik konuşma desteğini düzeltemez.","API costs apply":"API ücretleri uygulanır","API costs apply (or free local)":"API ücretleri uygulanır (veya ücretsiz yerel)","Add":"Ekleyin:","Add Voices":"Ses Ekle","Advanced Parameters":"Gelişmiş Parametreler","Alternatives:":"Alternatifler:","Audio Capture in OBS":"OBS'de Ses Yakalama","Audio Router (legacy)":"Audio Router (eski)","Basic Parameters":"Temel Parametreler","Best Practices":"İyi Uygulamalar","Both services offer premium and free TTS options":"Her iki hizmet de ücretli ve ücretsiz TTS seçenekleri sunar","Browser Limitations:":"Tarayıcı Sınırlamaları:","Browser Support":"Tarayıcı Desteği","Browser compatibility varies significantly":"Tarayıcı uyumluluğu önemli ölçüde değişir","Browser-based AI, excellent quality, dozens of voices":"Tarayıcı tabanlı yapay zekâ, mükemmel kalite, onlarca ses","Browser-based, fast, CPU-friendly neural TTS":"Tarayıcı tabanlı, hızlı, CPU dostu sinir ağı TTS","Browser-based, lightweight ONNX model":"Tarayıcı tabanlı, hafif ONNX modeli","CAPTION.Ninja:":"CAPTION.Ninja:","Check":"Kontrol edin:","Check API key and ensure provider is correctly specified":"API anahtarını kontrol edin ve sağlayıcının doğru belirtildiğinden emin olun","Check Available Voices":"Kullanılabilir Sesleri Kontrol Et","Check This Browser's System Voices":"Bu Tarayıcının Sistem Seslerini Kontrol Et","Check that TTS is enabled, the TTS-producing page is open, and the browser source is not muted. In a normal browser, click the page once.":"TTS'nin etkin olduğunu, TTS üreten sayfanın açık olduğunu ve tarayıcı kaynağının sessize alınmadığını kontrol edin. Normal tarayıcıda sayfaya bir kez tıklayın.","Check voice availability, then audio capture.":"Önce sesin kullanılabilirliğini, ardından ses yakalamayı kontrol edin.","Choose Fish Audio and enter your API key, with an optional voice ID. The default model is":"Fish Audio'yu seçip API anahtarınızı ve isteğe bağlı ses kimliğini girin. Varsayılan model:","Choose a voice for the language:":"Dil için bir ses seçin:","Chrome":"Chrome","Chrome offers Google-powered TTS options":"Chrome, Google destekli TTS seçenekleri sunar","Chrome offers Google-powered options, Edge has Microsoft options":"Chrome Google destekli seçenekler, Edge ise Microsoft seçenekleri sunar","Chromium-based; available voices vary by install":"Chromium tabanlı; kullanılabilir sesler kuruluma göre değişir","Classic open-source TTS, works on any hardware":"Klasik açık kaynaklı TTS, her donanımda çalışır","Classic open-source, works on any hardware":"Klasik açık kaynaklı, her donanımda çalışır","Common Issues":"Yaygın Sorunlar","Compare providers, hear samples and see the settings.":"Sağlayıcıları karşılaştırın, örnekleri dinleyin ve ayarları görün.","Complete guide to Text-to-Speech voice options, browser compatibility, and audio capture":"Metinden Konuşma ses seçenekleri, tarayıcı uyumluluğu ve ses yakalama için kapsamlı rehber","Configure Social Stream Ninja text-to-speech providers, voices, URL parameters, browser support, OBS audio capture, and troubleshooting.":"Social Stream Ninja metinden konuşma sağlayıcılarını, seslerini, URL parametrelerini, tarayıcı desteğini, OBS ses yakalamasını ve sorun gidermeyi yapılandırın.","Consider user-generated content risks with TTS":"TTS'de kullanıcıların oluşturduğu içeriğin risklerini göz önünde bulundurun","Control audio via OBS":"Sesi OBS üzerinden denetle","Cost":"Maliyet","Custom endpoint:":"Özel uç nokta:","Custom voice training, natural sounding":"Özel ses eğitimi, doğal ses","Custom/local endpoint playback is buffered today; SSN does not progressively play streamed audio chunks yet":"Özel/yerel uç nokta oynatması şu anda arabelleğe alınır; SSN henüz akışla gelen ses parçalarını aşamalı olarak çalmaz","Description":"Açıklama","Direct":"Doğrudan","Do not assume OBS exposes the same voices as Chrome or Edge":"OBS'nin Chrome veya Edge ile aynı sesleri sunduğunu varsaymayın","Don't read chatnames at all":"Sohbet adlarını hiç okuma","Don't say \"says\" or \"someone says\"":"\"diyor\" veya \"birisi diyor\" deme","Edge":"Edge","Edge supports Microsoft TTS and Windows language pack voices":"Edge, Microsoft TTS ve Windows dil paketi seslerini destekler","ElevenLabs":"ElevenLabs","ElevenLabs TTS":"ElevenLabs TTS","Enable TTS with language code":"Dil koduyla TTS'yi etkinleştir","Enable custom TTS command (default: !say)":"Özel TTS komutunu etkinleştir (varsayılan: !say)","Enable with":"Şununla etkinleştirin:","Example":"Örnek","Fast, CPU-friendly neural TTS running in browser":"Tarayıcıda çalışan hızlı, CPU dostu sinir ağı TTS","Features":"Özellikler","Firefox":"Firefox","First confirm that System TTS generates speech. OBS’s embedded browser may not expose a usable system voice. If it generates no speech, changing audio routing will not help. Choose another provider, or generate speech in a supported browser and capture that browser’s audio.":"Önce Sistem TTS'nin konuşma ürettiğini doğrulayın. OBS'nin gömülü tarayıcısı kullanılabilir sistem sesi sunmayabilir. Konuşma üretmiyorsa ses yönlendirmesini değiştirmek işe yaramaz. Başka bir sağlayıcı seçin veya desteklenen tarayıcıda konuşma üretip o tarayıcının sesini yakalayın.","Fish Audio TTS":"Fish Audio TTS","Follow the instructions in":"Şuradaki talimatları izleyin:","For System TTS specifically:":"Özellikle Sistem TTS için:","For cloud voices, use a provider voice/language that supports the target language, such as Google Cloud, ElevenLabs, Speechify, Gemini, or an OpenAI-compatible local server.":"Bulut sesleri için Google Cloud, ElevenLabs, Speechify, Gemini veya OpenAI uyumlu yerel sunucu gibi hedef dili destekleyen sağlayıcı sesi/dili kullanın.","Free":"Ücretsiz","Free providers such as Kokoro, Piper, Kitten, and eSpeak generate page audio instead. Payment is not required for TTS in OBS.":"Kokoro, Piper, Kitten ve eSpeak gibi ücretsiz sağlayıcılar bunun yerine sayfa sesi üretir. OBS'de TTS için ödeme gerekmez.","Free tier available":"Ücretsiz katman mevcut","Gemini TTS":"Gemini TTS","GitHub repository":"GitHub deposu","Google Cloud":"Google Cloud","Google Cloud TTS":"Google Cloud TTS","Google generative language API":"Google üretken dil API'si","Google-powered voices + system voices":"Google destekli sesler + sistem sesleri","Have a toggle to quickly disable TTS if needed":"Gerektiğinde TTS'yi hızla kapatacak bir anahtar bulundurun","High quality; also supports local servers via custom endpoint":"Yüksek kalite; özel uç noktayla yerel sunucuları da destekler","High-quality voices, multiple languages":"Yüksek kaliteli sesler, birden fazla dil","If speech plays outside the scene Browser Source, capture that output separately":"Konuşma sahnenin Tarayıcı Kaynağı dışında çalıyorsa bu çıkışı ayrıca yakalayın","If the local server has CORS or local network problems in Chrome/OBS, run":"Yerel sunucuda Chrome/OBS içinde CORS veya yerel ağ sorunları varsa şunu çalıştırın:","If there is no speech, check voice/provider availability first. If speech exists, check":"Konuşma yoksa önce ses/sağlayıcı kullanılabilirliğini kontrol edin. Konuşma varsa şunu kontrol edin:","Important:":"Önemli:","Include stream events in TTS":"Yayın etkinliklerini TTS'ye dahil et","Installing Additional Language Packs":"Ek Dil Paketlerini Yükleme","Installing Language Packs":"Dil Paketlerini Yükleme","Kitten TTS":"Kitten TTS","Kitten TTS (Free, Built-in)":"Kitten TTS (Ücretsiz, Yerleşik)","Kokoro TTS":"Kokoro TTS","Kokoro TTS (Free, Built-in)":"Kokoro TTS (Ücretsiz, Yerleşik)","Language:":"Dil:","Lightweight ONNX-based TTS running in browser":"Tarayıcıda çalışan hafif ONNX tabanlı TTS","Limited language support based on system installation":"Sistem kurulumuna bağlı sınırlı dil desteği","Limited support across browsers (Firefox may lack some TTS voices)":"Tarayıcılar arasında sınırlı destek (Firefox'ta bazı TTS sesleri bulunmayabilir)","Local / Free TTS Options (No API Key Required)":"Yerel / Ücretsiz TTS Seçenekleri (API Anahtarı Gerekmez)","Local AI TTS Guide":"Yerel yapay zekâ TTS kılavuzu","Local endpoint works in the app test but not OBS:":"Yerel uç nokta uygulama testinde çalışıyor ama OBS'de çalışmıyor:","Local system languages only":"Yalnızca yerel sistem dilleri","Manage Voices":"Sesleri Yönet","Method 1: Default Audio Route with a Virtual Cable":"Yöntem 1: Sanal Kabloyla Varsayılan Ses Yönlendirmesi","Method 2: Windows 10 App Route":"Yöntem 2: Windows 10 Uygulama Yönlendirmesi","Method 3: Windows 11 App Route":"Yöntem 3: Windows 11 Uygulama Yönlendirmesi","Method 4: Audio Router Software":"Yöntem 4: Audio Router Yazılımı","Method 5: Voicemeeter (Advanced)":"Yöntem 5: Voicemeeter (Gelişmiş)","Microsoft voices + Windows TTS packs":"Microsoft sesleri + Windows TTS paketleri","Microsoft's official guide":"Microsoft'un resmi rehberi","Model:":"Model:","Navigate to":"Şuraya gidin:","No API key needed for local servers":"Yerel sunucular için API anahtarı gerekmez","No audio playing:":"Ses çalmıyor:","No virtual audio cables needed":"Sanal ses kablosu gerekmez","Not all browsers support text-to-speech equally (some Firefox versions have limited voices)":"Tüm tarayıcılar metinden konuşmayı aynı düzeyde desteklemez (bazı Firefox sürümlerinde sesler sınırlıdır)","OBS Capture":"OBS Yakalama","OBS is a separate browser. Check the endpoint from the OBS computer, especially if using":"OBS ayrı bir tarayıcıdır. Uç noktayı OBS bilgisayarından kontrol edin; özellikle şunu kullanıyorsanız:","OBS not capturing:":"OBS yakalamıyor:","Offers closed-captioning, transcription, and translation with TTS":"TTS ile altyazı, yazıya dökme ve çeviri sunar","Only the first letter or first words are read:":"Yalnızca ilk harf veya ilk kelimeler okunuyor:","OpenAI / Local Server TTS":"OpenAI / Yerel Sunucu TTS","OpenAI TTS":"OpenAI TTS","Opera":"Opera","Overview":"Genel bakış","Page Audio: Free Local and Cloud Providers":"Sayfa Sesi: Ücretsiz Yerel ve Bulut Sağlayıcıları","Parameter":"Parametre","Parameters: stability, similarity, style can be adjusted":"Parametreler: kararlılık, benzerlik ve stil ayarlanabilir","Partial voice name match":"Kısmi ses adı eşleşmesi","Piper TTS":"Piper TTS","Piper TTS (Free, Built-in)":"Piper TTS (Ücretsiz, Yerleşik)","Portuguese and Spanish TTS Examples":"Portekizce ve İspanyolca TTS Örnekleri","Portuguese example:":"Portekizce örnek:","Portuguese voices:":"Portekizce sesler:","Portuguese, best free local quality tested in SSN:":"Portekizce, SSN'de test edilen en iyi ücretsiz yerel kalite:","Portuguese, fastest fallback tested in SSN:":"Portekizce, SSN'de test edilen en hızlı alternatif:","Premium / Cloud TTS Options (Direct Browser Audio)":"Ücretli / Bulut TTS Seçenekleri (Doğrudan Tarayıcı Sesi)","Premium TTS Options":"Ücretli TTS Seçenekleri","Premium service not working:":"Ücretli hizmet çalışmıyor:","Professional quality voices":"Profesyonel kalitede sesler","Professional quality, multiple languages":"Profesyonel kalite, birden fazla dil","Provider":"Sağlayıcı","Quick Start:":"Hızlı Başlangıç:","Read every 3rd message only":"Yalnızca her 3. mesajı oku","Reads out audience chat messages in multiple areas":"İzleyici sohbet mesajlarını birden fazla alanda sesli okur","Restart browser after installing language packs":"Dil paketlerini yükledikten sonra tarayıcıyı yeniden başlatın","Restart browsers to refresh available voices":"Kullanılabilir sesleri yenilemek için tarayıcıları yeniden başlatın","Routing downloads:":"Yönlendirme indirmeleri:","Runs in browser via WebGPU/WASM without a server":"WebGPU/WASM üzerinden tarayıcıda çalışır — sunucu gerekmez","SSN can read captured chat text from any supported source; the chat platform does not need its own TTS feature.":"SSN, desteklenen herhangi bir kaynaktan yakalanan sohbet metnini okuyabilir; sohbet platformunun kendi TTS özelliği olması gerekmez.","SSN sends":"SSN şunu gönderir:","SSN’s browser-based local providers and cloud audio providers play generated audio through the page:":"SSN'nin tarayıcı tabanlı yerel sağlayıcıları ve bulut ses sağlayıcıları, oluşturulan sesi sayfa üzerinden çalar:","Safari has limited automatic TTS support":"Safari'nin otomatik TTS desteği sınırlıdır","Safari issues:":"Safari sorunları:","Safari requires user interaction to start audio":"Safari, sesi başlatmak için kullanıcı etkileşimi gerektirir","See the":"Bkz.","Select desired languages and click":"İstediğiniz dilleri seçip şuna tıklayın:","Select provider: kokoro, piper, kitten, espeak, openai, customtts, localtts, elevenlabs, google, speechify, gemini":"Sağlayıcı seçin: kokoro, piper, kitten, espeak, openai, customtts, localtts, elevenlabs, google, speechify, gemini","Setup, model options, and browser access limitations":"Kurulum, model seçenekleri ve tarayıcı erişim sınırlamaları","Several high-quality AI voices are built directly into Social Stream Ninja and run in your browser without an API key, cloud service, or extra installation. See the":"Birçok yüksek kaliteli yapay zekâ sesi doğrudan Social Stream Ninja'ya yerleşiktir ve tarayıcınızda çalışır — API anahtarı, bulut veya ek kurulum gerekmez. Şuraya bakın:","Simply enable \"Control audio via OBS\" in browser source":"Tarayıcı kaynağında \"Sesi OBS üzerinden kontrol et\" seçeneğini etkinleştirmeniz yeterlidir","Social Stream Ninja - TTS Voice Guide":"Social Stream Ninja - TTS Ses Rehberi","Social Stream Ninja TTS Guide":"Social Stream Ninja TTS Rehberi","Social Stream Ninja TTS Guide - For the latest updates, visit the":"Social Stream Ninja TTS Rehberi - En son güncellemeler için şurayı ziyaret edin:","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja:":"Social Stream Ninja:","Some third-party voices may not appear in browsers due to compatibility issues. Firefox often shows more system voices than Chromium-based browsers.":"Bazı üçüncü taraf sesler uyumluluk sorunları nedeniyle tarayıcılarda görünmeyebilir. Firefox genellikle Chromium tabanlı tarayıcılardan daha fazla sistem sesi gösterir.","Spanish example:":"İspanyolca örnek:","Spanish voices:":"İspanyolca sesler:","Spanish, best free local quality tested in SSN:":"İspanyolca, SSN'de test edilen en iyi ücretsiz yerel kalite:","Spanish, fastest fallback tested in SSN:":"İspanyolca, SSN'de test edilen en hızlı alternatif:","Speaking rate (0.1 to 10.0)":"Konuşma hızı (0,1–10,0)","Speaking speed:":"Konuşma hızı:","Speechify":"Speechify","Speechify TTS":"Speechify TTS","Speechify setup, voices, speed, and volume guide":"Speechify kurulum, ses, hız ve ses seviyesi rehberi","Speed control:":"Hız kontrolü:","Start > Settings > Time & Language > Speech":"Başlat > Ayarlar > Saat ve Dil > Konuşma","Style instructions:":"Stil yönergeleri:","System TTS (Free)":"Sistem TTS (Ücretsiz)","System TTS Capture Methods":"Sistem TTS Yakalama Yöntemleri","System TTS is not the same as all free TTS:":"Sistem TTS, tüm ücretsiz TTS seçenekleriyle aynı şey değildir:","System TTS voices in the browser displaying this guide only":"Yalnızca bu rehberi gösteren tarayıcıdaki Sistem TTS sesleri","System Voice Availability":"Sistem Seslerinin Kullanılabilirliği","System voices depend on the browser and operating system. OBS may expose no usable voices, even when Chrome/Edge works.":"Sistem sesleri tarayıcıya ve işletim sistemine bağlıdır. Chrome/Edge çalışsa bile OBS kullanılabilir ses sunmayabilir.","TTS Provider Configuration":"TTS Sağlayıcı Yapılandırması","TTS Provider Options":"TTS Sağlayıcı Seçenekleri","TTS Providers":"TTS Sağlayıcıları","Table of Contents":"İçindekiler","Test your setup with simple phrases before going live":"Yayına başlamadan önce kurulumu basit cümlelerle test edin","Testing Your Setup":"Kurulumunuzu Test Etme","These are typical capabilities, not guarantees for every installation. OBS uses its own embedded browser and does not inherit an installed Chrome/Edge voice list. A successful SSN app test does not test a separate OBS Browser Source.":"Bunlar genel yeteneklerdir; her kurulum için garanti değildir. OBS kendi gömülü tarayıcısını kullanır ve yüklü Chrome/Edge ses listesini devralmaz. Başarılı SSN uygulama testi, ayrı OBS Tarayıcı Kaynağı'nı test etmez.","This lists":"Bu, şunları listeler:","Tip:":"İpucu:","Toggle Dark Mode":"Koyu Modu Aç/Kapat","Toggle Light Mode":"Açık Modu Değiştir","Troubleshooting":"Sorun giderme","Try capturing the speaking browser with OBS application or desktop audio first, where supported. The virtual-cable methods below are optional alternatives; they do not add speech support to OBS.":"Destekleniyorsa önce konuşan tarayıcıyı OBS uygulama veya masaüstü sesiyle yakalamayı deneyin. Aşağıdaki sanal kablo yöntemleri isteğe bağlı alternatiflerdir; OBS'ye konuşma desteği eklemezler.","URL Parameters":"URL Parametreleri","URL Parameters for TTS Configuration":"TTS Yapılandırması için URL Parametreleri","Under":"Şu bölümde:","Use":"Kullanın:","Use a free built-in provider such as Kokoro, Piper, Kitten, or eSpeak, a cloud provider, or a self-hosted TTS server.":"Kokoro, Piper, Kitten veya eSpeak gibi ücretsiz yerleşik sağlayıcı, bulut sağlayıcısı veya kendi barındırdığınız TTS sunucusunu kullanın.","Use a provider that generates page audio for a simpler OBS setup; free local providers are available":"Daha basit OBS kurulumu için sayfa sesi üreten sağlayıcı kullanın; ücretsiz yerel sağlayıcılar mevcuttur","Uses OpenAI's API by default, or any compatible local server":"Varsayılan olarak OpenAI API'sini veya herhangi bir uyumlu yerel sunucuyu kullanır","Uses your operating system's built-in voices":"İşletim sisteminizin yerleşik seslerini kullanır","VB-Audio Virtual Cable":"VB-Audio Virtual Cable","Voice ID:":"Ses Kimliği:","Voice availability and audio routing depend on the browser and operating system; test in the actual player":"Ses kullanılabilirliği ve ses yönlendirmesi tarayıcıya ve işletim sistemine bağlıdır; gerçek oynatıcıda test edin","Voice pitch (0.1 to 2.0)":"Ses perdesi (0,1–2,0)","Voice selection:":"Ses seçimi:","Voice:":"Ses:","Voicemeeter":"Voicemeeter","Voices not showing:":"Sesler görünmüyor:","Volume level (0.0 to 1.0)":"Ses seviyesi (0,0–1,0)","Want fully local AI TTS?":"Tamamen yerel yapay zekâ TTS mi istiyorsunuz?","Where is TTS Used?":"TTS Nerede Kullanılır?","Windows 10":"Windows 10","Windows 11":"Windows 11","Windows TTS Audio Capture Methods for OBS":"OBS için Windows TTS Ses Yakalama Yöntemleri","Works directly with OBS browser source":"Doğrudan OBS tarayıcı kaynağıyla çalışır","Works with SSN app and OBS browser sources":"SSN uygulaması ve OBS tarayıcı kaynaklarıyla çalışır","Your TTS-enabled dock or overlay speaks the messages it receives, subject to its filters and TTS settings. Start with the":"TTS etkin paneliniz veya katmanınız, aldığı mesajları filtrelerine ve TTS ayarlarına göre seslendirir. Şununla başlayın:","alone does not change the selected voice. Existing English voice IDs still work.":"tek başına seçili sesi değiştirmez. Mevcut İngilizce ses kimlikleri çalışmaya devam eder.","and":"ve","and supports binary audio, JSON audio URLs, and JSON base64 audio":"ve ikili ses, JSON ses URL'leri ve JSON base64 sesi destekler","available voices":"kullanılabilir sesler","eSpeak-NG":"eSpeak-NG","eSpeak-NG (Free, Built-in)":"eSpeak-NG (Ücretsiz, Yerleşik)","for Brazilian Portuguese. Changing":"Brezilya Portekizcesi için. Şunu değiştirmek:","for English.":"İngilizce için.","for Spanish or":"İspanyolca için veya","for a self-hosted endpoint":"kendi barındırdığınız uç nokta için","for installing language packs.":"dil paketlerini yüklemek için.","for self-hosted server setup":"kendi barındırdığınız sunucunun kurulumu için","for setup instructions and self-hosted server options.":"kurulum yönergeleri ve kendi barındırdığınız sunucu seçenekleri için.","for your browser":"tarayıcınız için","from the OBS URL if present.":"varsa OBS URL'sinden.","mean the same computer that is playing the TTS page. If OBS is on a different computer than your TTS server, use the server computer's LAN IP instead.":"TTS sayfasını oynatan aynı bilgisayarı ifade eder. OBS, TTS sunucunuzdan farklı bilgisayardaysa bunun yerine sunucu bilgisayarının LAN IP'sini kullanın.","on the OBS computer and point SSN at":"OBS bilgisayarında ve SSN'yi şuraya yönlendirin:","or":"veya","remove":"kaldırın:","short setup guide":"kısa kurulum rehberi","⚠ Limited Support":"⚠ Sınırlı Destek","✓ System voices available on supported installations":"✓ Desteklenen kurulumlarda sistem sesleri mevcut"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tts.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header>
+        <div class="container">
+            <button class="theme-toggle" data-theme-toggle type="button">
+                <span class="theme-icon">🌓</span>
+                <span class="theme-text">Koyu Modu Aç/Kapat</span>
+            </button>
+            <h1>Social Stream Ninja TTS Rehberi</h1>
+            <p>Metinden Konuşma ses seçenekleri, tarayıcı uyumluluğu ve ses yakalama için kapsamlı rehber</p>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="tts.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/tts.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tts.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+    </header>
+    
+    <div class="container">
+        <nav>
+            <h3>İçindekiler</h3>
+            <ul>
+                <li><a href="#overview">Genel bakış</a></li>
+                <li><a href="#providers">TTS Sağlayıcıları</a></li>
+                <li><a href="#browser-support">Tarayıcı Desteği</a></li>
+                <li><a href="#audio-capture">OBS'de Ses Yakalama</a></li>
+                <li><a href="#language-installation">Dil Paketlerini Yükleme</a></li>
+                <li><a href="#parameters">URL Parametreleri</a></li>
+                <li><a href="#premium-options">Ücretli TTS Seçenekleri</a></li>
+                <li><a href="#troubleshooting">Sorun giderme</a></li>
+            </ul>
+        </nav>
+        
+        <h2 id="overview">Genel bakış</h2>
+        <div class="card">
+            <p><strong>SSN, desteklenen herhangi bir kaynaktan yakalanan sohbet metnini okuyabilir; sohbet platformunun kendi TTS özelliği olması gerekmez.</strong> TTS etkin paneliniz veya katmanınız, aldığı mesajları filtrelerine ve TTS ayarlarına göre seslendirir. Şununla başlayın: <a href="tts-setup-guide.html#chat-platforms">kısa kurulum rehberi</a>; bu sayfa ses seçeneklerini ve gelişmiş ayarları kapsar. <a href="tts-setup-guide.html#voice-chooser">Sağlayıcıları karşılaştırın, örnekleri dinleyin ve ayarları görün.</a></p>
+            
+            <div class="info">
+                <strong>Hızlı Başlangıç:</strong> Kullanın: <code>dock.html?session=YOUR_SESSION&amp;speech=en-US</code>. Varsayılan olarak Sistem TTS kullanılır. Ücretsiz OBS sağlayıcısı için şunu da ekleyin: <code>&amp;ttsprovider=kokoro</code>. Bu sayfayı açık ve bağlı tutun; yalnızca bir kopya konuşmalıdır.
+            </div>
+            
+            <h3>TTS Nerede Kullanılır?</h3>
+            <ul>
+                <li><strong>Social Stream Ninja:</strong> İzleyici sohbet mesajlarını birden fazla alanda sesli okur</li>
+                <li><strong>CAPTION.Ninja:</strong> TTS ile altyazı, yazıya dökme ve çeviri sunar</li>
+                <li>Her iki hizmet de ücretli ve ücretsiz TTS seçenekleri sunar</li>
+            </ul>
+            
+            <div class="warning">
+                <strong>Sistem TTS, tüm ücretsiz TTS seçenekleriyle aynı şey değildir:</strong>
+                <ul>
+                    <li>Sistem sesleri tarayıcıya ve işletim sistemine bağlıdır. Chrome/Edge çalışsa bile OBS kullanılabilir ses sunmayabilir.</li>
+                    <li>Sesin mevcut olmaması, konuşmanın OBS'nin ses yakalaması dışında çalmasından farklıdır. Ses yönlendirmesi, eksik konuşma desteğini düzeltemez.</li>
+                    <li>Kokoro, Piper, Kitten ve eSpeak gibi ücretsiz sağlayıcılar bunun yerine sayfa sesi üretir. OBS'de TTS için ödeme gerekmez.</li>
+                    <li><a href="tts-setup-guide.html#obs-voices">Önce sesin kullanılabilirliğini, ardından ses yakalamayı kontrol edin.</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <h2 id="providers">TTS Sağlayıcı Seçenekleri</h2>
+        <div class="card">
+            <h3>Sistem TTS (Ücretsiz)</h3>
+            <ul>
+                <li>İşletim sisteminizin yerleşik seslerini kullanır</li>
+                <li>Sistem kurulumuna bağlı sınırlı dil desteği</li>
+                <li>Ses kullanılabilirliği ve ses yönlendirmesi tarayıcıya ve işletim sistemine bağlıdır; gerçek oynatıcıda test edin</li>
+                <li>Tarayıcı uyumluluğu önemli ölçüde değişir</li>
+            </ul>
+            
+            <h3>Yerel / Ücretsiz TTS Seçenekleri (API Anahtarı Gerekmez)</h3>
+            <div class="info">
+                <strong>Tamamen yerel yapay zekâ TTS mi istiyorsunuz?</strong> Birçok yüksek kaliteli yapay zekâ sesi doğrudan Social Stream Ninja'ya yerleşiktir ve tarayıcınızda çalışır — API anahtarı, bulut veya ek kurulum gerekmez. Şuraya bakın: <a href="local-tts.html"><strong>Yerel yapay zekâ TTS kılavuzu</strong></a> kurulum yönergeleri ve kendi barındırdığınız sunucu seçenekleri için.
+            </div>
+            <table>
+                <tr>
+                    <th>Sağlayıcı</th>
+                    <th>Maliyet</th>
+                    <th>OBS Yakalama</th>
+                    <th>Özellikler</th>
+                </tr>
+                <tr>
+                    <td>Kokoro TTS</td>
+                    <td>Ücretsiz</td>
+                    <td>Doğrudan</td>
+                    <td>Tarayıcı tabanlı yapay zekâ, mükemmel kalite, onlarca ses</td>
+                </tr>
+                <tr>
+                    <td>Piper TTS</td>
+                    <td>Ücretsiz</td>
+                    <td>Doğrudan</td>
+                    <td>Tarayıcı tabanlı, hızlı, CPU dostu sinir ağı TTS</td>
+                </tr>
+                <tr>
+                    <td>Kitten TTS</td>
+                    <td>Ücretsiz</td>
+                    <td>Doğrudan</td>
+                    <td>Tarayıcı tabanlı, hafif ONNX modeli</td>
+                </tr>
+                <tr>
+                    <td>eSpeak-NG</td>
+                    <td>Ücretsiz</td>
+                    <td>Doğrudan</td>
+                    <td>Klasik açık kaynaklı, her donanımda çalışır</td>
+                </tr>
+            </table>
+
+            <h3>Ücretli / Bulut TTS Seçenekleri (Doğrudan Tarayıcı Sesi)</h3>
+            <table>
+                <tr>
+                    <th>Sağlayıcı</th>
+                    <th>Maliyet</th>
+                    <th>OBS Yakalama</th>
+                    <th>Özellikler</th>
+                </tr>
+                <tr>
+                    <td>OpenAI TTS</td>
+                    <td>API ücretleri uygulanır (veya ücretsiz yerel)</td>
+                    <td>Doğrudan</td>
+                    <td>Yüksek kalite; özel uç noktayla yerel sunucuları da destekler</td>
+                </tr>
+                <tr>
+                    <td>Google Cloud</td>
+                    <td>API ücretleri uygulanır</td>
+                    <td>Doğrudan</td>
+                    <td>Profesyonel kalite, birden fazla dil</td>
+                </tr>
+                <tr>
+                    <td>ElevenLabs</td>
+                    <td>Ücretsiz katman mevcut</td>
+                    <td>Doğrudan</td>
+                    <td>Özel ses eğitimi, doğal ses</td>
+                </tr>
+                <tr>
+                    <td>Speechify</td>
+                    <td>API ücretleri uygulanır</td>
+                    <td>Doğrudan</td>
+                    <td>Yüksek kaliteli sesler, birden fazla dil</td>
+                </tr>
+                <tr>
+                    <td>Gemini TTS</td>
+                    <td>API ücretleri uygulanır</td>
+                    <td>Doğrudan</td>
+                    <td>Google üretken dil API'si</td>
+                </tr>
+            </table>
+        </div>
+        
+        <h2 id="browser-support">Sistem Seslerinin Kullanılabilirliği</h2>
+        <p>Bunlar genel yeteneklerdir; her kurulum için garanti değildir. OBS kendi gömülü tarayıcısını kullanır ve yüklü Chrome/Edge ses listesini devralmaz. Başarılı SSN uygulama testi, ayrı OBS Tarayıcı Kaynağı'nı test etmez.</p>
+        <div class="browser-support">
+            <div class="browser-card">
+                <h3>Chrome</h3>
+                <p class="supported">✓ Desteklenen kurulumlarda sistem sesleri mevcut</p>
+                <p>Google destekli sesler + sistem sesleri</p>
+            </div>
+            <div class="browser-card">
+                <h3>Edge</h3>
+                <p class="supported">✓ Desteklenen kurulumlarda sistem sesleri mevcut</p>
+                <p>Microsoft sesleri + Windows TTS paketleri</p>
+            </div>
+            <div class="browser-card">
+                <h3>Firefox</h3>
+                <p class="partial">⚠ Sınırlı Destek</p>
+                <p>Yalnızca yerel sistem dilleri</p>
+            </div>
+            <div class="browser-card">
+                <h3>Opera</h3>
+                <p class="partial">⚠ Sınırlı Destek</p>
+                <p>Chromium tabanlı; kullanılabilir sesler kuruluma göre değişir</p>
+            </div>
+        </div>
+        
+        <div class="warning">
+            <strong>Tarayıcı Sınırlamaları:</strong>
+            <ul>
+                <li>Tüm tarayıcılar metinden konuşmayı aynı düzeyde desteklemez (bazı Firefox sürümlerinde sesler sınırlıdır)</li>
+                <li>Chrome, Google destekli TTS seçenekleri sunar</li>
+                <li>Edge, Microsoft TTS ve Windows dil paketi seslerini destekler</li>
+                <li>Safari, sesi başlatmak için kullanıcı etkileşimi gerektirir</li>
+                <li>Kontrol edin: <a href="https://socialstream.ninja/tts" target="_blank">kullanılabilir sesler</a> tarayıcınız için</li>
+            </ul>
+        </div>
+        
+        <h2 id="audio-capture">OBS için Windows TTS Ses Yakalama Yöntemleri</h2>
+        <div class="card">
+            <h3>Sayfa Sesi: Ücretsiz Yerel ve Bulut Sağlayıcıları</h3>
+            <p>SSN'nin tarayıcı tabanlı yerel sağlayıcıları ve bulut ses sağlayıcıları, oluşturulan sesi sayfa üzerinden çalar:</p>
+            <ul>
+                <li>Tarayıcı kaynağında "Sesi OBS üzerinden kontrol et" seçeneğini etkinleştirmeniz yeterlidir</li>
+                <li>Sanal ses kablosu gerekmez</li>
+                <li>SSN uygulaması ve OBS tarayıcı kaynaklarıyla çalışır</li>
+            </ul>
+            
+            <h3>Sistem TTS Yakalama Yöntemleri</h3>
+            <div class="warning">
+                <strong>Önemli:</strong> Önce Sistem TTS'nin konuşma ürettiğini doğrulayın. OBS'nin gömülü tarayıcısı kullanılabilir sistem sesi sunmayabilir. Konuşma üretmiyorsa ses yönlendirmesini değiştirmek işe yaramaz. Başka bir sağlayıcı seçin veya desteklenen tarayıcıda konuşma üretip o tarayıcının sesini yakalayın.
+            </div>
+            
+            <p>Özellikle Sistem TTS için:</p>
+            <ul>
+                <li>OBS'nin Chrome veya Edge ile aynı sesleri sunduğunu varsaymayın</li>
+                <li>Tarayıcılar arasında sınırlı destek (Firefox'ta bazı TTS sesleri bulunmayabilir)</li>
+                <li>Chrome Google destekli seçenekler, Edge ise Microsoft seçenekleri sunar</li>
+                <li>Konuşma sahnenin Tarayıcı Kaynağı dışında çalıyorsa bu çıkışı ayrıca yakalayın</li>
+            </ul>
+            <p><strong>Yönlendirme indirmeleri:</strong> <a href="https://vb-audio.com/Cable/" target="_blank">VB-Audio Virtual Cable</a> | <a href="https://vb-audio.com/Voicemeeter/" target="_blank">Voicemeeter</a> | <a href="https://github.com/audiorouterdev/audio-router" target="_blank">Audio Router (eski)</a></p>
+
+            <p>Destekleniyorsa önce konuşan tarayıcıyı OBS uygulama veya masaüstü sesiyle yakalamayı deneyin. Aşağıdaki sanal kablo yöntemleri isteğe bağlı alternatiflerdir; OBS'ye konuşma desteği eklemezler.</p>
+            <h4>Yöntem 1: Sanal Kabloyla Varsayılan Ses Yönlendirmesi</h4>
+            <div class="code">
+1. Set VB-Audio Virtual Cable as Windows default output
+   - Sound Settings > Output > CABLE Input
+2. OBS:
+   - Add Audio Input Capture
+   - Source: CABLE Output
+   - Monitor: Monitor and Output, or Monitor Only if another source handles stream output
+            </div>
+            
+            <h4>Yöntem 2: Windows 10 Uygulama Yönlendirmesi</h4>
+            <div class="code">
+1. Sound Settings > App volume and device preferences
+2. Find browser in list
+3. Output: CABLE Input
+4. OBS setup same as Method 1
+            </div>
+            
+            <h4>Yöntem 3: Windows 11 Uygulama Yönlendirmesi</h4>
+            <div class="code">
+1. Settings > System > Sound > Volume Mixer
+2. Locate browser
+3. Output: CABLE Input
+4. OBS setup same as Method 1
+            </div>
+            
+            <h4>Yöntem 4: Audio Router Yazılımı</h4>
+            <div class="code">
+1. Install Audio Router
+2. Route browser to CABLE Input
+3. OBS setup same as Method 1
+            </div>
+            
+            <h4>Yöntem 5: Voicemeeter (Gelişmiş)</h4>
+            <div class="code">
+1. Install Voicemeeter
+2. Set as Windows default output
+3. Route:
+   - Hardware out > speakers
+   - Virtual out > OBS
+4. OBS captures Voicemeeter output
+            </div>
+            
+            <h3>Kurulumunuzu Test Etme</h3>
+            <div class="code">
+1. Play TTS
+2. Check OBS meter
+3. Verify system audio
+4. Adjust levels if needed
+            </div>
+            
+            <div class="info">
+                <strong>Alternatifler:</strong> Kokoro, Piper, Kitten veya eSpeak gibi ücretsiz yerleşik sağlayıcı, bulut sağlayıcısı veya kendi barındırdığınız TTS sunucusunu kullanın.
+            </div>
+        </div>
+        
+        <h2 id="language-installation">Ek Dil Paketlerini Yükleme</h2>
+        <div class="card">
+            <h3>Windows 11</h3>
+            <ol>
+                <li>Şuraya gidin: <strong>Başlat &gt; Ayarlar &gt; Saat ve Dil &gt; Konuşma</strong></li>
+                <li>Şu bölümde: <strong>Sesleri Yönet</strong>, şuna tıklayın: <strong>Ses Ekle</strong></li>
+                <li>İstediğiniz dilleri seçip şuna tıklayın: <strong>Ekleyin:</strong></li>
+                <li>Kullanılabilir sesleri yenilemek için tarayıcıları yeniden başlatın</li>
+            </ol>
+            
+            <h3>Windows 10</h3>
+            <p>Şuradaki talimatları izleyin: <a href="https://support.microsoft.com/en-US/Windows/Hardware/Input-Devices/manage-the-language-and-keyboard-input-layout-settings-in-windows" target="_blank">Microsoft'un resmi rehberi</a> dil paketlerini yüklemek için.</p>
+            
+            <div class="info">
+                <strong>İpucu:</strong> Bazı üçüncü taraf sesler uyumluluk sorunları nedeniyle tarayıcılarda görünmeyebilir. Firefox genellikle Chromium tabanlı tarayıcılardan daha fazla sistem sesi gösterir.
+            </div>
+        </div>
+        
+        <h2 id="parameters">TTS Yapılandırması için URL Parametreleri</h2>
+        <div class="card">
+            <h3>Temel Parametreler</h3>
+            <table class="parameter-table">
+                <tr>
+                    <th>Parametre</th>
+                    <th>Açıklama</th>
+                    <th>Örnek</th>
+                </tr>
+                <tr>
+                    <td>&speech</td>
+                    <td>Dil koduyla TTS'yi etkinleştir</td>
+                    <td>&speech=en-US</td>
+                </tr>
+                <tr>
+                    <td>&pitch</td>
+                    <td>Ses perdesi (0,1–2,0)</td>
+                    <td>&pitch=1.2</td>
+                </tr>
+                <tr>
+                    <td>&volume</td>
+                    <td>Ses seviyesi (0,0–1,0)</td>
+                    <td>&volume=0.8</td>
+                </tr>
+                <tr>
+                    <td>&rate</td>
+                    <td>Konuşma hızı (0,1–10,0)</td>
+                    <td>&rate=1.5</td>
+                </tr>
+                <tr>
+                    <td>&voice</td>
+                    <td>Kısmi ses adı eşleşmesi</td>
+                    <td>&voice=google</td>
+                </tr>
+                <tr>
+                    <td>&ttsprovider</td>
+                    <td>Sağlayıcı seçin: kokoro, piper, kitten, espeak, openai, customtts, localtts, elevenlabs, google, speechify, gemini</td>
+                    <td>&ttsprovider=customtts</td>
+                </tr>
+            </table>
+            
+            <h3>Gelişmiş Parametreler</h3>
+            <table class="parameter-table">
+                <tr>
+                    <th>Parametre</th>
+                    <th>Açıklama</th>
+                </tr>
+                <tr>
+                    <td>&simpletts</td>
+                    <td>"diyor" veya "birisi diyor" deme</td>
+                </tr>
+                <tr>
+                    <td>&simpletts2</td>
+                    <td>Sohbet adlarını hiç okuma</td>
+                </tr>
+                <tr>
+                    <td>&ttscommand</td>
+                    <td>Özel TTS komutunu etkinleştir (varsayılan: !say)</td>
+                </tr>
+                <tr>
+                    <td>&readevents</td>
+                    <td>Yayın etkinliklerini TTS'ye dahil et</td>
+                </tr>
+                <tr>
+                    <td>&skipmessages=3</td>
+                    <td>Yalnızca her 3. mesajı oku</td>
+                </tr>
+            </table>
+        </div>
+        
+        <h2 id="premium-options">TTS Sağlayıcı Yapılandırması</h2>
+        <div class="card">
+            <h3>Kokoro TTS (Ücretsiz, Yerleşik)</h3>
+            <ul>
+                <li>Şununla etkinleştirin: <code>?ttsprovider=kokoro</code></li>
+                <li>WebGPU/WASM üzerinden tarayıcıda çalışır — sunucu gerekmez</li>
+                <li>Doğrudan OBS tarayıcı kaynağıyla çalışır</li>
+                <li>Ses seçimi: <code>&voicekokoro=af_bella</code></li>
+                <li>Hız kontrolü: <code>&kokorospeed=1.2</code></li>
+                <li>Dil için bir ses seçin: <code>&amp;voicekokoro=ef_dora</code> İspanyolca için veya <code>&amp;voicekokoro=pf_dora</code> Brezilya Portekizcesi için. Şunu değiştirmek: <code>&amp;speech=</code> tek başına seçili sesi değiştirmez. Mevcut İngilizce ses kimlikleri çalışmaya devam eder.</li>
+
+            </ul>
+
+            <h3>Piper TTS (Ücretsiz, Yerleşik)</h3>
+            <ul>
+                <li>Şununla etkinleştirin: <code>?ttsprovider=piper</code></li>
+                <li>Tarayıcıda çalışan hızlı, CPU dostu sinir ağı TTS</li>
+                <li>Ses seçimi: <code>&pipervoice=en_US-hfc_female-medium</code></li>
+                <li>Portekizce sesler: <code>&pipervoice=pt_BR-faber-medium</code> veya <code>&pipervoice=pt_BR-edresson-low</code></li>
+                <li>İspanyolca sesler: <code>&pipervoice=es_ES-davefx-medium</code> veya <code>&pipervoice=es_MX-ald-medium</code></li>
+                <li>Hız kontrolü: <code>&piperspeed=1.0</code></li>
+            </ul>
+
+            <h3>Kitten TTS (Ücretsiz, Yerleşik)</h3>
+            <ul>
+                <li>Şununla etkinleştirin: <code>?ttsprovider=kitten</code></li>
+                <li>Tarayıcıda çalışan hafif ONNX tabanlı TTS</li>
+                <li>Ses seçimi: <code>&kittenvoice=expr-voice-4-f</code></li>
+            </ul>
+
+            <h3>eSpeak-NG (Ücretsiz, Yerleşik)</h3>
+            <ul>
+                <li>Şununla etkinleştirin: <code>?ttsprovider=espeak</code></li>
+                <li>Klasik açık kaynaklı TTS, her donanımda çalışır</li>
+                <li>Ses seçimi: <code>&espeakvoice=en</code></li>
+                <li>Portekizce örnek: <code>&speech=pt-BR&ttsprovider=espeak&espeakvoice=pt-br</code></li>
+                <li>İspanyolca örnek: <code>&speech=es-ES&ttsprovider=espeak&espeakvoice=es</code></li>
+                <li>Hız kontrolü: <code>&espeakspeed=175</code></li>
+            </ul>
+
+            <h3>Portekizce ve İspanyolca TTS Örnekleri</h3>
+            <ul>
+                <li>Portekizce, SSN'de test edilen en iyi ücretsiz yerel kalite: <code>?speech=pt-BR&ttsprovider=piper&pipervoice=pt_BR-faber-medium</code></li>
+                <li>Portekizce, SSN'de test edilen en hızlı alternatif: <code>?speech=pt-BR&ttsprovider=espeak&espeakvoice=pt-br</code></li>
+                <li>İspanyolca, SSN'de test edilen en iyi ücretsiz yerel kalite: <code>?speech=es-ES&ttsprovider=piper&pipervoice=es_ES-davefx-medium</code></li>
+                <li>İspanyolca, SSN'de test edilen en hızlı alternatif: <code>?speech=es-ES&ttsprovider=espeak&espeakvoice=es</code></li>
+                <li>Bulut sesleri için Google Cloud, ElevenLabs, Speechify, Gemini veya OpenAI uyumlu yerel sunucu gibi hedef dili destekleyen sağlayıcı sesi/dili kullanın.</li>
+            </ul>
+
+            <h3>OpenAI / Yerel Sunucu TTS</h3>
+            <ul>
+                <li>Şununla etkinleştirin: <code>?ttsprovider=openai</code></li>
+                <li>Kullanın: <code>?ttsprovider=customtts</code> veya <code>?ttsprovider=localtts</code> kendi barındırdığınız uç nokta için</li>
+                <li>Varsayılan olarak OpenAI API'sini veya herhangi bir uyumlu yerel sunucuyu kullanır</li>
+                <li>Özel uç nokta: <code>&openaiendpoint=http://localhost:8880/v1/audio/speech</code></li>
+                <li><strong>Önemli:</strong> <code>localhost</code> ve <code>127.0.0.1</code> TTS sayfasını oynatan aynı bilgisayarı ifade eder. OBS, TTS sunucunuzdan farklı bilgisayardaysa bunun yerine sunucu bilgisayarının LAN IP'sini kullanın.</li>
+                <li>Yerel sunucular için API anahtarı gerekmez</li>
+                <li>Yerel sunucuda Chrome/OBS içinde CORS veya yerel ağ sorunları varsa şunu çalıştırın: <code>npm run local-tts-bridge</code> OBS bilgisayarında ve SSN'yi şuraya yönlendirin: <code>http://127.0.0.1:8124/v1/audio/speech</code></li>
+                <li>SSN şunu gönderir: <code>{ model, input, voice, response_format, speed }</code> ve ikili ses, JSON ses URL'leri ve JSON base64 sesi destekler</li>
+                <li>Özel/yerel uç nokta oynatması şu anda arabelleğe alınır; SSN henüz akışla gelen ses parçalarını aşamalı olarak çalmaz</li>
+                <li>Ses: <code>&voiceopenai=af_bella</code>, hız: <code>&openaispeed=1.0</code>. Sunucunuzun desteklediği bir ses adı kullanın; Kokoro sesleri şöyle görünür: <code>af_bella</code>, openedai-speech/OpenAI tarzı sesler ise şöyle görünebilir: <code>nova</code> veya <code>echo</code>.</li>
+                <li>Bkz. <a href="local-tts.html">Yerel yapay zekâ TTS kılavuzu</a> kendi barındırdığınız sunucunun kurulumu için</li>
+            </ul>
+            
+            <h3>Google Cloud TTS</h3>
+            <ul>
+                <li>Şununla etkinleştirin: <code>?ttsprovider=google&ttskey=YOUR_API_KEY</code></li>
+                <li>Profesyonel kalitede sesler</li>
+                <li>Ses seçimi: <code>&voicegoogle=en-GB-Standard-A</code></li>
+                <li>Dil: <code>&googlelang=en-US</code></li>
+            </ul>
+
+            <h3>Gemini TTS</h3>
+            <ul>
+                <li>Şununla etkinleştirin: <code>?ttsprovider=gemini&geminikey=YOUR_API_KEY</code></li>
+                <li>Model: <code>&geminimodel=gemini-2.5-flash-preview-tts</code></li>
+                <li>Ses: <code>&voicegemini=Kore</code>, dil: <code>&geminilang=th-TH</code></li>
+                <li>Stil yönergeleri: <code>&geministyle=Read aloud in a warm tone.</code></li>
+            </ul>
+
+            <h3>ElevenLabs TTS</h3>
+            <ul>
+                <li>Şununla etkinleştirin: <code>?ttsprovider=elevenlabs&elevenlabskey=YOUR_API_KEY</code></li>
+                <li>Ses Kimliği: <code>&voice11=YOUR_VOICE_ID</code></li>
+                <li>Model: <code>&elevenlabsmodel=eleven_multilingual_v2</code></li>
+                <li>Parametreler: kararlılık, benzerlik ve stil ayarlanabilir</li>
+            </ul>
+            
+            <h3>Fish Audio TTS</h3>
+            <p>Fish Audio'yu seçip API anahtarınızı ve isteğe bağlı ses kimliğini girin. Varsayılan model: <code>s2.1-pro-free</code>. <a href="tts-setup-guide.html#settings-fish">Kurulum, model seçenekleri ve tarayıcı erişim sınırlamaları</a>.</p>
+
+            <h3>Speechify TTS</h3>
+            <ul>
+                <li>Şununla etkinleştirin: <code>?ttsprovider=speechify&speechifykey=YOUR_API_KEY</code></li>
+                <li>Ses: <code>&voicespeechify=henry</code></li>
+                <li>Model: <code>&speechifymodel=simba-3.0</code> (varsayılan) veya <code>&speechifymodel=simba-3.2</code> İngilizce için.</li>
+                <li>Konuşma hızı: <code>&speechifyspeed=1.2</code> (0,5–3,0 aralığında; normal değer 1,0).</li>
+                <li><a href="speechify-setup-guide.html">Speechify kurulum, ses, hız ve ses seviyesi rehberi</a></li>
+            </ul>
+        </div>
+        
+        <h2 id="troubleshooting">Sorun giderme</h2>
+        <div class="card">
+            <h3>Yaygın Sorunlar</h3>
+            <ul>
+                <li><strong>Ses çalmıyor:</strong> TTS'nin etkin olduğunu, TTS üreten sayfanın açık olduğunu ve tarayıcı kaynağının sessize alınmadığını kontrol edin. Normal tarayıcıda sayfaya bir kez tıklayın.</li>
+                <li><strong>Sesler görünmüyor:</strong> Dil paketlerini yükledikten sonra tarayıcıyı yeniden başlatın</li>
+                <li><strong>OBS yakalamıyor:</strong> Konuşma yoksa önce ses/sağlayıcı kullanılabilirliğini kontrol edin. Konuşma varsa şunu kontrol edin: <strong>Sesi OBS üzerinden denetle</strong>, mikserin sessiz durumunu ve çıkış parçalarını kontrol edin veya konuşan harici tarayıcının sesini yakalayın</li>
+                <li><strong>Yerel uç nokta uygulama testinde çalışıyor ama OBS'de çalışmıyor:</strong> OBS ayrı bir tarayıcıdır. Uç noktayı OBS bilgisayarından kontrol edin; özellikle şunu kullanıyorsanız: <code>127.0.0.1</code>.</li>
+                <li><strong>Yalnızca ilk harf veya ilk kelimeler okunuyor:</strong> kaldırın: <code>ttsquick</code> varsa OBS URL'sinden.</li>
+                <li><strong>Safari sorunları:</strong> Safari'nin otomatik TTS desteği sınırlıdır</li>
+                <li><strong>Ücretli hizmet çalışmıyor:</strong> API anahtarını kontrol edin ve sağlayıcının doğru belirtildiğinden emin olun</li>
+            </ul>
+            
+            <h3>İyi Uygulamalar</h3>
+            <ul>
+                <li>Daha basit OBS kurulumu için sayfa sesi üreten sağlayıcı kullanın; ücretsiz yerel sağlayıcılar mevcuttur</li>
+                <li>Yayına başlamadan önce kurulumu basit cümlelerle test edin</li>
+                <li>TTS'de kullanıcıların oluşturduğu içeriğin risklerini göz önünde bulundurun</li>
+                <li>Gerektiğinde TTS'yi hızla kapatacak bir anahtar bulundurun</li>
+            </ul>
+        </div>
+        
+        <div class="tts-test">
+            <h3>Bu Tarayıcının Sistem Seslerini Kontrol Et</h3>
+            <p>Bu, şunları listeler: <strong>Yalnızca bu rehberi gösteren tarayıcıdaki Sistem TTS sesleri</strong>. OBS'yi, ayrı bir SSN uygulama penceresini veya Kokoro gibi sağlayıcıları test etmez. Boş liste, SSN'nin diğer TTS sağlayıcılarının kullanılamadığı anlamına gelmez.</p>
+            <button onclick="window.open(&#x27;https://socialstream.ninja/tts&#x27;, &#x27;_blank&#x27;)">Kullanılabilir Sesleri Kontrol Et</button>
+        </div>
+        
+        <footer>
+            <p>Social Stream Ninja TTS Rehberi - En son güncellemeler için şurayı ziyaret edin: <a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub deposu</a></p>
+        </footer>
+    </div>
+    
+</body>
+</html>

@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="it" data-site-root="../../" data-site-language="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="it_IT">
+    <meta property="og:url" content="https://socialstream.ninja/it/docs/features.html">
+    <meta property="og:title" content="Chat, overlay OBS e automazione - Social Stream Ninja">
+    <meta property="og:description" content="Esplora le funzioni di Social Stream Ninja: chat unificata in diretta, overlay OBS, sintesi vocale, co-conduttori IA, giochi di chat, moderazione e automazione.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo di Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/it/docs/features.html">
+    <meta name="twitter:title" content="Chat, overlay OBS e automazione - Social Stream Ninja">
+    <meta name="twitter:description" content="Esplora le funzioni di Social Stream Ninja: chat unificata in diretta, overlay OBS, sintesi vocale, co-conduttori IA, giochi di chat, moderazione e automazione.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo di Social Stream Ninja">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat, overlay OBS e automazione - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/featured.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Esplora le funzioni di Social Stream Ninja: chat unificata in diretta, overlay OBS, sintesi vocale, co-conduttori IA, giochi di chat, moderazione e automazione.">
+    <link rel="canonical" href="https://socialstream.ninja/it/docs/features.html">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="it">
+<script id="ssn-site-language" type="application/json">{"language":"it","page":"docs/features.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Passa al tema chiaro","Switch to dark theme":"Passa al tema scuro","Light mode":"Modalità chiara","Dark mode":"Modalità scura","Open navigation menu":"Apri il menu di navigazione","Close navigation menu":"Chiudi il menu di navigazione","Copy this document as Markdown to the clipboard":"Copia questo documento in formato Markdown negli appunti","Copy Markdown":"Copia Markdown","Copying…":"Copia in corso…","Markdown copied":"Markdown copiato","Copy failed":"Copia non riuscita","Copy comprehensive Markdown for an AI assistant":"Copia il Markdown completo per un assistente IA","Copy this documentation page as Markdown for an AI assistant":"Copia questa pagina di documentazione in Markdown per un assistente IA"},"strings":{"$10-50/month subscription":"Abbonamento da 10–50 USD al mese",", Stripe, Ko-Fi, Buy Me A Coffee)":", Stripe, Ko-Fi, Buy Me A Coffee)","1-5 platforms":"1–5 piattaforme","100+ platforms":"Oltre 100 piattaforme","AI & LLM Integration":"Integrazione IA e LLM","AI Co-Host":"Co-conduttore IA","AI Integration":"Integrazione IA","API Integration":"Integrazione API","API Keys Required":"Chiavi API necessarie","Active Discord community":"Comunità Discord attiva","Advanced Streaming Tools":"Strumenti avanzati per le dirette","Advanced Tools":"Strumenti avanzati","Alternative Streaming":"Streaming alternativo","Amazon Chime":"Amazon Chime","Amazon Live":"Amazon Live","Animation options including fade and swipe effects":"Opzioni di animazione con effetti di dissolvenza e scorrimento","Auto or manual message selection":"Selezione automatica o manuale dei messaggi","Automated greetings and responses":"Saluti e risposte automatici","Automatic message relaying between platforms":"Inoltro automatico dei messaggi tra piattaforme","Bilibili.com":"Bilibili.com","Bilibili.tv":"Bilibili.tv","Bluesky":"Bluesky","Bot Commands":"Comandi dei bot","Bot Commands & Auto-Response":"Comandi dei bot e risposte automatiche","Bring chat messages to life with text-to-speech capabilities, making your stream more engaging and accessible.":"Dai voce ai messaggi della chat con la sintesi vocale, rendendo la diretta più coinvolgente e accessibile.","Bring your chats together, put your audience on screen, and make each stream your own.":"Riunisci le tue chat, porta il pubblico sullo schermo e dai a ogni diretta il tuo stile.","Built-in commands for common interactions":"Comandi integrati per le interazioni comuni","Built-in mini-games":"Minigiochi integrati","CSS styling for complete visual control":"Stile CSS per un controllo visivo completo","Castyr":"Castyr","Chat history database with search":"Database della cronologia della chat con ricerca","Choose a voice cohost, chat bot, browser companion, or focused AI processing tools without locking the rest of your stream into one provider.":"Scegli un co-conduttore vocale, un bot di chat, un assistente nel browser o strumenti mirati di elaborazione IA senza vincolare il resto della diretta a un unico provider.","Chzzk.naver.com":"Chzzk.naver.com","Closed ecosystem":"Ecosistema chiuso","Commands & API":"Comandi e API","Community":"Comunità","Community Support":"Supporto della comunità","Compare every AI option →":"Confronta tutte le opzioni IA →","Competitors":"Concorrenti","Connect with viewers across all your streaming platforms simultaneously. Social Stream Ninja consolidates chat messages from dozens of platforms into a single, easy-to-manage dashboard.":"Interagisci contemporaneamente con gli spettatori di tutte le tue piattaforme. Social Stream Ninja riunisce i messaggi di chat di decine di piattaforme in un'unica dashboard facile da gestire.","Consolidates your live social messaging streams and more. Free and open source.":"Riunisce i messaggi dei tuoi social in diretta e molto altro. Gratuito e open source.","Contribute":"Contribuisci","Cost":"Costo","Cozy.tv":"Cozy.tv","Create automated interactions with your audience through custom commands and responses.":"Crea interazioni automatiche con il pubblico tramite comandi e risposte personalizzati.","Credits roll and tip jar displays":"Ringraziamenti scorrevoli e visualizzazioni del barattolo delle mance","Crowdcast.io":"Crowdcast.io","Custom JavaScript support":"Supporto per JavaScript personalizzato","Custom command logic with a scriptable plugin file":"Logica personalizzata dei comandi con un file plugin programmabile","Customizable voice, pitch, and speaking rate":"Voce, tonalità e velocità di lettura personalizzabili","Customizable with CSS for perfect integration with your stream's aesthetic":"Personalizzabile con CSS per integrarsi perfettamente con lo stile della diretta","Customization":"Personalizzazione","Customization Guide":"Guida alla personalizzazione","Deep Customization":"Personalizzazione avanzata","Discord":"Discord","Don't see your platform?":"Non trovi la tua piattaforma?","Donate":"Fai una donazione","Donation integration (":"Integrazione delle donazioni (","Download":"Scarica","Download Now":"Scarica ora","Explore 126 stream ideas":"Esplora 126 idee per le dirette","Explore Social Stream Ninja features: combined live chat, OBS overlays, text-to-speech, AI cohosts, chat games, moderation and stream automation.":"Esplora le funzioni di Social Stream Ninja: chat unificata in diretta, overlay OBS, sintesi vocale, co-conduttori IA, giochi di chat, moderazione e automazione.","Extend Social Stream Ninja's capabilities with robust API integration options.":"Estendi le funzionalità di Social Stream Ninja con solide opzioni di integrazione API.","Extensions":"Estensioni","FAQ":"Domande frequenti","Facebook Live":"Facebook Live","Feature":"Metti in evidenza","Featured Chat Overlay":"Overlay dei messaggi in evidenza","Features":"Funzioni","Free & Open Source":"Gratuito e open source","Free system TTS support":"Supporto gratuito del TTS di sistema","GitHub":"GitHub","GitHub Repository":"Repository GitHub","Giveaway system with queue management":"Sistema di estrazioni a premi con gestione della coda","Google Meet":"Google Meet","Graphical polling system":"Sistema grafico di sondaggi","Guides":"Guide","Highlight the best messages from your audience directly on your stream with beautiful, customizable overlays.":"Metti in evidenza i migliori messaggi del pubblico direttamente nella diretta con overlay belli e personalizzabili.","Hire":"Incarica un professionista","Home":"Home","IRC (Multiple networks)":"IRC (più reti)","Inspiration":"Ispirazione","Instagram Live":"Instagram Live","Installation Guide":"Guida all'installazione","Interactive Games":"Giochi interattivi","Interactive mini-games including Battle Royal":"Minigiochi interattivi, incluso Battle Royal","International Platforms":"Piattaforme internazionali","Join our Discord":"Unisciti al nostro Discord","Kick.com":"Kick.com","Limited or extra cost":"Limitato o a pagamento","Limited or nonexistent":"Limitato o inesistente","Limited templates":"Modelli limitati","LinkedIn Events":"LinkedIn Events","Live Chat, OBS Overlays and Automation - Social Stream Ninja":"Chat, overlay OBS e automazione - Social Stream Ninja","Live two-way chat messaging with Facebook, YouTube, Twitch, Zoom, and more":"Messaggi di chat bidirezionali in tempo reale con Facebook, YouTube, Twitch, Zoom e altre piattaforme","Livestorm.io":"Livestorm.io","Local models or cloud providers, including OpenAI, Gemini, xAI, Bedrock, OpenRouter, Groq, and custom compatible APIs":"Modelli locali o provider cloud, tra cui OpenAI, Gemini, xAI, Bedrock, OpenRouter, Groq e API personalizzate compatibili","Local models, voice cohost, cloud providers, and custom APIs":"Modelli locali, co-conduttore vocale, provider cloud e API personalizzate","Locals.com":"Locals.com","MIDI/Streamdeck control":"Controllo MIDI/Streamdeck","Main navigation":"Navigazione principale","Major Streaming Platforms":"Principali piattaforme di streaming","Make Social Stream Ninja truly yours with extensive customization options for both functionality and appearance.":"Rendi Social Stream Ninja davvero tuo grazie alle numerose opzioni di personalizzazione delle funzioni e dell'aspetto.","Message filtering and moderation":"Filtri e moderazione dei messaggi","Message queuing for organized highlighting":"Coda dei messaggi per una messa in evidenza organizzata","Messaging Platforms":"Piattaforme di messaggistica","Microsoft Teams":"Microsoft Teams","Moderation, translation, summaries, RAG context, and overlay building":"Moderazione, traduzione, riepiloghi, contesto RAG e creazione di overlay","Multi-Platform Chat Integration":"Integrazione delle chat multipiattaforma","Multi-Platform Support":"Supporto multipiattaforma","Multi-channel source icons to differentiate between platforms":"Icone delle sorgenti multicanale per distinguere le piattaforme","Multi-language support":"Supporto multilingue","Multimodal AI assistant":"Assistente IA multimodale","Multimodal AI co-host capabilities":"Funzioni di co-conduttore IA multimodale","Nimo.TV":"Nimo.TV","NinjaBacker: free, 0% platform commission":"NinjaBacker: gratuito, commissione della piattaforma 0%","No login or API keys needed for most platforms":"Nessun accesso o chiave API richiesti per la maggior parte delle piattaforme","NonOLive":"NonOLive","None for most platforms":"Nessuna per la maggior parte delle piattaforme","Not available":"Non disponibile","OBS audio capture support":"Supporto dell'acquisizione audio OBS","OBS remote scene support":"Supporto delle scene OBS remote","Odysee.com":"Odysee.com","Open for contributions":"Aperto ai contributi","Open navigation menu":"Apri il menu di navigazione","Optional ChatGPT browser capture with no API key":"Acquisizione facoltativa di ChatGPT nel browser senza chiave API","Overlay Gallery":"Galleria degli overlay","Owncast":"Owncast","Picarto.tv":"Picarto.tv","Piczel.tv":"Piczel.tv","Platform Support":"Supporto delle piattaforme","Powerful API":"API potente","Pre-styled templates and themes":"Modelli e temi già pronti","Premium TTS services integration (Google Cloud, ElevenLabs, Speechify)":"Integrazione di servizi TTS premium (Google Cloud, ElevenLabs, Speechify)","Preview sticker rewards":"Anteprima delle ricompense sticker","Primary and private chat bots with custom instructions and trigger rules":"Bot di chat principale e privato con istruzioni personalizzate e regole di attivazione","Privacy Policy":"Informativa sulla privacy","Private AI chat bot interface":"Interfaccia privata del bot di chat IA","Quick Links":"Link rapidi","Ready to Transform Your Multi-Platform Streaming?":"Pronto a trasformare le tue dirette multipiattaforma?","Report an Issue":"Segnala un problema","Required for most platforms":"Richieste per la maggior parte delle piattaforme","Resources":"Risorse","Restream.io Chat":"Restream.io Chat","Rumble.com":"Rumble.com","SOOP Live":"SOOP Live","Seal Team Sloth":"Seal Team Sloth","See the full supported-platform list":"Visualizza l'elenco completo delle piattaforme supportate","Select messages via the dockable dashboard":"Seleziona i messaggi tramite la dashboard agganciabile","Server API for remote control":"API del server per il controllo remoto","Sessions.us":"Sessions.us","SharePlay.tv":"SharePlay.tv","Slack":"Slack","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo di Social Stream Ninja","Social Stream Ninja works with 100+ platforms and services - here's a sample":"Social Stream Ninja funziona con oltre 100 piattaforme e servizi: ecco alcuni esempi","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. Licenza GPLv3.0. Creato da","Source filtering and branding options":"Filtri delle sorgenti e opzioni di personalizzazione del marchio","Specialized Platforms":"Piattaforme specializzate","Start using Social Stream Ninja today and take your audience engagement to the next level.":"Inizia oggi a usare Social Stream Ninja e rendi il pubblico ancora più partecipe.","Steve Seguin":"Steve Seguin","Support":"Supporto","Supported Platforms":"Piattaforme supportate","Supported Sites":"Siti supportati","Switch theme":"Cambia tema","Take your streams to the next level with our suite of professional tools designed for engagement and interaction.":"Migliora le tue dirette con la nostra serie di strumenti professionali pensati per coinvolgimento e interazione.","Telegram":"Telegram","Templates":"Modelli","Terms of Service":"Termini di servizio","Text-to-Speech":"Sintesi vocale","TikTok Live":"TikTok Live","Twitch.tv":"Twitch.tv","Two-way Chat":"Chat bidirezionale","URL parameters for easy configuration":"Parametri URL per una configurazione semplice","Unlimited with CSS/JS":"Illimitata con CSS/JS","VKPlay.ru":"VKPlay.ru","VPZone.tv":"VPZone.tv","Varies by provider":"Varia in base al provider","Video Conferencing":"Videoconferenze","View Installation Guide":"Visualizza la guida all'installazione","Voice cohost that can hear you and receive selected live-chat messages":"Co-conduttore vocale che può ascoltarti e ricevere messaggi selezionati della chat in diretta","Webex":"Webex","Webhook support for third-party integrations":"Supporto webhook per integrazioni esterne","WhatsApp Web":"WhatsApp Web","Why Choose Social Stream Ninja?":"Perché scegliere Social Stream Ninja?","Word cloud and custom GIF commands":"Nuvola di parole e comandi GIF personalizzati","X (Twitter) Live":"X (Twitter) Live","X.com":"X.com","Yes, on most platforms":"Sì, sulla maggior parte delle piattaforme","YouTube Live":"YouTube Live","Zoom.us":"Zoom.us","learn how to add it yourself":"scopri come aggiungerla tu stesso","to request a new integration or":"per richiedere una nuova integrazione oppure","with contributions from the community.":"con il contributo della comunità."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/features.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/features.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/features.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/features.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/features.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/features.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/features.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/features.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/features.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/features.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/features.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/features.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/features.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/features.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/features.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/features.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/features.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/features.html">
+<!-- ssn-languages:end --></head>
+<body>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navigazione principale"><a href="../index.html">Home</a><a href="features.html" aria-current="page">Funzioni</a><a href="inspiration.html" class="site-priority-inspiration">Ispirazione</a><a href="download.html">Scarica</a><a href="guides.html">Guide</a><a href="commands.html">Comandi e API</a><a href="supported-sites.html">Siti supportati</a><a href="overlay-gallery.html" class="site-priority-gallery">Galleria degli overlay</a><a href="services.html" class="site-priority-hire">Incarica un professionista</a><a href="support.html">Supporto</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Italiano"><span aria-hidden="true">🌐 </span><span lang="it">Italiano</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/features.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/features.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/features.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/features.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/features.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/features.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/features.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/features.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/features.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="features.html" lang="it" hreflang="it" aria-current="true">Italiano</a><a class="site-language-link" href="../../pl/docs/features.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/features.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/features.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/features.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/features.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/features.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/features.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Cambia tema"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Apri il menu di navigazione" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Funzioni</h1>
+            <p>Riunisci le tue chat, porta il pubblico sullo schermo e dai a ogni diretta il tuo stile.</p>
+            <p><a href="inspiration.html">Esplora 126 idee per le dirette</a> · <a href="sticker-gallery.html">Anteprima delle ricompense sticker</a></p>
+        </div>
+    </section>
+
+    <section class="features-section">
+        <div class="container">
+            <div class="feature-item">
+                <div class="feature-image">
+                    <img src="../../media/multi.png" alt="Supporto multipiattaforma">
+                </div>
+                <div class="feature-details">
+                    <h2>Integrazione delle chat multipiattaforma</h2>
+                    <p>Interagisci contemporaneamente con gli spettatori di tutte le tue piattaforme. Social Stream Ninja riunisce i messaggi di chat di decine di piattaforme in un'unica dashboard facile da gestire.</p>
+                    <ul class="feature-list">
+                        <li>Messaggi di chat bidirezionali in tempo reale con Facebook, YouTube, Twitch, Zoom e altre piattaforme</li>
+                        <li>Nessun accesso o chiave API richiesti per la maggior parte delle piattaforme</li>
+                        <li>Icone delle sorgenti multicanale per distinguere le piattaforme</li>
+                        <li>Inoltro automatico dei messaggi tra piattaforme</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feature-item reverse">
+                <div class="feature-image">
+                    <img src="../../media/featured-chat-overlay.png" alt="Overlay dei messaggi in evidenza">
+                </div>
+                <div class="feature-details">
+                    <h2>Overlay dei messaggi in evidenza</h2>
+                    <p>Metti in evidenza i migliori messaggi del pubblico direttamente nella diretta con overlay belli e personalizzabili.</p>
+                    <ul class="feature-list">
+                        <li>Seleziona i messaggi tramite la dashboard agganciabile</li>
+                        <li>Selezione automatica o manuale dei messaggi</li>
+                        <li>Personalizzabile con CSS per integrarsi perfettamente con lo stile della diretta</li>
+                        <li>Opzioni di animazione con effetti di dissolvenza e scorrimento</li>
+                        <li>Coda dei messaggi per una messa in evidenza organizzata</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-image">
+                    <img src="../../media/bot-commands.png" alt="Comandi dei bot">
+                </div>
+                <div class="feature-details">
+                    <h2>Comandi dei bot e risposte automatiche</h2>
+                    <p>Crea interazioni automatiche con il pubblico tramite comandi e risposte personalizzati.</p>
+                    <ul class="feature-list">
+                        <li>Comandi integrati per le interazioni comuni</li>
+                        <li>Logica personalizzata dei comandi con un file plugin programmabile</li>
+                        <li>Saluti e risposte automatici</li>
+                        <li>Filtri e moderazione dei messaggi</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feature-item reverse">
+                <div class="feature-image">
+                    <img src="../../media/llm-support.png" alt="Integrazione IA e LLM">
+                </div>
+                <div class="feature-details">
+                    <h2>Integrazione IA e LLM</h2>
+                    <p>Scegli un co-conduttore vocale, un bot di chat, un assistente nel browser o strumenti mirati di elaborazione IA senza vincolare il resto della diretta a un unico provider.</p>
+                    <ul class="feature-list">
+                        <li>Co-conduttore vocale che può ascoltarti e ricevere messaggi selezionati della chat in diretta</li>
+                        <li>Bot di chat principale e privato con istruzioni personalizzate e regole di attivazione</li>
+                        <li>Modelli locali o provider cloud, tra cui OpenAI, Gemini, xAI, Bedrock, OpenRouter, Groq e API personalizzate compatibili</li>
+                        <li>Moderazione, traduzione, riepiloghi, contesto RAG e creazione di overlay</li>
+                        <li>Acquisizione facoltativa di ChatGPT nel browser senza chiave API</li>
+                    </ul>
+                    <a href="ai-modes-guide.html" class="btn btn-text">Confronta tutte le opzioni IA →</a>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                <div class="feature-image">
+                    <img src="../../media/text-to-speech.png" alt="Sintesi vocale">
+                </div>
+                <div class="feature-details">
+                    <h2>Sintesi vocale</h2>
+                    <p>Dai voce ai messaggi della chat con la sintesi vocale, rendendo la diretta più coinvolgente e accessibile.</p>
+                    <ul class="feature-list">
+                        <li>Supporto gratuito del TTS di sistema</li>
+                        <li>Integrazione di servizi TTS premium (Google Cloud, ElevenLabs, Speechify)</li>
+                        <li>Supporto multilingue</li>
+                        <li>Voce, tonalità e velocità di lettura personalizzabili</li>
+                        <li>Supporto dell'acquisizione audio OBS</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="feature-item">
+                
+                <div class="feature-details">
+                    <h2>API potente</h2>
+                    <p>Estendi le funzionalità di Social Stream Ninja con solide opzioni di integrazione API.</p>
+                    <ul class="feature-list">
+                        <li>Supporto webhook per integrazioni esterne</li>
+                        <li>API del server per il controllo remoto</li>
+                        <li>Integrazione delle donazioni (<a href="monetization.html#ninjabacker">NinjaBacker: gratuito, commissione della piattaforma 0%</a>, Stripe, Ko-Fi, Buy Me A Coffee)</li>
+                        <li>Controllo MIDI/Streamdeck</li>
+                        <li>Supporto delle scene OBS remote</li>
+                    </ul>
+                </div>
+				<div class="feature-image">
+                    <img src="../../media/powerful-api.png" alt="Integrazione API">
+                </div>
+            </div>
+			
+			<div class="feature-item reverse">
+                
+                <div class="feature-details">
+                    <h2>Personalizzazione avanzata</h2>
+                    <p>Rendi Social Stream Ninja davvero tuo grazie alle numerose opzioni di personalizzazione delle funzioni e dell'aspetto.</p>
+                    <ul class="feature-list">
+                        <li>Stile CSS per un controllo visivo completo</li>
+                        <li>Modelli e temi già pronti</li>
+                        <li>Supporto per JavaScript personalizzato</li>
+                        <li>Parametri URL per una configurazione semplice</li>
+                        <li>Filtri delle sorgenti e opzioni di personalizzazione del marchio</li>
+                    </ul>
+                </div>
+				<div class="feature-image">
+                    <img src="../../media/deep-customization.png" alt="Personalizzazione">
+                </div>
+            </div>
+			
+			<div class="feature-item">
+				<div class="feature-details">
+					<h2>Strumenti avanzati per le dirette</h2>
+					<p>Migliora le tue dirette con la nostra serie di strumenti professionali pensati per coinvolgimento e interazione.</p>
+					<ul class="feature-list">
+						<li>Minigiochi interattivi, incluso Battle Royal</li>
+						<li>Sistema di estrazioni a premi con gestione della coda</li>
+						<li>Ringraziamenti scorrevoli e visualizzazioni del barattolo delle mance</li>
+						<li>Nuvola di parole e comandi GIF personalizzati</li>
+						<li>Sistema grafico di sondaggi</li>
+						<li>Database della cronologia della chat con ricerca</li>
+						<li>Interfaccia privata del bot di chat IA</li>
+						<li>Funzioni di co-conduttore IA multimodale</li>
+					</ul>
+				</div>
+				<div class="feature-image">
+					<img src="../../media/advanced-streaming.png" alt="Strumenti avanzati">
+				</div>
+			</div>
+        </div>
+    </section>
+
+    <section id="supported-platforms" class="supported-platforms">
+        <div class="container">
+            <h2>Piattaforme supportate</h2>
+            <p class="section-subtitle">Social Stream Ninja funziona con oltre 100 piattaforme e servizi: ecco alcuni esempi</p>
+            
+            <div class="platforms-grid">
+                <div class="platform-category">
+                    <h3>Principali piattaforme di streaming</h3>
+                    <ul>
+                        <li>YouTube Live</li>
+                        <li>Twitch.tv</li>
+                        <li>Facebook Live</li>
+                        <li>Instagram Live</li>
+                        <li>TikTok Live</li>
+                        <li>X (Twitter) Live</li>
+                        <li>LinkedIn Events</li>
+                        <li>Amazon Live</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-category">
+                    <h3>Videoconferenze</h3>
+                    <ul>
+                        <li>Zoom.us</li>
+                        <li>Google Meet</li>
+                        <li>Microsoft Teams</li>
+                        <li>Webex</li>
+                        <li>Sessions.us</li>
+                        <li>Amazon Chime</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-category">
+                    <h3>Piattaforme di messaggistica</h3>
+                    <ul>
+                        <li>Discord</li>
+                        <li>Slack</li>
+                        <li>Telegram</li>
+                        <li>WhatsApp Web</li>
+                        <li>IRC (più reti)</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-category">
+                    <h3>Streaming alternativo</h3>
+                    <ul>
+                        <li>Kick.com</li>
+                        <li>VPZone.tv</li>
+                        <li>Rumble.com</li>
+                        <li>Odysee.com</li>
+                        <li>Picarto.tv</li>
+                        <li>Chzzk.naver.com</li>
+                        <li>Cozy.tv</li>
+						<li>SharePlay.tv</li>
+						<li>Seal Team Sloth</li>
+						<li>Castyr</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-category">
+                    <h3>Piattaforme internazionali</h3>
+                    <ul>
+                        <li>Bilibili.tv</li>
+                        <li>Bilibili.com</li>
+                        <li>VKPlay.ru</li>
+                        <li>SOOP Live</li>
+                        <li>Nimo.TV</li>
+                        <li>NonOLive</li>
+                    </ul>
+                </div>
+                
+                <div class="platform-category">
+                    <h3>Piattaforme specializzate</h3>
+                    <ul>
+                        <li>Owncast</li>
+                        <li>Restream.io Chat</li>
+                        <li>Piczel.tv</li>
+                        <li>Locals.com</li>
+                        <li>Crowdcast.io</li>
+                        <li>Livestorm.io</li>
+						<li><a href="supported-sites.html">Visualizza l'elenco completo delle piattaforme supportate</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+			<div class="platform-note">
+				<p>Non trovi la tua piattaforma? <a href="https://discord.socialstream.ninja" target="_blank">Unisciti al nostro Discord</a> per richiedere una nuova integrazione oppure <a href="source-types-guide.html#generic-and-unnamed-sources">scopri come aggiungerla tu stesso</a>.</p>
+			</div>
+        </div>
+    </section>
+
+    <section class="comparison">
+        <div class="container">
+            <h2>Perché scegliere Social Stream Ninja?</h2>
+            <div class="comparison-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metti in evidenza</th>
+                            <th>Social Stream Ninja</th>
+                            <th>Concorrenti</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Costo</td>
+                            <td><span class="highlight">Gratuito e open source</span></td>
+                            <td>Abbonamento da 10–50 USD al mese</td>
+                        </tr>
+                        <tr>
+                            <td>Supporto delle piattaforme</td>
+                            <td><span class="highlight">Oltre 100 piattaforme</span></td>
+                            <td>1–5 piattaforme</td>
+                        </tr>
+                        <tr>
+                            <td>Chiavi API necessarie</td>
+                            <td><span class="highlight">Nessuna per la maggior parte delle piattaforme</span></td>
+                            <td>Richieste per la maggior parte delle piattaforme</td>
+                        </tr>
+                        <tr>
+                            <td>Personalizzazione</td>
+                            <td><span class="highlight">Illimitata con CSS/JS</span></td>
+                            <td>Modelli limitati</td>
+                        </tr>
+                        <tr>
+                            <td>Chat bidirezionale</td>
+                            <td><span class="highlight">Sì, sulla maggior parte delle piattaforme</span></td>
+                            <td>Limitato o a pagamento</td>
+                        </tr>
+	                        <tr>
+	                            <td>Integrazione IA</td>
+	                            <td><span class="highlight">Modelli locali, co-conduttore vocale, provider cloud e API personalizzate</span></td>
+	                            <td>Limitato o inesistente</td>
+	                        </tr>
+                        <tr>
+                            <td>Supporto della comunità</td>
+                            <td><span class="highlight">Comunità Discord attiva</span></td>
+                            <td>Varia in base al provider</td>
+                        </tr>
+                        <tr>
+                            <td>Estensioni</td>
+                            <td><span class="highlight">Aperto ai contributi</span></td>
+                            <td>Ecosistema chiuso</td>
+                        </tr>
+						<tr>
+							<td>Giochi interattivi</td>
+							<td><span class="highlight">Minigiochi integrati</span></td>
+							<td>Non disponibile</td>
+						</tr>
+						<tr>
+							<td>Co-conduttore IA</td>
+							<td><span class="highlight">Assistente IA multimodale</span></td>
+							<td>Non disponibile</td>
+						</tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+	
+    <section class="get-started">
+        <div class="container">
+            <h2>Pronto a trasformare le tue dirette multipiattaforma?</h2>
+            <p>Inizia oggi a usare Social Stream Ninja e rendi il pubblico ancora più partecipe.</p>
+            <div class="get-started-cta">
+                <a href="download.html" class="btn btn-primary">Scarica ora</a>
+                <a href="guides.html" class="btn btn-secondary">Visualizza la guida all'installazione</a>
+            </div>
+        </div>
+    </section>
+
+        <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>Riunisce i messaggi dei tuoi social in diretta e molto altro. Gratuito e open source.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+					<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Link rapidi</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="features.html">Funzioni</a></li>
+                        <li><a href="download.html">Scarica</a></li>
+                        <li><a href="guides.html">Guide</a></li>
+                        <li><a href="commands.html">Comandi e API</a></li>
+                        <li><a href="supported-sites.html">Siti supportati</a></li>
+                        <li><a href="templates.html">Modelli</a></li>
+                        <li><a href="support.html">Supporto</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Risorse</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">Guida all'installazione</a></li>
+                        <li><a href="guides.html#extension-customization">Guida alla personalizzazione</a></li>
+                        <li><a href="guides.html#faq">Domande frequenti</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Segnala un problema</a></li>
+                        <li><a href="../privacy.html">Informativa sulla privacy</a></li>
+                        <li><a href="../TOS.html">Termini di servizio</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Comunità</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Unisciti al nostro Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">Repository GitHub</a></li>
+                        <li><a href="support.html#contribute">Contribuisci</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">Fai una donazione</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licenza GPLv3.0. Creato da <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> con il contributo della comunità.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../../docs/js/main.js"></script>
+    <script>
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

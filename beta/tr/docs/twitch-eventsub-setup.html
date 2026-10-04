@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/tr/docs/twitch-eventsub-setup.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/tr/docs/twitch-eventsub-setup.html">
+    <meta property="og:title" content="Twitch Kurulumu ve EventSub - Social Stream Ninja">
+    <meta property="og:description" content="OAuth, kapsam, etkinlik ve sorun giderme notlarıyla normal sayfa yakalama veya daha kapsamlı EventSub WebSocket kaynağını kullanarak Twitch sohbetini Social Stream Ninja&#x27;ya bağlayın.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/tr/docs/twitch-eventsub-setup.html">
+    <meta name="twitter:title" content="Twitch Kurulumu ve EventSub - Social Stream Ninja">
+    <meta name="twitter:description" content="OAuth, kapsam, etkinlik ve sorun giderme notlarıyla normal sayfa yakalama veya daha kapsamlı EventSub WebSocket kaynağını kullanarak Twitch sohbetini Social Stream Ninja&#x27;ya bağlayın.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitch Kurulumu ve EventSub - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="OAuth, kapsam, etkinlik ve sorun giderme notlarıyla normal sayfa yakalama veya daha kapsamlı EventSub WebSocket kaynağını kullanarak Twitch sohbetini Social Stream Ninja&#x27;ya bağlayın.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/twitch-eventsub-setup.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{"## Verified maintainer context Current Twitch OAuth scopes requested by `sources/websocket/twitch.js`: `chat:read`, `chat:edit`, `user:write:chat`, `bits:read`, `moderator:read:followers`, `moderator:read:chatters`, `channel:read:subscriptions`, `channel:read:hype_train`, `channel:moderate`, `moderator:manage:banned_users`, `moderator:manage:chat_messages`, `channel:manage:broadcast`, `channel:read:ads`, `channel:manage:ads`, `channel:read:redemptions`. Current EventSub subscription attempts, gated by role/scope/channel eligibility: `channel.follow` v2; `channel.subscribe`; `channel.subscription.gift`; `channel.subscription.message`; `channel.cheer`; `channel.ban`; `channel.channel_points_custom_reward_redemption.add`; `channel.raid`; `stream.online`; `stream.offline`; `channel.ad_break.begin`; and `channel.hype_train.begin`, `.progress`, `.end` v2. The current transport endpoint is Twitch EventSub WebSocket. Twitch requires a user access token when creating WebSocket subscriptions. The Twitch chat-client subscription-gift normalization regression test passed during this documentation review.":"## Geliştiricinin doğruladığı bağlam\n\n`sources/websocket/twitch.js` tarafından şu anda istenen Twitch OAuth kapsamları:\n\n`chat:read`, `chat:edit`, `user:write:chat`, `bits:read`, `moderator:read:followers`, `moderator:read:chatters`, `channel:read:subscriptions`, `channel:read:hype_train`, `channel:moderate`, `moderator:manage:banned_users`, `moderator:manage:chat_messages`, `channel:manage:broadcast`, `channel:read:ads`, `channel:manage:ads`, `channel:read:redemptions`.\n\nRol/kapsam/kanal uygunluğuna göre yapılan mevcut EventSub abonelik denemeleri:\n\n`channel.follow` v2; `channel.subscribe`; `channel.subscription.gift`; `channel.subscription.message`; `channel.cheer`; `channel.ban`; `channel.channel_points_custom_reward_redemption.add`; `channel.raid`; `stream.online`; `stream.offline`; `channel.ad_break.begin`; ve `channel.hype_train.begin`, `.progress`, `.end` v2.\n\nMevcut aktarım uç noktası Twitch EventSub WebSocket'tir. Twitch, WebSocket abonelikleri oluşturulurken kullanıcı erişim belirteci gerektirir. Twitch sohbet istemcisinin hediye abonelik normalleştirme regresyon testi bu belge incelemesinde geçti.",", and":", ve",", enter":", şunu girin:",", then":", ardından","Activate source":"Kaynağı etkinleştir","Add source → Twitch":"Kaynak ekle → Twitch","Authorize the requested permissions and keep the Twitch source window open.":"İstenen izinleri onaylayın ve Twitch kaynak penceresini açık tutun.","Basic public chat capture from a Twitch chat or popout page.":"Twitch sohbet veya ayrı açılır sohbet sayfasından temel herkese açık sohbet yakalama.","Best For":"En uygun kullanım","Bits, rewards, and Hype Trains":"Bits, ödüller ve Hype Train'ler","Bits:":"Bits:","Browser Extension EventSub Setup":"Tarayıcı Uzantısında EventSub Kurulumu","Channel":"Kanal","Channel Points:":"Kanal Puanları:","Channel management":"Kanal yönetimi","Chat":"Sohbet","Check that the dock and alert overlay use the same Social Stream session ID.":"Panel ve uyarı katmanının aynı Social Stream oturum kimliğini kullandığını kontrol edin.","Cheers, custom Channel Points redemptions, and Hype Train status.":"Cheer'lar, özel Kanal Puanı kullanımları ve Hype Train durumu.","Choose A Twitch Source Mode":"Twitch Kaynak Modu Seçin","Commands & API":"Komutlar ve API","Confirm the source page says the correct":"Kaynak sayfasının doğru değeri gösterdiğini doğrulayın:","Connect Twitch chat to Social Stream Ninja using normal page capture or the richer EventSub WebSocket source, with OAuth, scope, event, and troubleshooting notes.":"OAuth, kapsam, etkinlik ve sorun giderme notlarıyla normal sayfa yakalama veya daha kapsamlı EventSub WebSocket kaynağını kullanarak Twitch sohbetini Social Stream Ninja'ya bağlayın.","Desktop App Setup":"Masaüstü uygulaması kurulumu","Download":"İndir","Enter the Twitch channel login used in its URL. For":"Twitch kanalının URL'sinde kullanılan giriş adını girin. Şu örnek için:","Event Reference":"Etkinlik başvuru kaynağı","EventSub can deliver a notification more than once.":"EventSub bir bildirimi birden fazla kez iletebilir.","EventSub overview":"EventSub genel bakış","EventSub subscription types":"EventSub abonelik türleri","Events The Current Source Handles":"Mevcut Kaynağın İşlediği Etkinlikler","Events and Alerts Compatibility guide":"Etkinlikler ve uyarılar uyumluluk kılavuzu","Features":"Özellikler","First Checks When An Event Is Missing":"Etkinlik Eksikse İlk Kontroller","Follow events, subscriber events, gifted subscriptions, and resub messages.":"Takip etkinlikleri, abone etkinlikleri, hediye abonelikler ve yeniden abonelik mesajları.","Followers and subscribers":"Takipçiler ve aboneler","Follows, subscriptions, bits, rewards, raids, stream status, Hype Trains, moderation sync, sending chat, and channel details.":"Takipler, abonelikler, bits, ödüller, baskınlar, yayın durumu, Hype Train'ler, moderasyon eşitlemesi, sohbet gönderimi ve kanal ayrıntıları.","Follows:":"Takipler:","For basic Standard capture instead, open the normal Twitch chat or popout chat page and keep chat visible.":"Bunun yerine temel Standart yakalama için normal Twitch sohbet veya ayrı açılır sohbet sayfasını açıp sohbeti görünür tutun.","For downstream alert names and payload fields, use the":"Sonraki aşamalardaki uyarı adları ve veri alanları için şunu kullanın:","Guides":"Kılavuzlar","Hire":"Hizmet alın","Home":"Ana sayfa","Hype Train:":"Hype Train:","If chat works but follows/subs/rewards do not, sign out and authorize again so the current scopes are granted.":"Sohbet çalışıyor ama takipler/abonelikler/ödüller çalışmıyorsa mevcut kapsamların verilmesi için çıkış yapıp yeniden yetkilendirin.","Important Difference":"Önemli Fark","Inspiration":"İlham","Install and enable the current Social Stream Ninja extension.":"Güncel Social Stream Ninja uzantısını yükleyip etkinleştirin.","Keep that page open. Confirm that its User and Channel fields are correct before testing alerts.":"Sayfayı açık tutun. Uyarıları test etmeden önce Kullanıcı ve Kanal alanlarının doğru olduğunu doğrulayın.","Keep the source page/window open and confirm its chat connection is active.":"Kaynak sayfasını/penceresini açık tutun ve sohbet bağlantısının etkin olduğunu doğrulayın.","Leave":"Bırakın:","Main navigation":"Ana gezinme","Message deletion, bans/timeouts, and block synchronization when the account may moderate the channel.":"Hesap kanalda moderasyon yapabiliyorsa mesaj silme, yasaklama/geçici susturma ve engel eşitlemesi.","Mode":"Mod","Moderation":"Moderasyon","Moderation:":"Moderasyon:","Open navigation menu":"Gezinme menüsünü aç","Open the":"Şunu açın:","Overlay Gallery":"Katman galerisi","Permission Group":"İzin grubu","Raids:":"Baskınlar:","Read chat, send chat, and list chatters.":"Sohbet okuma, sohbet gönderme ve sohbet edenleri listeleme.","Read/update title and category, read/manage ads, and display channel metrics.":"Başlık ve kategoriyi okuma/güncelleme, reklamları okuma/yönetme ve kanal ölçümlerini gösterme.","Reads what the page exposes. It is simple, but does not provide the full EventSub event set.":"Sayfanın sunduğunu okur. Basittir ancak tüm EventSub etkinliklerini sağlamaz.","Replace":"Değiştirin:","Requires Twitch OAuth. Events are enabled only when the signed-in account, channel role, channel eligibility, and granted scope allow them.":"Twitch OAuth gerektirir. Etkinlikler yalnızca giriş yapılan hesap, kanal rolü, kanal uygunluğu ve verilen kapsam izin verdiğinde etkinleşir.","See Twitch's official":"Twitch'in resmi kaynağına bakın:","Select":"Seçin:","Sign in to Twitch":"Twitch'e giriş yap","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 Lisansı.","Social Stream asks for a user token with permissions needed by the controls and subscriptions it supports. Granting a scope does not make an account a broadcaster or moderator; Twitch still checks the account's role for the selected channel.":"Social Stream, desteklediği kontroller ve abonelikler için gereken izinlere sahip kullanıcı belirteci ister. Kapsam vermek hesabı yayıncı veya moderatör yapmaz; Twitch seçilen kanaldaki hesap rolünü yine kontrol eder.","Standard":"Standart","Stream and ad status:":"Yayın ve reklam durumu:","Subscriptions:":"Abonelikler:","Support":"Destek","Supported Sites":"Desteklenen siteler","Switch theme":"Temayı değiştir","The desktop source offers an external-browser OAuth flow and a local-app flow. External browser is usually the easiest when Twitch already works in your normal browser.":"Masaüstü kaynağı harici tarayıcı OAuth akışı ve yerel uygulama akışı sunar. Twitch normal tarayıcınızda zaten çalışıyorsa harici tarayıcı genellikle en kolay seçenektir.","Twitch EventSub source page":"Twitch EventSub kaynak sayfası","Twitch Setup and EventSub":"Twitch Kurulumu ve EventSub","Twitch Setup and EventSub - Social Stream Ninja":"Twitch Kurulumu ve EventSub - Social Stream Ninja","Twitch documents at-least-once delivery. Social Stream includes duplicate protection, but custom API consumers should still deduplicate by event/message identity where possible. See the official":"Twitch, en az bir kez teslimatı belgeler. Social Stream yinelenenlere karşı koruma içerir ancak özel API tüketicileri mümkün olduğunda etkinlik/mesaj kimliğine göre yinelenenleri yine elemelidir. Resmi kaynağa bakın:","Twitch source sign-in screen with External browser and Local app sign-in methods":"Harici tarayıcı ve Yerel uygulama giriş yöntemlerini gösteren Twitch kaynak giriş ekranı","Twitch subscriber events require an eligible Affiliate/Partner channel and broadcaster access. Follow and moderation subscriptions require the signed-in user to be the broadcaster or an authorized moderator, depending on the event.":"Twitch abone etkinlikleri, uygun bir İştirak/Partner kanalı ve yayıncı erişimi gerektirir. Takip ve moderasyon abonelikleri, etkinliğe bağlı olarak giriş yapan kullanıcının yayıncı veya yetkili moderatör olmasını gerektirir.","Use normal page capture for simple chat, or EventSub/WebSocket mode for follows, subs, bits, rewards, raids, Hype Trains, and channel controls.":"Basit sohbet için normal sayfa yakalama; takipler, abonelikler, bits, ödüller, baskınlar, Hype Train'ler ve kanal kontrolleri için EventSub/WebSocket modu kullanın.","Use the popup's fake test message or Multi Alerts preview to separate capture problems from overlay problems.":"Yakalama sorunlarını katman sorunlarından ayırmak için açılır pencerenin sahte test mesajını veya Çoklu Uyarılar önizlemesini kullanın.","Used For":"Kullanım amacı","User":"Kullanıcı","Verify that the signed-in account is the broadcaster or a permitted moderator for that channel.":"Giriş yapılan hesabın bu kanalda yayıncı veya izin verilen moderatör olduğunu doğrulayın.","WebSocket":"WebSocket","WebSocket / EventSub":"WebSocket / EventSub","What Twitch Requests":"Twitch'in İstediği İzinler","and":"ve","and approve the requested access.":"ve istenen erişimi onaylayın.","ban and message-deletion updates when permitted.":"izin verildiğinde yasaklama ve mesaj silme güncellemeleri.","begin, progress, and end updates.":"başlangıç, ilerleme ve bitiş güncellemeleri.","in the URL with the channel login you want to monitor.":"URL'de izlemek istediğiniz kanalın giriş adıyla değiştirin.","scope reference":"kapsam başvuru kaynağı","selected for the richer EventSub source. Twitch currently defaults to this mode in the app.":"daha kapsamlı EventSub kaynağı için seçili olsun. Twitch, uygulamada şu anda varsayılan olarak bu modu kullanır.","with a donation value.":"bağış değeriyle birlikte."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/twitch-eventsub-setup.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme"><a href="../index.html">Ana sayfa</a><a href="features.html">Özellikler</a><a href="inspiration.html" class="site-priority-inspiration">İlham</a><a href="download.html">İndir</a><a href="guides.html">Kılavuzlar</a><a href="commands.html">Komutlar ve API</a><a href="supported-sites.html">Desteklenen siteler</a><a href="overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a><a href="services.html" class="site-priority-hire">Hizmet alın</a><a href="support.html">Destek</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/twitch-eventsub-setup.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/twitch-eventsub-setup.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/twitch-eventsub-setup.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/twitch-eventsub-setup.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/twitch-eventsub-setup.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/twitch-eventsub-setup.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/twitch-eventsub-setup.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/twitch-eventsub-setup.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/twitch-eventsub-setup.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/twitch-eventsub-setup.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/twitch-eventsub-setup.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/twitch-eventsub-setup.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/twitch-eventsub-setup.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/twitch-eventsub-setup.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="twitch-eventsub-setup.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/twitch-eventsub-setup.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/twitch-eventsub-setup.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Twitch Kurulumu ve EventSub</h1>
+            <p>Basit sohbet için normal sayfa yakalama; takipler, abonelikler, bits, ödüller, baskınlar, Hype Train'ler ve kanal kontrolleri için EventSub/WebSocket modu kullanın.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Twitch Kaynak Modu Seçin</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Mod</th><th>En uygun kullanım</th><th>Önemli Fark</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Mode">Standart</td>
+                            <td data-label="Best For">Twitch sohbet veya ayrı açılır sohbet sayfasından temel herkese açık sohbet yakalama.</td>
+                            <td data-label="Important Difference">Sayfanın sunduğunu okur. Basittir ancak tüm EventSub etkinliklerini sağlamaz.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Mode">WebSocket / EventSub</td>
+                            <td data-label="Best For">Takipler, abonelikler, bits, ödüller, baskınlar, yayın durumu, Hype Train'ler, moderasyon eşitlemesi, sohbet gönderimi ve kanal ayrıntıları.</td>
+                            <td data-label="Important Difference">Twitch OAuth gerektirir. Etkinlikler yalnızca giriş yapılan hesap, kanal rolü, kanal uygunluğu ve verilen kapsam izin verdiğinde etkinleşir.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Masaüstü uygulaması kurulumu</h2>
+                <ol class="guide-steps">
+                    <li>Seçin: <strong>Kaynak ekle → Twitch</strong>.</li>
+                    <li>Twitch kanalının URL'sinde kullanılan giriş adını girin. Şu örnek için: <code>twitch.tv/examplechannel</code>, şunu girin: <code>examplechannel</code>.</li>
+                    <li>Bırakın: <strong>WebSocket</strong> daha kapsamlı EventSub kaynağı için seçili olsun. Twitch, uygulamada şu anda varsayılan olarak bu modu kullanır.</li>
+                    <li>Seçin: <strong>Kaynağı etkinleştir</strong>, ardından <strong>Twitch'e giriş yap</strong>.</li>
+                    <li>İstenen izinleri onaylayın ve Twitch kaynak penceresini açık tutun.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/twitch-eventsub-sign-in.png" alt="Harici tarayıcı ve Yerel uygulama giriş yöntemlerini gösteren Twitch kaynak giriş ekranı" class="guide-image guide-image-narrow">
+                    <figcaption>Masaüstü kaynağı harici tarayıcı OAuth akışı ve yerel uygulama akışı sunar. Twitch normal tarayıcınızda zaten çalışıyorsa harici tarayıcı genellikle en kolay seçenektir.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Tarayıcı Uzantısında EventSub Kurulumu</h2>
+                <ol class="guide-steps">
+                    <li>Güncel Social Stream Ninja uzantısını yükleyip etkinleştirin.</li>
+                    <li>Şunu açın: <a href="https://socialstream.ninja/sources/websocket/twitch.html?channel=examplechannel" target="_blank" rel="noopener">Twitch EventSub kaynak sayfası</a>.</li>
+                    <li>Değiştirin: <code>examplechannel</code> URL'de izlemek istediğiniz kanalın giriş adıyla değiştirin.</li>
+                    <li>Seçin: <strong>Twitch'e giriş yap</strong> ve istenen erişimi onaylayın.</li>
+                    <li>Sayfayı açık tutun. Uyarıları test etmeden önce Kullanıcı ve Kanal alanlarının doğru olduğunu doğrulayın.</li>
+                </ol>
+                <pre><code>https://socialstream.ninja/sources/websocket/twitch.html?channel=CHANNEL_LOGIN</code></pre>
+                <p>Bunun yerine temel Standart yakalama için normal Twitch sohbet veya ayrı açılır sohbet sayfasını açıp sohbeti görünür tutun.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Twitch'in İstediği İzinler</h2>
+                <p>Social Stream, desteklediği kontroller ve abonelikler için gereken izinlere sahip kullanıcı belirteci ister. Kapsam vermek hesabı yayıncı veya moderatör yapmaz; Twitch seçilen kanaldaki hesap rolünü yine kontrol eder.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>İzin grubu</th><th>Kullanım amacı</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Permission Group">Sohbet</td><td data-label="Used For">Sohbet okuma, sohbet gönderme ve sohbet edenleri listeleme.</td></tr>
+                        <tr><td data-label="Permission Group">Takipçiler ve aboneler</td><td data-label="Used For">Takip etkinlikleri, abone etkinlikleri, hediye abonelikler ve yeniden abonelik mesajları.</td></tr>
+                        <tr><td data-label="Permission Group">Bits, ödüller ve Hype Train'ler</td><td data-label="Used For">Cheer'lar, özel Kanal Puanı kullanımları ve Hype Train durumu.</td></tr>
+                        <tr><td data-label="Permission Group">Moderasyon</td><td data-label="Used For">Hesap kanalda moderasyon yapabiliyorsa mesaj silme, yasaklama/geçici susturma ve engel eşitlemesi.</td></tr>
+                        <tr><td data-label="Permission Group">Kanal yönetimi</td><td data-label="Used For">Başlık ve kategoriyi okuma/güncelleme, reklamları okuma/yönetme ve kanal ölçümlerini gösterme.</td></tr>
+                    </tbody>
+                </table>
+                <p>Twitch'in resmi kaynağına bakın: <a href="https://dev.twitch.tv/docs/authentication/scopes/" target="_blank" rel="noopener">kapsam başvuru kaynağı</a> ve <a href="https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/" target="_blank" rel="noopener">EventSub abonelik türleri</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Mevcut Kaynağın İşlediği Etkinlikler</h2>
+                <ul class="guide-list">
+                    <li><strong>Takipler:</strong> <code>new_follower</code>.</li>
+                    <li><strong>Abonelikler:</strong> <code>new_subscriber</code>, <code>resub</code>, ve <code>subscription_gift</code>.</li>
+                    <li><strong>Bits:</strong> <code>cheer</code> bağış değeriyle birlikte.</li>
+                    <li><strong>Kanal Puanları:</strong> <code>reward</code>.</li>
+                    <li><strong>Baskınlar:</strong> <code>raid</code>.</li>
+                    <li><strong>Yayın ve reklam durumu:</strong> <code>stream_online</code>, <code>stream_offline</code>, ve <code>ad_break</code>.</li>
+                    <li><strong>Hype Train:</strong> <code>hype_train</code> başlangıç, ilerleme ve bitiş güncellemeleri.</li>
+                    <li><strong>Moderasyon:</strong> izin verildiğinde yasaklama ve mesaj silme güncellemeleri.</li>
+                </ul>
+                <p>Twitch abone etkinlikleri, uygun bir İştirak/Partner kanalı ve yayıncı erişimi gerektirir. Takip ve moderasyon abonelikleri, etkinliğe bağlı olarak giriş yapan kullanıcının yayıncı veya yetkili moderatör olmasını gerektirir.</p>
+                <p>Sonraki aşamalardaki uyarı adları ve veri alanları için şunu kullanın: <a href="events-alerts-compatibility.html">Etkinlikler ve uyarılar uyumluluk kılavuzu</a> ve <a href="event-reference.html">Etkinlik başvuru kaynağı</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Etkinlik Eksikse İlk Kontroller</h2>
+                <ol class="guide-steps">
+                    <li>Kaynak sayfasının doğru değeri gösterdiğini doğrulayın: <strong>Kullanıcı</strong> ve <strong>Kanal</strong>.</li>
+                    <li>Kaynak sayfasını/penceresini açık tutun ve sohbet bağlantısının etkin olduğunu doğrulayın.</li>
+                    <li>Sohbet çalışıyor ama takipler/abonelikler/ödüller çalışmıyorsa mevcut kapsamların verilmesi için çıkış yapıp yeniden yetkilendirin.</li>
+                    <li>Giriş yapılan hesabın bu kanalda yayıncı veya izin verilen moderatör olduğunu doğrulayın.</li>
+                    <li>Panel ve uyarı katmanının aynı Social Stream oturum kimliğini kullandığını kontrol edin.</li>
+                    <li>Yakalama sorunlarını katman sorunlarından ayırmak için açılır pencerenin sahte test mesajını veya Çoklu Uyarılar önizlemesini kullanın.</li>
+                </ol>
+                <div class="guide-note">
+                    <p><strong>EventSub bir bildirimi birden fazla kez iletebilir.</strong> Twitch, en az bir kez teslimatı belgeler. Social Stream yinelenenlere karşı koruma içerir ancak özel API tüketicileri mümkün olduğunda etkinlik/mesaj kimliğine göre yinelenenleri yine elemelidir. Resmi kaynağa bakın: <a href="https://dev.twitch.tv/docs/eventsub/" target="_blank" rel="noopener">EventSub genel bakış</a>.</p>
+                </div>
+            </div>
+
+            <template data-copy-markdown-extra>
+## Geliştiricinin doğruladığı bağlam
+
+`sources/websocket/twitch.js` tarafından şu anda istenen Twitch OAuth kapsamları:
+
+`chat:read`, `chat:edit`, `user:write:chat`, `bits:read`, `moderator:read:followers`, `moderator:read:chatters`, `channel:read:subscriptions`, `channel:read:hype_train`, `channel:moderate`, `moderator:manage:banned_users`, `moderator:manage:chat_messages`, `channel:manage:broadcast`, `channel:read:ads`, `channel:manage:ads`, `channel:read:redemptions`.
+
+Rol/kapsam/kanal uygunluğuna göre yapılan mevcut EventSub abonelik denemeleri:
+
+`channel.follow` v2; `channel.subscribe`; `channel.subscription.gift`; `channel.subscription.message`; `channel.cheer`; `channel.ban`; `channel.channel_points_custom_reward_redemption.add`; `channel.raid`; `stream.online`; `stream.offline`; `channel.ad_break.begin`; ve `channel.hype_train.begin`, `.progress`, `.end` v2.
+
+Mevcut aktarım uç noktası Twitch EventSub WebSocket'tir. Twitch, WebSocket abonelikleri oluşturulurken kullanıcı erişim belirteci gerektirir. Twitch sohbet istemcisinin hediye abonelik normalleştirme regresyon testi bu belge incelemesinde geçti.
+            </template>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 Lisansı.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Používejte stavové uzly v Social Stream Ninja Event Flow ke sledování hodnot, nastavení čekacích dob a koordinaci akcí napříč příchozími událostmi chatu.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/actions/state-nodes-guide.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/actions/state-nodes-guide.html">
+    <meta property="og:title" content="Průvodce stavovými uzly – Social Stream Ninja">
+    <meta property="og:description" content="Používejte stavové uzly v Social Stream Ninja Event Flow ke sledování hodnot, nastavení čekacích dob a koordinaci akcí napříč příchozími událostmi chatu.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/actions/state-nodes-guide.html">
+    <meta name="twitter:title" content="Průvodce stavovými uzly – Social Stream Ninja">
+    <meta name="twitter:description" content="Používejte stavové uzly v Social Stream Ninja Event Flow ke sledování hodnot, nastavení čekacích dob a koordinaci akcí napříč příchozími událostmi chatu.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Průvodce stavovými uzly – Social Stream Ninja</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: radial-gradient(circle at top, #4338ca 0%, #0f172a 55%, #020617 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 35px 80px rgba(3, 7, 18, 0.55);
+        }
+        header {
+            background: linear-gradient(135deg, #4c1d95, #312e81, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.7rem;
+            margin-bottom: 12px;
+        }
+        header p {
+            font-size: 1.15rem;
+            max-width: 680px;
+            opacity: 0.92;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 11px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.06em;
+            margin-bottom: 18px;
+        }
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        nav a {
+            color: #f8fafc;
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 999px;
+            padding: 6px 16px;
+            transition: background 0.2s;
+        }
+        nav a:hover {
+            background: rgba(15,23,42,0.25);
+        }
+        .content {
+            padding: 50px 55px 70px;
+        }
+        section {
+            margin-bottom: 70px;
+        }
+        h2 {
+            font-size: 2rem;
+            color: #312e81;
+            margin-bottom: 18px;
+        }
+        h3 {
+            font-size: 1.35rem;
+            color: #4338ca;
+            margin: 20px 0 10px;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 24px;
+            margin: 12px 0;
+        }
+        li {
+            margin: 6px 0;
+        }
+        .panel {
+            border-radius: 16px;
+            padding: 22px;
+            margin: 18px 0;
+        }
+        .panel.info {
+            background: #eef2ff;
+            border: 1px solid rgba(67,56,202,0.2);
+        }
+        .panel.warn {
+            background: #fff7ed;
+            border: 1px solid rgba(234,88,12,0.25);
+        }
+        .panel.success {
+            background: #ecfdf5;
+            border: 1px solid rgba(5,150,105,0.2);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 18px;
+            margin: 20px 0;
+        }
+        .card {
+            border-radius: 18px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+            padding: 20px 22px;
+            background: #fff;
+        }
+        .card h4 {
+            margin-bottom: 10px;
+            color: #4c1d95;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono','Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            border-radius: 14px;
+            padding: 18px;
+            margin: 16px 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .recipe {
+            border-left: 4px solid #312e81;
+            padding-left: 18px;
+            margin: 18px 0;
+        }
+        .recipe h4 {
+            margin-bottom: 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        table th, table td {
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            text-align: left;
+        }
+        table th {
+            background: #f1f5f9;
+            color: #312e81;
+        }
+        code {
+            background: rgba(15,23,42,0.06);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono','Courier New', monospace;
+        }
+        @media (max-width: 720px) {
+            table { display: block; max-width: 100%; overflow-x: auto; }
+            header, .content {
+                padding: 35px 20px;
+            }
+            nav {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"actions/state-nodes-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"!hello ──▶ Switch (ON?) ─▶ Send Reply ─▶ Set Gate: OFF ─▶ Delay 15s ─▶ Set Gate: ON":"!hello ──▶ Přepínač (ON?) ─▶ Odeslat odpověď ─▶ Nastavit bránu: OFF ─▶ Prodleva 15 s ─▶ Nastavit bránu: ON","(OFF) referencing “helloCooldown”.":"(OFF) odkazující na „helloCooldown“.","(ON) for “helloCooldown”.":"(ON) pro „helloCooldown“.","01 · Quick Orientation":"01 · Rychlá orientace","02 · On/Off Switch (Gate)":"02 · Přepínač zapnuto/vypnuto (brána)","03 · Counter":"03 · Počítadlo","04 · Rate Limiter (Throttle)":"04 · Omezovač četnosti","05 · User Memory":"05 · Paměť uživatelů","06 · Problem Kits":"06 · Řešení typických úloh","07 · Troubleshooting & FAQ":"07 · Řešení potíží a časté otázky","08 · Next Steps":"08 · Další kroky",": add or subtract custom amounts.":"— přičtěte nebo odečtěte vlastní hodnoty.",": flip ON or OFF.":"— přepněte na ON nebo OFF.",": jump to a specific number.":"— přejděte na konkrétní číslo.",": revert to default (usually ON).":"— obnovte výchozí stav (obvykle ON).",": revert to the default start value.":"— obnovte výchozí počáteční hodnotu.","A User Memory operation has no dashed link.":"Operace paměti uživatelů nemá přerušovaný spoj.","Actions":"Akce","Add a":"Přidejte","Add a chat message “Cooldown active” on the false output if desired.":"V případě potřeby přidejte na výstup false zprávu do chatu „Čekací doba je aktivní“.","Add another":"Přidejte další","Add the State node first, give it a unique name, then select it from each matching operation. Without the base node, state actions have nothing to update.":"Nejprve přidejte stavový uzel, pojmenujte ho jedinečným názvem a pak ho vyberte v každé odpovídající operaci. Bez základního uzlu nemají stavové akce co aktualizovat.","Add the switch node first and confirm the dropdown references it.":"Nejprve přidejte uzel přepínače a ověřte, že na něj odkazuje rozbalovací nabídka.","After your action, add":"Za svou akci přidejte","All overlay triggers pass through the switch.":"Všechny spouštěče překryvů procházejí přepínačem.","Any Message ─▶ Counter (name: hype5) ─▶ Condition (value % 5 === 0?) ─▶ Play Celebration":"Libovolná zpráva ─▶ Počítadlo (název: hype5) ─▶ Podmínka (value % 5 === 0?) ─▶ Spustit oslavu","Auto increment:":"Automatické navyšování:","Best for":"Nejlepší pro","Build Steps":"Postup sestavení","Can live anywhere in the flow. Just pick the matching node name.":"Může být kdekoli ve scénáři — stačí vybrat název odpovídajícího uzlu.","Choose the named memory in the operation's properties or drag its purple side connector onto the memory.":"Ve vlastnostech operace vyberte pojmenovanou paměť nebo na ni přetáhněte fialový boční konektor.","Choose the time window (seconds).":"Zvolte časové okno (v sekundách).","Combine state nodes with the rest of the Event Flow toolkit:":"Kombinujte stavové uzly s dalšími nástroji Event Flow:","Command Cooldown":"Čekací doba příkazu","Configuration":"Konfigurace","Connect your trigger → switch → actions.":"Propojte spouštěč → přepínač → akce.","Cooldowns for chat commands.":"Čekací doby chatových příkazů.","Counter":"Počítadlo (Counter)","Counter default 0, target 3.":"Počítadlo s výchozí hodnotou 0 a cílem 3.","Counter never increments.":"Počítadlo se nikdy nezvyšuje.","Counters track numbers across messages. They increment automatically when a message flows through, and you can adjust values manually with actions.":"Počítadla uchovávají číselné hodnoty napříč zprávami. Automaticky se zvyšují při průchodu zprávy a hodnoty můžete ručně upravovat pomocí akcí.","Decide whether to queue or discard overflow.":"Rozhodněte, zda nadlimitní události zařadit do fronty, nebo zahodit.","Delay":"Prodleva (Delay)","Drop the switch node, name it “helloCooldown”, default ON.":"Vložte uzel přepínače, pojmenujte ho „helloCooldown“ a nastavte výchozí stav ON.","Ensure":"Ověřte, že","Event Flow Guide":"Průvodce Event Flow","Event Flow System":"Systém Event Flow","Every Nth chatter triggers a prize.":"Každý N-tý účastník chatu spustí cenu.","Every time a payload passes through the Counter node it adds 1 (unless you pause it with the “Only count when gate is true” option).":"Pokaždé, když datová zpráva projde uzlem Counter, přičte se 1 (pokud ho nepozastavíte volbou „Only count when gate is true“).","Example Flow Charts":"Příklady schémat scénářů","Example: 15s Cooldown":"Příklad: čekací doba 15 s","Example: Celebrate Every 5 Messages":"Příklad: oslava každých 5 zpráv","Export working patterns as templates so your team can re-import them later.":"Exportujte funkční postupy jako šablony, aby je váš tým mohl později znovu importovat.","Fix":"Řešení","Gate, Counter, and Rate Limiter can run in the normal event path.":"Gate, Counter a Rate Limiter mohou být součástí běžné cesty události.","Gift-based or badge-based eligibility.":"Způsobilost podle dárků nebo odznaků.","Great When You Need":"Vhodné, když potřebujete","Guide buttons don’t open.":"Tlačítka návodů nic neotevřou.","Heads up:":"Pozor:","Holds the value (ON/OFF, count, timestamps, or users).":"Uchovává hodnotu (ON/OFF, počet, časové údaje nebo uživatele).","Increment after each redemption.":"Po každém uplatnění odměny zvyšte hodnotu.","Inside the Condition node, compare":"V uzlu Condition porovnejte","Keep experimenting! The new":"Zkoušejte dál! Nový","Key Actions":"Hlavní akce","Label branches (e.g., “false → cooldown active”) so you can follow the path visually.":"Označte větve (např. „false → čekací doba aktivní“), abyste mohli cestu sledovat vizuálně.","Likely Cause":"Pravděpodobná příčina","Limited Freebies":"Omezený počet odměn zdarma","Lives on the canvas.":"Nachází se na plátně.","Maintenance windows (pause features during BRB scenes).":"Servisní přestávky (pozastavení funkcí během scén BRB).","Make sure the trigger wire passes through the counter and the gate output is true.":"Ověřte, že spoj ze spouštěče prochází počítadlem a výstup brány je true.","Manual toggles (enable/disable overlays).":"Ruční přepínače (zapnutí/vypnutí překryvů).","No matching switch node exists (or the names differ).":"Odpovídající uzel přepínače neexistuje (nebo se liší názvy).","No target memory is selected.":"Není vybrána cílová paměť.","On/Off Switch":"Přepínač zapnuto/vypnuto","Operations":"Operace","Overview":"Přehled","Participation Trigger ──▶ Remember User ······▶ User Memory: Entrants Draw Command ───────────▶ Pick Random User ···▶ User Memory: Entrants Reset Command ──────────▶ Clear All Users ·····▶ User Memory: Entrants":"Spouštěč účasti ──▶ Zapamatovat uživatele ······▶ Paměť uživatelů: Účastníci\nPříkaz losování ──▶ Vybrat náhodného uživatele ·▶ Paměť uživatelů: Účastníci\nPříkaz resetu ────▶ Vymazat všechny uživatele ··▶ Paměť uživatelů: Účastníci","Pick a scenario and follow the steps.":"Vyberte scénář použití a postupujte podle kroků.","Placed downstream.":"Umísťují se dále po směru toku.","Problem Kits":"Řešení typických úloh","Rate Limiter":"Omezovač četnosti","Reads or changes the stored value (set ON, add +1, remember, draw, reset, etc.).":"Čte nebo mění uloženou hodnotu (nastaví ON, přičte +1, zapamatuje, vylosuje, resetuje atd.).","Redeem Reward ─▶ Counter ticketsSold ├─value \u003c 50 ─▶ Approve Redemption └─value ≥ 50 ─▶ Deny + Refund points":"Uplatnit odměnu ─▶ Počítadlo ticketsSold\n                      ├─value \u003c 50 ─▶ Schválit uplatnění\n                      └─value ≥ 50 ─▶ Zamítnout + vrátit body","Relax the limit and drop a Reset State Node action before retesting.":"Před opakováním testu zmírněte limit a přidejte akci Reset State Node.","Remember:":"Pamatujte:","Remembering viewers who liked, entered, or participated.":"Zapamatování diváků, kteří dali lajk, přihlásili se nebo se zapojili.","Reset state nodes between tests so you are not reading stale data.":"Mezi testy resetujte stavové uzly, abyste nečetli zastaralá data.","Running inside the extension without web_accessible resources updated.":"Běží v rozšíření bez aktualizovaných prostředků web_accessible.","See the dedicated":"Viz samostatný","Separate lists for separate campaigns.":"Samostatné seznamy pro různé kampaně.","Set Gate OFF → Delay → Set Gate ON.":"Nastavit bránu na OFF → Prodleva → Nastavit bránu na ON.","Set Gate State":"Nastavit stav brány (Set Gate State)","Set Gate State action won’t save.":"Akci Set Gate State nelze uložit.","Set the maximum events allowed.":"Nastavte maximální povolený počet událostí.","Social Stream Ninja logo":"Logo Social Stream Ninja","Solid teal wires carry events. Dashed purple links show which shared memory an operation uses. Each User Memory has its own count, persistence mode, and reset policy, so clearing one list does not affect another.":"Plné tyrkysové spoje přenášejí události. Přerušované fialové spoje ukazují, kterou sdílenou paměť operace používá. Každá paměť uživatelů má vlastní počet, režim uchování a pravidla resetování, takže vymazání jednoho seznamu neovlivní jiný.","State Action":"Stavová akce","State Node":"Stavový uzel","State Nodes Playbook":"Průvodce stavovými uzly","State Nodes Playbook - Social Stream Ninja":"Průvodce stavovými uzly – Social Stream Ninja","State nodes give Social Stream Ninja memory. Use them to build cooldowns, toggles, counters, throttles, participant lists, and prize draws that keep automations predictable.":"Stavové uzly dávají Social Stream Ninja paměť. Vytvářejte s nimi čekací doby, přepínače, počítadla, omezovače četnosti, seznamy účastníků a losování cen, díky nimž budou automatizace předvídatelné.","State tools have an object that owns the value and operations that read or change it:":"Stavové nástroje mají objekt, který vlastní hodnotu, a operace, které ji čtou nebo mění:","Store points redeemed via commands.":"Uchovávejte body uplatněné pomocí příkazů.","Store state-driven metadata under":"Metadata řízená stavem ukládejte pod","Switch named “overlayToggle”.":"Přepínač s názvem „overlayToggle“.","Switch node named “commandCooldown”.":"Uzel přepínače s názvem „commandCooldown“.","Symptom":"Projev","Temporarily shorten cooldowns (2 seconds) or lower counter targets while verifying.":"Při ověřování dočasně zkraťte čekací doby (na 2 sekundy) nebo snižte cíle počítadel.","Testing Checklist":"Kontrolní seznam testování","The flow bypasses the counter node or the gate is false.":"Scénář obchází uzel počítadla nebo má brána hodnotu false.","The switch is a boolean guard. When ON, messages pass through; when OFF, the flow halts at this node.":"Přepínač je logická brána. Ve stavu ON zprávy propouští; ve stavu OFF se scénář v tomto uzlu zastaví.","The throttle remembers timestamps and refuses new events until the rate you specify is respected.":"Omezovač si pamatuje časové údaje a odmítá nové události, dokud nebude dodržena zadaná četnost.","Throttle blocks everything forever.":"Omezovač blokuje všechno navždy.","Throttles do not auto-reset when you edit the flow. Use":"Omezovače se při úpravě scénáře automaticky neresetují. Použijte","Track progress to a community goal.":"Sledujte pokrok ke společnému cíli komunity.","Trigger → switch → reply.":"Spouštěč → přepínač → odpověď.","Trigger ─▶ Switch (overlayToggle) ─▶ If ON → Show Overlay └─false─▶ Notify moderator “Overlay disabled”":"Spouštěč ─▶ Přepínač (overlayToggle) ─▶ Pokud ON → Zobrazit překryv\n               └─false─▶ Upozornit moderátora „Překryv vypnut“","Troubleshooting":"Řešení potíží","Unique-entry prize draws.":"Losování cen s jednou účastí na uživatele.","Use Cases":"Příklady použití","Use Reset action at the end of stream.":"Na konci vysílání použijte akci Reset.","Use logic gates (AND/OR/NOT) before a switch to decide who can toggle it.":"Pomocí logických bran (AND/OR/NOT) před přepínačem rozhodněte, kdo ho smí přepínat.","Use state nodes in Social Stream Ninja Event Flow to track values, apply cooldowns and coordinate actions across incoming chat events.":"Používejte stavové uzly v Social Stream Ninja Event Flow ke sledování hodnot, nastavení čekacích dob a koordinaci akcí napříč příchozími událostmi chatu.","Use the Event Flow “Send Test Event” tool to simulate commands.":"Příkazy simulujte nástrojem „Send Test Event“ v Event Flow.","User Memory":"Paměť uživatelů (User Memory)","User Memory guide":"Průvodce pamětí uživatelů","User Memory is a shared hub referenced by other nodes.":"Paměť uživatelů je sdílený uzel, na který odkazují ostatní uzly.","User Memory owns one named list of unique people. Remember users when they participate, check that list on later messages, remove a person, choose a random winner, or clear only that list.":"Paměť uživatelů vlastní jeden pojmenovaný seznam jedinečných osob. Zapamatujte si uživatele při zapojení, zkontrolujte seznam u pozdějších zpráv, odeberte osobu, vyberte náhodného vítěze nebo vymažte pouze tento seznam.","Viewer Toggle":"Přepínač pro diváky","When value ≥ 3, branch to “Sorry, all gone”.":"Když value ≥ 3, přejděte do větve „Omlouváme se, vše je pryč“.","Window too strict or leftover state from testing.":"Příliš přísné časové okno nebo zbývající stav z testování.","and":"a","command → Set Gate OFF.":"příkaz → Nastavit bránu na OFF.","command → Set Gate ON.":"příkaz → Nastavit bránu na ON.","for reviewed screenshots, a downloadable draw flow, TikTok eligibility, participation examples, and reset details.":"— obsahuje ověřené snímky obrazovky, scénář losování ke stažení, způsobilost na TikToku, příklady účasti a podrobnosti resetování.","if you need a clean slate during testing.":"pokud potřebujete při testování začít od nuly.","node (15 seconds).":"uzel (15 sekund).","or":"nebo","or simply use the built-in “Trigger when value matches Target” option from the Counter node’s properties.":"nebo jednoduše použijte vestavěnou volbu „Trigger when value matches Target“ ve vlastnostech uzlu Counter.","pairs with this playbook so you can master both logic and state layers.":"doplňuje tuto příručku, abyste zvládli logickou i stavovou vrstvu.","ships via manifest and reload the extension.":"je zahrnut přes manifest, a znovu načtěte rozšíření.","so overlays know why a branch fired.":"aby překryvy věděly, proč se větev spustila.","“Drop alerts if the overlay is already busy.”":"„Zahodit upozornění, pokud je překryv už zaneprázdněný.“","“One API call per 10 seconds.”":"„Jedno volání API za 10 sekund.“","“Only five raffle entries per minute.”":"„Pouze pět přihlášek do losování za minutu.“"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/actions/state-nodes-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="shell">
+        <header>
+            <div class="badge">Systém Event Flow<!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/state-nodes-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/state-nodes-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/state-nodes-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/state-nodes-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/state-nodes-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/state-nodes-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/state-nodes-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/state-nodes-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/state-nodes-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/state-nodes-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/state-nodes-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/state-nodes-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/state-nodes-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/state-nodes-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/state-nodes-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="state-nodes-guide.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/actions/state-nodes-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+            <h1>Průvodce stavovými uzly</h1>
+            <p>Stavové uzly dávají Social Stream Ninja paměť. Vytvářejte s nimi čekací doby, přepínače, počítadla, omezovače četnosti, seznamy účastníků a losování cen, díky nimž budou automatizace předvídatelné.</p>
+            <nav>
+                <a href="#overview">Přehled</a>
+                <a href="#switch">Přepínač zapnuto/vypnuto</a>
+                <a href="#counter">Počítadlo (Counter)</a>
+                <a href="#throttle">Omezovač četnosti</a>
+                <a href="#user-memory">Paměť uživatelů (User Memory)</a>
+                <a href="#recipes">Řešení typických úloh</a>
+                <a href="#troubleshooting">Řešení potíží</a>
+            </nav>
+        </header>
+        <div class="content">
+            <section id="overview">
+                <h2>01 · Rychlá orientace</h2>
+                <p>Stavové nástroje mají objekt, který vlastní hodnotu, a operace, které ji čtou nebo mění:</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Stavový uzel</h4>
+                        <ul>
+                            <li>Nachází se na plátně.</li>
+                            <li>Uchovává hodnotu (ON/OFF, počet, časové údaje nebo uživatele).</li>
+                            <li>Gate, Counter a Rate Limiter mohou být součástí běžné cesty události.</li>
+                            <li>Paměť uživatelů je sdílený uzel, na který odkazují ostatní uzly.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Stavová akce</h4>
+                        <ul>
+                            <li>Umísťují se dále po směru toku.</li>
+                            <li>Čte nebo mění uloženou hodnotu (nastaví ON, přičte +1, zapamatuje, vylosuje, resetuje atd.).</li>
+                            <li>Může být kdekoli ve scénáři — stačí vybrat název odpovídajícího uzlu.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel info">
+                    <strong>Pamatujte:</strong> Nejprve přidejte stavový uzel, pojmenujte ho jedinečným názvem a pak ho vyberte v každé odpovídající operaci. Bez základního uzlu nemají stavové akce co aktualizovat.
+                </div>
+            </section>
+
+            <section id="switch">
+                <h2>02 · Přepínač zapnuto/vypnuto (brána)</h2>
+                <p>Přepínač je logická brána. Ve stavu ON zprávy propouští; ve stavu OFF se scénář v tomto uzlu zastaví.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Nejlepší pro</h4>
+                        <ul>
+                            <li>Čekací doby chatových příkazů.</li>
+                            <li>Ruční přepínače (zapnutí/vypnutí překryvů).</li>
+                            <li>Servisní přestávky (pozastavení funkcí během scén BRB).</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Hlavní akce</h4>
+                        <ul>
+                            <li><code>Set Gate State</code>— přepněte na ON nebo OFF.</li>
+                            <li><code>Reset State Node</code>— obnovte výchozí stav (obvykle ON).</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>Příklad: čekací doba 15 s</h3>
+                <div class="diagram">
+!hello ──▶ Přepínač (ON?) ─▶ Odeslat odpověď ─▶ Nastavit bránu: OFF ─▶ Prodleva 15 s ─▶ Nastavit bránu: ON
+                </div>
+                <div class="recipe">
+                    <h4>Postup sestavení</h4>
+                    <ol>
+                        <li>Vložte uzel přepínače, pojmenujte ho „helloCooldown“ a nastavte výchozí stav ON.</li>
+                        <li>Propojte spouštěč → přepínač → akce.</li>
+                        <li>Za svou akci přidejte <em>Nastavit stav brány (Set Gate State)</em> (OFF) odkazující na „helloCooldown“.</li>
+                        <li>Přidejte <em>Prodleva (Delay)</em> uzel (15 sekund).</li>
+                        <li>Přidejte další <em>Nastavit stav brány (Set Gate State)</em> (ON) pro „helloCooldown“.</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section id="counter">
+                <h2>03 · Počítadlo</h2>
+                <p>Počítadla uchovávají číselné hodnoty napříč zprávami. Automaticky se zvyšují při průchodu zprávy a hodnoty můžete ručně upravovat pomocí akcí.</p>
+                <div class="panel success">
+                    <strong>Automatické navyšování:</strong> Pokaždé, když datová zpráva projde uzlem Counter, přičte se 1 (pokud ho nepozastavíte volbou „Only count when gate is true“).
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Příklady použití</h4>
+                        <ul>
+                            <li>Každý N-tý účastník chatu spustí cenu.</li>
+                            <li>Sledujte pokrok ke společnému cíli komunity.</li>
+                            <li>Uchovávejte body uplatněné pomocí příkazů.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Akce</h4>
+                        <ul>
+                            <li><code>Increment Counter</code>— přičtěte nebo odečtěte vlastní hodnoty.</li>
+                            <li><code>Set Counter Value</code>— přejděte na konkrétní číslo.</li>
+                            <li><code>Reset State Node</code>— obnovte výchozí počáteční hodnotu.</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>Příklad: oslava každých 5 zpráv</h3>
+                <div class="diagram">
+Libovolná zpráva ─▶ Počítadlo (název: hype5) ─▶ Podmínka (value % 5 === 0?) ─▶ Spustit oslavu
+                </div>
+                <p>V uzlu Condition porovnejte <code>state.hype5.value</code> nebo jednoduše použijte vestavěnou volbu „Trigger when value matches Target“ ve vlastnostech uzlu Counter.</p>
+            </section>
+
+            <section id="throttle">
+                <h2>04 · Omezovač četnosti</h2>
+                <p>Omezovač si pamatuje časové údaje a odmítá nové události, dokud nebude dodržena zadaná četnost.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Vhodné, když potřebujete</h4>
+                        <ul>
+                            <li>„Pouze pět přihlášek do losování za minutu.“</li>
+                            <li>„Jedno volání API za 10 sekund.“</li>
+                            <li>„Zahodit upozornění, pokud je překryv už zaneprázdněný.“</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Konfigurace</h4>
+                        <ul>
+                            <li>Nastavte maximální povolený počet událostí.</li>
+                            <li>Zvolte časové okno (v sekundách).</li>
+                            <li>Rozhodněte, zda nadlimitní události zařadit do fronty, nebo zahodit.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel warn">
+                    <strong>Pozor:</strong> Omezovače se při úpravě scénáře automaticky neresetují. Použijte <code>Reset State Node</code> pokud potřebujete při testování začít od nuly.
+                </div>
+            </section>
+
+            <section id="user-memory">
+                <h2>05 · Paměť uživatelů</h2>
+                <p>Paměť uživatelů vlastní jeden pojmenovaný seznam jedinečných osob. Zapamatujte si uživatele při zapojení, zkontrolujte seznam u pozdějších zpráv, odeberte osobu, vyberte náhodného vítěze nebo vymažte pouze tento seznam.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Nejlepší pro</h4>
+                        <ul>
+                            <li>Způsobilost podle dárků nebo odznaků.</li>
+                            <li>Zapamatování diváků, kteří dali lajk, přihlásili se nebo se zapojili.</li>
+                            <li>Losování cen s jednou účastí na uživatele.</li>
+                            <li>Samostatné seznamy pro různé kampaně.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Operace</h4>
+                        <ul>
+                            <li><code>Remember User</code> a <code>Forget User</code>.</li>
+                            <li><code>User Is Remembered</code>.</li>
+                            <li><code>Pick Random User</code>.</li>
+                            <li><code>Clear All Users</code> nebo <code>Reset State Node</code>.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="diagram">
+Spouštěč účasti ──▶ Zapamatovat uživatele ······▶ Paměť uživatelů: Účastníci
+Příkaz losování ──▶ Vybrat náhodného uživatele ·▶ Paměť uživatelů: Účastníci
+Příkaz resetu ────▶ Vymazat všechny uživatele ··▶ Paměť uživatelů: Účastníci
+                </div>
+                <p>Plné tyrkysové spoje přenášejí události. Přerušované fialové spoje ukazují, kterou sdílenou paměť operace používá. Každá paměť uživatelů má vlastní počet, režim uchování a pravidla resetování, takže vymazání jednoho seznamu neovlivní jiný.</p>
+                <div class="panel success">
+                    Viz samostatný <a href="user-memory-guide.html">Průvodce pamětí uživatelů</a> — obsahuje ověřené snímky obrazovky, scénář losování ke stažení, způsobilost na TikToku, příklady účasti a podrobnosti resetování.
+                </div>
+            </section>
+
+            <section id="recipes">
+                <h2>06 · Řešení typických úloh</h2>
+                <p>Vyberte scénář použití a postupujte podle kroků.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Čekací doba příkazu</h4>
+                        <ol>
+                            <li>Uzel přepínače s názvem „commandCooldown“.</li>
+                            <li>Spouštěč → přepínač → odpověď.</li>
+                            <li>Nastavit bránu na OFF → Prodleva → Nastavit bránu na ON.</li>
+                            <li>V případě potřeby přidejte na výstup false zprávu do chatu „Čekací doba je aktivní“.</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>Omezený počet odměn zdarma</h4>
+                        <ol>
+                            <li>Počítadlo s výchozí hodnotou 0 a cílem 3.</li>
+                            <li>Po každém uplatnění odměny zvyšte hodnotu.</li>
+                            <li>Když value ≥ 3, přejděte do větve „Omlouváme se, vše je pryč“.</li>
+                            <li>Na konci vysílání použijte akci Reset.</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>Přepínač pro diváky</h4>
+                        <ol>
+                            <li>Přepínač s názvem „overlayToggle“.</li>
+                            <li><code>!overlay on</code> příkaz → Nastavit bránu na ON.</li>
+                            <li><code>!overlay off</code> příkaz → Nastavit bránu na OFF.</li>
+                            <li>Všechny spouštěče překryvů procházejí přepínačem.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <h3>Příklady schémat scénářů</h3>
+                <div class="diagram">
+Spouštěč ─▶ Přepínač (overlayToggle) ─▶ Pokud ON → Zobrazit překryv
+               └─false─▶ Upozornit moderátora „Překryv vypnut“
+                </div>
+                <div class="diagram">
+Uplatnit odměnu ─▶ Počítadlo ticketsSold
+                      ├─value &lt; 50 ─▶ Schválit uplatnění
+                      └─value ≥ 50 ─▶ Zamítnout + vrátit body
+                </div>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>07 · Řešení potíží a časté otázky</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Projev</th>
+                            <th>Pravděpodobná příčina</th>
+                            <th>Řešení</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Akci Set Gate State nelze uložit.</td>
+                            <td>Odpovídající uzel přepínače neexistuje (nebo se liší názvy).</td>
+                            <td>Nejprve přidejte uzel přepínače a ověřte, že na něj odkazuje rozbalovací nabídka.</td>
+                        </tr>
+                        <tr>
+                            <td>Počítadlo se nikdy nezvyšuje.</td>
+                            <td>Scénář obchází uzel počítadla nebo má brána hodnotu false.</td>
+                            <td>Ověřte, že spoj ze spouštěče prochází počítadlem a výstup brány je true.</td>
+                        </tr>
+                        <tr>
+                            <td>Omezovač blokuje všechno navždy.</td>
+                            <td>Příliš přísné časové okno nebo zbývající stav z testování.</td>
+                            <td>Před opakováním testu zmírněte limit a přidejte akci Reset State Node.</td>
+                        </tr>
+                        <tr>
+                            <td>Operace paměti uživatelů nemá přerušovaný spoj.</td>
+                            <td>Není vybrána cílová paměť.</td>
+                            <td>Ve vlastnostech operace vyberte pojmenovanou paměť nebo na ni přetáhněte fialový boční konektor.</td>
+                        </tr>
+                        <tr>
+                            <td>Tlačítka návodů nic neotevřou.</td>
+                            <td>Běží v rozšíření bez aktualizovaných prostředků web_accessible.</td>
+                            <td>Ověřte, že <code>actions/state-nodes-guide.html</code> je zahrnut přes manifest, a znovu načtěte rozšíření.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h3>Kontrolní seznam testování</h3>
+                <ul>
+                    <li>Příkazy simulujte nástrojem „Send Test Event“ v Event Flow.</li>
+                    <li>Při ověřování dočasně zkraťte čekací doby (na 2 sekundy) nebo snižte cíle počítadel.</li>
+                    <li>Mezi testy resetujte stavové uzly, abyste nečetli zastaralá data.</li>
+                    <li>Označte větve (např. „false → čekací doba aktivní“), abyste mohli cestu sledovat vizuálně.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>08 · Další kroky</h2>
+                <p>Kombinujte stavové uzly s dalšími nástroji Event Flow:</p>
+                <ul>
+                    <li>Pomocí logických bran (AND/OR/NOT) před přepínačem rozhodněte, kdo ho smí přepínat.</li>
+                    <li>Metadata řízená stavem ukládejte pod <code>meta</code> aby překryvy věděly, proč se větev spustila.</li>
+                    <li>Exportujte funkční postupy jako šablony, aby je váš tým mohl později znovu importovat.</li>
+                </ul>
+                <div class="panel info">
+                    Zkoušejte dál! Nový <a href="event-flow-guide.html">Průvodce Event Flow</a> doplňuje tuto příručku, abyste zvládli logickou i stavovou vrstvu.
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

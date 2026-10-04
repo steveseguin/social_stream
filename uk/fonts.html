@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="uk" data-site-root="../" data-site-language="uk">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:url" content="https://socialstream.ninja/uk/fonts.html">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Логотип Social Stream Ninja">
+    <meta name="twitter:url" content="https://socialstream.ninja/uk/fonts.html">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Логотип Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Визначення встановлених шрифтів — перегляд шрифтів і створення посилань ?font</title>
+    <meta name="description" content="Виявляйте встановлені шрифти у браузері, переглядайте живі зразки й копіюйте посилання з параметром URL (?font=), сумісні з VDO.Ninja, SocialStream.Ninja та Caption.Ninja.">
+    <link rel="canonical" href="https://socialstream.ninja/uk/fonts.html">
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="author" content="Installed Font Detector" />
+    <meta name="keywords" content="шрифти, встановлені шрифти, виявлення шрифтів, шрифти браузера, перегляд шрифтів, параметр url, vdo.ninja, socialstream.ninja, caption.ninja" />
+    <meta name="theme-color" content="#0f1221" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Визначення встановлених шрифтів — перегляд шрифтів і створення посилань ?font">
+    <meta property="og:description" content="Виявляйте встановлені шрифти у браузері, переглядайте живі зразки й копіюйте посилання з параметром URL (?font=), сумісні з VDO.Ninja, SocialStream.Ninja та Caption.Ninja.">
+    <meta property="og:locale" content="uk_UA">
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Визначення встановлених шрифтів — перегляд шрифтів і створення посилань ?font">
+    <meta name="twitter:description" content="Виявляйте встановлені шрифти у браузері, переглядайте живі зразки й копіюйте посилання з параметром URL (?font=), сумісні з VDO.Ninja, SocialStream.Ninja та Caption.Ninja.">
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Installed Font Detector",
+      "applicationCategory": "Utility",
+      "operatingSystem": "Windows, macOS, Linux, ChromeOS",
+      "isAccessibleForFree": true,
+      "inLanguage": "en",
+      "description": "Detects installed fonts in your browser, previews them, and generates ?font= URL parameters compatible with VDO.Ninja, SocialStream.Ninja, and Caption.Ninja.",
+      "featureList": [
+        "Detect installed fonts via text-metric comparison",
+        "Optional Local Fonts API for precise enumeration",
+        "Generate ?font=<family> links",
+        "Compatibility with VDO.Ninja, SocialStream.Ninja, Caption.Ninja"
+      ],
+      "softwareRequirements": "Optional Local Fonts API requires Chromium-based browser on HTTPS/localhost and user permission.",
+      "sameAs": [
+        "https://vdo.ninja",
+        "https://socialstream.ninja",
+        "https://caption.ninja"
+      ]
+    }
+    </script>
+    <style>
+      :root {
+        --font-family: Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif;
+        --bg: #0f1221;
+        --panel: #171a2b;
+        --text: #e7e9f4;
+        --muted: #a8aec9;
+        --accent: #7ab6ff;
+        --ok: #47d16a;
+        --warn: #ffb020;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        --radius: 10px;
+      }
+
+      html, body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-family);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .wrap {
+        max-width: 1100px;
+        margin: 24px auto 80px;
+        padding: 0 16px;
+      }
+
+      header h1 {
+        margin: 0 0 6px 0;
+        font-size: 28px;
+      }
+
+      header p {
+        margin: 0 0 16px 0;
+        color: var(--muted);
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr auto auto auto;
+        gap: 10px;
+        align-items: center;
+        background: var(--panel);
+        border-radius: var(--radius);
+        padding: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
+      .controls input[type="text"] {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #2a2e44;
+        background: #0f1221;
+        color: var(--text);
+      }
+
+      .controls button, .controls a.button {
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #2a2e44;
+        background: #0f1221;
+        color: var(--text);
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .controls .count {
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .results {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: center;
+        background: var(--panel);
+        border-radius: var(--radius);
+        padding: 12px;
+        border: 1px solid #20243a;
+      }
+
+      .sample {
+        font-size: 18px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .meta {
+        display: grid;
+        gap: 6px;
+        justify-items: end;
+      }
+
+      .fontname {
+        font-weight: 600;
+      }
+
+      .link {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--muted);
+        user-select: all;
+      }
+
+      .link a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      .badge {
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 999px;
+        border: 1px solid #2a2e44;
+        color: var(--muted);
+      }
+
+      .footer {
+        margin-top: 40px;
+        background: var(--panel);
+        border-radius: var(--radius);
+        padding: 24px 28px;
+        border: 1px solid #20243a;
+        line-height: 1.6;
+      }
+
+      .footer h2 {
+        margin: 0 0 12px 0;
+        font-size: 18px;
+      }
+
+      .footer ul {
+        margin: 12px 0 0 24px;
+        padding: 0;
+        color: var(--muted);
+      }
+
+      .footer li { margin: 6px 0; }
+
+      .footer code {
+        font-family: var(--mono);
+        background: #0f1221;
+        padding: 2px 6px;
+        border-radius: 6px;
+        border: 1px solid #2a2e44;
+        color: #cfe2ff;
+      }
+
+      .note {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 14px;
+      }
+
+      @media (max-width: 700px) {
+        .controls {
+          grid-template-columns: minmax(0, 1fr) auto;
+        }
+        .controls input[type="text"], .controls button {
+          grid-column: 1 / -1;
+          box-sizing: border-box;
+          max-width: 100%;
+        }
+      }
+
+      @media (min-width: 900px) {
+        .results {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+
+<meta name="ssn-site-translation" content="uk">
+<script id="ssn-site-language" type="application/json">{"language":"uk","page":"fonts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Перемкнути на світлу тему","Switch to dark theme":"Перемкнути на темну тему","Light mode":"Світла тема","Dark mode":"Темна тема","Open navigation menu":"Відкрити меню навігації","Close navigation menu":"Закрити меню навігації","Copy this document as Markdown to the clipboard":"Скопіювати цей документ у форматі Markdown до буфера обміну","Copy Markdown":"Скопіювати Markdown","Copying…":"Копіювання…","Markdown copied":"Markdown скопійовано","Copy failed":"Не вдалося скопіювати","Copy comprehensive Markdown for an AI assistant":"Скопіювати повний Markdown для ШІ-асистента","Copy this documentation page as Markdown for an AI assistant":"Скопіювати цю сторінку документації як Markdown для ШІ-асистента"},"strings":{"(generated links below use proper encoding).":"(створені нижче посилання використовують належне кодування).","; this page also respects it. Example:":"; ця сторінка також його враховує. Приклад:","After installing, refresh this page to see your new fonts. If a font doesn't appear, try the \"Try Local Fonts API\" button (Chromium browsers only).":"Після встановлення оновіть цю сторінку, щоб побачити нові шрифти. Якщо шрифт не з’являється, спробуйте кнопку «Спробувати Local Fonts API» (лише браузери Chromium).","Append":"Додайте","Applies to CSS var:":"Застосовується до змінної CSS:","Apply":"Застосувати (Apply)","Browsers don’t allow full font enumeration without permission. This page detects from a large known list and optional Local Fonts API.":"Браузери не дозволяють отримувати повний перелік шрифтів без дозволу. Ця сторінка перевіряє великий відомий список і за потреби використовує Local Fonts API.","Browsers use TrueType/OpenType/WOFF. Legacy Type 1 and some bitmap fonts won’t work.":"Браузери використовують TrueType/OpenType/WOFF. Застарілі Type 1 та деякі растрові шрифти не працюватимуть.","Build links like:":"Створюйте такі посилання:","CJK and script fonts:":"Шрифти CJK та інших систем письма:","Caption.Ninja:":"Caption.Ninja:","Compatibility (Ninja apps)":"Сумісність (застосунки Ninja)","Copied!":"Скопійовано!","Copy font files to":"Скопіюйте файли шрифтів до","Copy param":"Копіювати параметр","Copy param:":"Копіювати параметр:","Could not access local fonts. The browser may require HTTPS/localhost and user approval.":"Не вдалося отримати доступ до локальних шрифтів. Браузер може вимагати HTTPS/localhost і дозволу користувача.","Detect installed fonts in your browser, preview live samples, and copy URL parameter links (?font=) compatible with VDO.Ninja, SocialStream.Ninja, and Caption.Ninja.":"Виявляйте встановлені шрифти у браузері, переглядайте живі зразки й копіюйте посилання з параметром URL (?font=), сумісні з VDO.Ninja, SocialStream.Ninja та Caption.Ninja.","Detecting…":"Виявлення…","Do not include quotes in the parameter; they are not required in the CSS variable.":"Не включайте лапки в параметр; у змінній CSS вони не потрібні.","Double-click the .ttf or .otf file → click \"Install Font\" in Font Book → restart your browser.":"Двічі натисніть файл .ttf або .otf → натисніть Install Font у Font Book → перезапустіть браузер.","Encoding:":"Кодування:","Exact family name:":"Точна назва сімейства:","Filter fonts (e.g. Segoe, Mono, Arabic)":"Фільтрувати шрифти (наприклад, Segoe, Mono, Arabic)","Force a font:":"Примусово задати шрифт:","Generated":"Згенеровано","How to Install Custom Fonts":"Як установити власні шрифти","If only Bold is installed, Normal text may fall back. Try a bold sample or install Regular as well.":"Якщо встановлено лише Bold, звичайний текст може використовувати запасний шрифт. Спробуйте жирний зразок або встановіть також Regular.","If you installed a font for a different Windows user or via an admin account only, your browser session may not see it. Install “for all users” if needed.":"Якщо шрифт установлено для іншого користувача Windows або лише через обліковий запис адміністратора, ваша сесія браузера може його не бачити. За потреби встановіть «для всіх користувачів».","In Chromium on secure origins (https/localhost), clicking “Try Local Fonts API” can list your exact installed families after permission.":"У Chromium на захищених джерелах (https/localhost) кнопка «Спробувати Local Fonts API» може показати точний перелік установлених сімейств після надання дозволу.","In your CSS:":"У вашому CSS:","Installed Font Detector":"Визначення встановлених шрифтів","Installed Font Detector: Preview installed fonts and generate ?font links":"Визначення встановлених шрифтів — перегляд шрифтів і створення посилань ?font","Installed only:":"Лише встановлені:","Linux:":"Linux:","Lists fonts your browser can use, shows a live sample, and provides a URL parameter to apply the font site‑wide.":"Перелічує шрифти, доступні браузеру, показує живий зразок і надає параметр URL для застосування шрифту на всьому сайті.","Local Fonts API not supported in this browser. Use recent Chromium on HTTPS/localhost.":"Цей браузер не підтримує Local Fonts API. Використовуйте сучасний Chromium через HTTPS/localhost.","Local Fonts API:":"Local Fonts API:","Manual usage tips":"Поради щодо ручного використання","Note: This page does not install or download fonts; it only detects and previews families already available to your browser.":"Примітка: ця сторінка не встановлює та не завантажує шрифти; вона лише виявляє й показує сімейства, уже доступні вашому браузеру.","Param":"Параметр","Param:":"Параметр:","Privacy limits:":"Обмеження конфіденційності:","Quotes not needed:":"Лапки не потрібні:","Requests permission (if supported) to list local fonts via the Local Fonts API":"Запитує дозвіл (якщо підтримується) на перелік локальних шрифтів через Local Fonts API","Right install scope:":"Правильна область установлення:","Right-click the .ttf or .otf file → select \"Install\" or \"Install for all users\" → restart your browser.":"Натисніть правою кнопкою файл .ttf або .otf → виберіть «Установити» або «Установити для всіх користувачів» → перезапустіть браузер.","Show faces":"Показати накреслення","Social Stream Ninja logo":"Логотип Social Stream Ninja","SocialStream.Ninja:":"SocialStream.Ninja:","Supported formats:":"Підтримувані формати:","Test an arbitrary name:":"Перевірити довільну назву:","The parameter only works for fonts already installed on your system. It does not download webfonts.":"Параметр працює лише для шрифтів, уже встановлених у вашій системі. Він не завантажує вебшрифти.","The sample includes Latin, numerals, and symbols. Replace with script‑specific text to verify shaping.":"Зразок містить латинські літери, цифри та символи. Замініть його текстом потрібної системи письма, щоб перевірити формування символів.","These apps accept a font-family override when the":"Ці застосунки дозволяють перевизначати сімейство шрифтів, коли параметр","Troubleshooting (Windows)":"Усунення неполадок (Windows)","Try Local Fonts API":"Спробувати Local Fonts API","Use the font’s":"Використовуйте","Use the same":"Використовуйте те саме значення","Use the search box to try any family; if found, it appears in results with a sample.":"Використовуйте поле пошуку для перевірки будь-якого сімейства; якщо його знайдено, воно з’явиться в результатах зі зразком.","Using a specific font via URL":"Використання певного шрифту через URL","VDO.Ninja:":"VDO.Ninja:","Weight/style availability:":"Доступність товщини/стилю:","Windows:":"Windows:","Your site uses":"Ваш сайт використовує","family":"сімейство","fonts, installed fonts, detect fonts, browser fonts, font preview, url parameter, vdo.ninja, socialstream.ninja, caption.ninja":"шрифти, встановлені шрифти, виявлення шрифтів, шрифти браузера, перегляд шрифтів, параметр url, vdo.ninja, socialstream.ninja, caption.ninja","links work with overlays/scenes that honor the":"посилання працюють з оверлеями/сценами, які враховують змінну","macOS:":"macOS:","name (not file name). Check Settings → Personalization → Fonts for the proper family label.":"назву сімейства шрифту (а не назву файлу). Правильну назву перевірте в Налаштування → Персоналізація → Шрифти.","parameter is supported in their URLs or embed links. This tool generates properly encoded values for drop‑in use.":"підтримується в їхніх URL або посиланнях вбудовування. Цей інструмент генерує правильно закодовані значення, готові до використання.","parameter to override the default font in supported widgets.":"для перевизначення стандартного шрифту в підтримуваних віджетах.","to caption overlays that support custom font families.":"до оверлеїв субтитрів, що підтримують власні сімейства шрифтів.","to the URL. Spaces and symbols must be URL‑encoded.":"до URL. Пробіли та символи потрібно закодувати для URL.","variable.":".","{0} item(s)":"Елементів: {0}","→ restart your browser.":"→ перезапустіть браузер.","→ run":"→ виконайте"}}</script>
+<script src="../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../docs/css/site-language.css">
+<script src="../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/fonts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/fonts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/fonts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/fonts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/fonts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/fonts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/fonts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/fonts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/fonts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/fonts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/fonts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/fonts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/fonts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/fonts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/fonts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/fonts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/fonts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/fonts.html">
+<!-- ssn-languages:end --></head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Визначення встановлених шрифтів</h1>
+        <p>Перелічує шрифти, доступні браузеру, показує живий зразок і надає параметр URL для застосування шрифту на всьому сайті.</p>
+      <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Українська"><span aria-hidden="true">🌐 </span><span lang="uk">Українська</span></summary><div class="site-language-options"><a class="site-language-link" href="../fonts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../es/fonts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../pt-br/fonts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../ru/fonts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../fr/fonts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../de/fonts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../ja/fonts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../zh-cn/fonts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../zh-tw/fonts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../it/fonts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../pl/fonts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../ko/fonts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="fonts.html" lang="uk" hreflang="uk" aria-current="true">Українська</a><a class="site-language-link" href="../ar/fonts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../tr/fonts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../cs/fonts.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../th/fonts.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></header>
+
+      <div class="footer" style="margin-top:0;margin-bottom:16px;">
+        <h2>Як установити власні шрифти</h2>
+        <ul>
+          <li><b>Windows:</b> Натисніть правою кнопкою файл .ttf або .otf → виберіть «Установити» або «Установити для всіх користувачів» → перезапустіть браузер.</li>
+          <li><b>macOS:</b> Двічі натисніть файл .ttf або .otf → натисніть Install Font у Font Book → перезапустіть браузер.</li>
+          <li><b>Linux:</b> Скопіюйте файли шрифтів до <code>~/.local/share/fonts/</code> → виконайте <code>fc-cache -fv</code> → перезапустіть браузер.</li>
+        </ul>
+        <p class="note">Після встановлення оновіть цю сторінку, щоб побачити нові шрифти. Якщо шрифт не з’являється, спробуйте кнопку «Спробувати Local Fonts API» (лише браузери Chromium).</p>
+      </div>
+
+      <div class="controls">
+        <input id="filter" type="text" placeholder="Фільтрувати шрифти (наприклад, Segoe, Mono, Arabic)" />
+        <button id="tryLocalFonts" title="Запитує дозвіл (якщо підтримується) на перелік локальних шрифтів через Local Fonts API">Спробувати Local Fonts API</button>
+        <label class="count" style="display:flex;align-items:center;gap:6px;white-space:nowrap;">
+          <input id="facesToggle" type="checkbox" /> Показати накреслення
+        </label>
+        <div class="count" id="count">Виявлення…</div>
+      </div>
+
+      <div class="results" id="results" role="list"></div>
+
+      <div class="footer">
+        <h2>Використання певного шрифту через URL</h2>
+        <ul>
+          <li><b>Параметр:</b> Додайте <code>?font=&lt;Font%20Family%20Name&gt;</code> до URL. Пробіли та символи потрібно закодувати для URL.</li>
+          <li><b>Застосовується до змінної CSS:</b> Ваш сайт використовує <code>--font-family</code>; ця сторінка також його враховує. Приклад: <code>?font=Segoe%20UI</code>.</li>
+          <li><b>Лапки не потрібні:</b> Не включайте лапки в параметр; у змінній CSS вони не потрібні.</li>
+          <li><b>Лише встановлені:</b> Параметр працює лише для шрифтів, уже встановлених у вашій системі. Він не завантажує вебшрифти.</li>
+        </ul>
+
+        <h2>Сумісність (застосунки Ninja)</h2>
+        <ul>
+          <li><b>VDO.Ninja:</b> Згенеровано <code>?font=</code> посилання працюють з оверлеями/сценами, які враховують змінну <code>--font-family</code> .</li>
+          <li><b>SocialStream.Ninja:</b> Використовуйте те саме значення <code>?font=</code> для перевизначення стандартного шрифту в підтримуваних віджетах.</li>
+          <li><b>Caption.Ninja:</b> Застосувати (Apply) <code>?font=</code> до оверлеїв субтитрів, що підтримують власні сімейства шрифтів.</li>
+        </ul>
+        <p class="note">Ці застосунки дозволяють перевизначати сімейство шрифтів, коли параметр <code>?font=</code> підтримується в їхніх URL або посиланнях вбудовування. Цей інструмент генерує правильно закодовані значення, готові до використання.</p>
+
+        <h2>Усунення неполадок (Windows)</h2>
+        <ul>
+          <li><b>Точна назва сімейства:</b> Використовуйте <i>сімейство</i> назву сімейства шрифту (а не назву файлу). Правильну назву перевірте в Налаштування → Персоналізація → Шрифти.</li>
+          <li><b>Правильна область установлення:</b> Якщо шрифт установлено для іншого користувача Windows або лише через обліковий запис адміністратора, ваша сесія браузера може його не бачити. За потреби встановіть «для всіх користувачів».</li>
+          <li><b>Підтримувані формати:</b> Браузери використовують TrueType/OpenType/WOFF. Застарілі Type 1 та деякі растрові шрифти не працюватимуть.</li>
+          <li><b>Доступність товщини/стилю:</b> Якщо встановлено лише Bold, звичайний текст може використовувати запасний шрифт. Спробуйте жирний зразок або встановіть також Regular.</li>
+          <li><b>Обмеження конфіденційності:</b> Браузери не дозволяють отримувати повний перелік шрифтів без дозволу. Ця сторінка перевіряє великий відомий список і за потреби використовує Local Fonts API.</li>
+          <li><b>Local Fonts API:</b> У Chromium на захищених джерелах (https/localhost) кнопка «Спробувати Local Fonts API» може показати точний перелік установлених сімейств після надання дозволу.</li>
+        </ul>
+
+        <h2>Поради щодо ручного використання</h2>
+        <ul>
+          <li><b>Примусово задати шрифт:</b> У вашому CSS: <code>font-family: "Your Family", Avenir Next, Sora, Roboto, Helvetica, Arial, sans-serif;</code></li>
+          <li><b>Перевірити довільну назву:</b> Використовуйте поле пошуку для перевірки будь-якого сімейства; якщо його знайдено, воно з’явиться в результатах зі зразком.</li>
+          <li><b>Кодування:</b> Створюйте такі посилання: <code>?font=<span id="egFont">Segoe%20UI</span></code> (створені нижче посилання використовують належне кодування).</li>
+          <li><b>Шрифти CJK та інших систем письма:</b> Зразок містить латинські літери, цифри та символи. Замініть його текстом потрібної системи письма, щоб перевірити формування символів.</li>
+        </ul>
+        <p class="note">Примітка: ця сторінка не встановлює та не завантажує шрифти; вона лише виявляє й показує сімейства, уже доступні вашому браузеру.</p>
+      </div>
+    </div>
+
+    <script>
+      function siteText(value) { return window.SSNSiteTranslate ? window.SSNSiteTranslate(value) : value; }
+      // Respect the provided code for applying a font from URL params
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("font")) {
+        const fontParam = urlParams.get("font").trim();
+        const fonts = fontParam.split(',').map(f => {
+          const clean = f.trim().replace(/^['"]|['"]$/g, "");
+          return clean ? `"${clean}"` : '';
+        }).filter(Boolean);
+        if (fonts.length) {
+          document.documentElement.style.setProperty(
+            "--font-family",
+            `${fonts.join(', ')}, Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`
+          );
+        }
+      }
+
+      const resultsEl = document.getElementById('results');
+      const countEl = document.getElementById('count');
+      const filterEl = document.getElementById('filter');
+      const facesToggleEl = document.getElementById('facesToggle');
+
+      // A broad list of common fonts across Windows/macOS/Linux + popular developer/Google fonts.
+      // Detection works by comparing text metrics against generic base families.
+      const CANDIDATE_FONTS = Array.from(new Set([
+        // Windows core UI/text
+        'Segoe UI','Segoe UI Variable','Segoe UI Emoji','Segoe UI Historic','Segoe UI Symbol','Bahnschrift','Ebrima','Gadugi','Javanese Text','Leelawadee UI','Lucida Sans Unicode','Malgun Gothic','Meiryo','Microsoft Himalaya','Microsoft JhengHei','Microsoft New Tai Lue','Microsoft PhagsPa','Microsoft Sans Serif','Microsoft Tai Le','Microsoft Uighur','Microsoft YaHei','Microsoft Yi Baiti','MingLiU-ExtB','Mongolian Baiti','MS Gothic','MS PGothic','MS UI Gothic','NSimSun','PMingLiU-ExtB','SimSun','SimSun-ExtB','Yu Gothic','Yu Gothic UI',
+        // Windows Latin staples
+        'Arial','Arial Black','Calibri','Cambria','Candara','Comic Sans MS','Consolas','Constantia','Corbel','Courier New','Franklin Gothic Medium','Gabriola','Georgia','Impact','Palatino Linotype','Tahoma','Times New Roman','Trebuchet MS','Verdana','Symbol','Webdings','Wingdings','Wingdings 2','Wingdings 3','Sitka Banner','Sitka Display','Sitka Heading','Sitka Small','Sitka Subheading','Sitka Text','Lucida Console',
+        // Developer favorites / code
+        'Cascadia Code','Cascadia Mono','Fira Code','Fira Mono','JetBrains Mono','Source Code Pro','IBM Plex Mono','Ubuntu Mono','Inconsolata','Monaspace Neon','Monaspace Argon',
+        // Popular sans/serif families
+        'Inter','Roboto','Open Sans','Noto Sans','Noto Serif','Noto Sans JP','Noto Sans KR','Noto Sans SC','Noto Serif JP','Noto Naskh Arabic','Lato','Montserrat','Poppins','Oswald','Raleway','Nunito','Merriweather','Playfair Display','PT Sans','PT Serif','Source Sans 3','Source Serif 4','Source Sans Pro','Source Serif Pro','IBM Plex Sans','IBM Plex Serif','Ubuntu','Work Sans','Sora','Avenir','Avenir Next','SF Pro Text','SF Pro Display','Helvetica Neue','Helvetica','Gill Sans',
+        // Other common
+        'Book Antiqua','Century Gothic','Garamond','Didot','Bodoni MT','Perpetua','Rockwell','Goudy Old Style','Copperplate','Brush Script MT','Candara',
+      ].sort((a,b)=>a.localeCompare(b))))
+
+      // Base families used for measuring vs installed font.
+      const BASES = ['serif','sans-serif','monospace'];
+
+      // Measurement string chosen to amplify dimension differences
+      const TEST_STRING = 'mmmmmmmmmmlliWWQy #@ 0123456789 The quick brown fox';
+      const TEST_SIZE = '72px';
+
+      function createMeasureSpan(base) {
+        const s = document.createElement('span');
+        s.textContent = TEST_STRING;
+        s.style.position = 'absolute';
+        s.style.left = '-9999px';
+        s.style.top = '-9999px';
+        s.style.fontSize = TEST_SIZE;
+        s.style.fontVariantLigatures = 'none';
+        s.style.whiteSpace = 'nowrap';
+        s.style.fontFamily = base;
+        document.body.appendChild(s);
+        return s;
+      }
+
+      function metricsFor(base) {
+        const el = createMeasureSpan(base);
+        const w = el.offsetWidth;
+        const h = el.offsetHeight;
+        el.remove();
+        return { w, h };
+      }
+
+      // Detect if a font is available by comparing width/height against all base families.
+      function isFontAvailable(fontName) {
+        try {
+          const baseline = BASES.map(b => metricsFor(b));
+          // If any base differs once we prepend the font, it's likely installed
+          return BASES.some((b, i) => {
+            const el = createMeasureSpan(`"${fontName}", ${b}`);
+            const different = el.offsetWidth !== baseline[i].w || el.offsetHeight !== baseline[i].h;
+            el.remove();
+            return different;
+          });
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function applyFilter(filter, items) {
+        if (!filter) return items;
+        const q = filter.trim().toLowerCase();
+        if (!q) return items;
+        return items.filter(item => {
+          if (typeof item === 'string') return item.toLowerCase().includes(q);
+          const hay = [item.family, item.fullName, item.style, item.weight, item.postscriptName].filter(Boolean).join(' ').toLowerCase();
+          return hay.includes(q);
+        });
+      }
+
+      function makeRow(item) {
+        const isFace = typeof item === 'object' && item && 'family' in item;
+        const name = isFace ? item.family : item;
+        const row = document.createElement('div');
+        row.className = 'row';
+
+        const sample = document.createElement('div');
+        sample.className = 'sample';
+        sample.setAttribute('translate', 'no');
+        sample.style.fontFamily = `"${name}", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`;
+        if (isFace) {
+          if (item.weight) sample.style.fontWeight = String(item.weight);
+          if (item.style) sample.style.fontStyle = item.style;
+          if (item.stretch) sample.style.fontStretch = item.stretch;
+        }
+        const faceSuffix = isFace ? ` (${[item.style||'normal', item.weight||'400'].filter(Boolean).join(', ')})` : '';
+        sample.textContent = `${name}${faceSuffix}: The quick brown fox jumps over the lazy dog 0123456789`;
+        row.appendChild(sample);
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+
+        const fontname = document.createElement('div');
+        fontname.className = 'fontname';
+        fontname.textContent = name + (isFace && item.fullName ? `: ${item.fullName}` : '');
+
+        const link = document.createElement('div');
+        link.className = 'link';
+        const enc = encodeURIComponent(name);
+        const param = `?font=${enc}`;
+        const url = `${location.origin}${location.pathname}${param}`;
+        link.innerHTML = `<span class="badge">Param</span> <a href="${param}">${param}</a>`;
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'button';
+        copyBtn.textContent = 'Copy param';
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(param);
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => (copyBtn.textContent = 'Copy param'), 1200);
+          } catch {
+            window.prompt(siteText('Copy param:'), param);
+          }
+        });
+
+        meta.appendChild(fontname);
+        meta.appendChild(link);
+        meta.appendChild(copyBtn);
+        row.appendChild(meta);
+        return row;
+      }
+
+      function render(list) {
+        resultsEl.innerHTML = '';
+        const frag = document.createDocumentFragment();
+        list.forEach(item => frag.appendChild(makeRow(item)));
+        resultsEl.appendChild(frag);
+        countEl.textContent = `${list.length} item(s)`;
+      }
+
+      async function detectFromCandidates(candidates) {
+        const seen = new Set();
+        const found = [];
+        for (const name of candidates) {
+          if (seen.has(name)) continue;
+          seen.add(name);
+          if (isFontAvailable(name)) found.push(name);
+        }
+        found.sort((a,b)=>a.localeCompare(b));
+        return found;
+      }
+
+      // Optional: Use Local Fonts API if supported + permitted
+      async function tryLocalFontsAPI() {
+        if (!('queryLocalFonts' in window)) {
+          alert(siteText('Local Fonts API not supported in this browser. Use recent Chromium on HTTPS/localhost.'));
+          return [];
+        }
+        try {
+          const families = new Set();
+          const fonts = await window.queryLocalFonts();
+          // Keep faces for optional detailed listing
+          window.__FACES__ = fonts.map(f => ({
+            family: f.family,
+            fullName: f.fullName,
+            postscriptName: f.postscriptName,
+            style: f.style,
+            weight: f.weight,
+            stretch: f.stretch,
+          }));
+          for (const f of fonts) {
+            if (f.family) families.add(f.family);
+          }
+          return Array.from(families).sort((a,b)=>a.localeCompare(b));
+        } catch (err) {
+          console.warn('Local Fonts API error:', err);
+          alert(siteText('Could not access local fonts. The browser may require HTTPS/localhost and user approval.'));
+          return [];
+        }
+      }
+
+      async function getLocalFontsIfGranted() {
+        if (!('queryLocalFonts' in window) || !('permissions' in navigator)) return [];
+        try {
+          const status = await navigator.permissions.query({ name: 'local-fonts' });
+          if (status.state === 'granted') {
+            const families = await tryLocalFontsAPI();
+            return families;
+          }
+        } catch (e) {
+          // Ignore if permissions API doesn't recognize 'local-fonts'
+        }
+        return [];
+      }
+
+      // Initial detection
+      (async function init() {
+        // If a font is set via URL param, reflect it in example in the “Manual usage tips”
+        const eg = document.getElementById('egFont');
+        if (eg) eg.textContent = encodeURIComponent(urlParams.get('font') || 'Segoe UI');
+
+        countEl.textContent = 'Detecting…';
+        const detected = await detectFromCandidates(CANDIDATE_FONTS);
+        window.__ALL_DETECTED__ = detected; // families
+
+        // If permission already granted, auto-merge Local Fonts API
+        const grantedFamilies = await getLocalFontsIfGranted();
+        if (grantedFamilies.length) {
+          const merged = Array.from(new Set([...(window.__ALL_DETECTED__||[]), ...grantedFamilies]));
+          merged.sort((a,b)=>a.localeCompare(b));
+          window.__ALL_DETECTED__ = merged;
+        }
+
+        const initialList = (facesToggleEl && facesToggleEl.checked && window.__FACES__) ? window.__FACES__ : window.__ALL_DETECTED__;
+        render(initialList);
+
+        // Filter UI
+        filterEl.addEventListener('input', () => {
+          const facesOn = facesToggleEl && facesToggleEl.checked && window.__FACES__;
+          const base = facesOn ? window.__FACES__ : (window.__ALL_DETECTED__ || []);
+          const list = applyFilter(filterEl.value, base);
+          render(list);
+        });
+
+        // Allow trying arbitrary names by typing and pressing Enter
+        filterEl.addEventListener('keydown', async (e) => {
+          if (e.key === 'Enter') {
+            const name = filterEl.value.trim();
+            if (!name) return;
+            if (!window.__ALL_DETECTED__.includes(name) && isFontAvailable(name)) {
+              window.__ALL_DETECTED__ = [...window.__ALL_DETECTED__, name].sort((a,b)=>a.localeCompare(b));
+            }
+            const facesOn = facesToggleEl && facesToggleEl.checked && window.__FACES__;
+            const base = facesOn ? window.__FACES__ : window.__ALL_DETECTED__;
+            const list = applyFilter(filterEl.value, base);
+            render(list);
+          }
+        });
+
+        // Local Fonts API button
+        document.getElementById('tryLocalFonts').addEventListener('click', async () => {
+          const families = await tryLocalFontsAPI();
+          if (families.length) {
+            // Merge Local Fonts API results with detected list
+            const merged = Array.from(new Set([...(window.__ALL_DETECTED__||[]), ...families]));
+            merged.sort((a,b)=>a.localeCompare(b));
+            window.__ALL_DETECTED__ = merged;
+            const facesOn = facesToggleEl && facesToggleEl.checked && window.__FACES__;
+            const base = facesOn ? window.__FACES__ : merged;
+            const list = applyFilter(filterEl.value, base);
+            render(list);
+          }
+        });
+
+        // Faces toggle
+        if (facesToggleEl) {
+          facesToggleEl.addEventListener('change', () => {
+            const facesOn = facesToggleEl.checked && window.__FACES__;
+            const base = facesOn ? window.__FACES__ : (window.__ALL_DETECTED__ || []);
+            const list = applyFilter(filterEl.value, base);
+            render(list);
+          });
+        }
+      })();
+    </script>
+  </body>
+  </html>

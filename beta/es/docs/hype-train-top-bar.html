@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es" data-site-root="../../" data-site-language="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/es/docs/hype-train-top-bar.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="es_ES">
+    <meta property="og:url" content="https://socialstream.ninja/beta/es/docs/hype-train-top-bar.html">
+    <meta property="og:title" content="Guía de la barra superior del tren del Hype - Social Stream Ninja">
+    <meta property="og:description" content="Cómo añadir a OBS la barra superior del tren del Hype de Twitch de Social Stream Ninja y probarla antes de transmitir.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logotipo de Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/es/docs/hype-train-top-bar.html">
+    <meta name="twitter:title" content="Guía de la barra superior del tren del Hype - Social Stream Ninja">
+    <meta name="twitter:description" content="Cómo añadir a OBS la barra superior del tren del Hype de Twitch de Social Stream Ninja y probarla antes de transmitir.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logotipo de Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de la barra superior del tren del Hype - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Cómo añadir a OBS la barra superior del tren del Hype de Twitch de Social Stream Ninja y probarla antes de transmitir.">
+    <style>
+        .guide-image {
+            display: block;
+            width: 100%;
+            max-width: 1100px;
+            margin: 1.5rem auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .quick-note {
+            background: rgba(26, 115, 232, 0.08);
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 1.4rem 1.6rem;
+            margin: 1.5rem 0;
+        }
+
+        .dark-mode .quick-note {
+            background: rgba(26, 115, 232, 0.18);
+        }
+
+        .warning-note {
+            background: rgba(251, 188, 5, 0.14);
+            border-left-color: #f9ab00;
+        }
+
+        .dark-mode .warning-note {
+            background: rgba(251, 188, 5, 0.2);
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="es">
+<script id="ssn-site-language" type="application/json">{"language":"es","page":"docs/hype-train-top-bar.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Cambiar al tema claro","Switch to dark theme":"Cambiar al tema oscuro","Light mode":"Modo claro","Dark mode":"Modo oscuro","Open navigation menu":"Abrir el menú de navegación","Close navigation menu":"Cerrar el menú de navegación","Copy this document as Markdown to the clipboard":"Copiar este documento en Markdown al portapapeles","Copy Markdown":"Copiar Markdown","Copying…":"Copiando…","Markdown copied":"Markdown copiado","Copy failed":"No se pudo copiar","Copy comprehensive Markdown for an AI assistant":"Copiar el contenido completo en Markdown para un asistente de IA","Copy this documentation page as Markdown for an AI assistant":"Copiar esta página de documentación en Markdown para un asistente de IA"},"strings":{", which makes the overlay focus on Hype Train and Treasure Train events.":", que centra la superposición en eventos del tren del Hype y del tren del tesoro.","A Hype Train will not appear in the normal chat overlay. Use the Hype Train Top Bar, the Meta Data Bar, or":"Un tren del Hype no aparecerá en la superposición normal de chat. Usa Hype Train Top Bar, Meta Data Bar o","Add a Twitch-style Hype Train progress bar to OBS, test it before going live, and know what to check if it does not appear.":"Añade una barra de progreso del tren del Hype de Twitch a OBS, pruébala antes de transmitir y descubre qué revisar si no aparece.","Add that link to OBS as a Browser Source.":"Añade ese enlace a OBS como fuente de navegador.","Add the Hype Train Top Bar as a browser source, not as a normal chat overlay.":"Añade Hype Train Top Bar como fuente de navegador, no como superposición normal de chat.","Align overlay to the center:":"Alinear superposición al centro:","Align overlay to the right-side:":"Alinear superposición a la derecha:","Before you start":"Antes de empezar","Commands & API":"Comandos y API","Confirm the URL includes":"Confirma que la URL incluya","Confirm the copied overlay URL has the same session ID as the Social Stream Ninja popup.":"Confirma que la URL de superposición copiada tenga el mismo ID de sesión que el menú emergente de Social Stream Ninja.","Confirm your Twitch account was re-authorized after Hype Train support was added.":"Confirma que hayas vuelto a autorizar tu cuenta de Twitch después de que se añadiera compatibilidad con el tren del Hype.","Copy the":"Copia el","Custom page background color:":"Color personalizado del fondo de la página:","Customize the bar":"Personalizar la barra","Disable text outlining:":"Desactivar contorno del texto:","Download":"Descargar","Event Reference":"Referencia de eventos","Fake Hype Train":"Tren del Hype ficticio (Fake Hype Train)","Features":"Funciones","Find":"Busca","Guides":"Guías","Hire":"Contratar","Home":"Inicio","How to add the Social Stream Ninja Twitch Hype Train top bar overlay to OBS and test it before going live.":"Cómo añadir a OBS la barra superior del tren del Hype de Twitch de Social Stream Ninja y probarla antes de transmitir.","Hype Meter and Viewer Count":"Medidor de Hype y recuento de espectadores","Hype Train Top Bar":"Barra superior del tren del hype","Hype Train Top Bar Guide":"Guía de la barra superior del tren del Hype","Hype Train Top Bar Guide - Social Stream Ninja":"Guía de la barra superior del tren del Hype - Social Stream Ninja","Hype Train Top Bar preview showing progress, level, timer, and contributors":"Vista previa de Hype Train Top Bar con progreso, nivel, temporizador y colaboradores","If it does not show":"Si no aparece","If prompted, re-authorize Twitch so Social Stream Ninja can request the":"Si se solicita, vuelve a autorizar Twitch para que Social Stream Ninja pueda solicitar el permiso","Important:":"Importante:","Inspiration":"Inspiración","It does not show normal chat messages. Hype Train data is metadata-only, so the bar updates when Twitch sends a Hype Train event.":"No muestra mensajes normales de chat. Los datos del tren del Hype son solo metadatos, así que la barra se actualiza cuando Twitch envía un evento del tren.","Main navigation":"Navegación principal","Open":"Abrir","Open navigation menu":"Abrir el menú de navegación","Open the Social Stream Ninja popup.":"Abre la ventana emergente de Social Stream Ninja.","Overlay Gallery":"Galería de superposiciones","Panel opacity:":"Opacidad del panel:","Resources":"Recursos","Scale multiplier:":"Multiplicador de escala:","Set it up from the popup":"Configurar desde el menú emergente","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logotipo de Social Stream Ninja","Social Stream Ninja popup showing Hype Train Top Bar link and layout options":"Menú emergente de Social Stream Ninja con el enlace Hype Train Top Bar y opciones de diseño","Support":"Ayuda","Supported Sites":"Sitios compatibles","Switch theme":"Cambiar de tema","Test with the":"Prueba con el botón","Testing options":"Opciones de prueba","The Hype Train Top Bar is a dedicated overlay for Twitch Hype Train and Treasure Train events. It shows the current level, progress, total, timer, and top contributors in a top-bar style layout.":"Hype Train Top Bar es una superposición dedicada a los eventos del tren del Hype y del tren del tesoro de Twitch. Muestra el nivel actual, el progreso, el total, el temporizador y los principales colaboradores en un diseño de barra superior.","The Hype Train Top Bar options work like the other overlay options in the popup. Toggle an option, then copy the updated link again.":"Las opciones de Hype Train Top Bar funcionan como las demás opciones de superposición del menú emergente. Cambia una opción y vuelve a copiar el enlace actualizado.","The copied URL includes":"La URL copiada incluye","Tip:":"Consejo:","Transparent bar background:":"Fondo transparente de la barra:","Use":"Usa","Use Twitch WebSocket mode for Twitch event capture.":"Usa el modo WebSocket de Twitch para capturar eventos de Twitch.","Use the":"Usa:","What this overlay does":"Qué hace esta superposición","adjusts the whole bar opacity.":"ajusta la opacidad de toda la barra.","and select a Hype Train preset if you want to test through the API route.":"y selecciona una configuración de tren del Hype si quieres probar mediante la ruta de API.","button to confirm the bar appears.":"para confirmar que aparezca la barra.","button.":".","centers the bar horizontally.":"centra la barra horizontalmente.","if you want to confirm the raw Twitch Hype Train event is being received.":"si quieres confirmar que se recibe el evento original del tren del Hype de Twitch.","in the popup for the quickest test.":"en el menú emergente para la prueba más rápida.","link.":"enlace.","makes the bar smaller or larger.":"reduce o amplía la barra.","places the bar against the right edge.":"coloca la barra contra el borde derecho.","removes the black text shadow.":"quita la sombra negra del texto.","removes the filled background behind the bar.":"quita el fondo relleno detrás de la barra.","scope.":".","to see it.":"para verlo.","useful when testing outside OBS or when you want a non-transparent page background.":"útil para probar fuera de OBS o si quieres un fondo de página no transparente.","with the same session to verify Hype Train metadata is arriving.":"con la misma sesión para verificar que lleguen los metadatos del tren del Hype.","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja. Todos los derechos reservados."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/hype-train-top-bar.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navegación principal"><a href="../index.html">Inicio</a><a href="features.html">Funciones</a><a href="inspiration.html" class="site-priority-inspiration">Inspiración</a><a href="download.html">Descargar</a><a href="guides.html">Guías</a><a href="commands.html">Comandos y API</a><a href="supported-sites.html">Sitios compatibles</a><a href="overlay-gallery.html" class="site-priority-gallery">Galería de superposiciones</a><a href="services.html" class="site-priority-hire">Contratar</a><a href="support.html">Ayuda</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Español"><span aria-hidden="true">🌐 </span><span lang="es">Español</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/hype-train-top-bar.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="hype-train-top-bar.html" lang="es" hreflang="es" aria-current="true">Español</a><a class="site-language-link" href="../../pt-br/docs/hype-train-top-bar.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/hype-train-top-bar.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/hype-train-top-bar.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/hype-train-top-bar.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/hype-train-top-bar.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/hype-train-top-bar.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/hype-train-top-bar.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/hype-train-top-bar.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/hype-train-top-bar.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/hype-train-top-bar.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/hype-train-top-bar.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/hype-train-top-bar.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/hype-train-top-bar.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/hype-train-top-bar.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/hype-train-top-bar.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Cambiar de tema"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Abrir el menú de navegación" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Guía de la barra superior del tren del Hype</h1>
+            <p>Añade una barra de progreso del tren del Hype de Twitch a OBS, pruébala antes de transmitir y descubre qué revisar si no aparece.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <h3>Qué hace esta superposición</h3>
+                    <p>Hype Train Top Bar es una superposición dedicada a los eventos del tren del Hype y del tren del tesoro de Twitch. Muestra el nivel actual, el progreso, el total, el temporizador y los principales colaboradores en un diseño de barra superior.</p>
+                    <p>No muestra mensajes normales de chat. Los datos del tren del Hype son solo metadatos, así que la barra se actualiza cuando Twitch envía un evento del tren.</p>
+                    <img src="../../docs/images/hype-train-top-bar-preview.png" alt="Vista previa de Hype Train Top Bar con progreso, nivel, temporizador y colaboradores" class="guide-image">
+                </div>
+
+                <div class="guide-card">
+                    <h3>Antes de empezar</h3>
+                    <ul class="guide-list">
+                        <li>Usa el modo WebSocket de Twitch para capturar eventos de Twitch.</li>
+                        <li>Si se solicita, vuelve a autorizar Twitch para que Social Stream Ninja pueda solicitar el permiso <code>channel:read:hype_train</code> .</li>
+                        <li>Añade Hype Train Top Bar como fuente de navegador, no como superposición normal de chat.</li>
+                    </ul>
+                    <div class="quick-note warning-note">
+                        <strong>Importante:</strong> Un tren del Hype no aparecerá en la superposición normal de chat. Usa Hype Train Top Bar, Meta Data Bar o <code>events.html</code> para verlo.
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Configurar desde el menú emergente</h3>
+                    <ol class="guide-steps">
+                        <li>Abre la ventana emergente de Social Stream Ninja.</li>
+                        <li>Busca <strong>Medidor de Hype y recuento de espectadores</strong>.</li>
+                        <li>Copia el <strong>Barra superior del tren del hype</strong> enlace.</li>
+                        <li>Añade ese enlace a OBS como fuente de navegador.</li>
+                        <li>Usa: <strong>Tren del Hype ficticio (Fake Hype Train)</strong> para confirmar que aparezca la barra.</li>
+                    </ol>
+                    <img src="../../docs/images/hype-train-popup-options.png" alt="Menú emergente de Social Stream Ninja con el enlace Hype Train Top Bar y opciones de diseño" class="guide-image">
+                    <div class="quick-note">
+                        <strong>Consejo:</strong> La URL copiada incluye <code>&amp;hype</code>, que centra la superposición en eventos del tren del Hype y del tren del tesoro.
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Personalizar la barra</h3>
+                    <p>Las opciones de Hype Train Top Bar funcionan como las demás opciones de superposición del menú emergente. Cambia una opción y vuelve a copiar el enlace actualizado.</p>
+                    <ul class="guide-list">
+                        <li><strong>Alinear superposición a la derecha:</strong> coloca la barra contra el borde derecho.</li>
+                        <li><strong>Alinear superposición al centro:</strong> centra la barra horizontalmente.</li>
+                        <li><strong>Multiplicador de escala:</strong> reduce o amplía la barra.</li>
+                        <li><strong>Opacidad del panel:</strong> ajusta la opacidad de toda la barra.</li>
+                        <li><strong>Fondo transparente de la barra:</strong> quita el fondo relleno detrás de la barra.</li>
+                        <li><strong>Desactivar contorno del texto:</strong> quita la sombra negra del texto.</li>
+                        <li><strong>Color personalizado del fondo de la página:</strong> útil para probar fuera de OBS o si quieres un fondo de página no transparente.</li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Opciones de prueba</h3>
+                    <ul class="guide-list">
+                        <li>Usa <strong>Tren del Hype ficticio (Fake Hype Train)</strong> en el menú emergente para la prueba más rápida.</li>
+                        <li>Usa <code>sampleapi.html</code> y selecciona una configuración de tren del Hype si quieres probar mediante la ruta de API.</li>
+                        <li>Usa <code>events.html</code> si quieres confirmar que se recibe el evento original del tren del Hype de Twitch.</li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Si no aparece</h3>
+                    <ol class="guide-steps">
+                        <li>Confirma que hayas vuelto a autorizar tu cuenta de Twitch después de que se añadiera compatibilidad con el tren del Hype.</li>
+                        <li>Confirma que la URL de superposición copiada tenga el mismo ID de sesión que el menú emergente de Social Stream Ninja.</li>
+                        <li>Confirma que la URL incluya <code>&amp;hype</code>.</li>
+                        <li>Prueba con el botón <strong>Tren del Hype ficticio (Fake Hype Train)</strong> .</li>
+                        <li>Abrir <code>events.html</code> con la misma sesión para verificar que lleguen los metadatos del tren del Hype.</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="../../media/logo.png" alt="Logotipo de Social Stream Ninja">
+                    <span>Social Stream Ninja</span>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>Recursos</h4>
+                        <ul>
+                            <li><a href="guides.html">Guías</a></li>
+                            <li><a href="event-reference.html">Referencia de eventos</a></li>
+                            <li><a href="support.html">Ayuda</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Social Stream Ninja. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

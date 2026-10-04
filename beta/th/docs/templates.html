@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/beta/th/docs/templates.html">
+    <meta property="og:title" content="เทมเพลตโอเวอร์เลย์แชตและสกินแบบกำหนดเอง - Social Stream Ninja">
+    <meta property="og:description" content="เลือกเทมเพลตโอเวอร์เลย์แชตสำหรับ OBS ปรับรูปลักษณ์ หรือนำเข้าสกินแชตจาก StreamElements ดูตัวอย่างและคู่มือตั้งค่า Social Stream Ninja">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/th/docs/templates.html">
+    <meta name="twitter:title" content="เทมเพลตโอเวอร์เลย์แชตและสกินแบบกำหนดเอง - Social Stream Ninja">
+    <meta name="twitter:description" content="เลือกเทมเพลตโอเวอร์เลย์แชตสำหรับ OBS ปรับรูปลักษณ์ หรือนำเข้าสกินแชตจาก StreamElements ดูตัวอย่างและคู่มือตั้งค่า Social Stream Ninja">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เทมเพลตโอเวอร์เลย์แชตและสกินแบบกำหนดเอง - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/templates.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <meta name="description" content="เลือกเทมเพลตโอเวอร์เลย์แชตสำหรับ OBS ปรับรูปลักษณ์ หรือนำเข้าสกินแชตจาก StreamElements ดูตัวอย่างและคู่มือตั้งค่า Social Stream Ninja">
+    <link rel="canonical" href="https://socialstream.ninja/beta/th/docs/templates.html">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/templates.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{", and select the downloaded HTML file.":"แล้วเลือกไฟล์ HTML ที่ดาวน์โหลดไว้",", enter your session details, then copy the links for OBS. Motion is optional.":"กรอกรายละเอียดเซสชันของคุณ แล้วคัดลอกลิงก์สำหรับ OBS การเคลื่อนไหวเป็นตัวเลือก",", or explore custom templates and imports below.":"หรือสำรวจเทมเพลตแบบกำหนดเองและการนำเข้าด้านล่าง",", preview it, then download the OBS HTML. Use the original ZIP or files, not a screenshot or overlay URL.":"ดูตัวอย่าง แล้วดาวน์โหลด HTML สำหรับ OBS ใช้ ZIP หรือไฟล์ต้นฉบับ ไม่ใช่ภาพหน้าจอหรือ URL ของโอเวอร์เลย์",". In OBS, add a Browser Source, enable":"ใน OBS ให้เพิ่มแหล่งเบราว์เซอร์ (Browser Source) แล้วเปิด","A cheerful corgi on a sky-blue postcard":"คอร์กี้ร่าเริงบนโปสการ์ดสีฟ้า","A cheerful corgi on a sky-blue postcard. Includes matching chat, featured-message, and alert styles.":"คอร์กี้ร่าเริงบนโปสการ์ดสีฟ้าท้องฟ้า มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน","A clean, lightweight template with essential features. Perfect starting point for customization.":"เทมเพลตเรียบง่ายและเบาพร้อมคุณสมบัติที่จำเป็น เหมาะสำหรับเริ่มปรับแต่ง","A more complete starting point with comments and documentation to help you build your own custom overlays.":"ต้นแบบที่ครบถ้วนยิ่งขึ้น พร้อมความคิดเห็นในโค้ดและเอกสารเพื่อช่วยคุณสร้างโอเวอร์เลย์ของตนเอง","A running feed from your connected platforms. Start with a chat template or":"ฟีดต่อเนื่องจากแพลตฟอร์มที่เชื่อมต่อ เริ่มด้วยเทมเพลตแชตหรือ","A sophisticated, fully animated theme with customizable colors and smooth transitions. Perfect for gaming streams.":"ธีมประณีตที่มีภาพเคลื่อนไหวครบชุด ปรับสีได้และเปลี่ยนฉากอย่างนุ่มนวล เหมาะสำหรับสตรีมเกม","A storybook frog in a peaceful woodland":"กบนิทานในป่าสงบ","A storybook frog in a peaceful woodland. Includes matching chat, featured-message, and alert styles.":"กบจากหนังสือนิทานในป่าอันสงบ มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน","A tiny dragon with a luminous enchanted crystal":"มังกรจิ๋วกับคริสตัลวิเศษเรืองแสง","A tiny dragon with a luminous enchanted crystal. Includes matching chat, featured-message, and alert styles.":"มังกรตัวน้อยกับคริสตัลเวทมนตร์เรืองแสง มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน","Add Your SSN Session ID":"เพิ่ม ID เซสชัน SSN ของคุณ","Add Your Session ID":"เพิ่ม ID เซสชันของคุณ","Add the modified URL as a Browser Source in your streaming software:":"เพิ่ม URL ที่แก้ไขแล้วเป็นแหล่งเบราว์เซอร์ในซอฟต์แวร์สตรีมของคุณ:","Add to OBS/Streamlabs":"เพิ่มใน OBS/Streamlabs","Add your CSS in the Browser Source properties":"เพิ่ม CSS ของคุณในคุณสมบัติแหล่งเบราว์เซอร์","Alert guide":"คู่มือการแจ้งเตือน","All Templates":"เทมเพลตทั้งหมด","An astronaut bunny drifting through lilac stardust":"กระต่ายนักบินอวกาศลอยผ่านละอองดาวสีม่วงอ่อน","An astronaut bunny drifting through lilac stardust. Includes matching chat, featured-message, and alert styles.":"กระต่ายนักบินอวกาศลอยผ่านละอองดาวสีไลแลค มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน","Animated":"มีภาพเคลื่อนไหว","Append":"ต่อท้าย","Apply your custom CSS through OBS browser source settings":"ใช้ CSS ที่กำหนดเองผ่านการตั้งค่าแหล่งเบราว์เซอร์ของ OBS","Bare Template":"เทมเพลตเปล่า","Base64 CSS:":"CSS แบบ Base64:","Bluesky":"Bluesky","Bold, high-contrast theme designed for gaming streams with excellent visibility even in fast-paced content.":"ธีมเด่นชัดและคอนทราสต์สูงสำหรับสตรีมเกม มองเห็นได้ดีแม้เนื้อหาเคลื่อนไหวรวดเร็ว","Browse Overlay Gallery":"ดูแกลเลอรีโอเวอร์เลย์","Browse the":"เรียกดู","Browse the template library and select one that fits your stream style. Use the screenshot gallery to compare designs; most built-in templates work directly from a URL, with no download.":"เรียกดูคลังเทมเพลตและเลือกแบบที่เหมาะกับสไตล์สตรีมของคุณ ใช้แกลเลอรีภาพหน้าจอเปรียบเทียบดีไซน์ เทมเพลตในตัวส่วนใหญ่ใช้งานได้โดยตรงผ่าน URL โดยไม่ต้องดาวน์โหลด","By Deuk":"โดย Deuk","By LuckyLootTube":"โดย LuckyLootTube","By NeutronStudio":"โดย NeutronStudio","By RetroTech":"โดย RetroTech","By Social Stream Ninja":"โดย Social Stream Ninja","By t3nk3y":"โดย t3nk3y","CSS Snippet":"ส่วนโค้ด CSS","CSS copied to clipboard!":"คัดลอก CSS ไปยังคลิปบอร์ดแล้ว!","CSS not found":"ไม่พบ CSS","Celebrate follows, memberships, and donations. Configure animations and audio in SSN’s alert settings.":"ฉลองการติดตาม การเป็นสมาชิก และการบริจาค ตั้งค่าภาพเคลื่อนไหวและเสียงในการตั้งค่าการแจ้งเตือนของ SSN","Chat Overlay Templates and Custom Skins - Social Stream Ninja":"เทมเพลตโอเวอร์เลย์แชตและสกินแบบกำหนดเอง - Social Stream Ninja","Choose Message History":"เลือกประวัติข้อความ","Choose Your Template":"เลือกเทมเพลตของคุณ","Choose a chat overlay template for OBS, customize its appearance, or import a StreamElements chat skin. Find previews and Social Stream Ninja setup guides.":"เลือกเทมเพลตโอเวอร์เลย์แชตสำหรับ OBS ปรับรูปลักษณ์ หรือนำเข้าสกินแชตจาก StreamElements ดูตัวอย่างและคู่มือตั้งค่า Social Stream Ninja","Choose a look for your stream":"เลือกรูปลักษณ์สำหรับสตรีมของคุณ","Choose a starting point, copy the prompt, and replace the bracketed design details. Attach source files if your AI cannot read links. Leave your private session ID and password out of the conversation.":"เลือกต้นแบบ คัดลอกพรอมต์ แล้วแทนที่รายละเอียดการออกแบบในวงเล็บ แนบไฟล์ต้นฉบับหาก AI ของคุณอ่านลิงก์ไม่ได้ อย่าใส่ ID เซสชันและรหัสผ่านส่วนตัวในการสนทนา","Clean, modern design with smooth animations and excellent readability. Customizable color schemes.":"ดีไซน์สะอาดทันสมัย พร้อมภาพเคลื่อนไหวที่นุ่มนวลและอ่านง่าย ปรับชุดสีได้","Click":"คลิก","Click OK to add it to your scene":"คลิก OK เพื่อเพิ่มลงในฉาก","Close":"ปิด","Commands & API":"คำสั่งและ API","Community":"ชุมชน","Complete Package":"แพ็กเกจครบชุด","Complete themed packages with documentation, sample images, and guides":"แพ็กเกจธีมครบชุดพร้อมเอกสาร ภาพตัวอย่าง และคู่มือ","Configure OBS to use your customized template":"ตั้งค่า OBS ให้ใช้เทมเพลตที่คุณปรับแต่ง","Confirm SSN Is Receiving Chat":"ตรวจสอบว่า SSN รับแชตอยู่","Confirm chat reaches the SSN dock and that the session ID and optional password match exactly.":"ตรวจสอบว่าแชตมาถึงแผงด็อก SSN และ ID เซสชันกับรหัสผ่านถ้ามีตรงกันทุกตัวอักษร","Consolidates your live social messaging streams and more. Free and open source.":"รวมข้อความโซเชียลสดและอีกมากมาย ฟรีและเป็นโอเพนซอร์ส","Contribute":"ร่วมพัฒนา","Converting a more complex widget?":"กำลังแปลงวิดเจ็ตที่ซับซ้อนกว่านี้หรือไม่?","Copy a working starter and edit its HTML, CSS, and JavaScript.":"คัดลอกต้นแบบที่ใช้งานได้ แล้วแก้ไข HTML, CSS และ JavaScript","Copy the template code to your clipboard":"คัดลอกโค้ดเทมเพลตไปยังคลิปบอร์ด","Copy to Clipboard":"คัดลอกไปยังคลิปบอร์ด","Create a styled SSN consolidated chat overlay from https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html . Receive the normal live feed (dock label), with a bounded message list, configurable count and optional expiry. Preserve platform icons, donation and membership presentation. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"สร้างโอเวอร์เลย์แชตรวม SSN ที่มีสไตล์จาก https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html รับฟีดสดปกติ (ป้ายกำกับ dock) โดยมีรายการข้อความที่จำกัดขนาด ปรับจำนวนได้ และเลือกให้หมดอายุได้ รักษาไอคอนแพลตฟอร์มและการแสดงการบริจาคกับสมาชิก ตรวจสอบซอร์สและเอกสารปัจจุบันของ SSN ด้านล่างก่อน หากเปิดไม่ได้ ให้ขอให้ฉันแนบไฟล์ อย่าคาดเดาวิธีรับส่งข้อมูลหรือสคีมาเหตุการณ์ เอกสารอ้างอิง: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md และ https://socialstream.ninja/beta/docs/event-reference.html รักษาการเชื่อมต่อ ตัวเลือกเซสชัน/รหัสผ่าน ป้ายกำกับและเซิร์ฟเวอร์ การจัดการดูแล/ลบ/ล้างข้อความ และฟิลด์ข้อความที่มีอยู่ของโอเวอร์เลย์ต้นแบบ ใช้ตัวยึด YOUR_SESSION_ID / YOUR_PASSWORD สำหรับข้อมูลรับรองเสมอ ห้ามใช้ข้อมูลรับรองจริง ใช้สคริปต์แบบดั้งเดิมที่เข้ากันได้กับ Chrome 80 และ OBS รักษาการอ้างอิงไฟล์ภายในแบบสัมพัทธ์ และระบุไฟล์ที่ต้องมาพร้อมกับ HTML จัดการ chatname เป็นข้อความธรรมดา โดย textonly ใช้กับ chatmessage เท่านั้น รักษาอีโมต/ตราที่ปลอดภัย ข้อความที่มีเฉพาะภาพ contentimg และการรับส่งเหตุการณ์/เมทาดาทาที่ปะปนกัน โดยไม่แสดงการอัปเดตที่มีเฉพาะเมทาดาทาเป็นแชต อย่าแทรก HTML ที่ยังไม่ผ่านการตรวจสอบหรือสร้างฟิลด์เพย์โหลดระดับบนสุดขึ้นเอง การออกแบบ: [อธิบายสี อารมณ์ รูปแบบตัวอักษร ตำแหน่ง และการเคลื่อนไหว] ขนาดพื้นที่: [ความกว้าง x ความสูง] ให้พื้นหลังโปร่งใส ข้อความอ่านง่ายเมื่อซ้อนทับเกม ชื่อ/ข้อความยาวไม่ล้น และมีรูปแบบสำหรับลดการเคลื่อนไหว ส่งคืนไฟล์ที่แก้ไขฉบับสมบูรณ์ ขั้นตอนตั้งค่าง่าย ๆ และโหมดสาธิตด้วยข้อมูลจำลองที่ไม่เชื่อมต่อกับเซสชันจริง ทดสอบข้อความยาว อีโมจิ ข้อความที่มีเฉพาะภาพ การลบ การล้าง การปรับขนาด และการเชื่อมต่อใหม่","Created an awesome template for Social Stream Ninja? Share it with the community by submitting a pull request to our GitHub repository.":"สร้างเทมเพลตเจ๋ง ๆ สำหรับ Social Stream Ninja แล้วใช่ไหม? แบ่งปันกับชุมชนโดยส่ง pull request มายังที่เก็บ GitHub ของเรา","Creating a Custom Chat Overlay for Social Stream Ninja":"การสร้างโอเวอร์เลย์แชตแบบกำหนดเองสำหรับ Social Stream Ninja","Custom CSS":"CSS แบบกำหนดเอง","Customization Guide":"คู่มือการปรับแต่ง","Customize Your Template":"ปรับแต่งเทมเพลตของคุณ","Customize https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html . Inspect its shared alert dependencies and https://socialstream.ninja/beta/docs/alert-effects.html first. Reuse existing alert type filters, queue, sound library, mute/volume and effect rules. Keep USD thresholds on the existing currency.js conversion path; do not compare formatted currency strings. Support an optional animation and sound for a $100 USD donation rule, respecting enabled state and existing range semantics. Avoid duplicate playback. Use only audio I supply or have permission to use. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"ปรับแต่ง https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html ตรวจสอบส่วนประกอบการแจ้งเตือนที่ใช้ร่วมกันและ https://socialstream.ninja/beta/docs/alert-effects.html ก่อน ใช้ตัวกรองประเภทการแจ้งเตือน คิว คลังเสียง การปิดเสียง/ระดับเสียง และกฎเอฟเฟกต์ที่มีอยู่ ใช้เส้นทางการแปลง currency.js เดิมสำหรับเกณฑ์ USD อย่าเปรียบเทียบสตริงสกุลเงินที่จัดรูปแบบแล้ว รองรับภาพเคลื่อนไหวและเสียงแบบเลือกใช้สำหรับกฎการบริจาค $100 USD โดยเคารพสถานะเปิดใช้งานและความหมายของช่วงค่าที่มีอยู่ ป้องกันการเล่นซ้ำ ใช้เฉพาะเสียงที่ฉันให้หรือมีสิทธิ์ใช้ ตรวจสอบซอร์สและเอกสารปัจจุบันของ SSN ด้านล่างก่อน หากเปิดไม่ได้ ให้ขอให้ฉันแนบไฟล์ อย่าคาดเดาวิธีรับส่งข้อมูลหรือสคีมาเหตุการณ์ เอกสารอ้างอิง: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md และ https://socialstream.ninja/beta/docs/event-reference.html รักษาการเชื่อมต่อ ตัวเลือกเซสชัน/รหัสผ่าน ป้ายกำกับและเซิร์ฟเวอร์ การจัดการดูแล/ลบ/ล้างข้อความ และฟิลด์ข้อความที่มีอยู่ของโอเวอร์เลย์ต้นแบบ ใช้ตัวยึด YOUR_SESSION_ID / YOUR_PASSWORD สำหรับข้อมูลรับรองเสมอ ห้ามใช้ข้อมูลรับรองจริง ใช้สคริปต์แบบดั้งเดิมที่เข้ากันได้กับ Chrome 80 และ OBS รักษาการอ้างอิงไฟล์ภายในแบบสัมพัทธ์ และระบุไฟล์ที่ต้องมาพร้อมกับ HTML จัดการ chatname เป็นข้อความธรรมดา โดย textonly ใช้กับ chatmessage เท่านั้น รักษาอีโมต/ตราที่ปลอดภัย ข้อความที่มีเฉพาะภาพ contentimg และการรับส่งเหตุการณ์/เมทาดาทาที่ปะปนกัน โดยไม่แสดงการอัปเดตที่มีเฉพาะเมทาดาทาเป็นแชต อย่าแทรก HTML ที่ยังไม่ผ่านการตรวจสอบหรือสร้างฟิลด์เพย์โหลดระดับบนสุดขึ้นเอง การออกแบบ: [อธิบายสี อารมณ์ รูปแบบตัวอักษร ตำแหน่ง และการเคลื่อนไหว] ขนาดพื้นที่: [ความกว้าง x ความสูง] ให้พื้นหลังโปร่งใส ข้อความอ่านง่ายเมื่อซ้อนทับเกม ชื่อ/ข้อความยาวไม่ล้น และมีรูปแบบสำหรับลดการเคลื่อนไหว ส่งคืนไฟล์ที่แก้ไขฉบับสมบูรณ์ ขั้นตอนตั้งค่าง่าย ๆ และโหมดสาธิตด้วยข้อมูลจำลองที่ไม่เชื่อมต่อกับเซสชันจริง ทดสอบข้อความยาว อีโมจิ ข้อความที่มีเฉพาะภาพ การลบ การล้าง การปรับขนาด และการเชื่อมต่อใหม่","Customize https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html for a single selected message. Preserve its default featured/overlay routing and clear behavior; do not automatically show every chat message. Explain how to select a message from the SSN dock. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"ปรับแต่ง https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html สำหรับข้อความที่เลือกหนึ่งข้อความ รักษาการส่งข้อมูล featured/overlay เริ่มต้นและพฤติกรรมการล้าง อย่าแสดงทุกข้อความแชตโดยอัตโนมัติ อธิบายวิธีเลือกข้อความจากแผงด็อก SSN ตรวจสอบซอร์สและเอกสารปัจจุบันของ SSN ด้านล่างก่อน หากเปิดไม่ได้ ให้ขอให้ฉันแนบไฟล์ อย่าคาดเดาวิธีรับส่งข้อมูลหรือสคีมาเหตุการณ์ เอกสารอ้างอิง: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md และ https://socialstream.ninja/beta/docs/event-reference.html รักษาการเชื่อมต่อ ตัวเลือกเซสชัน/รหัสผ่าน ป้ายกำกับและเซิร์ฟเวอร์ การจัดการดูแล/ลบ/ล้างข้อความ และฟิลด์ข้อความที่มีอยู่ของโอเวอร์เลย์ต้นแบบ ใช้ตัวยึด YOUR_SESSION_ID / YOUR_PASSWORD สำหรับข้อมูลรับรองเสมอ ห้ามใช้ข้อมูลรับรองจริง ใช้สคริปต์แบบดั้งเดิมที่เข้ากันได้กับ Chrome 80 และ OBS รักษาการอ้างอิงไฟล์ภายในแบบสัมพัทธ์ และระบุไฟล์ที่ต้องมาพร้อมกับ HTML จัดการ chatname เป็นข้อความธรรมดา โดย textonly ใช้กับ chatmessage เท่านั้น รักษาอีโมต/ตราที่ปลอดภัย ข้อความที่มีเฉพาะภาพ contentimg และการรับส่งเหตุการณ์/เมทาดาทาที่ปะปนกัน โดยไม่แสดงการอัปเดตที่มีเฉพาะเมทาดาทาเป็นแชต อย่าแทรก HTML ที่ยังไม่ผ่านการตรวจสอบหรือสร้างฟิลด์เพย์โหลดระดับบนสุดขึ้นเอง การออกแบบ: [อธิบายสี อารมณ์ รูปแบบตัวอักษร ตำแหน่ง และการเคลื่อนไหว] ขนาดพื้นที่: [ความกว้าง x ความสูง] ให้พื้นหลังโปร่งใส ข้อความอ่านง่ายเมื่อซ้อนทับเกม ชื่อ/ข้อความยาวไม่ล้น และมีรูปแบบสำหรับลดการเคลื่อนไหว ส่งคืนไฟล์ที่แก้ไขฉบับสมบูรณ์ ขั้นตอนตั้งค่าง่าย ๆ และโหมดสาธิตด้วยข้อมูลจำลองที่ไม่เชื่อมต่อกับเซสชันจริง ทดสอบข้อความยาว อีโมจิ ข้อความที่มีเฉพาะภาพ การลบ การล้าง การปรับขนาด และการเชื่อมต่อใหม่","Demo Preview":"ตัวอย่างสาธิต (Demo Preview)","Demo is blank":"โหมดสาธิตว่างเปล่า","Deuk's Theme":"ธีมของ Deuk","Developer":"นักพัฒนา","Developer Templates":"เทมเพลตสำหรับนักพัฒนา","Developer guide":"คู่มือนักพัฒนา","Discord":"Discord","Do not add the session ID or edit the URL in OBS.":"อย่าเพิ่ม ID เซสชันหรือแก้ไข URL ใน OBS","Donate":"บริจาค","Download":"ดาวน์โหลด","Download OBS HTML":"ดาวน์โหลด HTML สำหรับ OBS (Download OBS HTML)","Download and Add It to OBS":"ดาวน์โหลดและเพิ่มใน OBS","Editable prompt":"พรอมต์ที่แก้ไขได้","Elegant design with smooth animations and visual effects. Eye-catching yet not distracting.":"ดีไซน์หรูหราพร้อมภาพเคลื่อนไหวที่นุ่มนวลและเอฟเฟกต์ภาพ สะดุดตาแต่ไม่รบกวน","Event Flow editor":"ตัวแก้ไข Event Flow","Event fields":"ฟิลด์เหตุการณ์","FAQ":"คำถามที่พบบ่อย","Failed to copy. Try selecting and copying manually.":"คัดลอกไม่สำเร็จ ลองเลือกแล้วคัดลอกด้วยตนเอง","Featured":"ข้อความเด่น","Features":"ฟีเจอร์","Filter templates":"กรองเทมเพลต","Find the perfect template for your stream":"ค้นหาเทมเพลตที่เหมาะกับสตรีมของคุณ","Find the sample overlay template (sampleoverlay.html)":"ค้นหาเทมเพลตโอเวอร์เลย์ตัวอย่าง (sampleoverlay.html)","Follow these simple steps to get started":"ทำตามขั้นตอนง่าย ๆ เหล่านี้เพื่อเริ่มต้น","For inline CSS, use":"สำหรับ CSS แบบอินไลน์ ให้ใช้","For trigger-based behavior, start with the":"สำหรับพฤติกรรมตามทริกเกอร์ ให้เริ่มด้วย","Friendly ghost, glowing pumpkin and midnight plum":"ผีเป็นมิตร ฟักทองเรืองแสง และสีพลัมยามเที่ยงคืน","Friendly ghost, glowing pumpkin and midnight plum. Includes matching chat, featured-message, and alert styles.":"ผีน้อยเป็นมิตร ฟักทองเรืองแสง และสีพลัมยามเที่ยงคืน มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน","Gaming":"เกม","Get":"รับ","Get the Original Widget Export":"รับไฟล์ส่งออกวิดเจ็ตต้นฉบับ","GitHub":"GitHub","GitHub Repository":"ที่เก็บโค้ด GitHub","Guides":"คู่มือ","Have a StreamElements chat widget export?":"มีไฟล์ส่งออกวิดเจ็ตแชตจาก StreamElements หรือไม่?","Have a Template to Share?":"มีเทมเพลตอยากแบ่งปันหรือไม่?","Headphone raccoon and vinyl in mint and plum":"แร็กคูนสวมหูฟังและแผ่นเสียงในสีมิ้นต์กับพลัม","Headphone raccoon and vinyl in mint and plum. Includes matching chat, featured-message, and alert styles.":"แร็กคูนสวมหูฟังกับแผ่นเสียงในโทนมินต์และพลัม มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน","Hire":"จ้างงาน","Home":"หน้าแรก","Host your files and use their URL with your session and optional password. For a self-contained local export, follow its configuration instructions; OBS Local file has no URL field for session parameters.":"โฮสต์ไฟล์ของคุณและใช้ URL พร้อมเซสชันและรหัสผ่านถ้ามี สำหรับไฟล์ส่งออกภายในเครื่องที่รวมทุกอย่างในตัว ให้ทำตามขั้นตอนตั้งค่าของไฟล์นั้น ตัวเลือก Local file ของ OBS ไม่มีช่อง URL สำหรับพารามิเตอร์เซสชัน","How to Use Templates":"วิธีใช้เทมเพลต","If the imported widget provides compatible settings, use":"หากวิดเจ็ตที่นำเข้ามีการตั้งค่าที่รองรับ ให้ใช้","Import StreamElements Widget":"นำเข้าวิดเจ็ต StreamElements","In OBS, click the + under Sources and select \"Browser\"":"ใน OBS คลิก + ใต้ Sources แล้วเลือก \"Browser\"","Inspiration":"ไอเดียสร้างสรรค์","Installation Guide":"คู่มือการติดตั้ง","Join our Discord":"เข้าร่วม Discord ของเรา","Keep SSN running while streaming; the importer and StreamElements may be closed.":"เปิด SSN ไว้ระหว่างสตรีม คุณสามารถปิดตัวนำเข้าและ StreamElements ได้","Keep referenced shared scripts, fonts, and images alongside your file with the same relative paths, or ask your AI for a self-contained export. Renaming one HTML file does not bundle its dependencies.":"เก็บสคริปต์ที่ใช้ร่วมกัน ฟอนต์ และรูปภาพที่อ้างอิงไว้คู่กับไฟล์ของคุณตามพาธสัมพัทธ์เดิม หรือขอให้ AI ส่งออกไฟล์ที่รวมทุกอย่างในตัว การเปลี่ยนชื่อไฟล์ HTML หนึ่งไฟล์ไม่ได้รวมส่วนประกอบที่ไฟล์นั้นต้องใช้","Keep the original connection code. Chat and featured overlays receive different feeds; styling a chat feed does not make it a selected-message overlay.":"คงโค้ดการเชื่อมต่อเดิมไว้ โอเวอร์เลย์แชตกับโอเวอร์เลย์ข้อความเด่นรับฟีดต่างกัน การปรับสไตล์ฟีดแชตไม่ได้ทำให้เป็นโอเวอร์เลย์สำหรับข้อความที่เลือก","Learn how to create a custom chat overlay with AI assistance":"เรียนรู้วิธีสร้างโอเวอร์เลย์แชตแบบกำหนดเองด้วยความช่วยเหลือจาก AI","Liquid Glass":"กระจกเหลว","Live Preview":"ตัวอย่างสด (Live Preview)","Live Preview is blank":"ตัวอย่างสด (Live Preview) ว่างเปล่า","Local file":"ไฟล์ในเครื่อง (Local file)","LuckyLootTube Liquid Glass Theme":"ธีม Liquid Glass ของ LuckyLootTube","LuckyLootTube's Theme":"ธีมของ LuckyLootTube","Main navigation":"เมนูหลัก","Message history":"ประวัติข้อความ (Message history)","Minimal":"น้อยมาก","Minimal code needed to create your own overlay from scratch. Perfect for developers and LLM-assisted coding.":"โค้ดขั้นต่ำที่จำเป็นสำหรับสร้างโอเวอร์เลย์ของคุณตั้งแต่ต้น เหมาะสำหรับนักพัฒนาและการเขียนโค้ดด้วยความช่วยเหลือจาก LLM","Modern":"ทันสมัย","Modern Design":"ดีไซน์ทันสมัย","Name your source and click OK":"ตั้งชื่อแหล่งข้อมูลแล้วคลิก OK","Neutron Theme":"ธีม Neutron","New":"ใหม่","New to importing?":"เพิ่งเริ่มนำเข้าใช่ไหม?","No matches. Try another search or choose All Templates.":"ไม่พบรายการที่ตรง ลองค้นหาใหม่หรือเลือกเทมเพลตทั้งหมด","Nostalgic Windows 3.1 style chat overlay with classic window design and pixel-perfect detailing.":"โอเวอร์เลย์แชตสไตล์ Windows 3.1 ชวนย้อนวันวาน พร้อมดีไซน์หน้าต่างคลาสสิกและรายละเอียดพิกเซลที่ประณีต","OBS Custom CSS:":"CSS แบบกำหนดเองใน OBS:","OBS is blank":"OBS ว่างเปล่า","One look across three browser sources. In the gallery, choose":"รูปลักษณ์เดียวกันสำหรับแหล่งเบราว์เซอร์สามรายการ ในแกลเลอรี ให้เลือก","One message you select in the dock. Choose a featured design for interviews, Q&A, or shout-outs.":"ข้อความหนึ่งข้อความที่คุณเลือกในแผงด็อก เลือกดีไซน์ข้อความเด่นสำหรับการสัมภาษณ์ ถามตอบ หรือกล่าวทักทาย","Open Widget Importer":"เปิดตัวนำเข้าวิดเจ็ต","Open navigation menu":"เปิดเมนูนำทาง","Open the Importer":"เปิดตัวนำเข้า","Open the StreamElements converter":"เปิดตัวแปลง StreamElements","Open the importer and choose the ZIP, folder, or files. It detects the widget parts and immediately shows a demo preview.":"เปิดตัวนำเข้าแล้วเลือก ZIP โฟลเดอร์ หรือไฟล์ ตัวนำเข้าจะตรวจพบส่วนต่าง ๆ ของวิดเจ็ตและแสดงตัวอย่างสาธิตทันที","Open your platform sources in the SSN app or extension, then send a test message. Continue only after it appears in the SSN dock.":"เปิดแหล่งข้อมูลแพลตฟอร์มของคุณในแอปหรือส่วนขยาย SSN แล้วส่งข้อความทดสอบ ดำเนินการต่อเมื่อข้อความปรากฏในแผงด็อก SSN แล้วเท่านั้น","Opening the importer from the SSN popup fills the session ID and password automatically. If you opened it directly, copy them from":"การเปิดตัวนำเข้าจากป๊อปอัป SSN จะกรอก ID เซสชันและรหัสผ่านให้โดยอัตโนมัติ หากคุณเปิดโดยตรง ให้คัดลอกจาก","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Paste your template URL with session ID":"วาง URL เทมเพลตของคุณพร้อม ID เซสชัน","Personalize your overlay with custom CSS in one of these ways:":"ปรับโอเวอร์เลย์ให้เป็นสไตล์ของคุณด้วย CSS แบบกำหนดเองด้วยวิธีใดวิธีหนึ่งต่อไปนี้:","Popular":"ยอดนิยม","Pretty Template":"เทมเพลตสวยงาม","Preview & use pack":"ดูตัวอย่างและใช้ชุด","Preview chat, featured-message, and alert overlays, then add your favorite to OBS or Streamlabs.":"ดูตัวอย่างโอเวอร์เลย์แชต ข้อความเด่น และการแจ้งเตือน แล้วเพิ่มแบบที่ชอบใน OBS หรือ Streamlabs","Preview fake data first, then test with your own SSN session. Check selected messages, clearing, long names, images, and transparent backgrounds. Keep SSN running during live use.":"ดูตัวอย่างด้วยข้อมูลจำลองก่อน แล้วทดสอบด้วยเซสชัน SSN ของคุณ ตรวจสอบข้อความที่เลือก การล้าง ชื่อยาว รูปภาพ และพื้นหลังโปร่งใส เปิด SSN ไว้ระหว่างใช้งานจริง","Privacy Policy":"นโยบายความเป็นส่วนตัว","Prompt copied.":"คัดลอกพรอมป์ต์แล้ว","Prompt selected. Press Ctrl+C (Command+C on Mac) to copy.":"เลือกพรอมป์ต์แล้ว กด Ctrl+C (Command+C บน Mac) เพื่อคัดลอก","Prompt the AI to modify the CSS for your preferred style":"สั่งให้ AI แก้ไข CSS ตามสไตล์ที่คุณต้องการ","Quick Guide from the Video":"คู่มือย่อจากวิดีโอ","Quick Links":"ลิงก์ด่วน","Quick start":"เริ่มต้นอย่างรวดเร็ว","Read the full chat skin guide":"อ่านคู่มือสกินแชตฉบับเต็ม","Ready-to-use templates that only require your session ID":"เทมเพลตพร้อมใช้งานที่ต้องการเพียง ID เซสชันของคุณ","Replace":"แทนที่","Report an Issue":"รายงานปัญหา","Resources":"แหล่งข้อมูลอ้างอิง","Restyle my existing SSN overlay using CSS only. I will provide its URL and source HTML/CSS. Keep all JavaScript and message routing unchanged. Inspect actual DOM selectors before writing CSS. Deliver CSS for the OBS Browser Source Custom CSS box plus any necessary local font/image assets. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"ปรับสไตล์โอเวอร์เลย์ SSN ที่ฉันใช้อยู่โดยใช้เฉพาะ CSS ฉันจะให้ URL และซอร์ส HTML/CSS คง JavaScript และการส่งต่อข้อความทั้งหมดไว้เช่นเดิม ตรวจสอบตัวเลือก DOM ที่มีจริงก่อนเขียน CSS ส่งมอบ CSS สำหรับช่อง Custom CSS ของแหล่งเบราว์เซอร์ OBS พร้อมไฟล์ฟอนต์/รูปภาพภายในเครื่องที่จำเป็น ตรวจสอบซอร์สและเอกสารปัจจุบันของ SSN ด้านล่างก่อน หากเปิดไม่ได้ ให้ขอให้ฉันแนบไฟล์ อย่าคาดเดาวิธีรับส่งข้อมูลหรือสคีมาเหตุการณ์ เอกสารอ้างอิง: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md และ https://socialstream.ninja/beta/docs/event-reference.html รักษาการเชื่อมต่อ ตัวเลือกเซสชัน/รหัสผ่าน ป้ายกำกับและเซิร์ฟเวอร์ การจัดการดูแล/ลบ/ล้างข้อความ และฟิลด์ข้อความที่มีอยู่ของโอเวอร์เลย์ต้นแบบ ใช้ตัวยึด YOUR_SESSION_ID / YOUR_PASSWORD สำหรับข้อมูลรับรองเสมอ ห้ามใช้ข้อมูลรับรองจริง ใช้สคริปต์แบบดั้งเดิมที่เข้ากันได้กับ Chrome 80 และ OBS รักษาการอ้างอิงไฟล์ภายในแบบสัมพัทธ์ และระบุไฟล์ที่ต้องมาพร้อมกับ HTML จัดการ chatname เป็นข้อความธรรมดา โดย textonly ใช้กับ chatmessage เท่านั้น รักษาอีโมต/ตราที่ปลอดภัย ข้อความที่มีเฉพาะภาพ contentimg และการรับส่งเหตุการณ์/เมทาดาทาที่ปะปนกัน โดยไม่แสดงการอัปเดตที่มีเฉพาะเมทาดาทาเป็นแชต อย่าแทรก HTML ที่ยังไม่ผ่านการตรวจสอบหรือสร้างฟิลด์เพย์โหลดระดับบนสุดขึ้นเอง การออกแบบ: [อธิบายสี อารมณ์ รูปแบบตัวอักษร ตำแหน่ง และการเคลื่อนไหว] ขนาดพื้นที่: [ความกว้าง x ความสูง] ให้พื้นหลังโปร่งใส ข้อความอ่านง่ายเมื่อซ้อนทับเกม ชื่อ/ข้อความยาวไม่ล้น และมีรูปแบบสำหรับลดการเคลื่อนไหว ส่งคืนไฟล์ที่แก้ไขฉบับสมบูรณ์ ขั้นตอนตั้งค่าง่าย ๆ และโหมดสาธิตด้วยข้อมูลจำลองที่ไม่เชื่อมต่อกับเซสชันจริง ทดสอบข้อความยาว อีโมจิ ข้อความที่มีเฉพาะภาพ การลบ การล้าง การปรับขนาด และการเชื่อมต่อใหม่","Retro":"ย้อนยุค","Retro Style":"สไตล์ย้อนยุค","Review the detected files in the importer and use Advanced file selection if it chose the wrong HTML, CSS, or JavaScript.":"ตรวจสอบไฟล์ที่ตรวจพบในตัวนำเข้า และใช้การเลือกไฟล์ขั้นสูง (Advanced file selection) หากเลือก HTML, CSS หรือ JavaScript ผิด","Sample Overlay":"โอเวอร์เลย์ตัวอย่าง","Sample Overlay Template":"เทมเพลตโอเวอร์เลย์ตัวอย่าง","Sample Template":"เทมเพลตตัวอย่าง","Scarf-wrapped reindeer and festive evergreen":"เรนเดียร์พันผ้าพันคอและต้นไม้เขียวเทศกาล","Scarf-wrapped reindeer and festive evergreen. Includes matching chat, featured-message, and alert styles.":"กวางเรนเดียร์พันผ้าพันคอกับต้นไม้เขียวในบรรยากาศเทศกาล มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน","Search templates by name, type, or feature...":"ค้นหาเทมเพลตตามชื่อ ประเภท หรือคุณสมบัติ...","See setup below":"ดูการตั้งค่าด้านล่าง","Session Options":"ตัวเลือกเซสชัน","Set width and height (recommended: 1920×1080)":"ตั้งความกว้างและความสูง (แนะนำ: 1920×1080)","Setup":"การตั้งค่า","Simple Drop-in Templates":"เทมเพลตเรียบง่ายพร้อมใช้","Sleek animated liquid-glass style chat overlay with smooth animations and cool emote rendering.":"โอเวอร์เลย์แชตสไตล์กระจกเหลวที่ดูโฉบเฉี่ยว พร้อมภาพเคลื่อนไหวนุ่มนวลและการแสดงอีโมตที่สวยงาม","Sleepy calico, strawberry milk and blush stationery":"แมวสามสีง่วงนอน นมสตรอว์เบอร์รี และเครื่องเขียนสีชมพูอ่อน","Sleepy calico, strawberry milk and blush stationery. Includes matching chat, featured-message, and alert styles.":"แมวสามสีง่วงนอน นมสตรอว์เบอร์รี และเครื่องเขียนสีชมพูอ่อน มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja สัญญาอนุญาต GPLv3.0 สร้างโดย","Source Code":"ซอร์สโค้ด","Start with a working overlay, then change its appearance.":"เริ่มด้วยโอเวอร์เลย์ที่ใช้งานได้ แล้วปรับรูปลักษณ์","Starting points for creating your own custom overlays":"จุดเริ่มต้นสำหรับสร้างโอเวอร์เลย์แบบกำหนดเองของคุณ","Steve Seguin":"Steve Seguin","StreamElements Setup Guide":"คู่มือตั้งค่า StreamElements","Submit on GitHub":"ส่งบน GitHub","Support":"การสนับสนุน","Supported Sites":"เว็บไซต์ที่รองรับ","Switch theme":"เปลี่ยนธีม","Template Library":"คลังเทมเพลต","Templates":"เทมเพลต","Templates Gallery":"แกลเลอรีเทมเพลต","Templates that work with YouTube CSS styles":"เทมเพลตที่ใช้กับสไตล์ CSS ของ YouTube ได้","Terms of Service":"ข้อกำหนดการให้บริการ","Test Before Downloading":"ทดสอบก่อนดาวน์โหลด","Themed Packages":"แพ็กเกจธีม","This works with both the SSN Windows desktop app and Chrome extension. No code editing is required.":"ใช้ได้ทั้งแอปเดสก์ท็อป SSN สำหรับ Windows และส่วนขยาย Chrome โดยไม่ต้องแก้ไขโค้ด","URL Parameter:":"พารามิเตอร์ URL:","Use":"ใช้","Use CSS designed for YouTube with our YouTube-structured overlay page. Compatible with Septapus styles.":"ใช้ CSS ที่ออกแบบสำหรับ YouTube กับหน้าโอเวอร์เลย์ที่มีโครงสร้างแบบ YouTube ของเรา รองรับสไตล์ Septapus","Use OBS Browser Source":"ใช้แหล่งเบราว์เซอร์ของ OBS","Use a StreamElements Chat Widget with Social Stream Ninja":"ใช้วิดเจ็ตแชต StreamElements กับ Social Stream Ninja","Use an AI assistant like Claude to help customize it":"ใช้ผู้ช่วย AI เช่น Claude ช่วยปรับแต่ง","Use matching set":"ใช้ชุดเข้าคู่","Use the ZIP, folder, or files supplied by the widget designer. A useful export normally contains HTML, CSS, JavaScript, fields/data, and assets. A screenshot or StreamElements overlay URL is not enough.":"ใช้ ZIP โฟลเดอร์ หรือไฟล์ที่ผู้ออกแบบวิดเจ็ตให้มา ไฟล์ส่งออกที่ใช้งานได้มักประกอบด้วย HTML, CSS, JavaScript, fields/data และไฟล์ประกอบ ภาพหน้าจอหรือ URL โอเวอร์เลย์ของ StreamElements ไม่เพียงพอ","Use the downloaded HTML file, then refresh the OBS Browser Source. The importer page, original ZIP, and StreamElements URL cannot be used as the Browser Source.":"ใช้ไฟล์ HTML ที่ดาวน์โหลด ไม่ใช่หน้าตัวนำเข้า ZIP ต้นฉบับ หรือ URL ของ StreamElements แล้วรีเฟรชแหล่งเบราว์เซอร์ของ OBS","Use the full StreamElements / Streamlabs conversion prompt":"ใช้พรอมต์แปลง StreamElements / Streamlabs ฉบับเต็ม","Video Tutorial":"วิดีโอสอน","Windows 3.1 Theme":"ธีม Windows 3.1","X.com":"X.com","YouTube Compatible":"รองรับ YouTube","YouTube-CSS Compatible Templates":"เทมเพลตที่รองรับ CSS ของ YouTube","YouTube-CSS Template":"เทมเพลต CSS ของ YouTube","alert effect rules":"กฎเอฟเฟกต์การแจ้งเตือน","and":"และ","before writing a new overlay.":"ก่อนเขียนโอเวอร์เลย์ใหม่","checks the design with sample messages.":"ตรวจสอบดีไซน์ด้วยข้อความตัวอย่าง","checks the session using real chat from the running SSN app or extension.":"ตรวจสอบเซสชันด้วยแชตจริงจากแอปหรือส่วนขยาย SSN ที่กำลังทำงาน","complete visual overlay gallery":"แกลเลอรีภาพโอเวอร์เลย์ทั้งหมด","featured-modern.html":"featured-modern.html","for colors, spacing, and typography. Keep the original SSN URL and connection.":"สำหรับสี ระยะห่าง และรูปแบบตัวอักษร คง URL และการเชื่อมต่อ SSN เดิมไว้","for consolidated chat,":"สำหรับแชตรวม","for events. Download the source and required assets from":"สำหรับเหตุการณ์ ดาวน์โหลดซอร์สและไฟล์ประกอบที่จำเป็นจาก","for finding widget files, supported formats, OBS setup and troubleshooting.":"สำหรับการค้นหาไฟล์วิดเจ็ต รูปแบบที่รองรับ การตั้งค่า OBS และการแก้ปัญหา","for selected messages, or":"สำหรับข้อความที่เลือก หรือ","in the app or extension. You enter the session ID once in the importer; it is saved inside the downloaded file.":"ในแอปหรือส่วนขยาย คุณกรอก ID เซสชันเพียงครั้งเดียวในตัวนำเข้า โดยจะบันทึกไว้ภายในไฟล์ที่ดาวน์โหลด","in the template URL with your actual Social Stream Ninja session ID found under Session Options in the SSN app or extension. Include the optional password if your session uses one.":"ใน URL เทมเพลตด้วย ID เซสชัน Social Stream Ninja จริงของคุณ ซึ่งอยู่ใต้ Session Options ในแอปหรือส่วนขยาย SSN ใส่รหัสผ่านด้วยหากเซสชันของคุณใช้รหัสผ่าน","multi-alerts.html":"multi-alerts.html","sampleoverlay.html":"sampleoverlay.html","t3nk3y's Theme":"ธีมของ t3nk3y","the beta repository":"ที่เก็บ beta","the dock":"แผงด็อก","to turn off timed removal or change how many messages stay on screen. This changes widget settings, not its code.":"เพื่อปิดการลบตามเวลาหรือเปลี่ยนจำนวนข้อความที่คงอยู่บนหน้าจอ การดำเนินการนี้เปลี่ยนการตั้งค่าวิดเจ็ต ไม่ได้แก้โค้ด","to your template URL":"ต่อท้าย URL เทมเพลตของคุณ","with contributions from the community.":"ร่วมพัฒนาโดยชุมชน","{0} templates shown":"แสดงเทมเพลต {0} รายการ","✨ Copy AI Prompts":"✨ คัดลอกพรอมต์ AI","✨ Copy a prompt for your AI":"✨ คัดลอกพรอมต์สำหรับ AI ของคุณ","⭐ Featured message":"⭐ ข้อความเด่น","🌙 Moon Bunny":"🌙 กระต่ายดวงจันทร์","🍄 Moss & Mushrooms":"🍄 มอสและเห็ด","🎃 Pumpkin Haunt":"🎃 ฟักทองหลอน","🎄 Merry Little Reindeer":"🎄 เรนเดียร์น้อยร่าเริง","🎉 Alerts with sound":"🎉 การแจ้งเตือนพร้อมเสียง","🎉 Event alerts":"🎉 การแจ้งเตือนเหตุการณ์","🎨 CSS-only makeover":"🎨 ปรับโฉมด้วย CSS เท่านั้น","🎨 Change the look":"🎨 เปลี่ยนรูปลักษณ์","🎨 Matching packs":"🎨 ชุดที่เข้ากัน","🎨 Matching theme packs":"🎨 ชุดธีมที่เข้ากัน","🎵 Midnight Mixtape":"🎵 มิกซ์เทปเที่ยงคืน","🐉 Crystal Guardian":"🐉 ผู้พิทักษ์คริสตัล","🐱 Strawberry Cat":"🐱 แมวสตรอว์เบอร์รี","🐶 Good Company":"🐶 เพื่อนแสนดี","💬 Consolidated chat":"💬 แชตรวม","📋 Copy prompt":"📋 คัดลอกพรอมต์","📦 Bring a widget":"📦 นำวิดเจ็ตมาใช้","🔎 Find a template or theme pack":"🔎 ค้นหาเทมเพลตหรือชุดธีม","🔧 Files, routing, and testing":"🔧 ไฟล์ การส่งต่อข้อมูล และการทดสอบ","🚀 Setup":"🚀 การตั้งค่า","🛠️ Make Your Own":"🛠️ สร้างด้วยตัวเอง","🛠️ Make your own template":"🛠️ สร้างเทมเพลตของคุณเอง","🧩 Change behavior":"🧩 เปลี่ยนพฤติกรรม","🧭 Choose your overlay type":"🧭 เลือกประเภทโอเวอร์เลย์"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/templates.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/templates.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/templates.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/templates.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/templates.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/templates.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/templates.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/templates.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/templates.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/templates.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/templates.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/templates.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/templates.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/templates.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/templates.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/templates.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/templates.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/templates.html">
+<!-- ssn-languages:end --></head>
+<body>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก"><a href="../index.html">หน้าแรก</a><a href="features.html">ฟีเจอร์</a><a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a><a href="download.html">ดาวน์โหลด</a><a href="guides.html">คู่มือ</a><a href="commands.html">คำสั่งและ API</a><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a><a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a><a href="services.html" class="site-priority-hire">จ้างงาน</a><a href="support.html">การสนับสนุน</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/templates.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/templates.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/templates.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/templates.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/templates.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/templates.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/templates.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/templates.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/templates.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/templates.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/templates.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/templates.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/templates.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/templates.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/templates.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/templates.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="templates.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="เปลี่ยนธีม"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>แกลเลอรีเทมเพลต</h1>
+            <p>เรียกดู <a href="overlay-gallery.html">แกลเลอรีภาพโอเวอร์เลย์ทั้งหมด</a>หรือสำรวจเทมเพลตแบบกำหนดเองและการนำเข้าด้านล่าง</p>
+        </div>
+    </section>
+
+    <section class="template-banner">
+        <div class="container">
+            <h2>เลือกรูปลักษณ์สำหรับสตรีมของคุณ</h2>
+            <p>ดูตัวอย่างโอเวอร์เลย์แชต ข้อความเด่น และการแจ้งเตือน แล้วเพิ่มแบบที่ชอบใน OBS หรือ Streamlabs</p>
+            <div class="hero-buttons">
+                <a href="overlay-gallery.html" class="btn btn-primary">ดูแกลเลอรีโอเวอร์เลย์</a>
+                <a href="#how-to-use" class="btn btn-secondary">🚀 การตั้งค่า</a>
+                <a href="#make-your-own" class="btn btn-secondary">🛠️ สร้างด้วยตัวเอง</a>
+                <a href="#ai-prompts" class="btn btn-secondary">✨ คัดลอกพรอมต์ AI</a>
+                <a href="../../streamelements-importer.html" class="btn btn-secondary">นำเข้าวิดเจ็ต StreamElements</a>
+                <a href="streamelements-chat-guide.html" class="btn btn-secondary">คู่มือตั้งค่า StreamElements</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="template-details" aria-labelledby="choose-overlay">
+        <div class="container">
+            <h2 id="choose-overlay">🧭 เลือกประเภทโอเวอร์เลย์</h2>
+            <div class="template-features">
+                <div class="template-feature"><h3>💬 แชตรวม</h3><p>ฟีดต่อเนื่องจากแพลตฟอร์มที่เชื่อมต่อ เริ่มด้วยเทมเพลตแชตหรือ <a href="../../dock.html">แผงด็อก</a>.</p></div>
+                <div class="template-feature"><h3>⭐ ข้อความเด่น</h3><p>ข้อความหนึ่งข้อความที่คุณเลือกในแผงด็อก เลือกดีไซน์ข้อความเด่นสำหรับการสัมภาษณ์ ถามตอบ หรือกล่าวทักทาย</p></div>
+                <div class="template-feature"><h3>🎉 การแจ้งเตือนเหตุการณ์</h3><p>ฉลองการติดตาม การเป็นสมาชิก และการบริจาค ตั้งค่าภาพเคลื่อนไหวและเสียงในการตั้งค่าการแจ้งเตือนของ SSN <a href="alert-effects.html">คู่มือการแจ้งเตือน</a></p></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="template-library" class="template-library">
+        <div class="container">
+            <h2>คลังเทมเพลต</h2>
+            <p class="section-subtitle">ค้นหาเทมเพลตที่เหมาะกับสตรีมของคุณ</p>
+            
+            <div class="template-search">
+                <label for="template-search-input">🔎 ค้นหาเทมเพลตหรือชุดธีม</label>
+                <input type="search" id="template-search-input" placeholder="ค้นหาเทมเพลตตามชื่อ ประเภท หรือคุณสมบัติ...">
+            </div>
+            
+            <p id="template-results" role="status"></p>
+            <div class="tag-filters" aria-label="กรองเทมเพลต">
+                <button type="button" class="filter-tag" data-filter="matching" aria-pressed="false">🎨 ชุดที่เข้ากัน</button>
+                <button type="button" class="filter-tag active" data-filter="all" aria-pressed="true">เทมเพลตทั้งหมด</button>
+                <button type="button" class="filter-tag" data-filter="gaming" aria-pressed="false">เกม</button>
+                <button type="button" class="filter-tag" data-filter="minimal" aria-pressed="false">น้อยมาก</button>
+                <button type="button" class="filter-tag" data-filter="animated" aria-pressed="false">มีภาพเคลื่อนไหว</button>
+                <button type="button" class="filter-tag" data-filter="retro" aria-pressed="false">ย้อนยุค</button>
+                <button type="button" class="filter-tag" data-filter="modern" aria-pressed="false">ทันสมัย</button>
+                <button type="button" class="filter-tag" data-filter="youtube-compatible" aria-pressed="false">รองรับ YouTube</button>
+            </div>
+            
+<div id="matching-packs" class="template-category"><div class="category-header"><h3>🎨 ชุดธีมที่เข้ากัน</h3></div><p>รูปลักษณ์เดียวกันสำหรับแหล่งเบราว์เซอร์สามรายการ ในแกลเลอรี ให้เลือก <strong>ใช้ชุดเข้าคู่</strong>กรอกรายละเอียดเซสชันของคุณ แล้วคัดลอกลิงก์สำหรับ OBS การเคลื่อนไหวเป็นตัวเลือก</p><div class="templates-main-grid"><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute cat cats kitten">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-cat.webp" loading="lazy" width="640" height="360" alt="แมวสามสีง่วงนอน นมสตรอว์เบอร์รี และเครื่องเขียนสีชมพูอ่อน"></div>
+ <div class="template-content"><h3>🐱 แมวสตรอว์เบอร์รี</h3><p class="template-description">แมวสามสีง่วงนอน นมสตรอว์เบอร์รี และเครื่องเขียนสีชมพูอ่อน มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน</p><a class="btn btn-primary" href="overlay-gallery.html#pack-cat">ดูตัวอย่างและใช้ชุด</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute dog dogs corgi puppy">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-dog.webp" loading="lazy" width="640" height="360" alt="คอร์กี้ร่าเริงบนโปสการ์ดสีฟ้า"></div>
+ <div class="template-content"><h3>🐶 เพื่อนแสนดี</h3><p class="template-description">คอร์กี้ร่าเริงบนโปสการ์ดสีฟ้าท้องฟ้า มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน</p><a class="btn btn-primary" href="overlay-gallery.html#pack-dog">ดูตัวอย่างและใช้ชุด</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute forest">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-forest.webp" loading="lazy" width="640" height="360" alt="กบนิทานในป่าสงบ"></div>
+ <div class="template-content"><h3>🍄 มอสและเห็ด</h3><p class="template-description">กบจากหนังสือนิทานในป่าอันสงบ มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน</p><a class="btn btn-primary" href="overlay-gallery.html#pack-forest">ดูตัวอย่างและใช้ชุด</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute space">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-space.webp" loading="lazy" width="640" height="360" alt="กระต่ายนักบินอวกาศลอยผ่านละอองดาวสีม่วงอ่อน"></div>
+ <div class="template-content"><h3>🌙 กระต่ายดวงจันทร์</h3><p class="template-description">กระต่ายนักบินอวกาศลอยผ่านละอองดาวสีไลแลค มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน</p><a class="btn btn-primary" href="overlay-gallery.html#pack-space">ดูตัวอย่างและใช้ชุด</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute dragon">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-dragon.webp" loading="lazy" width="640" height="360" alt="มังกรจิ๋วกับคริสตัลวิเศษเรืองแสง"></div>
+ <div class="template-content"><h3>🐉 ผู้พิทักษ์คริสตัล</h3><p class="template-description">มังกรตัวน้อยกับคริสตัลเวทมนตร์เรืองแสง มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน</p><a class="btn btn-primary" href="overlay-gallery.html#pack-dragon">ดูตัวอย่างและใช้ชุด</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute music">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-music.webp" loading="lazy" width="640" height="360" alt="แร็กคูนสวมหูฟังและแผ่นเสียงในสีมิ้นต์กับพลัม"></div>
+ <div class="template-content"><h3>🎵 มิกซ์เทปเที่ยงคืน</h3><p class="template-description">แร็กคูนสวมหูฟังกับแผ่นเสียงในโทนมินต์และพลัม มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน</p><a class="btn btn-primary" href="overlay-gallery.html#pack-music">ดูตัวอย่างและใช้ชุด</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute halloween">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-halloween.webp" loading="lazy" width="640" height="360" alt="ผีเป็นมิตร ฟักทองเรืองแสง และสีพลัมยามเที่ยงคืน"></div>
+ <div class="template-content"><h3>🎃 ฟักทองหลอน</h3><p class="template-description">ผีน้อยเป็นมิตร ฟักทองเรืองแสง และสีพลัมยามเที่ยงคืน มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน</p><a class="btn btn-primary" href="overlay-gallery.html#pack-halloween">ดูตัวอย่างและใช้ชุด</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute christmas">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-christmas.webp" loading="lazy" width="640" height="360" alt="เรนเดียร์พันผ้าพันคอและต้นไม้เขียวเทศกาล"></div>
+ <div class="template-content"><h3>🎄 เรนเดียร์น้อยร่าเริง</h3><p class="template-description">กวางเรนเดียร์พันผ้าพันคอกับต้นไม้เขียวในบรรยากาศเทศกาล มีรูปแบบแชต ข้อความเด่น และการแจ้งเตือนที่เข้าชุดกัน</p><a class="btn btn-primary" href="overlay-gallery.html#pack-christmas">ดูตัวอย่างและใช้ชุด</a></div></article></div></div>
+            <div id="themed-packages" class="template-category">
+                <div class="category-header">
+                    <h3>แพ็กเกจธีม</h3>
+                </div>
+                <p>แพ็กเกจธีมครบชุดพร้อมเอกสาร ภาพตัวอย่าง และคู่มือ</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="gaming animated modern">
+                        <div class="template-badge badge-featured">ข้อความเด่น</div>
+                        <div class="template-preview">
+                            <img src="../../media/deuks.png" alt="ธีมของ Deuk">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">แพ็กเกจครบชุด</span>
+                            <h3>ธีมของ Deuk</h3>
+                            <p class="template-description">ธีมประณีตที่มีภาพเคลื่อนไหวครบชุด ปรับสีได้และเปลี่ยนฉากอย่างนุ่มนวล เหมาะสำหรับสตรีมเกม</p>
+                            <div class="template-footer">
+                                <div class="template-author">โดย Deuk</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/tree/main/themes/deuks_overlay" class="btn btn-primary">รับ</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="retro">
+                        <div class="template-badge badge-new">ใหม่</div>
+                        <div class="template-preview">
+                            <img src="../../media/windows.png" alt="ธีม Windows 3.1">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">สไตล์ย้อนยุค</span>
+                            <h3>ธีม Windows 3.1</h3>
+                            <p class="template-description">โอเวอร์เลย์แชตสไตล์ Windows 3.1 ชวนย้อนวันวาน พร้อมดีไซน์หน้าต่างคลาสสิกและรายละเอียดพิกเซลที่ประณีต</p>
+                            <div class="template-footer">
+                                <div class="template-author">โดย RetroTech</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/tree/main/themes/Windows3.1" class="btn btn-primary">รับ</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="modern animated">
+                        <div class="template-preview">
+                            <img src="../../media/neutron.png" alt="ธีม Neutron">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">ดีไซน์ทันสมัย</span>
+                            <h3>ธีม Neutron</h3>
+                            <p class="template-description">ดีไซน์สะอาดทันสมัย พร้อมภาพเคลื่อนไหวที่นุ่มนวลและอ่านง่าย ปรับชุดสีได้</p>
+                            <div class="template-footer">
+                                <div class="template-author">โดย NeutronStudio</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/Neutron/" class="btn btn-primary">รับ</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>เทมเพลตเรียบง่ายพร้อมใช้</h3>
+                </div>
+                <p>เทมเพลตพร้อมใช้งานที่ต้องการเพียง ID เซสชันของคุณ</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-badge badge-popular">ยอดนิยม</div>
+                        <div class="template-preview">
+                            <img src="../../media/simple.png" alt="เทมเพลตตัวอย่าง">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">น้อยมาก</span>
+                            <h3>เทมเพลตตัวอย่าง</h3>
+                            <p class="template-description">เทมเพลตเรียบง่ายและเบาพร้อมคุณสมบัติที่จำเป็น เหมาะสำหรับเริ่มปรับแต่ง</p>
+                            <div class="template-footer">
+                                <div class="template-author">โดย Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/sampleoverlay.html?session=YOURSESSIONIDHERE" class="btn btn-primary">ใช้</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="animated modern">
+                        <div class="template-preview">
+                            <img src="../../media/prettyoverlay.png" alt="เทมเพลตสวยงาม">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">มีภาพเคลื่อนไหว</span>
+                            <h3>เทมเพลตสวยงาม</h3>
+                            <p class="template-description">ดีไซน์หรูหราพร้อมภาพเคลื่อนไหวที่นุ่มนวลและเอฟเฟกต์ภาพ สะดุดตาแต่ไม่รบกวน</p>
+                            <div class="template-footer">
+                                <div class="template-author">โดย Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONIDHERE" class="btn btn-primary">ใช้</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="gaming">
+                        <div class="template-preview">
+                            <img src="../../media/t3nk3y.png" alt="ธีมของ t3nk3y">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">เกม</span>
+                            <h3>ธีมของ t3nk3y</h3>
+                            <p class="template-description">ธีมเด่นชัดและคอนทราสต์สูงสำหรับสตรีมเกม มองเห็นได้ดีแม้เนื้อหาเคลื่อนไหวรวดเร็ว</p>
+                            <div class="template-footer">
+                                <div class="template-author">โดย t3nk3y</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/t3nk3y/?session=YOURSESSIONIDHERE" class="btn btn-primary">ใช้</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="template-card" data-tags="liquid-glass">
+                        <div class="template-preview">
+                            <img src="../../media/luckyloottube.png" alt="ธีม Liquid Glass ของ LuckyLootTube">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">กระจกเหลว</span>
+                            <h3>ธีมของ LuckyLootTube</h3>
+                            <p class="template-description">โอเวอร์เลย์แชตสไตล์กระจกเหลวที่ดูโฉบเฉี่ยว พร้อมภาพเคลื่อนไหวนุ่มนวลและการแสดงอีโมตที่สวยงาม</p>
+                            <div class="template-footer">
+                                <div class="template-author">โดย LuckyLootTube</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/LuckyLootTube/luckyloottube.html?session=YOURSESSIONIDHERE&amp;v=3.40.2" class="btn btn-primary" target="_blank" rel="noopener noreferrer">ใช้</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>เทมเพลตที่รองรับ CSS ของ YouTube</h3>
+                </div>
+                <p>เทมเพลตที่ใช้กับสไตล์ CSS ของ YouTube ได้</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="youtube-compatible">
+                        <div class="template-preview">
+                            <img src="../../media/septapus.png" alt="เทมเพลต CSS ของ YouTube">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">รองรับ YouTube</span>
+                            <h3>เทมเพลต CSS ของ YouTube</h3>
+                            <p class="template-description">ใช้ CSS ที่ออกแบบสำหรับ YouTube กับหน้าโอเวอร์เลย์ที่มีโครงสร้างแบบ YouTube ของเรา รองรับสไตล์ Septapus</p>
+                            <div class="template-footer">
+                                <div class="template-author">โดย Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/septapus" class="btn btn-primary">การตั้งค่า</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>เทมเพลตสำหรับนักพัฒนา</h3>
+                </div>
+                <p>จุดเริ่มต้นสำหรับสร้างโอเวอร์เลย์แบบกำหนดเองของคุณ</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-preview">
+                            <img  alt="เทมเพลตเปล่า">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">นักพัฒนา</span>
+                            <h3>เทมเพลตเปล่า</h3>
+                            <p class="template-description">โค้ดขั้นต่ำที่จำเป็นสำหรับสร้างโอเวอร์เลย์ของคุณตั้งแต่ต้น เหมาะสำหรับนักพัฒนาและการเขียนโค้ดด้วยความช่วยเหลือจาก LLM</p>
+                            <div class="template-footer">
+                                <div class="template-author">โดย Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/blob/main/baretempate.html" target="_blank" class="btn btn-primary">ซอร์สโค้ด</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-preview">
+                            <img src="../../media/simple.png" alt="โอเวอร์เลย์ตัวอย่าง">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">นักพัฒนา</span>
+                            <h3>เทมเพลตโอเวอร์เลย์ตัวอย่าง</h3>
+                            <p class="template-description">ต้นแบบที่ครบถ้วนยิ่งขึ้น พร้อมความคิดเห็นในโค้ดและเอกสารเพื่อช่วยคุณสร้างโอเวอร์เลย์ของตนเอง</p>
+                            <div class="template-footer">
+                                <div class="template-author">โดย Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/blob/main/sampleoverlay.html" class="btn btn-primary">ซอร์สโค้ด</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="submit-template">
+                <h3>มีเทมเพลตอยากแบ่งปันหรือไม่?</h3>
+                <p>สร้างเทมเพลตเจ๋ง ๆ สำหรับ Social Stream Ninja แล้วใช่ไหม? แบ่งปันกับชุมชนโดยส่ง pull request มายังที่เก็บ GitHub ของเรา</p>
+                <a href="https://github.com/steveseguin/social_stream" target="_blank" class="btn btn-primary">ส่งบน GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="streamelements-importer-guide" class="how-to-use">
+        <div class="container">
+            <h2>ใช้วิดเจ็ตแชต StreamElements กับ Social Stream Ninja</h2>
+            <p>เพิ่งเริ่มนำเข้าใช่ไหม? <a href="streamelements-chat-guide.html">อ่านคู่มือสกินแชตฉบับเต็ม</a> สำหรับการค้นหาไฟล์วิดเจ็ต รูปแบบที่รองรับ การตั้งค่า OBS และการแก้ปัญหา</p>
+            <p class="section-subtitle">ใช้ได้ทั้งแอปเดสก์ท็อป SSN สำหรับ Windows และส่วนขยาย Chrome โดยไม่ต้องแก้ไขโค้ด</p>
+
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>ตรวจสอบว่า SSN รับแชตอยู่</h4>
+                        <p>เปิดแหล่งข้อมูลแพลตฟอร์มของคุณในแอปหรือส่วนขยาย SSN แล้วส่งข้อความทดสอบ ดำเนินการต่อเมื่อข้อความปรากฏในแผงด็อก SSN แล้วเท่านั้น</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>รับไฟล์ส่งออกวิดเจ็ตต้นฉบับ</h4>
+                        <p>ใช้ ZIP โฟลเดอร์ หรือไฟล์ที่ผู้ออกแบบวิดเจ็ตให้มา ไฟล์ส่งออกที่ใช้งานได้มักประกอบด้วย HTML, CSS, JavaScript, fields/data และไฟล์ประกอบ ภาพหน้าจอหรือ URL โอเวอร์เลย์ของ StreamElements ไม่เพียงพอ</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>เปิดตัวนำเข้า</h4>
+                        <p>เปิดตัวนำเข้าแล้วเลือก ZIP โฟลเดอร์ หรือไฟล์ ตัวนำเข้าจะตรวจพบส่วนต่าง ๆ ของวิดเจ็ตและแสดงตัวอย่างสาธิตทันที</p>
+                        <a href="../../streamelements-importer.html" class="btn btn-primary">เปิดตัวนำเข้าวิดเจ็ต</a>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>เพิ่ม ID เซสชัน SSN ของคุณ</h4>
+						<p>การเปิดตัวนำเข้าจากป๊อปอัป SSN จะกรอก ID เซสชันและรหัสผ่านให้โดยอัตโนมัติ หากคุณเปิดโดยตรง ให้คัดลอกจาก <strong>ตัวเลือกเซสชัน</strong> ในแอปหรือส่วนขยาย คุณกรอก ID เซสชันเพียงครั้งเดียวในตัวนำเข้า โดยจะบันทึกไว้ภายในไฟล์ที่ดาวน์โหลด</p>
+                    </div>
+                </div>
+
+				<div class="step-card">
+					<div class="step-number"></div>
+					<div class="step-content">
+						<h4>เลือกประวัติข้อความ</h4>
+						<p>หากวิดเจ็ตที่นำเข้ามีการตั้งค่าที่รองรับ ให้ใช้ <strong>ประวัติข้อความ (Message history)</strong> เพื่อปิดการลบตามเวลาหรือเปลี่ยนจำนวนข้อความที่คงอยู่บนหน้าจอ การดำเนินการนี้เปลี่ยนการตั้งค่าวิดเจ็ต ไม่ได้แก้โค้ด</p>
+					</div>
+				</div>
+
+				<div class="step-card">
+					<div class="step-number"></div>
+					<div class="step-content">
+						<h4>ทดสอบก่อนดาวน์โหลด</h4>
+                        <p><strong>ตัวอย่างสาธิต (Demo Preview)</strong> ตรวจสอบดีไซน์ด้วยข้อความตัวอย่าง <strong>ตัวอย่างสด (Live Preview)</strong> ตรวจสอบเซสชันด้วยแชตจริงจากแอปหรือส่วนขยาย SSN ที่กำลังทำงาน</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>ดาวน์โหลดและเพิ่มใน OBS</h4>
+						<p>คลิก <strong>ดาวน์โหลด HTML สำหรับ OBS (Download OBS HTML)</strong>ใน OBS ให้เพิ่มแหล่งเบราว์เซอร์ (Browser Source) แล้วเปิด <strong>ไฟล์ในเครื่อง (Local file)</strong>แล้วเลือกไฟล์ HTML ที่ดาวน์โหลดไว้ <strong>อย่าเพิ่ม ID เซสชันหรือแก้ไข URL ใน OBS</strong> เปิด SSN ไว้ระหว่างสตรีม คุณสามารถปิดตัวนำเข้าและ StreamElements ได้</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="template-features" style="margin-top: 2rem;">
+                <div class="template-feature">
+                    <h4>โหมดสาธิตว่างเปล่า</h4>
+                    <p>ตรวจสอบไฟล์ที่ตรวจพบในตัวนำเข้า และใช้การเลือกไฟล์ขั้นสูง (Advanced file selection) หากเลือก HTML, CSS หรือ JavaScript ผิด</p>
+                </div>
+                <div class="template-feature">
+                    <h4>ตัวอย่างสด (Live Preview) ว่างเปล่า</h4>
+                    <p>ตรวจสอบว่าแชตมาถึงแผงด็อก SSN และ ID เซสชันกับรหัสผ่านถ้ามีตรงกันทุกตัวอักษร</p>
+                </div>
+                <div class="template-feature">
+                    <h4>OBS ว่างเปล่า</h4>
+                    <p>ใช้ไฟล์ HTML ที่ดาวน์โหลด ไม่ใช่หน้าตัวนำเข้า ZIP ต้นฉบับ หรือ URL ของ StreamElements แล้วรีเฟรชแหล่งเบราว์เซอร์ของ OBS</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-to-use" class="how-to-use">
+        <div class="container">
+            <h2>วิธีใช้เทมเพลต</h2>
+            <p class="section-subtitle">ทำตามขั้นตอนง่าย ๆ เหล่านี้เพื่อเริ่มต้น</p>
+            
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>เลือกเทมเพลตของคุณ</h4>
+                        <p>เรียกดูคลังเทมเพลตและเลือกแบบที่เหมาะกับสไตล์สตรีมของคุณ ใช้แกลเลอรีภาพหน้าจอเปรียบเทียบดีไซน์ เทมเพลตในตัวส่วนใหญ่ใช้งานได้โดยตรงผ่าน URL โดยไม่ต้องดาวน์โหลด</p>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>เพิ่ม ID เซสชันของคุณ</h4>
+                        <p>แทนที่ <code>YOURSESSIONID</code> ใน URL เทมเพลตด้วย ID เซสชัน Social Stream Ninja จริงของคุณ ซึ่งอยู่ใต้ Session Options ในแอปหรือส่วนขยาย SSN ใส่รหัสผ่านด้วยหากเซสชันของคุณใช้รหัสผ่าน</p>
+                        <div class="code-block">
+                            <code>https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID</code>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>เพิ่มใน OBS/Streamlabs</h4>
+                        <p>เพิ่ม URL ที่แก้ไขแล้วเป็นแหล่งเบราว์เซอร์ในซอฟต์แวร์สตรีมของคุณ:</p>
+                        <ol>
+                            <li>ใน OBS คลิก + ใต้ Sources แล้วเลือก "Browser"</li>
+                            <li>ตั้งชื่อแหล่งข้อมูลแล้วคลิก OK</li>
+                            <li>วาง URL เทมเพลตของคุณพร้อม ID เซสชัน</li>
+                            <li>ตั้งความกว้างและความสูง (แนะนำ: 1920×1080)</li>
+                            <li>คลิก OK เพื่อเพิ่มลงในฉาก</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>ปรับแต่งเทมเพลตของคุณ</h4>
+                        <p>ปรับโอเวอร์เลย์ให้เป็นสไตล์ของคุณด้วย CSS แบบกำหนดเองด้วยวิธีใดวิธีหนึ่งต่อไปนี้:</p>
+                        <ul>
+                            <li><strong>CSS แบบกำหนดเองใน OBS:</strong> เพิ่ม CSS ของคุณในคุณสมบัติแหล่งเบราว์เซอร์</li>
+                            <li><strong>พารามิเตอร์ URL:</strong> ต่อท้าย <code>&css=URL_TO_YOUR_CSS_FILE</code> ต่อท้าย URL เทมเพลตของคุณ</li>
+                            <li><strong>CSS แบบ Base64:</strong> สำหรับ CSS แบบอินไลน์ ให้ใช้ <code>&b64css=YOUR_BASE64_ENCODED_CSS</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="make-your-own" class="how-to-use"><div class="container">
+<h2>🛠️ สร้างเทมเพลตของคุณเอง</h2><p>เริ่มด้วยโอเวอร์เลย์ที่ใช้งานได้ แล้วปรับรูปลักษณ์</p>
+<div class="template-features">
+<div class="template-feature"><h3>🎨 เปลี่ยนรูปลักษณ์</h3><p>ใช้แหล่งเบราว์เซอร์ของ OBS <strong>CSS แบบกำหนดเอง</strong> สำหรับสี ระยะห่าง และรูปแบบตัวอักษร คง URL และการเชื่อมต่อ SSN เดิมไว้</p></div>
+<div class="template-feature"><h3>📦 นำวิดเจ็ตมาใช้</h3><p>มีไฟล์ส่งออกวิดเจ็ตแชตจาก StreamElements หรือไม่? <a href="../../streamelements-importer.html">เปิดตัวแปลง StreamElements</a>ดูตัวอย่าง แล้วดาวน์โหลด HTML สำหรับ OBS ใช้ ZIP หรือไฟล์ต้นฉบับ ไม่ใช่ภาพหน้าจอหรือ URL ของโอเวอร์เลย์ <a href="#streamelements-importer-guide">ดูการตั้งค่าด้านล่าง</a>.</p></div>
+<div class="template-feature"><h3>🧩 เปลี่ยนพฤติกรรม</h3><p>คัดลอกต้นแบบที่ใช้งานได้ แล้วแก้ไข HTML, CSS และ JavaScript <a href="overlay-template-quick-start.html">เริ่มต้นอย่างรวดเร็ว</a> · <a href="https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md">คู่มือนักพัฒนา</a> · <a href="event-reference.html">ฟิลด์เหตุการณ์</a></p></div>
+</div>
+<details class="template-instructions"><summary>🔧 ไฟล์ การส่งต่อข้อมูล และการทดสอบ</summary><ol>
+<li>ใช้ <a href="../../sampleoverlay.html">sampleoverlay.html</a> สำหรับแชตรวม <a href="../../themes/featured-styles/featured-modern.html">featured-modern.html</a> สำหรับข้อความที่เลือก หรือ <a href="../../multi-alerts.html">multi-alerts.html</a> สำหรับเหตุการณ์ ดาวน์โหลดซอร์สและไฟล์ประกอบที่จำเป็นจาก <a href="https://github.com/steveseguin/social_stream/tree/beta">ที่เก็บ beta</a>.</li>
+<li>คงโค้ดการเชื่อมต่อเดิมไว้ โอเวอร์เลย์แชตกับโอเวอร์เลย์ข้อความเด่นรับฟีดต่างกัน การปรับสไตล์ฟีดแชตไม่ได้ทำให้เป็นโอเวอร์เลย์สำหรับข้อความที่เลือก</li>
+<li>เก็บสคริปต์ที่ใช้ร่วมกัน ฟอนต์ และรูปภาพที่อ้างอิงไว้คู่กับไฟล์ของคุณตามพาธสัมพัทธ์เดิม หรือขอให้ AI ส่งออกไฟล์ที่รวมทุกอย่างในตัว การเปลี่ยนชื่อไฟล์ HTML หนึ่งไฟล์ไม่ได้รวมส่วนประกอบที่ไฟล์นั้นต้องใช้</li>
+<li>โฮสต์ไฟล์ของคุณและใช้ URL พร้อมเซสชันและรหัสผ่านถ้ามี สำหรับไฟล์ส่งออกภายในเครื่องที่รวมทุกอย่างในตัว ให้ทำตามขั้นตอนตั้งค่าของไฟล์นั้น ตัวเลือก Local file ของ OBS ไม่มีช่อง URL สำหรับพารามิเตอร์เซสชัน</li>
+<li>ดูตัวอย่างด้วยข้อมูลจำลองก่อน แล้วทดสอบด้วยเซสชัน SSN ของคุณ ตรวจสอบข้อความที่เลือก การล้าง ชื่อยาว รูปภาพ และพื้นหลังโปร่งใส เปิด SSN ไว้ระหว่างใช้งานจริง</li>
+</ol><p>สำหรับพฤติกรรมตามทริกเกอร์ ให้เริ่มด้วย <a href="../actions/event-flow-guide.html">ตัวแก้ไข Event Flow</a> และ <a href="alert-effects.html">กฎเอฟเฟกต์การแจ้งเตือน</a> ก่อนเขียนโอเวอร์เลย์ใหม่</p></details>
+</div></section>
+<section id="ai-prompts" class="how-to-use"><div class="container"><h2>✨ คัดลอกพรอมต์สำหรับ AI ของคุณ</h2><p>เลือกต้นแบบ คัดลอกพรอมต์ แล้วแทนที่รายละเอียดการออกแบบในวงเล็บ แนบไฟล์ต้นฉบับหาก AI ของคุณอ่านลิงก์ไม่ได้ อย่าใส่ ID เซสชันและรหัสผ่านส่วนตัวในการสนทนา</p>
+<details class="template-instructions"><summary>💬 แชตรวม</summary><label for="prompt-chat">พรอมต์ที่แก้ไขได้</label><textarea id="prompt-chat" class="template-prompt" rows="10" spellcheck="false">สร้างโอเวอร์เลย์แชตรวม SSN ที่มีสไตล์จาก https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html รับฟีดสดปกติ (ป้ายกำกับ dock) โดยมีรายการข้อความที่จำกัดขนาด ปรับจำนวนได้ และเลือกให้หมดอายุได้ รักษาไอคอนแพลตฟอร์มและการแสดงการบริจาคกับสมาชิก ตรวจสอบซอร์สและเอกสารปัจจุบันของ SSN ด้านล่างก่อน หากเปิดไม่ได้ ให้ขอให้ฉันแนบไฟล์ อย่าคาดเดาวิธีรับส่งข้อมูลหรือสคีมาเหตุการณ์ เอกสารอ้างอิง: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md และ https://socialstream.ninja/beta/docs/event-reference.html รักษาการเชื่อมต่อ ตัวเลือกเซสชัน/รหัสผ่าน ป้ายกำกับและเซิร์ฟเวอร์ การจัดการดูแล/ลบ/ล้างข้อความ และฟิลด์ข้อความที่มีอยู่ของโอเวอร์เลย์ต้นแบบ ใช้ตัวยึด YOUR_SESSION_ID / YOUR_PASSWORD สำหรับข้อมูลรับรองเสมอ ห้ามใช้ข้อมูลรับรองจริง ใช้สคริปต์แบบดั้งเดิมที่เข้ากันได้กับ Chrome 80 และ OBS รักษาการอ้างอิงไฟล์ภายในแบบสัมพัทธ์ และระบุไฟล์ที่ต้องมาพร้อมกับ HTML จัดการ chatname เป็นข้อความธรรมดา โดย textonly ใช้กับ chatmessage เท่านั้น รักษาอีโมต/ตราที่ปลอดภัย ข้อความที่มีเฉพาะภาพ contentimg และการรับส่งเหตุการณ์/เมทาดาทาที่ปะปนกัน โดยไม่แสดงการอัปเดตที่มีเฉพาะเมทาดาทาเป็นแชต อย่าแทรก HTML ที่ยังไม่ผ่านการตรวจสอบหรือสร้างฟิลด์เพย์โหลดระดับบนสุดขึ้นเอง การออกแบบ: [อธิบายสี อารมณ์ รูปแบบตัวอักษร ตำแหน่ง และการเคลื่อนไหว] ขนาดพื้นที่: [ความกว้าง x ความสูง] ให้พื้นหลังโปร่งใส ข้อความอ่านง่ายเมื่อซ้อนทับเกม ชื่อ/ข้อความยาวไม่ล้น และมีรูปแบบสำหรับลดการเคลื่อนไหว ส่งคืนไฟล์ที่แก้ไขฉบับสมบูรณ์ ขั้นตอนตั้งค่าง่าย ๆ และโหมดสาธิตด้วยข้อมูลจำลองที่ไม่เชื่อมต่อกับเซสชันจริง ทดสอบข้อความยาว อีโมจิ ข้อความที่มีเฉพาะภาพ การลบ การล้าง การปรับขนาด และการเชื่อมต่อใหม่</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-chat">📋 คัดลอกพรอมต์</button></details>
+<details class="template-instructions"><summary>⭐ ข้อความเด่น</summary><label for="prompt-featured">พรอมต์ที่แก้ไขได้</label><textarea id="prompt-featured" class="template-prompt" rows="10" spellcheck="false">ปรับแต่ง https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html สำหรับข้อความที่เลือกหนึ่งข้อความ รักษาการส่งข้อมูล featured/overlay เริ่มต้นและพฤติกรรมการล้าง อย่าแสดงทุกข้อความแชตโดยอัตโนมัติ อธิบายวิธีเลือกข้อความจากแผงด็อก SSN ตรวจสอบซอร์สและเอกสารปัจจุบันของ SSN ด้านล่างก่อน หากเปิดไม่ได้ ให้ขอให้ฉันแนบไฟล์ อย่าคาดเดาวิธีรับส่งข้อมูลหรือสคีมาเหตุการณ์ เอกสารอ้างอิง: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md และ https://socialstream.ninja/beta/docs/event-reference.html รักษาการเชื่อมต่อ ตัวเลือกเซสชัน/รหัสผ่าน ป้ายกำกับและเซิร์ฟเวอร์ การจัดการดูแล/ลบ/ล้างข้อความ และฟิลด์ข้อความที่มีอยู่ของโอเวอร์เลย์ต้นแบบ ใช้ตัวยึด YOUR_SESSION_ID / YOUR_PASSWORD สำหรับข้อมูลรับรองเสมอ ห้ามใช้ข้อมูลรับรองจริง ใช้สคริปต์แบบดั้งเดิมที่เข้ากันได้กับ Chrome 80 และ OBS รักษาการอ้างอิงไฟล์ภายในแบบสัมพัทธ์ และระบุไฟล์ที่ต้องมาพร้อมกับ HTML จัดการ chatname เป็นข้อความธรรมดา โดย textonly ใช้กับ chatmessage เท่านั้น รักษาอีโมต/ตราที่ปลอดภัย ข้อความที่มีเฉพาะภาพ contentimg และการรับส่งเหตุการณ์/เมทาดาทาที่ปะปนกัน โดยไม่แสดงการอัปเดตที่มีเฉพาะเมทาดาทาเป็นแชต อย่าแทรก HTML ที่ยังไม่ผ่านการตรวจสอบหรือสร้างฟิลด์เพย์โหลดระดับบนสุดขึ้นเอง การออกแบบ: [อธิบายสี อารมณ์ รูปแบบตัวอักษร ตำแหน่ง และการเคลื่อนไหว] ขนาดพื้นที่: [ความกว้าง x ความสูง] ให้พื้นหลังโปร่งใส ข้อความอ่านง่ายเมื่อซ้อนทับเกม ชื่อ/ข้อความยาวไม่ล้น และมีรูปแบบสำหรับลดการเคลื่อนไหว ส่งคืนไฟล์ที่แก้ไขฉบับสมบูรณ์ ขั้นตอนตั้งค่าง่าย ๆ และโหมดสาธิตด้วยข้อมูลจำลองที่ไม่เชื่อมต่อกับเซสชันจริง ทดสอบข้อความยาว อีโมจิ ข้อความที่มีเฉพาะภาพ การลบ การล้าง การปรับขนาด และการเชื่อมต่อใหม่</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-featured">📋 คัดลอกพรอมต์</button></details>
+<details class="template-instructions"><summary>🎉 การแจ้งเตือนพร้อมเสียง</summary><label for="prompt-alerts">พรอมต์ที่แก้ไขได้</label><textarea id="prompt-alerts" class="template-prompt" rows="10" spellcheck="false">ปรับแต่ง https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html ตรวจสอบส่วนประกอบการแจ้งเตือนที่ใช้ร่วมกันและ https://socialstream.ninja/beta/docs/alert-effects.html ก่อน ใช้ตัวกรองประเภทการแจ้งเตือน คิว คลังเสียง การปิดเสียง/ระดับเสียง และกฎเอฟเฟกต์ที่มีอยู่ ใช้เส้นทางการแปลง currency.js เดิมสำหรับเกณฑ์ USD อย่าเปรียบเทียบสตริงสกุลเงินที่จัดรูปแบบแล้ว รองรับภาพเคลื่อนไหวและเสียงแบบเลือกใช้สำหรับกฎการบริจาค $100 USD โดยเคารพสถานะเปิดใช้งานและความหมายของช่วงค่าที่มีอยู่ ป้องกันการเล่นซ้ำ ใช้เฉพาะเสียงที่ฉันให้หรือมีสิทธิ์ใช้ ตรวจสอบซอร์สและเอกสารปัจจุบันของ SSN ด้านล่างก่อน หากเปิดไม่ได้ ให้ขอให้ฉันแนบไฟล์ อย่าคาดเดาวิธีรับส่งข้อมูลหรือสคีมาเหตุการณ์ เอกสารอ้างอิง: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md และ https://socialstream.ninja/beta/docs/event-reference.html รักษาการเชื่อมต่อ ตัวเลือกเซสชัน/รหัสผ่าน ป้ายกำกับและเซิร์ฟเวอร์ การจัดการดูแล/ลบ/ล้างข้อความ และฟิลด์ข้อความที่มีอยู่ของโอเวอร์เลย์ต้นแบบ ใช้ตัวยึด YOUR_SESSION_ID / YOUR_PASSWORD สำหรับข้อมูลรับรองเสมอ ห้ามใช้ข้อมูลรับรองจริง ใช้สคริปต์แบบดั้งเดิมที่เข้ากันได้กับ Chrome 80 และ OBS รักษาการอ้างอิงไฟล์ภายในแบบสัมพัทธ์ และระบุไฟล์ที่ต้องมาพร้อมกับ HTML จัดการ chatname เป็นข้อความธรรมดา โดย textonly ใช้กับ chatmessage เท่านั้น รักษาอีโมต/ตราที่ปลอดภัย ข้อความที่มีเฉพาะภาพ contentimg และการรับส่งเหตุการณ์/เมทาดาทาที่ปะปนกัน โดยไม่แสดงการอัปเดตที่มีเฉพาะเมทาดาทาเป็นแชต อย่าแทรก HTML ที่ยังไม่ผ่านการตรวจสอบหรือสร้างฟิลด์เพย์โหลดระดับบนสุดขึ้นเอง การออกแบบ: [อธิบายสี อารมณ์ รูปแบบตัวอักษร ตำแหน่ง และการเคลื่อนไหว] ขนาดพื้นที่: [ความกว้าง x ความสูง] ให้พื้นหลังโปร่งใส ข้อความอ่านง่ายเมื่อซ้อนทับเกม ชื่อ/ข้อความยาวไม่ล้น และมีรูปแบบสำหรับลดการเคลื่อนไหว ส่งคืนไฟล์ที่แก้ไขฉบับสมบูรณ์ ขั้นตอนตั้งค่าง่าย ๆ และโหมดสาธิตด้วยข้อมูลจำลองที่ไม่เชื่อมต่อกับเซสชันจริง ทดสอบข้อความยาว อีโมจิ ข้อความที่มีเฉพาะภาพ การลบ การล้าง การปรับขนาด และการเชื่อมต่อใหม่</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-alerts">📋 คัดลอกพรอมต์</button></details>
+<details class="template-instructions"><summary>🎨 ปรับโฉมด้วย CSS เท่านั้น</summary><label for="prompt-css">พรอมต์ที่แก้ไขได้</label><textarea id="prompt-css" class="template-prompt" rows="10" spellcheck="false">ปรับสไตล์โอเวอร์เลย์ SSN ที่ฉันใช้อยู่โดยใช้เฉพาะ CSS ฉันจะให้ URL และซอร์ส HTML/CSS คง JavaScript และการส่งต่อข้อความทั้งหมดไว้เช่นเดิม ตรวจสอบตัวเลือก DOM ที่มีจริงก่อนเขียน CSS ส่งมอบ CSS สำหรับช่อง Custom CSS ของแหล่งเบราว์เซอร์ OBS พร้อมไฟล์ฟอนต์/รูปภาพภายในเครื่องที่จำเป็น ตรวจสอบซอร์สและเอกสารปัจจุบันของ SSN ด้านล่างก่อน หากเปิดไม่ได้ ให้ขอให้ฉันแนบไฟล์ อย่าคาดเดาวิธีรับส่งข้อมูลหรือสคีมาเหตุการณ์ เอกสารอ้างอิง: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md และ https://socialstream.ninja/beta/docs/event-reference.html รักษาการเชื่อมต่อ ตัวเลือกเซสชัน/รหัสผ่าน ป้ายกำกับและเซิร์ฟเวอร์ การจัดการดูแล/ลบ/ล้างข้อความ และฟิลด์ข้อความที่มีอยู่ของโอเวอร์เลย์ต้นแบบ ใช้ตัวยึด YOUR_SESSION_ID / YOUR_PASSWORD สำหรับข้อมูลรับรองเสมอ ห้ามใช้ข้อมูลรับรองจริง ใช้สคริปต์แบบดั้งเดิมที่เข้ากันได้กับ Chrome 80 และ OBS รักษาการอ้างอิงไฟล์ภายในแบบสัมพัทธ์ และระบุไฟล์ที่ต้องมาพร้อมกับ HTML จัดการ chatname เป็นข้อความธรรมดา โดย textonly ใช้กับ chatmessage เท่านั้น รักษาอีโมต/ตราที่ปลอดภัย ข้อความที่มีเฉพาะภาพ contentimg และการรับส่งเหตุการณ์/เมทาดาทาที่ปะปนกัน โดยไม่แสดงการอัปเดตที่มีเฉพาะเมทาดาทาเป็นแชต อย่าแทรก HTML ที่ยังไม่ผ่านการตรวจสอบหรือสร้างฟิลด์เพย์โหลดระดับบนสุดขึ้นเอง การออกแบบ: [อธิบายสี อารมณ์ รูปแบบตัวอักษร ตำแหน่ง และการเคลื่อนไหว] ขนาดพื้นที่: [ความกว้าง x ความสูง] ให้พื้นหลังโปร่งใส ข้อความอ่านง่ายเมื่อซ้อนทับเกม ชื่อ/ข้อความยาวไม่ล้น และมีรูปแบบสำหรับลดการเคลื่อนไหว ส่งคืนไฟล์ที่แก้ไขฉบับสมบูรณ์ ขั้นตอนตั้งค่าง่าย ๆ และโหมดสาธิตด้วยข้อมูลจำลองที่ไม่เชื่อมต่อกับเซสชันจริง ทดสอบข้อความยาว อีโมจิ ข้อความที่มีเฉพาะภาพ การลบ การล้าง การปรับขนาด และการเชื่อมต่อใหม่</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-css">📋 คัดลอกพรอมต์</button></details>
+<p>กำลังแปลงวิดเจ็ตที่ซับซ้อนกว่านี้หรือไม่? <a href="../../streamelements-importer-prompt.md">ใช้พรอมต์แปลง StreamElements / Streamlabs ฉบับเต็ม</a>.</p><p id="prompt-copy-status" role="status" aria-live="polite"></p></div></section>
+    <section class="guide-section alt">
+        <div class="container">
+            <h2>วิดีโอสอน</h2>
+            <p class="section-subtitle">เรียนรู้วิธีสร้างโอเวอร์เลย์แชตแบบกำหนดเองด้วยความช่วยเหลือจาก AI</p>
+            
+            <div style="max-width: 800px; margin: 0 auto; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+                <iframe width="100%" height="100%" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/GDy5ijQPTkU" title="การสร้างโอเวอร์เลย์แชตแบบกำหนดเองสำหรับ Social Stream Ninja" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            
+            <div style="max-width: 800px; margin: 3rem auto 0;">
+                <h3>คู่มือย่อจากวิดีโอ</h3>
+                <ol class="guide-steps">
+                    <li>ค้นหาเทมเพลตโอเวอร์เลย์ตัวอย่าง (sampleoverlay.html)</li>
+                    <li>คัดลอกโค้ดเทมเพลตไปยังคลิปบอร์ด</li>
+                    <li>ใช้ผู้ช่วย AI เช่น Claude ช่วยปรับแต่ง</li>
+                    <li>สั่งให้ AI แก้ไข CSS ตามสไตล์ที่คุณต้องการ</li>
+                    <li>ตั้งค่า OBS ให้ใช้เทมเพลตที่คุณปรับแต่ง</li>
+                    <li>ใช้ CSS ที่กำหนดเองผ่านการตั้งค่าแหล่งเบราว์เซอร์ของ OBS</li>
+                </ol>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CSS Modal (hidden by default) -->
+    <div id="css-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000; overflow: auto;">
+        <div style="background-color: var(--background-card); margin: 10% auto; padding: 20px; width: 80%; max-width: 800px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 id="css-modal-title" style="margin: 0;">ส่วนโค้ด CSS</h2>
+                <button onclick="closeCssModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <pre id="css-modal-content" style="background-color: var(--background-dark); padding: 20px; border-radius: var(--radius-sm); overflow-x: auto; max-height: 60vh;"></pre>
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="copyCss()" class="btn btn-primary">คัดลอกไปยังคลิปบอร์ด</button>
+                <button onclick="closeCssModal()" class="btn btn-secondary">ปิด</button>
+            </div>
+        </div>
+    </div>
+
+        <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>รวมข้อความโซเชียลสดและอีกมากมาย ฟรีและเป็นโอเพนซอร์ส</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+					<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>ลิงก์ด่วน</h3>
+                    <ul>
+                        <li><a href="../index.html">หน้าแรก</a></li>
+                        <li><a href="features.html">ฟีเจอร์</a></li>
+                        <li><a href="download.html">ดาวน์โหลด</a></li>
+                        <li><a href="guides.html">คู่มือ</a></li>
+                        <li><a href="commands.html">คำสั่งและ API</a></li>
+                        <li><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a></li>
+                        <li><a href="templates.html">เทมเพลต</a></li>
+                        <li><a href="support.html">การสนับสนุน</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>แหล่งข้อมูลอ้างอิง</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">คู่มือการติดตั้ง</a></li>
+                        <li><a href="guides.html#extension-customization">คู่มือการปรับแต่ง</a></li>
+                        <li><a href="guides.html#faq">คำถามที่พบบ่อย</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">รายงานปัญหา</a></li>
+                        <li><a href="../privacy.html">นโยบายความเป็นส่วนตัว</a></li>
+                        <li><a href="../TOS.html">ข้อกำหนดการให้บริการ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>ชุมชน</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">เข้าร่วม Discord ของเรา</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">ที่เก็บโค้ด GitHub</a></li>
+                        <li><a href="support.html#contribute">ร่วมพัฒนา</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">บริจาค</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja สัญญาอนุญาต GPLv3.0 สร้างโดย <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> ร่วมพัฒนาโดยชุมชน</p>
+            </div>
+        </div>
+    </footer>
+	<script src="../../docs/js/main.js"></script>
+    <script src="../../docs/js/templates.js"></script>
+    <script>
+        // Current year for copyright
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        
+        function showCssModal(cssType) {
+            const modal = document.getElementById('css-modal');
+            const title = document.getElementById('css-modal-title');
+            const content = document.getElementById('css-modal-content');
+            
+            title.textContent = cssType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) + ' CSS';
+            content.textContent = cssSnippets[cssType] || 'CSS not found';
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeCssModal() {
+            document.getElementById('css-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+		function copyCss() {
+            const content = document.getElementById('css-modal-content').textContent;
+            navigator.clipboard.writeText(content)
+                .then(() => {
+                    alert(window.SSNSiteTranslate ? window.SSNSiteTranslate('CSS copied to clipboard!') : 'CSS copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Could not copy text: ', err);
+                    alert(window.SSNSiteTranslate ? window.SSNSiteTranslate('Failed to copy. Try selecting and copying manually.') : 'Failed to copy. Try selecting and copying manually.');
+                });
+        }
+		
+		
+        
+       document.addEventListener('DOMContentLoaded', () => {
+            // Number the steps
+			document.querySelectorAll('.steps-container').forEach(container => {
+				container.querySelectorAll('.step-number').forEach((el, index) => {
+					el.textContent = (index + 1).toString();
+				});
+            });
+            
+            // Auto-scroll to sections when clicking nav links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        e.preventDefault();
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
+ </script>
+</body>
+</html>

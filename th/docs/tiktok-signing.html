@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/th/docs/tiktok-signing.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/th/docs/tiktok-signing.html">
+    <meta property="og:title" content="การลงลายเซ็น TikTok - Social Stream Ninja">
+    <meta property="og:description" content="เซิร์ฟเวอร์ลงลายเซ็น TikTok คืออะไร ทำไมแอปเดสก์ท็อปจึงแจ้ง Sign server unavailable และวิธีแก้: รอให้พ้นข้อจำกัดอัตราการใช้งาน เพิ่มคีย์ Euler API หรือเปลี่ยนโหมด">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/th/docs/tiktok-signing.html">
+    <meta name="twitter:title" content="การลงลายเซ็น TikTok - Social Stream Ninja">
+    <meta name="twitter:description" content="เซิร์ฟเวอร์ลงลายเซ็น TikTok คืออะไร ทำไมแอปเดสก์ท็อปจึงแจ้ง Sign server unavailable และวิธีแก้: รอให้พ้นข้อจำกัดอัตราการใช้งาน เพิ่มคีย์ Euler API หรือเปลี่ยนโหมด">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>การลงลายเซ็น TikTok - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="เซิร์ฟเวอร์ลงลายเซ็น TikTok คืออะไร ทำไมแอปเดสก์ท็อปจึงแจ้ง Sign server unavailable และวิธีแก้: รอให้พ้นข้อจำกัดอัตราการใช้งาน เพิ่มคีย์ Euler API หรือเปลี่ยนโหมด">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/tiktok-signing.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{"\"Sign Server Unavailable\"":"\"เซิร์ฟเวอร์ลงลายเซ็นไม่พร้อมใช้งาน (Sign Server Unavailable)\"","). Repeatedly deleting and re-adding the source, or rapidly switching modes, burns through the quota and keeps the error going.":") การลบแล้วเพิ่มแหล่งข้อมูลซ้ำ ๆ หรือสลับโหมดอย่างรวดเร็วจะใช้โควตาจนหมดและทำให้ข้อผิดพลาดดำเนินต่อไป",", and":", และ",", called":" ซึ่งเรียกว่า",". No account or API key is needed for normal use. The app uses Euler's free tier automatically.":" การใช้งานปกติไม่ต้องมีบัญชีหรือคีย์ API แอปใช้แพ็กเกจฟรีของ Euler โดยอัตโนมัติ","Add Your Own Euler API Key":"เพิ่มคีย์ Euler API ของคุณเอง","Because this service sits between the app and TikTok, TikTok sources can stop working even when nothing is wrong on your end: the sign server may be down, rate-limited, or temporarily broken by a TikTok-side change.":"เนื่องจากบริการนี้อยู่ระหว่างแอปกับ TikTok แหล่งข้อมูล TikTok อาจหยุดทำงานแม้ฝั่งคุณไม่มีปัญหา เซิร์ฟเวอร์ลงลายเซ็นอาจล่ม ถูกจำกัดอัตราการใช้งาน หรือใช้ไม่ได้ชั่วคราวเพราะ TikTok เปลี่ยนแปลง","Choose":"เลือก","Commands & API":"คำสั่งและ API","Compatibility (WebSocket)":"โหมดความเข้ากันได้ (WebSocket)","Create a free account and key at the":"สร้างบัญชีฟรีและคีย์ได้ที่","Download":"ดาวน์โหลด","Euler Proxy (API Key)":"Euler Proxy (API Key)","Euler Signing (Advanced)":"Euler Signing (Advanced)","Euler Stream":"Euler Stream","Euler Stream dashboard":"แดชบอร์ด Euler Stream","Euler is occasionally down or overloaded. This usually resolves within hours and needs no changes on your side.":"บางครั้ง Euler ล่มหรือรับภาระมากเกินไป โดยทั่วไปจะกลับมาภายในไม่กี่ชั่วโมงและคุณไม่ต้องเปลี่ยนอะไร","Euler's rate limits":"ข้อจำกัดอัตราการใช้งานของ Euler","Features":"ฟีเจอร์","Guides":"คู่มือ","Hire":"จ้างงาน","Home":"หน้าแรก","How It Works":"วิธีการทำงาน","If it has failed repeatedly, stop for an hour so the per-IP rate limit resets, then reconnect once.":"หากล้มเหลวซ้ำ ๆ ให้หยุดหนึ่งชั่วโมงเพื่อให้ข้อจำกัดต่อ IP รีเซ็ต แล้วเชื่อมต่อใหม่ครั้งเดียว","If you hit rate limits often, add your own free Euler API key (below).":"หากติดข้อจำกัดอัตราการใช้งานบ่อย ให้เพิ่มคีย์ Euler API ฟรีของตัวเองตามด้านล่าง","In the desktop app, edit your TikTok source and open the connection preset picker.":"ในแอปเดสก์ท็อป ให้แก้ไขแหล่งข้อมูล TikTok แล้วเปิดตัวเลือกพรีเซ็ตการเชื่อมต่อ","Inspiration":"ไอเดียสร้างสรรค์","Leave the source connected on Auto and let it retry on its own. Avoid re-adding the source over and over.":"ปล่อยแหล่งข้อมูลเชื่อมต่อในโหมด Auto แล้วให้ลองใหม่เอง หลีกเลี่ยงการเพิ่มแหล่งข้อมูลซ้ำแล้วซ้ำอีก","Loads the TikTok live page and captures chat from it. No signing service involved.":"โหลดหน้าถ่ายทอดสด TikTok แล้วเก็บแชตจากหน้านั้น ไม่ใช้บริการลงลายเซ็น","Local Signer":"ตัวลงลายเซ็นในเครื่อง (Local Signer)","Main navigation":"เมนูหลัก","Make sure you are on the latest app version. TikTok fixes ship frequently.":"ตรวจสอบว่าใช้แอปเวอร์ชันล่าสุด เพราะมีการแก้ไข TikTok ออกมาบ่อย","Mode":"โหมด","Modes That Avoid the Sign Server":"โหมดที่ไม่ใช้เซิร์ฟเวอร์ลงลายเซ็น","Needs the live page to stay open; may prompt for TikTok login or verification.":"ต้องเปิดหน้าถ่ายทอดสดไว้ อาจขอให้ลงชื่อเข้าใช้หรือยืนยันตัวตน TikTok","Note that Euler Proxy mode never supports replies, regardless of sign-in state.":"โหมด Euler Proxy ไม่รองรับการตอบกลับ ไม่ว่าจะลงชื่อเข้าใช้หรือไม่","Open navigation menu":"เปิดเมนูนำทาง","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Polling":"Polling","Rate limits.":"ข้อจำกัดอัตราการใช้งาน","Reconnect the source once after saving.":"เชื่อมต่อแหล่งข้อมูลใหม่หนึ่งครั้งหลังบันทึก","Related":"ที่เกี่ยวข้อง","Sending Replies To TikTok":"การส่งคำตอบกลับไปยัง TikTok","Sending chat messages from the dock back to TikTok requires being signed into your TikTok account inside the desktop app. The app needs your TikTok session to post as you. If you are not signed in, or the TikTok connection is down, outgoing messages will only reach your other platforms.":"การส่งข้อความแชตจากแผงด็อกกลับไปยัง TikTok ต้องลงชื่อเข้าใช้บัญชี TikTok ภายในแอปเดสก์ท็อป เพราะแอปต้องใช้เซสชัน TikTok เพื่อโพสต์ในนามคุณ หากยังไม่ลงชื่อเข้าใช้หรือการเชื่อมต่อ TikTok ขัดข้อง ข้อความขาออกจะไปถึงเฉพาะแพลตฟอร์มอื่นของคุณ","Sign server outage.":"เซิร์ฟเวอร์ลงลายเซ็นขัดข้อง","Signs requests locally in a lightweight TikTok window instead of using Euler.":"ลงลายเซ็นคำขอภายในเครื่องผ่านหน้าต่าง TikTok ขนาดเล็กแทนการใช้ Euler","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja สัญญาอนุญาต GPLv3.0","Standard":"Standard","Support":"การสนับสนุน","Supported Sites":"เว็บไซต์ที่รองรับ","Switch the TikTok source to":"เปลี่ยนแหล่งข้อมูล TikTok เป็นโหมด","Switch theme":"เปลี่ยนธีม","The free tier is limited per IP address (a few connections per minute, with hourly and daily caps; see":"แพ็กเกจฟรีจำกัดตามที่อยู่ IP (เชื่อมต่อได้ไม่กี่ครั้งต่อนาที พร้อมเพดานรายชั่วโมงและรายวัน ดู","This status means the app could not get a valid signature from the signing service. Common causes:":"สถานะนี้หมายถึงแอปรับลายเซ็นที่ใช้ได้จากบริการลงลายเซ็นไม่ได้ สาเหตุที่พบบ่อย:","TikTok Signing":"การลงลายเซ็น TikTok","TikTok Signing - Social Stream Ninja":"การลงลายเซ็น TikTok - Social Stream Ninja","TikTok app modes":"โหมด TikTok ในแอป","TikTok changes.":"การเปลี่ยนแปลงของ TikTok","TikTok guide":"คู่มือ TikTok","TikTok quick start":"เริ่มใช้ TikTok อย่างรวดเร็ว","TikTok requires connection requests to its live chat feed to be cryptographically signed. The desktop app signs these requests through a third-party signing service run by":"TikTok กำหนดให้คำขอเชื่อมต่อฟีดแชตสดมีลายเซ็นเข้ารหัส แอปเดสก์ท็อปลงลายเซ็นคำขอเหล่านี้ผ่านบริการภายนอกที่ดำเนินการโดย","Trade-offs":"ข้อแลกเปลี่ยน","What Is TikTok Signing?":"การลงลายเซ็น TikTok คืออะไร?","What the TikTok sign server is, why the desktop app says Sign server unavailable, and how to fix it: wait out rate limits, add an Euler API key, or switch modes.":"เซิร์ฟเวอร์ลงลายเซ็น TikTok คืออะไร ทำไมแอปเดสก์ท็อปจึงแจ้ง Sign server unavailable และวิธีแก้: รอให้พ้นข้อจำกัดอัตราการใช้งาน เพิ่มคีย์ Euler API หรือเปลี่ยนโหมด","What the sign server is, why it sometimes fails, and how to get reconnected.":"เซิร์ฟเวอร์ลงลายเซ็นคืออะไร ทำไมบางครั้งจึงไม่ทำงาน และวิธีเชื่อมต่อใหม่","What to do, in order:":"สิ่งที่ควรทำตามลำดับ:","When TikTok updates its live infrastructure, signing can break for everyone until Euler ships a fix.":"เมื่อ TikTok อัปเดตโครงสร้างพื้นฐานถ่ายทอดสด การลงลายเซ็นอาจใช้ไม่ได้สำหรับทุกคนจนกว่า Euler จะออกการแก้ไข","Works best signed into TikTok inside the app; anonymous mode can miss some chat.":"ทำงานดีที่สุดเมื่อลงชื่อเข้าใช้ TikTok ภายในแอป โหมดไม่ระบุตัวตนอาจพลาดแชตบางส่วน","Your own key gives you a dedicated quota instead of sharing the anonymous per-IP allowance.":"คีย์ของตัวเองให้โควตาเฉพาะ แทนการแชร์โควตาผู้ไม่ระบุตัวตนต่อ IP","also works but does not support sending replies.":"ก็ใช้ได้ แต่ไม่รองรับการส่งคำตอบกลับ","and paste your API key.":"แล้ววางคีย์ API ของคุณ","in older app versions, uses a signed WebSocket in the current desktop app. It does not provide unsigned HTTP polling and cannot send replies. It uses Euler signing, so it is also affected by that service's outages and limits.":"ในแอปรุ่นเก่า โดยแอปเดสก์ท็อปปัจจุบันใช้ WebSocket ที่ลงลายเซ็นแล้ว ไม่รองรับการดึงข้อมูล HTTP เป็นระยะโดยไม่ลงลายเซ็น และส่งข้อความตอบกลับไม่ได้ โหมดนี้ใช้การลงลายเซ็นของ Euler จึงได้รับผลจากการขัดข้องและขีดจำกัดของบริการนั้นด้วย","mode (page capture) as a reliable stopgap. It loads the live page directly and does not use the sign server at all.":"(เก็บข้อมูลหน้าเว็บ) เป็นวิธีแก้ชั่วคราวที่เชื่อถือได้ โหมดนี้โหลดหน้าถ่ายทอดสดโดยตรงและไม่ใช้เซิร์ฟเวอร์ลงลายเซ็นเลย"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/tiktok-signing.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/tiktok-signing.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก"><a href="../index.html">หน้าแรก</a><a href="features.html">ฟีเจอร์</a><a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a><a href="download.html">ดาวน์โหลด</a><a href="guides.html">คู่มือ</a><a href="commands.html">คำสั่งและ API</a><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a><a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a><a href="services.html" class="site-priority-hire">จ้างงาน</a><a href="support.html">การสนับสนุน</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tiktok-signing.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tiktok-signing.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tiktok-signing.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tiktok-signing.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tiktok-signing.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tiktok-signing.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tiktok-signing.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tiktok-signing.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tiktok-signing.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tiktok-signing.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tiktok-signing.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tiktok-signing.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tiktok-signing.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tiktok-signing.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tiktok-signing.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tiktok-signing.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="tiktok-signing.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="เปลี่ยนธีม"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>การลงลายเซ็น TikTok</h1><p>เซิร์ฟเวอร์ลงลายเซ็นคืออะไร ทำไมบางครั้งจึงไม่ทำงาน และวิธีเชื่อมต่อใหม่</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>การลงลายเซ็น TikTok คืออะไร?</h2>
+                <p>TikTok กำหนดให้คำขอเชื่อมต่อฟีดแชตสดมีลายเซ็นเข้ารหัส แอปเดสก์ท็อปลงลายเซ็นคำขอเหล่านี้ผ่านบริการภายนอกที่ดำเนินการโดย <a href="https://www.eulerstream.com/" target="_blank" rel="noopener">Euler Stream</a> การใช้งานปกติไม่ต้องมีบัญชีหรือคีย์ API แอปใช้แพ็กเกจฟรีของ Euler โดยอัตโนมัติ</p>
+                <p>เนื่องจากบริการนี้อยู่ระหว่างแอปกับ TikTok แหล่งข้อมูล TikTok อาจหยุดทำงานแม้ฝั่งคุณไม่มีปัญหา เซิร์ฟเวอร์ลงลายเซ็นอาจล่ม ถูกจำกัดอัตราการใช้งาน หรือใช้ไม่ได้ชั่วคราวเพราะ TikTok เปลี่ยนแปลง</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>"เซิร์ฟเวอร์ลงลายเซ็นไม่พร้อมใช้งาน (Sign Server Unavailable)"</h2>
+                <p>สถานะนี้หมายถึงแอปรับลายเซ็นที่ใช้ได้จากบริการลงลายเซ็นไม่ได้ สาเหตุที่พบบ่อย:</p>
+                <ul class="guide-list">
+                    <li><strong>ข้อจำกัดอัตราการใช้งาน</strong> แพ็กเกจฟรีจำกัดตามที่อยู่ IP (เชื่อมต่อได้ไม่กี่ครั้งต่อนาที พร้อมเพดานรายชั่วโมงและรายวัน ดู <a href="https://www.eulerstream.com/docs/api/rate-limits" target="_blank" rel="noopener">ข้อจำกัดอัตราการใช้งานของ Euler</a>) การลบแล้วเพิ่มแหล่งข้อมูลซ้ำ ๆ หรือสลับโหมดอย่างรวดเร็วจะใช้โควตาจนหมดและทำให้ข้อผิดพลาดดำเนินต่อไป</li>
+                    <li><strong>เซิร์ฟเวอร์ลงลายเซ็นขัดข้อง</strong> บางครั้ง Euler ล่มหรือรับภาระมากเกินไป โดยทั่วไปจะกลับมาภายในไม่กี่ชั่วโมงและคุณไม่ต้องเปลี่ยนอะไร</li>
+                    <li><strong>การเปลี่ยนแปลงของ TikTok</strong> เมื่อ TikTok อัปเดตโครงสร้างพื้นฐานถ่ายทอดสด การลงลายเซ็นอาจใช้ไม่ได้สำหรับทุกคนจนกว่า Euler จะออกการแก้ไข</li>
+                </ul>
+                <p>สิ่งที่ควรทำตามลำดับ:</p>
+                <ul class="guide-list">
+                    <li>ปล่อยแหล่งข้อมูลเชื่อมต่อในโหมด Auto แล้วให้ลองใหม่เอง หลีกเลี่ยงการเพิ่มแหล่งข้อมูลซ้ำแล้วซ้ำอีก</li>
+                    <li>หากล้มเหลวซ้ำ ๆ ให้หยุดหนึ่งชั่วโมงเพื่อให้ข้อจำกัดต่อ IP รีเซ็ต แล้วเชื่อมต่อใหม่ครั้งเดียว</li>
+                    <li>ตรวจสอบว่าใช้แอปเวอร์ชันล่าสุด เพราะมีการแก้ไข TikTok ออกมาบ่อย</li>
+                    <li>เปลี่ยนแหล่งข้อมูล TikTok เป็นโหมด <strong>Standard</strong> (เก็บข้อมูลหน้าเว็บ) เป็นวิธีแก้ชั่วคราวที่เชื่อถือได้ โหมดนี้โหลดหน้าถ่ายทอดสดโดยตรงและไม่ใช้เซิร์ฟเวอร์ลงลายเซ็นเลย</li>
+                    <li>หากติดข้อจำกัดอัตราการใช้งานบ่อย ให้เพิ่มคีย์ Euler API ฟรีของตัวเองตามด้านล่าง</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>เพิ่มคีย์ Euler API ของคุณเอง</h2>
+                <p>คีย์ของตัวเองให้โควตาเฉพาะ แทนการแชร์โควตาผู้ไม่ระบุตัวตนต่อ IP</p>
+                <ul class="guide-list">
+                    <li>สร้างบัญชีฟรีและคีย์ได้ที่ <a href="https://www.eulerstream.com/dashboard" target="_blank" rel="noopener">แดชบอร์ด Euler Stream</a>.</li>
+                    <li>ในแอปเดสก์ท็อป ให้แก้ไขแหล่งข้อมูล TikTok แล้วเปิดตัวเลือกพรีเซ็ตการเชื่อมต่อ</li>
+                    <li>เลือก <strong>Euler Signing (Advanced)</strong> แล้ววางคีย์ API ของคุณ <strong>Euler Proxy (API Key)</strong> ก็ใช้ได้ แต่ไม่รองรับการส่งคำตอบกลับ</li>
+                    <li>เชื่อมต่อแหล่งข้อมูลใหม่หนึ่งครั้งหลังบันทึก</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>โหมดที่ไม่ใช้เซิร์ฟเวอร์ลงลายเซ็น</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>โหมด</th><th>วิธีการทำงาน</th><th>ข้อแลกเปลี่ยน</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Mode">Standard</td><td data-label="How It Works">โหลดหน้าถ่ายทอดสด TikTok แล้วเก็บแชตจากหน้านั้น ไม่ใช้บริการลงลายเซ็น</td><td data-label="Trade-offs">ต้องเปิดหน้าถ่ายทอดสดไว้ อาจขอให้ลงชื่อเข้าใช้หรือยืนยันตัวตน TikTok</td></tr>
+                        <tr><td data-label="Mode">ตัวลงลายเซ็นในเครื่อง (Local Signer)</td><td data-label="How It Works">ลงลายเซ็นคำขอภายในเครื่องผ่านหน้าต่าง TikTok ขนาดเล็กแทนการใช้ Euler</td><td data-label="Trade-offs">ทำงานดีที่สุดเมื่อลงชื่อเข้าใช้ TikTok ภายในแอป โหมดไม่ระบุตัวตนอาจพลาดแชตบางส่วน</td></tr>
+                    </tbody>
+                </table>
+                <p><strong>โหมดความเข้ากันได้ (WebSocket)</strong> ซึ่งเรียกว่า <strong>Polling</strong> ในแอปรุ่นเก่า โดยแอปเดสก์ท็อปปัจจุบันใช้ WebSocket ที่ลงลายเซ็นแล้ว ไม่รองรับการดึงข้อมูล HTTP เป็นระยะโดยไม่ลงลายเซ็น และส่งข้อความตอบกลับไม่ได้ โหมดนี้ใช้การลงลายเซ็นของ Euler จึงได้รับผลจากการขัดข้องและขีดจำกัดของบริการนั้นด้วย</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>การส่งคำตอบกลับไปยัง TikTok</h2>
+                <p>การส่งข้อความแชตจากแผงด็อกกลับไปยัง TikTok ต้องลงชื่อเข้าใช้บัญชี TikTok ภายในแอปเดสก์ท็อป เพราะแอปต้องใช้เซสชัน TikTok เพื่อโพสต์ในนามคุณ หากยังไม่ลงชื่อเข้าใช้หรือการเชื่อมต่อ TikTok ขัดข้อง ข้อความขาออกจะไปถึงเฉพาะแพลตฟอร์มอื่นของคุณ</p>
+                <p>โหมด Euler Proxy ไม่รองรับการตอบกลับ ไม่ว่าจะลงชื่อเข้าใช้หรือไม่</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>ที่เกี่ยวข้อง</h2>
+                <p><a href="tiktok-app-modes-guide.html">โหมด TikTok ในแอป</a>, <a href="tiktok-guide.html">คู่มือ TikTok</a>, และ <a href="tiktok-quick-start.html">เริ่มใช้ TikTok อย่างรวดเร็ว</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja สัญญาอนุญาต GPLv3.0</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

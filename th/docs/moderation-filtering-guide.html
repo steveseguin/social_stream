@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/th/docs/moderation-filtering-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/th/docs/moderation-filtering-guide.html">
+    <meta property="og:title" content="การดูแลและกรองข้อความ - Social Stream Ninja">
+    <meta property="og:description" content="เลือกสิ่งที่จะส่งไปยังเอาต์พุต SSN และสิ่งที่จะแสดงในแผงด็อกหรือโอเวอร์เลย์แต่ละหน้า">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/th/docs/moderation-filtering-guide.html">
+    <meta name="twitter:title" content="การดูแลและกรองข้อความ - Social Stream Ninja">
+    <meta name="twitter:description" content="เลือกสิ่งที่จะส่งไปยังเอาต์พุต SSN และสิ่งที่จะแสดงในแผงด็อกหรือโอเวอร์เลย์แต่ละหน้า">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>การดูแลและกรองข้อความ - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="เลือกสิ่งที่จะส่งไปยังเอาต์พุต SSN และสิ่งที่จะแสดงในแผงด็อกหรือโอเวอร์เลย์แต่ละหน้า">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/moderation-filtering-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{", use":" ให้ใช้",". A platform suffix limits classification to that source type.":" ส่วนต่อท้ายแพลตฟอร์มจำกัดการจัดประเภทให้ใช้กับแหล่งข้อมูลชนิดนั้น",". Censoring replaces matched text; blocking removes the whole message. Choose the behavior you want before testing.":" การเซ็นเซอร์แทนที่ข้อความที่ตรงเงื่อนไข ส่วนการบล็อกลบทั้งข้อความ เลือกพฤติกรรมที่ต้องการก่อนทดสอบ",". Enter, for example,":" ตัวอย่างเช่น ป้อน",". For example:":" ตัวอย่าง:",". Matching is case-insensitive and checks both message text and the chatter’s name. A short fragment can match inside a longer word. If blur mode is enabled, matches can be blurred instead of removed.":" การจับคู่ไม่แยกตัวพิมพ์ใหญ่และเล็ก และตรวจทั้งข้อความกับชื่อผู้แชต ส่วนข้อความสั้น ๆ อาจตรงกับส่วนหนึ่งของคำที่ยาวกว่า หากเปิดโหมดเบลอ รายการที่ตรงอาจถูกเบลอแทนการลบ",". This removes that user’s messages and adds them to the SSN hide-user list.":" วิธีนี้ลบข้อความของผู้ใช้คนนั้นและเพิ่มผู้ใช้ในรายชื่อซ่อนของ SSN",". Use menu search to find the exact labels below.":" ใช้การค้นหาในเมนูเพื่อหาป้ายกำกับตรงตามที่ระบุด้านล่าง",". Use this on your personal Dock; a separate OBS Dock without the option uses the existing behavior of removing deleted messages. This cannot show messages that were blocked before SSN captured them.":". Use this on your personal Dock; a separate OBS Dock without the option uses the existing behavior of removing deleted messages. This cannot show messages that were blocked before SSN captured them.","1. Choose where to filter":"1. เลือกตำแหน่งที่จะกรอง","2. Block or restore a user":"2. บล็อกหรือเลิกบล็อกผู้ใช้","3. Filter words and commands":"3. กรองคำและคำสั่ง","4. Handle bots and trusted links":"4. จัดการบอตและลิงก์ที่เชื่อถือได้","5. Verify the boundary":"5. ตรวจสอบขอบเขตการทำงาน",": a normal line, a blocked phrase, a command, and a bot message. Local filters should affect only the configured page; global filters should affect downstream outputs. Test manual and automatic featuring separately.":": ข้อความปกติ วลีที่ถูกบล็อก คำสั่ง และข้อความบอต ตัวกรองเฉพาะหน้าควรมีผลเฉพาะหน้าที่กำหนด ส่วนตัวกรองส่วนกลางควรมีผลต่อเอาต์พุตปลายทาง ทดสอบการแสดงข้อความเด่นด้วยตนเองและอัตโนมัติแยกกัน","Add":"เพิ่ม","All guides":"คู่มือทั้งหมด","Block messages that contain swear words":"Block messages that contain swear words","Blocked users":"ผู้ใช้ที่ถูกบล็อก (Blocked users)","Browse all guides":"ดูคู่มือทั้งหมด","Captured source messages":"ข้อความที่เก็บจากแหล่งข้อมูล","Censor":"Censor","Changes that generated Dock URL. Other open Docks and overlays keep their own options.":"เปลี่ยน URL แผงด็อกที่สร้างขึ้นนั้น แผงด็อกและโอเวอร์เลย์อื่นที่เปิดอยู่ยังใช้ตัวเลือกของตัวเอง","Choose what reaches SSN outputs and what appears in an individual Dock or overlay.":"เลือกสิ่งที่จะส่งไปยังเอาต์พุต SSN และสิ่งที่จะแสดงในแผงด็อกหรือโอเวอร์เลย์แต่ละหน้า","Commands & API":"คำสั่งและ API","Contains text or name":"มีข้อความหรือชื่อ (Contains text or name)","Controls the original platform chat. Hiding someone inside SSN does not establish a native platform ban.":"ควบคุมแชตบนแพลตฟอร์มต้นทาง การซ่อนคนใน SSN ไม่ได้แบนคนคนนั้นบนแพลตฟอร์มจริง","Copy the updated Dock link and replace the URL wherever that Dock is open. For command clutter, the Dock supports":"คัดลอกลิงก์แผงด็อกที่อัปเดตแล้วและแทนที่ URL ทุกที่ที่เปิดแผงด็อกนั้น สำหรับข้อความคำสั่งที่รก แผงด็อกรองรับ","Deleted":"Deleted","Download":"ดาวน์โหลด","Drops or changes captured messages for downstream SSN outputs. Use when something should not reach any output.":"ลบหรือเปลี่ยนข้อความที่เก็บได้ก่อนส่งไปยังเอาต์พุต SSN ใช้เมื่อไม่ต้องการให้สิ่งนั้นไปถึงเอาต์พุตใดเลย","Each page applies its own URL options":"แต่ละหน้าใช้ตัวเลือก URL ของตัวเอง","Effect":"ผล","Features":"ฟีเจอร์","Filter before distribution":"กรองก่อนกระจายข้อมูล","For a custom Dock-only phrase list, find":"สำหรับรายการวลีกำหนดเองเฉพาะแผงด็อก ให้หา","For a message already in the Dock, right-click and open":"สำหรับข้อความที่อยู่ในแผงด็อกแล้ว ให้คลิกขวาแล้วเปิด","For a prepared list, find":"สำหรับรายการที่เตรียมไว้ ให้หา","For global profanity handling, search for":"สำหรับจัดการคำหยาบส่วนกลาง ให้ค้นหา","Global filtering happens before distribution. A Dock URL filter affects only that Dock.":"การกรองส่วนกลางเกิดก่อนกระจายข้อมูล ตัวกรองใน URL แผงด็อกมีผลเฉพาะแผงด็อกนั้น","Global settings":"การตั้งค่าส่วนกลาง","Global settings and tools → Message - Visibility":"Global settings and tools → Message - Visibility","Guides":"คู่มือ","Hire":"จ้างงาน","Home":"หน้าแรก","Identify by name who are bots":"ระบุบอตตามชื่อ (Identify by name who are bots)","If too much disappears, turn off the last filter you added, check the blocked-user list, and check donation/member/queue-only toolbar modes. Old OBS URLs retain old options. For a reviewed-message workflow, see":"หากข้อความหายมากเกินไป ให้ปิดตัวกรองล่าสุดที่เพิ่ม ตรวจสอบรายชื่อผู้ใช้ที่ถูกบล็อก และตรวจสอบโหมดแถบเครื่องมือที่แสดงเฉพาะการบริจาค/สมาชิก/คิว URL เก่าใน OBS ยังคงตัวเลือกเดิม สำหรับขั้นตอนตรวจข้อความก่อนแสดง ดู","Incoming chat":"แชตขาเข้า","Individual pages":"แต่ละหน้า","Inspiration":"ไอเดียสร้างสรรค์","Main navigation":"เมนูหลัก","Message - Visibility → Assign roles/classes to certain users":"Message - Visibility → Assign roles/classes to certain users","Moderation and message filtering":"การดูแลและกรองข้อความ","Moderation and message filtering - Social Stream Ninja":"การดูแลและกรองข้อความ - Social Stream Ninja","Native platform moderation":"การดูแลแชตบนแพลตฟอร์มโดยตรง","On this page":"ในหน้านี้","Open SSN’s popup or desktop":"เปิดป๊อปอัปหรือแผงเดสก์ท็อปของ SSN ที่","Open navigation menu":"เปิดเมนูนำทาง","Open one unfiltered Dock and one filtered Dock on the same session. Send fictional":"เปิดแผงด็อกที่ไม่กรองหนึ่งหน้าและที่กรองหนึ่งหน้าในเซสชันเดียวกัน ส่ง","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja ·":"Social Stream Ninja ·","Sources and Settings":"แหล่งข้อมูลและการตั้งค่า (Sources and Settings)","Streaming Chat Dock link options":"ตัวเลือกลิงก์ Streaming Chat Dock","Support":"การสนับสนุน","Supported Sites":"เว็บไซต์ที่รองรับ","Switch theme":"เปลี่ยนธีม","The bot must be identified first. Assigning an SSN role does not grant privileges on Twitch or another platform. See the":"ต้องระบุว่าผู้ใช้นั้นเป็นบอตก่อน การกำหนดบทบาท SSN ไม่ได้ให้สิทธิ์บน Twitch หรือแพลตฟอร์มอื่น ดู","Then choose a global bot-hiding option if no output needs those messages, or add":"จากนั้นเลือกตัวเลือกซ่อนบอตส่วนกลางหากไม่มีเอาต์พุตใดต้องใช้ข้อความเหล่านั้น หรือเพิ่ม","This example changes a Dock’s presentation. It does not disable commands in Points, Waitlist, or Event Flow.":"ตัวอย่างนี้เปลี่ยนการแสดงผลของแผงด็อก ไม่ได้ปิดคำสั่งใน Points, Waitlist หรือ Event Flow","To keep messages visible after the Dock receives a deletion, add":"To keep messages visible after the Dock receives a deletion, add","To unblock, remove the username from that list. Test with a new message; previously removed rows do not automatically return.":"หากต้องการเลิกบล็อก ให้ลบชื่อผู้ใช้ออกจากรายการนั้น ทดสอบด้วยข้อความใหม่ แถวที่ลบไปก่อนหน้าจะไม่กลับมาโดยอัตโนมัติ","Under global":"ในส่วนกลาง","Use the platform’s own moderation tools when you need to ban or time out someone on the source platform. SSN’s visibility and role lists are not a substitute for platform permissions.":"ใช้เครื่องมือดูแลของแพลตฟอร์มเองเมื่อต้องการแบนหรือพักการแชตของใครบนแพลตฟอร์มต้นทาง รายการการมองเห็นและบทบาทของ SSN ใช้แทนสิทธิ์แพลตฟอร์มไม่ได้","User Actions → Block User":"User Actions → Block User","Using the Dock":"การใช้แผงด็อก","Where":"ตำแหน่ง","in the Streaming Chat Dock options. Turn it on, enter a word or phrase, and select":"ในตัวเลือก Streaming Chat Dock เปิดสวิตช์ ป้อนคำหรือวลี แล้วเลือก","label and dimmed text. For example:":"label and dimmed text. For example:","or":"หรือ","role controls reference":"เอกสารอ้างอิงการควบคุมบทบาท","test messages":"ข้อความทดสอบ","to a Dock URL to hide them only there. To replace ordinary links while allowing bot links, use:":"ใน URL แผงด็อกเพื่อซ่อนเฉพาะที่นั่น หากต้องการแทนที่ลิงก์ทั่วไปแต่อนุญาตลิงก์บอต ให้ใช้:","to that Dock’s URL. Deleted messages stay readable with a":"to that Dock’s URL. Deleted messages stay readable with a","under global Message - Visibility. Enable its switch and enter comma-separated usernames.":"ใน Message - Visibility ส่วนกลาง เปิดสวิตช์แล้วป้อนชื่อผู้ใช้คั่นด้วยจุลภาค"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/moderation-filtering-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/moderation-filtering-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก">
+<a href="../index.html">หน้าแรก</a>
+<a href="features.html">ฟีเจอร์</a>
+<a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a>
+<a href="download.html">ดาวน์โหลด</a>
+<a href="guides.html">คู่มือ</a>
+<a href="commands.html">คำสั่งและ API</a>
+<a href="supported-sites.html">เว็บไซต์ที่รองรับ</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a>
+<a href="services.html" class="site-priority-hire">จ้างงาน</a>
+<a href="support.html">การสนับสนุน</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/moderation-filtering-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/moderation-filtering-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/moderation-filtering-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/moderation-filtering-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/moderation-filtering-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/moderation-filtering-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/moderation-filtering-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/moderation-filtering-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/moderation-filtering-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/moderation-filtering-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/moderation-filtering-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/moderation-filtering-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/moderation-filtering-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/moderation-filtering-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/moderation-filtering-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/moderation-filtering-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="moderation-filtering-guide.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="เปลี่ยนธีม">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>การดูแลและกรองข้อความ</h1>
+<p>เลือกสิ่งที่จะส่งไปยังเอาต์พุต SSN และสิ่งที่จะแสดงในแผงด็อกหรือโอเวอร์เลย์แต่ละหน้า</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="ในหน้านี้">
+<a href="guides.html">คู่มือทั้งหมด</a>
+<a href="#scope">1. เลือกตำแหน่งที่จะกรอง</a>
+<a href="#users">2. บล็อกหรือเลิกบล็อกผู้ใช้</a>
+<a href="#words">3. กรองคำและคำสั่ง</a>
+<a href="#roles">4. จัดการบอตและลิงก์ที่เชื่อถือได้</a>
+<a href="#check">5. ตรวจสอบขอบเขตการทำงาน</a>
+</nav>
+<section class="guide-card" id="scope">
+<h2>1. เลือกตำแหน่งที่จะกรอง</h2>
+<p>เปิดป๊อปอัปหรือแผงเดสก์ท็อปของ SSN ที่ <strong>แหล่งข้อมูลและการตั้งค่า (Sources and Settings)</strong> ใช้การค้นหาในเมนูเพื่อหาป้ายกำกับตรงตามที่ระบุด้านล่าง</p>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>แชตขาเข้า</strong>
+<span>ข้อความที่เก็บจากแหล่งข้อมูล</span>
+</li>
+<li>
+<strong>การตั้งค่าส่วนกลาง</strong>
+<span>กรองก่อนกระจายข้อมูล</span>
+</li>
+<li>
+<strong>แต่ละหน้า</strong>
+<span>แต่ละหน้าใช้ตัวเลือก URL ของตัวเอง</span>
+</li>
+</ol>
+<figcaption>การกรองส่วนกลางเกิดก่อนกระจายข้อมูล ตัวกรองใน URL แผงด็อกมีผลเฉพาะแผงด็อกนั้น</figcaption>
+</figure>
+<table class="guide-table guide-table-stack">
+<thead>
+<tr>
+<th scope="col">ตำแหน่ง</th>
+<th scope="col">ผล</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td data-label="Where">
+<strong>Global settings and tools → Message - Visibility</strong>
+</td>
+<td data-label="Effect">ลบหรือเปลี่ยนข้อความที่เก็บได้ก่อนส่งไปยังเอาต์พุต SSN ใช้เมื่อไม่ต้องการให้สิ่งนั้นไปถึงเอาต์พุตใดเลย</td>
+</tr>
+<tr>
+<td data-label="Where">
+<strong>ตัวเลือกลิงก์ Streaming Chat Dock</strong>
+</td>
+<td data-label="Effect">เปลี่ยน URL แผงด็อกที่สร้างขึ้นนั้น แผงด็อกและโอเวอร์เลย์อื่นที่เปิดอยู่ยังใช้ตัวเลือกของตัวเอง</td>
+</tr>
+<tr>
+<td data-label="Where">
+<strong>การดูแลแชตบนแพลตฟอร์มโดยตรง</strong>
+</td>
+<td data-label="Effect">ควบคุมแชตบนแพลตฟอร์มต้นทาง การซ่อนคนใน SSN ไม่ได้แบนคนคนนั้นบนแพลตฟอร์มจริง</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section class="guide-card" id="users">
+<h2>2. บล็อกหรือเลิกบล็อกผู้ใช้</h2>
+<ol class="guide-steps">
+<li>สำหรับข้อความที่อยู่ในแผงด็อกแล้ว ให้คลิกขวาแล้วเปิด <strong>User Actions → Block User</strong> วิธีนี้ลบข้อความของผู้ใช้คนนั้นและเพิ่มผู้ใช้ในรายชื่อซ่อนของ SSN</li>
+<li>สำหรับรายการที่เตรียมไว้ ให้หา <strong>ผู้ใช้ที่ถูกบล็อก (Blocked users)</strong> ใน Message - Visibility ส่วนกลาง เปิดสวิตช์แล้วป้อนชื่อผู้ใช้คั่นด้วยจุลภาค</li>
+<li>หากต้องการเลิกบล็อก ให้ลบชื่อผู้ใช้ออกจากรายการนั้น ทดสอบด้วยข้อความใหม่ แถวที่ลบไปก่อนหน้าจะไม่กลับมาโดยอัตโนมัติ</li>
+</ol>
+<p>ใช้เครื่องมือดูแลของแพลตฟอร์มเองเมื่อต้องการแบนหรือพักการแชตของใครบนแพลตฟอร์มต้นทาง รายการการมองเห็นและบทบาทของ SSN ใช้แทนสิทธิ์แพลตฟอร์มไม่ได้</p>
+<p>To keep messages visible after the Dock receives a deletion, add <code>&amp;showdeleted</code> to that Dock’s URL. Deleted messages stay readable with a <strong>Deleted</strong> label and dimmed text. For example: <code>dock.html?session=YOUR_SESSION_ID&amp;showdeleted</code>. Use this on your personal Dock; a separate OBS Dock without the option uses the existing behavior of removing deleted messages. This cannot show messages that were blocked before SSN captured them.</p>
+</section>
+<section class="guide-card" id="words">
+<h2>3. กรองคำและคำสั่ง</h2>
+<p>สำหรับจัดการคำหยาบส่วนกลาง ให้ค้นหา <strong>Censor</strong> หรือ <strong>Block messages that contain swear words</strong> การเซ็นเซอร์แทนที่ข้อความที่ตรงเงื่อนไข ส่วนการบล็อกลบทั้งข้อความ เลือกพฤติกรรมที่ต้องการก่อนทดสอบ</p>
+<p>สำหรับรายการวลีกำหนดเองเฉพาะแผงด็อก ให้หา <strong>มีข้อความหรือชื่อ (Contains text or name)</strong> ในตัวเลือก Streaming Chat Dock เปิดสวิตช์ ป้อนคำหรือวลี แล้วเลือก <strong>เพิ่ม</strong> การจับคู่ไม่แยกตัวพิมพ์ใหญ่และเล็ก และตรวจทั้งข้อความกับชื่อผู้แชต ส่วนข้อความสั้น ๆ อาจตรงกับส่วนหนึ่งของคำที่ยาวกว่า หากเปิดโหมดเบลอ รายการที่ตรงอาจถูกเบลอแทนการลบ</p>
+<p>คัดลอกลิงก์แผงด็อกที่อัปเดตแล้วและแทนที่ URL ทุกที่ที่เปิดแผงด็อกนั้น สำหรับข้อความคำสั่งที่รก แผงด็อกรองรับ <code>&amp;hidecommands</code> ตัวอย่าง:</p>
+<pre>
+<code>dock.html?session=YOUR_SESSION_ID&amp;hidecommands&amp;blockedwords=spoiler</code>
+</pre>
+<p>ตัวอย่างนี้เปลี่ยนการแสดงผลของแผงด็อก ไม่ได้ปิดคำสั่งใน Points, Waitlist หรือ Event Flow</p>
+</section>
+<section class="guide-card" id="roles">
+<h2>4. จัดการบอตและลิงก์ที่เชื่อถือได้</h2>
+<p>ในส่วนกลาง <strong>Message - Visibility → Assign roles/classes to certain users</strong> ให้ใช้ <strong>ระบุบอตตามชื่อ (Identify by name who are bots)</strong> ตัวอย่างเช่น ป้อน <code>moobot:twitch,nightbot:twitch</code> ส่วนต่อท้ายแพลตฟอร์มจำกัดการจัดประเภทให้ใช้กับแหล่งข้อมูลชนิดนั้น</p>
+<p>จากนั้นเลือกตัวเลือกซ่อนบอตส่วนกลางหากไม่มีเอาต์พุตใดต้องใช้ข้อความเหล่านั้น หรือเพิ่ม <code>&amp;hidebots</code> ใน URL แผงด็อกเพื่อซ่อนเฉพาะที่นั่น หากต้องการแทนที่ลิงก์ทั่วไปแต่อนุญาตลิงก์บอต ให้ใช้:</p>
+<pre>
+<code>dock.html?session=YOUR_SESSION_ID&amp;striplinks&amp;allowbotlinks</code>
+</pre>
+<p>ต้องระบุว่าผู้ใช้นั้นเป็นบอตก่อน การกำหนดบทบาท SSN ไม่ได้ให้สิทธิ์บน Twitch หรือแพลตฟอร์มอื่น ดู <a href="../../docs/index.html?file=role-based-controls.md">เอกสารอ้างอิงการควบคุมบทบาท</a>.</p>
+</section>
+<section class="guide-card" id="check">
+<h2>5. ตรวจสอบขอบเขตการทำงาน</h2>
+<p>เปิดแผงด็อกที่ไม่กรองหนึ่งหน้าและที่กรองหนึ่งหน้าในเซสชันเดียวกัน ส่ง <a href="test-message-guide.html">ข้อความทดสอบ</a>: ข้อความปกติ วลีที่ถูกบล็อก คำสั่ง และข้อความบอต ตัวกรองเฉพาะหน้าควรมีผลเฉพาะหน้าที่กำหนด ส่วนตัวกรองส่วนกลางควรมีผลต่อเอาต์พุตปลายทาง ทดสอบการแสดงข้อความเด่นด้วยตนเองและอัตโนมัติแยกกัน</p>
+<p>หากข้อความหายมากเกินไป ให้ปิดตัวกรองล่าสุดที่เพิ่ม ตรวจสอบรายชื่อผู้ใช้ที่ถูกบล็อก และตรวจสอบโหมดแถบเครื่องมือที่แสดงเฉพาะการบริจาค/สมาชิก/คิว URL เก่าใน OBS ยังคงตัวเลือกเดิม สำหรับขั้นตอนตรวจข้อความก่อนแสดง ดู <a href="dock-live-guide.html">การใช้แผงด็อก</a>.</p>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">ดูคู่มือทั้งหมด</a>
+</p>
+</div>
+</div>
+</footer>
+<script data-copy-markdown src="../../docs/js/main.js">
+</script>
+</body>
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/video-stats-bitrate.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/video-stats-bitrate.html">
+    <meta property="og:title" content="影片統計與位元率指南 - Social Stream Ninja">
+    <meta property="og:description" content="設定影片伺服器輪詢，並在 Social Stream Ninja 停駐面板中顯示即時位元率中繼資料。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/video-stats-bitrate.html">
+    <meta name="twitter:title" content="影片統計與位元率指南 - Social Stream Ninja">
+    <meta name="twitter:description" content="設定影片伺服器輪詢，並在 Social Stream Ninja 停駐面板中顯示即時位元率中繼資料。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) document.documentElement.classList.add("dark-mode");
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影片統計與位元率指南 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="設定影片伺服器輪詢，並在 Social Stream Ninja 停駐面板中顯示即時位元率中繼資料。">
+    <style>
+        .quick-note { background: rgba(26,115,232,.08); border-left: 4px solid #1a73e8; padding: 1.2rem 1.4rem; margin: 1.5rem 0; }
+        .warning-note { background: rgba(251,188,5,.14); border-left-color: #f9ab00; }
+        .dark-mode .quick-note { background: rgba(26,115,232,.18); }
+        .field-table { width: 100%; border-collapse: collapse; }
+        .field-table th, .field-table td { border: 1px solid var(--border-color); padding: .65rem; text-align: left; vertical-align: top; }
+        pre { overflow-x: auto; }
+
+        @media (max-width: 700px) {
+            .field-table, .steps-table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/video-stats-bitrate.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{", enable":"，啟用",", then open or refresh the Dock link.":"，然後開啟或重新整理停駐面板連結。",", with":"，帶有",". Fields may be top-level or inside":"。欄位可位於最上層或",". It also reads stream time and optional video/audio codec metadata.":"。它也讀取直播時間以及選用的影片/音訊編解碼器中繼資料。",". SSN automatically uses it when the response contains only one publisher.":"。回應僅包含一個發佈者時，SSN 會自動使用它。","Add authorization if required. The SRT API key field is sent as the complete":"若有需要，加入授權。SRT API 金鑰欄位會作為完整的","Advanced: protocol, formats, and units":"進階：通訊協定、格式及單位","Belabox Cloud:":"Belabox Cloud：","Bitrate is Kbps, viewers is a count, and duration is seconds.":"位元率單位為 Kbps，觀眾為人數，時長單位為秒。","Boolean;":"布林值；","Choose a polling interval from 1 to 60 seconds; the default is five seconds.":"選擇 1 至 60 秒的輪詢間隔；預設為 5 秒。","Commands & API":"指令與 API","Compatibility":"相容性","Configure video server polling and show live bitrate metadata in the Social Stream Ninja Dock.":"設定影片伺服器輪詢，並在 Social Stream Ninja 停駐面板中顯示即時位元率中繼資料。","Confirm both video stats options are enabled in SSN.":"確認 SSN 中兩項影片統計選項都已啟用。","Confirm the endpoint responds within five seconds and the source type and stream identifiers match.":"確認端點在 5 秒內回應，且來源類型及串流識別碼相符。","Download":"下載","Enable the compatible server's HTTP stats endpoint and confirm the computer running SSN can open its URL.":"啟用相容伺服器的 HTTP 統計端點，並確認執行 SSN 的電腦能開啟其 URL。","Event Reference":"事件參考","Features":"功能","Field":"欄位","For NGINX RTMP or Node Media Server, enter the application and stream key/name, such as":"對於 NGINX RTMP 或 Node Media Server，輸入應用程式和串流金鑰/名稱，例如","For SRT or Belabox, enter the exact publisher ID, such as":"對於 SRT 或 Belabox，輸入精確的發佈者 ID，例如","Global settings":"全域設定","Guides":"指南","Hire":"聘用","Home":"首頁","How to use it":"使用方法","If nothing appears":"如果沒有顯示任何內容","Important:":"重要：","In Dock options, enable":"在停駐面板選項中啟用","In SSN":"在 SSN 中","Inspiration":"靈感","JSON":"JSON","Kbps, whole number":"Kbps，整數","Loss/drop fields":"遺失/捨棄欄位","Main navigation":"主導覽","Mbps":"Mbps","Milliseconds":"毫秒","NGINX RTMP":"NGINX RTMP","NGINX RTMP:":"NGINX RTMP：","Node Media Server":"Node Media Server","Node Media Server:":"Node Media Server：","Normalized SSN event":"正規化 SSN 事件","OBS can send video to a compatible server, but OBS WebSocket and SSN browser sources do not provide this data.":"OBS 可向相容伺服器傳送影片，但 OBS WebSocket 和 SSN 瀏覽器來源不提供這些資料。","OBS is not a stats source:":"OBS 不是統計來源：","Open navigation menu":"開啟導覽選單","Overlay Gallery":"疊加畫面圖庫","Packet counts or bytes":"封包數量或位元組數","Resources":"資源","SRT Live Server / SLS and Belabox Cloud":"SRT Live Server / SLS 與 Belabox Cloud","SRT Live Server / SLS:":"SRT Live Server / SLS：","SSN also normalizes available latency, buffer, packet-loss, uptime, codec, and viewer data into a":"SSN 也會將可用的延遲、緩衝、封包遺失、執行時間、編解碼器及觀眾資料正規化為","SSN does not read bitrate from OBS or a streaming platform automatically. It polls the stats API of the video server receiving your stream.":"SSN 不會自動從 OBS 或直播平台讀取位元率。它會輪詢接收直播的影片伺服器統計 API。","SSN performs an HTTP or HTTPS":"SSN 執行 HTTP 或 HTTPS","SSN requests":"SSN 請求","Seconds":"秒","Select the source type and enter the stats URL.":"選擇來源類型並輸入統計 URL。","Show bitrate metadata if available; top-right":"若可用，在右上角顯示位元率中繼資料","Show the incoming stream bitrate in the top-right of the Social Stream Ninja Dock.":"在 Social Stream Ninja 停駐面板右上角顯示傳入串流的位元率。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Start publishing video. The bitrate appears after a valid online response.":"開始發佈影片。收到有效的上線回應後會顯示位元率。","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","The Dock accepts":"停駐面板接受","The URL must return NGINX RTMP status XML. SSN matches the configured application and stream. It reads":"該 URL 必須傳回 NGINX RTMP 狀態 XML。SSN 比對設定的應用程式與串流，並讀取","The readout disappears when the stream is offline, bitrate is missing or zero, or no fresh stats arrive for about 130 seconds.":"當直播離線、位元率缺失或為零，或約 130 秒未收到新統計資料時，讀數會消失。","This gives a host or producer a small, live bitrate readout in the Dock. It is useful when OBS, a mobile encoder, or another sender publishes to your own relay or ingest server.":"這會為主持人或製作人在停駐面板中提供小型即時位元率讀數。當 OBS、行動編碼器或其他傳送端將影片發佈至自己的中繼或接收伺服器時很有用。","Unit/type":"單位/類型","Video Stats and Bitrate":"影片統計與位元率","Video Stats and Bitrate Guide - Social Stream Ninja":"影片統計與位元率指南 - Social Stream Ninja","Video stats polling":"影片統計輪詢","What it is for":"用途","XML from the NGINX RTMP status module.":"來自 NGINX RTMP 狀態模組的 XML。","and":"和","as bytes per second and divides by 1024 for":"作為每秒位元組數，並除以 1024 得到","as fallbacks. Values below 1000 display as rounded Kbps; larger values display as Mbps rounded to one decimal. The stats URL, stream key, and credentials are never sent to overlays.":"作為備用值。低於 1000 的值以四捨五入後的 Kbps 顯示；更大的值以 Mbps 顯示，保留一位小數。統計 URL、串流金鑰及憑證絕不會傳送至疊加畫面。","at the configured interval with caching disabled and a five-second timeout.":"，依設定的間隔執行，停用快取，逾時為 5 秒。","endpoint containing a":"端點，其中包含","header. Node Media Server uses the username/password as HTTP Basic authentication.":"標頭傳送。Node Media Server 將使用者名稱/密碼用作 HTTP Basic 驗證。","hides the Dock value":"會隱藏停駐面板中的數值","is Kbps; RTT and receive buffer are milliseconds; receive rate and bandwidth are Mbps; uptime is seconds; loss/drop values are packet counts or bytes.":"的單位為 Kbps；RTT 和接收緩衝為毫秒；接收速率與頻寬為 Mbps；執行時間為秒；遺失/捨棄值為封包數量或位元組數。","its JSON stream API, with optional HTTP Basic authentication.":"其 JSON 串流 API，可選用 HTTP Basic 驗證。","its SRT-style JSON receiver/relay stats response.":"其 SRT 風格的 JSON 接收端/中繼統計回應。","means the computer running SSN. Use the server's LAN address when it is another device.":"指執行 SSN 的電腦。若伺服器位於其他裝置，請使用其區域網路位址。","metadata event. The standard Dock readout shows only bitrate.":"中繼資料事件。標準停駐面板讀數僅顯示位元率。","object.":"物件內。","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja。保留所有權利。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/video-stats-bitrate.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/video-stats-bitrate.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/video-stats-bitrate.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/video-stats-bitrate.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/video-stats-bitrate.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/video-stats-bitrate.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/video-stats-bitrate.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/video-stats-bitrate.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/video-stats-bitrate.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/video-stats-bitrate.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="video-stats-bitrate.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/video-stats-bitrate.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/video-stats-bitrate.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/video-stats-bitrate.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/video-stats-bitrate.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/video-stats-bitrate.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/video-stats-bitrate.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/video-stats-bitrate.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/video-stats-bitrate.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <main>
+        <section class="page-hero"><div class="container"><h1>影片統計與位元率</h1><p>在 Social Stream Ninja 停駐面板右上角顯示傳入串流的位元率。</p></div></section>
+        <section class="guide-content"><div class="container">
+            <div class="quick-note"><strong>重要：</strong> SSN 不會自動從 OBS 或直播平台讀取位元率。它會輪詢接收直播的影片伺服器統計 API。</div>
+
+            <div class="guide-card"><h2>用途</h2>
+                <p>這會為主持人或製作人在停駐面板中提供小型即時位元率讀數。當 OBS、行動編碼器或其他傳送端將影片發佈至自己的中繼或接收伺服器時很有用。</p>
+                <p>SSN 也會將可用的延遲、緩衝、封包遺失、執行時間、編解碼器及觀眾資料正規化為 <code>video_stats</code> 中繼資料事件。標準停駐面板讀數僅顯示位元率。</p>
+            </div>
+
+            <div class="guide-card"><h2>相容性</h2><ul class="guide-list">
+                <li><strong>SRT Live Server / SLS：</strong> JSON <code>/stats</code> 端點，其中包含 <code>publishers</code> 物件內。</li>
+                <li><strong>Belabox Cloud：</strong> 其 SRT 風格的 JSON 接收端/中繼統計回應。</li>
+                <li><strong>NGINX RTMP：</strong> 來自 NGINX RTMP 狀態模組的 XML。</li>
+                <li><strong>Node Media Server：</strong> 其 JSON 串流 API，可選用 HTTP Basic 驗證。</li>
+            </ul><div class="quick-note warning-note"><strong>OBS 不是統計來源：</strong> OBS 可向相容伺服器傳送影片，但 OBS WebSocket 和 SSN 瀏覽器來源不提供這些資料。</div></div>
+
+            <div class="guide-card"><h2>使用方法</h2><ol class="guide-steps">
+                <li>啟用相容伺服器的 HTTP 統計端點，並確認執行 SSN 的電腦能開啟其 URL。</li>
+                <li>在 SSN 中 <strong>全域設定</strong>，啟用 <strong>影片統計輪詢</strong>.</li>
+                <li>選擇來源類型並輸入統計 URL。</li>
+                <li>對於 SRT 或 Belabox，輸入精確的發佈者 ID，例如 <code>publish/live/feed1</code>。回應僅包含一個發佈者時，SSN 會自動使用它。</li>
+                <li>對於 NGINX RTMP 或 Node Media Server，輸入應用程式和串流金鑰/名稱，例如 <code>live</code> 和 <code>feed1</code>.</li>
+                <li>若有需要，加入授權。SRT API 金鑰欄位會作為完整的 <code>Authorization</code> 標頭傳送。Node Media Server 將使用者名稱/密碼用作 HTTP Basic 驗證。</li>
+                <li>選擇 1 至 60 秒的輪詢間隔；預設為 5 秒。</li>
+                <li>在停駐面板選項中啟用 <strong>若可用，在右上角顯示位元率中繼資料</strong>，然後開啟或重新整理停駐面板連結。</li>
+                <li>開始發佈影片。收到有效的上線回應後會顯示位元率。</li>
+            </ol></div>
+
+            <div class="guide-card"><h2>如果沒有顯示任何內容</h2><ul class="guide-list">
+                <li>確認 SSN 中兩項影片統計選項都已啟用。</li>
+                <li>確認端點在 5 秒內回應，且來源類型及串流識別碼相符。</li>
+                <li><code>127.0.0.1</code> 指執行 SSN 的電腦。若伺服器位於其他裝置，請使用其區域網路位址。</li>
+                <li>當直播離線、位元率缺失或為零，或約 130 秒未收到新統計資料時，讀數會消失。</li>
+            </ul></div>
+
+            <div class="guide-card"><h2>進階：通訊協定、格式及單位</h2>
+                <p>SSN 執行 HTTP 或 HTTPS <code>GET</code> ，依設定的間隔執行，停用快取，逾時為 5 秒。</p>
+                <h3>SRT Live Server / SLS 與 Belabox Cloud</h3>
+                <pre><code>{
+  "publishers": {
+    "publish/live/feed1": {
+      "bitrate": 4500, "rtt": 32.5, "msRcvBuf": 120,
+      "mbpsRecvRate": 4.5, "mbpsBandwidth": 12.8,
+      "pktRcvDrop": 2, "pktRcvLoss": 1,
+      "bytesRcvDrop": 2632, "bytesRcvLoss": 1316, "uptime": 3600
+    }
+  }
+}</code></pre>
+                <p><code>bitrate</code> 的單位為 Kbps；RTT 和接收緩衝為毫秒；接收速率與頻寬為 Mbps；執行時間為秒；遺失/捨棄值為封包數量或位元組數。</p>
+                <h3>NGINX RTMP</h3>
+                <p>該 URL 必須傳回 NGINX RTMP 狀態 XML。SSN 比對設定的應用程式與串流，並讀取 <code>bw_video</code> 作為每秒位元組數，並除以 1024 得到 <code>bitrateKbps</code>。它也讀取直播時間以及選用的影片/音訊編解碼器中繼資料。</p>
+                <h3>Node Media Server</h3>
+                <p>SSN 請求 <code>STATS_URL/APPLICATION/STREAM_NAME</code>。欄位可位於最上層或 <code>data</code>.</p>
+                <pre><code>{ "data": { "isLive": true, "bitrate": 4500, "viewers": 3, "duration": 3600 } }</code></pre>
+                <p>位元率單位為 Kbps，觀眾為人數，時長單位為秒。</p>
+                <h3>正規化 SSN 事件</h3>
+                <pre><code>{
+  "type": "generic",
+  "event": "video_stats",
+  "meta": {
+    "provider": "srt-live-server", "source": "srt-live-server",
+    "label": "SRT", "online": true,
+    "updatedAt": "2026-07-13T14:45:00.000Z",
+    "bitrateKbps": 4500, "rttMs": 32.5, "bufferMs": 120,
+    "summary": "4500 Kbps, 33 ms, 120 ms"
+  }
+}</code></pre>
+                <table class="field-table"><thead><tr><th>欄位</th><th>單位/類型</th></tr></thead><tbody>
+                    <tr><td><code>bitrateKbps</code></td><td>Kbps，整數</td></tr>
+                    <tr><td><code>rttMs</code> / <code>bufferMs</code></td><td>毫秒</td></tr>
+                    <tr><td><code>recvRateMbps</code> / <code>bandwidthMbps</code></td><td>Mbps</td></tr>
+                    <tr><td>遺失/捨棄欄位</td><td>封包數量或位元組數</td></tr>
+                    <tr><td><code>uptimeSeconds</code> / <code>durationSeconds</code></td><td>秒</td></tr>
+                    <tr><td><code>online</code></td><td>布林值； <code>false</code> 會隱藏停駐面板中的數值</td></tr>
+                </tbody></table>
+                <p>停駐面板接受 <code>meta.bitrateKbps</code>，帶有 <code>meta.bitrate</code> 和 <code>meta.kbps</code> 作為備用值。低於 1000 的值以四捨五入後的 Kbps 顯示；更大的值以 Mbps 顯示，保留一位小數。統計 URL、串流金鑰及憑證絕不會傳送至疊加畫面。</p>
+            </div>
+        </div></section>
+    </main>
+    <footer><div class="container"><div class="footer-content"><div class="footer-logo"><img src="../../media/logo.png" alt="Social Stream Ninja 標誌"><span>Social Stream Ninja</span></div><div class="footer-links"><div class="footer-section"><h4>資源</h4><ul><li><a href="guides.html">指南</a></li><li><a href="event-reference.html">事件參考</a></li><li><a href="support.html">支援</a></li></ul></div></div></div><div class="footer-bottom"><p>© 2026 Social Stream Ninja。保留所有權利。</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

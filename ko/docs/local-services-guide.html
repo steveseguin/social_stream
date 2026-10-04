@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ko/docs/local-services-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/ko/docs/local-services-guide.html">
+    <meta property="og:title" content="로컬 서버와 서비스 설명 - Social Stream Ninja">
+    <meta property="og:description" content="WebSocket 릴레이, 로컬 제어 API 및 MCP, 헤드리스 호스팅, 이벤트 흐름 미디어 서버 중 목적에 맞는 Social Stream Ninja 로컬 서비스를 선택하세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ko/docs/local-services-guide.html">
+    <meta name="twitter:title" content="로컬 서버와 서비스 설명 - Social Stream Ninja">
+    <meta name="twitter:description" content="WebSocket 릴레이, 로컬 제어 API 및 MCP, 헤드리스 호스팅, 이벤트 흐름 미디어 서버 중 목적에 맞는 Social Stream Ninja 로컬 서비스를 선택하세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>로컬 서버와 서비스 설명 - Social Stream Ninja</title>
+	<meta name="description" content="WebSocket 릴레이, 로컬 제어 API 및 MCP, 헤드리스 호스팅, 이벤트 흐름 미디어 서버 중 목적에 맞는 Social Stream Ninja 로컬 서비스를 선택하세요.">
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/local-services-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{", and":", 그리고",", it uses the desktop app's local relay instead. See":"가 있으면 데스크톱 앱의 로컬 릴레이를 대신 사용합니다. 참고:",". It is separate from":"입니다. 다음과는 별개입니다:",". See the":". 참고:","1. Enable Local Server":"1. 로컬 서버 활성화","2. Local Control API and MCP":"2. 로컬 제어 API 및 MCP","3. Headless Home Server or VPS":"3. 헤드리스 홈 서버 또는 VPS","4. Local Media Server":"4. 로컬 미디어 서버","Choose the correct Social Stream Ninja local service: the WebSocket relay, local control API and MCP, headless hosting, or Event Flow media server.":"WebSocket 릴레이, 로컬 제어 API 및 MCP, 헤드리스 호스팅, 이벤트 흐름 미디어 서버 중 목적에 맞는 Social Stream Ninja 로컬 서비스를 선택하세요.","Commands & API":"명령 및 API","Default Address":"기본 주소","Dock sends its commands to Extension via server":"도크가 서버를 통해 확장 프로그램에 명령 전송 (Dock sends its commands to Extension via server)","Download":"다운로드","Enable Local Server":"로컬 서버 활성화 (Enable Local Server)","Enable Local Server guide":"로컬 서버 활성화 가이드","Enable it under":"다음 메뉴에서 활성화하세요:","Features":"기능","File > Local AI / Automation":"파일 > 로컬 AI / 자동화(File > Local AI / Automation)","Guides":"가이드","Headless SSApp hosting":"헤드리스 SSApp 호스팅","Headless mode does not create a public control API. Remote control uses Social Stream's normal WebRTC or WebSocket transport. See the":"헤드리스 모드는 공개 제어 API를 만들지 않습니다. 원격 제어는 Social Stream의 일반 WebRTC 또는 WebSocket 전송 방식을 사용합니다. 참고:","Headless mode runs the full Electron desktop app with its source windows hidden. On Linux it still needs a display backend such as Xvfb. This is useful when a dedicated computer should keep capturing chat without a monitor attached.":"헤드리스 모드는 소스 창을 숨긴 상태로 전체 Electron 데스크톱 앱을 실행합니다. Linux에서는 여전히 Xvfb 같은 디스플레이 백엔드가 필요합니다. 모니터 없이 전용 컴퓨터에서 채팅을 계속 캡처하려는 경우에 유용합니다.","Hire":"작업 의뢰","Home":"홈","I Want To":"원하는 작업","Inspiration":"아이디어","It does not host the Social Stream website, capture a platform by itself, or provide the HTTP automation API. Start with the":"Social Stream 웹사이트를 호스팅하거나 자체적으로 플랫폼을 캡처하거나 HTTP 자동화 API를 제공하지는 않습니다. 다음 가이드부터 보세요:","It is not a general web or file server. See":"일반 웹 서버나 파일 서버가 아닙니다. 참고:","Let an AI tool or local script inspect and control the desktop app":"AI 도구나 로컬 스크립트로 데스크톱 앱 확인 및 제어","Local Control API and MCP":"로컬 제어 API 및 MCP","Local Control API and MCP guide":"로컬 제어 API 및 MCP 가이드","Local Servers and Services Explained":"로컬 서버 및 서비스 설명","Local Servers and Services Explained - Social Stream Ninja":"로컬 서버와 서비스 설명 - Social Stream Ninja","Local media server":"로컬 미디어 서버","Main navigation":"기본 탐색 메뉴","Media Files for Event Flow":"이벤트 흐름용 미디어 파일","No new public API; remote control uses the normal Social Stream session.":"새로운 공개 API는 없습니다. 원격 제어는 일반 Social Stream 세션을 사용합니다.","Older upgraded installs may use":"이전 버전에서 업그레이드한 설치는 다음을 사용할 수 있습니다:","Open navigation menu":"탐색 메뉴 열기","Other Temporary Local Ports":"기타 임시 로컬 포트","Overlay Gallery":"오버레이 갤러리","Play an approved local audio, image, or video file in Event Flow":"승인된 로컬 오디오, 이미지 또는 동영상 파일을 이벤트 흐름에서 재생","Quick Chooser":"빠른 선택 안내","Relay chat and supported commands between Social Stream pages without the normal remote transport":"일반 원격 전송 없이 Social Stream 페이지 간 채팅 및 지원 명령 릴레이","Routing flags are page-specific. Do not copy a server flag from one page to another and assume it has the same meaning.":"라우팅 플래그는 페이지마다 다릅니다. 한 페이지의 서버 플래그를 다른 페이지에 복사하고 의미가 같다고 가정하지 마세요.","Run the complete desktop app on a Linux home server or VPS without a monitor":"모니터 없이 Linux 홈 서버 또는 VPS에서 전체 데스크톱 앱 실행","Send chat messages to API server":"API 서버로 채팅 메시지 전송 (Send chat messages to API server)","Server Fallback Is Different":"서버 폴백은 별개입니다","Sessions, Passwords, Relay, and Server Modes":"세션, 비밀번호, 릴레이 및 서버 모드","Settings such as":"다음과 같은 설정은","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja uses several different local services. Choose the one that matches what you want to do.":"Social Stream Ninja는 여러 로컬 서비스를 사용합니다. 원하는 작업에 맞는 서비스를 선택하세요.","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Some sign-in and account-link workflows briefly open a loopback callback port and close it when the workflow ends. These temporary listeners are not general SSN servers or automation APIs.":"일부 로그인 및 계정 연결 절차는 잠시 루프백 콜백 포트를 열었다가 절차가 끝나면 닫습니다. 이러한 임시 수신기는 일반 SSN 서버나 자동화 API가 아닙니다.","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","The desktop app starts this automatically when local Event Flow media is available. It serves only files approved through SSApp and selected runtime assets through a random per-profile token path.":"로컬 이벤트 흐름 미디어를 사용할 수 있으면 데스크톱 앱이 이 서버를 자동으로 시작합니다. 프로필별 임의 토큰 경로를 통해 SSApp에서 승인된 파일과 일부 런타임 리소스만 제공합니다.","This File-menu option starts a room- and channel-aware WebSocket relay inside the desktop app. Supported Social Stream pages can use it to exchange chat and commands on the same computer. It is an alternative endpoint for page-specific server routing.":"File 메뉴의 이 옵션은 데스크톱 앱 안에서 방과 채널을 구분하는 WebSocket 릴레이를 시작합니다. 지원되는 Social Stream 페이지는 같은 컴퓨터에서 채팅과 명령을 교환하는 데 이를 사용할 수 있습니다. 페이지별 서버 라우팅을 위한 대체 엔드포인트입니다.","This opt-in loopback API lets programs on the SSApp computer manage supported sources and settings, read status and diagnostics, inspect app or source windows, and follow captured events. The bundled MCP adapter presents those operations as tools to compatible AI clients.":"이 선택적 루프백 API를 통해 SSApp 컴퓨터의 프로그램은 지원되는 소스와 설정을 관리하고, 상태와 진단 정보를 읽고, 앱 또는 소스 창을 검사하고, 캡처한 이벤트를 구독할 수 있습니다. 내장 MCP 어댑터는 이러한 작업을 호환 AI 클라이언트에 도구로 제공합니다.","Those settings normally use Social Stream's hosted WebSocket service. When a supported page also has":"이 설정들은 일반적으로 Social Stream의 호스팅 WebSocket 서비스를 사용합니다. 지원되는 페이지에 다음도 있으면","Use":"사용:","Use freshly generated links.":"새로 생성한 링크를 사용하세요.","and":"그리고","choose how chat and commands are routed. Their generated URL flags include":"채팅과 명령의 라우팅 방식을 선택합니다. 생성되는 URL 플래그에는 다음이 포함됩니다:","for the routing controls.":"에서 라우팅 제어를 확인하세요.","headless hosting guide":"헤드리스 호스팅 가이드","to choose between local files, uploads, and cloud hosting.":"에서 로컬 파일, 업로드, 클라우드 호스팅 중 선택하세요."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/local-services-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/local-services-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/local-services-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/local-services-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/local-services-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/local-services-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/local-services-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/local-services-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/local-services-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/local-services-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/local-services-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/local-services-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/local-services-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/local-services-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/local-services-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/local-services-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/local-services-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/local-services-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="guides-page">
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/local-services-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/local-services-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/local-services-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/local-services-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/local-services-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/local-services-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/local-services-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/local-services-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/local-services-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/local-services-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/local-services-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="local-services-guide.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/local-services-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/local-services-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/local-services-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/local-services-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/local-services-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+	<section class="page-hero">
+		<div class="container">
+			<h1>로컬 서버 및 서비스 설명</h1>
+			<p>Social Stream Ninja는 여러 로컬 서비스를 사용합니다. 원하는 작업에 맞는 서비스를 선택하세요.</p>
+		</div>
+	</section>
+
+	<main class="guide-section">
+		<div class="container">
+			<div class="guide-card">
+				<h2>빠른 선택 안내</h2>
+				<table class="guide-table guide-table-stack">
+					<thead>
+						<tr><th>원하는 작업</th><th>사용:</th><th>기본 주소</th></tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td data-label="I Want To"><span>일반 원격 전송 없이 Social Stream 페이지 간 채팅 및 지원 명령 릴레이</span></td>
+							<td data-label="Use"><span><a href="local-websocket-server-guide.html"><strong>로컬 서버 활성화 (Enable Local Server)</strong></a></span></td>
+							<td data-label="Default Address"><span><code>ws://127.0.0.1:3003</code><br>이전 버전에서 업그레이드한 설치는 다음을 사용할 수 있습니다: <code>3000</code>.</span></td>
+						</tr>
+						<tr>
+							<td data-label="I Want To"><span>AI 도구나 로컬 스크립트로 데스크톱 앱 확인 및 제어</span></td>
+							<td data-label="Use"><span><a href="llm-control-guide.html"><strong>로컬 제어 API 및 MCP</strong></a></span></td>
+							<td data-label="Default Address"><span><code>http://127.0.0.1:17777</code></span></td>
+						</tr>
+						<tr>
+							<td data-label="I Want To"><span>모니터 없이 Linux 홈 서버 또는 VPS에서 전체 데스크톱 앱 실행</span></td>
+							<td data-label="Use"><span><a href="headless-server-guide.html"><strong>헤드리스 SSApp 호스팅</strong></a></span></td>
+							<td data-label="Default Address"><span>새로운 공개 API는 없습니다. 원격 제어는 일반 Social Stream 세션을 사용합니다.</span></td>
+						</tr>
+						<tr>
+							<td data-label="I Want To"><span>승인된 로컬 오디오, 이미지 또는 동영상 파일을 이벤트 흐름에서 재생</span></td>
+							<td data-label="Use"><span><a href="media-hosting-event-flow.html"><strong>로컬 미디어 서버</strong></a></span></td>
+							<td data-label="Default Address"><span><code>http://127.0.0.1:3001</code></span></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card">
+				<h2>1. 로컬 서버 활성화</h2>
+				<p>File 메뉴의 이 옵션은 데스크톱 앱 안에서 방과 채널을 구분하는 WebSocket 릴레이를 시작합니다. 지원되는 Social Stream 페이지는 같은 컴퓨터에서 채팅과 명령을 교환하는 데 이를 사용할 수 있습니다. 페이지별 서버 라우팅을 위한 대체 엔드포인트입니다.</p>
+				<p>Social Stream 웹사이트를 호스팅하거나 자체적으로 플랫폼을 캡처하거나 HTTP 자동화 API를 제공하지는 않습니다. 다음 가이드부터 보세요: <a href="local-websocket-server-guide.html">로컬 서버 활성화 가이드</a>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>2. 로컬 제어 API 및 MCP</h2>
+				<p>이 선택적 루프백 API를 통해 SSApp 컴퓨터의 프로그램은 지원되는 소스와 설정을 관리하고, 상태와 진단 정보를 읽고, 앱 또는 소스 창을 검사하고, 캡처한 이벤트를 구독할 수 있습니다. 내장 MCP 어댑터는 이러한 작업을 호환 AI 클라이언트에 도구로 제공합니다.</p>
+				<p>다음 메뉴에서 활성화하세요: <strong>파일 &gt; 로컬 AI / 자동화(File &gt; Local AI / Automation)</strong>입니다. 다음과는 별개입니다: <strong>로컬 서버 활성화 (Enable Local Server)</strong>. 참고: <a href="llm-control-guide.html">로컬 제어 API 및 MCP 가이드</a>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>3. 헤드리스 홈 서버 또는 VPS</h2>
+				<p>헤드리스 모드는 소스 창을 숨긴 상태로 전체 Electron 데스크톱 앱을 실행합니다. Linux에서는 여전히 Xvfb 같은 디스플레이 백엔드가 필요합니다. 모니터 없이 전용 컴퓨터에서 채팅을 계속 캡처하려는 경우에 유용합니다.</p>
+				<p>헤드리스 모드는 공개 제어 API를 만들지 않습니다. 원격 제어는 Social Stream의 일반 WebRTC 또는 WebSocket 전송 방식을 사용합니다. 참고: <a href="headless-server-guide.html">헤드리스 호스팅 가이드</a>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>4. 로컬 미디어 서버</h2>
+				<p>로컬 이벤트 흐름 미디어를 사용할 수 있으면 데스크톱 앱이 이 서버를 자동으로 시작합니다. 프로필별 임의 토큰 경로를 통해 SSApp에서 승인된 파일과 일부 런타임 리소스만 제공합니다.</p>
+				<p>일반 웹 서버나 파일 서버가 아닙니다. 참고: <a href="media-hosting-event-flow.html">이벤트 흐름용 미디어 파일</a> 에서 로컬 파일, 업로드, 클라우드 호스팅 중 선택하세요.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>서버 폴백은 별개입니다</h2>
+				<p>다음과 같은 설정은 <strong>API 서버로 채팅 메시지 전송 (Send chat messages to API server)</strong> 그리고 <strong>도크가 서버를 통해 확장 프로그램에 명령 전송 (Dock sends its commands to Extension via server)</strong> 채팅과 명령의 라우팅 방식을 선택합니다. 생성되는 URL 플래그에는 다음이 포함됩니다: <code>server</code>, <code>server2</code>, 그리고 <code>server3</code>.</p>
+				<p>이 설정들은 일반적으로 Social Stream의 호스팅 WebSocket 서비스를 사용합니다. 지원되는 페이지에 다음도 있으면 <code>localserver</code>가 있으면 데스크톱 앱의 로컬 릴레이를 대신 사용합니다. 참고: <a href="sessions-passwords-relay-modes.html">세션, 비밀번호, 릴레이 및 서버 모드</a> 에서 라우팅 제어를 확인하세요.</p>
+				<div class="warning-note">
+					<p><strong>새로 생성한 링크를 사용하세요.</strong> 라우팅 플래그는 페이지마다 다릅니다. 한 페이지의 서버 플래그를 다른 페이지에 복사하고 의미가 같다고 가정하지 마세요.</p>
+				</div>
+			</div>
+
+			<div class="guide-card">
+				<h2>기타 임시 로컬 포트</h2>
+				<p>일부 로그인 및 계정 연결 절차는 잠시 루프백 콜백 포트를 열었다가 절차가 끝나면 닫습니다. 이러한 임시 수신기는 일반 SSN 서버나 자동화 API가 아닙니다.</p>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 라이선스.</p></div></div></footer>
+	<script data-copy-markdown src="../../docs/js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

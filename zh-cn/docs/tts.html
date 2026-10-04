@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-cn/docs/tts.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/zh-cn/docs/tts.html">
+    <meta property="og:title" content="Social Stream Ninja - TTS 语音指南">
+    <meta property="og:description" content="配置 Social Stream Ninja 文本转语音提供商、语音、URL 参数、浏览器支持、OBS 音频捕获及故障排查。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-cn/docs/tts.html">
+    <meta name="twitter:title" content="Social Stream Ninja - TTS 语音指南">
+    <meta name="twitter:description" content="配置 Social Stream Ninja 文本转语音提供商、语音、URL 参数、浏览器支持、OBS 音频捕获及故障排查。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream Ninja - TTS 语音指南</title>
+    <meta name="description" content="配置 Social Stream Ninja 文本转语音提供商、语音、URL 参数、浏览器支持、OBS 音频捕获及故障排查。">
+    <script src="../../docs/js/standalone-theme.js"></script>
+    <script defer src="../../docs/js/copy-markdown.js"></script>
+    <style>
+        :root {
+            --primary-color: #1565C0;
+            --on-primary: #FFFFFF;
+            --secondary-color: #1976D2;
+            --accent-color: #996000;
+            --text-color: #212121;
+            --text-light: #757575;
+            --bg-color: #FFFFFF;
+            --card-bg: #F5F5F5;
+            --border-color: #E0E0E0;
+            --code-bg: #263238;
+            --code-text: #ECEFF1;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #64B5F6;
+            --on-primary: #10283B;
+            --secondary-color: #42A5F5;
+            --accent-color: #FFB74D;
+            --text-color: #E0E0E0;
+            --text-light: #BDBDBD;
+            --bg-color: #121212;
+            --card-bg: #1E1E1E;
+            --border-color: #424242;
+            --code-bg: #000000;
+            --code-text: #ECEFF1;
+        }
+
+        html[data-theme="dark"],
+        body[data-theme="dark"] {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .voice-card,
+        [data-theme="dark"] .tts-test {
+            color: var(--text-color);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: var(--on-primary);
+            padding: 40px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 2px solid currentColor;
+            color: var(--on-primary);
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            margin-top: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .warning {
+            background-color: #FFF3E0;
+            border-left: 4px solid var(--accent-color);
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        [data-theme="dark"] .warning {
+            background-color: #5D4037;
+            color: #FFCC80;
+        }
+
+        .info {
+            background-color: #E3F2FD;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        [data-theme="dark"] .info {
+            background-color: #1565C0;
+            color: #BBDEFB;
+        }
+
+        .info a {
+            color: inherit;
+            text-decoration: underline;
+        }
+
+        .code {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+            white-space: pre-line;
+        }
+
+        code {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: var(--on-primary);
+        }
+
+        tr:nth-child(even) {
+            background-color: #F9F9F9;
+        }
+
+        [data-theme="dark"] tr:nth-child(even) {
+            background-color: #2A2A2A;
+        }
+
+        .browser-support {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .browser-card {
+            text-align: center;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .supported {
+            color: #267A2B;
+        }
+
+        [data-theme="dark"] .supported {
+            color: #81C784;
+        }
+
+        .partial {
+            color: var(--accent-color);
+        }
+
+        .not-supported {
+            color: #F44336;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin: 10px 0;
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .tts-test {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: var(--on-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .parameter-table td:first-child {
+            font-family: monospace;
+            background-color: #F5F5F5;
+        }
+
+        [data-theme="dark"] .parameter-table td:first-child {
+            background-color: #2A2A2A;
+        }
+
+        @media (max-width: 700px) {
+            table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        nav {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        nav li {
+            margin: 5px 0;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background-color: var(--card-bg);
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/tts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{"&pitch\u003c":"&pitch\u003c","&pitch=1.2":"&pitch=1.2","&rate\u003c":"&rate\u003c","&rate=1.5":"&rate=1.5","&readevents\u003c":"&readevents\u003c","&simpletts2\u003c":"&simpletts2\u003c","&simpletts\u003c":"&simpletts\u003c","&skipmessages=3":"&skipmessages=3","&speech\u003c":"&speech\u003c","&speech=en-US":"&speech=en-US","&ttscommand\u003c":"&ttscommand\u003c","&ttsprovider\u003c":"&ttsprovider\u003c","&ttsprovider=customtts":"&ttsprovider=customtts","&voice\u003c":"&voice\u003c","&voice=google":"&voice=google","&volume\u003c":"&volume\u003c","&volume=0.8":"&volume=0.8","(default), or":"（默认），或","(range 0.5 to 3.0; normal is 1.0).":"（范围 0.5 至 3.0；正常为 1.0）。",", click":"，点击",", language:":"，语言：",", mixer mute, and output tracks, or capture the external browser that is speaking":"、混音器静音及输出轨道，或捕获正在发声的外部浏览器",", speed:":"，速度：",", while openedai-speech/OpenAI-style voices may look like":"，而 openedai-speech/OpenAI 风格的语音可能类似",". It does not test OBS, a separate SSN app window, or providers such as Kokoro. An empty list does not mean SSN’s other TTS providers are unavailable.":"。它不测试 OBS、独立 SSN 应用窗口或 Kokoro 等提供商。列表为空并不表示 SSN 的其他 TTS 提供商不可用。",". Keep this page open and connected; only one copy should speak.":"。保持此页面打开并连接；仅应有一个副本发声。",". This defaults to System TTS. For a free OBS provider, also add":"。默认使用 System TTS。若要使用免费的 OBS 提供商，还需添加",". Use a voice name your server supports; Kokoro voices look like":"。使用服务器支持的语音名称；Kokoro 语音类似","; this page covers voice options and advanced settings.":"；本页介绍语音选项和高级设置。","A missing voice is different from speech playing outside OBS’s audio capture. Audio routing cannot fix missing speech support.":"语音不可用与语音在 OBS 音频捕获之外播放是不同问题。音频路由无法弥补缺失的语音支持。","API costs apply":"适用 API 费用","API costs apply (or free local)":"适用 API 费用（或免费本地运行）","Add":"添加","Add Voices":"添加语音","Advanced Parameters":"高级参数","Alternatives:":"替代方案：","Audio Capture in OBS":"在 OBS 中捕获音频","Audio Router (legacy)":"Audio Router（旧版）","Basic Parameters":"基本参数","Best Practices":"最佳实践","Both services offer premium and free TTS options":"两项服务均提供付费及免费 TTS 选项","Browser Limitations:":"浏览器限制：","Browser Support":"浏览器支持","Browser compatibility varies significantly":"浏览器兼容性差异很大","Browser-based AI, excellent quality, dozens of voices":"浏览器内 AI，音质出色，提供数十种语音","Browser-based, fast, CPU-friendly neural TTS":"在浏览器中运行、快速且适合 CPU 的神经网络 TTS","Browser-based, lightweight ONNX model":"在浏览器中运行的轻量 ONNX 模型","CAPTION.Ninja:":"CAPTION.Ninja：","Check":"检查","Check API key and ensure provider is correctly specified":"检查 API 密钥并确保提供商指定正确","Check Available Voices":"检查可用语音","Check This Browser's System Voices":"检查此浏览器的系统语音","Check that TTS is enabled, the TTS-producing page is open, and the browser source is not muted. In a normal browser, click the page once.":"检查 TTS 是否启用、生成 TTS 的页面是否打开，以及浏览器源是否未静音。在普通浏览器中，先点击页面一次。","Check voice availability, then audio capture.":"先检查语音可用性，再检查音频捕获。","Choose Fish Audio and enter your API key, with an optional voice ID. The default model is":"选择 Fish Audio 并输入 API 密钥，可选填语音 ID。默认模型为","Choose a voice for the language:":"选择该语言的语音：","Chrome":"Chrome","Chrome offers Google-powered TTS options":"Chrome 提供由 Google 支持的 TTS 选项","Chrome offers Google-powered options, Edge has Microsoft options":"Chrome 提供 Google 选项，Edge 提供 Microsoft 选项","Chromium-based; available voices vary by install":"基于 Chromium；可用语音因安装环境而异","Classic open-source TTS, works on any hardware":"经典开源 TTS，可在任意硬件上运行","Classic open-source, works on any hardware":"经典开源方案，可在任意硬件上运行","Common Issues":"常见问题","Compare providers, hear samples and see the settings.":"比较提供商、试听示例并查看设置。","Complete guide to Text-to-Speech voice options, browser compatibility, and audio capture":"文本转语音语音选项、浏览器兼容性及音频捕获完整指南","Configure Social Stream Ninja text-to-speech providers, voices, URL parameters, browser support, OBS audio capture, and troubleshooting.":"配置 Social Stream Ninja 文本转语音提供商、语音、URL 参数、浏览器支持、OBS 音频捕获及故障排查。","Consider user-generated content risks with TTS":"使用 TTS 时考虑用户生成内容的风险","Control audio via OBS":"通过 OBS 控制音频","Cost":"费用","Custom endpoint:":"自定义端点：","Custom voice training, natural sounding":"自定义语音训练，音色自然","Custom/local endpoint playback is buffered today; SSN does not progressively play streamed audio chunks yet":"目前自定义/本地端点播放采用缓冲方式；SSN 尚不支持逐步播放流式音频片段","Description":"说明","Direct":"直接","Do not assume OBS exposes the same voices as Chrome or Edge":"不要假设 OBS 提供与 Chrome 或 Edge 相同的语音","Don't read chatnames at all":"完全不朗读聊天用户名","Don't say \"says\" or \"someone says\"":"不说“says”或“someone says”","Edge":"Edge","Edge supports Microsoft TTS and Windows language pack voices":"Edge 支持 Microsoft TTS 及 Windows 语言包语音","ElevenLabs":"ElevenLabs","ElevenLabs TTS":"ElevenLabs TTS","Enable TTS with language code":"使用语言代码启用 TTS","Enable custom TTS command (default: !say)":"启用自定义 TTS 命令（默认：!say）","Enable with":"通过以下内容启用","Example":"示例","Fast, CPU-friendly neural TTS running in browser":"在浏览器中运行、快速且适合 CPU 的神经网络 TTS","Features":"功能","Firefox":"Firefox","First confirm that System TTS generates speech. OBS’s embedded browser may not expose a usable system voice. If it generates no speech, changing audio routing will not help. Choose another provider, or generate speech in a supported browser and capture that browser’s audio.":"首先确认 System TTS 能生成语音。OBS 的嵌入式浏览器可能不提供可用的系统语音。若未生成语音，修改音频路由不会有帮助。请选择其他提供商，或在受支持的浏览器中生成语音并捕获其音频。","Fish Audio TTS":"Fish Audio TTS","Follow the instructions in":"请按照以下资料中的说明操作：","For System TTS specifically:":"专门针对 System TTS：","For cloud voices, use a provider voice/language that supports the target language, such as Google Cloud, ElevenLabs, Speechify, Gemini, or an OpenAI-compatible local server.":"对于云端语音，请使用支持目标语言的提供商语音/语言，例如 Google Cloud、ElevenLabs、Speechify、Gemini 或 OpenAI 兼容本地服务器。","Free":"免费","Free providers such as Kokoro, Piper, Kitten, and eSpeak generate page audio instead. Payment is not required for TTS in OBS.":"Kokoro、Piper、Kitten 及 eSpeak 等免费提供商则生成页面音频。在 OBS 中使用 TTS 不必付费。","Free tier available":"提供免费额度","Gemini TTS":"Gemini TTS","GitHub repository":"GitHub仓库","Google Cloud":"Google Cloud","Google Cloud TTS":"Google Cloud TTS","Google generative language API":"Google 生成式语言 API","Google-powered voices + system voices":"Google 提供的语音 + 系统语音","Have a toggle to quickly disable TTS if needed":"准备一个开关，以便需要时快速禁用 TTS","High quality; also supports local servers via custom endpoint":"高品质；也通过自定义端点支持本地服务器","High-quality voices, multiple languages":"高品质语音，支持多种语言","If speech plays outside the scene Browser Source, capture that output separately":"若语音在场景浏览器源之外播放，请单独捕获该输出","If the local server has CORS or local network problems in Chrome/OBS, run":"若本地服务器在 Chrome/OBS 中遇到 CORS 或本地网络问题，运行","If there is no speech, check voice/provider availability first. If speech exists, check":"若没有语音，先检查语音/提供商可用性。若已有语音，检查","Important:":"重要：","Include stream events in TTS":"将直播事件纳入 TTS","Installing Additional Language Packs":"安装其他语言包","Installing Language Packs":"安装语言包","Kitten TTS":"Kitten TTS","Kitten TTS (Free, Built-in)":"Kitten TTS（免费、内置）","Kokoro TTS":"Kokoro TTS","Kokoro TTS (Free, Built-in)":"Kokoro TTS（免费、内置）","Language:":"语言：","Lightweight ONNX-based TTS running in browser":"在浏览器中运行的轻量 ONNX TTS","Limited language support based on system installation":"语言支持受系统安装情况限制","Limited support across browsers (Firefox may lack some TTS voices)":"各浏览器支持有限（Firefox 可能缺少部分 TTS 语音）","Local / Free TTS Options (No API Key Required)":"本地 / 免费 TTS 选项（无需 API 密钥）","Local AI TTS Guide":"本地 AI TTS 指南","Local endpoint works in the app test but not OBS:":"本地端点在应用测试中可用，但在 OBS 中无效：","Local system languages only":"仅支持本地系统语言","Manage Voices":"管理语音","Method 1: Default Audio Route with a Virtual Cable":"方法 1：使用虚拟音频线的默认音频路由","Method 2: Windows 10 App Route":"方法 2：Windows 10 应用路由","Method 3: Windows 11 App Route":"方法 3：Windows 11 应用路由","Method 4: Audio Router Software":"方法 4：Audio Router 软件","Method 5: Voicemeeter (Advanced)":"方法 5：Voicemeeter（高级）","Microsoft voices + Windows TTS packs":"Microsoft 语音 + Windows TTS 包","Microsoft's official guide":"Microsoft 官方指南","Model:":"模型：","Navigate to":"前往","No API key needed for local servers":"本地服务器无需 API 密钥","No audio playing:":"没有音频播放：","No virtual audio cables needed":"无需虚拟音频线","Not all browsers support text-to-speech equally (some Firefox versions have limited voices)":"不同浏览器对文本转语音的支持不同（部分 Firefox 版本的语音有限）","OBS Capture":"OBS 捕获","OBS is a separate browser. Check the endpoint from the OBS computer, especially if using":"OBS 是独立浏览器。请在 OBS 电脑上检查端点，尤其是使用","OBS not capturing:":"OBS 未捕获：","Offers closed-captioning, transcription, and translation with TTS":"提供字幕、转录及结合 TTS 的翻译","Only the first letter or first words are read:":"只朗读第一个字母或开头几个词：","OpenAI / Local Server TTS":"OpenAI / 本地服务器 TTS","OpenAI TTS":"OpenAI TTS","Opera":"Opera","Overview":"概述","Page Audio: Free Local and Cloud Providers":"页面音频：免费本地及云端提供商","Parameter":"参数","Parameters: stability, similarity, style can be adjusted":"参数：可调整稳定性、相似度及风格","Partial voice name match":"部分匹配语音名称","Piper TTS":"Piper TTS","Piper TTS (Free, Built-in)":"Piper TTS（免费、内置）","Portuguese and Spanish TTS Examples":"葡萄牙语和西班牙语 TTS 示例","Portuguese example:":"葡萄牙语示例：","Portuguese voices:":"葡萄牙语语音：","Portuguese, best free local quality tested in SSN:":"葡萄牙语，在 SSN 中测试的最佳免费本地音质：","Portuguese, fastest fallback tested in SSN:":"葡萄牙语，在 SSN 中测试的最快备用方案：","Premium / Cloud TTS Options (Direct Browser Audio)":"付费 / 云端 TTS 选项（浏览器直接播放音频）","Premium TTS Options":"付费 TTS 选项","Premium service not working:":"付费服务无效：","Professional quality voices":"专业品质语音","Professional quality, multiple languages":"专业品质，支持多种语言","Provider":"提供商","Quick Start:":"快速开始：","Read every 3rd message only":"每3条消息只朗读1条","Reads out audience chat messages in multiple areas":"在多个界面中朗读观众聊天消息","Restart browser after installing language packs":"安装语言包后重启浏览器","Restart browsers to refresh available voices":"重启浏览器以刷新可用语音","Routing downloads:":"音频路由工具下载：","Runs in browser via WebGPU/WASM without a server":"通过 WebGPU/WASM 在浏览器中运行 — 无需服务器","SSN can read captured chat text from any supported source; the chat platform does not need its own TTS feature.":"SSN 可以朗读从任意支持来源捕获的聊天文字；聊天平台本身无需提供 TTS 功能。","SSN sends":"SSN 发送","SSN’s browser-based local providers and cloud audio providers play generated audio through the page:":"SSN 的浏览器内本地提供商及云端音频提供商通过页面播放生成的音频：","Safari has limited automatic TTS support":"Safari 对自动 TTS 的支持有限","Safari issues:":"Safari 问题：","Safari requires user interaction to start audio":"Safari 需要用户交互才能开始播放音频","See the":"请参阅","Select desired languages and click":"选择所需语言并点击","Select provider: kokoro, piper, kitten, espeak, openai, customtts, localtts, elevenlabs, google, speechify, gemini":"选择提供商：kokoro、piper、kitten、espeak、openai、customtts、localtts、elevenlabs、google、speechify、gemini","Setup, model options, and browser access limitations":"设置、模型选项及浏览器访问限制","Several high-quality AI voices are built directly into Social Stream Ninja and run in your browser without an API key, cloud service, or extra installation. See the":"Social Stream Ninja 直接内置多种高品质 AI 语音，在浏览器中运行 — 无需 API 密钥、云端或额外安装。参见","Simply enable \"Control audio via OBS\" in browser source":"只需在浏览器源中启用“Control audio via OBS”","Social Stream Ninja - TTS Voice Guide":"Social Stream Ninja - TTS 语音指南","Social Stream Ninja TTS Guide":"Social Stream Ninja TTS 指南","Social Stream Ninja TTS Guide - For the latest updates, visit the":"Social Stream Ninja TTS 指南 - 最新更新请访问","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja:":"Social Stream Ninja：","Some third-party voices may not appear in browsers due to compatibility issues. Firefox often shows more system voices than Chromium-based browsers.":"部分第三方语音可能因兼容性问题未出现在浏览器中。Firefox 通常比基于 Chromium 的浏览器显示更多系统语音。","Spanish example:":"西班牙语示例：","Spanish voices:":"西班牙语语音：","Spanish, best free local quality tested in SSN:":"西班牙语，在 SSN 中测试的最佳免费本地音质：","Spanish, fastest fallback tested in SSN:":"西班牙语，在 SSN 中测试的最快备用方案：","Speaking rate (0.1 to 10.0)":"语速（0.1 至 10.0）","Speaking speed:":"朗读速度：","Speechify":"Speechify","Speechify TTS":"Speechify TTS","Speechify setup, voices, speed, and volume guide":"Speechify 设置、语音、速度及音量指南","Speed control:":"速度控制：","Start > Settings > Time & Language > Speech":"开始 > 设置 > 时间和语言 > 语音","Style instructions:":"风格指令：","System TTS (Free)":"System TTS（免费）","System TTS Capture Methods":"System TTS 捕获方法","System TTS is not the same as all free TTS:":"System TTS 不等于所有免费 TTS：","System TTS voices in the browser displaying this guide only":"仅限显示本指南的浏览器中的 System TTS 语音","System Voice Availability":"系统语音可用性","System voices depend on the browser and operating system. OBS may expose no usable voices, even when Chrome/Edge works.":"系统语音取决于浏览器及操作系统。即使 Chrome/Edge 可用，OBS 也可能不提供任何可用语音。","TTS Provider Configuration":"TTS 提供商配置","TTS Provider Options":"TTS 提供商选项","TTS Providers":"TTS 提供商","Table of Contents":"目录","Test your setup with simple phrases before going live":"直播前用简单短句测试设置","Testing Your Setup":"测试你的设置","These are typical capabilities, not guarantees for every installation. OBS uses its own embedded browser and does not inherit an installed Chrome/Edge voice list. A successful SSN app test does not test a separate OBS Browser Source.":"这些是典型能力，并非对所有安装环境的保证。OBS 使用自己的嵌入式浏览器，不会继承已安装 Chrome/Edge 的语音列表。SSN 应用测试成功不代表单独的 OBS 浏览器源也已通过测试。","This lists":"此处列出","Tip:":"提示：","Toggle Dark Mode":"切换深色模式","Toggle Light Mode":"切换浅色模式","Troubleshooting":"故障排除","Try capturing the speaking browser with OBS application or desktop audio first, where supported. The virtual-cable methods below are optional alternatives; they do not add speech support to OBS.":"在支持的情况下，先尝试用 OBS 应用音频或桌面音频捕获正在发声的浏览器。下方虚拟音频线方法是可选替代方案；不会为 OBS 增加语音支持。","URL Parameters":"URL参数","URL Parameters for TTS Configuration":"TTS 配置的 URL 参数","Under":"位于","Use":"使用","Use a free built-in provider such as Kokoro, Piper, Kitten, or eSpeak, a cloud provider, or a self-hosted TTS server.":"使用 Kokoro、Piper、Kitten 或 eSpeak 等免费内置提供商、云端提供商或自托管 TTS 服务器。","Use a provider that generates page audio for a simpler OBS setup; free local providers are available":"使用生成页面音频的提供商可简化 OBS 设置；有免费本地提供商可选","Uses OpenAI's API by default, or any compatible local server":"默认使用 OpenAI API，也可使用任意兼容的本地服务器","Uses your operating system's built-in voices":"使用操作系统内置语音","VB-Audio Virtual Cable":"VB-Audio Virtual Cable","Voice ID:":"语音 ID：","Voice availability and audio routing depend on the browser and operating system; test in the actual player":"语音可用性及音频路由取决于浏览器和操作系统；请在实际播放器中测试","Voice pitch (0.1 to 2.0)":"语音音高（0.1 至 2.0）","Voice selection:":"语音选择：","Voice:":"语音：","Voicemeeter":"Voicemeeter","Voices not showing:":"语音未显示：","Volume level (0.0 to 1.0)":"音量（0.0 至 1.0）","Want fully local AI TTS?":"想要完全本地的 AI TTS？","Where is TTS Used?":"TTS 用于哪些位置？","Windows 10":"Windows 10","Windows 11":"Windows 11","Windows TTS Audio Capture Methods for OBS":"适用于 OBS 的 Windows TTS 音频捕获方法","Works directly with OBS browser source":"可直接配合 OBS 浏览器源使用","Works with SSN app and OBS browser sources":"适用于 SSN 应用及 OBS 浏览器源","Your TTS-enabled dock or overlay speaks the messages it receives, subject to its filters and TTS settings. Start with the":"启用 TTS 的停靠面板或叠加层会根据过滤器及 TTS 设置，朗读收到的消息。先阅读","alone does not change the selected voice. Existing English voice IDs still work.":"本身不会改变所选语音。现有英语语音 ID 仍然可用。","and":"和","and supports binary audio, JSON audio URLs, and JSON base64 audio":"，并支持二进制音频、JSON 音频 URL 及 JSON base64 音频","available voices":"可用语音","eSpeak-NG":"eSpeak-NG","eSpeak-NG (Free, Built-in)":"eSpeak-NG（免费、内置）","for Brazilian Portuguese. Changing":"用于巴西葡萄牙语。更改","for English.":"用于英语。","for Spanish or":"用于西班牙语，或","for a self-hosted endpoint":"用于自托管端点","for installing language packs.":"，了解语言包安装方法。","for self-hosted server setup":"，了解自托管服务器设置。","for setup instructions and self-hosted server options.":"，了解设置说明及自托管服务器选项。","for your browser":"供你的浏览器使用","from the OBS URL if present.":"，如 OBS URL 中存在则移除。","mean the same computer that is playing the TTS page. If OBS is on a different computer than your TTS server, use the server computer's LAN IP instead.":"指播放 TTS 页面的同一台电脑。如果 OBS 与 TTS 服务器不在同一台电脑上，请改用服务器电脑的局域网 IP。","on the OBS computer and point SSN at":"，在 OBS 电脑上运行，并将 SSN 指向","or":"或","remove":"移除","short setup guide":"简明设置指南","⚠ Limited Support":"⚠ 支持有限","✓ System voices available on supported installations":"✓ 在支持的安装环境中可使用系统语音"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/tts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/tts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/tts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/tts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/tts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/tts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/tts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/tts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/tts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/tts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/tts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/tts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/tts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/tts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/tts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/tts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/tts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/tts.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header>
+        <div class="container">
+            <button class="theme-toggle" data-theme-toggle type="button">
+                <span class="theme-icon">🌓</span>
+                <span class="theme-text">切换深色模式</span>
+            </button>
+            <h1>Social Stream Ninja TTS 指南</h1>
+            <p>文本转语音语音选项、浏览器兼容性及音频捕获完整指南</p>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="tts.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tts.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tts.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+    </header>
+    
+    <div class="container">
+        <nav>
+            <h3>目录</h3>
+            <ul>
+                <li><a href="#overview">概述</a></li>
+                <li><a href="#providers">TTS 提供商</a></li>
+                <li><a href="#browser-support">浏览器支持</a></li>
+                <li><a href="#audio-capture">在 OBS 中捕获音频</a></li>
+                <li><a href="#language-installation">安装语言包</a></li>
+                <li><a href="#parameters">URL参数</a></li>
+                <li><a href="#premium-options">付费 TTS 选项</a></li>
+                <li><a href="#troubleshooting">故障排除</a></li>
+            </ul>
+        </nav>
+        
+        <h2 id="overview">概述</h2>
+        <div class="card">
+            <p><strong>SSN 可以朗读从任意支持来源捕获的聊天文字；聊天平台本身无需提供 TTS 功能。</strong> 启用 TTS 的停靠面板或叠加层会根据过滤器及 TTS 设置，朗读收到的消息。先阅读 <a href="tts-setup-guide.html#chat-platforms">简明设置指南</a>；本页介绍语音选项和高级设置。 <a href="tts-setup-guide.html#voice-chooser">比较提供商、试听示例并查看设置。</a></p>
+            
+            <div class="info">
+                <strong>快速开始：</strong> 使用 <code>dock.html?session=YOUR_SESSION&amp;speech=en-US</code>。默认使用 System TTS。若要使用免费的 OBS 提供商，还需添加 <code>&amp;ttsprovider=kokoro</code>。保持此页面打开并连接；仅应有一个副本发声。
+            </div>
+            
+            <h3>TTS 用于哪些位置？</h3>
+            <ul>
+                <li><strong>Social Stream Ninja：</strong> 在多个界面中朗读观众聊天消息</li>
+                <li><strong>CAPTION.Ninja：</strong> 提供字幕、转录及结合 TTS 的翻译</li>
+                <li>两项服务均提供付费及免费 TTS 选项</li>
+            </ul>
+            
+            <div class="warning">
+                <strong>System TTS 不等于所有免费 TTS：</strong>
+                <ul>
+                    <li>系统语音取决于浏览器及操作系统。即使 Chrome/Edge 可用，OBS 也可能不提供任何可用语音。</li>
+                    <li>语音不可用与语音在 OBS 音频捕获之外播放是不同问题。音频路由无法弥补缺失的语音支持。</li>
+                    <li>Kokoro、Piper、Kitten 及 eSpeak 等免费提供商则生成页面音频。在 OBS 中使用 TTS 不必付费。</li>
+                    <li><a href="tts-setup-guide.html#obs-voices">先检查语音可用性，再检查音频捕获。</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <h2 id="providers">TTS 提供商选项</h2>
+        <div class="card">
+            <h3>System TTS（免费）</h3>
+            <ul>
+                <li>使用操作系统内置语音</li>
+                <li>语言支持受系统安装情况限制</li>
+                <li>语音可用性及音频路由取决于浏览器和操作系统；请在实际播放器中测试</li>
+                <li>浏览器兼容性差异很大</li>
+            </ul>
+            
+            <h3>本地 / 免费 TTS 选项（无需 API 密钥）</h3>
+            <div class="info">
+                <strong>想要完全本地的 AI TTS？</strong> Social Stream Ninja 直接内置多种高品质 AI 语音，在浏览器中运行 — 无需 API 密钥、云端或额外安装。参见 <a href="local-tts.html"><strong>本地 AI TTS 指南</strong></a> ，了解设置说明及自托管服务器选项。
+            </div>
+            <table>
+                <tr>
+                    <th>提供商</th>
+                    <th>费用</th>
+                    <th>OBS 捕获</th>
+                    <th>功能</th>
+                </tr>
+                <tr>
+                    <td>Kokoro TTS</td>
+                    <td>免费</td>
+                    <td>直接</td>
+                    <td>浏览器内 AI，音质出色，提供数十种语音</td>
+                </tr>
+                <tr>
+                    <td>Piper TTS</td>
+                    <td>免费</td>
+                    <td>直接</td>
+                    <td>在浏览器中运行、快速且适合 CPU 的神经网络 TTS</td>
+                </tr>
+                <tr>
+                    <td>Kitten TTS</td>
+                    <td>免费</td>
+                    <td>直接</td>
+                    <td>在浏览器中运行的轻量 ONNX 模型</td>
+                </tr>
+                <tr>
+                    <td>eSpeak-NG</td>
+                    <td>免费</td>
+                    <td>直接</td>
+                    <td>经典开源方案，可在任意硬件上运行</td>
+                </tr>
+            </table>
+
+            <h3>付费 / 云端 TTS 选项（浏览器直接播放音频）</h3>
+            <table>
+                <tr>
+                    <th>提供商</th>
+                    <th>费用</th>
+                    <th>OBS 捕获</th>
+                    <th>功能</th>
+                </tr>
+                <tr>
+                    <td>OpenAI TTS</td>
+                    <td>适用 API 费用（或免费本地运行）</td>
+                    <td>直接</td>
+                    <td>高品质；也通过自定义端点支持本地服务器</td>
+                </tr>
+                <tr>
+                    <td>Google Cloud</td>
+                    <td>适用 API 费用</td>
+                    <td>直接</td>
+                    <td>专业品质，支持多种语言</td>
+                </tr>
+                <tr>
+                    <td>ElevenLabs</td>
+                    <td>提供免费额度</td>
+                    <td>直接</td>
+                    <td>自定义语音训练，音色自然</td>
+                </tr>
+                <tr>
+                    <td>Speechify</td>
+                    <td>适用 API 费用</td>
+                    <td>直接</td>
+                    <td>高品质语音，支持多种语言</td>
+                </tr>
+                <tr>
+                    <td>Gemini TTS</td>
+                    <td>适用 API 费用</td>
+                    <td>直接</td>
+                    <td>Google 生成式语言 API</td>
+                </tr>
+            </table>
+        </div>
+        
+        <h2 id="browser-support">系统语音可用性</h2>
+        <p>这些是典型能力，并非对所有安装环境的保证。OBS 使用自己的嵌入式浏览器，不会继承已安装 Chrome/Edge 的语音列表。SSN 应用测试成功不代表单独的 OBS 浏览器源也已通过测试。</p>
+        <div class="browser-support">
+            <div class="browser-card">
+                <h3>Chrome</h3>
+                <p class="supported">✓ 在支持的安装环境中可使用系统语音</p>
+                <p>Google 提供的语音 + 系统语音</p>
+            </div>
+            <div class="browser-card">
+                <h3>Edge</h3>
+                <p class="supported">✓ 在支持的安装环境中可使用系统语音</p>
+                <p>Microsoft 语音 + Windows TTS 包</p>
+            </div>
+            <div class="browser-card">
+                <h3>Firefox</h3>
+                <p class="partial">⚠ 支持有限</p>
+                <p>仅支持本地系统语言</p>
+            </div>
+            <div class="browser-card">
+                <h3>Opera</h3>
+                <p class="partial">⚠ 支持有限</p>
+                <p>基于 Chromium；可用语音因安装环境而异</p>
+            </div>
+        </div>
+        
+        <div class="warning">
+            <strong>浏览器限制：</strong>
+            <ul>
+                <li>不同浏览器对文本转语音的支持不同（部分 Firefox 版本的语音有限）</li>
+                <li>Chrome 提供由 Google 支持的 TTS 选项</li>
+                <li>Edge 支持 Microsoft TTS 及 Windows 语言包语音</li>
+                <li>Safari 需要用户交互才能开始播放音频</li>
+                <li>检查 <a href="https://socialstream.ninja/tts" target="_blank">可用语音</a> 供你的浏览器使用</li>
+            </ul>
+        </div>
+        
+        <h2 id="audio-capture">适用于 OBS 的 Windows TTS 音频捕获方法</h2>
+        <div class="card">
+            <h3>页面音频：免费本地及云端提供商</h3>
+            <p>SSN 的浏览器内本地提供商及云端音频提供商通过页面播放生成的音频：</p>
+            <ul>
+                <li>只需在浏览器源中启用“Control audio via OBS”</li>
+                <li>无需虚拟音频线</li>
+                <li>适用于 SSN 应用及 OBS 浏览器源</li>
+            </ul>
+            
+            <h3>System TTS 捕获方法</h3>
+            <div class="warning">
+                <strong>重要：</strong> 首先确认 System TTS 能生成语音。OBS 的嵌入式浏览器可能不提供可用的系统语音。若未生成语音，修改音频路由不会有帮助。请选择其他提供商，或在受支持的浏览器中生成语音并捕获其音频。
+            </div>
+            
+            <p>专门针对 System TTS：</p>
+            <ul>
+                <li>不要假设 OBS 提供与 Chrome 或 Edge 相同的语音</li>
+                <li>各浏览器支持有限（Firefox 可能缺少部分 TTS 语音）</li>
+                <li>Chrome 提供 Google 选项，Edge 提供 Microsoft 选项</li>
+                <li>若语音在场景浏览器源之外播放，请单独捕获该输出</li>
+            </ul>
+            <p><strong>音频路由工具下载：</strong> <a href="https://vb-audio.com/Cable/" target="_blank">VB-Audio Virtual Cable</a> | <a href="https://vb-audio.com/Voicemeeter/" target="_blank">Voicemeeter</a> | <a href="https://github.com/audiorouterdev/audio-router" target="_blank">Audio Router（旧版）</a></p>
+
+            <p>在支持的情况下，先尝试用 OBS 应用音频或桌面音频捕获正在发声的浏览器。下方虚拟音频线方法是可选替代方案；不会为 OBS 增加语音支持。</p>
+            <h4>方法 1：使用虚拟音频线的默认音频路由</h4>
+            <div class="code">
+1. Set VB-Audio Virtual Cable as Windows default output
+   - Sound Settings > Output > CABLE Input
+2. OBS:
+   - Add Audio Input Capture
+   - Source: CABLE Output
+   - Monitor: Monitor and Output, or Monitor Only if another source handles stream output
+            </div>
+            
+            <h4>方法 2：Windows 10 应用路由</h4>
+            <div class="code">
+1. Sound Settings > App volume and device preferences
+2. Find browser in list
+3. Output: CABLE Input
+4. OBS setup same as Method 1
+            </div>
+            
+            <h4>方法 3：Windows 11 应用路由</h4>
+            <div class="code">
+1. Settings > System > Sound > Volume Mixer
+2. Locate browser
+3. Output: CABLE Input
+4. OBS setup same as Method 1
+            </div>
+            
+            <h4>方法 4：Audio Router 软件</h4>
+            <div class="code">
+1. Install Audio Router
+2. Route browser to CABLE Input
+3. OBS setup same as Method 1
+            </div>
+            
+            <h4>方法 5：Voicemeeter（高级）</h4>
+            <div class="code">
+1. Install Voicemeeter
+2. Set as Windows default output
+3. Route:
+   - Hardware out > speakers
+   - Virtual out > OBS
+4. OBS captures Voicemeeter output
+            </div>
+            
+            <h3>测试你的设置</h3>
+            <div class="code">
+1. Play TTS
+2. Check OBS meter
+3. Verify system audio
+4. Adjust levels if needed
+            </div>
+            
+            <div class="info">
+                <strong>替代方案：</strong> 使用 Kokoro、Piper、Kitten 或 eSpeak 等免费内置提供商、云端提供商或自托管 TTS 服务器。
+            </div>
+        </div>
+        
+        <h2 id="language-installation">安装其他语言包</h2>
+        <div class="card">
+            <h3>Windows 11</h3>
+            <ol>
+                <li>前往 <strong>开始 &gt; 设置 &gt; 时间和语言 &gt; 语音</strong></li>
+                <li>位于 <strong>管理语音</strong>，点击 <strong>添加语音</strong></li>
+                <li>选择所需语言并点击 <strong>添加</strong></li>
+                <li>重启浏览器以刷新可用语音</li>
+            </ol>
+            
+            <h3>Windows 10</h3>
+            <p>请按照以下资料中的说明操作： <a href="https://support.microsoft.com/en-US/Windows/Hardware/Input-Devices/manage-the-language-and-keyboard-input-layout-settings-in-windows" target="_blank">Microsoft 官方指南</a> ，了解语言包安装方法。</p>
+            
+            <div class="info">
+                <strong>提示：</strong> 部分第三方语音可能因兼容性问题未出现在浏览器中。Firefox 通常比基于 Chromium 的浏览器显示更多系统语音。
+            </div>
+        </div>
+        
+        <h2 id="parameters">TTS 配置的 URL 参数</h2>
+        <div class="card">
+            <h3>基本参数</h3>
+            <table class="parameter-table">
+                <tr>
+                    <th>参数</th>
+                    <th>说明</th>
+                    <th>示例</th>
+                </tr>
+                <tr>
+                    <td>&speech</td>
+                    <td>使用语言代码启用 TTS</td>
+                    <td>&speech=en-US</td>
+                </tr>
+                <tr>
+                    <td>&pitch</td>
+                    <td>语音音高（0.1 至 2.0）</td>
+                    <td>&pitch=1.2</td>
+                </tr>
+                <tr>
+                    <td>&volume</td>
+                    <td>音量（0.0 至 1.0）</td>
+                    <td>&volume=0.8</td>
+                </tr>
+                <tr>
+                    <td>&rate</td>
+                    <td>语速（0.1 至 10.0）</td>
+                    <td>&rate=1.5</td>
+                </tr>
+                <tr>
+                    <td>&voice</td>
+                    <td>部分匹配语音名称</td>
+                    <td>&voice=google</td>
+                </tr>
+                <tr>
+                    <td>&ttsprovider</td>
+                    <td>选择提供商：kokoro、piper、kitten、espeak、openai、customtts、localtts、elevenlabs、google、speechify、gemini</td>
+                    <td>&ttsprovider=customtts</td>
+                </tr>
+            </table>
+            
+            <h3>高级参数</h3>
+            <table class="parameter-table">
+                <tr>
+                    <th>参数</th>
+                    <th>说明</th>
+                </tr>
+                <tr>
+                    <td>&simpletts</td>
+                    <td>不说“says”或“someone says”</td>
+                </tr>
+                <tr>
+                    <td>&simpletts2</td>
+                    <td>完全不朗读聊天用户名</td>
+                </tr>
+                <tr>
+                    <td>&ttscommand</td>
+                    <td>启用自定义 TTS 命令（默认：!say）</td>
+                </tr>
+                <tr>
+                    <td>&readevents</td>
+                    <td>将直播事件纳入 TTS</td>
+                </tr>
+                <tr>
+                    <td>&skipmessages=3</td>
+                    <td>每3条消息只朗读1条</td>
+                </tr>
+            </table>
+        </div>
+        
+        <h2 id="premium-options">TTS 提供商配置</h2>
+        <div class="card">
+            <h3>Kokoro TTS（免费、内置）</h3>
+            <ul>
+                <li>通过以下内容启用 <code>?ttsprovider=kokoro</code></li>
+                <li>通过 WebGPU/WASM 在浏览器中运行 — 无需服务器</li>
+                <li>可直接配合 OBS 浏览器源使用</li>
+                <li>语音选择： <code>&voicekokoro=af_bella</code></li>
+                <li>速度控制： <code>&kokorospeed=1.2</code></li>
+                <li>选择该语言的语音： <code>&amp;voicekokoro=ef_dora</code> 用于西班牙语，或 <code>&amp;voicekokoro=pf_dora</code> 用于巴西葡萄牙语。更改 <code>&amp;speech=</code> 本身不会改变所选语音。现有英语语音 ID 仍然可用。</li>
+
+            </ul>
+
+            <h3>Piper TTS（免费、内置）</h3>
+            <ul>
+                <li>通过以下内容启用 <code>?ttsprovider=piper</code></li>
+                <li>在浏览器中运行、快速且适合 CPU 的神经网络 TTS</li>
+                <li>语音选择： <code>&pipervoice=en_US-hfc_female-medium</code></li>
+                <li>葡萄牙语语音： <code>&pipervoice=pt_BR-faber-medium</code> 或 <code>&pipervoice=pt_BR-edresson-low</code></li>
+                <li>西班牙语语音： <code>&pipervoice=es_ES-davefx-medium</code> 或 <code>&pipervoice=es_MX-ald-medium</code></li>
+                <li>速度控制： <code>&piperspeed=1.0</code></li>
+            </ul>
+
+            <h3>Kitten TTS（免费、内置）</h3>
+            <ul>
+                <li>通过以下内容启用 <code>?ttsprovider=kitten</code></li>
+                <li>在浏览器中运行的轻量 ONNX TTS</li>
+                <li>语音选择： <code>&kittenvoice=expr-voice-4-f</code></li>
+            </ul>
+
+            <h3>eSpeak-NG（免费、内置）</h3>
+            <ul>
+                <li>通过以下内容启用 <code>?ttsprovider=espeak</code></li>
+                <li>经典开源 TTS，可在任意硬件上运行</li>
+                <li>语音选择： <code>&espeakvoice=en</code></li>
+                <li>葡萄牙语示例： <code>&speech=pt-BR&ttsprovider=espeak&espeakvoice=pt-br</code></li>
+                <li>西班牙语示例： <code>&speech=es-ES&ttsprovider=espeak&espeakvoice=es</code></li>
+                <li>速度控制： <code>&espeakspeed=175</code></li>
+            </ul>
+
+            <h3>葡萄牙语和西班牙语 TTS 示例</h3>
+            <ul>
+                <li>葡萄牙语，在 SSN 中测试的最佳免费本地音质： <code>?speech=pt-BR&ttsprovider=piper&pipervoice=pt_BR-faber-medium</code></li>
+                <li>葡萄牙语，在 SSN 中测试的最快备用方案： <code>?speech=pt-BR&ttsprovider=espeak&espeakvoice=pt-br</code></li>
+                <li>西班牙语，在 SSN 中测试的最佳免费本地音质： <code>?speech=es-ES&ttsprovider=piper&pipervoice=es_ES-davefx-medium</code></li>
+                <li>西班牙语，在 SSN 中测试的最快备用方案： <code>?speech=es-ES&ttsprovider=espeak&espeakvoice=es</code></li>
+                <li>对于云端语音，请使用支持目标语言的提供商语音/语言，例如 Google Cloud、ElevenLabs、Speechify、Gemini 或 OpenAI 兼容本地服务器。</li>
+            </ul>
+
+            <h3>OpenAI / 本地服务器 TTS</h3>
+            <ul>
+                <li>通过以下内容启用 <code>?ttsprovider=openai</code></li>
+                <li>使用 <code>?ttsprovider=customtts</code> 或 <code>?ttsprovider=localtts</code> 用于自托管端点</li>
+                <li>默认使用 OpenAI API，也可使用任意兼容的本地服务器</li>
+                <li>自定义端点： <code>&openaiendpoint=http://localhost:8880/v1/audio/speech</code></li>
+                <li><strong>重要：</strong> <code>localhost</code> 和 <code>127.0.0.1</code> 指播放 TTS 页面的同一台电脑。如果 OBS 与 TTS 服务器不在同一台电脑上，请改用服务器电脑的局域网 IP。</li>
+                <li>本地服务器无需 API 密钥</li>
+                <li>若本地服务器在 Chrome/OBS 中遇到 CORS 或本地网络问题，运行 <code>npm run local-tts-bridge</code> ，在 OBS 电脑上运行，并将 SSN 指向 <code>http://127.0.0.1:8124/v1/audio/speech</code></li>
+                <li>SSN 发送 <code>{ model, input, voice, response_format, speed }</code> ，并支持二进制音频、JSON 音频 URL 及 JSON base64 音频</li>
+                <li>目前自定义/本地端点播放采用缓冲方式；SSN 尚不支持逐步播放流式音频片段</li>
+                <li>语音： <code>&voiceopenai=af_bella</code>，速度： <code>&openaispeed=1.0</code>。使用服务器支持的语音名称；Kokoro 语音类似 <code>af_bella</code>，而 openedai-speech/OpenAI 风格的语音可能类似 <code>nova</code> 或 <code>echo</code>.</li>
+                <li>请参阅 <a href="local-tts.html">本地 AI TTS 指南</a> ，了解自托管服务器设置。</li>
+            </ul>
+            
+            <h3>Google Cloud TTS</h3>
+            <ul>
+                <li>通过以下内容启用 <code>?ttsprovider=google&ttskey=YOUR_API_KEY</code></li>
+                <li>专业品质语音</li>
+                <li>语音选择： <code>&voicegoogle=en-GB-Standard-A</code></li>
+                <li>语言： <code>&googlelang=en-US</code></li>
+            </ul>
+
+            <h3>Gemini TTS</h3>
+            <ul>
+                <li>通过以下内容启用 <code>?ttsprovider=gemini&geminikey=YOUR_API_KEY</code></li>
+                <li>模型： <code>&geminimodel=gemini-2.5-flash-preview-tts</code></li>
+                <li>语音： <code>&voicegemini=Kore</code>，语言： <code>&geminilang=th-TH</code></li>
+                <li>风格指令： <code>&geministyle=Read aloud in a warm tone.</code></li>
+            </ul>
+
+            <h3>ElevenLabs TTS</h3>
+            <ul>
+                <li>通过以下内容启用 <code>?ttsprovider=elevenlabs&elevenlabskey=YOUR_API_KEY</code></li>
+                <li>语音 ID： <code>&voice11=YOUR_VOICE_ID</code></li>
+                <li>模型： <code>&elevenlabsmodel=eleven_multilingual_v2</code></li>
+                <li>参数：可调整稳定性、相似度及风格</li>
+            </ul>
+            
+            <h3>Fish Audio TTS</h3>
+            <p>选择 Fish Audio 并输入 API 密钥，可选填语音 ID。默认模型为 <code>s2.1-pro-free</code>. <a href="tts-setup-guide.html#settings-fish">设置、模型选项及浏览器访问限制</a>.</p>
+
+            <h3>Speechify TTS</h3>
+            <ul>
+                <li>通过以下内容启用 <code>?ttsprovider=speechify&speechifykey=YOUR_API_KEY</code></li>
+                <li>语音： <code>&voicespeechify=henry</code></li>
+                <li>模型： <code>&speechifymodel=simba-3.0</code> （默认），或 <code>&speechifymodel=simba-3.2</code> 用于英语。</li>
+                <li>朗读速度： <code>&speechifyspeed=1.2</code> （范围 0.5 至 3.0；正常为 1.0）。</li>
+                <li><a href="speechify-setup-guide.html">Speechify 设置、语音、速度及音量指南</a></li>
+            </ul>
+        </div>
+        
+        <h2 id="troubleshooting">故障排除</h2>
+        <div class="card">
+            <h3>常见问题</h3>
+            <ul>
+                <li><strong>没有音频播放：</strong> 检查 TTS 是否启用、生成 TTS 的页面是否打开，以及浏览器源是否未静音。在普通浏览器中，先点击页面一次。</li>
+                <li><strong>语音未显示：</strong> 安装语言包后重启浏览器</li>
+                <li><strong>OBS 未捕获：</strong> 若没有语音，先检查语音/提供商可用性。若已有语音，检查 <strong>通过 OBS 控制音频</strong>、混音器静音及输出轨道，或捕获正在发声的外部浏览器</li>
+                <li><strong>本地端点在应用测试中可用，但在 OBS 中无效：</strong> OBS 是独立浏览器。请在 OBS 电脑上检查端点，尤其是使用 <code>127.0.0.1</code>.</li>
+                <li><strong>只朗读第一个字母或开头几个词：</strong> 移除 <code>ttsquick</code> ，如 OBS URL 中存在则移除。</li>
+                <li><strong>Safari 问题：</strong> Safari 对自动 TTS 的支持有限</li>
+                <li><strong>付费服务无效：</strong> 检查 API 密钥并确保提供商指定正确</li>
+            </ul>
+            
+            <h3>最佳实践</h3>
+            <ul>
+                <li>使用生成页面音频的提供商可简化 OBS 设置；有免费本地提供商可选</li>
+                <li>直播前用简单短句测试设置</li>
+                <li>使用 TTS 时考虑用户生成内容的风险</li>
+                <li>准备一个开关，以便需要时快速禁用 TTS</li>
+            </ul>
+        </div>
+        
+        <div class="tts-test">
+            <h3>检查此浏览器的系统语音</h3>
+            <p>此处列出 <strong>仅限显示本指南的浏览器中的 System TTS 语音</strong>。它不测试 OBS、独立 SSN 应用窗口或 Kokoro 等提供商。列表为空并不表示 SSN 的其他 TTS 提供商不可用。</p>
+            <button onclick="window.open(&#x27;https://socialstream.ninja/tts&#x27;, &#x27;_blank&#x27;)">检查可用语音</button>
+        </div>
+        
+        <footer>
+            <p>Social Stream Ninja TTS 指南 - 最新更新请访问 <a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub仓库</a></p>
+        </footer>
+    </div>
+    
+</body>
+</html>

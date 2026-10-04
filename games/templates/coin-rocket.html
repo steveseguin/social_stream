@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en"><head>
+    <meta charset="utf-8">
+    <meta name="description" content="Coin rocket · SSN starter: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex"><title>Coin rocket · SSN starter</title><link rel="stylesheet" href="starter.css"><!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/games/templates/coin-rocket.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/games/templates/coin-rocket.html">
+<!-- ssn-languages:end --></head>
+<body><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="English"><span aria-hidden="true">🌐 </span><span lang="en">English</span></summary><div class="site-language-options"><a class="site-language-link" href="coin-rocket.html" lang="en" hreflang="en" aria-current="true">English</a><a class="site-language-link" href="../../es/games/templates/coin-rocket.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/games/templates/coin-rocket.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/games/templates/coin-rocket.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/games/templates/coin-rocket.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/games/templates/coin-rocket.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/games/templates/coin-rocket.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/games/templates/coin-rocket.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/games/templates/coin-rocket.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/games/templates/coin-rocket.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/games/templates/coin-rocket.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/games/templates/coin-rocket.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/games/templates/coin-rocket.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/games/templates/coin-rocket.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/games/templates/coin-rocket.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/games/templates/coin-rocket.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/games/templates/coin-rocket.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><main><div class="host"><a href="../../docs/making-games.html">Build games and rewards</a><p id="connection" role="status"></p></div>
+<p class="eyebrow">Template 01 · Native units</p><h1>Give the rocket a boost.</h1>
+<p id="rules"></p><section class="stage" aria-label="Rocket progress"><div class="art" aria-hidden="true">🚀</div>
+<p id="score" class="score" aria-live="polite"></p><progress id="progress" max="10" value="0" aria-label="Boosts toward the next planet"></progress>
+<p id="latest" role="status" translate="no">Waiting for the first boost.</p></section>
+<div class="host"><div id="demo-controls"><button id="coins" type="button">Sample: 10 TikTok coins</button><button id="bits" type="button">Sample: 100 Bits</button><button id="stars" type="button">Sample: 100 Stars</button><button id="streak" type="button">Sample: streak 1, 2, 3</button><button id="unknown" type="button">Sample: unknown gift price</button></div>
+<button id="reset" type="button">Reset run</button><details><summary>Last received payload</summary><pre id="payload">Use a sample button to inspect an event.</pre></details>
+<p class="muted">Balances and progress last until reset or reload. Add &amp;clean to hide these controls in OBS.</p></div></main>
+<script src="../../js/local-server-url.js"></script><script src="starter.js"></script><script>
+'use strict';
+// EDIT THESE RULES: native platform units required for one boost.
+var COST = { tiktok: 10, twitch: 100, facebook: 100 };
+var boosts = 0, balances = new Map(), R = RewardStarter;
+R.text('rules', '{0} TikTok coins, {1} Twitch Bits, or {2} Facebook Stars = one boost. Each viewer keeps their remainder.', [COST.tiktok, COST.twitch, COST.facebook]);
+function render() {
+    R.text('score', 'Boosts: {0} · Planets reached: {1}', [boosts, Math.floor(boosts / 10)]);
+    document.getElementById('progress').value = boosts % 10;
+}
+function receive(data) {
+    if (!R.isSupport(data)) return;
+    var type = R.platform(data);
+    // Twitch's display label can be translated; prefer its native Bits count.
+    var bits = type === 'twitch' ? Number((data.meta || {}).bits || data.bits) : 0;
+    var amount = type === 'tiktok' ? R.coins(data) : type === 'twitch' ?
+        (Number.isInteger(bits) && bits > 0 ? bits : R.labelCount(data, 'bit')) :
+        type === 'facebook' ? R.labelCount(data, 'star') : 0;
+    if (!amount) { R.log('No supported native-unit amount on this event.'); return; }
+    var added = R.increment(data, amount, 'native-units');
+    if (!added) return;
+    var key = JSON.stringify([type, data.userid || (type === 'tiktok' && data.meta && data.meta.tiktokGiftSenderId) || data.chatname || 'anonymous']);
+    var balance = (balances.get(key) || 0) + added;
+    var awarded = Math.floor(balance / COST[type]);
+    balances.set(key, balance % COST[type]);
+    boosts += awarded;
+    R.log('{0}: +{1} boosts; {2} units toward the next.', [data.chatname || R.format('A viewer'), awarded, balances.get(key)]);
+    render();
+}
+function gift(id, count) { return { id: id, type: 'tiktok', event: 'gift', userid: 'demo-tiktok', chatname: 'Sample viewer', chatmessage: 'Sent Demo gift x' + count, hasDonation: (count * 10) + ' coins', donoValue: count * 0.1, meta: { giftName: 'Demo gift', coinsPerGift: 10, tiktokGiftCount: count } }; }
+R.start(receive, function () { boosts = 0; balances.clear(); render(); R.log('Waiting for the first boost.'); }, {
+    coins: function (id) { return gift('coins-' + id, 1); },
+    bits: function (id) { return { id: 'bits-' + id, type: 'twitch', event: 'cheer', chatname: 'Sample viewer', hasDonation: '100 bits', donoValue: 1 }; },
+    stars: function (id) { return { id: 'stars-' + id, type: 'facebook', chatname: 'Sample viewer', hasDonation: '100 Stars', donoValue: 1 }; },
+    streak: function (id) { return [1, 2, 3].map(function (count) { var data = gift('streak-' + id + '-' + count, count); data.meta.tiktokGiftStreakId = 'demo-streak-' + id; return data; }); },
+    unknown: function (id) { return { id: 'unknown-' + id, type: 'tiktok', event: 'gift', hasDonation: '1 gift', donoValue: 0.01, meta: { tiktokGiftCount: 1 } }; }
+});
+</script></body></html>

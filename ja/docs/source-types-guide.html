@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+	<head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ja/docs/source-types-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/ja/docs/source-types-guide.html">
+    <meta property="og:title" content="ソースタイプ - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninjaのソースタイプ名が、ペイロード、フィルター、Event Flow、デスクトップアプリのソース、カスタム取得、返信でどのように使われるかを説明します。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ja/docs/source-types-guide.html">
+    <meta name="twitter:title" content="ソースタイプ - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninjaのソースタイプ名が、ペイロード、フィルター、Event Flow、デスクトップアプリのソース、カスタム取得、返信でどのように使われるかを説明します。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem("darkMode");
+				var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+				if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+					document.documentElement.classList.add("dark-mode");
+				}
+			})();
+		</script>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>ソースタイプ - Social Stream Ninja</title>
+		<link rel="stylesheet" href="../../docs/css/styles.css" />
+		<link rel="stylesheet" href="../../docs/css/guides.css" />
+		<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon" />
+		<meta name="description" content="Social Stream Ninjaのソースタイプ名が、ペイロード、フィルター、Event Flow、デスクトップアプリのソース、カスタム取得、返信でどのように使われるかを説明します。">
+	<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/source-types-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{", and":"、および",", chooses one or more":"を選択し、1つ以上の次の項目を決定します：",", opens a source window, and injects shared capture scripts from this project. A Chrome-runtime compatibility bridge carries captured messages and reply commands between the page and app.":"。ソースウィンドウを開き、このプロジェクトの共通キャプチャスクリプトを挿入します。Chromeランタイム互換ブリッジが、取得したメッセージと返信コマンドをページとアプリの間で受け渡します。",", or":"、または",", or legacy":"、または従来の",", or that capture mode cannot send chat.":"、またはその取得モードがチャット送信に対応していません。",", then normally derives a lowercase type from a known platform or the page hostname.":"。通常は、既知のプラットフォームまたはページのホスト名から小文字のタイプを決定します。",", which emits":"。出力される値は",", while payloads are normalized.":"ですが、ペイロードは正規化されます。",". That usually separates incoming matching, outbound routing, and capture duplication.":"。通常、これで受信時の照合、送信先の振り分け、重複取得を切り分けられます。",". Use":"。使う項目：",". Use the exact lowercase payload value.":"。ペイロードの小文字の値を正確に使用してください。",": canonical fields and platform event names.":"：標準フィールドとプラットフォームのイベント名。",": fallback and external capture.":"：代替手段と外部からの取得。",": platform names and setup requirements.":"：プラットフォーム名と設定要件。",": source contracts, injection helpers, manifests, and docs.":"：ソース仕様、挿入用ヘルパー、マニフェスト、ドキュメント。",": source-window and connection-mode behavior.":"：ソースウィンドウと接続モードの動作。",": target, script, bridge, and reply-only internals.":"：ターゲット、スクリプト、ブリッジ、返信専用モードの内部処理。",": triggers, actions, templates, reflection handling, and tests.":"：トリガー、アクション、テンプレート、反射メッセージの処理、テスト。","A display label, connection mode, or event name.":"表示ラベル、接続モード、イベント名。","A guarantee that every emitted payload has the same string.":"送信されるすべてのペイロードが同じ文字列になるという保証。","A hostname-derived type is convenient, but not a permanent public contract. Confirm the emitted payload before building filters around it.":"ホスト名から生成したタイプは便利ですが、永続的な公開仕様ではありません。それを使ったフィルターを作成する前に、実際に送信されるペイロードを確認してください。","A platform type.":"プラットフォームのタイプ。","A source cannot accept automated input, or a reflection is captured again.":"ソースが自動入力を受け付けない、または反射したメッセージを再び取得してしまいます。","A source script's":"ソーススクリプトの","A target and script filename need not match the payload type. The":"ターゲットやスクリプトのファイル名は、ペイロードのタイプと一致するとは限りません。","API/WebSocket modes may send through platform APIs instead of typing into the visible page.":"API/WebSocketモードでは、表示中のページに文字を入力する代わりに、プラットフォームのAPIで送信する場合があります。","Action":"操作","Adding a Source":"ソースの追加","An optional channel, room, or source display name.":"任意のチャネル名、ルーム名、ソース表示名。","Asks open sources whether they support that outbound destination.":"開いているソースに、その送信先へ送信できるか問い合わせます。","Bilibili regional choices":"Bilibiliの地域別選択肢","Bilibili targets similarly map to shared/regional scripts while emitting":"Bilibiliのターゲットも同様に共通または地域別のスクリプトへ対応付けられますが、送信される値は","Bot reply-only (no capture)":"ボット返信専用（取得なし）（Bot reply-only）","Both:":"両方：","Broadcasts to routeable sources and excludes the originating":"送信可能なソースへ一斉送信し、送信元の次の値を除外します：","Capture or UI Name":"取得方法またはUI名","Commands & API":"コマンドとAPI","Common Failure":"よくある失敗","Common and Confusing Types":"よく使うタイプと混同しやすいタイプ","Common and confusing names":"よく使う名前と混同しやすい名前","Continue with the":"詳しくは次をご覧ください：","DOM, API polling, and WebSocket/streaming describe transport, not separate types.":"DOM、APIポーリング、WebSocket/ストリーミングは通信方式であり、別のタイプではありません。","Desktop App Script Injection":"デスクトップアプリのスクリプト挿入","Desktop App Source Windows":"デスクトップアプリのソースウィンドウ","Desktop app":"デスクトップアプリ","Desktop app script injection":"デスクトップアプリのスクリプト挿入","Desktop targets and scripts may say":"デスクトップのターゲットやスクリプトでは、次の名前を使用する場合があります：","Destination":"送信先","Do Not Confuse It With":"混同しないでください","Do not expect reliable event, moderation, deletion, virtualized-list, or closed shadow-DOM support.":"イベント、モデレーション、削除、仮想化リスト、閉じたShadow DOMへの確実な対応は期待しないでください。","Download":"ダウンロード","Each desktop source keeps its own target, URL, connection mode, and capture script.":"デスクトップの各ソースは、個別のターゲット、URL、接続モード、キャプチャスクリプトを保持します。","Event Flow Guide":"Event Flowガイド","Event Flow's":"Event Flowの","Event Reference":"イベントリファレンス","Existing filters may intentionally preserve the older name.":"既存のフィルターでは、意図的に古い名前を維持している場合があります。","Features":"機能","From Source":"ソース指定（From Source）","From Source =":"From Source =","From Source reads the incoming payload type; Relay Chat selects outbound source windows.":"From Sourceは受信ペイロードのタイプを読み取り、Relay Chatは送信先のソースウィンドウを選択します。","Generic and Custom Sources":"汎用ソースとカスタムソース","Generic capture can find and focus likely inputs, but that does not guarantee the site will accept an automated send.":"汎用取得は入力欄らしい要素を探してフォーカスできますが、そのサイトが自動送信を受け付ける保証はありません。","Generic, Custom, and Unnamed Sources":"汎用、カスタム、名前なしのソース","Generic, custom, and unnamed sources":"汎用、カスタム、名前なしのソース","Guides":"ガイド","Hire":"仕事を依頼する","Home":"ホーム","How It Chooses":"選択方法","How Social Stream Ninja source type names work in payloads, filters, Event Flow, desktop app sources, custom capture, and replies.":"Social Stream Ninjaのソースタイプ名が、ペイロード、フィルター、Event Flow、デスクトップアプリのソース、カスタム取得、返信でどのように使われるかを説明します。","If a source has no established platform name, choose one stable lowercase":"ソースに定まったプラットフォーム名がない場合は、小文字で一貫した次の値を1つ選んでください：","If no stable identity exists yet,":"まだ一貫した識別名がない場合は、","Important:":"重要：","In the desktop app,":"デスクトップアプリでは、","Incoming identity and outbound capability are related, but they are not the same contract.":"受信元の識別と送信能力は関連していますが、同じ仕様ではありません。","Incoming matching is exact:":"受信時は完全一致で照合します：","Inspiration":"活用アイデア","Instagram Live / InstaFeed live":"Instagram Live / InstaFeedライブ","Instagram Live and Instagram comments":"Instagram LiveとInstagramのコメント","Instagram Live vs Instagram Comments":"Instagram LiveとInstagramコメントの違い","Instagram post and feed comments use":"Instagramの投稿やフィードのコメントには、次を使用します：","It is distinct for incoming filters and Event Flow relay destinations, while shared YouTube controls still treat both variants as one family where needed.":"受信フィルターとEvent Flowの中継先では別々に扱われます。一方、共通のYouTube操作では、必要に応じて両方を同じグループとして扱います。","Live chat flow:":"ライブチャットのフロー：","Main navigation":"メインナビゲーション","Maintainers can trace setup in the desktop app's":"メンテナーは、デスクトップアプリの次の箇所から設定処理を追跡できます：","Meaning":"意味","Name":"名前","No":"不要","OBS system events":"OBSシステムイベント","Older versions grouped both relay destinations, so two actions could send twice to each YouTube window. Update Social Stream Ninja if that happens. A Reflection Filter prevents relay loops, but it does not correct overlapping destination matching in those older versions.":"古いバージョンでは両方の中継先をまとめて扱っていたため、アクションを2つ設定すると各YouTubeウィンドウへ2回ずつ送信する場合がありました。この現象が起きる場合はSocial Stream Ninjaを更新してください。Reflection Filterは中継ループを防ぎますが、古いバージョンで送信先の照合が重複する問題は修正しません。","On This Page":"このページの内容","Once users, overlays, or flows depend on a new type, document it in the":"ユーザー、オーバーレイ、フローが新しいタイプに依存するようになったら、次に記載してください：","Open navigation menu":"ナビゲーションメニューを開く","Other YouTube-wide controls may intentionally handle both types as one platform family. This does not change the exact Event Flow matching above.":"YouTube全体に適用する他の操作では、意図的に両方のタイプを同じプラットフォームのグループとして扱うことがあります。上記のEvent Flowの完全一致による照合は変わりません。","Outgoing matching is also exact:":"送信時も完全一致で照合します：","Overlay Gallery":"オーバーレイギャラリー","Payload Type":"ペイロードのタイプ","Post/comment flow:":"投稿/コメントのフロー：","Relay Chat treats them as separate destinations.":"Relay Chatはそれぞれを別の送信先として扱います。","Relay to a platform":"プラットフォームへ中継","Relay to all except source":"送信元以外のすべてへ中継","Reply to source":"送信元へ返信","Replying and Relaying to Sources":"ソースへの返信と中継","Replying and relaying to sources":"ソースへの返信と中継","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja Event Flow editor with connected trigger, filter, and action nodes":"トリガー、フィルター、アクションの各ノードが接続されたSocial Stream NinjaのEvent Flowエディタ","Social Stream Ninja desktop app source entries showing connection modes":"接続モードを表示したSocial Stream Ninjaデスクトップアプリのソース一覧","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0ライセンス。","Source Types":"ソースタイプ","Source Types - Social Stream Ninja":"ソースタイプ - Social Stream Ninja","Source capture changes belong in this repository's":"ソースの取得処理の変更は、このリポジトリの次の場所で行います：","Standalone App Modes":"単体アプリのモード","Support":"サポート","Supported Sites":"対応サイト","Switch theme":"テーマを切り替え","Test reply support with one source window before building a multi-platform relay.":"複数プラットフォームの中継を作成する前に、1つのソースウィンドウで返信対応をテストしてください。","The desktop app saves a source":"デスクトップアプリはソースの次の値を保存します：","The incoming payload source, such as":"受信ペイロードのソース。例：","The originating tab or desktop source-window ID used for reply and source exclusion.":"返信や送信元の除外に使用する、送信元タブまたはデスクトップのソースウィンドウのID。","The platform that produced it.":"そのイベントを生成したプラットフォーム。","The saved category used to choose a URL, mode, and capture script.":"URL、モード、キャプチャスクリプトの選択に使う保存済みカテゴリ。","The selected variant has no matching open source window, or the source cannot send chat.":"選択した種類に一致するソースウィンドウが開いていないか、ソースがチャットを送信できません。","The stable value used by a From Source trigger.":"From Sourceトリガーが使う一貫した値。","The visible Instagram brand is not enough to choose the type; the content context separates the two.":"表示上のInstagramブランド名だけではタイプを選べません。コンテンツの種類によって両者が区別されます。","They are not chat sources, but can enter Event Flow with events such as":"これらはチャットソースではありませんが、次のようなイベントでEvent Flowに入ることがあります：","TikFinity":"TikFinity","TikFinity is the connector; the normalized platform remains TikTok.":"TikFinityは接続ツールであり、正規化されたプラットフォーム名はTikTokのままです。","To reach both, add one action for each destination or relay to all platforms excluding the source.":"両方に送信するには、送信先ごとにアクションを1つ追加するか、送信元を除く全プラットフォームへ中継してください。","Troubleshooting Older Versions":"古いバージョンのトラブルシューティング","Use":"使う項目：","Use it to prove that an ordinary DOM chat can be captured before writing a dedicated source.":"専用ソースを作成する前に、一般的なDOMチャットを取得できるか確認するために使用してください。","Use the":"使用するもの：","Use the payload's exact source name for incoming filters, and understand the destination family before sending chat back out.":"受信フィルターにはペイロードの正確なソース名を使い、チャットを送り返す前に送信先のグループを確認してください。","Uses":"使用する値：","What Is a":"次の値とは：","What a type is":"タイプとは","What happened, such as":"発生した出来事。例：","When debugging, inspect one raw payload and record its":"デバッグする際は、生のペイロードを1件確認し、次の値を記録してください：","When several scripts are injected, avoid making every helper claim the same outbound destination. Capture identity and reply capability are separate concerns.":"複数のスクリプトを挿入する場合、すべてのヘルパーが同じ送信先への対応を宣言しないようにしてください。取得元の識別と返信機能は別々に扱います。","Where to Find Exact Details":"詳しい仕様の参照先","Where to find exact details":"詳しい仕様の参照先","Why It May Be Surprising":"混乱しやすい理由","X":"X","YouTube Setup Guide":"YouTube設定ガイド","YouTube Shorts and Event Flow":"YouTube ShortsとEvent Flow","YouTube Shorts live chat":"YouTube Shortsのライブチャット","YouTube live chat":"YouTubeのライブチャット","and":"および","files are page-context helpers for sockets or page variables. The source wrapper remains responsible for the canonical payload.":"ファイルは、ソケットやページ変数を扱うページコンテキスト用ヘルパーです。標準ペイロードの生成は引き続きソースラッパーが担当します。","files. The desktop app consumes them; its packaged fallback copy is not the source of truth.":"ファイルです。デスクトップアプリはこれらを使用します。アプリに同梱された代替コピーは正本ではありません。","for injection and bridging.":"で挿入とブリッジ処理を確認できます。","for live-room chat captured by the Instagram Live or InstaFeed live source. Use":"は、Instagram LiveまたはInstaFeedライブのソースから取得したライブルームのチャットに使います。次を使用してください：","for non-live feed, post, or static comments.":"は、ライブ以外のフィード、投稿、静的なコメントに使います。","for public platform setup names.":"で公開されているプラットフォームの設定名を確認できます。","for regular YouTube live chat.":"は通常のYouTubeライブチャットに使います。","for the field contract and":"でフィールド仕様を、次で","for the human-facing room or channel label.":"は、人が読むためのルーム名やチャネル名に使います。","from page context.":"をページコンテキストから取得します。","in a From Source trigger for Shorts messages, and":"をShortsメッセージ用のFrom Sourceトリガーに使い、","is a broad DOM-capture fallback. It looks for common chat rows, names, messages, avatars, and inputs. It starts with":"は、幅広いページに対応するDOM取得の代替手段です。よく使われるチャット行、名前、メッセージ、アバター、入力欄を探します。最初の値は","is safer than changing type per message. External integrations commonly use a deliberate value such as":"を使う方が、メッセージごとにタイプを変更するより安全です。外部連携では通常、次のような意図的に選んだ値を使用します：","is the canonical source identifier on an incoming Social Stream payload. Overlays, URL filters, APIs, and Event Flow use it to tell platforms and source variants apart.":"は、受信したSocial Streamペイロードの標準のソース識別子です。オーバーレイ、URLフィルター、API、Event Flowが、プラットフォームやソースの種類を区別するために使用します。","keeps a source available for replies/status while suppressing its normal captured messages.":"は、通常の取得メッセージを抑制しながら、そのソースを返信やステータス取得に利用できる状態に保ちます。","or":"または","rather than silently renaming it.":"。名前だけを黙って変更しないでください。","response is an outbound-routeability signal. Shared YouTube controls may group both variants, while Relay Chat adds exact Shorts URL context for destination matching.":"という応答は、その送信先に送信可能であることを示します。共通のYouTube操作は両方の種類をまとめて扱う場合がありますが、Relay Chatは送信先の照合に正確なShorts URLのコンテキストを加えます。","sends only to YouTube Shorts live-chat windows.":"はYouTube Shortsのライブチャットウィンドウにのみ送信します。","sends only to regular YouTube live-chat windows.":"は通常のYouTubeライブチャットウィンドウにのみ送信します。","source-window creation, then":"でソースウィンドウの作成を確認し、その後、","target loads":"ターゲットは次を読み込みます：","to address the exact originating tab/window.":"で送信元のタブ/ウィンドウを正確に指定します。","trigger compares its configured value directly with":"トリガーは、設定された値を次と直接比較します：","use":"使用するもの：","use two triggers feeding one shared action, or an Any Source trigger followed by a type-aware filter.":"2つのトリガーを1つの共通アクションへ接続するか、Any Sourceトリガーの後にタイプを判別するフィルターを置きます。","with the Twitter-branding option":"にTwitterブランド表示のオプションを適用した場合"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/source-types-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/source-types-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/source-types-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/source-types-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/source-types-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/source-types-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/source-types-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/source-types-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/source-types-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/source-types-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/source-types-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/source-types-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/source-types-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/source-types-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/source-types-guide.html">
+<!-- ssn-languages:end --></head>
+	<body>
+		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション"><a href="../index.html">ホーム</a><a href="features.html">機能</a><a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a><a href="download.html">ダウンロード</a><a href="guides.html">ガイド</a><a href="commands.html">コマンドとAPI</a><a href="supported-sites.html">対応サイト</a><a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a><a href="services.html" class="site-priority-hire">仕事を依頼する</a><a href="support.html">サポート</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/source-types-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/source-types-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/source-types-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/source-types-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/source-types-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/source-types-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="source-types-guide.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/source-types-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/source-types-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/source-types-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/source-types-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/source-types-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/source-types-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/source-types-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/source-types-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/source-types-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/source-types-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="テーマを切り替え"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+		<section class="page-hero">
+			<div class="container">
+				<h1>ソースタイプ</h1>
+				<p>受信フィルターにはペイロードの正確なソース名を使い、チャットを送り返す前に送信先のグループを確認してください。</p>
+			</div>
+		</section>
+		<main class="guide-section">
+			<div class="container">
+				<div class="guide-card">
+					<h2>このページの内容</h2>
+					<ul class="guide-list">
+						<li><a href="#what-is-a-type">タイプとは</a></li>
+						<li><a href="#common-and-confusing-types">よく使う名前と混同しやすい名前</a></li>
+						<li><a href="#youtube-shorts-event-flow">YouTube ShortsとEvent Flow</a></li>
+						<li><a href="#instagram-live">Instagram LiveとInstagramのコメント</a></li>
+						<li><a href="#generic-and-unnamed-sources">汎用、カスタム、名前なしのソース</a></li>
+						<li><a href="#desktop-app-injection">デスクトップアプリのスクリプト挿入</a></li>
+						<li><a href="#replying-to-sources">ソースへの返信と中継</a></li>
+						<li><a href="#where-to-find-details">詳しい仕様の参照先</a></li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="what-is-a-type">
+					<h2>次の値とは： <code>type</code>?</h2>
+					<p><code>type</code> は、受信したSocial Streamペイロードの標準のソース識別子です。オーバーレイ、URLフィルター、API、Event Flowが、プラットフォームやソースの種類を区別するために使用します。</p>
+					<pre><code>{
+  "type": "youtubeshorts",
+  "chatname": "Ava",
+  "chatmessage": "Hello from Shorts"
+}</code></pre>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>名前</th>
+								<th>意味</th>
+								<th>混同しないでください</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Name"><code>type</code></td>
+								<td data-label="Meaning">受信ペイロードのソース。例： <code>youtube</code> または <code>instagramlive</code>.</td>
+								<td data-label="Do Not Confuse It With">表示ラベル、接続モード、イベント名。</td>
+							</tr>
+							<tr>
+								<td data-label="Name"><code>event</code></td>
+								<td data-label="Meaning">発生した出来事。例： <code>superchat</code>, <code>gift</code>、または <code>viewer_update</code>.</td>
+								<td data-label="Do Not Confuse It With">そのイベントを生成したプラットフォーム。</td>
+							</tr>
+							<tr>
+								<td data-label="Name"><code>sourceName</code></td>
+								<td data-label="Meaning">任意のチャネル名、ルーム名、ソース表示名。</td>
+								<td data-label="Do Not Confuse It With">From Sourceトリガーが使う一貫した値。</td>
+							</tr>
+							<tr>
+								<td data-label="Name"><code>tid</code></td>
+								<td data-label="Meaning">返信や送信元の除外に使用する、送信元タブまたはデスクトップのソースウィンドウのID。</td>
+								<td data-label="Do Not Confuse It With">プラットフォームのタイプ。</td>
+							</tr>
+							<tr>
+								<td data-label="Name">デスクトップアプリ <code>target</code></td>
+								<td data-label="Meaning">URL、モード、キャプチャスクリプトの選択に使う保存済みカテゴリ。</td>
+								<td data-label="Do Not Confuse It With">送信されるすべてのペイロードが同じ文字列になるという保証。</td>
+							</tr>
+						</tbody>
+					</table>
+					<p><strong>重要：</strong> Event Flowの <em>ソース指定（From Source）</em> トリガーは、設定された値を次と直接比較します： <code>message.type</code>。ペイロードの小文字の値を正確に使用してください。</p>
+				</div>
+
+				<div class="guide-card" id="common-and-confusing-types">
+					<h2>よく使うタイプと混同しやすいタイプ</h2>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>取得方法またはUI名</th>
+								<th>ペイロードのタイプ</th>
+								<th>混乱しやすい理由</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Capture or UI Name">YouTubeのライブチャット</td>
+								<td data-label="Payload Type"><code>youtube</code></td>
+								<td data-label="Why It May Be Surprising">DOM、APIポーリング、WebSocket/ストリーミングは通信方式であり、別のタイプではありません。</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">YouTube Shortsのライブチャット</td>
+								<td data-label="Payload Type"><code>youtubeshorts</code></td>
+								<td data-label="Why It May Be Surprising">受信フィルターとEvent Flowの中継先では別々に扱われます。一方、共通のYouTube操作では、必要に応じて両方を同じグループとして扱います。</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">Instagram Live / InstaFeedライブ</td>
+								<td data-label="Payload Type"><code>instagramlive</code></td>
+								<td data-label="Why It May Be Surprising">Instagramの投稿やフィードのコメントには、次を使用します： <code>instagram</code>.</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">TikFinity</td>
+								<td data-label="Payload Type"><code>tiktok</code></td>
+								<td data-label="Why It May Be Surprising">TikFinityは接続ツールであり、正規化されたプラットフォーム名はTikTokのままです。</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">X</td>
+								<td data-label="Payload Type"><code>x</code>、または従来の <code>twitter</code> にTwitterブランド表示のオプションを適用した場合</td>
+								<td data-label="Why It May Be Surprising">既存のフィルターでは、意図的に古い名前を維持している場合があります。</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">Bilibiliの地域別選択肢</td>
+								<td data-label="Payload Type"><code>bilibili</code></td>
+								<td data-label="Why It May Be Surprising">デスクトップのターゲットやスクリプトでは、次の名前を使用する場合があります： <code>bilibilicom</code> または <code>bilibilitv</code>ですが、ペイロードは正規化されます。</td>
+							</tr>
+							<tr>
+								<td data-label="Capture or UI Name">OBSシステムイベント</td>
+								<td data-label="Payload Type"><code>obs</code></td>
+								<td data-label="Why It May Be Surprising">これらはチャットソースではありませんが、次のようなイベントでEvent Flowに入ることがあります： <code>scene_changed</code>.</td>
+							</tr>
+						</tbody>
+					</table>
+					<p>使用するもの： <a href="event-reference.html">イベントリファレンス</a> でフィールド仕様を、次で <a href="supported-sites.html">対応サイト</a> で公開されているプラットフォームの設定名を確認できます。</p>
+				</div>
+
+				<div class="guide-card" id="youtube-shorts-event-flow">
+					<h2>YouTube ShortsとEvent Flow</h2>
+					<p><strong>受信時は完全一致で照合します：</strong> 使用するもの： <code>youtubeshorts</code> をShortsメッセージ用のFrom Sourceトリガーに使い、 <code>youtube</code> は通常のYouTubeライブチャットに使います。</p>
+					<p><strong>送信時も完全一致で照合します：</strong> Relay Chatはそれぞれを別の送信先として扱います。</p>
+					<ul class="guide-list">
+						<li>送信先 <code>youtube</code> は通常のYouTubeライブチャットウィンドウにのみ送信します。</li>
+						<li>送信先 <code>youtubeshorts</code> はYouTube Shortsのライブチャットウィンドウにのみ送信します。</li>
+						<li>両方に送信するには、送信先ごとにアクションを1つ追加するか、送信元を除く全プラットフォームへ中継してください。</li>
+					</ul>
+					<p>YouTube全体に適用する他の操作では、意図的に両方のタイプを同じプラットフォームのグループとして扱うことがあります。上記のEvent Flowの完全一致による照合は変わりません。</p>
+					<h3>古いバージョンのトラブルシューティング</h3>
+					<p>古いバージョンでは両方の中継先をまとめて扱っていたため、アクションを2つ設定すると各YouTubeウィンドウへ2回ずつ送信する場合がありました。この現象が起きる場合はSocial Stream Ninjaを更新してください。Reflection Filterは中継ループを防ぎますが、古いバージョンで送信先の照合が重複する問題は修正しません。</p>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/guide-event-flow-overview.png" alt="トリガー、フィルター、アクションの各ノードが接続されたSocial Stream NinjaのEvent Flowエディタ" class="guide-image" />
+						<figcaption>From Sourceは受信ペイロードのタイプを読み取り、Relay Chatは送信先のソースウィンドウを選択します。</figcaption>
+					</figure>
+					<p>詳しくは次をご覧ください： <a href="../actions/event-flow-guide.html">Event Flowガイド</a> または <a href="youtube-setup-guide.html">YouTube設定ガイド</a>.</p>
+				</div>
+
+				<div class="guide-card" id="instagram-live">
+					<h2>Instagram LiveとInstagramコメントの違い</h2>
+					<p>使う項目： <code>instagramlive</code> は、Instagram LiveまたはInstaFeedライブのソースから取得したライブルームのチャットに使います。次を使用してください： <code>instagram</code> は、ライブ以外のフィード、投稿、静的なコメントに使います。</p>
+					<ul class="guide-list">
+						<li><strong>ライブチャットのフロー：</strong> From Source = <code>instagramlive</code>.</li>
+						<li><strong>投稿/コメントのフロー：</strong> From Source = <code>instagram</code>.</li>
+						<li><strong>両方：</strong> 2つのトリガーを1つの共通アクションへ接続するか、Any Sourceトリガーの後にタイプを判別するフィルターを置きます。</li>
+					</ul>
+					<p>表示上のInstagramブランド名だけではタイプを選べません。コンテンツの種類によって両者が区別されます。</p>
+				</div>
+
+				<div class="guide-card" id="generic-and-unnamed-sources">
+					<h2>汎用、カスタム、名前なしのソース</h2>
+					<p><code>sources/generic.js</code> は、幅広いページに対応するDOM取得の代替手段です。よく使われるチャット行、名前、メッセージ、アバター、入力欄を探します。最初の値は <code>generic</code>。通常は、既知のプラットフォームまたはページのホスト名から小文字のタイプを決定します。</p>
+					<ul class="guide-list">
+						<li>専用ソースを作成する前に、一般的なDOMチャットを取得できるか確認するために使用してください。</li>
+						<li>イベント、モデレーション、削除、仮想化リスト、閉じたShadow DOMへの確実な対応は期待しないでください。</li>
+						<li>ホスト名から生成したタイプは便利ですが、永続的な公開仕様ではありません。それを使ったフィルターを作成する前に、実際に送信されるペイロードを確認してください。</li>
+						<li>ソースに定まったプラットフォーム名がない場合は、小文字で一貫した次の値を1つ選んでください： <code>type</code>。使う項目： <code>sourceName</code> は、人が読むためのルーム名やチャネル名に使います。</li>
+						<li>まだ一貫した識別名がない場合は、 <code>generic</code> を使う方が、メッセージごとにタイプを変更するより安全です。外部連携では通常、次のような意図的に選んだ値を使用します： <code>external</code>.</li>
+					</ul>
+					<p>ユーザー、オーバーレイ、フローが新しいタイプに依存するようになったら、次に記載してください： <a href="event-reference.html">イベントリファレンス</a> 。名前だけを黙って変更しないでください。</p>
+				</div>
+
+				<div class="guide-card" id="desktop-app-injection">
+					<h2>デスクトップアプリのスクリプト挿入</h2>
+					<p>デスクトップアプリはソースの次の値を保存します： <code>target</code>を選択し、1つ以上の次の項目を決定します： <code>sourceFile</code>/<code>sourceFiles</code>。ソースウィンドウを開き、このプロジェクトの共通キャプチャスクリプトを挿入します。Chromeランタイム互換ブリッジが、取得したメッセージと返信コマンドをページとアプリの間で受け渡します。</p>
+					<ul class="guide-list">
+						<li>ターゲットやスクリプトのファイル名は、ペイロードのタイプと一致するとは限りません。 <code>youtubeshorts</code> ターゲットは次を読み込みます： <code>sources/youtube.js</code>。出力される値は <code>youtube</code> または <code>youtubeshorts</code> をページコンテキストから取得します。</li>
+						<li>Bilibiliのターゲットも同様に共通または地域別のスクリプトへ対応付けられますが、送信される値は <code>bilibili</code>.</li>
+						<li><code>sources/inject/*.js</code> ファイルは、ソケットやページ変数を扱うページコンテキスト用ヘルパーです。標準ペイロードの生成は引き続きソースラッパーが担当します。</li>
+						<li>複数のスクリプトを挿入する場合、すべてのヘルパーが同じ送信先への対応を宣言しないようにしてください。取得元の識別と返信機能は別々に扱います。</li>
+						<li>ソースの取得処理の変更は、このリポジトリの次の場所で行います： <code>sources/</code> ファイルです。デスクトップアプリはこれらを使用します。アプリに同梱された代替コピーは正本ではありません。</li>
+					</ul>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/guide-standalone-source-modes.png" alt="接続モードを表示したSocial Stream Ninjaデスクトップアプリのソース一覧" class="guide-image" />
+						<figcaption>デスクトップの各ソースは、個別のターゲット、URL、接続モード、キャプチャスクリプトを保持します。</figcaption>
+					</figure>
+					<p>メンテナーは、デスクトップアプリの次の箇所から設定処理を追跡できます： <code>index.html</code> でソースウィンドウの作成を確認し、その後、 <code>main.js</code> および <code>preload.js</code> で挿入とブリッジ処理を確認できます。</p>
+				</div>
+
+				<div class="guide-card" id="replying-to-sources">
+					<h2>ソースへの返信と中継</h2>
+					<p>受信元の識別と送信能力は関連していますが、同じ仕様ではありません。</p>
+					<table class="guide-table guide-table-stack">
+						<thead>
+							<tr>
+								<th>操作</th>
+								<th>選択方法</th>
+								<th>よくある失敗</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td data-label="Action">送信元へ返信</td>
+								<td data-label="How It Chooses">使用する値： <code>tid</code> で送信元のタブ/ウィンドウを正確に指定します。</td>
+								<td data-label="Common Failure">不要 <code>tid</code>、またはその取得モードがチャット送信に対応していません。</td>
+							</tr>
+							<tr>
+								<td data-label="Action">プラットフォームへ中継</td>
+								<td data-label="How It Chooses">開いているソースに、その送信先へ送信できるか問い合わせます。</td>
+								<td data-label="Common Failure">選択した種類に一致するソースウィンドウが開いていないか、ソースがチャットを送信できません。</td>
+							</tr>
+							<tr>
+								<td data-label="Action">送信元以外のすべてへ中継</td>
+								<td data-label="How It Chooses">送信可能なソースへ一斉送信し、送信元の次の値を除外します： <code>tid</code>.</td>
+								<td data-label="Common Failure">ソースが自動入力を受け付けない、または反射したメッセージを再び取得してしまいます。</td>
+							</tr>
+						</tbody>
+					</table>
+					<ul class="guide-list">
+						<li>ソーススクリプトの <code>getSource</code> という応答は、その送信先に送信可能であることを示します。共通のYouTube操作は両方の種類をまとめて扱う場合がありますが、Relay Chatは送信先の照合に正確なShorts URLのコンテキストを加えます。</li>
+						<li>汎用取得は入力欄らしい要素を探してフォーカスできますが、そのサイトが自動送信を受け付ける保証はありません。</li>
+						<li>API/WebSocketモードでは、表示中のページに文字を入力する代わりに、プラットフォームのAPIで送信する場合があります。</li>
+						<li>デスクトップアプリでは、 <em>ボット返信専用（取得なし）（Bot reply-only）</em> は、通常の取得メッセージを抑制しながら、そのソースを返信やステータス取得に利用できる状態に保ちます。</li>
+						<li>複数プラットフォームの中継を作成する前に、1つのソースウィンドウで返信対応をテストしてください。</li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="where-to-find-details">
+					<h2>詳しい仕様の参照先</h2>
+					<ul class="guide-list">
+						<li><a href="event-reference.html">イベントリファレンス</a>：標準フィールドとプラットフォームのイベント名。</li>
+						<li><a href="../actions/event-flow-guide.html">Event Flowガイド</a>：トリガー、アクション、テンプレート、反射メッセージの処理、テスト。</li>
+						<li><a href="standalone-app-modes.html">単体アプリのモード</a>：ソースウィンドウと接続モードの動作。</li>
+						<li><a href="supported-sites.html">対応サイト</a>：プラットフォーム名と設定要件。</li>
+						<li><a href="../../docs/index.html?file=agents/08-platform-sources/generic-and-custom-sources.md">汎用ソースとカスタムソース</a>：代替手段と外部からの取得。</li>
+						<li><a href="../../docs/index.html?file=agents/04-standalone-app-source-windows.md">デスクトップアプリのソースウィンドウ</a>：ターゲット、スクリプト、ブリッジ、返信専用モードの内部処理。</li>
+						<li><a href="../../docs/index.html?file=agents/12-development/adding-a-source.md">ソースの追加</a>：ソース仕様、挿入用ヘルパー、マニフェスト、ドキュメント。</li>
+					</ul>
+					<p>デバッグする際は、生のペイロードを1件確認し、次の値を記録してください： <code>type</code>, <code>event</code>, <code>sourceName</code>、および <code>tid</code>。通常、これで受信時の照合、送信先の振り分け、重複取得を切り分けられます。</p>
+				</div>
+			</div>
+		</main>
+		<footer>
+			<div class="container">
+				<div class="footer-bottom">
+					<p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0ライセンス。</p>
+				</div>
+			</div>
+		</footer>
+		<script data-copy-markdown src="../../docs/js/main.js"></script>
+		<script>
+			document.getElementById("current-year").textContent = new Date().getFullYear();
+		</script>
+	</body>
+</html>

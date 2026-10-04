@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/getting-started.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/getting-started.html">
+    <meta property="og:title" content="入門指南 — Social Stream Ninja">
+    <meta property="og:description" content="新手教學：安裝 SSN，擷取 eBay Live 或其他聊天，開啟停駐面板，啟用免費文字轉語音，並在 OBS 中聽到聲音。附實際應用程式截圖。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/getting-started.html">
+    <meta name="twitter:title" content="入門指南 — Social Stream Ninja">
+    <meta name="twitter:description" content="新手教學：安裝 SSN，擷取 eBay Live 或其他聊天，開啟停駐面板，啟用免費文字轉語音，並在 OBS 中聽到聲音。附實際應用程式截圖。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>入門指南 — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <style>
+        .start-paths { display: flex; flex-wrap: wrap; gap: 1rem; margin: 1.2rem 0; }
+        .start-paths button { font: inherit; font-weight: 600; padding: 1rem 1.6rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); background: var(--card-bg, transparent); color: var(--text-primary); cursor: pointer; }
+        .start-paths button[aria-pressed="true"] { background: #6837ce; color: white; border-color: #6837ce; }
+        .start-paths button:focus-visible, summary:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+        [data-start-path][hidden] { display: none; }
+        .guide-card [id] { scroll-margin-top: 10rem; }
+        .guide-image-medium { max-width: 76rem; }
+        .start-small { max-width: 52rem; margin: 0 auto; }
+        .start-status { max-width: 32rem; margin: 0 auto; }
+        .start-check { border-left: 3px solid #43a47a; padding-left: 1.2rem; }
+        .start-extra { margin-top: 1.4rem; }
+        .start-extra summary { cursor: pointer; font-weight: 600; padding: .6rem 0; }
+    </style>
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="新手教學：安裝 SSN，擷取 eBay Live 或其他聊天，開啟停駐面板，啟用免費文字轉語音，並在 OBS 中聽到聲音。附實際應用程式截圖。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+<meta name="ssn-language-alternate" content="../../docs/getting-started.html" data-label="English" data-lang="en">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/getting-started.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"(puzzle-piece) button, then":"（拼圖）按鈕，然後",", choose your platform from the buttons on the left. Scroll that list if needed.":"，從左側按鈕中選擇平台。必要時捲動該清單。",", click it once. It should say":"，點擊一次。隨後應顯示",", open the live stream’s chat page. Sign in to the platform if needed, and keep that tab open.":"，開啟直播的聊天頁面。必要時登入平台，並保持該分頁開啟。",", paste the link to your live event, then click":"，貼上直播活動連結，然後點擊",", then activate the source again.":"，然後再次啟用來源。",", then click":"，然後點擊",", then select a voice. No API key or paid account is needed.":"。然後選擇聲音。無需 API 金鑰或付費帳號。",". Click":"。點擊",". Find":"。找到",". If the right panel says":"。如果右側面板顯示",". If the site asks you to sign in, use":"。如果網站要求登入，請使用",". Name it":"。將其命名為",". Pin it for next time.":"。將它釘選，方便下次使用。",". Set that source to":"。將該來源設為",". Turn on":"。開啟","1. Open SSN and turn it on":"1. 開啟並啟用 SSN","2. Add the chat you want to read":"2. 新增要讀取的聊天","3. Open your SSN dock":"3. 開啟 SSN 停駐面板","4. Optional: read chat aloud":"4. 選用：朗讀聊天","5. Add your dock to OBS":"5. 將停駐面板新增至 OBS","6. Check the sound before going live":"6. 開播前檢查聲音","= the SSN window showing those messages.":"＝顯示這些訊息的 SSN 視窗。","= the chat you capture.":"＝你擷取的聊天。","= where you put them on your stream.":"＝你在直播畫面中顯示它們的位置。","A beginner walkthrough: install SSN, capture eBay Live or other chat, open your dock, enable free text-to-speech, and hear it in OBS. Real app screenshots.":"新手教學：安裝 SSN，擷取 eBay Live 或其他聊天，開啟停駐面板，啟用免費文字轉語音，並在 OBS 中聽到聲音。附實際應用程式截圖。","Activate source":"啟用來源","Actual Add eBay Live dialog: event or seller link field and Continue button":"實際的新增 eBay Live 對話方塊：活動或賣家連結欄位和繼續按鈕","Actual Main chat overlay and control dock heading, generated link and copy link button":"實際的主聊天疊加畫面與控制停駐面板標題、產生的連結和複製連結按鈕","Actual OBS Browser Source properties showing URL, width, height and Control audio via OBS":"實際的 OBS 瀏覽器來源內容，顯示 URL、寬度、高度和透過 OBS 控制音訊","Actual Piper TTS provider and voice selectors":"實際的 Piper TTS 服務和聲音選擇器","Actual SSN Service Active control, switched on":"實際的 SSN 服務啟用控制項，已開啟","Actual SSN dock displaying three example eBay chat messages":"實際的 SSN 停駐面板，顯示三則 eBay 聊天範例訊息","Actual added eBay Live source with Activate source and Sign-in buttons":"實際新增的 eBay Live 來源，包含啟用來源和登入按鈕","Actual desktop app: platform buttons on the left, added source in the middle, SSN settings on the right":"實際桌面應用程式：左側為平台按鈕，中間為已新增的來源，右側為 SSN 設定","Actual popup TTS section with incoming-message reading switched on":"實際的彈出選單 TTS 區域，已開啟收到訊息時朗讀","Added Sources":"已新增的來源","All guides":"所有指南","Allow time for the first voice download.":"首次下載聲音需要一些時間。","Ask someone to send a new chat message, or send one yourself on the original platform. It should appear in the SSN dock.":"請別人傳送一則新聊天訊息，或自己在原平台傳送。訊息應出現在 SSN 停駐面板中。","Audio Mixer":"混音器","Back in SSN settings, below your main dock link, expand":"回到 SSN 設定，在主停駐面板連結下方展開","Browser":"瀏覽器","Browser Source":"瀏覽器來源","Browser extension":"瀏覽器擴充功能","Browser extension instructions":"瀏覽器擴充功能使用說明","Chat appears here? You are connected.":"聊天出現在這裡？表示已連線。","Chat visible + voice in the recording = ready.":"看到聊天，且錄影中有語音，就準備好了。","Check SSN is active, the source is running and its chat is visible. Send a":"檢查 SSN 已啟用、來源正在執行且聊天可見。傳送一則","Check:":"檢查：","Choose one way to run SSN. You do not need both.":"選擇一種執行 SSN 的方式即可，不需要兩種都裝。","Choose your SSN setup":"選擇 SSN 的使用方式","Click the long link underneath that heading.":"點擊該標題下方的長連結。","Click your browser’s":"點擊瀏覽器的","Commands & API":"指令與 API","Compare voices and troubleshoot TTS":"比較聲音並排除 TTS 問題","Connect your chat. See it in one place. Then add a voice.":"連接聊天，集中查看，再加上語音。","Continue":"繼續","Control audio via OBS":"透過 OBS 控制音訊","Copy your main dock link again.":"再次複製主停駐面板連結。","Default OBS dialog shown: replace its URL with yours, and check Control audio via OBS.":"圖中為預設 OBS 對話方塊：將 URL 替換為你的連結，並勾選透過 OBS 控制音訊。","Desktop app":"桌面應用程式","Desktop app shown. The extension calls this “Extension active”.":"圖中是桌面應用程式。擴充功能中此項名為「Extension active」。","Dock":"停駐面板","Download":"下載","Download the desktop app":"下載桌面應用程式","Drag the chat box in the OBS preview to move it. Drag a corner to resize it. If you already added this source, open its":"在 OBS 預覽中拖曳聊天框以移動位置，拖曳角落以調整大小。如果已經新增了該來源，請開啟其","Edit → Advanced Audio Properties":"編輯 → 進階音訊內容","Enable TTS in dock":"在停駐面板中啟用 TTS","Example event shown. Use your own live event. Keep its capture page running.":"圖中為範例活動。請使用你自己的直播活動，並保持擷取頁面執行。","Example messages in the real dock. Your own chat should appear here.":"實際停駐面板中的範例訊息。你的聊天應顯示在這裡。","Extension Disabled":"擴充功能已停用","Extension active":"擴充功能已啟用","Extensions":"擴充功能","Features":"功能","Find the setup steps for your platform.":"尋找你所用平台的設定步驟。","Follow the Windows, macOS or Linux opening instructions.":"依照 Windows、macOS 或 Linux 的啟動說明操作。","For TTS, check":"若要使用 TTS，請勾選","Get this working before changing TTS or OBS settings.":"先讓這一步正常運作，再調整 TTS 或 OBS 設定。","Getting Started - Social Stream Ninja":"入門指南 — Social Stream Ninja","Go to":"前往","Guides":"指南","Hearing it twice:":"聲音播放兩次：","Hire":"聘用","Home":"首頁","I only want to hear it on my computer":"我只想在自己的電腦上聽到聲音","I want the voice without showing chat":"我只想播放語音，不顯示聊天","If needed, use":"如有需要，請使用","If the popup says":"如果彈出選單顯示","In":"在","In the":"在","In your OBS scene, find":"在 OBS 場景中找到","Inspiration":"靈感","Install":"安裝","Installing SSN does not automatically connect a chat.":"安裝 SSN 不會自動連接聊天。","It opens your chat dock. Use":"這會開啟聊天停駐面板。使用","Keep the Browser Source enabled, but place it behind an opaque camera/game source, or move it off the canvas. Do not switch off its eye icon or unload it while relying on its audio.":"保持瀏覽器來源啟用，但將它放在不透明的攝影機或遊戲來源後面，或移到畫布外。需要它的聲音時，不要關閉其眼睛圖示或卸載該來源。","Local file":"本機檔案","Main chat overlay & control dock":"主聊天疊加畫面與控制停駐面板","Main navigation":"主導覽","Make a short OBS recording and play it back. You should hear the message once.":"用 OBS 錄製一小段並播放。你應該只聽到一次訊息。","Message: Text to Speech":"訊息 — 文字轉語音","Meter moves but recording is silent:":"音量表有反應，但錄影沒有聲音：","Monitor and Output":"監聽並輸出","More about docks and overlays.":"進一步了解停駐面板和疊加畫面。","More advanced options":"更多進階選項","My dock is empty":"停駐面板是空的","Next time you stream":"下次直播時","No meter movement:":"音量表沒有反應：","OBS":"OBS","OBS audio help":"OBS 音訊說明","OBS source help":"OBS 來源說明","OK":"確定","Open SSN, activate your source (or open the chat tab), and open OBS. If eBay gives the next stream a new event link, update the source to that event. Keep using the dock link from the same SSN session.":"開啟 SSN，啟用來源（或開啟聊天分頁），再開啟 OBS。如果 eBay 為下一場直播提供了新活動連結，請將來源更新為該活動。繼續使用同一 SSN 工作階段的停駐面板連結。","Open navigation menu":"開啟導覽選單","Open the updated dock link and send a new chat message. Click inside the page if your browser blocks audio. You can stop here if you do not need OBS.":"開啟更新後的停駐面板連結，傳送一則新聊天訊息。如果瀏覽器阻擋音訊，請點擊頁面內部。不需要 OBS 的話，到這裡就完成了。","Other voice providers":"其他語音服務","Overlay Gallery":"疊加畫面圖庫","Piper TTS":"Piper TTS","Properties":"內容","Replace the default":"替換預設的","Return to SSN’s settings":"返回 SSN 設定","Run your own TTS server":"執行自己的 TTS 伺服器","SSN Chat":"SSN Chat","Scroll down in that section. Choose":"在該區域向下捲動，選擇","Send another chat message. Look for movement on":"再傳送一則聊天訊息，觀察是否有反應：","Service Active":"服務已啟用","Service Disabled":"服務已停用","Sign-in":"登入","Silent, or hearing it twice?":"沒聲音，或聽到兩遍？","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja from the Chrome Web Store":"Chrome 線上應用程式商店中的 Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 授權條款。","Source":"來源","Sources":"來源","Sources and Settings":"來源與設定","Sources on the left; SSN settings and dock link on the right.":"左側是來源，右側是 SSN 設定和停駐面板連結。","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","TTS Service Provider":"TTS 服務提供者","That is a control panel for you. It is different from the scene":"那是供你使用的控制面板，與場景中的","The blue switch enables reading incoming messages.":"藍色開關用於啟用新訊息朗讀。","The desktop app will not open?":"桌面應用程式無法開啟？","The desktop steps are shown below.":"下方顯示桌面版的操作步驟。","The updated link includes TTS. An older copied link does not gain the new settings.":"更新後的連結包含 TTS 設定。先前複製的舊連結不會自動取得新設定。","To hear it yourself, open":"如果你自己也想聽到，請開啟","Trigger a fake test message":"觸發模擬測試訊息","URL":"URL","Use that platform’s live chat or pop-out chat link.":"使用該平台的直播聊天或彈出聊天視窗連結。","Use the link in your own settings. GUIDE_DEMO in this screenshot is only an example.":"使用你自己設定中的連結。截圖裡的 GUIDE_DEMO 只是範例。","Use your event’s link from eBay, not an individual product listing.":"使用 eBay 活動連結，而不是單一商品的頁面。","Using another platform?":"使用其他平台？","What about an OBS Custom Browser Dock?":"OBS 自訂瀏覽器停駐面板呢？","Where are those controls?":"這些控制項在哪裡？","Yes, TTS can read incoming chat automatically, one message at a time.":"可以，TTS 能依序自動朗讀新聊天訊息，一次一則。","You do not add a source row in SSN for this method: the extension captures supported chat pages you open.":"這種方式不需要在 SSN 中新增來源項目：擴充功能會擷取你開啟的受支援聊天頁面。","Your first chat in SSN":"開始在 SSN 中接收聊天訊息","Your live broadcast must use OBS’s audio for viewers to hear it; SSN does not automatically add sound to a separate phone broadcast.":"直播必須使用 OBS 的音訊，觀眾才能聽到；SSN 不會自動為獨立的手機直播加入聲音。","Your new source appears under":"新來源會出現在","above. Start with the Browser Source for captured TTS audio.":"不同。若要擷取 TTS 音訊，請先使用上述瀏覽器來源。","and replace the old URL instead.":"並替換舊 URL。","by clicking its browser extension icon":"，方法是點擊其瀏覽器擴充功能圖示","check mute and recording-track assignments.":"檢查靜音狀態和錄製音軌分配。","check the new URL, TTS switch, voice download and Control audio via OBS. Start with Piper rather than System TTS in OBS.":"檢查新 URL、TTS 開關、聲音下載和透過 OBS 控制音訊選項。在 OBS 中先使用 Piper，而不是系統 TTS。","click":"點擊","close the extra speaking dock/browser, or disable its TTS. Avoid recording both the OBS source and a second copy of its monitored sound.":"關閉多餘的朗讀停駐面板或瀏覽器，或停用其中的 TTS。避免同時錄製 OBS 來源和它的另一份監聽聲音。","copy link":"複製連結","eBay Live":"eBay Live","eBay Live example:":"eBay Live 範例：","eBay does not need its own TTS feature. SSN must already be receiving the text.":"eBay 不需要自帶 TTS 功能，但 SSN 必須已經能收到文字。","for your computer, install it, then open":"，選擇適合電腦的版本並安裝，然後開啟","in Chrome or Edge.":"（使用 Chrome 或 Edge）。","in OBS’s":"，位於 OBS 的","in SSN settings. If that appears but real chat does not, investigate the source. If neither appears, check the dock link and connection.":"，位於 SSN 設定中。如果測試訊息出現而實際聊天沒有出現，請檢查來源；如果兩者都沒有出現，請檢查停駐面板連結和連線。","message; old messages may not be replayed. Open the dock link from this same SSN app/extension, not a screenshot or another session.":"訊息；舊訊息可能不會重播。請從同一個 SSN 應用程式或擴充功能中開啟停駐面板連結，不要使用截圖或其他工作階段中的連結。","new":"新","on the right of the app":"，位於應用程式右側","open your live event on eBay and make sure its chat is visible. A product listing or seller’s shop page is not the live chat.":"在 eBay 上開啟直播活動，確保聊天可見。商品頁面或賣家商店頁面不是直播聊天。","same browser that has the extension":"安裝了擴充功能的同一個瀏覽器","unchecked.":"不要勾選。","under":"；對應的設定項目：","when you need to paste it somewhere else.":"，用於貼到其他位置。","with the dock link you just copied. Leave":"，改為剛複製的停駐面板連結。保持","you can see new messages appearing on the original platform’s chat page.":"確認原平台的聊天頁面正在出現新訊息。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/getting-started.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/getting-started.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/getting-started.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/getting-started.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/getting-started.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/getting-started.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/getting-started.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/getting-started.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/getting-started.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/getting-started.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/getting-started.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/getting-started.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/getting-started.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/getting-started.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/getting-started.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/getting-started.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/getting-started.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/getting-started.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/getting-started.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/getting-started.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/getting-started.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/getting-started.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/getting-started.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/getting-started.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/getting-started.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/getting-started.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="getting-started.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/getting-started.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/getting-started.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/getting-started.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/getting-started.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/getting-started.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/getting-started.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/getting-started.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/getting-started.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero"><div class="container"><h1>開始在 SSN 中接收聊天訊息</h1><p>連接聊天，集中查看，再加上語音。</p></div></section>
+    <main class="guide-section"><div class="container">
+        <div class="guide-card">
+            <p><strong>來源</strong> ＝你擷取的聊天。 <strong>停駐面板</strong> ＝顯示這些訊息的 SSN 視窗。 <strong>OBS</strong> ＝你在直播畫面中顯示它們的位置。</p>
+            <p>選擇一種執行 SSN 的方式即可，不需要兩種都裝。</p>
+            <div class="start-paths" aria-label="選擇 SSN 的使用方式">
+                <button type="button" data-choose-path="app" aria-pressed="true">桌面應用程式</button>
+                <button type="button" data-choose-path="extension" aria-pressed="false">瀏覽器擴充功能</button>
+            </div>
+            <noscript><p>下方顯示桌面版的操作步驟。 <a href="guides.html#extension-getting-started">瀏覽器擴充功能使用說明</a>.</p></noscript>
+        </div>
+        <div class="guide-card">
+            <h2 id="install">1. 開啟並啟用 SSN</h2>
+            <div data-start-path="app">
+                <p><a href="download.html#standalone">下載桌面應用程式</a> ，選擇適合電腦的版本並安裝，然後開啟 <strong>Social Stream Ninja</strong>.</p>
+                <p>前往 <strong>來源與設定</strong>。如果右側面板顯示 <strong>服務已停用</strong>，點擊一次。隨後應顯示 <strong>服務已啟用</strong>.</p>
+            </div>
+            <div data-start-path="extension" hidden>
+                <p>安裝 <a href="https://chromewebstore.google.com/detail/social-stream-ninja/cppibjhfemifednoimlblfcmjgfhfjeg">Chrome 線上應用程式商店中的 Social Stream Ninja</a> （使用 Chrome 或 Edge）。</p>
+                <p>點擊瀏覽器的 <strong>擴充功能</strong> （拼圖）按鈕，然後 <strong>Social Stream Ninja</strong>。將它釘選，方便下次使用。</p>
+                <p>如果彈出選單顯示 <strong>擴充功能已停用</strong>，點擊一次。隨後應顯示 <strong>擴充功能已啟用</strong>.</p>
+            </div>
+<figure class="guide-figure"><a href="../../docs/images/guides/beginner-service-active.png"><img src="../../docs/images/guides/beginner-service-active.png" alt="實際的 SSN 服務啟用控制項，已開啟" class="guide-image start-small" loading="lazy"></a><figcaption>圖中是桌面應用程式。擴充功能中此項名為「Extension active」。</figcaption></figure>
+            <details class="start-extra"><summary>桌面應用程式無法開啟？</summary><p><a href="desktop-app-wont-open.html">依照 Windows、macOS 或 Linux 的啟動說明操作。</a> 安裝 SSN 不會自動連接聊天。</p></details>
+        </div>
+        <div class="guide-card">
+            <h2 id="source">2. 新增要讀取的聊天</h2>
+            <div data-start-path="app">
+                <p>在 <strong>來源與設定</strong>，從左側按鈕中選擇平台。必要時捲動該清單。</p>
+                <p><strong>eBay Live 範例：</strong> 點擊 <strong>eBay Live</strong>，貼上直播活動連結，然後點擊 <strong>繼續</strong>.</p>
+<figure class="guide-figure"><a href="../../docs/images/guides/beginner-ebay-source.png"><img src="../../docs/images/guides/beginner-ebay-source.png" alt="實際的新增 eBay Live 對話方塊：活動或賣家連結欄位和繼續按鈕" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>使用 eBay 活動連結，而不是單一商品的頁面。</figcaption></figure>
+                <p>新來源會出現在 <strong>已新增的來源</strong>。點擊 <strong>啟用來源</strong>。如果網站要求登入，請使用 <strong>登入</strong>，然後再次啟用來源。</p>
+<figure class="guide-figure"><a href="../../docs/images/guides/beginner-activate-source.png"><img src="../../docs/images/guides/beginner-activate-source.png" alt="實際新增的 eBay Live 來源，包含啟用來源和登入按鈕" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>圖中為範例活動。請使用你自己的直播活動，並保持擷取頁面執行。</figcaption></figure>
+                <details class="start-extra"><summary>這些控制項在哪裡？</summary><figure class="guide-figure"><a href="../../docs/images/guides/beginner-app-sources.png"><img src="../../docs/images/guides/beginner-app-sources.png" alt="實際桌面應用程式：左側為平台按鈕，中間為已新增的來源，右側為 SSN 設定" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>左側是來源，右側是 SSN 設定和停駐面板連結。</figcaption></figure></details>
+            </div>
+            <div data-start-path="extension" hidden>
+                <p>在 <strong>安裝了擴充功能的同一個瀏覽器</strong>，開啟直播的聊天頁面。必要時登入平台，並保持該分頁開啟。</p>
+                <p><strong>eBay Live 範例：</strong> 在 eBay 上開啟直播活動，確保聊天可見。商品頁面或賣家商店頁面不是直播聊天。</p>
+                <p>這種方式不需要在 SSN 中新增來源項目：擴充功能會擷取你開啟的受支援聊天頁面。</p>
+            </div>
+            <p class="start-check"><strong>檢查：</strong> 確認原平台的聊天頁面正在出現新訊息。</p>
+            <details class="start-extra"><summary>使用其他平台？</summary><p>使用該平台的直播聊天或彈出聊天視窗連結。 <a href="platform-setup-picker.html">尋找你所用平台的設定步驟。</a></p></details>
+        </div>
+        <div class="guide-card">
+            <h2 id="dock">3. 開啟 SSN 停駐面板</h2>
+            <p>返回 SSN 設定 <span data-start-path="app">，位於應用程式右側</span><span data-start-path="extension" hidden>，方法是點擊其瀏覽器擴充功能圖示</span>。找到 <strong>主聊天疊加畫面與控制停駐面板</strong>.</p>
+            <p><strong>點擊該標題下方的長連結。</strong> 這會開啟聊天停駐面板。使用 <strong>複製連結</strong> ，用於貼到其他位置。</p>
+<figure class="guide-figure"><a href="../../docs/images/guides/beginner-open-dock.png"><img src="../../docs/images/guides/beginner-open-dock.png" alt="實際的主聊天疊加畫面與控制停駐面板標題、產生的連結和複製連結按鈕" class="guide-image start-small" loading="lazy"></a><figcaption>使用你自己設定中的連結。截圖裡的 GUIDE_DEMO 只是範例。</figcaption></figure>
+            <p>請別人傳送一則新聊天訊息，或自己在原平台傳送。訊息應出現在 SSN 停駐面板中。</p>
+<figure class="guide-figure"><a href="../../docs/images/guides/beginner-dock-chat.png"><img src="../../docs/images/guides/beginner-dock-chat.png" alt="實際的 SSN 停駐面板，顯示三則 eBay 聊天範例訊息" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>實際停駐面板中的範例訊息。你的聊天應顯示在這裡。</figcaption></figure>
+            <p class="start-check"><strong>聊天出現在這裡？表示已連線。</strong> 先讓這一步正常運作，再調整 TTS 或 OBS 設定。</p>
+            <details class="start-extra"><summary>停駐面板是空的</summary><p>檢查 SSN 已啟用、來源正在執行且聊天可見。傳送一則 <em>新</em> 訊息；舊訊息可能不會重播。請從同一個 SSN 應用程式或擴充功能中開啟停駐面板連結，不要使用截圖或其他工作階段中的連結。</p><p>如有需要，請使用 <strong>觸發模擬測試訊息</strong> ，位於 SSN 設定中。如果測試訊息出現而實際聊天沒有出現，請檢查來源；如果兩者都沒有出現，請檢查停駐面板連結和連線。</p></details>
+        </div>
+        <div class="guide-card">
+            <h2 id="tts">4. 選用：朗讀聊天</h2>
+            <p><strong>可以，TTS 能依序自動朗讀新聊天訊息，一次一則。</strong> eBay 不需要自帶 TTS 功能，但 SSN 必須已經能收到文字。</p>
+            <p>回到 SSN 設定，在主停駐面板連結下方展開 <strong>訊息 — 文字轉語音</strong>。開啟 <strong>在停駐面板中啟用 TTS</strong>:</p>
+<figure class="guide-figure"><a href="../../docs/images/guides/tts-enable-dock-popup.png"><img src="../../docs/images/guides/tts-enable-dock-popup.png" alt="實際的彈出選單 TTS 區域，已開啟收到訊息時朗讀" class="guide-image start-small" loading="lazy"></a><figcaption>藍色開關用於啟用新訊息朗讀。</figcaption></figure>
+            <p>在該區域向下捲動，選擇 <strong>Piper TTS</strong> ；對應的設定項目： <strong>TTS 服務提供者</strong>。然後選擇聲音。無需 API 金鑰或付費帳號。</p>
+<figure class="guide-figure"><a href="../../docs/images/guides/tts-select-provider-popup.png"><img src="../../docs/images/guides/tts-select-provider-popup.png" alt="實際的 Piper TTS 服務和聲音選擇器" class="guide-image start-small" loading="lazy"></a><figcaption>首次下載聲音需要一些時間。</figcaption></figure>
+            <p><strong>再次複製主停駐面板連結。</strong> 更新後的連結包含 TTS 設定。先前複製的舊連結不會自動取得新設定。</p>
+            <details class="start-extra"><summary>我只想在自己的電腦上聽到聲音</summary><p>開啟更新後的停駐面板連結，傳送一則新聊天訊息。如果瀏覽器阻擋音訊，請點擊頁面內部。不需要 OBS 的話，到這裡就完成了。</p></details>
+        </div>
+        <div class="guide-card">
+            <h2 id="obs">5. 將停駐面板新增至 OBS</h2>
+            <ol class="guide-steps">
+                <li>在 OBS 場景中找到 <strong>來源</strong>。點擊 <strong>+</strong> → <strong>瀏覽器</strong>。將其命名為 <strong>SSN Chat</strong>，然後點擊 <strong>確定</strong>.</li>
+                <li>替換預設的 <strong>URL</strong> ，改為剛複製的停駐面板連結。保持 <strong>本機檔案</strong> 不要勾選。</li>
+                <li>若要使用 TTS，請勾選 <strong>透過 OBS 控制音訊</strong>。點擊 <strong>確定</strong>.</li>
+            </ol>
+<figure class="guide-figure"><a href="../../docs/images/guides/obs-browser-source-properties.png"><img src="../../docs/images/guides/obs-browser-source-properties.png" alt="實際的 OBS 瀏覽器來源內容，顯示 URL、寬度、高度和透過 OBS 控制音訊" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>圖中為預設 OBS 對話方塊：將 URL 替換為你的連結，並勾選透過 OBS 控制音訊。</figcaption></figure>
+            <p>在 OBS 預覽中拖曳聊天框以移動位置，拖曳角落以調整大小。如果已經新增了該來源，請開啟其 <strong>內容</strong> 並替換舊 URL。</p>
+            <details class="start-extra"><summary>我只想播放語音，不顯示聊天</summary><p>保持瀏覽器來源啟用，但將它放在不透明的攝影機或遊戲來源後面，或移到畫布外。需要它的聲音時，不要關閉其眼睛圖示或卸載該來源。</p></details>
+            <details class="start-extra"><summary>OBS 自訂瀏覽器停駐面板呢？</summary><p>那是供你使用的控制面板，與場景中的 <strong>瀏覽器來源</strong> 不同。若要擷取 TTS 音訊，請先使用上述瀏覽器來源。 <a href="obs-quick-start.html">進一步了解停駐面板和疊加畫面。</a></p></details>
+        </div>
+        <div class="guide-card">
+            <h2 id="audio">6. 開播前檢查聲音</h2>
+            <ol class="guide-steps">
+                <li>再傳送一則聊天訊息，觀察是否有反應： <strong>SSN Chat</strong> ，位於 OBS 的 <strong>混音器</strong>.</li>
+                <li>如果你自己也想聽到，請開啟 <strong>編輯 → 進階音訊內容</strong>。將該來源設為 <strong>監聽並輸出</strong>.</li>
+                <li>用 OBS 錄製一小段並播放。你應該只聽到一次訊息。</li>
+            </ol>
+            <p class="start-check"><strong>看到聊天，且錄影中有語音，就準備好了。</strong> 直播必須使用 OBS 的音訊，觀眾才能聽到；SSN 不會自動為獨立的手機直播加入聲音。</p>
+            <details class="start-extra"><summary>沒聲音，或聽到兩遍？</summary><p><strong>音量表沒有反應：</strong> 檢查新 URL、TTS 開關、聲音下載和透過 OBS 控制音訊選項。在 OBS 中先使用 Piper，而不是系統 TTS。</p><p><strong>音量表有反應，但錄影沒有聲音：</strong> 檢查靜音狀態和錄製音軌分配。</p><p><strong>聲音播放兩次：</strong> 關閉多餘的朗讀停駐面板或瀏覽器，或停用其中的 TTS。避免同時錄製 OBS 來源和它的另一份監聽聲音。</p></details>
+            <p><a href="tts-setup-guide.html">比較聲音並排除 TTS 問題</a> · <a href="https://obsproject.com/kb/browser-source">OBS 來源說明</a> · <a href="https://obsproject.com/kb/audio-mixer-guide">OBS 音訊說明</a></p>
+        </div>
+        <div class="guide-card"><details class="start-extra"><summary>下次直播時</summary><p>開啟 SSN，啟用來源（或開啟聊天分頁），再開啟 OBS。如果 eBay 為下一場直播提供了新活動連結，請將來源更新為該活動。繼續使用同一 SSN 工作階段的停駐面板連結。</p></details><details class="start-extra"><summary>更多進階選項</summary><p><a href="tts-setup-guide.html#voice-chooser">其他語音服務</a> · <a href="local-tts.html">執行自己的 TTS 伺服器</a> · <a href="guides.html">所有指南</a></p></details></div>
+    </div></main>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 授權條款。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        function choosePath(path) {
+            document.querySelectorAll("[data-start-path]").forEach(function(node) { node.hidden = node.getAttribute("data-start-path") !== path; });
+            document.querySelectorAll("[data-choose-path]").forEach(function(button) { button.setAttribute("aria-pressed", String(button.getAttribute("data-choose-path") === path)); });
+        }
+        document.querySelectorAll("[data-choose-path]").forEach(function(button) { button.addEventListener("click", function() { choosePath(button.getAttribute("data-choose-path")); }); });
+    </script>
+</body>
+</html>

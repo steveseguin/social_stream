@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/th/docs/hype-train-top-bar.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/th/docs/hype-train-top-bar.html">
+    <meta property="og:title" content="คู่มือแถบด้านบน Hype Train - Social Stream Ninja">
+    <meta property="og:description" content="วิธีเพิ่มโอเวอร์เลย์แถบด้านบน Twitch Hype Train ของ Social Stream Ninja ใน OBS และทดสอบก่อนถ่ายทอดสด">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/th/docs/hype-train-top-bar.html">
+    <meta name="twitter:title" content="คู่มือแถบด้านบน Hype Train - Social Stream Ninja">
+    <meta name="twitter:description" content="วิธีเพิ่มโอเวอร์เลย์แถบด้านบน Twitch Hype Train ของ Social Stream Ninja ใน OBS และทดสอบก่อนถ่ายทอดสด">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คู่มือแถบด้านบน Hype Train - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="วิธีเพิ่มโอเวอร์เลย์แถบด้านบน Twitch Hype Train ของ Social Stream Ninja ใน OBS และทดสอบก่อนถ่ายทอดสด">
+    <style>
+        .guide-image {
+            display: block;
+            width: 100%;
+            max-width: 1100px;
+            margin: 1.5rem auto;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+        }
+
+        .quick-note {
+            background: rgba(26, 115, 232, 0.08);
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 1.4rem 1.6rem;
+            margin: 1.5rem 0;
+        }
+
+        .dark-mode .quick-note {
+            background: rgba(26, 115, 232, 0.18);
+        }
+
+        .warning-note {
+            background: rgba(251, 188, 5, 0.14);
+            border-left-color: #f9ab00;
+        }
+
+        .dark-mode .warning-note {
+            background: rgba(251, 188, 5, 0.2);
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/hype-train-top-bar.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{", which makes the overlay focus on Hype Train and Treasure Train events.":" ซึ่งทำให้โอเวอร์เลย์เน้นอีเวนต์ Hype Train และ Treasure Train","A Hype Train will not appear in the normal chat overlay. Use the Hype Train Top Bar, the Meta Data Bar, or":"Hype Train ไม่ปรากฏในโอเวอร์เลย์แชตปกติ ใช้ Hype Train Top Bar, Meta Data Bar หรือ","Add a Twitch-style Hype Train progress bar to OBS, test it before going live, and know what to check if it does not appear.":"เพิ่มแถบความคืบหน้า Hype Train สไตล์ Twitch ใน OBS ทดสอบก่อนถ่ายทอดสด และรู้ว่าต้องตรวจอะไรหากไม่ปรากฏ","Add that link to OBS as a Browser Source.":"เพิ่มลิงก์นั้นเป็นแหล่งเบราว์เซอร์ใน OBS","Add the Hype Train Top Bar as a browser source, not as a normal chat overlay.":"เพิ่ม Hype Train Top Bar เป็นแหล่งเบราว์เซอร์ ไม่ใช่โอเวอร์เลย์แชตปกติ","Align overlay to the center:":"จัดโอเวอร์เลย์กึ่งกลาง:","Align overlay to the right-side:":"จัดโอเวอร์เลย์ด้านขวา:","Before you start":"ก่อนเริ่ม","Commands & API":"คำสั่งและ API","Confirm the URL includes":"ยืนยันว่า URL มี","Confirm the copied overlay URL has the same session ID as the Social Stream Ninja popup.":"ยืนยันว่า URL โอเวอร์เลย์ที่คัดลอกมีรหัสเซสชันเดียวกับป๊อปอัป Social Stream Ninja","Confirm your Twitch account was re-authorized after Hype Train support was added.":"ยืนยันว่าอนุญาตบัญชี Twitch ใหม่หลังเพิ่มการรองรับ Hype Train แล้ว","Copy the":"คัดลอก","Custom page background color:":"สีพื้นหลังหน้ากำหนดเอง:","Customize the bar":"ปรับแถบ","Disable text outlining:":"ปิดเส้นขอบข้อความ:","Download":"ดาวน์โหลด","Event Reference":"เอกสารอ้างอิงอีเวนต์","Fake Hype Train":"Hype Train จำลอง (Fake Hype Train)","Features":"ฟีเจอร์","Find":"หา","Guides":"คู่มือ","Hire":"จ้างงาน","Home":"หน้าแรก","How to add the Social Stream Ninja Twitch Hype Train top bar overlay to OBS and test it before going live.":"วิธีเพิ่มโอเวอร์เลย์แถบด้านบน Twitch Hype Train ของ Social Stream Ninja ใน OBS และทดสอบก่อนถ่ายทอดสด","Hype Meter and Viewer Count":"มาตรวัด Hype และจำนวนผู้ชม","Hype Train Top Bar":"แถบด้านบน Hype Train","Hype Train Top Bar Guide":"คู่มือแถบด้านบน Hype Train","Hype Train Top Bar Guide - Social Stream Ninja":"คู่มือแถบด้านบน Hype Train - Social Stream Ninja","Hype Train Top Bar preview showing progress, level, timer, and contributors":"ตัวอย่าง Hype Train Top Bar แสดงความคืบหน้า ระดับ เวลา และผู้สนับสนุน","If it does not show":"หากไม่แสดง","If prompted, re-authorize Twitch so Social Stream Ninja can request the":"หากระบบขอ ให้อนุญาต Twitch ใหม่เพื่อให้ Social Stream Ninja ขอขอบเขต","Important:":"สำคัญ:","Inspiration":"ไอเดียสร้างสรรค์","It does not show normal chat messages. Hype Train data is metadata-only, so the bar updates when Twitch sends a Hype Train event.":"ไม่แสดงข้อความแชตปกติ ข้อมูล Hype Train มีเฉพาะเมทาดาทา แถบจึงอัปเดตเมื่อ Twitch ส่งอีเวนต์ Hype Train","Main navigation":"เมนูหลัก","Open":"เปิด","Open navigation menu":"เปิดเมนูนำทาง","Open the Social Stream Ninja popup.":"เปิดป๊อปอัป Social Stream Ninja","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Panel opacity:":"ความทึบแผง:","Resources":"แหล่งข้อมูลอ้างอิง","Scale multiplier:":"ตัวคูณสเกล:","Set it up from the popup":"ตั้งค่าจากป๊อปอัป","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja popup showing Hype Train Top Bar link and layout options":"ป๊อปอัป Social Stream Ninja แสดงลิงก์ Hype Train Top Bar และตัวเลือกเลย์เอาต์","Support":"การสนับสนุน","Supported Sites":"เว็บไซต์ที่รองรับ","Switch theme":"เปลี่ยนธีม","Test with the":"ทดสอบด้วย","Testing options":"ตัวเลือกทดสอบ","The Hype Train Top Bar is a dedicated overlay for Twitch Hype Train and Treasure Train events. It shows the current level, progress, total, timer, and top contributors in a top-bar style layout.":"Hype Train Top Bar เป็นโอเวอร์เลย์เฉพาะอีเวนต์ Twitch Hype Train และ Treasure Train แสดงระดับปัจจุบัน ความคืบหน้า ยอดรวม เวลา และผู้สนับสนุนสูงสุดในรูปแบบแถบด้านบน","The Hype Train Top Bar options work like the other overlay options in the popup. Toggle an option, then copy the updated link again.":"ตัวเลือก Hype Train Top Bar ทำงานเหมือนตัวเลือกโอเวอร์เลย์อื่นในป๊อปอัป เปิดหรือปิดตัวเลือกแล้วคัดลอกลิงก์ที่อัปเดตใหม่","The copied URL includes":"URL ที่คัดลอกรวม","Tip:":"เคล็ดลับ:","Transparent bar background:":"พื้นหลังแถบโปร่งใส:","Use":"ใช้","Use Twitch WebSocket mode for Twitch event capture.":"ใช้โหมด Twitch WebSocket เพื่อจับอีเวนต์ Twitch","Use the":"ใช้","What this overlay does":"โอเวอร์เลย์นี้ทำอะไร","adjusts the whole bar opacity.":"ปรับความทึบทั้งแถบ","and select a Hype Train preset if you want to test through the API route.":"แล้วเลือกค่าที่ตั้งไว้ของ Hype Train หากต้องการทดสอบผ่านเส้นทาง API","button to confirm the bar appears.":"ปุ่มเพื่อยืนยันว่าแถบปรากฏ","button.":"ปุ่ม","centers the bar horizontally.":"จัดแถบกึ่งกลางแนวนอน","if you want to confirm the raw Twitch Hype Train event is being received.":"หากต้องการยืนยันว่าได้รับอีเวนต์ Twitch Hype Train ดิบ","in the popup for the quickest test.":"ในป๊อปอัปเพื่อทดสอบเร็วที่สุด","link.":"ลิงก์","makes the bar smaller or larger.":"ทำให้แถบเล็กหรือใหญ่ขึ้น","places the bar against the right edge.":"วางแถบชิดขอบขวา","removes the black text shadow.":"ลบเงาข้อความสีดำ","removes the filled background behind the bar.":"ลบพื้นหลังทึบด้านหลังแถบ","scope.":"สิทธิ์","to see it.":"เพื่อดู","useful when testing outside OBS or when you want a non-transparent page background.":"มีประโยชน์เมื่อทดสอบนอก OBS หรือเมื่อต้องการพื้นหลังหน้าที่ไม่โปร่งใส","with the same session to verify Hype Train metadata is arriving.":"ด้วยเซสชันเดียวกันเพื่อตรวจว่ามีเมทาดาทา Hype Train เข้ามา","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja สงวนลิขสิทธิ์"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/hype-train-top-bar.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/hype-train-top-bar.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก"><a href="../index.html">หน้าแรก</a><a href="features.html">ฟีเจอร์</a><a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a><a href="download.html">ดาวน์โหลด</a><a href="guides.html">คู่มือ</a><a href="commands.html">คำสั่งและ API</a><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a><a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a><a href="services.html" class="site-priority-hire">จ้างงาน</a><a href="support.html">การสนับสนุน</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/hype-train-top-bar.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/hype-train-top-bar.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/hype-train-top-bar.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/hype-train-top-bar.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/hype-train-top-bar.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/hype-train-top-bar.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/hype-train-top-bar.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/hype-train-top-bar.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/hype-train-top-bar.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/hype-train-top-bar.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/hype-train-top-bar.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/hype-train-top-bar.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/hype-train-top-bar.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/hype-train-top-bar.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/hype-train-top-bar.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/hype-train-top-bar.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="hype-train-top-bar.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="เปลี่ยนธีม"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>คู่มือแถบด้านบน Hype Train</h1>
+            <p>เพิ่มแถบความคืบหน้า Hype Train สไตล์ Twitch ใน OBS ทดสอบก่อนถ่ายทอดสด และรู้ว่าต้องตรวจอะไรหากไม่ปรากฏ</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <h3>โอเวอร์เลย์นี้ทำอะไร</h3>
+                    <p>Hype Train Top Bar เป็นโอเวอร์เลย์เฉพาะอีเวนต์ Twitch Hype Train และ Treasure Train แสดงระดับปัจจุบัน ความคืบหน้า ยอดรวม เวลา และผู้สนับสนุนสูงสุดในรูปแบบแถบด้านบน</p>
+                    <p>ไม่แสดงข้อความแชตปกติ ข้อมูล Hype Train มีเฉพาะเมทาดาทา แถบจึงอัปเดตเมื่อ Twitch ส่งอีเวนต์ Hype Train</p>
+                    <img src="../../docs/images/hype-train-top-bar-preview.png" alt="ตัวอย่าง Hype Train Top Bar แสดงความคืบหน้า ระดับ เวลา และผู้สนับสนุน" class="guide-image">
+                </div>
+
+                <div class="guide-card">
+                    <h3>ก่อนเริ่ม</h3>
+                    <ul class="guide-list">
+                        <li>ใช้โหมด Twitch WebSocket เพื่อจับอีเวนต์ Twitch</li>
+                        <li>หากระบบขอ ให้อนุญาต Twitch ใหม่เพื่อให้ Social Stream Ninja ขอขอบเขต <code>channel:read:hype_train</code> สิทธิ์</li>
+                        <li>เพิ่ม Hype Train Top Bar เป็นแหล่งเบราว์เซอร์ ไม่ใช่โอเวอร์เลย์แชตปกติ</li>
+                    </ul>
+                    <div class="quick-note warning-note">
+                        <strong>สำคัญ:</strong> Hype Train ไม่ปรากฏในโอเวอร์เลย์แชตปกติ ใช้ Hype Train Top Bar, Meta Data Bar หรือ <code>events.html</code> เพื่อดู
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>ตั้งค่าจากป๊อปอัป</h3>
+                    <ol class="guide-steps">
+                        <li>เปิดป๊อปอัป Social Stream Ninja</li>
+                        <li>หา <strong>มาตรวัด Hype และจำนวนผู้ชม</strong>.</li>
+                        <li>คัดลอก <strong>แถบด้านบน Hype Train</strong> ลิงก์</li>
+                        <li>เพิ่มลิงก์นั้นเป็นแหล่งเบราว์เซอร์ใน OBS</li>
+                        <li>ใช้ <strong>Hype Train จำลอง (Fake Hype Train)</strong> ปุ่มเพื่อยืนยันว่าแถบปรากฏ</li>
+                    </ol>
+                    <img src="../../docs/images/hype-train-popup-options.png" alt="ป๊อปอัป Social Stream Ninja แสดงลิงก์ Hype Train Top Bar และตัวเลือกเลย์เอาต์" class="guide-image">
+                    <div class="quick-note">
+                        <strong>เคล็ดลับ:</strong> URL ที่คัดลอกรวม <code>&amp;hype</code> ซึ่งทำให้โอเวอร์เลย์เน้นอีเวนต์ Hype Train และ Treasure Train
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>ปรับแถบ</h3>
+                    <p>ตัวเลือก Hype Train Top Bar ทำงานเหมือนตัวเลือกโอเวอร์เลย์อื่นในป๊อปอัป เปิดหรือปิดตัวเลือกแล้วคัดลอกลิงก์ที่อัปเดตใหม่</p>
+                    <ul class="guide-list">
+                        <li><strong>จัดโอเวอร์เลย์ด้านขวา:</strong> วางแถบชิดขอบขวา</li>
+                        <li><strong>จัดโอเวอร์เลย์กึ่งกลาง:</strong> จัดแถบกึ่งกลางแนวนอน</li>
+                        <li><strong>ตัวคูณสเกล:</strong> ทำให้แถบเล็กหรือใหญ่ขึ้น</li>
+                        <li><strong>ความทึบแผง:</strong> ปรับความทึบทั้งแถบ</li>
+                        <li><strong>พื้นหลังแถบโปร่งใส:</strong> ลบพื้นหลังทึบด้านหลังแถบ</li>
+                        <li><strong>ปิดเส้นขอบข้อความ:</strong> ลบเงาข้อความสีดำ</li>
+                        <li><strong>สีพื้นหลังหน้ากำหนดเอง:</strong> มีประโยชน์เมื่อทดสอบนอก OBS หรือเมื่อต้องการพื้นหลังหน้าที่ไม่โปร่งใส</li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h3>ตัวเลือกทดสอบ</h3>
+                    <ul class="guide-list">
+                        <li>ใช้ <strong>Hype Train จำลอง (Fake Hype Train)</strong> ในป๊อปอัปเพื่อทดสอบเร็วที่สุด</li>
+                        <li>ใช้ <code>sampleapi.html</code> แล้วเลือกค่าที่ตั้งไว้ของ Hype Train หากต้องการทดสอบผ่านเส้นทาง API</li>
+                        <li>ใช้ <code>events.html</code> หากต้องการยืนยันว่าได้รับอีเวนต์ Twitch Hype Train ดิบ</li>
+                    </ul>
+                </div>
+
+                <div class="guide-card">
+                    <h3>หากไม่แสดง</h3>
+                    <ol class="guide-steps">
+                        <li>ยืนยันว่าอนุญาตบัญชี Twitch ใหม่หลังเพิ่มการรองรับ Hype Train แล้ว</li>
+                        <li>ยืนยันว่า URL โอเวอร์เลย์ที่คัดลอกมีรหัสเซสชันเดียวกับป๊อปอัป Social Stream Ninja</li>
+                        <li>ยืนยันว่า URL มี <code>&amp;hype</code>.</li>
+                        <li>ทดสอบด้วย <strong>Hype Train จำลอง (Fake Hype Train)</strong> ปุ่ม</li>
+                        <li>เปิด <code>events.html</code> ด้วยเซสชันเดียวกันเพื่อตรวจว่ามีเมทาดาทา Hype Train เข้ามา</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="../../media/logo.png" alt="โลโก้ Social Stream Ninja">
+                    <span>Social Stream Ninja</span>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-section">
+                        <h4>แหล่งข้อมูลอ้างอิง</h4>
+                        <ul>
+                            <li><a href="guides.html">คู่มือ</a></li>
+                            <li><a href="event-reference.html">เอกสารอ้างอิงอีเวนต์</a></li>
+                            <li><a href="support.html">การสนับสนุน</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Social Stream Ninja สงวนลิขสิทธิ์</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

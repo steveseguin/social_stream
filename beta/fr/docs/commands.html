@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="fr" data-site-root="../../" data-site-language="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/fr/docs/commands.html">
+    <meta property="og:title" content="Commandes et API - Social Stream Ninja">
+    <meta property="og:description" content="Documentation détaillée des commandes, de l’intégration API et des fonctions de bot de Social Stream Ninja.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/fr/docs/commands.html">
+    <meta name="twitter:title" content="Commandes et API - Social Stream Ninja">
+    <meta name="twitter:description" content="Documentation détaillée des commandes, de l’intégration API et des fonctions de bot de Social Stream Ninja.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commandes et API - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/commands.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <meta name="description" content="Documentation détaillée des commandes, de l’intégration API et des fonctions de bot de Social Stream Ninja.">
+    <link rel="canonical" href="https://socialstream.ninja/beta/fr/docs/commands.html">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="fr">
+<script id="ssn-site-language" type="application/json">{"language":"fr","page":"docs/commands.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Passer au thème clair","Switch to dark theme":"Passer au thème sombre","Light mode":"Mode clair","Dark mode":"Mode sombre","Open navigation menu":"Ouvrir le menu de navigation","Close navigation menu":"Fermer le menu de navigation","Copy this document as Markdown to the clipboard":"Copier ce document au format Markdown dans le presse-papiers","Copy Markdown":"Copier le Markdown","Copying…":"Copie en cours…","Markdown copied":"Markdown copié","Copy failed":"Échec de la copie","Copy comprehensive Markdown for an AI assistant":"Copier le Markdown complet pour un assistant IA","Copy this documentation page as Markdown for an AI assistant":"Copier cette page de documentation en Markdown pour un assistant IA"},"strings":{"\"Enable remote API control of extension\"":"« Activer le contrôle distant de l’extension par API »","\"Send chat messages to API server\"":"« Envoyer les messages du chat au serveur API »","(Toggle 1). Connect to":"(Interrupteur 1) — Se connecter à","(Toggle 3). Connect to":"(Interrupteur 3) — Se connecter à","(runs in background)":"(s’exécute en arrière-plan)",", and":", et",", or":", ou","- Current featured message text":"- Texte du message actuellement mis en avant","- Current featured username":"- Nom de l’utilisateur actuellement mis en avant","- Number of messages in queue":"- Nombre de messages dans la file","; use":"; utilisez","AI Chat Bot Mode":"Mode bot de chat IA","AI Chat Bot Setup Guide":"Guide de configuration du bot de chat IA","AI Co-Host":"Coprésentateur IA","AI Integration":"Intégration IA","AI-powered text-to-speech with natural voice conversion capabilities.":"Synthèse vocale par IA avec conversion vocale naturelle.","API Endpoints and Connection Methods":"Points d’accès API et méthodes de connexion","API Method":"Méthode API","AWS Bedrock":"AWS Bedrock","Access to multiple AI models through a unified API interface.":"Accès à plusieurs modèles IA via une interface API unifiée.","Action":"Action","Add":"Ajouter","Add custom animations for new messages":"Ajouter des animations personnalisées aux nouveaux messages","Add custom instructions for tone, role, and moderation rules":"Ajouter des instructions sur le ton, le rôle et les règles de modération","Add endpoint:":"Ajouter le point d’accès :","Add interactive elements with JavaScript":"Ajouter des éléments interactifs avec JavaScript","Add your API key and preferred model":"Ajouter votre clé API et le modèle souhaité","Auto-Response Configuration":"Configuration des réponses automatiques","Automated Chat Responses":"Réponses automatiques au chat","Automatically welcomes anyone who says \"hi\" in chat":"Accueille automatiquement toute personne disant « hi » dans le chat","Begin with our sample overlay template to understand the basics:":"Commencez avec notre modèle d’incrustation pour comprendre les bases :","Bitfocus Companion":"Bitfocus Companion","Bitfocus Companion provides powerful control of Social Stream Ninja using either WebSocket or HTTP APIs.":"Bitfocus Companion permet de contrôler Social Stream Ninja avec les API WebSocket ou HTTP.","Blocks a user from a specific platform":"Bloque un utilisateur sur une plateforme précise","Bluesky":"Bluesky","Bot Accounts for Automatic Replies":"Comptes de bot pour les réponses automatiques","Bot Commands":"Commandes de bot","Bot Instances and Overlays":"Instances de bots et incrustations","Bot Type":"Type de bot","Bot commands will only work when the auto-responder is properly configured and you have permission to post messages in the respective platforms.":"Les commandes du bot ne fonctionnent que si les réponses automatiques sont correctement configurées et si vous avez le droit de publier sur les plateformes concernées.","Both donations and membership events are supported":"Les dons et les événements d’adhésion sont pris en charge","Built-in Bot Commands":"Commandes intégrées du bot","Buy Me A Coffee":"Buy Me A Coffee","CC Number":"Numéro CC","Censor Bot":"Bot de censure","Channel System":"Système de canaux","ChatGPT / OpenAI":"ChatGPT / OpenAI","ChatGPT, Gemini, DeepSeek, xAI, Groq, OpenRouter, Bedrock:":"ChatGPT, Gemini, DeepSeek, xAI, Groq, OpenRouter, Bedrock :","Choose and Connect Your LLM Provider":"Choisir et connecter votre fournisseur LLM","Choose fixed, message-length, or after-TTS auto-hide behavior for":"Choisir le masquage automatique à durée fixe, selon la longueur ou après synthèse vocale pour","Choose whether replies go back to chat or only to the bot overlay page":"Choisir si les réponses retournent dans le chat ou seulement sur la page d’incrustation du bot","Clear Featured Message":"Effacer le message en vedette","Clear overlay":"Effacer l’incrustation","Clears the featured message from the overlay":"Efface le message en vedette de l’incrustation","Clears the waitlist and reopens entries":"Vide la liste d’attente et rouvre les inscriptions","Collect donations through the popular Buy Me A Coffee platform.":"Recevez des dons via la plateforme populaire Buy Me A Coffee.","Command":"Commande","Commands & API":"Commandes et API","Commands & API - Social Stream Ninja":"Commandes et API - Social Stream Ninja","Common API Commands":"Commandes API courantes","Community":"Communauté","Companion Integration":"Intégration Companion","Configure Bot Behavior":"Configurer le comportement du bot","Configure LLM Service Provider":"Configurer le fournisseur LLM","Configure your MIDI controller or StreamDeck MIDI plugin":"Configurer votre contrôleur MIDI ou le plugin MIDI de StreamDeck","Connect to llama.cpp, LM Studio, vLLM, or any other OpenAI-compatible endpoint.":"Connectez llama.cpp, LM Studio, vLLM ou tout autre point d’accès compatible OpenAI.","Connect with your desired channel:":"Connectez-vous au canal souhaité :","Consolidates your live social messaging streams and more. Free and open source.":"Réunit vos flux de messages sociaux en direct et bien plus. Gratuit et open source.","Content Moderation":"Modération du contenu","Contribute":"Contribuer","Control Social Stream Ninja using MIDI controllers, keyboard shortcuts, or StreamDeck with MIDI plugins.":"Contrôlez Social Stream Ninja avec des contrôleurs MIDI, des raccourcis clavier ou StreamDeck avec des plugins MIDI.","Control Social Stream Ninja with built-in commands, automation, and API integration":"Contrôlez Social Stream Ninja avec les commandes intégrées, l’automatisation et l’intégration API","Control featured messages, clear overlays, and manipulate content appearance in your stream.":"Contrôlez les messages en vedette, effacez les incrustations et modifiez l’apparence du contenu dans votre direct.","Create Tests":"Créer des tests","Create a payment link at":"Créez un lien de paiement sur","Creating Custom Overlays":"Créer des incrustations personnalisées","Custom API":"API personnalisée","Custom API (OpenAI-compatible)":"API personnalisée (compatible OpenAI)","Custom API:":"API personnalisée :","Custom JavaScript":"JavaScript personnalisé","Custom Overlays":"Incrustations personnalisées","Custom Scripts":"Scripts personnalisés","Customization Guide":"Guide de personnalisation","Customize how the bot behaves in chat:":"Personnalisez le comportement du bot dans le chat :","Customize the CSS for your desired appearance":"Personnaliser le CSS selon l’apparence souhaitée","Customize the appearance with CSS":"Personnaliser l’apparence avec CSS","Dedicated 1-on-1 bot page that does not share the main bot's RAG dataset or chat history":"Page de bot individuel dédiée, qui ne partage ni les données RAG ni l’historique du bot principal","DeepSeek":"DeepSeek","Description":"Description","Detailed Documentation":"Documentation détaillée","Detailed documentation for Social Stream Ninja's commands, API integration, and bot functionality.":"Documentation détaillée des commandes, de l’intégration API et des fonctions de bot de Social Stream Ninja.","Discord":"Discord","Displays the next message in the queue":"Affiche le message suivant de la file","Displays the next queued message":"Affiche le prochain message en attente","Donate":"Faire un don","Donation Services":"Services de dons","Download":"Télécharger","Download Now":"Télécharger maintenant","Download the sample overlay HTML file":"Télécharger le fichier HTML d’incrustation d’exemple","Downloads the current waitlist as a TSV file from the running Social Stream page/app":"Télécharge la liste d’attente actuelle en TSV depuis la page/application Social Stream active","Dynamic Variables":"Variables dynamiques","Edit the HTML for your custom layout":"Modifier le HTML pour votre disposition personnalisée","Edit the file to add your custom functionality":"Modifier le fichier pour ajouter vos fonctions personnalisées","Efficient, cost-effective AI models optimized for conversational tasks.":"Modèles IA efficaces et économiques, optimisés pour la conversation.","ElevenLabs":"ElevenLabs","Emote reaction":"Réaction par emote","Enable":"Activer","Enable MIDI support in the extension settings":"Activer la prise en charge MIDI dans les paramètres de l’extension","Enable Optional Extras":"Activer les options supplémentaires","Enable RAG and upload documents for knowledge-aware answers":"Activer le RAG et importer des documents pour des réponses documentées","Enable TTS for bot replies and choose a provider":"Activer la synthèse vocale des réponses du bot et choisir un fournisseur","Enable Toggle 1 +":"Activer l’interrupteur 1 +","Enable the LLM AI chat bot":"Activer le bot de chat IA LLM","Enable the censor bot for moderation or strict block mode":"Activer le bot de censure pour la modération ou le blocage strict","Enable the specific command toggles in the extension menu":"Activer les interrupteurs des commandes concernées dans le menu de l’extension","Enable via the extension menu toggle":"Activer avec l’interrupteur du menu de l’extension","Enables/disables automatic message featuring":"Active/désactive la mise en avant automatique des messages","Ensure you're logged into the platform (YouTube, Twitch, etc.)":"Vérifier que vous êtes connecté à la plateforme (YouTube, Twitch, etc.)","Enter an OpenAI-compatible endpoint, model id, and optional API key":"Entrer un point d’accès compatible OpenAI, un ID de modèle et une clé API facultative","Enterprise-grade AI models from various providers including Claude and Llama.":"Modèles IA professionnels de divers fournisseurs, dont Claude et Llama.","Example":"Exemple","Export chat messages to file or forward them via webhook (POST) for custom integrations.":"Exportez les messages du chat dans un fichier ou transmettez-les par webhook (POST) pour vos intégrations.","External Service Integration":"Intégration de services externes","FAQ":"FAQ","Features":"Fonctionnalités","Features the first pinned dock message.":"Met en avant le premier message épinglé du Dock.","Filters, sanitizes, or blocks incoming messages automatically":"Filtre, nettoie ou bloque automatiquement les messages entrants","Follow these steps to set up AI integration with the current menu:":"Suivez ces étapes pour configurer l’intégration IA avec le menu actuel :","For a smaller set of live-show buttons in OBS, use the":"Pour un petit ensemble de boutons de contrôle du direct dans OBS, utilisez le","For complete setup instructions and deeper TTS coverage, use these guides:":"Pour une configuration complète et plus de détails sur la synthèse vocale, consultez ces guides :","For one-way real-time updates from the server.":"Pour des mises à jour unidirectionnelles en temps réel depuis le serveur.","For real-time bidirectional communication with auto-reconnection.":"Pour une communication bidirectionnelle en temps réel avec reconnexion automatique.","For the auto-responder to work properly:":"Pour que les réponses automatiques fonctionnent :","Free, built-in TTS using your operating system's voice synthesizer.":"Synthèse vocale gratuite intégrée utilisant les voix de votre système d’exploitation.","Free, locally-running TTS using WebGPU/CPU for privacy-conscious users.":"Synthèse vocale gratuite en local via WebGPU/CPU pour préserver la confidentialité.","Free, privacy-focused, self-hosted AI models running on your own computer through Ollama's own API.":"Modèles IA gratuits et auto-hébergés sur votre ordinateur via l’API native d’Ollama, conçus pour préserver la confidentialité.","Gemini (Preview TTS)":"Gemini (synthèse vocale en aperçu)","Generate Code":"Générer du code","Generate test messages with random content":"Générer des messages de test au contenu aléatoire","Generic POST":"POST générique","Generic PUT":"PUT générique","Get Companion":"Obtenir Companion","Get Support":"Obtenir de l’aide","Get code examples for HTTP, WebSocket, and SSE":"Obtenir des exemples de code HTTP, WebSocket et SSE","GitHub":"GitHub","GitHub Repository":"Dépôt GitHub","Go to":"Accédez à","Google Cloud TTS":"Google Cloud TTS","Google Gemini":"Google Gemini","Google Gemini models including current Gemini 2.5 text and live multimodal options.":"Modèles Google Gemini, dont les options Gemini 2.5 actuelles pour le texte et le multimodal en direct.","Google's preview neural voice models with selectable voice and language options.":"Modèles neuronaux de voix de Google en aperçu, avec choix de voix et de langue.","Groq":"Groq","Guides":"Guides","H2R":"H2R","HTTP GET/POST":"HTTP GET/POST","HTTP/API Method":"Méthode HTTP/API","High-quality voices with extensive language and customization options.":"Voix de haute qualité avec de nombreuses langues et options de personnalisation.","Highlights the first active waitlist entry, or the numbered active entry in":"Met en avant la première entrée active de la liste d’attente, ou l’entrée active numérotée dans","Hire":"Faire appel à nos services","Home":"Accueil","Hotkey Support":"Prise en charge des raccourcis clavier","Hotkeys can be configured within the menu settings and work system-wide when the browser is focused or when the app is used.":"Les raccourcis se configurent dans les paramètres du menu et fonctionnent à l’échelle du système lorsque le navigateur a le focus ou que l’application est utilisée.","How to Enable":"Comment activer","If you prefer to keep connections peer-to-peer without enabling WebSocket mode, you can use the Social Stream Ninja WebRTC SDK. It includes Node and browser samples such as the":"Si vous préférez les connexions entre pairs sans activer le mode WebSocket, utilisez le SDK WebRTC de Social Stream Ninja. Il inclut des exemples Node et navigateur, comme le","If you see a blue debugging bar when auto-responses are triggered, you can hide it by starting Chrome with the":"Si une barre bleue de débogage apparaît lors des réponses automatiques, vous pouvez la masquer en lançant Chrome avec l’option","Implement your own message filtering":"Implémenter votre propre filtrage de messages","Implementation Steps":"Étapes de mise en œuvre","In Stripe Dashboard, go to Developers → Webhooks":"Dans le tableau de bord Stripe, ouvrez Développeurs → Webhooks","Inspiration":"Inspiration","Install a virtual MIDI loopback device (e.g., loopMIDI)":"Installer un périphérique MIDI virtuel de bouclage (par exemple loopMIDI)","Install locally and set the endpoint if needed":"Installer en local et définir le point d’accès si nécessaire","Installation Guide":"Guide d’installation","Interactive API Sandbox":"Bac à sable API interactif","Join our Discord":"Rejoindre notre Discord","Keep your session ID private, as anyone with it can send fake donations to your overlay. The webhook URL should be treated as sensitive information.":"Gardez votre ID de session privé : toute personne qui le connaît peut envoyer de faux dons à votre incrustation. L’URL du webhook doit être traitée comme une information sensible.","Key Features to Customize":"Principaux éléments à personnaliser","Kitten TTS":"Kitten TTS","Ko-Fi":"Ko-Fi","Kokoro":"Kokoro","Let the AI engage with your viewers automatically, answering questions and keeping the conversation lively even when you're focused on your content.":"Laissez l’IA échanger automatiquement avec vos spectateurs, répondre aux questions et animer la conversation pendant que vous vous concentrez sur votre contenu.","Lightweight browser-based TTS that downloads a small model for local voice generation.":"Synthèse vocale légère dans le navigateur, téléchargeant un petit modèle pour générer la voix en local.","Local AI TTS Guide":"Guide de synthèse vocale IA locale","Local Gemma / Local Qwen:":"Local Gemma / Local Qwen :","Local Gemma 4":"Local Gemma 4","Local Qwen 3.5":"Local Qwen 3.5","Low-latency OpenAI-compatible chat inference for fast conversational responses.":"Inférence de chat compatible OpenAI à faible latence pour des réponses rapides.","MIDI & Hotkey Control":"Contrôle MIDI et raccourcis clavier","MIDI & Hotkeys":"MIDI et raccourcis clavier","MIDI Integration":"Intégration MIDI","MIDI control works best with physical controllers but can also be triggered via virtual MIDI devices.":"Le contrôle MIDI fonctionne mieux avec des contrôleurs physiques, mais peut aussi être déclenché par des périphériques virtuels.","Main bot overlay with optional TTS and public chat responses":"Incrustation du bot principal avec synthèse vocale facultative et réponses au chat public","Main navigation":"Navigation principale","Make sure the chat window is visible (not minimized)":"Vérifier que la fenêtre de chat est visible et non réduite","Managed giveaway commands":"Commandes de tirages au sort gérés","Message Export":"Exportation des messages","Modify the JavaScript as needed for custom behaviors":"Modifier le JavaScript selon le comportement souhaité","Module Documentation":"Documentation du module","Multimodal AI that can see your screen, hear audio, and interact":"IA multimodale qui peut voir votre écran, entendre l’audio et interagir","Multiple Bot Instances":"Plusieurs instances de bots","Native integration with pre-built actions, real-time feedback, and variables for dynamic content.":"Intégration native avec actions prêtes à l’emploi, retours en temps réel et variables de contenu dynamique.","Navigate to webhook settings":"Ouvrir les paramètres de webhook","Next in Queue":"Suivant dans la file","Note:":"Remarque :","Notes":"Remarques","OBS setup guide":"guide de configuration OBS","Official Ollama Download":"Téléchargement officiel d’Ollama","Ollama (Native Local API)":"Ollama (API locale native)","Ollama uses its own native API. For llama.cpp, LM Studio, vLLM, or other OpenAI-compatible servers, choose":"Ollama utilise sa propre API native. Pour llama.cpp, LM Studio, vLLM ou d’autres serveurs compatibles OpenAI, choisissez","Ollama:":"Ollama :","Open":"Ouvrir","Open API Sandbox":"Ouvrir le bac à sable API","Open navigation menu":"Ouvrir le menu de navigation","Open the dock.html file locally for the custom.js to be loaded":"Ouvrir le fichier dock.html en local pour charger custom.js","OpenAI APIs including modern chat and realtime voice models.":"API OpenAI, dont les modèles récents de chat et de voix en temps réel.","OpenAI TTS":"OpenAI TTS","OpenAI speech synthesis with selectable voices, models, and optional compatible endpoints.":"Synthèse vocale OpenAI avec choix de voix, de modèles et, facultativement, de points d’accès compatibles.","OpenRouter":"OpenRouter","Overlay Gallery":"Galerie d’incrustations","Overlay Management":"Gestion des incrustations","Overview":"Vue d’ensemble","Perfect for simple commands from Stream Deck or custom scripts.":"Idéal pour des commandes simples depuis Stream Deck ou des scripts personnalisés.","Pins an existing dock message by message ID, or pins a full message object. Requires":"Épingle un message existant du Dock par son ID, ou un objet message complet. Nécessite","Premium voice synthesis with natural-sounding, customizable voices.":"Synthèse vocale premium avec des voix naturelles et personnalisables.","Primary Chat Bot":"Bot principal de chat","Privacy Policy":"Politique de confidentialité","Private Chat Interface":"Interface de chat privé","Process credit card donations directly through your Stripe account.":"Recevez des dons par carte bancaire directement sur votre compte Stripe.","Quick Links":"Liens rapides","Quick reaction":"Réaction rapide","RAG Search":"Recherche RAG","Ready to Take Your Stream to the Next Level?":"Prêt à faire évoluer votre direct ?","Receive coffee donations from your supporters.":"Recevez des cafés de vos soutiens.","Receive events from third-party services like Stripe, Ko-Fi, and Buy Me A Coffee.":"Recevez des événements de services tiers comme Stripe, Ko-Fi et Buy Me A Coffee.","Remember to replace":"Pensez à remplacer","Remote control for":"Contrôle à distance de","Removes featured message":"Retire le message en vedette","Removes the currently featured message from overlay":"Retire de l’incrustation le message actuellement mis en avant","Removes the first active waitlist entry, or the numbered active entry in":"Retire la première entrée active de la liste d’attente, ou l’entrée active numérotée dans","Rename":"Renommer","Report an Issue":"Signaler un problème","Required Settings (Global settings → Mechanics):":"Paramètres requis (Paramètres globaux → Mécanique) :","Resources":"Ressources","Retrieval-Augmented Generation allows the AI to search through your custom knowledge base to provide accurate answers specific to your content.":"La génération augmentée par recherche permet à l’IA de consulter votre base documentaire personnalisée pour donner des réponses précises adaptées à votre contenu.","Run Gemma 4 in the browser after mirroring the model files to your own asset host; the SSN largefiles host does not currently include Gemma assets.":"Exécutez Gemma 4 dans le navigateur après avoir copié les fichiers du modèle sur votre propre hébergement ; l’hébergement largefiles de SSN ne contient actuellement pas les fichiers Gemma.","Run Qwen 3.5 in the browser from your own hosted model files for local, private responses.":"Exécutez Qwen 3.5 dans le navigateur à partir de vos propres fichiers hébergés pour des réponses locales et privées.","Run different bot instances for various purposes: public chat bot, private 1-on-1 bot, censor bot, and even a multimodal AI co-host that can see and hear.":"Utilisez différentes instances selon les besoins : bot public, bot individuel privé, bot de censure et même coprésentateur IA multimodal capable de voir et d’entendre.","Save the file locally to use in OBS as a browser source":"Enregistrer le fichier en local pour l’utiliser comme source navigateur OBS","Security Note:":"Note de sécurité :","See real-time responses from your commands":"Voir les réponses à vos commandes en temps réel","See the":"Consultez :","Select the event":"Sélectionner l’événement","Select your provider in":"Sélectionnez votre fournisseur dans","Selects one or more random waitlist/draw winners":"Sélectionne un ou plusieurs gagnants aléatoires dans la liste d’attente/le tirage","Send \"1\" to chat":"Envoyer « 1 » dans le chat","Send \"LUL\" to chat":"Envoyer « LUL » dans le chat","Send Chat Message":"Envoyer un message de chat","Sends a URL-encoded message to all platforms":"Envoie un message encodé pour URL à toutes les plateformes","Sends a message to all connected chat platforms":"Envoie un message à toutes les plateformes de chat connectées","Sends a message to all connected platforms":"Envoie un message à toutes les plateformes connectées","Sends external content as a chat message":"Envoie du contenu externe comme message de chat","Sends selected messages to Singular Live for featured message overlay":"Envoie les messages sélectionnés à Singular Live pour les afficher en vedette","Sends selected messages to a custom endpoint via POST":"Envoie les messages sélectionnés à un point d’accès personnalisé par POST","Sends selected messages to a custom endpoint via PUT":"Envoie les messages sélectionnés à un point d’accès personnalisé par PUT","Sends selected messages to a local H2R server":"Envoie les messages sélectionnés à un serveur H2R local","Server API":"API serveur","Server-Sent Events":"Événements envoyés par le serveur","Service":"Service","Set the bot name, trigger words, and response rate limit":"Définir le nom du bot, les mots déclencheurs et la limite de fréquence des réponses","Sets the waitlist or draw title message shown on the waitlist page":"Définit le titre de la liste d’attente ou du tirage affiché sur sa page","Setting Up AI Integration":"Configurer l’intégration IA","Setup Requirements":"Conditions de configuration","Setup Resources":"Ressources de configuration","Setup, presentations, command values and recovery":"Configuration, présentations, valeurs de commandes et récupération","Sign in to your Buy Me A Coffee account":"Se connecter à votre compte Buy Me A Coffee","Sign in to your Ko-Fi account":"Se connecter à votre compte Ko-Fi","Singular Live":"Singular Live","Social Stream Control Dock":"Dock de contrôle Social Stream","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja can also send data to third-party services:":"Social Stream Ninja peut aussi envoyer des données à des services tiers :","Social Stream Ninja can receive donations and events from third-party services via webhooks; a few popular ones are below:":"Social Stream Ninja peut recevoir des dons et événements de services tiers par webhooks ; voici quelques services populaires :","Social Stream Ninja includes comprehensive TTS support for bot messages and featured chat content:":"Social Stream Ninja propose une prise en charge complète de la synthèse vocale pour les messages du bot et le chat en vedette :","Social Stream Ninja includes several built-in commands that your viewers can use in chat, or that you can trigger via the API.":"Social Stream Ninja inclut plusieurs commandes que le public peut utiliser dans le chat ou que vous pouvez déclencher par API.","Social Stream Ninja integrates with StreamDeck through multiple methods: native HTTP actions and Bitfocus Companion integration.":"Social Stream Ninja s’intègre à StreamDeck de plusieurs façons : actions HTTP natives et intégration Bitfocus Companion.","Social Stream Ninja listener":"récepteur Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja provides a powerful API that allows you to control every aspect of your streaming setup programmatically. The API server can both issue commands to your setup and listen to incoming messages from consolidated chat services.":"Social Stream Ninja fournit une API permettant de contrôler votre configuration de diffusion par programmation. Le serveur API peut envoyer des commandes à votre installation et écouter les messages entrants des chats regroupés.","Social Stream Ninja provides comprehensive AI integration to enhance your streams with AI-powered chat responses, moderation, and more. Choose from local or cloud-based AI providers to match your needs.":"Social Stream Ninja propose une intégration IA pour les réponses au chat, la modération et plus encore. Choisissez des fournisseurs locaux ou cloud selon vos besoins.","Social Stream Ninja provides multiple bot instances for different use cases:":"Social Stream Ninja propose plusieurs instances de bots pour différents usages :","Social Stream Ninja supports multiple AI providers, from fully local browser/runtime models to hosted APIs:":"Social Stream Ninja prend en charge plusieurs fournisseurs IA, des modèles entièrement locaux dans le navigateur ou l’environnement d’exécution aux API hébergées :","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. Licence GPLv3.0. Créé par","Speechify":"Speechify","Starting with a Template":"Commencer avec un modèle","Steve Seguin":"Steve Seguin","Stops or resumes new waitlist entries without clearing the existing list.":"Arrête ou reprend les nouvelles inscriptions sans vider la liste existante.","StreamDeck & Companion":"StreamDeck et Companion","StreamDeck Integration":"Intégration StreamDeck","Stripe":"Stripe","Support":"Assistance","Supported AI Providers":"Fournisseurs IA pris en charge","Supported Sites":"Sites pris en charge","Switch theme":"Changer de thème","System TTS":"Synthèse vocale système","TTS functionality requires the appropriate overlay page to be open in OBS. Each TTS provider offers different voice options, latency, and pricing or hardware requirements.":"La synthèse vocale nécessite d’ouvrir la page d’incrustation appropriée dans OBS. Chaque fournisseur propose des voix, délais, tarifs ou exigences matérielles différents.","Tell a joke":"Raconter une blague","Tells a random geeky dad joke in response":"Répond par une blague de papa geek choisie au hasard","Templates":"Modèles","Terms of Service":"Conditions d’utilisation","Test Commands":"Tester les commandes","Test selected chat bot":"Tester le bot de chat sélectionné","Test the Selected Chat Bot":"Tester le bot de chat sélectionné","Test with the \"Send Single Donation Test\" button":"Tester avec le bouton « Send Single Donation Test »","Text-to-Speech Integration":"Intégration de la synthèse vocale","The API uses a channel system for message routing:":"L’API utilise un système de canaux pour acheminer les messages :","The timer page is intentionally narrow in scope: one timer, optional operator controls, warning states, overtime, and a few visual styles.":"La page de minuterie est volontairement limitée : un minuteur, des commandes facultatives pour l’opérateur, des avertissements, le dépassement de temps et quelques styles visuels.","These parameters should be added to the dock page URL.":"Ces paramètres s’ajoutent à l’URL de la page du Dock.","This method allows for complex customizations and triggers.":"Cette méthode permet des personnalisations et déclencheurs complexes.","This minimal template includes just the essential code needed for a functioning overlay.":"Ce modèle minimal contient seulement le code nécessaire à une incrustation fonctionnelle.","Timer API":"API du minuteur","Tip:":"Conseil :","To query the current timer state, use":"Pour connaître l’état actuel du minuteur, utilisez","Toggle Auto-Show":"Basculer l’affichage automatique","Toggle between featured messages or showing all messages":"Basculer entre les messages en vedette et tous les messages","Toggles automatic featuring of messages":"Active ou désactive la mise en avant automatique","Triggers bot response":"Déclenche une réponse du bot","Try all API commands in a safe environment":"Essayer toutes les commandes API dans un environnement sûr","Try manually sending a test message first to confirm permissions":"Essayer d’abord d’envoyer manuellement un message de test pour vérifier les permissions","Try out the API with our interactive sandbox that provides easy access to all commands and features:":"Essayez l’API avec notre bac à sable interactif donnant accès à toutes les commandes et fonctions :","Turn on the features you want around the bot:":"Activez les fonctions souhaitées autour du bot :","Turns draw mode on/off, or toggles it when":"Active/désactive le mode tirage, ou le bascule lorsque","URL":"URL","URL Parameter":"Paramètre d’URL","Unpins an existing dock message by message ID. Use the target field/path segment for a labeled dock.":"Désépingle un message existant du Dock par son ID. Utilisez le champ ou segment de chemin target pour un Dock étiqueté.","Use AI to help moderate chat by identifying potentially harmful messages and automatically handling them based on your preferences. Choose between non-blocking or strict blocking modes.":"Utilisez l’IA pour repérer les messages potentiellement nuisibles et les traiter automatiquement selon vos préférences. Choisissez un mode non bloquant ou un blocage strict.","Use StreamDeck's \"Website\" action with \"GET request in background\" enabled to send commands directly to the API.":"Utilisez l’action « Website » de StreamDeck avec « GET request in background » activé pour envoyer directement des commandes à l’API.","Use hosted browser model assets and optional model folder override; Qwen can use SSN largefiles, while Gemma needs your own mirrored folder":"Utiliser des fichiers de modèle hébergés pour le navigateur et, facultativement, un dossier de modèle personnalisé ; Qwen peut utiliser SSN largefiles, tandis que Gemma nécessite votre propre dossier miroir","Use keyboard shortcuts for quick access to common functions.":"Utilisez les raccourcis clavier pour accéder rapidement aux fonctions courantes.","Use the built-in":"Utilisez le bouton intégré","Use the page with":"Utilisez la page avec","Useful actions include":"Les actions utiles comprennent","Using custom.js":"Utiliser custom.js","Value":"Valeur","View Complete API Documentation":"Voir la documentation complète de l’API","View Results":"Voir les résultats","View Sample Overlay":"Voir l’incrustation d’exemple","WebSocket":"WebSocket","WebSocket/HTTP":"WebSocket/HTTP","Webhook Integration":"Intégration des webhooks","Webhook settings":"Paramètres de webhook","Webhooks":"Webhooks","When enabled, allows viewers to change OBS scenes":"Lorsque cette option est activée, permet aux spectateurs de changer les scènes OBS","With these powerful commands and API options, you can create a truly unique and interactive streaming experience.":"Avec ces commandes et options API, vous pouvez créer une expérience de diffusion interactive adaptée à vos besoins.","X.com":"X.com","You can create completely custom chat overlays from scratch to match your stream's unique style and function. Social Stream Ninja provides a flexible foundation that you can build upon.":"Vous pouvez créer des incrustations de chat entièrement personnalisées selon le style et les fonctions de votre direct. Social Stream Ninja fournit une base souple pour les construire.","You can create your own commands and functionality by customizing the JavaScript code:":"Vous pouvez créer vos propres commandes et fonctions en personnalisant le JavaScript :","and":"et","and fill in the matching fields:":"et renseignez les champs correspondants :","and follow the":"et suivez le","are aliases for":"sont des alias de","as the webhook URL":"comme URL du webhook","button to verify your provider, model, and credentials before going live.":"pour vérifier votre fournisseur, le modèle et les identifiants avant le direct.","channel 1":"canal 1","channel 4":"canal 4","equals":"est égal à","flag.":".","for detailed setup guides and code samples.":"pour des guides détaillés et des exemples de code.","for manual clearing":"pour l’effacement manuel","full API documentation":"documentation complète de l’API","if you want it controlled directly through the API server.":"si vous voulez le contrôler directement via le serveur API.","in OBS or a browser as needed":"dans OBS ou un navigateur selon les besoins","open on the same session.":"ouvert sur la même session.","operate the dedicated giveaway pool using the same API/Stream Deck controls. Draw closes entries automatically. New round preserves earlier winner history and rejects unpaid reservations. Cancel and refund returns outstanding ticket payments. Paid tickets, Number Hunt, Coin Flip Pot and Event Flow use the same host service.":"gèrent le groupe de participants dédié avec les mêmes commandes API/Stream Deck. Le tirage ferme automatiquement les inscriptions. Nouvelle manche conserve l’historique des gagnants et rejette les réservations impayées. Annuler et rembourser restitue les paiements de billets en attente. Les billets payants, Number Hunt, Coin Flip Pot et Event Flow utilisent le même service hôte.","stripe.com":"stripe.com","to the filename":"avec le nom de fichier","to your dock URL":"à l’URL de votre Dock","to your dock URL to receive events":"à l’URL de votre Dock pour recevoir les événements","with a callback token.":"avec un token de rappel.","with contributions from the community.":"avec les contributions de la communauté.","with your actual session ID from Social Stream Ninja!":"par votre véritable ID de session Social Stream Ninja !","xAI (Grok)":"xAI (Grok)","xAI Grok APIs, including realtime voice sessions when using ephemeral client secrets.":"API xAI Grok, dont les sessions vocales en temps réel avec des secrets clients temporaires.","🎮 Remote Control (StreamDeck/Bitfocus):":"🎮 Contrôle distant (StreamDeck/Bitfocus) :","📡 Chat Listener (Python/Node apps):":"📡 Récepteur de chat (applications Python/Node) :"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/commands.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/commands.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/commands.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/commands.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/commands.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/commands.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/commands.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/commands.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/commands.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/commands.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/commands.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/commands.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/commands.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/commands.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/commands.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/commands.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/commands.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/commands.html">
+<!-- ssn-languages:end --></head>
+<body>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navigation principale"><a href="../index.html">Accueil</a><a href="features.html">Fonctionnalités</a><a href="inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="download.html">Télécharger</a><a href="guides.html">Guides</a><a href="commands.html" aria-current="page">Commandes et API</a><a href="supported-sites.html">Sites pris en charge</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie d’incrustations</a><a href="services.html" class="site-priority-hire">Faire appel à nos services</a><a href="support.html">Assistance</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Français"><span aria-hidden="true">🌐 </span><span lang="fr">Français</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/commands.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/commands.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/commands.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/commands.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="commands.html" lang="fr" hreflang="fr" aria-current="true">Français</a><a class="site-language-link" href="../../de/docs/commands.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/commands.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/commands.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/commands.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/commands.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/commands.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/commands.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/commands.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/commands.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/commands.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/commands.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/commands.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Changer de thème"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Ouvrir le menu de navigation" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Commandes et API</h1>
+            <p>Contrôlez Social Stream Ninja avec les commandes intégrées, l’automatisation et l’intégration API</p>
+        </div>
+    </section>
+
+	<section class="navigation" id="commands-nav">
+		<div class="container">
+			<div class="nav-links">
+				<a href="#bot-commands" class="nav-link active">
+					<i class="fas fa-robot"></i> Commandes de bot
+				</a>
+				<a href="#server-api" class="nav-link">
+					<i class="fas fa-server"></i> API serveur
+				</a>
+				<a href="#streamdeck-companion" class="nav-link">
+					<i class="fas fa-th"></i> StreamDeck et Companion
+				</a>
+				<a href="#ai-integration" class="nav-link">
+					<i class="fas fa-brain"></i> Intégration IA
+				</a>
+				<a href="#midi-hotkey" class="nav-link">
+					<i class="fas fa-music"></i> MIDI et raccourcis clavier
+				</a>
+				<a href="#webhook" class="nav-link">
+					<i class="fas fa-plug"></i> Webhooks
+				</a>
+				<a href="#custom-scripts" class="nav-link">
+					<i class="fas fa-code"></i> Scripts personnalisés
+				</a>
+				<a href="#custom-overlays" class="nav-link">
+					<i class="fas fa-paint-brush"></i> Incrustations personnalisées
+				</a>
+			</div>
+		</div>
+	</section>
+
+    <section id="bot-commands" class="command-section">
+        <div class="container">
+            <h2>Commandes de bot</h2>
+            
+            <div class="command-card">
+                <h3>Commandes intégrées du bot</h3>
+                <p>Social Stream Ninja inclut plusieurs commandes que le public peut utiliser dans le chat ou que vous pouvez déclencher par API.</p>
+                
+                <div class="command-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Commande</th>
+                                <th>Description</th>
+                                <th>Comment activer</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>!joke</code></td>
+                                <td>Répond par une blague de papa geek choisie au hasard</td>
+                                <td>Activer avec l’interrupteur du menu de l’extension</td>
+                            </tr>
+                            <tr>
+                                <td><code>hi</code></td>
+                                <td>Accueille automatiquement toute personne disant « hi » dans le chat</td>
+                                <td>Activer avec l’interrupteur du menu de l’extension</td>
+                            </tr>
+                            <tr>
+                                <td><code>!cycle</code></td>
+                                <td>Lorsque cette option est activée, permet aux spectateurs de changer les scènes OBS</td>
+                                <td>Activer avec l’interrupteur du menu de l’extension</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="command-note">
+                    <p><strong>Remarque :</strong> Les commandes du bot ne fonctionnent que si les réponses automatiques sont correctement configurées et si vous avez le droit de publier sur les plateformes concernées.</p>
+                </div>
+            </div>
+            
+            <div class="command-card">
+                <h3>Configuration des réponses automatiques</h3>
+                <p>Pour que les réponses automatiques fonctionnent :</p>
+                <ol class="command-steps">
+                    <li>Vérifier que vous êtes connecté à la plateforme (YouTube, Twitch, etc.)</li>
+                    <li>Vérifier que la fenêtre de chat est visible et non réduite</li>
+                    <li>Essayer d’abord d’envoyer manuellement un message de test pour vérifier les permissions</li>
+                    <li>Activer les interrupteurs des commandes concernées dans le menu de l’extension</li>
+                </ol>
+                
+                <p>Si une barre bleue de débogage apparaît lors des réponses automatiques, vous pouvez la masquer en lançant Chrome avec l’option <code>--silent-debugger-extension-api</code> .</p>
+            </div>
+        </div>
+    </section>
+
+    
+	<section id="server-api" class="command-section alt">
+		<div class="container">
+			<h2>API serveur</h2>
+			
+			<div class="command-card">
+				<h3>Vue d’ensemble</h3>
+				<p>Social Stream Ninja fournit une API permettant de contrôler votre configuration de diffusion par programmation. Le serveur API peut envoyer des commandes à votre installation et écouter les messages entrants des chats regroupés.</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-tv"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Gestion des incrustations</h4>
+							<p>Contrôlez les messages en vedette, effacez les incrustations et modifiez l’apparence du contenu dans votre direct.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-exchange-alt"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Intégration des webhooks</h4>
+							<p>Recevez des événements de services tiers comme Stripe, Ko-Fi et Buy Me A Coffee.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-download"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Exportation des messages</h4>
+							<p>Exportez les messages du chat dans un fichier ou transmettez-les par webhook (POST) pour vos intégrations.</p>
+						</div>
+					</div>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>Paramètres requis (Paramètres globaux → Mécanique) :</strong></p>
+					<ul style="text-align:left; margin: 10px 0;">
+						<li><strong>🎮 Contrôle distant (StreamDeck/Bitfocus) :</strong> Activer <em>« Activer le contrôle distant de l’extension par API »</em> (Interrupteur 1) — Se connecter à <strong>canal 1</strong></li>
+						<li><strong>📡 Récepteur de chat (applications Python/Node) :</strong> Activer l’interrupteur 1 + <em>« Envoyer les messages du chat au serveur API »</em> (Interrupteur 3) — Se connecter à <strong>canal 4</strong></li>
+					</ul>
+					<p>Consultez : <a href="../../api.md">documentation complète de l’API</a> pour des guides détaillés et des exemples de code.</p>
+				</div>
+			</div>
+
+			<div class="command-card">
+				<h3>Points d’accès API et méthodes de connexion</h3>
+				
+				<div class="api-methods">
+					<div class="api-method">
+						<h4><i class="fas fa-globe"></i> HTTP GET/POST</h4>
+						<div class="code-block">
+							<pre>https://io.socialstream.ninja/{sessionID}/{action}/{target}/{value}</pre>
+						</div>
+						<p>Idéal pour des commandes simples depuis Stream Deck ou des scripts personnalisés.</p>
+					</div>
+					
+					<div class="api-method">
+						<h4><i class="fas fa-exchange-alt"></i> WebSocket</h4>
+						<div class="code-block">
+							<pre>wss://io.socialstream.ninja:443</pre>
+						</div>
+						<p>Pour une communication bidirectionnelle en temps réel avec reconnexion automatique.</p>
+						<p>Si vous préférez les connexions entre pairs sans activer le mode WebSocket, utilisez le SDK WebRTC de Social Stream Ninja. Il inclut des exemples Node et navigateur, comme le <a href="https://github.com/steveseguin/ninjasdk/blob/main/demos/socialstreamninja-listener.js" target="_blank" rel="noopener">récepteur Social Stream Ninja</a>.</p>
+					</div>
+					
+					<div class="api-method">
+						<h4><i class="fas fa-broadcast-tower"></i> Événements envoyés par le serveur</h4>
+						<div class="code-block">
+							<pre>https://io.socialstream.ninja/sse/{sessionID}</pre>
+						</div>
+						<p>Pour des mises à jour unidirectionnelles en temps réel depuis le serveur.</p>
+					</div>
+				</div>
+				
+				<div class="channel-system">
+					<h4>Système de canaux</h4>
+					<p>L’API utilise un système de canaux pour acheminer les messages :</p>
+					<div class="code-block">
+						<pre>
+	- Channel 1: Remote control commands (default for StreamDeck/Bitfocus)
+	- Channel 2: Dock page output
+	- Channel 3: Extension receives commands from Dock
+	- Channel 4: <strong>Chat messages from Extension</strong> (use this to receive Twitch/YouTube chat!)
+	- Channel 5: Waitlist/giveaway communication
+	- Channels 6-9: Reserved for future use</pre>
+					</div>
+					<p>Connectez-vous au canal souhaité :</p>
+					<div class="code-block">
+						<pre>// To receive chat messages (listen on channel 4):
+wss://io.socialstream.ninja/join/SESSION_ID/4
+
+// To send commands (channel 1 default):
+wss://io.socialstream.ninja/join/SESSION_ID</pre>
+					</div>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Commandes API courantes</h3>
+				
+				<div class="command-table-responsive">
+					<table class="command-table">
+						<thead>
+							<tr>
+								<th>Action</th>
+								<th>Description</th>
+								<th>Exemple</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><code>sendChat</code></td>
+								<td>Envoie un message à toutes les plateformes de chat connectées</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/sendChat/null/Hello everyone!</code></td>
+							</tr>
+							<tr>
+								<td><code>sendEncodedChat</code></td>
+								<td>Envoie un message encodé pour URL à toutes les plateformes</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/sendEncodedChat/null/Hello%20everyone%21</code></td>
+							</tr>
+							<tr>
+								<td><code>clearOverlay</code></td>
+								<td>Efface le message en vedette de l’incrustation</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/clearOverlay</code></td>
+							</tr>
+							<tr>
+								<td><code>nextInQueue</code></td>
+								<td>Affiche le message suivant de la file</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/nextInQueue</code></td>
+							</tr>
+							<tr>
+								<td><code>autoShow</code></td>
+								<td>Active ou désactive la mise en avant automatique</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/autoShow/toggle</code></td>
+							</tr>
+							<tr>
+								<td><code>blockUser</code></td>
+								<td>Bloque un utilisateur sur une plateforme précise</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/blockUser/null/{"chatname":"username","type":"twitch"}</code></td>
+							</tr>
+							<tr>
+								<td><code>extContent</code></td>
+								<td>Envoie du contenu externe comme message de chat</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/extContent/null/{"chatname":"User","chatmessage":"Hello"}</code></td>
+							</tr>
+							<tr>
+								<td><code>pin</code></td>
+								<td>Épingle un message existant du Dock par son ID, ou un objet message complet. Nécessite <code>dock.html</code> ouvert sur la même session.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/pin/null/MESSAGE_MID</code></td>
+							</tr>
+							<tr>
+								<td><code>unpin</code></td>
+								<td>Désépingle un message existant du Dock par son ID. Utilisez le champ ou segment de chemin target pour un Dock étiqueté.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/unpin/null/MESSAGE_MID</code></td>
+							</tr>
+							<tr>
+								<td><code>nextPinned</code></td>
+								<td>Met en avant le premier message épinglé du Dock.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/nextPinned</code></td>
+							</tr>
+							<tr>
+								<td><code>removefromwaitlist</code></td>
+								<td>Retire la première entrée active de la liste d’attente, ou l’entrée active numérotée dans <code>value</code></td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/removefromwaitlist/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>highlightwaitlist</code></td>
+								<td>Met en avant la première entrée active de la liste d’attente, ou l’entrée active numérotée dans <code>value</code></td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/highlightwaitlist/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>stopentries</code> / <code>startentries</code></td>
+								<td>Arrête ou reprend les nouvelles inscriptions sans vider la liste existante. <code>openentries</code> et <code>resumeentries</code> sont des alias de <code>startentries</code>.</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/stopentries</code></td>
+							</tr>
+							<tr>
+								<td><code>selectwinner</code></td>
+								<td>Sélectionne un ou plusieurs gagnants aléatoires dans la liste d’attente/le tirage</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/selectwinner/null/1</code></td>
+							</tr>
+							<tr>
+								<td><code>downloadwaitlist</code></td>
+								<td>Télécharge la liste d’attente actuelle en TSV depuis la page/application Social Stream active</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/downloadwaitlist</code></td>
+							</tr>
+							<tr>
+								<td><code>drawmode</code></td>
+								<td>Active/désactive le mode tirage, ou le bascule lorsque <code>value</code> est égal à <code>toggle</code></td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/drawmode/null/toggle</code></td>
+							</tr>
+							<tr>
+								<td><code>waitlistmessage</code></td>
+								<td>Définit le titre de la liste d’attente ou du tirage affiché sur sa page</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/waitlistmessage/null/Type%20!join%20to%20enter</code></td>
+							</tr>
+							<tr>
+								<td><code>resetwaitlist</code></td>
+								<td>Vide la liste d’attente et rouvre les inscriptions</td>
+								<td><code>https://io.socialstream.ninja/SESSIONID/resetwaitlist</code></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<div class="view-more-link">
+					<a href="https://github.com/steveseguin/social_stream/blob/main/api.md" target="_blank" class="btn btn-secondary">
+						<i class="fab fa-github"></i> Voir la documentation complète de l’API
+					</a>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Bac à sable API interactif</h3>
+				<p>Essayez l’API avec notre bac à sable interactif donnant accès à toutes les commandes et fonctions :</p>
+				<p>Pour un petit ensemble de boutons de contrôle du direct dans OBS, utilisez le <a href="../../obs-control-dock.html">Dock de contrôle Social Stream</a> et suivez le <a href="obs-control-dock-guide.html">guide de configuration OBS</a>.</p>
+				
+				<div class="sandbox-api-preview">
+					<div class="sandbox-overlay">
+						<a href="https://socialstream.ninja/sampleapi.html" class="btn btn-primary" target="_blank">
+							<i class="fas fa-external-link-alt"></i> Ouvrir le bac à sable API
+						</a>
+					</div>
+				</div>
+				
+				<div class="sandbox-features">
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-flask"></i>
+							<h4>Tester les commandes</h4>
+						</div>
+						<p>Essayer toutes les commandes API dans un environnement sûr</p>
+					</div>
+					
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-code"></i>
+							<h4>Générer du code</h4>
+						</div>
+						<p>Obtenir des exemples de code HTTP, WebSocket et SSE</p>
+					</div>
+					
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-eye"></i>
+							<h4>Voir les résultats</h4>
+						</div>
+						<p>Voir les réponses à vos commandes en temps réel</p>
+					</div>
+					
+					<div class="sandbox-feature">
+						<div class="sandbox-title">
+							<i class="fas fa-magic"></i>
+							<h4>Créer des tests</h4>
+						</div>
+						<p>Générer des messages de test au contenu aléatoire</p>
+					</div>
+				</div>
+				
+				<div class="sandbox-api-note">
+					<p><strong>Remarque :</strong> Pensez à remplacer <code>SESSIONID</code> par votre véritable ID de session Social Stream Ninja !</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section id="streamdeck-companion" class="command-section">
+		<div class="container">
+			<h2>StreamDeck et Companion</h2>
+			
+			<div class="command-card">
+				<h3>Intégration StreamDeck</h3>
+				<p>Social Stream Ninja s’intègre à StreamDeck de plusieurs façons : actions HTTP natives et intégration Bitfocus Companion.</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-globe"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Méthode HTTP/API</h4>
+							<p>Utilisez l’action « Website » de StreamDeck avec « GET request in background » activé pour envoyer directement des commandes à l’API.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-boxes"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Bitfocus Companion</h4>
+							<p>Intégration native avec actions prêtes à l’emploi, retours en temps réel et variables de contenu dynamique.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Intégration Companion</h3>
+				<p>Bitfocus Companion permet de contrôler Social Stream Ninja avec les API WebSocket ou HTTP.</p>
+				
+				<div class="command-table">
+					<table>
+						<thead>
+							<tr>
+								<th>Action</th>
+								<th>Description</th>
+								<th>Méthode API</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Effacer le message en vedette</td>
+								<td>Retire de l’incrustation le message actuellement mis en avant</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+							<tr>
+								<td>Suivant dans la file</td>
+								<td>Affiche le prochain message en attente</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+							<tr>
+								<td>Basculer l’affichage automatique</td>
+								<td>Active/désactive la mise en avant automatique des messages</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+							<tr>
+								<td>Envoyer un message de chat</td>
+								<td>Envoie un message à toutes les plateformes connectées</td>
+								<td>WebSocket/HTTP</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<div class="companion-features">
+					<h4>Variables dynamiques</h4>
+					<ul class="feature-list">
+						<li><code>featured_message</code> - Texte du message actuellement mis en avant</li>
+						<li><code>featured_username</code> - Nom de l’utilisateur actuellement mis en avant</li>
+						<li><code>queue_size</code> - Nombre de messages dans la file</li>
+					</ul>
+				</div>
+				
+				<div class="documentation-links">
+					<h4>Ressources de configuration</h4>
+					<div class="doc-links">
+						<a href="https://bitfocus.io/companion" target="_blank" class="btn btn-secondary">
+							<i class="fas fa-external-link-alt"></i> Obtenir Companion
+						</a>
+						<a href="https://github.com/bitfocus/companion-module-socialstream-ninja" target="_blank" class="btn btn-secondary">
+							<i class="fab fa-github"></i> Documentation du module
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<section id="ai-integration" class="command-section">
+		<div class="container">
+			<h2>Intégration IA</h2>
+			
+			<div class="command-card">
+				<h3>Mode bot de chat IA</h3>
+				<p>Social Stream Ninja propose une intégration IA pour les réponses au chat, la modération et plus encore. Choisissez des fournisseurs locaux ou cloud selon vos besoins.</p>
+				
+				<div class="feature-highlights">
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-comment-dots"></i>
+						</div>
+						<div class="feature-content">
+							<h4>Réponses automatiques au chat</h4>
+							<p>Laissez l’IA échanger automatiquement avec vos spectateurs, répondre aux questions et animer la conversation pendant que vous vous concentrez sur votre contenu.</p>
+						</div>
+					</div>
+					
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-shield-alt"></i>
+						</div>
+						<div class="feature-content">
+							<h4>Modération du contenu</h4>
+							<p>Utilisez l’IA pour repérer les messages potentiellement nuisibles et les traiter automatiquement selon vos préférences. Choisissez un mode non bloquant ou un blocage strict.</p>
+						</div>
+					</div>
+					
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-search"></i>
+						</div>
+						<div class="feature-content">
+							<h4>Recherche RAG</h4>
+							<p>La génération augmentée par recherche permet à l’IA de consulter votre base documentaire personnalisée pour donner des réponses précises adaptées à votre contenu.</p>
+						</div>
+					</div>
+					
+					<div class="feature-highlight">
+						<div class="feature-icon">
+							<i class="fas fa-user-friends"></i>
+						</div>
+						<div class="feature-content">
+							<h4>Plusieurs instances de bots</h4>
+							<p>Utilisez différentes instances selon les besoins : bot public, bot individuel privé, bot de censure et même coprésentateur IA multimodal capable de voir et d’entendre.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Fournisseurs IA pris en charge</h3>
+				<p>Social Stream Ninja prend en charge plusieurs fournisseurs IA, des modèles entièrement locaux dans le navigateur ou l’environnement d’exécution aux API hébergées :</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-robot"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Ollama (API locale native)</h4>
+							<p>Modèles IA gratuits et auto-hébergés sur votre ordinateur via l’API native d’Ollama, conçus pour préserver la confidentialité.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-laptop-code"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Local Gemma 4</h4>
+							<p>Exécutez Gemma 4 dans le navigateur après avoir copié les fichiers du modèle sur votre propre hébergement ; l’hébergement largefiles de SSN ne contient actuellement pas les fichiers Gemma.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-microchip"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Local Qwen 3.5</h4>
+							<p>Exécutez Qwen 3.5 dans le navigateur à partir de vos propres fichiers hébergés pour des réponses locales et privées.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-openai"></i>
+						</div>
+						<div class="capability-content">
+							<h4>ChatGPT / OpenAI</h4>
+							<p>API OpenAI, dont les modèles récents de chat et de voix en temps réel.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-google"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Google Gemini</h4>
+							<p>Modèles Google Gemini, dont les options Gemini 2.5 actuelles pour le texte et le multimodal en direct.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-brain"></i>
+						</div>
+						<div class="capability-content">
+							<h4>DeepSeek</h4>
+							<p>Modèles IA efficaces et économiques, optimisés pour la conversation.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-rocket"></i>
+						</div>
+						<div class="capability-content">
+							<h4>xAI (Grok)</h4>
+							<p>API xAI Grok, dont les sessions vocales en temps réel avec des secrets clients temporaires.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-aws"></i>
+						</div>
+						<div class="capability-content">
+							<h4>AWS Bedrock</h4>
+							<p>Modèles IA professionnels de divers fournisseurs, dont Claude et Llama.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-route"></i>
+						</div>
+						<div class="capability-content">
+							<h4>OpenRouter</h4>
+							<p>Accès à plusieurs modèles IA via une interface API unifiée.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-bolt"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Groq</h4>
+							<p>Inférence de chat compatible OpenAI à faible latence pour des réponses rapides.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-tools"></i>
+						</div>
+						<div class="capability-content">
+							<h4>API personnalisée (compatible OpenAI)</h4>
+							<p>Connectez llama.cpp, LM Studio, vLLM ou tout autre point d’accès compatible OpenAI.</p>
+						</div>
+					</div>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>Remarque :</strong> Ollama utilise sa propre API native. Pour llama.cpp, LM Studio, vLLM ou d’autres serveurs compatibles OpenAI, choisissez <strong>API personnalisée</strong>.</p>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Intégration de la synthèse vocale</h3>
+				<p>Social Stream Ninja propose une prise en charge complète de la synthèse vocale pour les messages du bot et le chat en vedette :</p>
+				
+				<div class="api-capabilities">
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-laptop"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Synthèse vocale système</h4>
+							<p>Synthèse vocale gratuite intégrée utilisant les voix de votre système d’exploitation.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-heart"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Kokoro</h4>
+							<p>Synthèse vocale gratuite en local via WebGPU/CPU pour préserver la confidentialité.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-cat"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Kitten TTS</h4>
+							<p>Synthèse vocale légère dans le navigateur, téléchargeant un petit modèle pour générer la voix en local.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-microphone-alt"></i>
+						</div>
+						<div class="capability-content">
+							<h4>ElevenLabs</h4>
+							<p>Synthèse vocale premium avec des voix naturelles et personnalisables.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-google"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Google Cloud TTS</h4>
+							<p>Voix de haute qualité avec de nombreuses langues et options de personnalisation.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-wave-square"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Gemini (synthèse vocale en aperçu)</h4>
+							<p>Modèles neuronaux de voix de Google en aperçu, avec choix de voix et de langue.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fas fa-volume-up"></i>
+						</div>
+						<div class="capability-content">
+							<h4>Speechify</h4>
+							<p>Synthèse vocale par IA avec conversion vocale naturelle.</p>
+						</div>
+					</div>
+					
+					<div class="api-capability">
+						<div class="capability-icon">
+							<i class="fab fa-openai"></i>
+						</div>
+						<div class="capability-content">
+							<h4>OpenAI TTS</h4>
+							<p>Synthèse vocale OpenAI avec choix de voix, de modèles et, facultativement, de points d’accès compatibles.</p>
+						</div>
+					</div>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>Remarque :</strong> La synthèse vocale nécessite d’ouvrir la page d’incrustation appropriée dans OBS. Chaque fournisseur propose des voix, délais, tarifs ou exigences matérielles différents.</p>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Instances de bots et incrustations</h3>
+				<p>Social Stream Ninja propose plusieurs instances de bots pour différents usages :</p>
+				
+				<div class="command-table">
+					<table>
+						<thead>
+							<tr>
+								<th>Type de bot</th>
+								<th>URL</th>
+								<th>Description</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>Bot principal de chat</td>
+								<td><code>/bot.html</code></td>
+								<td>Incrustation du bot principal avec synthèse vocale facultative et réponses au chat public</td>
+							</tr>
+							<tr>
+								<td>Interface de chat privé</td>
+								<td><code>/chatbot.html</code></td>
+								<td>Page de bot individuel dédiée, qui ne partage ni les données RAG ni l’historique du bot principal</td>
+							</tr>
+							<tr>
+								<td>Bot de censure</td>
+								<td>(s’exécute en arrière-plan)</td>
+								<td>Filtre, nettoie ou bloque automatiquement les messages entrants</td>
+							</tr>
+							<tr>
+								<td>Coprésentateur IA</td>
+								<td><code>/cohost.html</code></td>
+								<td>IA multimodale qui peut voir votre écran, entendre l’audio et interagir</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Configurer l’intégration IA</h3>
+				<p>Suivez ces étapes pour configurer l’intégration IA avec le menu actuel :</p>
+				
+				<div class="ai-setup-steps">
+					<div class="ai-step">
+						<div class="ai-step-number">1</div>
+						<div class="ai-step-content">
+							<h4>Choisir et connecter votre fournisseur LLM</h4>
+							<p>Sélectionnez votre fournisseur dans <strong>Configurer le fournisseur LLM</strong> et renseignez les champs correspondants :</p>
+							<ul>
+								<li><strong>Ollama :</strong> Installer en local et définir le point d’accès si nécessaire</li>
+								<li><strong>Local Gemma / Local Qwen :</strong> Utiliser des fichiers de modèle hébergés pour le navigateur et, facultativement, un dossier de modèle personnalisé ; Qwen peut utiliser SSN largefiles, tandis que Gemma nécessite votre propre dossier miroir</li>
+								<li><strong>ChatGPT, Gemini, DeepSeek, xAI, Groq, OpenRouter, Bedrock :</strong> Ajouter votre clé API et le modèle souhaité</li>
+								<li><strong>API personnalisée :</strong> Entrer un point d’accès compatible OpenAI, un ID de modèle et une clé API facultative</li>
+							</ul>
+						</div>
+					</div>
+					
+					<div class="ai-step">
+						<div class="ai-step-number">2</div>
+						<div class="ai-step-content">
+							<h4>Tester le bot de chat sélectionné</h4>
+							<p>Utilisez le bouton intégré <strong>Tester le bot de chat sélectionné</strong> pour vérifier votre fournisseur, le modèle et les identifiants avant le direct.</p>
+						</div>
+					</div>
+					
+					<div class="ai-step">
+						<div class="ai-step-number">3</div>
+						<div class="ai-step-content">
+							<h4>Configurer le comportement du bot</h4>
+							<p>Personnalisez le comportement du bot dans le chat :</p>
+							<ul>
+								<li>Activer le bot de chat IA LLM</li>
+								<li>Définir le nom du bot, les mots déclencheurs et la limite de fréquence des réponses</li>
+								<li>Choisir si les réponses retournent dans le chat ou seulement sur la page d’incrustation du bot</li>
+								<li>Ajouter des instructions sur le ton, le rôle et les règles de modération</li>
+							</ul>
+						</div>
+					</div>
+					
+					<div class="ai-step">
+						<div class="ai-step-number">4</div>
+						<div class="ai-step-content">
+							<h4>Activer les options supplémentaires</h4>
+							<p>Activez les fonctions souhaitées autour du bot :</p>
+							<ul>
+								<li>Activer la synthèse vocale des réponses du bot et choisir un fournisseur</li>
+								<li>Choisir le masquage automatique à durée fixe, selon la longueur ou après synthèse vocale pour <code>/bot.html</code>; utilisez <code>clearBotOverlay</code> pour l’effacement manuel</li>
+								<li>Activer le RAG et importer des documents pour des réponses documentées</li>
+								<li>Activer le bot de censure pour la modération ou le blocage strict</li>
+								<li>Ouvrir <code>/bot.html</code>, <code>/chatbot.html</code>, ou <code>/cohost.html</code> dans OBS ou un navigateur selon les besoins</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+				
+				<div class="documentation-links">
+					<h4>Documentation détaillée</h4>
+					<p>Pour une configuration complète et plus de détails sur la synthèse vocale, consultez ces guides :</p>
+					<div class="doc-links">
+						<a href="chatbot-basics-guide.html" class="btn btn-primary">
+							<i class="fas fa-file-alt"></i>
+							<span>Guide de configuration du bot de chat IA</span>
+						</a>
+						<a href="local-tts.html" class="btn btn-secondary">
+							<i class="fas fa-volume-up"></i>
+							<span>Guide de synthèse vocale IA locale</span>
+						</a>
+						<a href="twitch-bot-account-chatbot.html" class="btn btn-secondary">
+							<i class="fas fa-robot"></i>
+							<span>Comptes de bot pour les réponses automatiques</span>
+						</a>
+						<a href="https://ollama.com/download" class="btn btn-secondary" target="_blank" rel="noopener">
+							<i class="fas fa-download"></i>
+							<span>Téléchargement officiel d’Ollama</span>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+
+	<section id="midi-hotkey" class="command-section alt">
+		<div class="container">
+			<h2>Contrôle MIDI et raccourcis clavier</h2>
+			
+			<div class="command-card">
+				<h3>Intégration MIDI</h3>
+				<p>Contrôlez Social Stream Ninja avec des contrôleurs MIDI, des raccourcis clavier ou StreamDeck avec des plugins MIDI.</p>
+				
+				<div class="midi-setup">
+					<h4>Conditions de configuration</h4>
+					<ol class="command-steps">
+						<li>Activer la prise en charge MIDI dans les paramètres de l’extension</li>
+						<li>Installer un périphérique MIDI virtuel de bouclage (par exemple loopMIDI)</li>
+						<li>Configurer votre contrôleur MIDI ou le plugin MIDI de StreamDeck</li>
+					</ol>
+				</div>
+				
+				<div class="command-table">
+					<table>
+						<thead>
+							<tr>
+								<th>Numéro CC</th>
+								<th>Valeur</th>
+								<th>Action</th>
+								<th>Remarques</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>102</td>
+								<td>1</td>
+								<td>Envoyer « 1 » dans le chat</td>
+								<td>Réaction rapide</td>
+							</tr>
+							<tr>
+								<td>102</td>
+								<td>2</td>
+								<td>Envoyer « LUL » dans le chat</td>
+								<td>Réaction par emote</td>
+							</tr>
+							<tr>
+								<td>102</td>
+								<td>3</td>
+								<td>Raconter une blague</td>
+								<td>Déclenche une réponse du bot</td>
+							</tr>
+							<tr>
+								<td>102</td>
+								<td>4</td>
+								<td>Effacer l’incrustation</td>
+								<td>Retire le message en vedette</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				
+				<div class="command-note">
+					<p><strong>Conseil :</strong> Le contrôle MIDI fonctionne mieux avec des contrôleurs physiques, mais peut aussi être déclenché par des périphériques virtuels.</p>
+				</div>
+			</div>
+			
+			<div class="command-card">
+				<h3>Prise en charge des raccourcis clavier</h3>
+				<p>Utilisez les raccourcis clavier pour accéder rapidement aux fonctions courantes.</p>
+				
+				<div class="hotkey-info">
+					<p>Les raccourcis se configurent dans les paramètres du menu et fonctionnent à l’échelle du système lorsque le navigateur a le focus ou que l’application est utilisée.</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+    <section id="webhook" class="command-section alt">
+        <div class="container">
+            <h2>Intégration des webhooks</h2>
+            
+            <div class="command-card">
+                <h3>Services de dons</h3>
+                <p>Social Stream Ninja peut recevoir des dons et événements de services tiers par webhooks ; voici quelques services populaires :</p>
+                
+                <div class="webhook-grid">
+					<div class="webhook-item">
+						<div class="webhook-icon">
+							<img src="../../sources/images/stripe.png" alt="Stripe">
+						</div>
+						<h4>Stripe</h4>
+						<p>Recevez des dons par carte bancaire directement sur votre compte Stripe.</p>
+						<ul class="webhook-steps">
+							<li>Créez un lien de paiement sur <a href="https://stripe.com" target="_blank">stripe.com</a></li>
+							<li>Dans le tableau de bord Stripe, ouvrez Développeurs → Webhooks</li>
+							<li>Ajouter le point d’accès : <code>https://io.socialstream.ninja/SESSIONID/stripe</code></li>
+							<li>Sélectionner l’événement <code>checkout.session.completed</code></li>
+							<li>Ajouter <code>&server</code> à l’URL de votre Dock</li>
+						</ul>
+					</div>
+					
+					<div class="webhook-item">
+						<div class="webhook-icon">
+							<img src="../../sources/images/kofi.png" alt="Ko-Fi">
+						</div>
+						<h4>Ko-Fi</h4>
+						<p>Recevez des cafés de vos soutiens.</p>
+						<ul class="webhook-steps">
+							<li>Se connecter à votre compte Ko-Fi</li>
+							<li>Accédez à <a href="https://ko-fi.com/manage/webhooks" target="_blank">Paramètres de webhook</a></li>
+							<li>Ajouter <code>https://io.socialstream.ninja/SESSIONID/kofi</code> comme URL du webhook</li>
+							<li>Ajouter <code>&server</code> à l’URL de votre Dock</li>
+							<li>Tester avec le bouton « Send Single Donation Test »</li>
+						</ul>
+					</div>
+					
+					<div class="webhook-item">
+						<div class="webhook-icon">
+							<img src="../../sources/images/bmac.png" alt="Buy Me A Coffee">
+						</div>
+						<h4>Buy Me A Coffee</h4>
+						<p>Recevez des dons via la plateforme populaire Buy Me A Coffee.</p>
+						<ul class="webhook-steps">
+							<li>Se connecter à votre compte Buy Me A Coffee</li>
+							<li>Ouvrir les paramètres de webhook</li>
+							<li>Ajouter <code>https://io.socialstream.ninja/SESSIONID/bmac</code> comme URL du webhook</li>
+							<li>Ajouter <code>&server</code> à l’URL de votre Dock pour recevoir les événements</li>
+							<li>Les dons et les événements d’adhésion sont pris en charge</li>
+						</ul>
+					</div>
+				</div>
+
+				<div class="webhook-note">
+					<p><strong>Note de sécurité :</strong> Gardez votre ID de session privé : toute personne qui le connaît peut envoyer de faux dons à votre incrustation. L’URL du webhook doit être traitée comme une information sensible.</p>
+				</div>
+            </div>
+            
+            <div class="command-card">
+                <h3>Intégration de services externes</h3>
+                <p>Social Stream Ninja peut aussi envoyer des données à des services tiers :</p>
+                
+                <div class="command-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Paramètre d’URL</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Singular Live</td>
+                                <td><code>&singular=IDENTIFIER</code></td>
+                                <td>Envoie les messages sélectionnés à Singular Live pour les afficher en vedette</td>
+                            </tr>
+                            <tr>
+                                <td>H2R</td>
+                                <td><code>&h2r=IDENTIFIER</code></td>
+                                <td>Envoie les messages sélectionnés à un serveur H2R local</td>
+                            </tr>
+                            <tr>
+                                <td>POST générique</td>
+                                <td><code>&postserver=URL</code></td>
+                                <td>Envoie les messages sélectionnés à un point d’accès personnalisé par POST</td>
+                            </tr>
+                            <tr>
+                                <td>PUT générique</td>
+                                <td><code>&putserver=URL</code></td>
+                                <td>Envoie les messages sélectionnés à un point d’accès personnalisé par PUT</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <p>Ces paramètres s’ajoutent à l’URL de la page du Dock.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="custom-scripts" class="command-section">
+        <div class="container">
+            <h2>Scripts personnalisés</h2>
+            
+            <div class="command-card">
+                <h3>JavaScript personnalisé</h3>
+                <p>Vous pouvez créer vos propres commandes et fonctions en personnalisant le JavaScript :</p>
+
+                <div class="custom-js-method">
+                    <h4>Utiliser custom.js</h4>
+                    <ol class="command-steps">
+                        <li>Renommer <code>custom_sample.js</code> avec le nom de fichier <code>custom.js</code></li>
+                        <li>Modifier le fichier pour ajouter vos fonctions personnalisées</li>
+                        <li>Ouvrir le fichier dock.html en local pour charger custom.js</li>
+                    </ol>
+                    <p>Cette méthode permet des personnalisations et déclencheurs complexes.</p>
+                </div>
+            </div>
+       </div>
+	</section>
+            
+<section id="custom-overlays" class="command-section">
+    <div class="container">
+        <h2>Incrustations personnalisées</h2>
+        
+        <div class="command-card">
+            <h3>Créer des incrustations personnalisées</h3>
+            <p>Vous pouvez créer des incrustations de chat entièrement personnalisées selon le style et les fonctions de votre direct. Social Stream Ninja fournit une base souple pour les construire.</p>
+            
+            <div class="overlay-options">
+                <div class="overlay-option">
+                    <h4>Commencer avec un modèle</h4>
+                    <p>Commencez avec notre modèle d’incrustation pour comprendre les bases :</p>
+                    <div class="code-block">
+                        <pre>// View the sample overlay
+https://socialstream.ninja/sampleoverlay?session=SESSIONID</pre>
+                    </div>
+                    <p>Ce modèle minimal contient seulement le code nécessaire à une incrustation fonctionnelle.</p>
+                    <a href="https://socialstream.ninja/sampleoverlay?session=SESSIONID" class="btn btn-secondary" target="_blank">Voir l’incrustation d’exemple</a>
+                </div>
+                
+                <div class="overlay-option">
+                    <h4>Principaux éléments à personnaliser</h4>
+                    <ul class="feature-list">
+                        <li>Basculer entre les messages en vedette et tous les messages</li>
+                        <li>Personnaliser l’apparence avec CSS</li>
+                        <li>Ajouter des animations personnalisées aux nouveaux messages</li>
+                        <li>Implémenter votre propre filtrage de messages</li>
+                        <li>Ajouter des éléments interactifs avec JavaScript</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="implementation-steps">
+                <h4>Étapes de mise en œuvre</h4>
+                <ol class="command-steps">
+                    <li>Télécharger le fichier HTML d’incrustation d’exemple</li>
+                    <li>Modifier le HTML pour votre disposition personnalisée</li>
+                    <li>Personnaliser le CSS selon l’apparence souhaitée</li>
+                    <li>Modifier le JavaScript selon le comportement souhaité</li>
+                    <li>Enregistrer le fichier en local pour l’utiliser comme source navigateur OBS</li>
+                </ol>
+            </div>
+		</div>
+    </div>
+
+	</section>
+	
+	
+	<section id="timer-api" class="command-section">
+		<div class="container">
+			<h2>API du minuteur</h2>
+			<div class="command-card">
+				<h3>Contrôle à distance de <code>timer.html</code></h3>
+				<p>La page de minuterie est volontairement limitée : un minuteur, des commandes facultatives pour l’opérateur, des avertissements, le dépassement de temps et quelques styles visuels.</p>
+				<p>Les actions utiles comprennent <code>starttimer</code>, <code>pausetimer</code>, <code>resettimer</code>, <code>timeradd</code>, <code>timersubtract</code>, et <code>settimer</code>.</p>
+				<div class="code-block">
+					<pre>{
+  "action": "settimer",
+  "value": {
+    "seconds": 300,
+    "label": "Interview",
+    "mode": "countdown",
+    "style": "stage",
+    "warnSeconds": 60,
+    "dangerSeconds": 15
+  }
+}</pre>
+				</div>
+				<p>Pour connaître l’état actuel du minuteur, utilisez <code>gettimerstate</code> avec un token de rappel.</p>
+				<div class="code-block">
+					<pre>{ "action": "gettimerstate", "get": "timer-state-1" }</pre>
+				</div>
+				<p>Utilisez la page avec <code>timer.html?session=YOUR_SESSION&amp;server</code> si vous voulez le contrôler directement via le serveur API.</p>
+			</div>
+		</div>
+	</section>
+	
+	
+
+
+<section class="container"><h2>Commandes de tirages au sort gérés</h2><p><code>startgiveaway</code>, <code>closegiveaway</code>, <code>drawgiveaway</code>, <code>resetgiveaway</code>, et <code>getgiveawaystate</code> gèrent le groupe de participants dédié avec les mêmes commandes API/Stream Deck. Le tirage ferme automatiquement les inscriptions. Nouvelle manche conserve l’historique des gagnants et rejette les réservations impayées. Annuler et rembourser restitue les paiements de billets en attente. Les billets payants, Number Hunt, Coin Flip Pot et Event Flow utilisent le même service hôte. <a href="giveaway-points-guide.html">Configuration, présentations, valeurs de commandes et récupération</a>.</p></section>
+    <section class="get-started">
+        <div class="container">
+            <h2>Prêt à faire évoluer votre direct ?</h2>
+            <p>Avec ces commandes et options API, vous pouvez créer une expérience de diffusion interactive adaptée à vos besoins.</p>
+            <div class="get-started-cta">
+                <a href="download.html" class="btn btn-primary">Télécharger maintenant</a>
+                <a href="support.html" class="btn btn-secondary">Obtenir de l’aide</a>
+            </div>
+        </div>
+    </section>
+
+       <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>Réunit vos flux de messages sociaux en direct et bien plus. Gratuit et open source.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+					<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Liens rapides</h3>
+                    <ul>
+                        <li><a href="../index.html">Accueil</a></li>
+                        <li><a href="features.html">Fonctionnalités</a></li>
+                        <li><a href="download.html">Télécharger</a></li>
+                        <li><a href="guides.html">Guides</a></li>
+                        <li><a href="commands.html">Commandes et API</a></li>
+                        <li><a href="supported-sites.html">Sites pris en charge</a></li>
+                        <li><a href="templates.html">Modèles</a></li>
+                        <li><a href="support.html">Assistance</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Ressources</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">Guide d’installation</a></li>
+                        <li><a href="guides.html#extension-customization">Guide de personnalisation</a></li>
+                        <li><a href="guides.html#faq">FAQ</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Signaler un problème</a></li>
+                        <li><a href="../privacy.html">Politique de confidentialité</a></li>
+                        <li><a href="../TOS.html">Conditions d’utilisation</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Communauté</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Rejoindre notre Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">Dépôt GitHub</a></li>
+                        <li><a href="support.html#contribute">Contribuer</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">Faire un don</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Licence GPLv3.0. Créé par <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> avec les contributions de la communauté.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        // Set current year in footer
+		document.getElementById('current-year').textContent = new Date().getFullYear();
+
+		document.addEventListener('DOMContentLoaded', function() {
+			// Sticky navigation functionality
+			const commandsNav = document.getElementById('commands-nav');
+			const header = document.querySelector('header');
+			const navOffset = commandsNav ? commandsNav.offsetTop : 0;
+			
+			// Make navigation sticky on scroll
+			function makeNavSticky() {
+				if (!commandsNav) return;
+				
+				const scrollPosition = window.pageYOffset;
+				const headerHeight = header ? header.offsetHeight : 0;
+				
+				if (scrollPosition > (navOffset - headerHeight)) {
+					commandsNav.classList.add('sticky');
+					document.body.classList.add('sticky-nav-active');
+					document.body.style.paddingTop = commandsNav.offsetHeight + 'px';
+				} else {
+					commandsNav.classList.remove('sticky');
+					document.body.classList.remove('sticky-nav-active');
+					document.body.style.paddingTop = '0';
+				}
+			}
+			
+			// Update active nav item based on scroll
+			function updateActiveNav() {
+				const scrollPosition = window.scrollY;
+				const headerHeight = header.offsetHeight;
+				const navElement = document.getElementById('commands-nav');
+				const navHeight = navElement ? navElement.offsetHeight : 0;
+				const offset = headerHeight + navHeight + 50;
+				
+				document.querySelectorAll('.command-section').forEach(section => {
+					const sectionTop = section.offsetTop - offset;
+					const sectionBottom = sectionTop + section.offsetHeight;
+					const sectionId = section.getAttribute('id');
+					
+					if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
+						document.querySelectorAll('.nav-link').forEach(link => {
+							link.classList.remove('active');
+							if (link.getAttribute('href') === `#${sectionId}`) {
+								link.classList.add('active');
+							}
+						});
+					}
+				});
+				
+			}
+			
+			
+			
+			// Combined scroll handler
+			let scrollTimeout;
+			window.addEventListener('scroll', function() {
+				makeNavSticky();
+				
+				if (scrollTimeout) {
+					window.cancelAnimationFrame(scrollTimeout);
+				}
+				scrollTimeout = window.requestAnimationFrame(function() {
+					updateActiveNav();
+				});
+			});
+			
+			// Initial checks
+			makeNavSticky();
+			updateActiveNav();
+			
+			// Smooth scroll for command navigation
+			document.querySelectorAll('.nav-link').forEach(anchor => {
+				anchor.addEventListener('click', function(e) {
+					e.preventDefault();
+					
+					const targetId = this.getAttribute('href');
+					const targetElement = document.querySelector(targetId);
+					
+					if (targetElement) {
+						const headerHeight = document.querySelector('header').offsetHeight;
+						const navHeight = document.querySelector('.navigation').offsetHeight;
+						const offsetPosition = targetElement.offsetTop - headerHeight - navHeight;
+						
+						window.scrollTo({
+							top: offsetPosition,
+							behavior: 'smooth'
+						});
+						
+						// Update active class on navigation
+						document.querySelectorAll('.nav-link').forEach(link => {
+							link.classList.remove('active');
+						});
+						this.classList.add('active');
+					}
+				});
+			});
+			
+			// Add anchor links to headings
+			document.querySelectorAll('h2, h3').forEach(heading => {
+				if (heading.id) {
+					heading.classList.add('section-heading');
+					const anchor = document.createElement('a');
+					anchor.className = 'section-anchor';
+					anchor.href = `#${heading.id}`;
+					anchor.innerHTML = '<i class="fas fa-link"></i>';
+					heading.appendChild(anchor);
+				}
+			});
+		});
+    </script>
+</body>
+</html>

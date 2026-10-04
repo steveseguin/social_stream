@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ru" data-site-root="../../" data-site-language="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ru/docs/youtube-setup-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ru/docs/youtube-setup-guide.html">
+    <meta property="og:title" content="Руководство по настройке YouTube — Social Stream Ninja">
+    <meta property="og:description" content="Выберите правильный способ настройки YouTube в Social Stream Ninja: живой чат, обычные комментарии, захват Standard, режим WebSocket/API и настройка проекта OAuth.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Логотип Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ru/docs/youtube-setup-guide.html">
+    <meta name="twitter:title" content="Руководство по настройке YouTube — Social Stream Ninja">
+    <meta name="twitter:description" content="Выберите правильный способ настройки YouTube в Social Stream Ninja: живой чат, обычные комментарии, захват Standard, режим WebSocket/API и настройка проекта OAuth.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Логотип Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Руководство по настройке YouTube — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Выберите правильный способ настройки YouTube в Social Stream Ninja: живой чат, обычные комментарии, захват Standard, режим WebSocket/API и настройка проекта OAuth.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ru">
+<script id="ssn-site-language" type="application/json">{"language":"ru","page":"docs/youtube-setup-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Переключиться на светлую тему","Switch to dark theme":"Переключиться на тёмную тему","Light mode":"Светлая тема","Dark mode":"Тёмная тема","Open navigation menu":"Открыть меню навигации","Close navigation menu":"Закрыть меню навигации","Copy this document as Markdown to the clipboard":"Скопировать этот документ в формате Markdown в буфер обмена","Copy Markdown":"Копировать Markdown","Copying…":"Копирование…","Markdown copied":"Markdown скопирован","Copy failed":"Не удалось скопировать","Copy comprehensive Markdown for an AI assistant":"Скопировать полное описание в Markdown для ИИ-помощника","Copy this documentation page as Markdown for an AI assistant":"Скопировать эту страницу документации в Markdown для ИИ-помощника"},"strings":{"API And OAuth Notes":"Примечания по API и OAuth","API mode can expose different event families than visible page capture.":"Режим API может предоставлять другие семейства событий, чем захват видимой страницы.","API mode fails:":"Режим API не работает:","Browser extension / Standard capture":"Расширение браузера / захват Standard","Choose The Mode":"Выберите режим","Choose live chat, comments, Standard capture, or API mode deliberately.":"Осознанно выберите живой чат, комментарии, захват Standard или режим API.","Choose the right YouTube Social Stream Ninja setup path: live chat, static comments, Standard capture, WebSocket/API mode, and OAuth project setup.":"Выберите правильный способ настройки YouTube в Social Stream Ninja: живой чат, обычные комментарии, захват Standard, режим WebSocket/API и настройка проекта OAuth.","Chrome works but app does not:":"В Chrome работает, а в приложении нет:","Commands & API":"Команды и API","Common Fixes":"Решение частых проблем","Confirm the dock receives messages before opening OBS.":"Убедитесь, что док получает сообщения, прежде чем открывать OBS.","Custom YouTube project":"Собственный проект YouTube","Download":"Скачать","Features":"Возможности","Full setup:":"Полная настройка:","Guides":"Руководства","Hire":"Найти специалиста","Home":"Главная","If YouTube asks for sign-in or permissions, complete that step in the same browser/app context that is doing the capture.":"Если YouTube запрашивает вход или разрешения, выполните это в той же среде браузера/приложения, где идёт захват.","Inspiration":"Идеи","Live Chat Setup":"Настройка живого чата","Main navigation":"Основная навигация","Make sure the stream is actually live or that live chat is available.":"Убедитесь, что трансляция действительно идёт или доступен живой чат.","Need background reliability or richer API events":"Нужна надёжность в фоне или больше событий API","Need your own API quota":"Нужна собственная квота API","No chat:":"Нет чата:","Normal live chat in Chrome":"Обычный живой чат в Chrome","Notes":"Примечания","OAuth scopes, account permissions, and API limits matter.":"Важны области доступа OAuth, разрешения аккаунта и лимиты API.","OBS blank:":"В OBS ничего не отображается:","Open navigation menu":"Открыть меню навигации","Open the YouTube live chat page or the mode-specific source page.":"Откройте страницу живого чата YouTube или страницу источника для выбранного режима.","Open the live chat where the extension can read it.":"Откройте живой чат там, где расширение сможет его прочитать.","Overlay Gallery":"Галерея оверлеев","Search for YouTube first. Social Stream separates live chat from static comments because they are different workflows.":"Сначала найдите YouTube. Social Stream разделяет живой чат и обычные комментарии, поскольку способы работы с ними различаются.","Situation":"Ситуация","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Логотип Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Лицензия GPLv3.0.","Start From Supported Sites":"Начните с поддерживаемых сайтов","Static video comments":"Обычные комментарии к видео","Subscriber data can be delayed by YouTube and may only include public subscriptions.":"YouTube может задерживать данные подписчиков; они могут включать только публичные подписки.","Support":"Поддержка","Supported Sites":"Поддерживаемые сайты","Supported Sites page filtered to YouTube Live and YouTube Static Comments":"Страница поддерживаемых сайтов с фильтром YouTube Live и YouTube Static Comments","Switch theme":"Сменить тему","The desktop app does not automatically share normal Chrome cookies.":"Настольное приложение не использует cookie обычного Chrome автоматически.","This is not live chat.":"Это не живой чат.","Try First":"Попробуйте сначала","Use YouTube Live for live stream chat. Use YouTube Static Comments for normal video comments.":"Используйте YouTube Live для чата прямой трансляции. Используйте YouTube Static Comments для обычных комментариев к видео.","Use the YouTube Project Setup guide.":"Используйте руководство по настройке проекта YouTube.","Use the same session ID in the dock and overlay.":"Используйте одинаковый ID сессии в доке и оверлее.","WebSocket/API source mode":"Режим источника WebSocket/API","Write actions need stronger scopes than read-only chat capture.":"Действия записи требуют более широких областей доступа, чем захват чата только для чтения.","YouTube Project Setup":"Настройка проекта YouTube","YouTube Setup Guide":"Руководство по настройке YouTube","YouTube Setup Guide - Social Stream Ninja":"Руководство по настройке YouTube — Social Stream Ninja","YouTube Static Comments":"Обычные комментарии YouTube (YouTube Static Comments)","check OAuth, scopes, project credentials, and quota.":"проверьте OAuth, области доступа, учётные данные проекта и квоту.","confirm the stream is live and chat is visible.":"убедитесь, что идёт эфир и чат виден.","sign into YouTube inside the app or use the extension path.":"войдите в YouTube внутри приложения или используйте расширение.","test the dock first, then the overlay URL in a normal browser.":"сначала проверьте док, затем URL оверлея в обычном браузере."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/youtube-setup-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/youtube-setup-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Основная навигация"><a href="../index.html">Главная</a><a href="features.html">Возможности</a><a href="inspiration.html" class="site-priority-inspiration">Идеи</a><a href="download.html">Скачать</a><a href="guides.html">Руководства</a><a href="commands.html">Команды и API</a><a href="supported-sites.html">Поддерживаемые сайты</a><a href="overlay-gallery.html" class="site-priority-gallery">Галерея оверлеев</a><a href="services.html" class="site-priority-hire">Найти специалиста</a><a href="support.html">Поддержка</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Русский"><span aria-hidden="true">🌐 </span><span lang="ru">Русский</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/youtube-setup-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/youtube-setup-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/youtube-setup-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="youtube-setup-guide.html" lang="ru" hreflang="ru" aria-current="true">Русский</a><a class="site-language-link" href="../../fr/docs/youtube-setup-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/youtube-setup-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/youtube-setup-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/youtube-setup-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/youtube-setup-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/youtube-setup-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/youtube-setup-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/youtube-setup-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/youtube-setup-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/youtube-setup-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/youtube-setup-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/youtube-setup-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/youtube-setup-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Сменить тему"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Открыть меню навигации" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>Руководство по настройке YouTube</h1><p>Осознанно выберите живой чат, комментарии, захват Standard или режим API.</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Начните с поддерживаемых сайтов</h2>
+                <p>Сначала найдите YouTube. Social Stream разделяет живой чат и обычные комментарии, поскольку способы работы с ними различаются.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-youtube-supported-sites.png" alt="Страница поддерживаемых сайтов с фильтром YouTube Live и YouTube Static Comments" class="guide-image">
+                    <figcaption>Используйте YouTube Live для чата прямой трансляции. Используйте YouTube Static Comments для обычных комментариев к видео.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Выберите режим</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Ситуация</th><th>Попробуйте сначала</th><th>Примечания</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Situation">Обычный живой чат в Chrome</td><td data-label="Try First">Расширение браузера / захват Standard</td><td data-label="Notes">Откройте живой чат там, где расширение сможет его прочитать.</td></tr>
+                        <tr><td data-label="Situation">Нужна надёжность в фоне или больше событий API</td><td data-label="Try First">Режим источника WebSocket/API</td><td data-label="Notes">Важны области доступа OAuth, разрешения аккаунта и лимиты API.</td></tr>
+                        <tr><td data-label="Situation">Нужна собственная квота API</td><td data-label="Try First">Собственный проект YouTube</td><td data-label="Notes">Используйте руководство по настройке проекта YouTube.</td></tr>
+                        <tr><td data-label="Situation">Обычные комментарии к видео</td><td data-label="Try First">Обычные комментарии YouTube (YouTube Static Comments)</td><td data-label="Notes">Это не живой чат.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Настройка живого чата</h2>
+                <ol class="guide-steps">
+                    <li>Убедитесь, что трансляция действительно идёт или доступен живой чат.</li>
+                    <li>Откройте страницу живого чата YouTube или страницу источника для выбранного режима.</li>
+                    <li>Убедитесь, что док получает сообщения, прежде чем открывать OBS.</li>
+                    <li>Используйте одинаковый ID сессии в доке и оверлее.</li>
+                </ol>
+                <p>Если YouTube запрашивает вход или разрешения, выполните это в той же среде браузера/приложения, где идёт захват.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Примечания по API и OAuth</h2>
+                <ul class="guide-list">
+                    <li>Режим API может предоставлять другие семейства событий, чем захват видимой страницы.</li>
+                    <li>YouTube может задерживать данные подписчиков; они могут включать только публичные подписки.</li>
+                    <li>Действия записи требуют более широких областей доступа, чем захват чата только для чтения.</li>
+                    <li>Настольное приложение не использует cookie обычного Chrome автоматически.</li>
+                </ul>
+                <p>Полная настройка: <a href="youtube-project-setup.html">Настройка проекта YouTube</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Решение частых проблем</h2>
+                <ul class="guide-list">
+                    <li><strong>Нет чата:</strong> убедитесь, что идёт эфир и чат виден.</li>
+                    <li><strong>В Chrome работает, а в приложении нет:</strong> войдите в YouTube внутри приложения или используйте расширение.</li>
+                    <li><strong>Режим API не работает:</strong> проверьте OAuth, области доступа, учётные данные проекта и квоту.</li>
+                    <li><strong>В OBS ничего не отображается:</strong> сначала проверьте док, затем URL оверлея в обычном браузере.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Лицензия GPLv3.0.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

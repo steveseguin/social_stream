@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="ใช้โหนดสถานะใน Social Stream Ninja Event Flow เพื่อติดตามค่า ใช้คูลดาวน์ และประสานแอ็กชันข้ามเหตุการณ์แชตขาเข้า">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/th/actions/state-nodes-guide.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/th/actions/state-nodes-guide.html">
+    <meta property="og:title" content="คู่มือใช้งานโหนดสถานะ - Social Stream Ninja">
+    <meta property="og:description" content="ใช้โหนดสถานะใน Social Stream Ninja Event Flow เพื่อติดตามค่า ใช้คูลดาวน์ และประสานแอ็กชันข้ามเหตุการณ์แชตขาเข้า">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/th/actions/state-nodes-guide.html">
+    <meta name="twitter:title" content="คู่มือใช้งานโหนดสถานะ - Social Stream Ninja">
+    <meta name="twitter:description" content="ใช้โหนดสถานะใน Social Stream Ninja Event Flow เพื่อติดตามค่า ใช้คูลดาวน์ และประสานแอ็กชันข้ามเหตุการณ์แชตขาเข้า">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คู่มือใช้งานโหนดสถานะ - Social Stream Ninja</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: radial-gradient(circle at top, #4338ca 0%, #0f172a 55%, #020617 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 35px 80px rgba(3, 7, 18, 0.55);
+        }
+        header {
+            background: linear-gradient(135deg, #4c1d95, #312e81, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.7rem;
+            margin-bottom: 12px;
+        }
+        header p {
+            font-size: 1.15rem;
+            max-width: 680px;
+            opacity: 0.92;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 11px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.06em;
+            margin-bottom: 18px;
+        }
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        nav a {
+            color: #f8fafc;
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 999px;
+            padding: 6px 16px;
+            transition: background 0.2s;
+        }
+        nav a:hover {
+            background: rgba(15,23,42,0.25);
+        }
+        .content {
+            padding: 50px 55px 70px;
+        }
+        section {
+            margin-bottom: 70px;
+        }
+        h2 {
+            font-size: 2rem;
+            color: #312e81;
+            margin-bottom: 18px;
+        }
+        h3 {
+            font-size: 1.35rem;
+            color: #4338ca;
+            margin: 20px 0 10px;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 24px;
+            margin: 12px 0;
+        }
+        li {
+            margin: 6px 0;
+        }
+        .panel {
+            border-radius: 16px;
+            padding: 22px;
+            margin: 18px 0;
+        }
+        .panel.info {
+            background: #eef2ff;
+            border: 1px solid rgba(67,56,202,0.2);
+        }
+        .panel.warn {
+            background: #fff7ed;
+            border: 1px solid rgba(234,88,12,0.25);
+        }
+        .panel.success {
+            background: #ecfdf5;
+            border: 1px solid rgba(5,150,105,0.2);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 18px;
+            margin: 20px 0;
+        }
+        .card {
+            border-radius: 18px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+            padding: 20px 22px;
+            background: #fff;
+        }
+        .card h4 {
+            margin-bottom: 10px;
+            color: #4c1d95;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono','Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            border-radius: 14px;
+            padding: 18px;
+            margin: 16px 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .recipe {
+            border-left: 4px solid #312e81;
+            padding-left: 18px;
+            margin: 18px 0;
+        }
+        .recipe h4 {
+            margin-bottom: 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        table th, table td {
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            text-align: left;
+        }
+        table th {
+            background: #f1f5f9;
+            color: #312e81;
+        }
+        code {
+            background: rgba(15,23,42,0.06);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono','Courier New', monospace;
+        }
+        @media (max-width: 720px) {
+            table { display: block; max-width: 100%; overflow-x: auto; }
+            header, .content {
+                padding: 35px 20px;
+            }
+            nav {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"actions/state-nodes-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{"!hello ──▶ Switch (ON?) ─▶ Send Reply ─▶ Set Gate: OFF ─▶ Delay 15s ─▶ Set Gate: ON":"!hello ──▶ สวิตช์ (ON?) ─▶ ส่งคำตอบ ─▶ Set Gate: OFF ─▶ หน่วง 15s ─▶ Set Gate: ON","(OFF) referencing “helloCooldown”.":"(OFF) ที่อ้างอิง “helloCooldown”","(ON) for “helloCooldown”.":"(ON) สำหรับ “helloCooldown”","01 · Quick Orientation":"01 · ภาพรวมเริ่มต้น","02 · On/Off Switch (Gate)":"02 · สวิตช์เปิด/ปิด (Gate)","03 · Counter":"03 · ตัวนับ","04 · Rate Limiter (Throttle)":"04 · ตัวจำกัดอัตรา (Throttle)","05 · User Memory":"05 · หน่วยความจำผู้ใช้","06 · Problem Kits":"06 · ชุดตัวอย่างแก้โจทย์","07 · Troubleshooting & FAQ":"07 · การแก้ปัญหาและคำถามที่พบบ่อย","08 · Next Steps":"08 · ขั้นตอนถัดไป",": add or subtract custom amounts.":"— เพิ่มหรือลดจำนวนที่กำหนดเอง",": flip ON or OFF.":"— สลับ ON หรือ OFF",": jump to a specific number.":"— เปลี่ยนไปยังตัวเลขที่ระบุ",": revert to default (usually ON).":"— กลับสู่ค่าเริ่มต้น (โดยปกติคือ ON)",": revert to the default start value.":"— กลับสู่ค่าเริ่มต้นของตัวนับ","A User Memory operation has no dashed link.":"การดำเนินการ User Memory ไม่มีเส้นประเชื่อม","Actions":"แอ็กชัน","Add a":"เพิ่ม","Add a chat message “Cooldown active” on the false output if desired.":"เพิ่มข้อความแชต “อยู่ระหว่างคูลดาวน์” ที่เอาต์พุต false หากต้องการ","Add another":"เพิ่มอีกหนึ่ง","Add the State node first, give it a unique name, then select it from each matching operation. Without the base node, state actions have nothing to update.":"เพิ่มโหนดสถานะก่อน ตั้งชื่อไม่ซ้ำ แล้วเลือกจากการดำเนินการที่เกี่ยวข้องแต่ละรายการ หากไม่มีโหนดหลัก แอ็กชันสถานะจะไม่มีสิ่งให้อัปเดต","Add the switch node first and confirm the dropdown references it.":"เพิ่มโหนดสวิตช์ก่อน แล้วตรวจสอบว่ารายการแบบเลื่อนลงอ้างอิงโหนดนั้น","After your action, add":"หลังแอ็กชันของคุณ ให้เพิ่ม","All overlay triggers pass through the switch.":"ทริกเกอร์โอเวอร์เลย์ทั้งหมดผ่านสวิตช์","Any Message ─▶ Counter (name: hype5) ─▶ Condition (value % 5 === 0?) ─▶ Play Celebration":"ข้อความใดก็ได้ ─▶ Counter (ชื่อ: hype5) ─▶ Condition (value % 5 === 0?) ─▶ เล่นการฉลอง","Auto increment:":"เพิ่มอัตโนมัติ:","Best for":"เหมาะกับ","Build Steps":"ขั้นตอนการสร้าง","Can live anywhere in the flow. Just pick the matching node name.":"อยู่ที่ใดก็ได้ในโฟลว์ เพียงเลือกชื่อโหนดที่ตรงกัน","Choose the named memory in the operation's properties or drag its purple side connector onto the memory.":"เลือกหน่วยความจำที่มีชื่อในคุณสมบัติการดำเนินการ หรือลากจุดเชื่อมสีม่วงด้านข้างไปยังหน่วยความจำ","Choose the time window (seconds).":"เลือกช่วงเวลา (วินาที)","Combine state nodes with the rest of the Event Flow toolkit:":"ใช้โหนดสถานะร่วมกับเครื่องมืออื่นของ Event Flow:","Command Cooldown":"คูลดาวน์คำสั่ง","Configuration":"การตั้งค่า","Connect your trigger → switch → actions.":"เชื่อมทริกเกอร์ → สวิตช์ → แอ็กชัน","Cooldowns for chat commands.":"คูลดาวน์สำหรับคำสั่งแชต","Counter":"ตัวนับ (Counter)","Counter default 0, target 3.":"ตัวนับเริ่มต้น 0 เป้าหมาย 3","Counter never increments.":"ตัวนับไม่เพิ่มเลย","Counters track numbers across messages. They increment automatically when a message flows through, and you can adjust values manually with actions.":"ตัวนับติดตามค่าตัวเลขข้ามข้อความ โดยเพิ่มอัตโนมัติเมื่อข้อความผ่าน และคุณปรับค่าด้วยแอ็กชันได้เอง","Decide whether to queue or discard overflow.":"ตัดสินใจว่าจะเข้าคิวหรือทิ้งเหตุการณ์ที่เกินจำนวน","Delay":"หน่วงเวลา (Delay)","Drop the switch node, name it “helloCooldown”, default ON.":"วางโหนดสวิตช์ ตั้งชื่อ “helloCooldown” และตั้งค่าเริ่มต้นเป็น ON","Ensure":"ตรวจสอบให้แน่ใจว่า","Event Flow Guide":"คู่มือ Event Flow","Event Flow System":"ระบบ Event Flow","Every Nth chatter triggers a prize.":"ผู้ส่งแชตทุกคนที่ N จะกระตุ้นรางวัล","Every time a payload passes through the Counter node it adds 1 (unless you pause it with the “Only count when gate is true” option).":"ทุกครั้งที่เพย์โหลดผ่านโหนด Counter จะเพิ่ม 1 (เว้นแต่คุณหยุดไว้ด้วยตัวเลือก “Only count when gate is true”)","Example Flow Charts":"ตัวอย่างแผนผังโฟลว์","Example: 15s Cooldown":"ตัวอย่าง: คูลดาวน์ 15 วินาที","Example: Celebrate Every 5 Messages":"ตัวอย่าง: ฉลองทุก 5 ข้อความ","Export working patterns as templates so your team can re-import them later.":"ส่งออกรูปแบบที่ใช้งานได้เป็นเทมเพลต เพื่อให้ทีมของคุณนำเข้าซ้ำภายหลัง","Fix":"วิธีแก้","Gate, Counter, and Rate Limiter can run in the normal event path.":"Gate, Counter และ Rate Limiter ทำงานในเส้นทางเหตุการณ์ปกติได้","Gift-based or badge-based eligibility.":"สิทธิ์เข้าร่วมตามของขวัญหรือป้าย","Great When You Need":"เหมาะเมื่อคุณต้องการ","Guide buttons don’t open.":"ปุ่มคู่มือเปิดไม่ได้","Heads up:":"ข้อควรทราบ:","Holds the value (ON/OFF, count, timestamps, or users).":"เก็บค่า (ON/OFF จำนวน เวลา หรือผู้ใช้)","Increment after each redemption.":"เพิ่มหลังการใช้รางวัลแต่ละครั้ง","Inside the Condition node, compare":"ภายในโหนด Condition ให้เปรียบเทียบ","Keep experimenting! The new":"ทดลองต่อไป! คู่มือใหม่","Key Actions":"แอ็กชันหลัก","Label branches (e.g., “false → cooldown active”) so you can follow the path visually.":"ตั้งชื่อสาขา (เช่น “false → อยู่ระหว่างคูลดาวน์”) เพื่อให้ไล่ดูเส้นทางได้ง่าย","Likely Cause":"สาเหตุที่เป็นไปได้","Limited Freebies":"ของแจกจำนวนจำกัด","Lives on the canvas.":"อยู่บนแคนวาส","Maintenance windows (pause features during BRB scenes).":"ช่วงพักการทำงาน (หยุดฟีเจอร์ระหว่างฉาก BRB)","Make sure the trigger wire passes through the counter and the gate output is true.":"ตรวจสอบว่าเส้นทริกเกอร์ผ่านตัวนับและเอาต์พุตเกตเป็น true","Manual toggles (enable/disable overlays).":"สวิตช์ด้วยตนเอง (เปิด/ปิดโอเวอร์เลย์)","No matching switch node exists (or the names differ).":"ไม่มีโหนดสวิตช์ที่ตรงกัน (หรือชื่อไม่ตรงกัน)","No target memory is selected.":"ยังไม่ได้เลือกหน่วยความจำเป้าหมาย","On/Off Switch":"สวิตช์เปิด/ปิด","Operations":"การดำเนินการ","Overview":"ภาพรวม","Participation Trigger ──▶ Remember User ······▶ User Memory: Entrants Draw Command ───────────▶ Pick Random User ···▶ User Memory: Entrants Reset Command ──────────▶ Clear All Users ·····▶ User Memory: Entrants":"ทริกเกอร์เข้าร่วม ──▶ Remember User ······▶ User Memory: Entrants คำสั่งสุ่ม ───────────▶ Pick Random User ···▶ User Memory: Entrants คำสั่งรีเซ็ต ──────────▶ Clear All Users ·····▶ User Memory: Entrants","Pick a scenario and follow the steps.":"เลือกสถานการณ์แล้วทำตามขั้นตอน","Placed downstream.":"วางไว้ในลำดับถัดไป","Problem Kits":"ชุดตัวอย่างแก้โจทย์","Rate Limiter":"ตัวจำกัดอัตรา (Rate Limiter)","Reads or changes the stored value (set ON, add +1, remember, draw, reset, etc.).":"อ่านหรือเปลี่ยนค่าที่เก็บไว้ (ตั้ง ON เพิ่ม +1 จดจำ สุ่ม รีเซ็ต ฯลฯ)","Redeem Reward ─▶ Counter ticketsSold ├─value \u003c 50 ─▶ Approve Redemption └─value ≥ 50 ─▶ Deny + Refund points":"ใช้รางวัล ─▶ Counter ticketsSold ├─value \u003c 50 ─▶ อนุมัติการใช้รางวัล └─value ≥ 50 ─▶ ปฏิเสธ + คืนคะแนน","Relax the limit and drop a Reset State Node action before retesting.":"ผ่อนข้อจำกัดและวางแอ็กชัน Reset State Node ก่อนทดสอบใหม่","Remember:":"จำไว้:","Remembering viewers who liked, entered, or participated.":"จดจำผู้ชมที่กดถูกใจ ลงชื่อ หรือเข้าร่วม","Reset state nodes between tests so you are not reading stale data.":"รีเซ็ตโหนดสถานะระหว่างการทดสอบ เพื่อไม่ให้อ่านข้อมูลเก่า","Running inside the extension without web_accessible resources updated.":"กำลังทำงานในส่วนขยายที่ยังไม่ได้อัปเดตทรัพยากร web_accessible","See the dedicated":"ดูคู่มือเฉพาะเรื่อง","Separate lists for separate campaigns.":"ใช้รายการแยกสำหรับแต่ละแคมเปญ","Set Gate OFF → Delay → Set Gate ON.":"Set Gate OFF → หน่วงเวลา → Set Gate ON","Set Gate State":"ตั้งสถานะเกต (Set Gate State)","Set Gate State action won’t save.":"แอ็กชัน Set Gate State บันทึกไม่ได้","Set the maximum events allowed.":"ตั้งจำนวนเหตุการณ์สูงสุดที่อนุญาต","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Solid teal wires carry events. Dashed purple links show which shared memory an operation uses. Each User Memory has its own count, persistence mode, and reset policy, so clearing one list does not affect another.":"เส้นทึบสีเขียวอมฟ้าส่งเหตุการณ์ เส้นประสีม่วงแสดงว่าการดำเนินการใช้หน่วยความจำร่วมใด User Memory แต่ละอันมีจำนวน โหมดเก็บถาวร และนโยบายรีเซ็ตของตัวเอง การล้างรายการหนึ่งจึงไม่กระทบอีกอัน","State Action":"แอ็กชันสถานะ","State Node":"โหนดสถานะ","State Nodes Playbook":"คู่มือใช้งานโหนดสถานะ","State Nodes Playbook - Social Stream Ninja":"คู่มือใช้งานโหนดสถานะ - Social Stream Ninja","State nodes give Social Stream Ninja memory. Use them to build cooldowns, toggles, counters, throttles, participant lists, and prize draws that keep automations predictable.":"โหนดสถานะทำให้ Social Stream Ninja มีความจำ ใช้สร้างคูลดาวน์ สวิตช์ ตัวนับ ตัวจำกัดอัตรา รายชื่อผู้เข้าร่วม และการสุ่มรางวัล เพื่อให้ระบบอัตโนมัติทำงานอย่างคาดการณ์ได้","State tools have an object that owns the value and operations that read or change it:":"เครื่องมือสถานะมีออบเจ็กต์ที่เก็บค่า และการดำเนินการที่อ่านหรือเปลี่ยนค่านั้น:","Store points redeemed via commands.":"เก็บคะแนนที่ใช้ผ่านคำสั่ง","Store state-driven metadata under":"เก็บเมทาดาทาที่อิงสถานะไว้ภายใต้","Switch named “overlayToggle”.":"สวิตช์ชื่อ “overlayToggle”","Switch node named “commandCooldown”.":"โหนดสวิตช์ชื่อ “commandCooldown”","Symptom":"อาการ","Temporarily shorten cooldowns (2 seconds) or lower counter targets while verifying.":"ลดคูลดาวน์ชั่วคราว (2 วินาที) หรือลดเป้าหมายตัวนับขณะตรวจสอบ","Testing Checklist":"รายการตรวจสอบการทดสอบ","The flow bypasses the counter node or the gate is false.":"โฟลว์ข้ามโหนดตัวนับ หรือเกตเป็น false","The switch is a boolean guard. When ON, messages pass through; when OFF, the flow halts at this node.":"สวิตช์เป็นตัวกั้นแบบบูลีน เมื่อ ON ข้อความจะผ่าน เมื่อ OFF โฟลว์จะหยุดที่โหนดนี้","The throttle remembers timestamps and refuses new events until the rate you specify is respected.":"ตัวจำกัดอัตราจดจำเวลาและปฏิเสธเหตุการณ์ใหม่ จนกว่าจะเป็นไปตามอัตราที่คุณกำหนด","Throttle blocks everything forever.":"ตัวจำกัดอัตราบล็อกทุกอย่างไม่สิ้นสุด","Throttles do not auto-reset when you edit the flow. Use":"ตัวจำกัดอัตราไม่รีเซ็ตอัตโนมัติเมื่อคุณแก้โฟลว์ ใช้","Track progress to a community goal.":"ติดตามความคืบหน้าไปยังเป้าหมายชุมชน","Trigger → switch → reply.":"ทริกเกอร์ → สวิตช์ → ตอบกลับ","Trigger ─▶ Switch (overlayToggle) ─▶ If ON → Show Overlay └─false─▶ Notify moderator “Overlay disabled”":"ทริกเกอร์ ─▶ สวิตช์ (overlayToggle) ─▶ ถ้า ON → แสดงโอเวอร์เลย์ └─false─▶ แจ้งผู้ดูแลแชต “โอเวอร์เลย์ปิดอยู่”","Troubleshooting":"การแก้ปัญหา","Unique-entry prize draws.":"สุ่มรางวัลจากรายชื่อไม่ซ้ำ","Use Cases":"กรณีใช้งาน","Use Reset action at the end of stream.":"ใช้แอ็กชัน Reset เมื่อจบสตรีม","Use logic gates (AND/OR/NOT) before a switch to decide who can toggle it.":"ใช้เกตตรรกะ (AND/OR/NOT) ก่อนสวิตช์ เพื่อกำหนดว่าใครสลับค่าได้","Use state nodes in Social Stream Ninja Event Flow to track values, apply cooldowns and coordinate actions across incoming chat events.":"ใช้โหนดสถานะใน Social Stream Ninja Event Flow เพื่อติดตามค่า ใช้คูลดาวน์ และประสานแอ็กชันข้ามเหตุการณ์แชตขาเข้า","Use the Event Flow “Send Test Event” tool to simulate commands.":"ใช้เครื่องมือ “Send Test Event” ของ Event Flow เพื่อจำลองคำสั่ง","User Memory":"หน่วยความจำผู้ใช้ (User Memory)","User Memory guide":"คู่มือ User Memory","User Memory is a shared hub referenced by other nodes.":"User Memory เป็นศูนย์กลางร่วมที่โหนดอื่นอ้างอิง","User Memory owns one named list of unique people. Remember users when they participate, check that list on later messages, remove a person, choose a random winner, or clear only that list.":"User Memory เก็บรายชื่อบุคคลไม่ซ้ำหนึ่งรายการที่มีชื่อ จดจำผู้ใช้เมื่อเข้าร่วม ตรวจสอบรายการเมื่อมีข้อความภายหลัง ลบบุคคล เลือกผู้ชนะสุ่ม หรือล้างเฉพาะรายการนั้น","Viewer Toggle":"สวิตช์สำหรับผู้ชม","When value ≥ 3, branch to “Sorry, all gone”.":"เมื่อ value ≥ 3 ให้แยกไปที่ “ขออภัย หมดแล้ว”","Window too strict or leftover state from testing.":"ช่วงเวลาเข้มงวดเกินไป หรือมีสถานะค้างจากการทดสอบ","and":"และ","command → Set Gate OFF.":"คำสั่ง → Set Gate OFF","command → Set Gate ON.":"คำสั่ง → Set Gate ON","for reviewed screenshots, a downloadable draw flow, TikTok eligibility, participation examples, and reset details.":"เพื่อดูภาพหน้าจอที่ตรวจสอบแล้ว โฟลว์สุ่มที่ดาวน์โหลดได้ สิทธิ์เข้าร่วม TikTok ตัวอย่างการเข้าร่วม และรายละเอียดรีเซ็ต","if you need a clean slate during testing.":"หากต้องการเริ่มจากสถานะว่างระหว่างทดสอบ","node (15 seconds).":"โหนด (15 วินาที)","or":"หรือ","or simply use the built-in “Trigger when value matches Target” option from the Counter node’s properties.":"หรือใช้ตัวเลือกในตัว “Trigger when value matches Target” จากคุณสมบัติโหนด Counter","pairs with this playbook so you can master both logic and state layers.":"ใช้คู่กับคู่มือนี้ เพื่อให้คุณเข้าใจทั้งส่วนตรรกะและส่วนสถานะ","ships via manifest and reload the extension.":"ถูกประกาศให้รวมผ่าน manifest แล้วโหลดส่วนขยายใหม่","so overlays know why a branch fired.":"เพื่อให้โอเวอร์เลย์ทราบว่าเหตุใดสาขาจึงทำงาน","“Drop alerts if the overlay is already busy.”":"“ทิ้งการแจ้งเตือนหากโอเวอร์เลย์ยังทำงานอยู่”","“One API call per 10 seconds.”":"“เรียก API หนึ่งครั้งต่อ 10 วินาที”","“Only five raffle entries per minute.”":"“รับผู้เข้าร่วมจับรางวัลเพียงห้ารายการต่อนาที”"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/actions/state-nodes-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="shell">
+        <header>
+            <div class="badge">ระบบ Event Flow<!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/state-nodes-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/state-nodes-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/state-nodes-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/state-nodes-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/state-nodes-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/state-nodes-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/state-nodes-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/state-nodes-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/state-nodes-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/state-nodes-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/state-nodes-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/state-nodes-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/state-nodes-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/state-nodes-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/state-nodes-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/state-nodes-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="state-nodes-guide.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --></div>
+            <h1>คู่มือใช้งานโหนดสถานะ</h1>
+            <p>โหนดสถานะทำให้ Social Stream Ninja มีความจำ ใช้สร้างคูลดาวน์ สวิตช์ ตัวนับ ตัวจำกัดอัตรา รายชื่อผู้เข้าร่วม และการสุ่มรางวัล เพื่อให้ระบบอัตโนมัติทำงานอย่างคาดการณ์ได้</p>
+            <nav>
+                <a href="#overview">ภาพรวม</a>
+                <a href="#switch">สวิตช์เปิด/ปิด</a>
+                <a href="#counter">ตัวนับ (Counter)</a>
+                <a href="#throttle">ตัวจำกัดอัตรา (Rate Limiter)</a>
+                <a href="#user-memory">หน่วยความจำผู้ใช้ (User Memory)</a>
+                <a href="#recipes">ชุดตัวอย่างแก้โจทย์</a>
+                <a href="#troubleshooting">การแก้ปัญหา</a>
+            </nav>
+        </header>
+        <div class="content">
+            <section id="overview">
+                <h2>01 · ภาพรวมเริ่มต้น</h2>
+                <p>เครื่องมือสถานะมีออบเจ็กต์ที่เก็บค่า และการดำเนินการที่อ่านหรือเปลี่ยนค่านั้น:</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>โหนดสถานะ</h4>
+                        <ul>
+                            <li>อยู่บนแคนวาส</li>
+                            <li>เก็บค่า (ON/OFF จำนวน เวลา หรือผู้ใช้)</li>
+                            <li>Gate, Counter และ Rate Limiter ทำงานในเส้นทางเหตุการณ์ปกติได้</li>
+                            <li>User Memory เป็นศูนย์กลางร่วมที่โหนดอื่นอ้างอิง</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>แอ็กชันสถานะ</h4>
+                        <ul>
+                            <li>วางไว้ในลำดับถัดไป</li>
+                            <li>อ่านหรือเปลี่ยนค่าที่เก็บไว้ (ตั้ง ON เพิ่ม +1 จดจำ สุ่ม รีเซ็ต ฯลฯ)</li>
+                            <li>อยู่ที่ใดก็ได้ในโฟลว์ เพียงเลือกชื่อโหนดที่ตรงกัน</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel info">
+                    <strong>จำไว้:</strong> เพิ่มโหนดสถานะก่อน ตั้งชื่อไม่ซ้ำ แล้วเลือกจากการดำเนินการที่เกี่ยวข้องแต่ละรายการ หากไม่มีโหนดหลัก แอ็กชันสถานะจะไม่มีสิ่งให้อัปเดต
+                </div>
+            </section>
+
+            <section id="switch">
+                <h2>02 · สวิตช์เปิด/ปิด (Gate)</h2>
+                <p>สวิตช์เป็นตัวกั้นแบบบูลีน เมื่อ ON ข้อความจะผ่าน เมื่อ OFF โฟลว์จะหยุดที่โหนดนี้</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>เหมาะกับ</h4>
+                        <ul>
+                            <li>คูลดาวน์สำหรับคำสั่งแชต</li>
+                            <li>สวิตช์ด้วยตนเอง (เปิด/ปิดโอเวอร์เลย์)</li>
+                            <li>ช่วงพักการทำงาน (หยุดฟีเจอร์ระหว่างฉาก BRB)</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>แอ็กชันหลัก</h4>
+                        <ul>
+                            <li><code>Set Gate State</code>— สลับ ON หรือ OFF</li>
+                            <li><code>Reset State Node</code>— กลับสู่ค่าเริ่มต้น (โดยปกติคือ ON)</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>ตัวอย่าง: คูลดาวน์ 15 วินาที</h3>
+                <div class="diagram">
+!hello ──▶ สวิตช์ (ON?) ─▶ ส่งคำตอบ ─▶ Set Gate: OFF ─▶ หน่วง 15s ─▶ Set Gate: ON
+                </div>
+                <div class="recipe">
+                    <h4>ขั้นตอนการสร้าง</h4>
+                    <ol>
+                        <li>วางโหนดสวิตช์ ตั้งชื่อ “helloCooldown” และตั้งค่าเริ่มต้นเป็น ON</li>
+                        <li>เชื่อมทริกเกอร์ → สวิตช์ → แอ็กชัน</li>
+                        <li>หลังแอ็กชันของคุณ ให้เพิ่ม <em>ตั้งสถานะเกต (Set Gate State)</em> (OFF) ที่อ้างอิง “helloCooldown”</li>
+                        <li>เพิ่ม <em>หน่วงเวลา (Delay)</em> โหนด (15 วินาที)</li>
+                        <li>เพิ่มอีกหนึ่ง <em>ตั้งสถานะเกต (Set Gate State)</em> (ON) สำหรับ “helloCooldown”</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section id="counter">
+                <h2>03 · ตัวนับ</h2>
+                <p>ตัวนับติดตามค่าตัวเลขข้ามข้อความ โดยเพิ่มอัตโนมัติเมื่อข้อความผ่าน และคุณปรับค่าด้วยแอ็กชันได้เอง</p>
+                <div class="panel success">
+                    <strong>เพิ่มอัตโนมัติ:</strong> ทุกครั้งที่เพย์โหลดผ่านโหนด Counter จะเพิ่ม 1 (เว้นแต่คุณหยุดไว้ด้วยตัวเลือก “Only count when gate is true”)
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <h4>กรณีใช้งาน</h4>
+                        <ul>
+                            <li>ผู้ส่งแชตทุกคนที่ N จะกระตุ้นรางวัล</li>
+                            <li>ติดตามความคืบหน้าไปยังเป้าหมายชุมชน</li>
+                            <li>เก็บคะแนนที่ใช้ผ่านคำสั่ง</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>แอ็กชัน</h4>
+                        <ul>
+                            <li><code>Increment Counter</code>— เพิ่มหรือลดจำนวนที่กำหนดเอง</li>
+                            <li><code>Set Counter Value</code>— เปลี่ยนไปยังตัวเลขที่ระบุ</li>
+                            <li><code>Reset State Node</code>— กลับสู่ค่าเริ่มต้นของตัวนับ</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>ตัวอย่าง: ฉลองทุก 5 ข้อความ</h3>
+                <div class="diagram">
+ข้อความใดก็ได้ ─▶ Counter (ชื่อ: hype5) ─▶ Condition (value % 5 === 0?) ─▶ เล่นการฉลอง
+                </div>
+                <p>ภายในโหนด Condition ให้เปรียบเทียบ <code>state.hype5.value</code> หรือใช้ตัวเลือกในตัว “Trigger when value matches Target” จากคุณสมบัติโหนด Counter</p>
+            </section>
+
+            <section id="throttle">
+                <h2>04 · ตัวจำกัดอัตรา (Throttle)</h2>
+                <p>ตัวจำกัดอัตราจดจำเวลาและปฏิเสธเหตุการณ์ใหม่ จนกว่าจะเป็นไปตามอัตราที่คุณกำหนด</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>เหมาะเมื่อคุณต้องการ</h4>
+                        <ul>
+                            <li>“รับผู้เข้าร่วมจับรางวัลเพียงห้ารายการต่อนาที”</li>
+                            <li>“เรียก API หนึ่งครั้งต่อ 10 วินาที”</li>
+                            <li>“ทิ้งการแจ้งเตือนหากโอเวอร์เลย์ยังทำงานอยู่”</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>การตั้งค่า</h4>
+                        <ul>
+                            <li>ตั้งจำนวนเหตุการณ์สูงสุดที่อนุญาต</li>
+                            <li>เลือกช่วงเวลา (วินาที)</li>
+                            <li>ตัดสินใจว่าจะเข้าคิวหรือทิ้งเหตุการณ์ที่เกินจำนวน</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel warn">
+                    <strong>ข้อควรทราบ:</strong> ตัวจำกัดอัตราไม่รีเซ็ตอัตโนมัติเมื่อคุณแก้โฟลว์ ใช้ <code>Reset State Node</code> หากต้องการเริ่มจากสถานะว่างระหว่างทดสอบ
+                </div>
+            </section>
+
+            <section id="user-memory">
+                <h2>05 · หน่วยความจำผู้ใช้</h2>
+                <p>User Memory เก็บรายชื่อบุคคลไม่ซ้ำหนึ่งรายการที่มีชื่อ จดจำผู้ใช้เมื่อเข้าร่วม ตรวจสอบรายการเมื่อมีข้อความภายหลัง ลบบุคคล เลือกผู้ชนะสุ่ม หรือล้างเฉพาะรายการนั้น</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>เหมาะกับ</h4>
+                        <ul>
+                            <li>สิทธิ์เข้าร่วมตามของขวัญหรือป้าย</li>
+                            <li>จดจำผู้ชมที่กดถูกใจ ลงชื่อ หรือเข้าร่วม</li>
+                            <li>สุ่มรางวัลจากรายชื่อไม่ซ้ำ</li>
+                            <li>ใช้รายการแยกสำหรับแต่ละแคมเปญ</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>การดำเนินการ</h4>
+                        <ul>
+                            <li><code>Remember User</code> และ <code>Forget User</code>.</li>
+                            <li><code>User Is Remembered</code>.</li>
+                            <li><code>Pick Random User</code>.</li>
+                            <li><code>Clear All Users</code> หรือ <code>Reset State Node</code>.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="diagram">
+ทริกเกอร์เข้าร่วม ──▶ Remember User ······▶ User Memory: Entrants คำสั่งสุ่ม ───────────▶ Pick Random User ···▶ User Memory: Entrants คำสั่งรีเซ็ต ──────────▶ Clear All Users ·····▶ User Memory: Entrants
+                </div>
+                <p>เส้นทึบสีเขียวอมฟ้าส่งเหตุการณ์ เส้นประสีม่วงแสดงว่าการดำเนินการใช้หน่วยความจำร่วมใด User Memory แต่ละอันมีจำนวน โหมดเก็บถาวร และนโยบายรีเซ็ตของตัวเอง การล้างรายการหนึ่งจึงไม่กระทบอีกอัน</p>
+                <div class="panel success">
+                    ดูคู่มือเฉพาะเรื่อง <a href="user-memory-guide.html">คู่มือ User Memory</a> เพื่อดูภาพหน้าจอที่ตรวจสอบแล้ว โฟลว์สุ่มที่ดาวน์โหลดได้ สิทธิ์เข้าร่วม TikTok ตัวอย่างการเข้าร่วม และรายละเอียดรีเซ็ต
+                </div>
+            </section>
+
+            <section id="recipes">
+                <h2>06 · ชุดตัวอย่างแก้โจทย์</h2>
+                <p>เลือกสถานการณ์แล้วทำตามขั้นตอน</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>คูลดาวน์คำสั่ง</h4>
+                        <ol>
+                            <li>โหนดสวิตช์ชื่อ “commandCooldown”</li>
+                            <li>ทริกเกอร์ → สวิตช์ → ตอบกลับ</li>
+                            <li>Set Gate OFF → หน่วงเวลา → Set Gate ON</li>
+                            <li>เพิ่มข้อความแชต “อยู่ระหว่างคูลดาวน์” ที่เอาต์พุต false หากต้องการ</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>ของแจกจำนวนจำกัด</h4>
+                        <ol>
+                            <li>ตัวนับเริ่มต้น 0 เป้าหมาย 3</li>
+                            <li>เพิ่มหลังการใช้รางวัลแต่ละครั้ง</li>
+                            <li>เมื่อ value ≥ 3 ให้แยกไปที่ “ขออภัย หมดแล้ว”</li>
+                            <li>ใช้แอ็กชัน Reset เมื่อจบสตรีม</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>สวิตช์สำหรับผู้ชม</h4>
+                        <ol>
+                            <li>สวิตช์ชื่อ “overlayToggle”</li>
+                            <li><code>!overlay on</code> คำสั่ง → Set Gate ON</li>
+                            <li><code>!overlay off</code> คำสั่ง → Set Gate OFF</li>
+                            <li>ทริกเกอร์โอเวอร์เลย์ทั้งหมดผ่านสวิตช์</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <h3>ตัวอย่างแผนผังโฟลว์</h3>
+                <div class="diagram">
+ทริกเกอร์ ─▶ สวิตช์ (overlayToggle) ─▶ ถ้า ON → แสดงโอเวอร์เลย์ └─false─▶ แจ้งผู้ดูแลแชต “โอเวอร์เลย์ปิดอยู่”
+                </div>
+                <div class="diagram">
+ใช้รางวัล ─▶ Counter ticketsSold ├─value &lt; 50 ─▶ อนุมัติการใช้รางวัล └─value ≥ 50 ─▶ ปฏิเสธ + คืนคะแนน
+                </div>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>07 · การแก้ปัญหาและคำถามที่พบบ่อย</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>อาการ</th>
+                            <th>สาเหตุที่เป็นไปได้</th>
+                            <th>วิธีแก้</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>แอ็กชัน Set Gate State บันทึกไม่ได้</td>
+                            <td>ไม่มีโหนดสวิตช์ที่ตรงกัน (หรือชื่อไม่ตรงกัน)</td>
+                            <td>เพิ่มโหนดสวิตช์ก่อน แล้วตรวจสอบว่ารายการแบบเลื่อนลงอ้างอิงโหนดนั้น</td>
+                        </tr>
+                        <tr>
+                            <td>ตัวนับไม่เพิ่มเลย</td>
+                            <td>โฟลว์ข้ามโหนดตัวนับ หรือเกตเป็น false</td>
+                            <td>ตรวจสอบว่าเส้นทริกเกอร์ผ่านตัวนับและเอาต์พุตเกตเป็น true</td>
+                        </tr>
+                        <tr>
+                            <td>ตัวจำกัดอัตราบล็อกทุกอย่างไม่สิ้นสุด</td>
+                            <td>ช่วงเวลาเข้มงวดเกินไป หรือมีสถานะค้างจากการทดสอบ</td>
+                            <td>ผ่อนข้อจำกัดและวางแอ็กชัน Reset State Node ก่อนทดสอบใหม่</td>
+                        </tr>
+                        <tr>
+                            <td>การดำเนินการ User Memory ไม่มีเส้นประเชื่อม</td>
+                            <td>ยังไม่ได้เลือกหน่วยความจำเป้าหมาย</td>
+                            <td>เลือกหน่วยความจำที่มีชื่อในคุณสมบัติการดำเนินการ หรือลากจุดเชื่อมสีม่วงด้านข้างไปยังหน่วยความจำ</td>
+                        </tr>
+                        <tr>
+                            <td>ปุ่มคู่มือเปิดไม่ได้</td>
+                            <td>กำลังทำงานในส่วนขยายที่ยังไม่ได้อัปเดตทรัพยากร web_accessible</td>
+                            <td>ตรวจสอบให้แน่ใจว่า <code>actions/state-nodes-guide.html</code> ถูกประกาศให้รวมผ่าน manifest แล้วโหลดส่วนขยายใหม่</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h3>รายการตรวจสอบการทดสอบ</h3>
+                <ul>
+                    <li>ใช้เครื่องมือ “Send Test Event” ของ Event Flow เพื่อจำลองคำสั่ง</li>
+                    <li>ลดคูลดาวน์ชั่วคราว (2 วินาที) หรือลดเป้าหมายตัวนับขณะตรวจสอบ</li>
+                    <li>รีเซ็ตโหนดสถานะระหว่างการทดสอบ เพื่อไม่ให้อ่านข้อมูลเก่า</li>
+                    <li>ตั้งชื่อสาขา (เช่น “false → อยู่ระหว่างคูลดาวน์”) เพื่อให้ไล่ดูเส้นทางได้ง่าย</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>08 · ขั้นตอนถัดไป</h2>
+                <p>ใช้โหนดสถานะร่วมกับเครื่องมืออื่นของ Event Flow:</p>
+                <ul>
+                    <li>ใช้เกตตรรกะ (AND/OR/NOT) ก่อนสวิตช์ เพื่อกำหนดว่าใครสลับค่าได้</li>
+                    <li>เก็บเมทาดาทาที่อิงสถานะไว้ภายใต้ <code>meta</code> เพื่อให้โอเวอร์เลย์ทราบว่าเหตุใดสาขาจึงทำงาน</li>
+                    <li>ส่งออกรูปแบบที่ใช้งานได้เป็นเทมเพลต เพื่อให้ทีมของคุณนำเข้าซ้ำภายหลัง</li>
+                </ul>
+                <div class="panel info">
+                    ทดลองต่อไป! คู่มือใหม่ <a href="event-flow-guide.html">คู่มือ Event Flow</a> ใช้คู่กับคู่มือนี้ เพื่อให้คุณเข้าใจทั้งส่วนตรรกะและส่วนสถานะ
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="Social Stream Ninja uyarılarına sesler, animasyonlar ve görsel efektler ekleyin. Efektleri önizleyin ve OBS katmanınızda nasıl görüneceklerini yapılandırın.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/tr/docs/alert-effects.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/tr/docs/alert-effects.html">
+    <meta property="og:title" content="Uyarı efektleri kurulumu | Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja uyarılarına sesler, animasyonlar ve görsel efektler ekleyin. Efektleri önizleyin ve OBS katmanınızda nasıl görüneceklerini yapılandırın.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/tr/docs/alert-effects.html">
+    <meta name="twitter:title" content="Uyarı efektleri kurulumu | Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja uyarılarına sesler, animasyonlar ve görsel efektler ekleyin. Efektleri önizleyin ve OBS katmanınızda nasıl görüneceklerini yapılandırın.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Uyarı efektleri kurulumu | Social Stream Ninja</title>
+<link rel="stylesheet" href="../../docs/css/styles.css">
+<link rel="stylesheet" href="../../docs/css/guides.css">
+<style>
+main.container { padding-top: 10.4rem; }
+</style>
+<script>
+(function () {
+    var saved = localStorage.getItem('darkMode');
+    if (saved === 'true' || (saved !== 'false' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark-mode');
+})();
+</script>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/alert-effects.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{"Add an optional direct GIF, image, or video URL, or upload media. A GIPHY page link is not a direct media URL. GIF images have no audio; choose a separate sound.":"İsteğe bağlı doğrudan bir GIF, resim veya video URL'si ekleyin ya da medya yükleyin. GIPHY sayfa bağlantısı doğrudan medya URL'si değildir. GIF resimlerinin sesi yoktur; ayrı bir ses seçin.","Add sounds, animations and visual effects to Social Stream Ninja alerts. Preview effects and configure how they appear in your OBS overlay.":"Social Stream Ninja uyarılarına sesler, animasyonlar ve görsel efektler ekleyin. Efektleri önizleyin ve OBS katmanınızda nasıl görüneceklerini yapılandırın.","Alert effects setup | Social Stream Ninja":"Uyarı efektleri kurulumu | Social Stream Ninja","Amount limits and priority":"Tutar sınırları ve öncelik","Animation and sound alerts":"Animasyon ve ses uyarıları","Choose a sound and use Listen to hear it locally. Custom URL and upload options are below the picker.":"Bir ses seçin ve yerel olarak duymak için Dinle'yi kullanın. Özel URL ve yükleme seçenekleri seçicinin altındadır.","Clear sound removes the custom sound override; default alert audio still applies. Disable Play alert sound to mute overlay audio. Enable alert pauses a rule while preserving its settings. Reset alert clears that rule alone.":"Sesi temizle, özel ses geçersiz kılmasını kaldırır; varsayılan uyarı sesi hâlâ geçerlidir. Katman sesini susturmak için Uyarı sesi çal seçeneğini kapatın. Uyarıyı etkinleştir anahtarı, ayarları koruyarak bir kuralı duraklatır. Uyarıyı sıfırla yalnızca o kuralı temizler.","Donations and bits use estimated USD values from the currency helper. For exactly $100, set both limits to 100. For $100 or more, leave the maximum blank. Blank limits allow any amount; other event types should have no amount limits.":"Bağışlar ve bitler, para birimi yardımcısının tahmini USD değerlerini kullanır. Tam 100 ABD doları için iki sınırı da 100 yapın. 100 ABD doları veya üzeri için üst sınırı boş bırakın. Boş sınırlar her tutara izin verir; diğer etkinlik türlerinde tutar sınırı olmamalıdır.","Enable an alert, then choose the event. The $100 donation preset fills both amount limits and supplies a synthetic Thank you sound if none is selected.":"Bir uyarıyı etkinleştirin, ardından etkinliği seçin. 100 ABD doları bağış ön ayarı, iki tutar sınırını da doldurur ve ses seçilmemişse sentetik bir Teşekkürler sesi ekler.","Event Flow and OBS effects":"Etkinlik Akışı ve OBS efektleri","Event Flow guide":"Etkinlik Akışı kılavuzu","Open Multi-Alerts → Event animations & sound effects.":"Çoklu Uyarılar → Etkinlik animasyonları ve ses efektleri bölümünü açın.","Preview and sound":"Önizleme ve ses","Set up your first alert":"İlk uyarınızı kurun","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja · Guides":"Social Stream Ninja · Kılavuzlar","Test alert opens and focuses the local preview. It does not send an event to your live channels. The preview uses your current overlay settings, filters, media, and timing. Sound volume is under Sound & Timing.":"Uyarıyı test et, yerel önizlemeyi açar ve odaklar. Canlı kanallarınıza etkinlik göndermez. Önizleme mevcut katman ayarlarınızı, filtrelerinizi, medyanızı ve zamanlamanızı kullanır. Ses düzeyi, Ses ve Zamanlama bölümündedir.","The first matching alert wins. Put specific rules before broad ones. Platform and category filters still apply.":"İlk eşleşen uyarı uygulanır. Özel kuralları genel kurallardan önce yerleştirin. Platform ve kategori filtreleri geçerli olmaya devam eder.","Use Event Flow templates for sequences and OBS effects. Those media and sound actions play in the Flow Actions overlay. Use one overlay for each event's sound to avoid hearing it twice. OBS templates need a source and filter selected before use.":"İşlem dizileri ve OBS efektleri için Etkinlik Akışı şablonlarını kullanın. Bu medya ve ses işlemleri Akış İşlemleri katmanında oynatılır. Sesi iki kez duymamak için her etkinliğin sesi için tek katman kullanın. OBS şablonlarında kullanımdan önce bir kaynak ve filtre seçilmelidir.","Use Test alert, then add your Multi-Alerts link as an OBS browser source.":"Uyarıyı test et seçeneğini kullanın, ardından Çoklu Uyarılar bağlantınızı OBS tarayıcı kaynağı olarak ekleyin.","Voiced phrases are labelled synthetic recordings. For names or changing text, use the Event Flow editor's Speak Text action.":"Sesli ifadeler sentetik kayıtlar olarak etiketlenir. Adlar veya değişen metinler için Etkinlik Akışı düzenleyicisinin Metni Seslendir işlemini kullanın."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/alert-effects.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/alert-effects.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/alert-effects.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/alert-effects.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/alert-effects.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/alert-effects.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/alert-effects.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/alert-effects.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/alert-effects.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/alert-effects.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/alert-effects.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/alert-effects.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/alert-effects.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/alert-effects.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/alert-effects.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/alert-effects.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/alert-effects.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/alert-effects.html">
+<!-- ssn-languages:end --></head>
+<body>
+<header>
+<div class="container">
+<a href="guides.html">Social Stream Ninja · Kılavuzlar</a>
+<!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/alert-effects.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/alert-effects.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/alert-effects.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/alert-effects.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/alert-effects.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/alert-effects.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/alert-effects.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/alert-effects.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/alert-effects.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/alert-effects.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/alert-effects.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/alert-effects.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/alert-effects.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/alert-effects.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="alert-effects.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/alert-effects.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/alert-effects.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+</header>
+<main class="container">
+<h1>Animasyon ve ses uyarıları</h1>
+<section class="guide-card">
+<h2>İlk uyarınızı kurun</h2>
+<ol>
+<li>Çoklu Uyarılar → Etkinlik animasyonları ve ses efektleri bölümünü açın.</li>
+<li>Bir uyarıyı etkinleştirin, ardından etkinliği seçin. 100 ABD doları bağış ön ayarı, iki tutar sınırını da doldurur ve ses seçilmemişse sentetik bir Teşekkürler sesi ekler.</li>
+<li>İsteğe bağlı doğrudan bir GIF, resim veya video URL'si ekleyin ya da medya yükleyin. GIPHY sayfa bağlantısı doğrudan medya URL'si değildir. GIF resimlerinin sesi yoktur; ayrı bir ses seçin.</li>
+<li>Bir ses seçin ve yerel olarak duymak için Dinle'yi kullanın. Özel URL ve yükleme seçenekleri seçicinin altındadır.</li>
+<li>Uyarıyı test et seçeneğini kullanın, ardından Çoklu Uyarılar bağlantınızı OBS tarayıcı kaynağı olarak ekleyin.</li>
+</ol>
+</section>
+<section class="guide-card">
+<h2>Tutar sınırları ve öncelik</h2>
+<p>Bağışlar ve bitler, para birimi yardımcısının tahmini USD değerlerini kullanır. Tam 100 ABD doları için iki sınırı da 100 yapın. 100 ABD doları veya üzeri için üst sınırı boş bırakın. Boş sınırlar her tutara izin verir; diğer etkinlik türlerinde tutar sınırı olmamalıdır.</p>
+<p>İlk eşleşen uyarı uygulanır. Özel kuralları genel kurallardan önce yerleştirin. Platform ve kategori filtreleri geçerli olmaya devam eder.</p>
+</section>
+<section class="guide-card" id="testing">
+<h2>Önizleme ve ses</h2>
+<p>Uyarıyı test et, yerel önizlemeyi açar ve odaklar. Canlı kanallarınıza etkinlik göndermez. Önizleme mevcut katman ayarlarınızı, filtrelerinizi, medyanızı ve zamanlamanızı kullanır. Ses düzeyi, Ses ve Zamanlama bölümündedir.</p>
+<p>Sesi temizle, özel ses geçersiz kılmasını kaldırır; varsayılan uyarı sesi hâlâ geçerlidir. Katman sesini susturmak için Uyarı sesi çal seçeneğini kapatın. Uyarıyı etkinleştir anahtarı, ayarları koruyarak bir kuralı duraklatır. Uyarıyı sıfırla yalnızca o kuralı temizler.</p>
+<p>Sesli ifadeler sentetik kayıtlar olarak etiketlenir. Adlar veya değişen metinler için Etkinlik Akışı düzenleyicisinin Metni Seslendir işlemini kullanın.</p>
+</section>
+<section class="guide-card">
+<h2>Etkinlik Akışı ve OBS efektleri</h2>
+<p>İşlem dizileri ve OBS efektleri için Etkinlik Akışı şablonlarını kullanın. Bu medya ve ses işlemleri Akış İşlemleri katmanında oynatılır. Sesi iki kez duymamak için her etkinliğin sesi için tek katman kullanın. OBS şablonlarında kullanımdan önce bir kaynak ve filtre seçilmelidir.</p>
+<p>
+<a href="../actions/event-flow-guide.html">Etkinlik Akışı kılavuzu</a>
+</p>
+</section>
+</main>
+</body>
+</html>

@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+	<head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/ko/docs/desktop-app-wont-open.html">
+    <meta property="og:title" content="데스크톱 앱이 열리지 않음 - Social Stream Ninja">
+    <meta property="og:description" content="Windows, macOS 또는 Linux가 보안 경고를 표시하거나 시작을 차단할 때 Social Stream Ninja 데스크톱 앱을 안전하게 여는 방법입니다.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ko/docs/desktop-app-wont-open.html">
+    <meta name="twitter:title" content="데스크톱 앱이 열리지 않음 - Social Stream Ninja">
+    <meta name="twitter:description" content="Windows, macOS 또는 Linux가 보안 경고를 표시하거나 시작을 차단할 때 Social Stream Ninja 데스크톱 앱을 안전하게 여는 방법입니다.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem("darkMode");
+				var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+				if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+					document.documentElement.classList.add("dark-mode");
+				}
+			})();
+		</script>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>데스크톱 앱이 열리지 않음 - Social Stream Ninja</title>
+		<link rel="stylesheet" href="../../docs/css/styles.css" />
+		<link rel="stylesheet" href="../../docs/css/guides.css" />
+		<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon" />
+		<meta name="description" content="Windows, macOS 또는 Linux가 보안 경고를 표시하거나 시작을 차단할 때 Social Stream Ninja 데스크톱 앱을 안전하게 여는 방법입니다.">
+		<link rel="canonical" href="https://socialstream.ninja/ko/docs/desktop-app-wont-open.html">
+		<style>
+			.platform-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+				gap: 18px;
+				margin: 24px 0 8px;
+			}
+
+			.platform-link {
+				display: flex;
+				align-items: center;
+				gap: 14px;
+				padding: 18px;
+				border: 1px solid var(--border-color, #d9dce3);
+				border-radius: 12px;
+				background: var(--card-background, #fff);
+				text-decoration: none;
+			}
+
+			.platform-link:hover {
+				transform: translateY(-2px);
+				box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+			}
+
+			.platform-link img {
+				width: 42px;
+				height: 42px;
+				object-fit: contain;
+			}
+
+			.platform-link strong,
+			.platform-link span {
+				display: block;
+			}
+
+			.platform-link span {
+				margin-top: 3px;
+				color: var(--text-secondary, #5b6472);
+				font-size: 0.9rem;
+			}
+
+			.example-alert {
+				margin: 18px 0;
+				padding: 18px;
+				border: 1px solid #b8c6dd;
+				border-left: 5px solid #3976d2;
+				border-radius: 8px;
+				background: rgba(57, 118, 210, 0.08);
+			}
+
+			.example-alert .example-label {
+				display: block;
+				margin-bottom: 6px;
+				font-size: 0.78rem;
+				font-weight: 700;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+			}
+
+			.example-alert strong {
+				display: block;
+				font-size: 1.08rem;
+			}
+
+			.route-table td:first-child {
+				font-weight: 700;
+			}
+
+			.quick-check {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+				gap: 14px;
+				margin-top: 18px;
+			}
+
+			.quick-check > div {
+				padding: 16px;
+				border-radius: 10px;
+				background: rgba(57, 118, 210, 0.08);
+			}
+
+			.quick-check strong {
+				display: block;
+				margin-bottom: 5px;
+			}
+
+			.dark-mode .platform-link {
+				border-color: rgba(255, 255, 255, 0.16);
+				background: rgba(255, 255, 255, 0.04);
+			}
+
+			.dark-mode .platform-link span {
+				color: rgba(255, 255, 255, 0.72);
+			}
+		</style>
+	<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/desktop-app-wont-open.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"\"For security and performance, this mode of Windows only runs Microsoft-verified apps\"":"\"보안 및 성능을 위해 이 Windows 모드에서는 Microsoft에서 확인한 앱만 실행합니다\"","\"This app can't run on your PC\"":"\"이 앱은 PC에서 실행할 수 없습니다\"","\"This app has been blocked by your system administrator\"":"\"시스템 관리자가 이 앱을 차단했습니다\"","\"Windows Defender Firewall has blocked some features of this app\"":"\"Windows Defender 방화벽이 이 앱의 일부 기능을 차단했습니다\"",", AppArmor, or unprivileged namespaces, follow the":", AppArmor 또는 비특권 네임스페이스가 오류에 언급되면 다음을 따르세요:",", authenticate if asked, then select":", 요청하면 인증한 다음 다음을 선택하세요:",", but changing it affects protection for all apps. Review Microsoft's explanation before deciding.":", 하지만 변경하면 모든 앱의 보호에 영향을 줍니다. 결정하기 전에 Microsoft 설명을 검토하세요.",", then":", 그다음은",". Otherwise, close the warning and use one of the alternatives below.":". 그렇지 않으면 경고를 닫고 아래 대안 중 하나를 사용하세요.",". The wording varies by desktop.":". 문구는 데스크톱 환경마다 다릅니다.",". You may need to download the file again.":". 파일을 다시 다운로드해야 할 수 있습니다.","1. Confirm the source":"1. 출처 확인","2. Match the message":"2. 메시지 확인","3. Keep the warning":"3. 경고 보관","A screenshot showing the complete warning.":"전체 경고가 보이는 스크린샷.","A work, school, family, or security policy is controlling the computer. The person who manages it must approve the app.":"회사, 학교, 가족 또는 보안 정책이 컴퓨터를 관리하고 있습니다. 관리 담당자가 앱을 승인해야 합니다.","Actions > Allow on device":"작업 > 디바이스에서 허용","Allow executing file as program":"파일을 프로그램으로 실행 허용","AppImage permission or sandbox error":"AppImage 권한 또는 샌드박스 오류","AppImage sandbox guide":"AppImage 샌드박스 가이드","Apple cannot check the app for malicious software, or the developer cannot be verified":"Apple이 앱에 악성 소프트웨어가 있는지 확인할 수 없거나 개발자를 확인할 수 없음","Apple menu > System Settings > Privacy & Security":"Apple 메뉴 > 시스템 설정 > 개인정보 보호 및 보안","Apple's guide to safely opening downloaded apps":"다운로드한 앱을 안전하게 여는 Apple 가이드","Ask For Help On Discord":"Discord에서 도움 요청","Check that the app name is Social Stream Ninja or begins with":"앱 이름이 Social Stream Ninja이거나 다음으로 시작하는지 확인하세요:","Chrome Web Store version":"Chrome 웹 스토어 버전","Commands & API":"명령 및 API","Confirm that the app came from the":"앱을 다음에서 받았는지 확인하세요:","Confirm that the file came from the":"파일을 다음에서 받았는지 확인하세요:","Delete that copy and download the current Windows x64 build again. Make sure the download completed and that you did not select a macOS or Linux file.":"해당 사본을 삭제하고 최신 Windows x64 빌드를 다시 다운로드하세요. 다운로드가 완료되었는지, macOS나 Linux 파일을 선택하지 않았는지 확인하세요.","Desktop App Will Not Open - Social Stream Ninja":"데스크톱 앱이 열리지 않음 - Social Stream Ninja","Do not choose Allow until you have confirmed the download source and shared the detection name or screenshot with support.":"다운로드 출처를 확인하고 탐지 이름이나 스크린샷을 지원팀과 공유하기 전에는 허용을 선택하지 마세요.","Do not use a Terminal command to strip the app's quarantine information. These messages can mean the download is incomplete or modified, a signature is invalid, or macOS detected a security problem.":"터미널 명령으로 앱의 격리 정보를 제거하지 마세요. 이 메시지는 다운로드가 불완전하거나 수정되었거나, 서명이 유효하지 않거나, macOS가 보안 문제를 탐지했다는 뜻일 수 있습니다.","Download":"다운로드","Download the current macOS build again from the official releases page.":"공식 릴리스 페이지에서 최신 macOS 빌드를 다시 다운로드하세요.","Example message":"메시지 예시","Features":"기능","Gatekeeper, developer, or notarization warning":"Gatekeeper, 개발자 또는 공증 경고","Guides":"가이드","Hire":"작업 의뢰","Home":"홈","How to safely open the Social Stream Ninja desktop app when Windows, macOS, or Linux displays a security warning or blocks it from starting.":"Windows, macOS 또는 Linux가 보안 경고를 표시하거나 시작을 차단할 때 Social Stream Ninja 데스크톱 앱을 안전하게 여는 방법입니다.","If":"다음 경우:","If It Still Will Not Open":"여전히 열리지 않는 경우","If it is only an app-reputation or potentially unwanted app warning, the file came from the official releases page, and you fully understand and are comfortable with the choice, select":"앱 평판 또는 사용자 동의 없이 설치된 앱 관련 경고일 뿐이고, 파일이 공식 릴리스 페이지에서 왔으며, 선택을 충분히 이해하고 진행해도 괜찮다고 판단했다면 다음을 선택하세요:","If the error mentions":"오류에 다음이 언급되면:","If the message returns, take a screenshot showing the full wording and the macOS version, then contact support.":"메시지가 다시 나타나면 전체 문구와 macOS 버전이 보이는 스크린샷을 찍고 지원팀에 문의하세요.","If the warning says the app contains malware, will damage your computer, or names a specific threat, do not allow it. Save a screenshot and check the troubleshooting section below.":"경고가 앱에 악성코드가 있거나 컴퓨터를 손상시킨다고 하거나 특정 위협 이름을 표시하면 허용하지 마세요. 스크린샷을 저장하고 아래 문제 해결 섹션을 확인하세요.","If you understand the warning and are comfortable continuing, select":"경고를 이해하고 계속 진행해도 괜찮다고 판단했다면 다음을 선택하세요:","In the blue warning window, select":"파란 경고 창에서 다음을 선택하세요:","Inspiration":"아이디어","Learn how Microsoft SmartScreen reputation works":"Microsoft SmartScreen 평판의 작동 방식 알아보기","Linux":"Linux","Linux: AppImage Will Not Start":"Linux: AppImage가 시작되지 않음","Lite web app":"Lite 웹 앱","Main navigation":"기본 탐색 메뉴","Message":"메시지","Microsoft Defender SmartScreen prevented an unrecognized app from starting.":"Microsoft Defender SmartScreen이 인식할 수 없는 앱의 시작을 막았습니다.","Microsoft's Protection History instructions":"Microsoft 보호 기록 지침","Microsoft's Smart App Control FAQ":"Microsoft Smart App Control FAQ","More info":"추가 정보","Move that copy to the Trash.":"해당 사본을 휴지통으로 옮기세요.","Never bypass a security warning unless you are comfortable doing so and fully understand what you are allowing.":"무엇을 허용하는지 충분히 이해하고 직접 진행해도 괜찮다고 판단한 경우가 아니면 보안 경고를 우회하지 마세요.","Official macOS releases are intended to be signed and notarized. A private or custom third-party build might not be notarized, and a newly downloaded app can still require first-open approval.":"공식 macOS 릴리스는 서명 및 공증을 거치도록 되어 있습니다. 비공개 또는 제3자 맞춤 빌드는 공증되지 않았을 수 있으며, 새로 다운로드한 앱은 처음 열 때 여전히 승인이 필요할 수 있습니다.","Older releases do not contain the newest fixes. Download them only from the official releases page, and move back to a current version once the problem is understood.":"이전 릴리스에는 최신 수정 사항이 없습니다. 공식 릴리스 페이지에서만 다운로드하고 문제를 파악하면 최신 버전으로 돌아오세요.","On Windows, the detection name from Protection History if one appears.":"Windows에서는 표시되는 경우 보호 기록의 탐지 이름.","On a personal computer, use the":"개인용 컴퓨터에서는 다음을 사용하세요:","On a work or school computer, ask the administrator to approve the app.":"회사나 학교 컴퓨터에서는 관리자에게 앱 승인을 요청하세요.","Only continue if you downloaded the app from the official Social Stream Ninja releases page or received a custom build from someone you trust. If you are unsure, stop and report the warning instead.":"공식 Social Stream Ninja 릴리스 페이지에서 앱을 다운로드했거나 신뢰하는 사람에게 맞춤 빌드를 받은 경우에만 계속하세요. 확실하지 않으면 중단하고 경고를 보고하세요.","Open":"열기","Open Anyway":"그래도 열기","Open navigation menu":"탐색 메뉴 열기","Open the":"다음을 여세요:","Open the AppImage again.":"AppImage를 다시 여세요.","Open the entry that mentions the Social Stream Ninja installer or portable app.":"Social Stream Ninja 설치 프로그램 또는 포터블 앱을 언급한 항목을 여세요.","Open the new copy without modifying the app bundle.":"앱 번들을 수정하지 않고 새 사본을 여세요.","Open the official releases page":"공식 릴리스 페이지 열기","Other Windows Messages":"기타 Windows 메시지","Overlay Gallery":"오버레이 갤러리","Possible messages":"표시될 수 있는 메시지","Properties":"속성","Protection history":"보호 기록","Read Microsoft's S mode guide":"Microsoft S 모드 가이드 읽기","Read the detection name and affected file path.":"탐지 이름과 영향을 받은 파일 경로를 읽으세요.","Report the warning:":"경고 보고:","Right-click the AppImage and open":"AppImage를 마우스 오른쪽 버튼으로 클릭하고 다음을 여세요:","Run anyway":"실행","SUID sandbox":"SUID sandbox","Safer Alternatives To Bypassing A Warning":"경고 우회보다 안전한 대안","Scroll down to the Security section and find the message about the blocked app.":"아래로 스크롤해 보안 섹션에서 차단된 앱에 관한 메시지를 찾으세요.","Select":"선택:","Send support the following details:":"지원팀에 다음 정보를 보내세요:","Smart App Control can be managed under":"Smart App Control은 다음에서 관리할 수 있습니다:","Smart App Control is different from the normal SmartScreen warning. Windows does not provide a one-app":"Smart App Control은 일반 SmartScreen 경고와 다릅니다. Windows는 앱 하나만을 위한 다음 예외를 제공하지 않습니다:","SmartScreen, Defender, or Smart App Control":"SmartScreen, Defender 또는 Smart App Control","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja Lite":"Social Stream Ninja Lite","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 라이선스.","Start Here":"여기서 시작","Stop if Windows names a specific malware threat.":"Windows가 특정 악성코드 위협 이름을 표시하면 중단하세요.","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Take a screenshot before closing it in case you need support.":"지원이 필요할 때를 대비해 닫기 전에 스크린샷을 찍으세요.","The AppImage may need permission to run:":"AppImage에 실행 권한이 필요할 수 있습니다:","The Desktop App Will Not Open":"데스크톱 앱이 열리지 않음","The computer is probably in Windows S mode. It only runs Microsoft Store apps. Switching out of S mode is a device-wide, one-way choice, so consider the browser or Lite version first.":"컴퓨터가 Windows S 모드일 가능성이 큽니다. 이 모드에서는 Microsoft Store 앱만 실행합니다. S 모드 해제는 장치 전체에 적용되고 되돌릴 수 없는 선택이므로 브라우저나 Lite 버전을 먼저 고려하세요.","The exact filename you downloaded.":"다운로드한 정확한 파일 이름.","The words in the warning determine which steps below apply.":"경고의 문구에 따라 아래에서 적용할 단계가 달라집니다.","This concerns network access, not whether the app may start. If you choose to allow access, use trusted private networks only; public-network access is normally unnecessary.":"이는 앱 시작 허용 여부가 아니라 네트워크 접근에 관한 것입니다. 접근을 허용하기로 했다면 신뢰할 수 있는 개인 네트워크만 사용하세요. 공용 네트워크 접근은 보통 필요하지 않습니다.","This makes an exception for that app. It does not require turning off Gatekeeper for every application.":"해당 앱에 예외를 만듭니다. 모든 앱에 대해 Gatekeeper를 끌 필요는 없습니다.","This warning normally means Windows does not yet have enough reputation information for that exact download. It is not the same as a malware detection.":"이 경고는 보통 Windows에 해당 다운로드의 평판 정보가 아직 충분하지 않다는 뜻입니다. 악성코드 탐지와는 다릅니다.","Threat found, Potentially unwanted app found, This app has been blocked, or Threat quarantined":"위협 발견, 사용자 동의 없이 설치된 앱 발견, 이 앱이 차단됨 또는 위협 격리됨","Try an older official release:":"이전 공식 릴리스 사용:","Try to open the app once, then dismiss the warning.":"앱을 한 번 열어 본 다음 경고를 닫으세요.","Under Permissions, enable":"권한에서 다음을 활성화하세요:","Unknown publisher":"알 수 없는 게시자","Use the Chrome extension:":"Chrome 확장 프로그램 사용:","Use the exact message on your screen to safely get Social Stream Ninja running.":"화면에 표시된 정확한 메시지에 따라 Social Stream Ninja를 안전하게 실행하세요.","Use the web app:":"웹 앱 사용:","Virus & threat protection":"바이러스 및 위협 방지","What To Do":"해결 방법","Whether the same copy opened successfully before.":"같은 사본이 이전에는 정상적으로 열렸는지 여부.","Whether this is the installer, portable app, AppImage, official macOS release, or a custom build.":"설치 프로그램, 포터블 앱, AppImage, 공식 macOS 릴리스 또는 맞춤 빌드 중 무엇인지.","Windows":"Windows","Windows Security":"Windows 보안","Windows Security > App & browser control":"Windows 보안 > 앱 및 브라우저 컨트롤","Windows and macOS sometimes ask for extra confirmation before running an app downloaded outside their app stores. This is especially common with a new release, a less frequently downloaded app, or a private/custom build.":"Windows와 macOS는 앱 스토어 외부에서 다운로드한 앱을 실행하기 전에 추가 확인을 요청하기도 합니다. 새 릴리스, 다운로드 횟수가 적은 앱, 비공개/맞춤 빌드에서 특히 흔합니다.","Windows builds are self-signed and submitted to VirusTotal as an additional safety and reputation check. A self-signed certificate is not treated the same as a certificate issued by a Windows-trusted commercial authority, so Windows may show":"Windows 빌드는 자체 서명되며 추가 안전성 및 평판 확인을 위해 VirusTotal에 제출됩니다. 자체 서명 인증서는 Windows가 신뢰하는 상용 인증 기관의 인증서와 동일하게 취급되지 않으므로 Windows가 다음을 표시할 수 있습니다:","Windows: \"Windows Protected Your PC\"":"Windows: 'Windows의 PC 보호'","Windows: Defender Blocked Or Removed The File":"Windows: Defender가 파일을 차단하거나 제거함","Windows: Smart App Control Blocked The App":"Windows: Smart App Control이 앱을 차단함","You can also grant permission from a terminal:":"터미널에서도 권한을 부여할 수 있습니다:","You do not have to override an operating-system warning to use Social Stream Ninja.":"Social Stream Ninja를 사용하기 위해 운영체제 경고를 반드시 무시해야 하는 것은 아닙니다.","Your operating system and version.":"운영체제와 버전.","and download a fresh copy if you are unsure.":"그리고 확실하지 않으면 새 사본을 다운로드하세요.","browser extension":"브라우저 확장 프로그램","chrome-sandbox":"chrome-sandbox","exception for it.":"예외.","from the Start menu.":"를 시작 메뉴에서 여세요.","if a new version is the only one being blocked or failing, return to the official releases page and use the most recent older version that worked for you. Export your settings first when possible.":"새 버전만 차단되거나 실패한다면 공식 릴리스 페이지로 돌아가 이전에 작동했던 가장 최근 버전을 사용하세요. 가능하면 먼저 설정을 내보내세요.","if you do not want to change a device-wide security setting.":"를 장치 전체 보안 설정을 변경하고 싶지 않을 때 사용하세요.","install the":"설치:","instead of the desktop app.":"를 데스크톱 앱 대신 사용하세요.","is missing, try opening the app once more and check Privacy & Security again. On a managed Mac, the administrator may control this setting.":"가 없다면 앱을 한 번 더 열어 보고 개인정보 보호 및 보안을 다시 확인하세요. 관리되는 Mac에서는 관리자가 이 설정을 제어할 수 있습니다.","macOS":"macOS","macOS: \"The App Is Damaged\" Or \"Will Damage Your Computer\"":"macOS: '앱이 손상됨' 또는 '컴퓨터를 손상시킴'","macOS: Developer Or Notarization Warning":"macOS: 개발자 또는 공증 경고","official releases page":"공식 릴리스 페이지","open":"열기:","or":"또는","or challenge a newly released file again.":"또는 새로 출시된 파일에 다시 확인을 요구할 수 있습니다.","or from someone whose custom build you trust.":"또는 맞춤 빌드를 신뢰할 수 있는 사람에게서 받았는지 확인하세요.","send a screenshot and the details listed below so it can be investigated.":"조사할 수 있도록 스크린샷과 아래에 나열된 정보를 보내세요.","socialstreamninja":"socialstreamninja","when its smaller feature set is enough.":"를 더 적은 기능으로도 충분할 때 사용하세요."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/desktop-app-wont-open.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/desktop-app-wont-open.html">
+<!-- ssn-languages:end --></head>
+	<body>
+		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/desktop-app-wont-open.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/desktop-app-wont-open.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/desktop-app-wont-open.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/desktop-app-wont-open.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/desktop-app-wont-open.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/desktop-app-wont-open.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/desktop-app-wont-open.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/desktop-app-wont-open.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/desktop-app-wont-open.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/desktop-app-wont-open.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/desktop-app-wont-open.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="desktop-app-wont-open.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/desktop-app-wont-open.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/desktop-app-wont-open.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/desktop-app-wont-open.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/desktop-app-wont-open.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/desktop-app-wont-open.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+		<section class="page-hero">
+			<div class="container">
+				<h1>데스크톱 앱이 열리지 않음</h1>
+				<p>화면에 표시된 정확한 메시지에 따라 Social Stream Ninja를 안전하게 실행하세요.</p>
+			</div>
+		</section>
+
+		<main class="guide-section">
+			<div class="container">
+				<div class="guide-card">
+					<h2>여기서 시작</h2>
+					<p>Windows와 macOS는 앱 스토어 외부에서 다운로드한 앱을 실행하기 전에 추가 확인을 요청하기도 합니다. 새 릴리스, 다운로드 횟수가 적은 앱, 비공개/맞춤 빌드에서 특히 흔합니다.</p>
+					<div class="warning-note"><strong>무엇을 허용하는지 충분히 이해하고 직접 진행해도 괜찮다고 판단한 경우가 아니면 보안 경고를 우회하지 마세요.</strong> 공식 Social Stream Ninja 릴리스 페이지에서 앱을 다운로드했거나 신뢰하는 사람에게 맞춤 빌드를 받은 경우에만 계속하세요. 확실하지 않으면 중단하고 경고를 보고하세요.</div>
+					<p>경고가 앱에 악성코드가 있거나 컴퓨터를 손상시킨다고 하거나 특정 위협 이름을 표시하면 허용하지 마세요. 스크린샷을 저장하고 아래 문제 해결 섹션을 확인하세요.</p>
+					<div class="quick-check">
+						<div><strong>1. 출처 확인</strong><a href="https://github.com/steveseguin/social_stream/releases" target="_blank" rel="noopener">공식 릴리스 페이지 열기</a> 그리고 확실하지 않으면 새 사본을 다운로드하세요.</div>
+						<div><strong>2. 메시지 확인</strong>경고의 문구에 따라 아래에서 적용할 단계가 달라집니다.</div>
+						<div><strong>3. 경고 보관</strong>지원이 필요할 때를 대비해 닫기 전에 스크린샷을 찍으세요.</div>
+					</div>
+					<div class="platform-grid">
+						<a class="platform-link" href="#windows"><img src="../../icons/windows.svg" alt="" /><span><strong>Windows</strong>SmartScreen, Defender 또는 Smart App Control</span></a>
+						<a class="platform-link" href="#macos"><img src="../../icons/macos.svg" alt="" /><span><strong>macOS</strong>Gatekeeper, 개발자 또는 공증 경고</span></a>
+						<a class="platform-link" href="#linux"><img src="../../icons/linux.svg" alt="" /><span><strong>Linux</strong>AppImage 권한 또는 샌드박스 오류</span></a>
+					</div>
+				</div>
+
+				<div class="guide-card" id="windows">
+					<h2>Windows: 'Windows의 PC 보호'</h2>
+					<div class="example-alert">
+						<span class="example-label">메시지 예시</span>
+						<strong>Microsoft Defender SmartScreen이 인식할 수 없는 앱의 시작을 막았습니다.</strong>
+					</div>
+					<p>이 경고는 보통 Windows에 해당 다운로드의 평판 정보가 아직 충분하지 않다는 뜻입니다. 악성코드 탐지와는 다릅니다.</p>
+					<ol class="guide-steps">
+						<li>파일을 다음에서 받았는지 확인하세요: <a href="https://github.com/steveseguin/social_stream/releases" target="_blank" rel="noopener">공식 릴리스 페이지</a>.</li>
+						<li>파란 경고 창에서 다음을 선택하세요: <strong>추가 정보</strong>.</li>
+						<li>앱 이름이 Social Stream Ninja이거나 다음으로 시작하는지 확인하세요: <strong>socialstreamninja</strong>.</li>
+						<li>경고를 이해하고 계속 진행해도 괜찮다고 판단했다면 다음을 선택하세요: <strong>실행</strong>. 그렇지 않으면 경고를 닫고 아래 대안 중 하나를 사용하세요.</li>
+					</ol>
+					<p>Windows 빌드는 자체 서명되며 추가 안전성 및 평판 확인을 위해 VirusTotal에 제출됩니다. 자체 서명 인증서는 Windows가 신뢰하는 상용 인증 기관의 인증서와 동일하게 취급되지 않으므로 Windows가 다음을 표시할 수 있습니다: <strong>알 수 없는 게시자</strong> 또는 새로 출시된 파일에 다시 확인을 요구할 수 있습니다.</p>
+					<p><a href="https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation" target="_blank" rel="noopener">Microsoft SmartScreen 평판의 작동 방식 알아보기</a>.</p>
+				</div>
+
+				<div class="guide-card">
+					<h2>Windows: Defender가 파일을 차단하거나 제거함</h2>
+					<div class="example-alert">
+						<span class="example-label">표시될 수 있는 메시지</span>
+						<strong>위협 발견, 사용자 동의 없이 설치된 앱 발견, 이 앱이 차단됨 또는 위협 격리됨</strong>
+					</div>
+					<ol class="guide-steps">
+						<li>열기 <strong>Windows 보안</strong> 를 시작 메뉴에서 여세요.</li>
+						<li>선택: <strong>바이러스 및 위협 방지</strong>, 그다음은 <strong>보호 기록</strong>.</li>
+						<li>Social Stream Ninja 설치 프로그램 또는 포터블 앱을 언급한 항목을 여세요.</li>
+						<li>탐지 이름과 영향을 받은 파일 경로를 읽으세요.</li>
+						<li>앱 평판 또는 사용자 동의 없이 설치된 앱 관련 경고일 뿐이고, 파일이 공식 릴리스 페이지에서 왔으며, 선택을 충분히 이해하고 진행해도 괜찮다고 판단했다면 다음을 선택하세요: <strong>작업 &gt; 디바이스에서 허용</strong>. 파일을 다시 다운로드해야 할 수 있습니다.</li>
+					</ol>
+					<div class="warning-note"><strong>Windows가 특정 악성코드 위협 이름을 표시하면 중단하세요.</strong> 다운로드 출처를 확인하고 탐지 이름이나 스크린샷을 지원팀과 공유하기 전에는 허용을 선택하지 마세요.</div>
+					<p><a href="https://support.microsoft.com/en-us/windows/security/windows-security-protection-history-in-the-windows-security-app" target="_blank" rel="noopener">Microsoft 보호 기록 지침</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h2>Windows: Smart App Control이 앱을 차단함</h2>
+					<p>Smart App Control은 일반 SmartScreen 경고와 다릅니다. Windows는 앱 하나만을 위한 다음 예외를 제공하지 않습니다: <strong>실행</strong> 예외.</p>
+					<ul class="guide-list">
+						<li>회사나 학교 컴퓨터에서는 관리자에게 앱 승인을 요청하세요.</li>
+						<li>개인용 컴퓨터에서는 다음을 사용하세요: <a href="https://chromewebstore.google.com/detail/social-stream-ninja/cppibjhfemifednoimlblfcmjgfhfjeg" target="_blank" rel="noopener">브라우저 확장 프로그램</a> 또는 <a href="https://socialstream.ninja/lite/" target="_blank" rel="noopener">Lite 웹 앱</a> 를 장치 전체 보안 설정을 변경하고 싶지 않을 때 사용하세요.</li>
+						<li>Smart App Control은 다음에서 관리할 수 있습니다: <strong>Windows 보안 &gt; 앱 및 브라우저 컨트롤</strong>, 하지만 변경하면 모든 앱의 보호에 영향을 줍니다. 결정하기 전에 Microsoft 설명을 검토하세요.</li>
+					</ul>
+					<p><a href="https://support.microsoft.com/en-us/windows/security/threat-malware-protection/smart-app-control-frequently-asked-questions" target="_blank" rel="noopener">Microsoft Smart App Control FAQ</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h2>기타 Windows 메시지</h2>
+					<table class="guide-table guide-table-stack route-table">
+						<thead><tr><th>메시지</th><th>해결 방법</th></tr></thead>
+						<tbody>
+							<tr><td data-label="Message">"보안 및 성능을 위해 이 Windows 모드에서는 Microsoft에서 확인한 앱만 실행합니다"</td><td data-label="What To Do">컴퓨터가 Windows S 모드일 가능성이 큽니다. 이 모드에서는 Microsoft Store 앱만 실행합니다. S 모드 해제는 장치 전체에 적용되고 되돌릴 수 없는 선택이므로 브라우저나 Lite 버전을 먼저 고려하세요. <a href="https://support.microsoft.com/en-us/windows/experience/platform-variants/switching-out-of-s-mode-in-windows" target="_blank" rel="noopener">Microsoft S 모드 가이드 읽기</a>.</td></tr>
+							<tr><td data-label="Message">"시스템 관리자가 이 앱을 차단했습니다"</td><td data-label="What To Do">회사, 학교, 가족 또는 보안 정책이 컴퓨터를 관리하고 있습니다. 관리 담당자가 앱을 승인해야 합니다.</td></tr>
+							<tr><td data-label="Message">"Windows Defender 방화벽이 이 앱의 일부 기능을 차단했습니다"</td><td data-label="What To Do">이는 앱 시작 허용 여부가 아니라 네트워크 접근에 관한 것입니다. 접근을 허용하기로 했다면 신뢰할 수 있는 개인 네트워크만 사용하세요. 공용 네트워크 접근은 보통 필요하지 않습니다.</td></tr>
+							<tr><td data-label="Message">"이 앱은 PC에서 실행할 수 없습니다"</td><td data-label="What To Do">해당 사본을 삭제하고 최신 Windows x64 빌드를 다시 다운로드하세요. 다운로드가 완료되었는지, macOS나 Linux 파일을 선택하지 않았는지 확인하세요.</td></tr>
+						</tbody>
+					</table>
+				</div>
+
+				<div class="guide-card" id="macos">
+					<h2>macOS: 개발자 또는 공증 경고</h2>
+					<div class="example-alert">
+						<span class="example-label">표시될 수 있는 메시지</span>
+						<strong>Apple이 앱에 악성 소프트웨어가 있는지 확인할 수 없거나 개발자를 확인할 수 없음</strong>
+					</div>
+					<p>공식 macOS 릴리스는 서명 및 공증을 거치도록 되어 있습니다. 비공개 또는 제3자 맞춤 빌드는 공증되지 않았을 수 있으며, 새로 다운로드한 앱은 처음 열 때 여전히 승인이 필요할 수 있습니다.</p>
+					<ol class="guide-steps">
+						<li>앱을 다음에서 받았는지 확인하세요: <a href="https://github.com/steveseguin/social_stream/releases" target="_blank" rel="noopener">공식 릴리스 페이지</a> 또는 맞춤 빌드를 신뢰할 수 있는 사람에게서 받았는지 확인하세요.</li>
+						<li>앱을 한 번 열어 본 다음 경고를 닫으세요.</li>
+						<li>다음을 여세요: <strong>Apple 메뉴 &gt; 시스템 설정 &gt; 개인정보 보호 및 보안</strong>.</li>
+						<li>아래로 스크롤해 보안 섹션에서 차단된 앱에 관한 메시지를 찾으세요.</li>
+						<li>경고를 이해하고 계속 진행해도 괜찮다고 판단했다면 다음을 선택하세요: <strong>그래도 열기</strong>, 요청하면 인증한 다음 다음을 선택하세요: <strong>열기</strong>.</li>
+					</ol>
+					<p>해당 앱에 예외를 만듭니다. 모든 앱에 대해 Gatekeeper를 끌 필요는 없습니다.</p>
+					<p><a href="https://support.apple.com/en-us/102445" target="_blank" rel="noopener">다운로드한 앱을 안전하게 여는 Apple 가이드</a></p>
+				</div>
+
+				<div class="guide-card">
+					<h2>macOS: '앱이 손상됨' 또는 '컴퓨터를 손상시킴'</h2>
+					<p>터미널 명령으로 앱의 격리 정보를 제거하지 마세요. 이 메시지는 다운로드가 불완전하거나 수정되었거나, 서명이 유효하지 않거나, macOS가 보안 문제를 탐지했다는 뜻일 수 있습니다.</p>
+					<ol class="guide-steps">
+						<li>해당 사본을 휴지통으로 옮기세요.</li>
+						<li>공식 릴리스 페이지에서 최신 macOS 빌드를 다시 다운로드하세요.</li>
+						<li>앱 번들을 수정하지 않고 새 사본을 여세요.</li>
+						<li>메시지가 다시 나타나면 전체 문구와 macOS 버전이 보이는 스크린샷을 찍고 지원팀에 문의하세요.</li>
+					</ol>
+					<p>다음 경우: <strong>그래도 열기</strong> 가 없다면 앱을 한 번 더 열어 보고 개인정보 보호 및 보안을 다시 확인하세요. 관리되는 Mac에서는 관리자가 이 설정을 제어할 수 있습니다.</p>
+				</div>
+
+				<div class="guide-card" id="linux">
+					<h2>Linux: AppImage가 시작되지 않음</h2>
+					<p>AppImage에 실행 권한이 필요할 수 있습니다:</p>
+					<ol class="guide-steps">
+						<li>AppImage를 마우스 오른쪽 버튼으로 클릭하고 다음을 여세요: <strong>속성</strong>.</li>
+						<li>권한에서 다음을 활성화하세요: <strong>파일을 프로그램으로 실행 허용</strong>. 문구는 데스크톱 환경마다 다릅니다.</li>
+						<li>AppImage를 다시 여세요.</li>
+					</ol>
+					<p>터미널에서도 권한을 부여할 수 있습니다:</p>
+					<pre><code>chmod +x socialstreamninja_linux_*.AppImage
+./socialstreamninja_linux_*.AppImage</code></pre>
+					<p>오류에 다음이 언급되면: <strong>chrome-sandbox</strong>, <strong>SUID sandbox</strong>, AppArmor 또는 비특권 네임스페이스가 오류에 언급되면 다음을 따르세요: <a href="../../docs/index.html?file=appImage.md">AppImage 샌드박스 가이드</a>.</p>
+				</div>
+
+				<div class="guide-card">
+					<h2>경고 우회보다 안전한 대안</h2>
+					<p>Social Stream Ninja를 사용하기 위해 운영체제 경고를 반드시 무시해야 하는 것은 아닙니다.</p>
+					<ul class="guide-list">
+						<li><strong>경고 보고:</strong> 조사할 수 있도록 스크린샷과 아래에 나열된 정보를 보내세요.</li>
+						<li><strong>이전 공식 릴리스 사용:</strong> 새 버전만 차단되거나 실패한다면 공식 릴리스 페이지로 돌아가 이전에 작동했던 가장 최근 버전을 사용하세요. 가능하면 먼저 설정을 내보내세요.</li>
+						<li><strong>Chrome 확장 프로그램 사용:</strong> 설치: <a href="https://chromewebstore.google.com/detail/social-stream-ninja/cppibjhfemifednoimlblfcmjgfhfjeg" target="_blank" rel="noopener">Chrome 웹 스토어 버전</a> 를 데스크톱 앱 대신 사용하세요.</li>
+						<li><strong>웹 앱 사용:</strong> 열기: <a href="https://socialstream.ninja/lite/" target="_blank" rel="noopener">Social Stream Ninja Lite</a> 를 더 적은 기능으로도 충분할 때 사용하세요.</li>
+					</ul>
+					<div class="warning-note">이전 릴리스에는 최신 수정 사항이 없습니다. 공식 릴리스 페이지에서만 다운로드하고 문제를 파악하면 최신 버전으로 돌아오세요.</div>
+				</div>
+
+				<div class="guide-card">
+					<h2>여전히 열리지 않는 경우</h2>
+					<p>지원팀에 다음 정보를 보내세요:</p>
+					<ul class="guide-list">
+						<li>전체 경고가 보이는 스크린샷.</li>
+						<li>운영체제와 버전.</li>
+						<li>다운로드한 정확한 파일 이름.</li>
+						<li>설치 프로그램, 포터블 앱, AppImage, 공식 macOS 릴리스 또는 맞춤 빌드 중 무엇인지.</li>
+						<li>같은 사본이 이전에는 정상적으로 열렸는지 여부.</li>
+						<li>Windows에서는 표시되는 경우 보호 기록의 탐지 이름.</li>
+					</ul>
+					<p><a href="https://discord.socialstream.ninja" target="_blank" rel="noopener" class="btn btn-primary">Discord에서 도움 요청</a></p>
+				</div>
+			</div>
+		</main>
+
+		<footer>
+			<div class="container">
+				<div class="footer-bottom">
+					<p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 라이선스.</p>
+				</div>
+			</div>
+		</footer>
+		<script data-copy-markdown src="../../docs/js/main.js"></script>
+		<script>
+			document.getElementById("current-year").textContent = new Date().getFullYear();
+		</script>
+	</body>
+</html>

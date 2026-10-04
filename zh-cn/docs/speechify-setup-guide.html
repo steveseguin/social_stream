@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-cn/docs/speechify-setup-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/zh-cn/docs/speechify-setup-guide.html">
+    <meta property="og:title" content="Speechify 设置指南 - Social Stream Ninja">
+    <meta property="og:description" content="在 Social Stream Ninja 中设置 Speechify，选择声音，调整朗读速度和音量，并可选通过 OBS 输出音频。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-cn/docs/speechify-setup-guide.html">
+    <meta name="twitter:title" content="Speechify 设置指南 - Social Stream Ninja">
+    <meta name="twitter:description" content="在 Social Stream Ninja 中设置 Speechify，选择声音，调整朗读速度和音量，并可选通过 OBS 输出音频。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speechify 设置指南 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <style>
+        .tts-preview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+        .tts-preview { border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.6rem; min-width: 0; }
+        .tts-preview h3 { margin-top: 0; }
+        .tts-preview audio { width: 100%; margin: .8rem 0; }
+        .tts-settings { margin: 1.2rem 0; }
+        .tts-settings summary { cursor: pointer; font-weight: 600; padding: .8rem 0; }
+        .tts-settings summary:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+        .tts-settings img { max-width: 52rem; }
+        .tts-preview code { overflow-wrap: anywhere; }
+        .guide-card[id] { scroll-margin-top: 10rem; }
+        .guide-image-medium { max-width: 52rem; }
+        @media (max-width: 700px) { .tts-preview-grid { grid-template-columns: 1fr; } }
+    </style>
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="在 Social Stream Ninja 中设置 Speechify，选择声音，调整朗读速度和音量，并可选通过 OBS 输出音频。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/speechify-setup-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{"(100%). Update the dock URL again. If you lowered the dock's own volume slider, turn it back up.":"（100%）。再次更新停靠面板 URL。如果调低了停靠面板自身的音量滑块，请调回较高音量。","+3 dB":"+3 dB",", add a":"，添加",", and":"，以及",", or the SSN extension popup.":"，或 SSN 扩展弹出菜单。",", then click":"，然后点击",", then expand":"，然后展开",", then open the updated dock link. Speechify lists":"，然后打开更新后的停靠面板链接。Speechify 列出",", turn on the switch beside":"，打开以下选项旁的开关：",". Avoid":"。避免使用",". Copy an existing key, or create one if needed.":"。复制现有密钥，或按需创建新密钥。",". For a first English voice, enter":"。首次尝试英语声音时，输入",". Installing the Speechify reading app alone does not connect it to SSN. Check API access and usage charges in your Speechify account. Chat selected for speech is sent to Speechify.":"。仅安装 Speechify 阅读应用不会将其连接到 SSN。请在 Speechify 账号中检查 API 访问权限和使用费用。选中朗读的聊天会发送到 Speechify。",". Its voice-list API returns the voices your account can use; copy the selected voice's":"。其声音列表 API 返回您的账号可用的声音；复制所选声音的",". Keep only one copy speaking to avoid doubled voices.":"。只保留一个副本发声，以免声音重复。",". Keep your chosen voice ID; Henry and Carly were tested with the current models. The legacy models remain available for existing configurations.":"。保留选定的声音 ID；Henry 和 Carly 已使用当前模型测试。旧模型仍可供现有配置使用。",". Name the source":"。将来源命名为",". You can also search settings for":"。您也可以在设置中搜索","0.0 dB":"0.0 dB","0.5 to 3.0":"0.5 到 3.0","1. Get your Speechify API key":"1. 获取 Speechify API 密钥","2. Select Speechify in SSN":"2. 在 SSN 中选择 Speechify","3. Open the updated dock link":"3. 打开更新后的停靠面板链接","API Keys":"API 密钥","Advanced Audio Properties":"高级音频属性","After changing voice, speed, or provider, copy the link again.":"更改声音、速度或提供商后，再次复制链接。","An OBS custom dock is a control panel. For these instructions, use a":"OBS 自定义停靠面板是控制面板。按照本说明操作时，请使用","Audio Mixer":"混音器","Audio Monitoring":"音频监听","Back to the general TTS guide":"返回通用 TTS 指南","Before you start":"开始之前","Browser Source in your scene":"场景中的浏览器来源","Change":"更改","Change the settings under":"更改以下部分中的设置：","Change voice":"更换声音","Choose a voice instructions":"选择声音的说明","Choose another voice":"选择其他声音","Commands & API":"命令与 API","Connect Speechify to SSN, choose a voice, and adjust speech speed and volume.":"将 Speechify 连接到 SSN，选择声音并调整朗读速度和音量。","Connect your first chat source":"连接第一个聊天来源","Control audio via OBS":"通过 OBS 控制音频","Copy the updated dock link and replace the URL in your browser or OBS source. Compare the same short sentence at both settings.":"复制更新后的停靠面板链接，并替换浏览器或 OBS 来源中的 URL。用同一个短句比较两种设置。","Download":"下载","Echo or repeated speech:":"回声或重复朗读：","Enable TTS in dock":"在停靠面板中启用 TTS","Enable chat reading in the dock section.":"在停靠面板部分启用聊天朗读。","Example: Henry with Speed enabled at 1.2 and Model set to Simba 3.0. The API key is omitted.":"示例：Henry，开启速度并设为 1.2，模型设为 Simba 3.0。API 密钥已省略。","Features":"功能","Filters":"滤镜","Find":"找到","For audio without visible chat, keep the Browser Source active and position it outside the visible canvas. Do not rely on a source that is shut down when hidden to keep reading.":"若只需音频而不显示聊天，请保持浏览器来源运行，并将其放在可见画布之外。不要依赖隐藏时会关闭的来源继续朗读。","For help, share your app version, voice ID, what step failed, and whether audio runs in SSApp, a browser, or OBS. Remove API keys and private session links from screenshots.":"寻求帮助时，请提供应用版本、声音 ID、失败步骤，以及音频运行于 SSApp、浏览器还是 OBS。请从截图中移除 API 密钥和私有会话链接。","Gain":"增益","Gain and other audio filters here":"此处的增益和其他音频滤镜","Get a key":"获取密钥","Guides":"指南","Hire":"雇用","Home":"首页","If it is still too quiet, open that audio source's":"如果仍然太小声，打开该音频来源的","If something does not work":"如果出现问题","In OBS, unmute":"在 OBS 中，取消静音","In SSN's dock TTS settings, enable":"在 SSN 停靠面板的 TTS 设置中，启用","In a normal browser, click inside the dock once if audio is blocked.":"在普通浏览器中，如果音频被阻止，请在停靠面板内点击一次。","In the scene you use for streaming, go to":"在用于直播的场景中，前往","Inspiration":"灵感","Keep the key ready to paste into SSN. You do not need to install an SDK or run code.":"准备好密钥以粘贴到 SSN。无需安装 SDK 或运行代码。","Keep the source connected and the TTS dock open. New eligible messages are read in sequence; filters and TTS controls can exclude messages. Busy chat can build a queue.":"保持来源连接和 TTS 停靠面板打开。符合条件的新消息会依次朗读；筛选器和 TTS 控件可能排除消息。繁忙聊天可能形成队列。","Keep your key and generated SSN link private.":"请妥善保密密钥和生成的 SSN 链接。","Leave Speed at its default for your first test. Leave the optional Model and language switches off; SSN uses Simba 3.0 by default.":"首次测试时保留默认速度。保持可选的模型和语言开关关闭；SSN 默认使用 Simba 3.0。","Main chat overlay & control dock":"主聊天叠加层与控制停靠面板","Main navigation":"主导航","Make a short recording and play it back to confirm the voice is in the output.":"录制一小段并回放，确认输出中包含声音。","Make it louder for viewers":"提高观众听到的音量","Make it read faster":"加快朗读速度","Message: Text to Speech":"消息 — 文字转语音","Model unavailable?":"模型不可用？","Monitor Only (mute output)":"仅监听（输出静音）","Monitor and Output":"监听并输出","No text in the dock:":"停靠面板中没有文字：","OBS Browser Source documentation":"OBS 浏览器来源文档","OBS Browser Source properties showing the URL field and Control audio via OBS checkbox":"OBS 浏览器来源属性，显示 URL 字段和通过 OBS 控制音频复选框","OBS audio":"OBS 音频","OK":"确定","Open":"打开","Open navigation menu":"打开导航菜单","Open that newly copied link in the browser where you want speech to play. If using OBS, follow the next OBS section.":"在希望播放朗读的浏览器中打开刚复制的链接。如果使用 OBS，请按照下一节 OBS 说明操作。","Open the":"打开","Open the desktop app's":"打开桌面应用的","Optional: send Speechify audio through OBS":"可选：通过 OBS 输出 Speechify 音频","Overlay Gallery":"叠加层图库","Paste the updated SSN dock link into":"将更新后的 SSN 停靠面板链接粘贴到","Paste your key into":"将密钥粘贴到","Read faster":"加快朗读","Read your chat with Speechify":"使用 Speechify 朗读聊天","Record speech alongside your microphone and background audio. Listen back and adjust the balance. Reduce gain if speech distorts or the meter reaches the red end.":"将语音与麦克风、背景音频一起录制。回听并调整平衡。如果语音失真或电平表到达红色区域，请降低增益。","Reference:":"参考：","Replace the example OBS URL with your SSN link and tick Control audio via OBS. This reference screenshot shows the checkbox before it is enabled.":"将示例 OBS URL 替换为 SSN 链接，并勾选通过 OBS 控制音频。此参考截图显示的是勾选前的状态。","Replace the old URL wherever speech plays. Refreshing a page that still has the old URL can keep the old settings.":"在所有播放朗读的位置替换旧 URL。刷新仍使用旧 URL 的页面可能保留旧设置。","Route the TTS audio to an input that app can capture. The setup depends on your operating system and the app's audio controls.":"将 TTS 音频路由到该应用可捕获的输入。具体设置取决于操作系统和应用的音频控件。","SSN Speechify":"SSN Speechify","SSN settings showing the Enable TTS in dock switch":"SSN 设置，显示在停靠面板中启用 TTS 开关","SSN's volume stops at 100%; extra boost belongs in your outgoing audio mix. Turning up your headphones alone does not make the stream louder. OBS documents":"SSN 音量最高为 100%；额外增益应在输出混音中调整。仅调高耳机音量不会让直播更响。OBS 文档介绍了","Select Simba 3.0 or Simba 3.2 and use a voice your Speechify account supports. Speechify is retiring the older English and Multilingual models; see its":"选择 Simba 3.0 或 Simba 3.2，并使用 Speechify 账号支持的声音。Speechify 正在停用旧版 English 和 Multilingual 模型；请参见其","Send a short chat message and look for movement in that source's":"发送一条简短聊天消息，观察该来源的","Send a short message in your own connected chat. Confirm the new message appears and is spoken.":"在自己已连接的聊天中发送短消息。确认新消息出现并被朗读。","Set":"设置","Set up SSN":"设置 SSN","Set up Speechify in Social Stream Ninja, choose a voice, adjust reading speed and volume, and optionally send audio through OBS.":"在 Social Stream Ninja 中设置 Speechify，选择声音，调整朗读速度和音量，并可选通过 OBS 输出音频。","Simba 3.0":"Simba 3.0","Simba 3.2 (English)":"Simba 3.2（英语）","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 许可证。","Sources and Settings":"来源与设置","Sources → + → Browser":"来源 → + → 浏览器","Speaking faster is different from starting sooner.":"朗读更快与更早开始朗读是两回事。","Speechify":"Speechify","Speechify API Key":"Speechify API 密钥","Speechify API account and key":"Speechify API 账号和密钥","Speechify Setup Guide - Social Stream Ninja":"Speechify 设置指南 - Social Stream Ninja","Speechify TTS Options":"Speechify TTS 选项","Speechify Voice ID":"Speechify 声音 ID","Speechify developer platform":"Speechify 开发者平台","Speechify options: API Key, Voice ID, Speed switch and value, Model, and language":"Speechify 选项：API 密钥、声音 ID、速度开关及数值、模型和语言","Speechify's official quickstart":"Speechify 官方快速入门","Speed":"速度","Speed does not remove the time Speechify needs to generate the audio. Shorter messages and turning off username reading can help the queue keep up.":"速度设置不会消除 Speechify 生成音频所需的时间。缩短消息和关闭用户名朗读有助于避免队列积压。","Speed or model does not change:":"速度或模型没有变化：","Start with chat connected in SSN. If you have not set that up yet, follow the":"先在 SSN 中连接聊天。如果尚未设置，请参照","Still the old voice:":"仍是旧声音：","Support":"支持","Supported Sites":"支持的网站","Switch theme":"切换主题","TTS Service Provider":"TTS 服务提供商","Text arrives but no speech:":"收到文字却没有朗读：","The link can contain your API key. Do not post it in chat or include it in screenshots.":"链接可能包含 API 密钥。不要发到聊天中或包含在截图里。","The switch must be on for the setting to be included in the link. Use":"必须打开开关，设置才会包含在链接中。使用","These account steps follow":"这些账号步骤依据","Tick":"勾选","To find more, use Speechify's":"若要寻找更多声音，使用 Speechify 的","Troubleshooting":"故障排除","Try":"试试","Turn on":"开启","URL":"URL","Under":"位于","Use":"使用","Using another streaming app?":"使用其他直播应用？","Viewer volume":"观众音量","Volume of speech":"朗读音量","Want to hear it yourself too?":"自己也想听到声音？","You hear it but viewers do not:":"您能听到，但观众听不到：","You need internet access and a":"您需要互联网连接和","and raise its mixer fader toward":"并将其混音器推子提高至接近","and set it to":"并将其设为","and sign in or create an account.":"并登录或创建账号。","as a modest increase from the normal value of":"，相比正常值略有提升；正常值为","as built-in examples. Use an exact API voice ID, not just a display name from the reading app.":"作为内置示例。请使用准确的 API 声音 ID，不要仅使用阅读应用中的显示名称。","audio filter, and try a small boost such as":"音频滤镜，并尝试小幅提升，例如","beside":"，位于以下选项旁：","by default. For English, you can enable the Model switch and choose":"作为默认值。对于英语，您可以打开模型开关并选择","check the OBS source meter, mute state, output track, and monitoring mode. Test a recording.":"检查 OBS 来源电平表、静音状态、输出音轨和监听模式。测试录制。","check the TTS switch, API key, account access/usage limits, and voice ID. In a normal browser, click the page once.":"检查 TTS 开关、API 密钥、账号访问权限／用量限制和声音 ID。在普通浏览器中，点击页面一次。","check you changed the dock's settings, selected Speechify, and replaced the old URL. Close or mute any other speaking copies.":"确认您更改的是停靠面板设置，已选择 Speechify 并替换旧 URL。关闭或静音其他正在发声的副本。","copy link":"复制链接","current model reference":"当前模型参考","fix source capture first. Speechify cannot read messages SSN has not received.":"先修复来源捕获。Speechify 无法朗读 SSN 尚未收到的消息。","for normal speed, a higher number for faster speech, or a lower number for slower speech. The supported range is":"代表正常速度，较大数值加快朗读，较小数值减慢朗读。支持范围为","from the Audio Mixer and set that source's":"，从音频混音器打开，并设置该来源的","getting-started guide":"入门指南","if it was turned down.":"，如果先前已调低。","if that is the page reading chat. Featured Chat and the chat bot have separate TTS settings.":"，如果该页面负责朗读聊天。精选聊天和聊天机器人有各自独立的 TTS 设置。","in":"在","into SSN. Match the voice to the model supported by your SSN settings. SSN uses":"到 SSN。将声音与 SSN 设置支持的模型匹配。SSN 使用","leave one TTS page speaking and avoid capturing both its direct output and monitoring audio.":"仅保留一个 TTS 页面发声，避免同时捕获其直接输出和监听音频。","meter.":"电平表是否跳动。","text to speech":"text to speech","to":"为","turn on its switch and copy the updated link. Older SSN settings pages had a bug that could send these controls to the wrong overlay. Reload settings to get the updated controls.":"打开对应开关并复制更新后的链接。旧版 SSN 设置页面存在一个问题，可能将这些控件发送到错误的叠加层。重新加载设置以获取更新后的控件。","when viewers should hear it. Avoid capturing the monitoring device a second time.":"（需要让观众听到声音时）。避免再次捕获监听设备。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/speechify-setup-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/speechify-setup-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/speechify-setup-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/speechify-setup-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/speechify-setup-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/speechify-setup-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/speechify-setup-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/speechify-setup-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/speechify-setup-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="speechify-setup-guide.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/speechify-setup-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/speechify-setup-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/speechify-setup-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/speechify-setup-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/speechify-setup-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/speechify-setup-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/speechify-setup-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/speechify-setup-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/speechify-setup-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero"><div class="container">
+        <h1>使用 Speechify 朗读聊天</h1>
+        <p>将 Speechify 连接到 SSN，选择声音并调整朗读速度和音量。</p>
+    </div></section>
+    <main class="guide-section"><div class="container">
+        <div class="guide-card">
+            <h2>开始之前</h2>
+            <p>先在 SSN 中连接聊天。如果尚未设置，请参照 <a href="getting-started.html">入门指南</a>.</p>
+            <p>您需要互联网连接和 <strong>Speechify API 账号和密钥</strong>。仅安装 Speechify 阅读应用不会将其连接到 SSN。请在 Speechify 账号中检查 API 访问权限和使用费用。选中朗读的聊天会发送到 Speechify。</p>
+            <p><a href="#account">获取密钥</a> &middot; <a href="#setup">设置 SSN</a> &middot; <a href="#voice">更换声音</a> &middot; <a href="#speed">加快朗读</a> &middot; <a href="#obs">OBS 音频</a> &middot; <a href="#volume">观众音量</a> &middot; <a href="#help">故障排除</a></p>
+        </div>
+        <div class="guide-card" id="account">
+            <h2>1. 获取 Speechify API 密钥</h2>
+            <ol class="guide-steps">
+                <li>打开 <a href="https://platform.speechify.ai/">Speechify 开发者平台</a> 并登录或创建账号。</li>
+                <li>打开 <a href="https://platform.speechify.ai/api-keys">API 密钥</a>。复制现有密钥，或按需创建新密钥。</li>
+                <li>准备好密钥以粘贴到 SSN。无需安装 SDK 或运行代码。</li>
+            </ol>
+            <p>这些账号步骤依据 <a href="https://docs.speechify.ai/docs/get-started/quickstart">Speechify 官方快速入门</a>.</p>
+            <p><strong>请妥善保密密钥和生成的 SSN 链接。</strong> 链接可能包含 API 密钥。不要发到聊天中或包含在截图里。</p>
+        </div>
+        <div class="guide-card" id="setup">
+            <h2>2. 在 SSN 中选择 Speechify</h2>
+            <ol class="guide-steps">
+                <li>打开桌面应用的 <strong>来源与设置</strong>，或 SSN 扩展弹出菜单。</li>
+                <li>找到 <strong>主聊天叠加层与控制停靠面板</strong>，然后展开 <strong>消息 — 文字转语音</strong>。您也可以在设置中搜索 <strong>text to speech</strong>.</li>
+                <li>开启 <strong>在停靠面板中启用 TTS</strong>.</li>
+                <li>设置 <strong>TTS 服务提供商</strong> 为 <strong>Speechify</strong>.</li>
+                <li>将密钥粘贴到 <strong>Speechify API 密钥</strong>。首次尝试英语声音时，输入 <code>henry</code> 在 <strong>Speechify 声音 ID</strong>.</li>
+                <li>首次测试时保留默认速度。保持可选的模型和语言开关关闭；SSN 默认使用 Simba 3.0。</li>
+            </ol>
+            <figure class="guide-figure"><a href="../../docs/images/guides/tts-enable-dock-popup.png"><img src="../../docs/images/guides/tts-enable-dock-popup.png" alt="SSN 设置，显示在停靠面板中启用 TTS 开关" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>在停靠面板部分启用聊天朗读。</figcaption></figure>
+            <figure class="guide-figure"><a href="../../docs/images/guides/tts-settings-speechify.png"><img src="../../docs/images/guides/tts-settings-speechify.png" alt="Speechify 选项：API 密钥、声音 ID、速度开关及数值、模型和语言" class="guide-image guide-image-medium" loading="lazy"></a><figcaption>示例：Henry，开启速度并设为 1.2，模型设为 Simba 3.0。API 密钥已省略。</figcaption></figure>
+        </div>
+        <div class="guide-card" id="open-link">
+            <h2>3. 打开更新后的停靠面板链接</h2>
+            <ol class="guide-steps">
+                <li>使用 <strong>复制链接</strong> ，位于以下选项旁： <strong>主聊天叠加层与控制停靠面板</strong>.</li>
+                <li>在希望播放朗读的浏览器中打开刚复制的链接。如果使用 OBS，请按照下一节 OBS 说明操作。</li>
+                <li>在普通浏览器中，如果音频被阻止，请在停靠面板内点击一次。</li>
+                <li>在自己已连接的聊天中发送短消息。确认新消息出现并被朗读。</li>
+            </ol>
+            <p>保持来源连接和 TTS 停靠面板打开。符合条件的新消息会依次朗读；筛选器和 TTS 控件可能排除消息。繁忙聊天可能形成队列。</p>
+            <p><strong>更改声音、速度或提供商后，再次复制链接。</strong> 在所有播放朗读的位置替换旧 URL。刷新仍使用旧 URL 的页面可能保留旧设置。</p>
+        </div>
+        <div class="guide-card" id="voice">
+            <h2>选择其他声音</h2>
+            <p>更改 <strong>Speechify 声音 ID</strong>，然后打开更新后的停靠面板链接。Speechify 列出 <code>henry</code>, <code>george</code>, <code>carly</code>，以及 <code>sabrina</code> 作为内置示例。请使用准确的 API 声音 ID，不要仅使用阅读应用中的显示名称。</p>
+            <p>若要寻找更多声音，使用 Speechify 的 <a href="https://docs.speechify.ai/build/text-to-speech-api#choose-a-voice">选择声音的说明</a>。其声音列表 API 返回您的账号可用的声音；复制所选声音的 <code>id</code> 到 SSN。将声音与 SSN 设置支持的模型匹配。SSN 使用 <strong>Simba 3.0</strong> 作为默认值。对于英语，您可以打开模型开关并选择 <strong>Simba 3.2（英语）</strong>。保留选定的声音 ID；Henry 和 Carly 已使用当前模型测试。旧模型仍可供现有配置使用。</p>
+            <p>更改以下部分中的设置： <strong>主聊天叠加层与控制停靠面板</strong> ，如果该页面负责朗读聊天。精选聊天和聊天机器人有各自独立的 TTS 设置。</p>
+        </div>
+        <div class="guide-card" id="speed">
+            <h2>加快朗读速度</h2>
+            <ol class="guide-steps">
+                <li>位于 <strong>Speechify TTS 选项</strong>，打开以下选项旁的开关： <strong>速度</strong>.</li>
+                <li>试试 <strong>1.2</strong> ，相比正常值略有提升；正常值为 <strong>1.0</strong>.</li>
+                <li>复制更新后的停靠面板链接，并替换浏览器或 OBS 来源中的 URL。用同一个短句比较两种设置。</li>
+            </ol>
+            <p>必须打开开关，设置才会包含在链接中。使用 <strong>1.0</strong> 代表正常速度，较大数值加快朗读，较小数值减慢朗读。支持范围为 <strong>0.5 到 3.0</strong>.</p>
+            <p><strong>朗读更快与更早开始朗读是两回事。</strong> 速度设置不会消除 Speechify 生成音频所需的时间。缩短消息和关闭用户名朗读有助于避免队列积压。</p>
+        </div>
+        <div class="guide-card" id="obs">
+            <h2>可选：通过 OBS 输出 Speechify 音频</h2>
+            <ol class="guide-steps">
+                <li>在用于直播的场景中，前往 <strong>来源 → + → 浏览器</strong>。将来源命名为 <strong>SSN Speechify</strong>.</li>
+                <li>将更新后的 SSN 停靠面板链接粘贴到 <strong>URL</strong>.</li>
+                <li>勾选 <strong>通过 OBS 控制音频</strong>，然后点击 <strong>确定</strong>.</li>
+                <li>发送一条简短聊天消息，观察该来源的 <strong>混音器</strong> 电平表是否跳动。</li>
+                <li>录制一小段并回放，确认输出中包含声音。</li>
+            </ol>
+            <figure class="guide-figure"><a href="../../docs/images/guides/obs-browser-source-properties.png"><img src="../../docs/images/guides/obs-browser-source-properties.png" alt="OBS 浏览器来源属性，显示 URL 字段和通过 OBS 控制音频复选框" class="guide-image" loading="lazy"></a><figcaption>将示例 OBS URL 替换为 SSN 链接，并勾选通过 OBS 控制音频。此参考截图显示的是勾选前的状态。</figcaption></figure>
+            <p>若只需音频而不显示聊天，请保持浏览器来源运行，并将其放在可见画布之外。不要依赖隐藏时会关闭的来源继续朗读。</p>
+            <p><strong>自己也想听到声音？</strong> 打开 <strong>高级音频属性</strong> ，从音频混音器打开，并设置该来源的 <strong>音频监听</strong> 为 <strong>监听并输出</strong>。避免使用 <strong>仅监听（输出静音）</strong> （需要让观众听到声音时）。避免再次捕获监听设备。</p>
+            <p>OBS 自定义停靠面板是控制面板。按照本说明操作时，请使用 <strong>场景中的浏览器来源</strong>。只保留一个副本发声，以免声音重复。</p>
+            <p>参考： <a href="https://obsproject.com/kb/browser-source">OBS 浏览器来源文档</a>.</p>
+        </div>
+        <div class="guide-card" id="volume">
+            <h2>提高观众听到的音量</h2>
+            <ol class="guide-steps">
+                <li>在 SSN 停靠面板的 TTS 设置中，启用 <strong>朗读音量</strong> 并将其设为 <strong>1.0</strong> （100%）。再次更新停靠面板 URL。如果调低了停靠面板自身的音量滑块，请调回较高音量。</li>
+                <li>在 OBS 中，取消静音 <strong>SSN Speechify</strong> 并将其混音器推子提高至接近 <strong>0.0 dB</strong> ，如果先前已调低。</li>
+                <li>如果仍然太小声，打开该音频来源的 <strong>滤镜</strong>，添加 <strong>增益</strong> 音频滤镜，并尝试小幅提升，例如 <strong>+3 dB</strong>.</li>
+                <li>将语音与麦克风、背景音频一起录制。回听并调整平衡。如果语音失真或电平表到达红色区域，请降低增益。</li>
+            </ol>
+            <p>SSN 音量最高为 100%；额外增益应在输出混音中调整。仅调高耳机音量不会让直播更响。OBS 文档介绍了 <a href="https://obsproject.com/kb/filters-guide">此处的增益和其他音频滤镜</a>.</p>
+            <p><strong>使用其他直播应用？</strong> 将 TTS 音频路由到该应用可捕获的输入。具体设置取决于操作系统和应用的音频控件。</p>
+        </div>
+        <div class="guide-card" id="help">
+            <h2>如果出现问题</h2>
+            <ul>
+                <li><strong>停靠面板中没有文字：</strong> 先修复来源捕获。Speechify 无法朗读 SSN 尚未收到的消息。</li>
+                <li><strong>仍是旧声音：</strong> 确认您更改的是停靠面板设置，已选择 Speechify 并替换旧 URL。关闭或静音其他正在发声的副本。</li>
+                <li><strong>收到文字却没有朗读：</strong> 检查 TTS 开关、API 密钥、账号访问权限／用量限制和声音 ID。在普通浏览器中，点击页面一次。</li>
+                <li><strong>您能听到，但观众听不到：</strong> 检查 OBS 来源电平表、静音状态、输出音轨和监听模式。测试录制。</li>
+                <li><strong>回声或重复朗读：</strong> 仅保留一个 TTS 页面发声，避免同时捕获其直接输出和监听音频。</li>
+                <li><strong>速度或模型没有变化：</strong> 打开对应开关并复制更新后的链接。旧版 SSN 设置页面存在一个问题，可能将这些控件发送到错误的叠加层。重新加载设置以获取更新后的控件。</li>
+            </ul>
+            <p><strong>模型不可用？</strong> 选择 Simba 3.0 或 Simba 3.2，并使用 Speechify 账号支持的声音。Speechify 正在停用旧版 English 和 Multilingual 模型；请参见其 <a href="https://docs.speechify.ai/build/guides/concepts/models">当前模型参考</a>.</p>
+            <p>寻求帮助时，请提供应用版本、声音 ID、失败步骤，以及音频运行于 SSApp、浏览器还是 OBS。请从截图中移除 API 密钥和私有会话链接。</p>
+            <p><a href="tts-setup-guide.html">返回通用 TTS 指南</a> &middot; <a href="getting-started.html">连接第一个聊天来源</a></p>
+        </div>
+    </div></main>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 许可证。</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>
+        document.getElementById("current-year").textContent = new Date().getFullYear();
+        function revealGuideSection() {
+            var target;
+            try { target = document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) { return; }
+            if (!target) return;
+            for (var node = target; node; node = node.parentElement) {
+                if (node.tagName === "DETAILS") node.open = true;
+            }
+            target.scrollIntoView();
+        }
+        window.addEventListener("hashchange", revealGuideSection);
+        revealGuideSection();
+    </script>
+</body>
+</html>

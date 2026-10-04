@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="fr" data-site-root="../../" data-site-language="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/fr/docs/chat-relay-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:url" content="https://socialstream.ninja/fr/docs/chat-relay-guide.html">
+    <meta property="og:title" content="Relayer le chat entre plateformes - Social Stream Ninja">
+    <meta property="og:description" content="Configurez un relais volontaire entre Twitch et YouTube, choisissez les expéditeurs et diagnostiquez les messages répétés.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/fr/docs/chat-relay-guide.html">
+    <meta name="twitter:title" content="Relayer le chat entre plateformes - Social Stream Ninja">
+    <meta name="twitter:description" content="Configurez un relais volontaire entre Twitch et YouTube, choisissez les expéditeurs et diagnostiquez les messages répétés.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Relayer le chat entre plateformes - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Configurez un relais volontaire entre Twitch et YouTube, choisissez les expéditeurs et diagnostiquez les messages répétés.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+
+<meta name="ssn-site-translation" content="fr">
+<script id="ssn-site-language" type="application/json">{"language":"fr","page":"docs/chat-relay-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Passer au thème clair","Switch to dark theme":"Passer au thème sombre","Light mode":"Mode clair","Dark mode":"Mode sombre","Open navigation menu":"Ouvrir le menu de navigation","Close navigation menu":"Fermer le menu de navigation","Copy this document as Markdown to the clipboard":"Copier ce document au format Markdown dans le presse-papiers","Copy Markdown":"Copier le Markdown","Copying…":"Copie en cours…","Markdown copied":"Markdown copié","Copy failed":"Échec de la copie","Copy comprehensive Markdown for an AI assistant":"Copier le Markdown complet pour un assistant IA","Copy this documentation page as Markdown for an AI assistant":"Copier cette page de documentation en Markdown pour un assistant IA"},"strings":{", and keep the message template":", et gardez le modèle de message",". A blank list means all eligible destinations. That list controls destinations, not which incoming platforms can trigger a relay. Disable the Event Flow relay pair before enabling this alternative.":". Une liste vide signifie toutes les destinations admissibles. Cette liste contrôle les destinations, pas les plateformes entrantes pouvant déclencher un relais. Désactivez les deux flux de relais Event Flow avant d’activer cette alternative.",". Choose Twitch as its source.":". Choisissez Twitch comme source.",". Save and enable it. Send a fresh message from each side and confirm each produces one cross-platform copy.":". Enregistrez-le et activez-le. Envoyez un nouveau message de chaque côté et confirmez que chacun produit une seule copie sur l’autre plateforme.","1. Confirm both chats can receive replies":"1. Vérifiez que les deux chats peuvent recevoir des réponses","2. Create Twitch → YouTube in Event Flow":"2. Créez Twitch → YouTube dans Event Flow","3. Add the return direction":"3. Ajoutez le sens retour","4. Understand reflections":"4. Comprenez les échos","5. Narrow what you relay":"5. Limitez ce que vous relayez","A reflection is a message SSN sent that gets captured again from the destination chat. Current Relay Chat actions skip recognized reflections automatically. They also exclude the originating tab.":"Un écho est un message envoyé par SSN puis recapturé dans le chat de destination. Les actions Relay Chat actuelles ignorent automatiquement les échos reconnus. Elles excluent aussi l’onglet d’origine.","AND":"AND","Add a":"Ajoutez un","All guides":"Tous les guides","Allow All":"Tout autoriser (Allow All)","Allow First":"Autoriser le premier (Allow First)","Block All":"Tout bloquer (Block All)","Bot accounts for replies":"Comptes de bot pour les réponses","Browse all guides":"Parcourir tous les guides","Build and verify one direction before enabling the return direction.":"Créez et vérifiez un sens avant d’activer le retour.","Commands & API":"Commandes et API","Connect your Twitch and YouTube Live chats to the same SSN session. Confirm both appear in the Dock, then send one manual reply to each from a message with a known source tab. Use your own test channels. A read-only capture source cannot send a relay.":"Connectez vos chats Twitch et YouTube Live à la même session SSN. Vérifiez qu’ils apparaissent dans le Dock, puis envoyez une réponse manuelle à chacun depuis un message dont l’onglet source est connu. Utilisez vos propres chaînes de test. Une source en lecture seule ne peut pas envoyer de relais.","Create a second flow named":"Créez un second flux nommé","Destination: YouTube":"Destination : YouTube","Download":"Télécharger","Event Flow Editor":"Éditeur Event Flow","Event Flow guide":"guide Event Flow","Features":"Fonctionnalités","For commands, add a":"Pour les commandes, ajoutez un","From Source":"Depuis la source (From Source)","From Source: YouTube → Relay Chat: Twitch":"Depuis la source : YouTube → Relayer le chat : Twitch","Global settings and tools → Commands → Pick relay destinations":"Paramètres et outils globaux → Commandes → Choisir les destinations du relais","Guides":"Guides","Hire":"Faire appel à nos services","Home":"Accueil","If you choose the simpler global relay instead, use":"Si vous préférez le relais global plus simple, utilisez","Inspiration":"Inspiration","Keep":"Gardez","Keep only the intended destination chats open for this setup. A platform destination can include multiple eligible source tabs on that platform. If you use a separate Twitch bot account, complete":"N’ouvrez que les chats de destination prévus pour cette configuration. Une destination de plateforme peut inclure plusieurs onglets sources admissibles. Si vous utilisez un compte bot Twitch distinct, effectuez","Main navigation":"Navigation principale","Message Starts With":"Le message commence par (Message Starts With)","Messages multiply:":"Les messages se multiplient :","NOT":"NOT","Nothing sends:":"Rien n’est envoyé :","On this page":"Sur cette page","Only the Dock shows duplicates:":"Seul le Dock affiche des doublons :","Open navigation menu":"Ouvrir le menu de navigation","Open the":"Ouvrez :","Overlay Gallery":"Galerie d’incrustations","Reflection Filter":"Filtre d’échos (Reflection Filter)","Relay Chat":"Relayer le chat (Relay Chat)","Relay Destination":"Destination du relais (Relay Destination)","Relay all messages (!NOT RECOMMENDED!)":"Relayer tous les messages (DÉCONSEILLÉ !)","Relay chat between platforms":"Relayer le chat entre plateformes","Relay chat between platforms - Social Stream Ninja":"Relayer le chat entre plateformes - Social Stream Ninja","SSApp’s account-role allow/block fields in the same Commands section can restrict which accounts send relays. Use the role assigned to your intended sender; an unmatched role can leave no eligible destination.":"Les champs d’autorisation/blocage des rôles de compte de SSApp, dans la même section Commandes, peuvent limiter les comptes qui envoient les relais. Utilisez le rôle de l’expéditeur prévu ; un rôle sans correspondance peut ne laisser aucune destination admissible.","Save Flow":"Enregistrer le flux (Save Flow)","Select":"Sélectionnez","Select that action. Set":"Sélectionnez cette action. Réglez","Send a fresh normal message in your own Twitch test chat. Confirm one labelled copy arrives in YouTube.":"Envoyez un nouveau message normal dans votre chat Twitch de test. Confirmez qu’une seule copie étiquetée arrive dans YouTube.","Set up a deliberate Twitch and YouTube relay, choose senders, and diagnose repeated messages.":"Configurez un relais volontaire entre Twitch et YouTube, choisissez les expéditeurs et diagnostiquez les messages répétés.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja ·":"Social Stream Ninja ·","Support":"Assistance","Supported Sites":"Sites pris en charge","Switch theme":"Changer de thème","Test Flow actions can send real messages. Use controlled destinations; a synthetic test does not prove the real source’s account routing.":"Les actions Test Flow peuvent envoyer de vrais messages. Utilisez des destinations contrôlées ; un test synthétique ne prouve pas le routage des comptes de la source réelle.","The current Relay Chat properties do not have a “No Reflections” checkbox. Use the separate Reflection Filter for display control. If an external service rewrites a relayed message, automatic recognition may not catch it.":"Les propriétés actuelles de Relay Chat n’ont pas de case « No Reflections ». Utilisez le filtre d’échos séparé pour contrôler l’affichage. Si un service externe réécrit un message relayé, la reconnaissance automatique peut le manquer.","To hide the captured echo from the Dock and overlays, add a":"Pour masquer l’écho capturé dans le Dock et les incrustations, ajoutez une action","Troubleshooting":"Dépannage","Twitch":"Twitch","Twitch to YouTube":"Twitch vers YouTube","User & Source":"Utilisateur et source (User & Source)","Wrong YouTube destination:":"Mauvaise destination YouTube :","YouTube":"YouTube","YouTube Shorts":"YouTube Shorts","YouTube Shorts has its own source type and destination. Choose":"YouTube Shorts a son propre type de source et sa propre destination. Choisissez","YouTube chat":"Chat YouTube","YouTube to Twitch":"YouTube vers Twitch","[twitch] Name: message":"[twitch] Nom : message","action and connect the trigger output to the action input.":"et reliez la sortie du déclencheur à l’entrée de l’action.","action early in the relevant flow and select":"au début du flux concerné et sélectionnez","and connect it through a":"et reliez-le à travers une porte","and enable the saved flow. Keep SSN active.":"et activez le flux enregistré. Gardez SSN actif.","and enter":"et entrez","before Relay Chat. See the":"avant Relay Chat. Consultez le","check YouTube versus YouTube Shorts and close unintended eligible chats.":"vérifiez YouTube contre YouTube Shorts et fermez les chats admissibles non souhaités.","disable the relay flows first. Check for duplicate capture sources, global Relay all, and external relay bots before retesting one direction.":"désactivez d’abord les flux de relais. Recherchez des sources de capture en double, le relais global et des bots externes avant de retester un seul sens.","displays them. This controls display after capture, not where a relay is sent.":"les affiche. Cela contrôle l’affichage après capture, pas la destination du relais.","first.":"d’abord.","for connecting logic gates. Test both a normal line and a command.":"pour relier les portes logiques. Testez une ligne normale et une commande.","from SSN’s menu (also linked from the Actions overlay section). Create a flow and give it a clear name such as":"depuis le menu SSN (également lié dans la section d’incrustation Actions). Créez un flux et donnez-lui un nom clair, par exemple","gate; combine that result with your source condition using":"; combinez ce résultat avec votre condition de source à l’aide de","inspect Reflection Filter display policy and global Message - Visibility echo settings.":"vérifiez la politique d’affichage du filtre d’échos et les paramètres globaux d’écho de Message - Visibilité.","keeps one matching reflection within its configured window;":"conserve un écho correspondant dans la fenêtre configurée ;","off when using these flows, so a second relay system is not doing the same work. Also check whether another bot or multistream service is already bridging the chats.":"désactivé avec ces flux, pour qu’un second système de relais ne fasse pas le même travail. Vérifiez aussi si un autre bot ou service multistream relie déjà les chats.","retry a manual reply, verify login/posting permission, enable the saved flow, and check destination and account-role restrictions.":"retentez une réponse manuelle, vérifiez la connexion et le droit de publier, activez le flux enregistré et contrôlez les restrictions de destination et de rôle.","to":"à","trigger from":"comme déclencheur depuis","trigger set to":"comme déclencheur réglé sur","where appropriate; it is not interchangeable with YouTube.":"selon le cas ; ce n’est pas interchangeable avec YouTube."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/chat-relay-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="Navigation principale">
+<a href="../index.html">Accueil</a>
+<a href="features.html">Fonctionnalités</a>
+<a href="inspiration.html" class="site-priority-inspiration">Inspiration</a>
+<a href="download.html">Télécharger</a>
+<a href="guides.html">Guides</a>
+<a href="commands.html">Commandes et API</a>
+<a href="supported-sites.html">Sites pris en charge</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">Galerie d’incrustations</a>
+<a href="services.html" class="site-priority-hire">Faire appel à nos services</a>
+<a href="support.html">Assistance</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Français"><span aria-hidden="true">🌐 </span><span lang="fr">Français</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/chat-relay-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/chat-relay-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/chat-relay-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/chat-relay-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="chat-relay-guide.html" lang="fr" hreflang="fr" aria-current="true">Français</a><a class="site-language-link" href="../../de/docs/chat-relay-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/chat-relay-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/chat-relay-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/chat-relay-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/chat-relay-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/chat-relay-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/chat-relay-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/chat-relay-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/chat-relay-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/chat-relay-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/chat-relay-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/chat-relay-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="Changer de thème">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="Ouvrir le menu de navigation" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>Relayer le chat entre plateformes</h1>
+<p>Configurez un relais volontaire entre Twitch et YouTube, choisissez les expéditeurs et diagnostiquez les messages répétés.</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="Sur cette page">
+<a href="guides.html">Tous les guides</a>
+<a href="#prepare">1. Vérifiez que les deux chats peuvent recevoir des réponses</a>
+<a href="#one-way">2. Créez Twitch → YouTube dans Event Flow</a>
+<a href="#return">3. Ajoutez le sens retour</a>
+<a href="#echoes">4. Comprenez les échos</a>
+<a href="#advanced">5. Limitez ce que vous relayez</a>
+<a href="#check">Dépannage</a>
+</nav>
+<section class="guide-card" id="prepare">
+<h2>1. Vérifiez que les deux chats peuvent recevoir des réponses</h2>
+<p>Connectez vos chats Twitch et YouTube Live à la même session SSN. Vérifiez qu’ils apparaissent dans le Dock, puis envoyez une réponse manuelle à chacun depuis un message dont l’onglet source est connu. Utilisez vos propres chaînes de test. Une source en lecture seule ne peut pas envoyer de relais.</p>
+<p>N’ouvrez que les chats de destination prévus pour cette configuration. Une destination de plateforme peut inclure plusieurs onglets sources admissibles. Si vous utilisez un compte bot Twitch distinct, effectuez <a href="twitch-bot-account-chatbot.html">Comptes de bot pour les réponses</a> d’abord.</p>
+</section>
+<section class="guide-card" id="one-way">
+<h2>2. Créez Twitch → YouTube dans Event Flow</h2>
+<p>Ouvrez : <strong>Éditeur Event Flow</strong> depuis le menu SSN (également lié dans la section d’incrustation Actions). Créez un flux et donnez-lui un nom clair, par exemple <strong>Twitch vers YouTube</strong>.</p>
+<ol class="guide-steps">
+<li>Ajoutez un <strong>Depuis la source (From Source)</strong> comme déclencheur depuis <strong>Utilisateur et source (User &amp; Source)</strong>. Choisissez Twitch comme source.</li>
+<li>Ajoutez un <strong>Relayer le chat (Relay Chat)</strong> et reliez la sortie du déclencheur à l’entrée de l’action.</li>
+<li>Sélectionnez cette action. Réglez <strong>Destination du relais (Relay Destination)</strong> à <strong>YouTube</strong>, et gardez le modèle de message <code>[{source}] {username}: {message}</code>.</li>
+<li>Sélectionnez <strong>Enregistrer le flux (Save Flow)</strong> et activez le flux enregistré. Gardez SSN actif.</li>
+<li>Envoyez un nouveau message normal dans votre chat Twitch de test. Confirmez qu’une seule copie étiquetée arrive dans YouTube.</li>
+</ol>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>Depuis la source (From Source)</strong>
+<span>Twitch</span>
+</li>
+<li>
+<strong>Relayer le chat (Relay Chat)</strong>
+<span>Destination : YouTube</span>
+</li>
+<li>
+<strong>Chat YouTube</strong>
+<span>[twitch] Nom : message</span>
+</li>
+</ol>
+<figcaption>Créez et vérifiez un sens avant d’activer le retour.</figcaption>
+</figure>
+<p>YouTube Shorts a son propre type de source et sa propre destination. Choisissez <strong>YouTube Shorts</strong> selon le cas ; ce n’est pas interchangeable avec YouTube.</p>
+</section>
+<section class="guide-card" id="return">
+<h2>3. Ajoutez le sens retour</h2>
+<p>Créez un second flux nommé <strong>YouTube vers Twitch</strong>: <strong>Depuis la source : YouTube → Relayer le chat : Twitch</strong>. Enregistrez-le et activez-le. Envoyez un nouveau message de chaque côté et confirmez que chacun produit une seule copie sur l’autre plateforme.</p>
+<p>Gardez <strong>Relayer tous les messages (DÉCONSEILLÉ !)</strong> désactivé avec ces flux, pour qu’un second système de relais ne fasse pas le même travail. Vérifiez aussi si un autre bot ou service multistream relie déjà les chats.</p>
+</section>
+<section class="guide-card" id="echoes">
+<h2>4. Comprenez les échos</h2>
+<p>Un écho est un message envoyé par SSN puis recapturé dans le chat de destination. Les actions Relay Chat actuelles ignorent automatiquement les échos reconnus. Elles excluent aussi l’onglet d’origine.</p>
+<p>Pour masquer l’écho capturé dans le Dock et les incrustations, ajoutez une action <strong>Filtre d’échos (Reflection Filter)</strong> au début du flux concerné et sélectionnez <strong>Tout bloquer (Block All)</strong>. <strong>Autoriser le premier (Allow First)</strong> conserve un écho correspondant dans la fenêtre configurée ; <strong>Tout autoriser (Allow All)</strong> les affiche. Cela contrôle l’affichage après capture, pas la destination du relais.</p>
+<div class="guide-note">Les propriétés actuelles de Relay Chat n’ont pas de case « No Reflections ». Utilisez le filtre d’échos séparé pour contrôler l’affichage. Si un service externe réécrit un message relayé, la reconnaissance automatique peut le manquer.</div>
+</section>
+<section class="guide-card" id="advanced">
+<h2>5. Limitez ce que vous relayez</h2>
+<p>Pour les commandes, ajoutez un <strong>Le message commence par (Message Starts With)</strong> comme déclencheur réglé sur <code>!</code> et reliez-le à travers une porte <strong>NOT</strong> ; combinez ce résultat avec votre condition de source à l’aide de <strong>AND</strong> avant Relay Chat. Consultez le <a href="../actions/event-flow-guide.html">guide Event Flow</a> pour relier les portes logiques. Testez une ligne normale et une commande.</p>
+<p>Si vous préférez le relais global plus simple, utilisez <strong>Paramètres et outils globaux → Commandes → Choisir les destinations du relais</strong> et entrez <code>twitch,youtube</code>. Une liste vide signifie toutes les destinations admissibles. Cette liste contrôle les destinations, pas les plateformes entrantes pouvant déclencher un relais. Désactivez les deux flux de relais Event Flow avant d’activer cette alternative.</p>
+<p>Les champs d’autorisation/blocage des rôles de compte de SSApp, dans la même section Commandes, peuvent limiter les comptes qui envoient les relais. Utilisez le rôle de l’expéditeur prévu ; un rôle sans correspondance peut ne laisser aucune destination admissible.</p>
+</section>
+<section class="guide-card" id="check">
+<h2>Dépannage</h2>
+<ul class="guide-list">
+<li>
+<strong>Rien n’est envoyé :</strong> retentez une réponse manuelle, vérifiez la connexion et le droit de publier, activez le flux enregistré et contrôlez les restrictions de destination et de rôle.</li>
+<li>
+<strong>Les messages se multiplient :</strong> désactivez d’abord les flux de relais. Recherchez des sources de capture en double, le relais global et des bots externes avant de retester un seul sens.</li>
+<li>
+<strong>Seul le Dock affiche des doublons :</strong> vérifiez la politique d’affichage du filtre d’échos et les paramètres globaux d’écho de Message - Visibilité.</li>
+<li>
+<strong>Mauvaise destination YouTube :</strong> vérifiez YouTube contre YouTube Shorts et fermez les chats admissibles non souhaités.</li>
+</ul>
+<p>Les actions Test Flow peuvent envoyer de vrais messages. Utilisez des destinations contrôlées ; un test synthétique ne prouve pas le routage des comptes de la source réelle.</p>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">Parcourir tous les guides</a>
+</p>
+</div>
+</div>
+</footer>
+<script data-copy-markdown src="../../docs/js/main.js">
+</script>
+</body>
+</html>

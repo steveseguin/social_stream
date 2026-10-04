@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/tr/docs/templates.html">
+    <meta property="og:title" content="Sohbet katmanı şablonları ve özel temalar - Social Stream Ninja">
+    <meta property="og:description" content="OBS için sohbet katmanı şablonu seçin, görünümünü özelleştirin veya StreamElements sohbet temasını içe aktarın. Önizlemeleri ve Social Stream Ninja kurulum kılavuzlarını bulun.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/tr/docs/templates.html">
+    <meta name="twitter:title" content="Sohbet katmanı şablonları ve özel temalar - Social Stream Ninja">
+    <meta name="twitter:description" content="OBS için sohbet katmanı şablonu seçin, görünümünü özelleştirin veya StreamElements sohbet temasını içe aktarın. Önizlemeleri ve Social Stream Ninja kurulum kılavuzlarını bulun.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sohbet katmanı şablonları ve özel temalar - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/templates.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <meta name="description" content="OBS için sohbet katmanı şablonu seçin, görünümünü özelleştirin veya StreamElements sohbet temasını içe aktarın. Önizlemeleri ve Social Stream Ninja kurulum kılavuzlarını bulun.">
+    <link rel="canonical" href="https://socialstream.ninja/beta/tr/docs/templates.html">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/templates.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{", and select the downloaded HTML file.":"ve indirilen HTML dosyasını seçin.",", enter your session details, then copy the links for OBS. Motion is optional.":", oturum ayrıntılarınızı girin, ardından OBS bağlantılarını kopyalayın. Hareket isteğe bağlıdır.",", or explore custom templates and imports below.":"veya aşağıdaki özel şablonları ve içe aktarma seçeneklerini keşfedin.",", preview it, then download the OBS HTML. Use the original ZIP or files, not a screenshot or overlay URL.":", önizleyin, ardından OBS HTML'sini indirin. Ekran görüntüsü veya katman URL'si yerine orijinal ZIP veya dosyaları kullanın.",". In OBS, add a Browser Source, enable":". OBS'de Tarayıcı Kaynağı ekleyin ve şunu etkinleştirin:","A cheerful corgi on a sky-blue postcard":"Gök mavisi kartpostalda neşeli bir corgi","A cheerful corgi on a sky-blue postcard. Includes matching chat, featured-message, and alert styles.":"Gök mavisi kartpostalda neşeli bir corgi. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.","A clean, lightweight template with essential features. Perfect starting point for customization.":"Temel özelliklere sahip sade, hafif şablon. Özelleştirme için ideal başlangıç noktası.","A more complete starting point with comments and documentation to help you build your own custom overlays.":"Kendi özel katmanlarınızı oluşturmanıza yardımcı olacak yorumlar ve belgeler içeren daha kapsamlı başlangıç noktası.","A running feed from your connected platforms. Start with a chat template or":"Bağlı platformlarınızdan akan mesajlar. Sohbet şablonuyla veya şununla başlayın:","A sophisticated, fully animated theme with customizable colors and smooth transitions. Perfect for gaming streams.":"Özelleştirilebilir renkler ve akıcı geçişlerle gelişmiş, tamamen animasyonlu tema. Oyun yayınları için ideal.","A storybook frog in a peaceful woodland":"Huzurlu bir ormanda masal kitabından bir kurbağa","A storybook frog in a peaceful woodland. Includes matching chat, featured-message, and alert styles.":"Huzurlu bir ormanda masal kitabından bir kurbağa. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.","A tiny dragon with a luminous enchanted crystal":"Işıltılı sihirli kristalle küçük bir ejderha","A tiny dragon with a luminous enchanted crystal. Includes matching chat, featured-message, and alert styles.":"Işıltılı sihirli kristalle küçük bir ejderha. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.","Add Your SSN Session ID":"SSN oturum kimliğinizi ekleyin","Add Your Session ID":"Oturum kimliğinizi ekleyin","Add the modified URL as a Browser Source in your streaming software:":"Değiştirilmiş URL'yi yayın yazılımınıza Tarayıcı Kaynağı olarak ekleyin:","Add to OBS/Streamlabs":"OBS/Streamlabs'e ekleyin","Add your CSS in the Browser Source properties":"CSS'nizi Tarayıcı Kaynağı özelliklerine ekleyin","Alert guide":"Uyarı kılavuzu","All Templates":"Tüm şablonlar","An astronaut bunny drifting through lilac stardust":"Leylak rengi yıldız tozunda süzülen astronot tavşan","An astronaut bunny drifting through lilac stardust. Includes matching chat, featured-message, and alert styles.":"Leylak rengi yıldız tozunda süzülen astronot tavşan. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.","Animated":"Animasyonlu","Append":"Şunu ekleyin:","Apply your custom CSS through OBS browser source settings":"Özel CSS'nizi OBS tarayıcı kaynağı ayarlarından uygulayın","Bare Template":"Yalın şablon","Base64 CSS:":"Base64 CSS:","Bluesky":"Bluesky","Bold, high-contrast theme designed for gaming streams with excellent visibility even in fast-paced content.":"Hızlı içerikte bile mükemmel görünürlük sağlayan, oyun yayınları için tasarlanmış belirgin, yüksek kontrastlı tema.","Browse Overlay Gallery":"Katman galerisine göz atın","Browse the":"Şuna göz atın:","Browse the template library and select one that fits your stream style. Use the screenshot gallery to compare designs; most built-in templates work directly from a URL, with no download.":"Şablon kütüphanesine göz atın ve yayın tarzınıza uygun olanı seçin. Tasarımları karşılaştırmak için ekran görüntüsü galerisini kullanın; yerleşik şablonların çoğu indirme gerekmeden doğrudan URL ile çalışır.","By Deuk":"Deuk tarafından","By LuckyLootTube":"LuckyLootTube tarafından","By NeutronStudio":"NeutronStudio tarafından","By RetroTech":"RetroTech tarafından","By Social Stream Ninja":"Social Stream Ninja tarafından","By t3nk3y":"t3nk3y tarafından","CSS Snippet":"CSS parçası","CSS copied to clipboard!":"CSS panoya kopyalandı!","CSS not found":"CSS bulunamadı","Celebrate follows, memberships, and donations. Configure animations and audio in SSN’s alert settings.":"Takipleri, üyelikleri ve bağışları kutlayın. Animasyonları ve sesi SSN'nin uyarı ayarlarında yapılandırın.","Chat Overlay Templates and Custom Skins - Social Stream Ninja":"Sohbet katmanı şablonları ve özel temalar - Social Stream Ninja","Choose Message History":"Mesaj geçmişini seçin","Choose Your Template":"Şablonunuzu seçin","Choose a chat overlay template for OBS, customize its appearance, or import a StreamElements chat skin. Find previews and Social Stream Ninja setup guides.":"OBS için sohbet katmanı şablonu seçin, görünümünü özelleştirin veya StreamElements sohbet temasını içe aktarın. Önizlemeleri ve Social Stream Ninja kurulum kılavuzlarını bulun.","Choose a look for your stream":"Yayınınız için bir görünüm seçin","Choose a starting point, copy the prompt, and replace the bracketed design details. Attach source files if your AI cannot read links. Leave your private session ID and password out of the conversation.":"Bir başlangıç noktası seçin, istemi kopyalayın ve köşeli parantezli tasarım ayrıntılarını değiştirin. Yapay zekânız bağlantıları okuyamıyorsa kaynak dosyaları ekleyin. Özel oturum kimliğinizi ve parolanızı konuşmaya dahil etmeyin.","Clean, modern design with smooth animations and excellent readability. Customizable color schemes.":"Akıcı animasyonlar ve mükemmel okunabilirlikle sade, modern tasarım. Özelleştirilebilir renk şemaları.","Click":"Tıklayın:","Click OK to add it to your scene":"Sahnenize eklemek için Tamam'a tıklayın","Close":"Kapat","Commands & API":"Komutlar ve API","Community":"Topluluk","Complete Package":"Tam paket","Complete themed packages with documentation, sample images, and guides":"Belgeler, örnek görseller ve kılavuzlarla tam temalı paketler","Configure OBS to use your customized template":"OBS'yi özelleştirilmiş şablonunuzu kullanacak şekilde yapılandırın","Confirm SSN Is Receiving Chat":"SSN'nin sohbet aldığını doğrulayın","Confirm chat reaches the SSN dock and that the session ID and optional password match exactly.":"Sohbetin SSN paneline ulaştığını ve oturum kimliği ile isteğe bağlı parolanın tam eşleştiğini doğrulayın.","Consolidates your live social messaging streams and more. Free and open source.":"Canlı sosyal mesaj akışlarınızı ve daha fazlasını birleştirir. Ücretsiz ve açık kaynaklıdır.","Contribute":"Katkıda bulunun","Converting a more complex widget?":"Daha karmaşık bir bileşen mi dönüştürüyorsunuz?","Copy a working starter and edit its HTML, CSS, and JavaScript.":"Çalışan bir başlangıcı kopyalayın ve HTML, CSS ve JavaScript'ini düzenleyin.","Copy the template code to your clipboard":"Şablon kodunu panonuza kopyalayın","Copy to Clipboard":"Panoya kopyala","Create a styled SSN consolidated chat overlay from https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html . Receive the normal live feed (dock label), with a bounded message list, configurable count and optional expiry. Preserve platform icons, donation and membership presentation. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html temelinde biçimlendirilmiş bir SSN birleşik sohbet katmanı oluştur. Sınırlı mesaj listesi, yapılandırılabilir sayı ve isteğe bağlı sona erme ile normal canlı akışı (dock etiketi) al. Platform simgelerini, bağış ve üyelik sunumunu koru. Önce aşağıdaki geçerli SSN kaynak kodunu ve belgelerini incele. Bunları açamıyorsan dosyaları eklememi iste; aktarımı veya etkinlik şemasını tahmin etme. Başvuru kaynakları: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md ve https://socialstream.ninja/beta/docs/event-reference.html Başlangıç katmanının bağlantısını, session/password, label ve server seçeneklerini, moderasyon/silme/temizleme işlemesini ve mevcut mesaj alanlarını koru. Kimlik bilgilerini YOUR_SESSION_ID / YOUR_PASSWORD yer tutucuları olarak bırak, asla gerçek kimlik bilgileri kullanma. Chrome 80 ve OBS ile uyumlu klasik betikler kullan; göreli yerel bağımlılıkları koru ve HTML ile birlikte bulunması gereken dosyaları listele. chatname alanını düz metin olarak ele al; textonly yalnızca chatmessage için geçerlidir. Güvenli ifadeleri/rozetleri, yalnızca görsel içeren contentimg mesajlarını ve karma etkinlik/meta veri trafiğini koru; yalnızca meta veri içeren güncellemeleri sohbet olarak gösterme. Denetlenmemiş HTML ekleme veya yeni üst düzey veri yükü alanları uydurma. Tasarım: [renkleri, atmosferi, tipografiyi, yerleşimi ve hareketi açıkla]. Tuval: [genişlik x yükseklik]. Arka planı şeffaf, metni oyun görüntüsü üzerinde okunabilir, uzun adları/mesajları alan içinde tut ve azaltılmış hareket için stil sağla. Değiştirilen dosyaların tamamını, basit kurulum talimatlarını ve canlı oturuma asla bağlanmayan sahte verili demo modunu döndür. Uzun metni, emojiyi, yalnızca görsel içeren mesajları, silmeyi, temizlemeyi, yeniden boyutlandırmayı ve yeniden bağlanmayı test et.","Created an awesome template for Social Stream Ninja? Share it with the community by submitting a pull request to our GitHub repository.":"Social Stream Ninja için harika bir şablon mu oluşturdunuz? GitHub depomuza pull request göndererek toplulukla paylaşın.","Creating a Custom Chat Overlay for Social Stream Ninja":"Social Stream Ninja için özel sohbet katmanı oluşturma","Custom CSS":"Özel CSS","Customization Guide":"Özelleştirme kılavuzu","Customize Your Template":"Şablonunuzu özelleştirin","Customize https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html . Inspect its shared alert dependencies and https://socialstream.ninja/beta/docs/alert-effects.html first. Reuse existing alert type filters, queue, sound library, mute/volume and effect rules. Keep USD thresholds on the existing currency.js conversion path; do not compare formatted currency strings. Support an optional animation and sound for a $100 USD donation rule, respecting enabled state and existing range semantics. Avoid duplicate playback. Use only audio I supply or have permission to use. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html dosyasını özelleştir. Önce ortak uyarı bağımlılıklarını ve https://socialstream.ninja/beta/docs/alert-effects.html sayfasını incele. Mevcut uyarı türü filtrelerini, kuyruğu, ses kütüphanesini, sessiz/ses düzeyi ve efekt kurallarını yeniden kullan. USD eşiklerini mevcut currency.js dönüştürme yolunda tut; biçimlendirilmiş para birimi dizelerini karşılaştırma. Etkinlik durumuna ve mevcut aralık anlamlarına uyarak $100 USD bağış kuralı için isteğe bağlı animasyon ve ses destekle. Yinelenen oynatmayı önle. Yalnızca benim sağladığım veya kullanmaya iznim olan sesleri kullan. Önce aşağıdaki geçerli SSN kaynak kodunu ve belgelerini incele. Bunları açamıyorsan dosyaları eklememi iste; aktarımı veya etkinlik şemasını tahmin etme. Başvuru kaynakları: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md ve https://socialstream.ninja/beta/docs/event-reference.html Başlangıç katmanının bağlantısını, session/password, label ve server seçeneklerini, moderasyon/silme/temizleme işlemesini ve mevcut mesaj alanlarını koru. Kimlik bilgilerini YOUR_SESSION_ID / YOUR_PASSWORD yer tutucuları olarak bırak, asla gerçek kimlik bilgileri kullanma. Chrome 80 ve OBS ile uyumlu klasik betikler kullan; göreli yerel bağımlılıkları koru ve HTML ile birlikte bulunması gereken dosyaları listele. chatname alanını düz metin olarak ele al; textonly yalnızca chatmessage için geçerlidir. Güvenli ifadeleri/rozetleri, yalnızca görsel içeren contentimg mesajlarını ve karma etkinlik/meta veri trafiğini koru; yalnızca meta veri içeren güncellemeleri sohbet olarak gösterme. Denetlenmemiş HTML ekleme veya yeni üst düzey veri yükü alanları uydurma. Tasarım: [renkleri, atmosferi, tipografiyi, yerleşimi ve hareketi açıkla]. Tuval: [genişlik x yükseklik]. Arka planı şeffaf, metni oyun görüntüsü üzerinde okunabilir, uzun adları/mesajları alan içinde tut ve azaltılmış hareket için stil sağla. Değiştirilen dosyaların tamamını, basit kurulum talimatlarını ve canlı oturuma asla bağlanmayan sahte verili demo modunu döndür. Uzun metni, emojiyi, yalnızca görsel içeren mesajları, silmeyi, temizlemeyi, yeniden boyutlandırmayı ve yeniden bağlanmayı test et.","Customize https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html for a single selected message. Preserve its default featured/overlay routing and clear behavior; do not automatically show every chat message. Explain how to select a message from the SSN dock. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html dosyasını seçilen tek mesaj için özelleştir. Varsayılan featured/overlay yönlendirmesini ve temizleme davranışını koru; her sohbet mesajını otomatik gösterme. SSN panelinden mesajın nasıl seçileceğini açıkla. Önce aşağıdaki geçerli SSN kaynak kodunu ve belgelerini incele. Bunları açamıyorsan dosyaları eklememi iste; aktarımı veya etkinlik şemasını tahmin etme. Başvuru kaynakları: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md ve https://socialstream.ninja/beta/docs/event-reference.html Başlangıç katmanının bağlantısını, session/password, label ve server seçeneklerini, moderasyon/silme/temizleme işlemesini ve mevcut mesaj alanlarını koru. Kimlik bilgilerini YOUR_SESSION_ID / YOUR_PASSWORD yer tutucuları olarak bırak, asla gerçek kimlik bilgileri kullanma. Chrome 80 ve OBS ile uyumlu klasik betikler kullan; göreli yerel bağımlılıkları koru ve HTML ile birlikte bulunması gereken dosyaları listele. chatname alanını düz metin olarak ele al; textonly yalnızca chatmessage için geçerlidir. Güvenli ifadeleri/rozetleri, yalnızca görsel içeren contentimg mesajlarını ve karma etkinlik/meta veri trafiğini koru; yalnızca meta veri içeren güncellemeleri sohbet olarak gösterme. Denetlenmemiş HTML ekleme veya yeni üst düzey veri yükü alanları uydurma. Tasarım: [renkleri, atmosferi, tipografiyi, yerleşimi ve hareketi açıkla]. Tuval: [genişlik x yükseklik]. Arka planı şeffaf, metni oyun görüntüsü üzerinde okunabilir, uzun adları/mesajları alan içinde tut ve azaltılmış hareket için stil sağla. Değiştirilen dosyaların tamamını, basit kurulum talimatlarını ve canlı oturuma asla bağlanmayan sahte verili demo modunu döndür. Uzun metni, emojiyi, yalnızca görsel içeren mesajları, silmeyi, temizlemeyi, yeniden boyutlandırmayı ve yeniden bağlanmayı test et.","Demo Preview":"Demo Önizleme","Demo is blank":"Demo boş","Deuk's Theme":"Deuk'un Teması","Developer":"Geliştirici","Developer Templates":"Geliştirici şablonları","Developer guide":"Geliştirici kılavuzu","Discord":"Discord","Do not add the session ID or edit the URL in OBS.":"OBS'de oturum kimliğini eklemeyin veya URL'yi düzenlemeyin.","Donate":"Bağış yapın","Download":"İndir","Download OBS HTML":"OBS HTML'sini İndir","Download and Add It to OBS":"İndirip OBS'ye ekleyin","Editable prompt":"Düzenlenebilir istem","Elegant design with smooth animations and visual effects. Eye-catching yet not distracting.":"Akıcı animasyonlar ve görsel efektlerle zarif tasarım. Dikkat çekici ama dikkat dağıtmaz.","Event Flow editor":"Etkinlik Akışı düzenleyicisi","Event fields":"Etkinlik alanları","FAQ":"SSS","Failed to copy. Try selecting and copying manually.":"Kopyalanamadı. Elle seçip kopyalamayı deneyin.","Featured":"Öne çıkan","Features":"Özellikler","Filter templates":"Şablonları filtrele","Find the perfect template for your stream":"Yayınınız için ideal şablonu bulun","Find the sample overlay template (sampleoverlay.html)":"Örnek katman şablonunu bulun (sampleoverlay.html)","Follow these simple steps to get started":"Başlamak için bu basit adımları izleyin","For inline CSS, use":"Satır içi CSS için şunu kullanın:","For trigger-based behavior, start with the":"Tetikleyici tabanlı davranış için şununla başlayın:","Friendly ghost, glowing pumpkin and midnight plum":"Sevimli hayalet, parlayan bal kabağı ve gece yarısı mürdümü","Friendly ghost, glowing pumpkin and midnight plum. Includes matching chat, featured-message, and alert styles.":"Sevimli hayalet, parlayan bal kabağı ve gece yarısı mürdümü. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.","Gaming":"Oyun","Get":"Alın:","Get the Original Widget Export":"Orijinal bileşen dışa aktarımını alın","GitHub":"GitHub","GitHub Repository":"GitHub deposu","Guides":"Kılavuzlar","Have a StreamElements chat widget export?":"StreamElements sohbet bileşeni dışa aktarımınız mı var?","Have a Template to Share?":"Paylaşacak şablonunuz mu var?","Headphone raccoon and vinyl in mint and plum":"Nane ve mürdüm tonlarında kulaklıklı rakun ve plak","Headphone raccoon and vinyl in mint and plum. Includes matching chat, featured-message, and alert styles.":"Nane ve mürdüm tonlarında kulaklıklı rakun ve plak. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.","Hire":"Hizmet alın","Home":"Ana sayfa","Host your files and use their URL with your session and optional password. For a self-contained local export, follow its configuration instructions; OBS Local file has no URL field for session parameters.":"Dosyalarınızı barındırın ve URL'lerini oturumunuz ve isteğe bağlı parolanızla kullanın. Kendi kendine yeterli yerel dışa aktarım için yapılandırma talimatlarını izleyin; OBS Yerel dosya seçeneğinde oturum parametreleri için URL alanı yoktur.","How to Use Templates":"Şablonları kullanma","If the imported widget provides compatible settings, use":"İçe aktarılan bileşen uyumlu ayarlar sağlıyorsa şunu kullanın:","Import StreamElements Widget":"StreamElements bileşenini içe aktar","In OBS, click the + under Sources and select \"Browser\"":"OBS'de Kaynaklar altındaki + işaretine tıklayıp “Tarayıcı”yı seçin","Inspiration":"İlham","Installation Guide":"Kurulum kılavuzu","Join our Discord":"Discord sunucumuza katılın","Keep SSN running while streaming; the importer and StreamElements may be closed.":"Yayın sırasında SSN'yi çalışır durumda tutun; içe aktarıcı ve StreamElements kapatılabilir.","Keep referenced shared scripts, fonts, and images alongside your file with the same relative paths, or ask your AI for a self-contained export. Renaming one HTML file does not bundle its dependencies.":"Başvurulan ortak betikleri, yazı tiplerini ve görselleri dosyanızın yanında aynı göreli yollarla tutun veya yapay zekânızdan kendi kendine yeterli dışa aktarım isteyin. Tek HTML dosyasını yeniden adlandırmak bağımlılıklarını paketlemez.","Keep the original connection code. Chat and featured overlays receive different feeds; styling a chat feed does not make it a selected-message overlay.":"Orijinal bağlantı kodunu koruyun. Sohbet ve öne çıkan katmanlar farklı akışlar alır; sohbet akışını biçimlendirmek onu seçili mesaj katmanı yapmaz.","Learn how to create a custom chat overlay with AI assistance":"Yapay zekâ yardımıyla özel sohbet katmanı oluşturmayı öğrenin","Liquid Glass":"Sıvı Cam","Live Preview":"Canlı Önizleme","Live Preview is blank":"Canlı Önizleme boş","Local file":"Yerel dosya","LuckyLootTube Liquid Glass Theme":"LuckyLootTube Sıvı Cam Teması","LuckyLootTube's Theme":"LuckyLootTube'un Teması","Main navigation":"Ana gezinme","Message history":"Mesaj geçmişi","Minimal":"En az","Minimal code needed to create your own overlay from scratch. Perfect for developers and LLM-assisted coding.":"Kendi katmanınızı sıfırdan oluşturmak için gereken en az kod. Geliştiriciler ve LLM destekli kodlama için ideal.","Modern":"Modern","Modern Design":"Modern tasarım","Name your source and click OK":"Kaynağınıza ad verip Tamam'a tıklayın","Neutron Theme":"Neutron Teması","New":"Yeni","New to importing?":"İçe aktarmada yeni misiniz?","No matches. Try another search or choose All Templates.":"Eşleşme yok. Başka arama deneyin veya Tüm Şablonlar'ı seçin.","Nostalgic Windows 3.1 style chat overlay with classic window design and pixel-perfect detailing.":"Klasik pencere tasarımı ve piksel hassasiyetli ayrıntılarıyla nostaljik Windows 3.1 tarzı sohbet katmanı.","OBS Custom CSS:":"OBS Özel CSS:","OBS is blank":"OBS boş","One look across three browser sources. In the gallery, choose":"Üç tarayıcı kaynağında tek görünüm. Galeride şunu seçin:","One message you select in the dock. Choose a featured design for interviews, Q&A, or shout-outs.":"Panelde seçtiğiniz tek mesaj. Röportajlar, soru-cevap veya selamlamalar için öne çıkan tasarım seçin.","Open Widget Importer":"Bileşen içe aktarıcısını aç","Open navigation menu":"Gezinme menüsünü aç","Open the Importer":"İçe aktarıcıyı açın","Open the StreamElements converter":"StreamElements dönüştürücüsünü aç","Open the importer and choose the ZIP, folder, or files. It detects the widget parts and immediately shows a demo preview.":"İçe aktarıcıyı açıp ZIP'i, klasörü veya dosyaları seçin. Bileşen parçalarını algılar ve hemen demo önizleme gösterir.","Open your platform sources in the SSN app or extension, then send a test message. Continue only after it appears in the SSN dock.":"SSN uygulamasında veya uzantısında platform kaynaklarınızı açın, ardından test mesajı gönderin. Yalnızca SSN panelinde göründükten sonra devam edin.","Opening the importer from the SSN popup fills the session ID and password automatically. If you opened it directly, copy them from":"İçe aktarıcıyı SSN açılır menüsünden açmak oturum kimliğini ve parolayı otomatik doldurur. Doğrudan açtıysanız şuradan kopyalayın:","Overlay Gallery":"Katman galerisi","Paste your template URL with session ID":"Oturum kimliğiyle birlikte şablon URL'nizi yapıştırın","Personalize your overlay with custom CSS in one of these ways:":"Katmanınızı şu yollardan biriyle özel CSS kullanarak kişiselleştirin:","Popular":"Popüler","Pretty Template":"Güzel Şablon","Preview & use pack":"Paketi önizle ve kullan","Preview chat, featured-message, and alert overlays, then add your favorite to OBS or Streamlabs.":"Sohbet, öne çıkan mesaj ve uyarı katmanlarını önizleyin, ardından favorinizi OBS veya Streamlabs'e ekleyin.","Preview fake data first, then test with your own SSN session. Check selected messages, clearing, long names, images, and transparent backgrounds. Keep SSN running during live use.":"Önce sahte verileri önizleyin, ardından kendi SSN oturumunuzla test edin. Seçili mesajları, temizlemeyi, uzun adları, görselleri ve şeffaf arka planları kontrol edin. Canlı kullanımda SSN'yi çalışır durumda tutun.","Privacy Policy":"Gizlilik politikası","Prompt copied.":"İstem kopyalandı.","Prompt selected. Press Ctrl+C (Command+C on Mac) to copy.":"İstem seçildi. Kopyalamak için Ctrl+C (Mac'te Command+C) tuşlarına basın.","Prompt the AI to modify the CSS for your preferred style":"Yapay zekâdan CSS'yi tercih ettiğiniz stile göre değiştirmesini isteyin","Quick Guide from the Video":"Videodan hızlı kılavuz","Quick Links":"Hızlı bağlantılar","Quick start":"Hızlı başlangıç","Read the full chat skin guide":"Tam sohbet teması kılavuzunu okuyun","Ready-to-use templates that only require your session ID":"Yalnızca oturum kimliğinizi gerektiren kullanıma hazır şablonlar","Replace":"Değiştirin:","Report an Issue":"Sorun bildirin","Resources":"Kaynaklar","Restyle my existing SSN overlay using CSS only. I will provide its URL and source HTML/CSS. Keep all JavaScript and message routing unchanged. Inspect actual DOM selectors before writing CSS. Deliver CSS for the OBS Browser Source Custom CSS box plus any necessary local font/image assets. First inspect the current SSN source and docs below. If you cannot open them, ask me to attach the files; do not guess the transport or event schema. References: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md and https://socialstream.ninja/beta/docs/event-reference.html Preserve the starting overlay’s connection, session/password, label and server options, moderation/delete/clear handling, and existing message fields. Keep credentials as YOUR_SESSION_ID / YOUR_PASSWORD placeholders, never real credentials. Use classic scripts compatible with Chrome 80 and OBS; preserve relative local dependencies and list files that must accompany the HTML. Treat chatname as plain text; textonly applies only to chatmessage. Preserve safe emotes/badges, image-only contentimg messages, and mixed event/metadata traffic without displaying metadata-only updates as chat. Do not insert unchecked HTML or invent top-level payload fields. Design: [describe colors, mood, typography, placement and motion]. Canvas: [width x height]. Keep the background transparent, text readable over gameplay, long names/messages contained, and provide reduced-motion styling. Return complete changed files, simple setup instructions, and a demo mode with fake data that never connects to a live session. Test long text, emoji, image-only messages, deletion, clear, resizing and reconnects.":"Mevcut SSN katmanımın stilini yalnızca CSS kullanarak değiştir. URL'sini ve kaynak HTML/CSS'sini sağlayacağım. Tüm JavaScript'i ve mesaj yönlendirmesini aynı bırak. CSS yazmadan önce gerçek DOM seçicilerini incele. OBS Tarayıcı Kaynağı Özel CSS kutusu için CSS'yi ve gerekli yerel yazı tipi/görsel varlıklarını teslim et. Önce aşağıdaki geçerli SSN kaynak kodunu ve belgelerini incele. Bunları açamıyorsan dosyaları eklememi iste; aktarımı veya etkinlik şemasını tahmin etme. Başvuru kaynakları: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md ve https://socialstream.ninja/beta/docs/event-reference.html Başlangıç katmanının bağlantısını, session/password, label ve server seçeneklerini, moderasyon/silme/temizleme işlemesini ve mevcut mesaj alanlarını koru. Kimlik bilgilerini YOUR_SESSION_ID / YOUR_PASSWORD yer tutucuları olarak bırak, asla gerçek kimlik bilgileri kullanma. Chrome 80 ve OBS ile uyumlu klasik betikler kullan; göreli yerel bağımlılıkları koru ve HTML ile birlikte bulunması gereken dosyaları listele. chatname alanını düz metin olarak ele al; textonly yalnızca chatmessage için geçerlidir. Güvenli ifadeleri/rozetleri, yalnızca görsel içeren contentimg mesajlarını ve karma etkinlik/meta veri trafiğini koru; yalnızca meta veri içeren güncellemeleri sohbet olarak gösterme. Denetlenmemiş HTML ekleme veya yeni üst düzey veri yükü alanları uydurma. Tasarım: [renkleri, atmosferi, tipografiyi, yerleşimi ve hareketi açıkla]. Tuval: [genişlik x yükseklik]. Arka planı şeffaf, metni oyun görüntüsü üzerinde okunabilir, uzun adları/mesajları alan içinde tut ve azaltılmış hareket için stil sağla. Değiştirilen dosyaların tamamını, basit kurulum talimatlarını ve canlı oturuma asla bağlanmayan sahte verili demo modunu döndür. Uzun metni, emojiyi, yalnızca görsel içeren mesajları, silmeyi, temizlemeyi, yeniden boyutlandırmayı ve yeniden bağlanmayı test et.","Retro":"Retro","Retro Style":"Retro tarz","Review the detected files in the importer and use Advanced file selection if it chose the wrong HTML, CSS, or JavaScript.":"İçe aktarıcıda algılanan dosyaları gözden geçirin ve yanlış HTML, CSS veya JavaScript seçildiyse Gelişmiş dosya seçimi'ni kullanın.","Sample Overlay":"Örnek Katman","Sample Overlay Template":"Örnek katman şablonu","Sample Template":"Örnek şablon","Scarf-wrapped reindeer and festive evergreen":"Atkılı ren geyiği ve şenlikli çam ağacı","Scarf-wrapped reindeer and festive evergreen. Includes matching chat, featured-message, and alert styles.":"Atkılı ren geyiği ve şenlikli çam ağacı. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.","Search templates by name, type, or feature...":"Ad, tür veya özellik ara…","See setup below":"Aşağıdaki kuruluma bakın","Session Options":"Oturum seçenekleri","Set width and height (recommended: 1920×1080)":"Genişliği ve yüksekliği ayarlayın (önerilen: 1920×1080)","Setup":"Kurulum","Simple Drop-in Templates":"Kolayca eklenen basit şablonlar","Sleek animated liquid-glass style chat overlay with smooth animations and cool emote rendering.":"Akıcı animasyonlar ve hoş ifade gösterimiyle şık, animasyonlu sıvı cam tarzı sohbet katmanı.","Sleepy calico, strawberry milk and blush stationery":"Uykulu üç renkli kedi, çilekli süt ve uçuk pembe kırtasiye","Sleepy calico, strawberry milk and blush stationery. Includes matching chat, featured-message, and alert styles.":"Uykulu üç renkli kedi, çilekli süt ve uçuk pembe kırtasiye. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja. GPLv3.0 License. Created by":"Social Stream Ninja. GPLv3.0 Lisansı. Geliştiren:","Source Code":"Kaynak kodu","Start with a working overlay, then change its appearance.":"Çalışan bir katmanla başlayın, ardından görünümünü değiştirin.","Starting points for creating your own custom overlays":"Kendi özel katmanlarınızı oluşturmak için başlangıç noktaları","Steve Seguin":"Steve Seguin","StreamElements Setup Guide":"StreamElements kurulum kılavuzu","Submit on GitHub":"GitHub'da gönder","Support":"Destek","Supported Sites":"Desteklenen siteler","Switch theme":"Temayı değiştir","Template Library":"Şablon kütüphanesi","Templates":"Şablonlar","Templates Gallery":"Şablon Galerisi","Templates that work with YouTube CSS styles":"YouTube CSS stilleriyle çalışan şablonlar","Terms of Service":"Hizmet koşulları","Test Before Downloading":"İndirmeden önce test edin","Themed Packages":"Temalı paketler","This works with both the SSN Windows desktop app and Chrome extension. No code editing is required.":"Hem SSN Windows masaüstü uygulaması hem Chrome uzantısıyla çalışır; kod düzenleme gerekmez.","URL Parameter:":"URL parametresi:","Use":"Kullanın:","Use CSS designed for YouTube with our YouTube-structured overlay page. Compatible with Septapus styles.":"YouTube yapısındaki katman sayfamızla YouTube için tasarlanmış CSS kullanın. Septapus stilleriyle uyumludur.","Use OBS Browser Source":"OBS Tarayıcı Kaynağı kullanın","Use a StreamElements Chat Widget with Social Stream Ninja":"Social Stream Ninja ile StreamElements sohbet bileşeni kullanın","Use an AI assistant like Claude to help customize it":"Özelleştirmeye yardımcı olması için Claude gibi bir yapay zekâ asistanı kullanın","Use matching set":"Uyumlu seti kullan","Use the ZIP, folder, or files supplied by the widget designer. A useful export normally contains HTML, CSS, JavaScript, fields/data, and assets. A screenshot or StreamElements overlay URL is not enough.":"Bileşen tasarımcısının sağladığı ZIP'i, klasörü veya dosyaları kullanın. İşe yarar bir dışa aktarım normalde HTML, CSS, JavaScript, fields/data ve varlıklar içerir. Ekran görüntüsü veya StreamElements katman URL'si yeterli değildir.","Use the downloaded HTML file, then refresh the OBS Browser Source. The importer page, original ZIP, and StreamElements URL cannot be used as the Browser Source.":"İçe aktarıcı sayfası, orijinal ZIP veya StreamElements URL'si yerine indirilen HTML dosyasını kullanın, ardından OBS Tarayıcı Kaynağı'nı yenileyin.","Use the full StreamElements / Streamlabs conversion prompt":"Tam StreamElements / Streamlabs dönüştürme istemini kullanın","Video Tutorial":"Video eğitimi","Windows 3.1 Theme":"Windows 3.1 Teması","X.com":"X.com","YouTube Compatible":"YouTube uyumlu","YouTube-CSS Compatible Templates":"YouTube CSS uyumlu şablonlar","YouTube-CSS Template":"YouTube CSS şablonu","alert effect rules":"uyarı efekti kuralları","and":"ve","before writing a new overlay.":"yeni katman yazmadan önce.","checks the design with sample messages.":"tasarımı örnek mesajlarla kontrol eder.","checks the session using real chat from the running SSN app or extension.":"çalışan SSN uygulaması veya uzantısından gelen gerçek sohbetle oturumu kontrol eder.","complete visual overlay gallery":"tam görsel katman galerisi","featured-modern.html":"featured-modern.html","for colors, spacing, and typography. Keep the original SSN URL and connection.":"renkler, aralıklar ve tipografi için. Orijinal SSN URL'sini ve bağlantısını koruyun.","for consolidated chat,":"birleştirilmiş sohbet için,","for events. Download the source and required assets from":"etkinlikler için. Kaynağı ve gereken varlıkları şuradan indirin:","for finding widget files, supported formats, OBS setup and troubleshooting.":"bileşen dosyalarını bulma, desteklenen biçimler, OBS kurulumu ve sorun giderme için.","for selected messages, or":"seçili mesajlar için veya","in the app or extension. You enter the session ID once in the importer; it is saved inside the downloaded file.":"uygulamada veya uzantıda. Oturum kimliğini içe aktarıcıya bir kez girersiniz; indirilen dosyanın içine kaydedilir.","in the template URL with your actual Social Stream Ninja session ID found under Session Options in the SSN app or extension. Include the optional password if your session uses one.":"şablon URL'sinde, SSN uygulaması veya uzantısındaki Oturum Seçenekleri altında bulunan gerçek Social Stream Ninja oturum kimliğinizle. Oturumunuz kullanıyorsa isteğe bağlı parolayı da dahil edin.","multi-alerts.html":"multi-alerts.html","sampleoverlay.html":"sampleoverlay.html","t3nk3y's Theme":"t3nk3y'nin Teması","the beta repository":"beta deposu","the dock":"panel","to turn off timed removal or change how many messages stay on screen. This changes widget settings, not its code.":"zamanlı kaldırmayı kapatmak veya ekranda kalan mesaj sayısını değiştirmek için. Bu, bileşen kodunu değil ayarlarını değiştirir.","to your template URL":"şablon URL'nize","with contributions from the community.":"topluluğun katkılarıyla.","{0} templates shown":"{0} şablon gösteriliyor","✨ Copy AI Prompts":"✨ Yapay zekâ istemlerini kopyala","✨ Copy a prompt for your AI":"✨ Yapay zekânız için istem kopyalayın","⭐ Featured message":"⭐ Öne çıkan mesaj","🌙 Moon Bunny":"🌙 Ay Tavşanı","🍄 Moss & Mushrooms":"🍄 Yosun ve Mantarlar","🎃 Pumpkin Haunt":"🎃 Hayaletli Bal Kabağı","🎄 Merry Little Reindeer":"🎄 Neşeli Küçük Ren Geyiği","🎉 Alerts with sound":"🎉 Sesli uyarılar","🎉 Event alerts":"🎉 Etkinlik uyarıları","🎨 CSS-only makeover":"🎨 Yalnızca CSS ile yeni görünüm","🎨 Change the look":"🎨 Görünümü değiştirin","🎨 Matching packs":"🎨 Uyumlu paketler","🎨 Matching theme packs":"🎨 Uyumlu tema paketleri","🎵 Midnight Mixtape":"🎵 Gece Yarısı Karışık Kaset","🐉 Crystal Guardian":"🐉 Kristal Muhafızı","🐱 Strawberry Cat":"🐱 Çilek Kedisi","🐶 Good Company":"🐶 Good Company","💬 Consolidated chat":"💬 Birleştirilmiş sohbet","📋 Copy prompt":"📋 İstemi kopyala","📦 Bring a widget":"📦 Bileşeninizi getirin","🔎 Find a template or theme pack":"🔎 Şablon veya tema paketi bulun","🔧 Files, routing, and testing":"🔧 Dosyalar, yönlendirme ve test","🚀 Setup":"🚀 Kurulum","🛠️ Make Your Own":"🛠️ Kendiniz yapın","🛠️ Make your own template":"🛠️ Kendi şablonunuzu yapın","🧩 Change behavior":"🧩 Davranışı değiştirin","🧭 Choose your overlay type":"🧭 Katman türünüzü seçin"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/templates.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/templates.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/templates.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/templates.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/templates.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/templates.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/templates.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/templates.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/templates.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/templates.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/templates.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/templates.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/templates.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/templates.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/templates.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/templates.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/templates.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/templates.html">
+<!-- ssn-languages:end --></head>
+<body>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme"><a href="../index.html">Ana sayfa</a><a href="features.html">Özellikler</a><a href="inspiration.html" class="site-priority-inspiration">İlham</a><a href="download.html">İndir</a><a href="guides.html">Kılavuzlar</a><a href="commands.html">Komutlar ve API</a><a href="supported-sites.html">Desteklenen siteler</a><a href="overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a><a href="services.html" class="site-priority-hire">Hizmet alın</a><a href="support.html">Destek</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/templates.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/templates.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/templates.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/templates.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/templates.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/templates.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/templates.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/templates.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/templates.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/templates.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/templates.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/templates.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/templates.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/templates.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="templates.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/templates.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/templates.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Şablon Galerisi</h1>
+            <p>Şuna göz atın: <a href="overlay-gallery.html">tam görsel katman galerisi</a>veya aşağıdaki özel şablonları ve içe aktarma seçeneklerini keşfedin.</p>
+        </div>
+    </section>
+
+    <section class="template-banner">
+        <div class="container">
+            <h2>Yayınınız için bir görünüm seçin</h2>
+            <p>Sohbet, öne çıkan mesaj ve uyarı katmanlarını önizleyin, ardından favorinizi OBS veya Streamlabs'e ekleyin.</p>
+            <div class="hero-buttons">
+                <a href="overlay-gallery.html" class="btn btn-primary">Katman galerisine göz atın</a>
+                <a href="#how-to-use" class="btn btn-secondary">🚀 Kurulum</a>
+                <a href="#make-your-own" class="btn btn-secondary">🛠️ Kendiniz yapın</a>
+                <a href="#ai-prompts" class="btn btn-secondary">✨ Yapay zekâ istemlerini kopyala</a>
+                <a href="../../streamelements-importer.html" class="btn btn-secondary">StreamElements bileşenini içe aktar</a>
+                <a href="streamelements-chat-guide.html" class="btn btn-secondary">StreamElements kurulum kılavuzu</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="template-details" aria-labelledby="choose-overlay">
+        <div class="container">
+            <h2 id="choose-overlay">🧭 Katman türünüzü seçin</h2>
+            <div class="template-features">
+                <div class="template-feature"><h3>💬 Birleştirilmiş sohbet</h3><p>Bağlı platformlarınızdan akan mesajlar. Sohbet şablonuyla veya şununla başlayın: <a href="../../dock.html">panel</a>.</p></div>
+                <div class="template-feature"><h3>⭐ Öne çıkan mesaj</h3><p>Panelde seçtiğiniz tek mesaj. Röportajlar, soru-cevap veya selamlamalar için öne çıkan tasarım seçin.</p></div>
+                <div class="template-feature"><h3>🎉 Etkinlik uyarıları</h3><p>Takipleri, üyelikleri ve bağışları kutlayın. Animasyonları ve sesi SSN'nin uyarı ayarlarında yapılandırın. <a href="alert-effects.html">Uyarı kılavuzu</a></p></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="template-library" class="template-library">
+        <div class="container">
+            <h2>Şablon kütüphanesi</h2>
+            <p class="section-subtitle">Yayınınız için ideal şablonu bulun</p>
+            
+            <div class="template-search">
+                <label for="template-search-input">🔎 Şablon veya tema paketi bulun</label>
+                <input type="search" id="template-search-input" placeholder="Ad, tür veya özellik ara…">
+            </div>
+            
+            <p id="template-results" role="status"></p>
+            <div class="tag-filters" aria-label="Şablonları filtrele">
+                <button type="button" class="filter-tag" data-filter="matching" aria-pressed="false">🎨 Uyumlu paketler</button>
+                <button type="button" class="filter-tag active" data-filter="all" aria-pressed="true">Tüm şablonlar</button>
+                <button type="button" class="filter-tag" data-filter="gaming" aria-pressed="false">Oyun</button>
+                <button type="button" class="filter-tag" data-filter="minimal" aria-pressed="false">En az</button>
+                <button type="button" class="filter-tag" data-filter="animated" aria-pressed="false">Animasyonlu</button>
+                <button type="button" class="filter-tag" data-filter="retro" aria-pressed="false">Retro</button>
+                <button type="button" class="filter-tag" data-filter="modern" aria-pressed="false">Modern</button>
+                <button type="button" class="filter-tag" data-filter="youtube-compatible" aria-pressed="false">YouTube uyumlu</button>
+            </div>
+            
+<div id="matching-packs" class="template-category"><div class="category-header"><h3>🎨 Uyumlu tema paketleri</h3></div><p>Üç tarayıcı kaynağında tek görünüm. Galeride şunu seçin: <strong>Uyumlu seti kullan</strong>, oturum ayrıntılarınızı girin, ardından OBS bağlantılarını kopyalayın. Hareket isteğe bağlıdır.</p><div class="templates-main-grid"><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute cat cats kitten">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-cat.webp" loading="lazy" width="640" height="360" alt="Uykulu üç renkli kedi, çilekli süt ve uçuk pembe kırtasiye"></div>
+ <div class="template-content"><h3>🐱 Çilek Kedisi</h3><p class="template-description">Uykulu üç renkli kedi, çilekli süt ve uçuk pembe kırtasiye. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-cat">Paketi önizle ve kullan</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute dog dogs corgi puppy">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-dog.webp" loading="lazy" width="640" height="360" alt="Gök mavisi kartpostalda neşeli bir corgi"></div>
+ <div class="template-content"><h3>🐶 Good Company</h3><p class="template-description">Gök mavisi kartpostalda neşeli bir corgi. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-dog">Paketi önizle ve kullan</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute forest">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-forest.webp" loading="lazy" width="640" height="360" alt="Huzurlu bir ormanda masal kitabından bir kurbağa"></div>
+ <div class="template-content"><h3>🍄 Yosun ve Mantarlar</h3><p class="template-description">Huzurlu bir ormanda masal kitabından bir kurbağa. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-forest">Paketi önizle ve kullan</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute space">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-space.webp" loading="lazy" width="640" height="360" alt="Leylak rengi yıldız tozunda süzülen astronot tavşan"></div>
+ <div class="template-content"><h3>🌙 Ay Tavşanı</h3><p class="template-description">Leylak rengi yıldız tozunda süzülen astronot tavşan. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-space">Paketi önizle ve kullan</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute dragon">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-dragon.webp" loading="lazy" width="640" height="360" alt="Işıltılı sihirli kristalle küçük bir ejderha"></div>
+ <div class="template-content"><h3>🐉 Kristal Muhafızı</h3><p class="template-description">Işıltılı sihirli kristalle küçük bir ejderha. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-dragon">Paketi önizle ve kullan</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute music">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-music.webp" loading="lazy" width="640" height="360" alt="Nane ve mürdüm tonlarında kulaklıklı rakun ve plak"></div>
+ <div class="template-content"><h3>🎵 Gece Yarısı Karışık Kaset</h3><p class="template-description">Nane ve mürdüm tonlarında kulaklıklı rakun ve plak. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-music">Paketi önizle ve kullan</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute halloween">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-halloween.webp" loading="lazy" width="640" height="360" alt="Sevimli hayalet, parlayan bal kabağı ve gece yarısı mürdümü"></div>
+ <div class="template-content"><h3>🎃 Hayaletli Bal Kabağı</h3><p class="template-description">Sevimli hayalet, parlayan bal kabağı ve gece yarısı mürdümü. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-halloween">Paketi önizle ve kullan</a></div></article><article class="template-card" data-tags="illustrated matching modern illustrated artwork mascot cute christmas">
+ <div class="template-preview"><img src="../../docs/images/overlay-gallery/featured-art-christmas.webp" loading="lazy" width="640" height="360" alt="Atkılı ren geyiği ve şenlikli çam ağacı"></div>
+ <div class="template-content"><h3>🎄 Neşeli Küçük Ren Geyiği</h3><p class="template-description">Atkılı ren geyiği ve şenlikli çam ağacı. Uyumlu sohbet, öne çıkan mesaj ve uyarı stilleri içerir.</p><a class="btn btn-primary" href="overlay-gallery.html#pack-christmas">Paketi önizle ve kullan</a></div></article></div></div>
+            <div id="themed-packages" class="template-category">
+                <div class="category-header">
+                    <h3>Temalı paketler</h3>
+                </div>
+                <p>Belgeler, örnek görseller ve kılavuzlarla tam temalı paketler</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="gaming animated modern">
+                        <div class="template-badge badge-featured">Öne çıkan</div>
+                        <div class="template-preview">
+                            <img src="../../media/deuks.png" alt="Deuk&#x27;un Teması">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Tam paket</span>
+                            <h3>Deuk'un Teması</h3>
+                            <p class="template-description">Özelleştirilebilir renkler ve akıcı geçişlerle gelişmiş, tamamen animasyonlu tema. Oyun yayınları için ideal.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Deuk tarafından</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/tree/main/themes/deuks_overlay" class="btn btn-primary">Alın:</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="retro">
+                        <div class="template-badge badge-new">Yeni</div>
+                        <div class="template-preview">
+                            <img src="../../media/windows.png" alt="Windows 3.1 Teması">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Retro tarz</span>
+                            <h3>Windows 3.1 Teması</h3>
+                            <p class="template-description">Klasik pencere tasarımı ve piksel hassasiyetli ayrıntılarıyla nostaljik Windows 3.1 tarzı sohbet katmanı.</p>
+                            <div class="template-footer">
+                                <div class="template-author">RetroTech tarafından</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/tree/main/themes/Windows3.1" class="btn btn-primary">Alın:</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="modern animated">
+                        <div class="template-preview">
+                            <img src="../../media/neutron.png" alt="Neutron Teması">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Modern tasarım</span>
+                            <h3>Neutron Teması</h3>
+                            <p class="template-description">Akıcı animasyonlar ve mükemmel okunabilirlikle sade, modern tasarım. Özelleştirilebilir renk şemaları.</p>
+                            <div class="template-footer">
+                                <div class="template-author">NeutronStudio tarafından</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/Neutron/" class="btn btn-primary">Alın:</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>Kolayca eklenen basit şablonlar</h3>
+                </div>
+                <p>Yalnızca oturum kimliğinizi gerektiren kullanıma hazır şablonlar</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-badge badge-popular">Popüler</div>
+                        <div class="template-preview">
+                            <img src="../../media/simple.png" alt="Örnek şablon">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">En az</span>
+                            <h3>Örnek şablon</h3>
+                            <p class="template-description">Temel özelliklere sahip sade, hafif şablon. Özelleştirme için ideal başlangıç noktası.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Social Stream Ninja tarafından</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/sampleoverlay.html?session=YOURSESSIONIDHERE" class="btn btn-primary">Kullanın:</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="animated modern">
+                        <div class="template-preview">
+                            <img src="../../media/prettyoverlay.png" alt="Güzel Şablon">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Animasyonlu</span>
+                            <h3>Güzel Şablon</h3>
+                            <p class="template-description">Akıcı animasyonlar ve görsel efektlerle zarif tasarım. Dikkat çekici ama dikkat dağıtmaz.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Social Stream Ninja tarafından</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONIDHERE" class="btn btn-primary">Kullanın:</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="gaming">
+                        <div class="template-preview">
+                            <img src="../../media/t3nk3y.png" alt="t3nk3y&#x27;nin Teması">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Oyun</span>
+                            <h3>t3nk3y'nin Teması</h3>
+                            <p class="template-description">Hızlı içerikte bile mükemmel görünürlük sağlayan, oyun yayınları için tasarlanmış belirgin, yüksek kontrastlı tema.</p>
+                            <div class="template-footer">
+                                <div class="template-author">t3nk3y tarafından</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/t3nk3y/?session=YOURSESSIONIDHERE" class="btn btn-primary">Kullanın:</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="template-card" data-tags="liquid-glass">
+                        <div class="template-preview">
+                            <img src="../../media/luckyloottube.png" alt="LuckyLootTube Sıvı Cam Teması">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Sıvı Cam</span>
+                            <h3>LuckyLootTube'un Teması</h3>
+                            <p class="template-description">Akıcı animasyonlar ve hoş ifade gösterimiyle şık, animasyonlu sıvı cam tarzı sohbet katmanı.</p>
+                            <div class="template-footer">
+                                <div class="template-author">LuckyLootTube tarafından</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/LuckyLootTube/luckyloottube.html?session=YOURSESSIONIDHERE&amp;v=3.40.2" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Kullanın:</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>YouTube CSS uyumlu şablonlar</h3>
+                </div>
+                <p>YouTube CSS stilleriyle çalışan şablonlar</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="youtube-compatible">
+                        <div class="template-preview">
+                            <img src="../../media/septapus.png" alt="YouTube CSS şablonu">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">YouTube uyumlu</span>
+                            <h3>YouTube CSS şablonu</h3>
+                            <p class="template-description">YouTube yapısındaki katman sayfamızla YouTube için tasarlanmış CSS kullanın. Septapus stilleriyle uyumludur.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Social Stream Ninja tarafından</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/septapus" class="btn btn-primary">Kurulum</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>Geliştirici şablonları</h3>
+                </div>
+                <p>Kendi özel katmanlarınızı oluşturmak için başlangıç noktaları</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-preview">
+                            <img  alt="Yalın şablon">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Geliştirici</span>
+                            <h3>Yalın şablon</h3>
+                            <p class="template-description">Kendi katmanınızı sıfırdan oluşturmak için gereken en az kod. Geliştiriciler ve LLM destekli kodlama için ideal.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Social Stream Ninja tarafından</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/blob/main/baretempate.html" target="_blank" class="btn btn-primary">Kaynak kodu</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-preview">
+                            <img src="../../media/simple.png" alt="Örnek Katman">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Geliştirici</span>
+                            <h3>Örnek katman şablonu</h3>
+                            <p class="template-description">Kendi özel katmanlarınızı oluşturmanıza yardımcı olacak yorumlar ve belgeler içeren daha kapsamlı başlangıç noktası.</p>
+                            <div class="template-footer">
+                                <div class="template-author">Social Stream Ninja tarafından</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/blob/main/sampleoverlay.html" class="btn btn-primary">Kaynak kodu</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="submit-template">
+                <h3>Paylaşacak şablonunuz mu var?</h3>
+                <p>Social Stream Ninja için harika bir şablon mu oluşturdunuz? GitHub depomuza pull request göndererek toplulukla paylaşın.</p>
+                <a href="https://github.com/steveseguin/social_stream" target="_blank" class="btn btn-primary">GitHub'da gönder</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="streamelements-importer-guide" class="how-to-use">
+        <div class="container">
+            <h2>Social Stream Ninja ile StreamElements sohbet bileşeni kullanın</h2>
+            <p>İçe aktarmada yeni misiniz? <a href="streamelements-chat-guide.html">Tam sohbet teması kılavuzunu okuyun</a> bileşen dosyalarını bulma, desteklenen biçimler, OBS kurulumu ve sorun giderme için.</p>
+            <p class="section-subtitle">Hem SSN Windows masaüstü uygulaması hem Chrome uzantısıyla çalışır; kod düzenleme gerekmez.</p>
+
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>SSN'nin sohbet aldığını doğrulayın</h4>
+                        <p>SSN uygulamasında veya uzantısında platform kaynaklarınızı açın, ardından test mesajı gönderin. Yalnızca SSN panelinde göründükten sonra devam edin.</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Orijinal bileşen dışa aktarımını alın</h4>
+                        <p>Bileşen tasarımcısının sağladığı ZIP'i, klasörü veya dosyaları kullanın. İşe yarar bir dışa aktarım normalde HTML, CSS, JavaScript, fields/data ve varlıklar içerir. Ekran görüntüsü veya StreamElements katman URL'si yeterli değildir.</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>İçe aktarıcıyı açın</h4>
+                        <p>İçe aktarıcıyı açıp ZIP'i, klasörü veya dosyaları seçin. Bileşen parçalarını algılar ve hemen demo önizleme gösterir.</p>
+                        <a href="../../streamelements-importer.html" class="btn btn-primary">Bileşen içe aktarıcısını aç</a>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>SSN oturum kimliğinizi ekleyin</h4>
+						<p>İçe aktarıcıyı SSN açılır menüsünden açmak oturum kimliğini ve parolayı otomatik doldurur. Doğrudan açtıysanız şuradan kopyalayın: <strong>Oturum seçenekleri</strong> uygulamada veya uzantıda. Oturum kimliğini içe aktarıcıya bir kez girersiniz; indirilen dosyanın içine kaydedilir.</p>
+                    </div>
+                </div>
+
+				<div class="step-card">
+					<div class="step-number"></div>
+					<div class="step-content">
+						<h4>Mesaj geçmişini seçin</h4>
+						<p>İçe aktarılan bileşen uyumlu ayarlar sağlıyorsa şunu kullanın: <strong>Mesaj geçmişi</strong> zamanlı kaldırmayı kapatmak veya ekranda kalan mesaj sayısını değiştirmek için. Bu, bileşen kodunu değil ayarlarını değiştirir.</p>
+					</div>
+				</div>
+
+				<div class="step-card">
+					<div class="step-number"></div>
+					<div class="step-content">
+						<h4>İndirmeden önce test edin</h4>
+                        <p><strong>Demo Önizleme</strong> tasarımı örnek mesajlarla kontrol eder. <strong>Canlı Önizleme</strong> çalışan SSN uygulaması veya uzantısından gelen gerçek sohbetle oturumu kontrol eder.</p>
+                    </div>
+                </div>
+
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>İndirip OBS'ye ekleyin</h4>
+						<p>Tıklayın: <strong>OBS HTML'sini İndir</strong>. OBS'de Tarayıcı Kaynağı ekleyin ve şunu etkinleştirin: <strong>Yerel dosya</strong>ve indirilen HTML dosyasını seçin. <strong>OBS'de oturum kimliğini eklemeyin veya URL'yi düzenlemeyin.</strong> Yayın sırasında SSN'yi çalışır durumda tutun; içe aktarıcı ve StreamElements kapatılabilir.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="template-features" style="margin-top: 2rem;">
+                <div class="template-feature">
+                    <h4>Demo boş</h4>
+                    <p>İçe aktarıcıda algılanan dosyaları gözden geçirin ve yanlış HTML, CSS veya JavaScript seçildiyse Gelişmiş dosya seçimi'ni kullanın.</p>
+                </div>
+                <div class="template-feature">
+                    <h4>Canlı Önizleme boş</h4>
+                    <p>Sohbetin SSN paneline ulaştığını ve oturum kimliği ile isteğe bağlı parolanın tam eşleştiğini doğrulayın.</p>
+                </div>
+                <div class="template-feature">
+                    <h4>OBS boş</h4>
+                    <p>İçe aktarıcı sayfası, orijinal ZIP veya StreamElements URL'si yerine indirilen HTML dosyasını kullanın, ardından OBS Tarayıcı Kaynağı'nı yenileyin.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-to-use" class="how-to-use">
+        <div class="container">
+            <h2>Şablonları kullanma</h2>
+            <p class="section-subtitle">Başlamak için bu basit adımları izleyin</p>
+            
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Şablonunuzu seçin</h4>
+                        <p>Şablon kütüphanesine göz atın ve yayın tarzınıza uygun olanı seçin. Tasarımları karşılaştırmak için ekran görüntüsü galerisini kullanın; yerleşik şablonların çoğu indirme gerekmeden doğrudan URL ile çalışır.</p>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Oturum kimliğinizi ekleyin</h4>
+                        <p>Değiştirin: <code>YOURSESSIONID</code> şablon URL'sinde, SSN uygulaması veya uzantısındaki Oturum Seçenekleri altında bulunan gerçek Social Stream Ninja oturum kimliğinizle. Oturumunuz kullanıyorsa isteğe bağlı parolayı da dahil edin.</p>
+                        <div class="code-block">
+                            <code>https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID</code>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>OBS/Streamlabs'e ekleyin</h4>
+                        <p>Değiştirilmiş URL'yi yayın yazılımınıza Tarayıcı Kaynağı olarak ekleyin:</p>
+                        <ol>
+                            <li>OBS'de Kaynaklar altındaki + işaretine tıklayıp “Tarayıcı”yı seçin</li>
+                            <li>Kaynağınıza ad verip Tamam'a tıklayın</li>
+                            <li>Oturum kimliğiyle birlikte şablon URL'nizi yapıştırın</li>
+                            <li>Genişliği ve yüksekliği ayarlayın (önerilen: 1920×1080)</li>
+                            <li>Sahnenize eklemek için Tamam'a tıklayın</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Şablonunuzu özelleştirin</h4>
+                        <p>Katmanınızı şu yollardan biriyle özel CSS kullanarak kişiselleştirin:</p>
+                        <ul>
+                            <li><strong>OBS Özel CSS:</strong> CSS'nizi Tarayıcı Kaynağı özelliklerine ekleyin</li>
+                            <li><strong>URL parametresi:</strong> Şunu ekleyin: <code>&css=URL_TO_YOUR_CSS_FILE</code> şablon URL'nize</li>
+                            <li><strong>Base64 CSS:</strong> Satır içi CSS için şunu kullanın: <code>&b64css=YOUR_BASE64_ENCODED_CSS</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="make-your-own" class="how-to-use"><div class="container">
+<h2>🛠️ Kendi şablonunuzu yapın</h2><p>Çalışan bir katmanla başlayın, ardından görünümünü değiştirin.</p>
+<div class="template-features">
+<div class="template-feature"><h3>🎨 Görünümü değiştirin</h3><p>OBS Tarayıcı Kaynağı kullanın <strong>Özel CSS</strong> renkler, aralıklar ve tipografi için. Orijinal SSN URL'sini ve bağlantısını koruyun.</p></div>
+<div class="template-feature"><h3>📦 Bileşeninizi getirin</h3><p>StreamElements sohbet bileşeni dışa aktarımınız mı var? <a href="../../streamelements-importer.html">StreamElements dönüştürücüsünü aç</a>, önizleyin, ardından OBS HTML'sini indirin. Ekran görüntüsü veya katman URL'si yerine orijinal ZIP veya dosyaları kullanın. <a href="#streamelements-importer-guide">Aşağıdaki kuruluma bakın</a>.</p></div>
+<div class="template-feature"><h3>🧩 Davranışı değiştirin</h3><p>Çalışan bir başlangıcı kopyalayın ve HTML, CSS ve JavaScript'ini düzenleyin. <a href="overlay-template-quick-start.html">Hızlı başlangıç</a> · <a href="https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md">Geliştirici kılavuzu</a> · <a href="event-reference.html">Etkinlik alanları</a></p></div>
+</div>
+<details class="template-instructions"><summary>🔧 Dosyalar, yönlendirme ve test</summary><ol>
+<li>Kullanın: <a href="../../sampleoverlay.html">sampleoverlay.html</a> birleştirilmiş sohbet için, <a href="../../themes/featured-styles/featured-modern.html">featured-modern.html</a> seçili mesajlar için veya <a href="../../multi-alerts.html">multi-alerts.html</a> etkinlikler için. Kaynağı ve gereken varlıkları şuradan indirin: <a href="https://github.com/steveseguin/social_stream/tree/beta">beta deposu</a>.</li>
+<li>Orijinal bağlantı kodunu koruyun. Sohbet ve öne çıkan katmanlar farklı akışlar alır; sohbet akışını biçimlendirmek onu seçili mesaj katmanı yapmaz.</li>
+<li>Başvurulan ortak betikleri, yazı tiplerini ve görselleri dosyanızın yanında aynı göreli yollarla tutun veya yapay zekânızdan kendi kendine yeterli dışa aktarım isteyin. Tek HTML dosyasını yeniden adlandırmak bağımlılıklarını paketlemez.</li>
+<li>Dosyalarınızı barındırın ve URL'lerini oturumunuz ve isteğe bağlı parolanızla kullanın. Kendi kendine yeterli yerel dışa aktarım için yapılandırma talimatlarını izleyin; OBS Yerel dosya seçeneğinde oturum parametreleri için URL alanı yoktur.</li>
+<li>Önce sahte verileri önizleyin, ardından kendi SSN oturumunuzla test edin. Seçili mesajları, temizlemeyi, uzun adları, görselleri ve şeffaf arka planları kontrol edin. Canlı kullanımda SSN'yi çalışır durumda tutun.</li>
+</ol><p>Tetikleyici tabanlı davranış için şununla başlayın: <a href="../actions/event-flow-guide.html">Etkinlik Akışı düzenleyicisi</a> ve <a href="alert-effects.html">uyarı efekti kuralları</a> yeni katman yazmadan önce.</p></details>
+</div></section>
+<section id="ai-prompts" class="how-to-use"><div class="container"><h2>✨ Yapay zekânız için istem kopyalayın</h2><p>Bir başlangıç noktası seçin, istemi kopyalayın ve köşeli parantezli tasarım ayrıntılarını değiştirin. Yapay zekânız bağlantıları okuyamıyorsa kaynak dosyaları ekleyin. Özel oturum kimliğinizi ve parolanızı konuşmaya dahil etmeyin.</p>
+<details class="template-instructions"><summary>💬 Birleştirilmiş sohbet</summary><label for="prompt-chat">Düzenlenebilir istem</label><textarea id="prompt-chat" class="template-prompt" rows="10" spellcheck="false">https://github.com/steveseguin/social_stream/blob/beta/sampleoverlay.html temelinde biçimlendirilmiş bir SSN birleşik sohbet katmanı oluştur. Sınırlı mesaj listesi, yapılandırılabilir sayı ve isteğe bağlı sona erme ile normal canlı akışı (dock etiketi) al. Platform simgelerini, bağış ve üyelik sunumunu koru. Önce aşağıdaki geçerli SSN kaynak kodunu ve belgelerini incele. Bunları açamıyorsan dosyaları eklememi iste; aktarımı veya etkinlik şemasını tahmin etme. Başvuru kaynakları: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md ve https://socialstream.ninja/beta/docs/event-reference.html Başlangıç katmanının bağlantısını, session/password, label ve server seçeneklerini, moderasyon/silme/temizleme işlemesini ve mevcut mesaj alanlarını koru. Kimlik bilgilerini YOUR_SESSION_ID / YOUR_PASSWORD yer tutucuları olarak bırak, asla gerçek kimlik bilgileri kullanma. Chrome 80 ve OBS ile uyumlu klasik betikler kullan; göreli yerel bağımlılıkları koru ve HTML ile birlikte bulunması gereken dosyaları listele. chatname alanını düz metin olarak ele al; textonly yalnızca chatmessage için geçerlidir. Güvenli ifadeleri/rozetleri, yalnızca görsel içeren contentimg mesajlarını ve karma etkinlik/meta veri trafiğini koru; yalnızca meta veri içeren güncellemeleri sohbet olarak gösterme. Denetlenmemiş HTML ekleme veya yeni üst düzey veri yükü alanları uydurma. Tasarım: [renkleri, atmosferi, tipografiyi, yerleşimi ve hareketi açıkla]. Tuval: [genişlik x yükseklik]. Arka planı şeffaf, metni oyun görüntüsü üzerinde okunabilir, uzun adları/mesajları alan içinde tut ve azaltılmış hareket için stil sağla. Değiştirilen dosyaların tamamını, basit kurulum talimatlarını ve canlı oturuma asla bağlanmayan sahte verili demo modunu döndür. Uzun metni, emojiyi, yalnızca görsel içeren mesajları, silmeyi, temizlemeyi, yeniden boyutlandırmayı ve yeniden bağlanmayı test et.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-chat">📋 İstemi kopyala</button></details>
+<details class="template-instructions"><summary>⭐ Öne çıkan mesaj</summary><label for="prompt-featured">Düzenlenebilir istem</label><textarea id="prompt-featured" class="template-prompt" rows="10" spellcheck="false">https://github.com/steveseguin/social_stream/blob/beta/themes/featured-styles/featured-modern.html dosyasını seçilen tek mesaj için özelleştir. Varsayılan featured/overlay yönlendirmesini ve temizleme davranışını koru; her sohbet mesajını otomatik gösterme. SSN panelinden mesajın nasıl seçileceğini açıkla. Önce aşağıdaki geçerli SSN kaynak kodunu ve belgelerini incele. Bunları açamıyorsan dosyaları eklememi iste; aktarımı veya etkinlik şemasını tahmin etme. Başvuru kaynakları: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md ve https://socialstream.ninja/beta/docs/event-reference.html Başlangıç katmanının bağlantısını, session/password, label ve server seçeneklerini, moderasyon/silme/temizleme işlemesini ve mevcut mesaj alanlarını koru. Kimlik bilgilerini YOUR_SESSION_ID / YOUR_PASSWORD yer tutucuları olarak bırak, asla gerçek kimlik bilgileri kullanma. Chrome 80 ve OBS ile uyumlu klasik betikler kullan; göreli yerel bağımlılıkları koru ve HTML ile birlikte bulunması gereken dosyaları listele. chatname alanını düz metin olarak ele al; textonly yalnızca chatmessage için geçerlidir. Güvenli ifadeleri/rozetleri, yalnızca görsel içeren contentimg mesajlarını ve karma etkinlik/meta veri trafiğini koru; yalnızca meta veri içeren güncellemeleri sohbet olarak gösterme. Denetlenmemiş HTML ekleme veya yeni üst düzey veri yükü alanları uydurma. Tasarım: [renkleri, atmosferi, tipografiyi, yerleşimi ve hareketi açıkla]. Tuval: [genişlik x yükseklik]. Arka planı şeffaf, metni oyun görüntüsü üzerinde okunabilir, uzun adları/mesajları alan içinde tut ve azaltılmış hareket için stil sağla. Değiştirilen dosyaların tamamını, basit kurulum talimatlarını ve canlı oturuma asla bağlanmayan sahte verili demo modunu döndür. Uzun metni, emojiyi, yalnızca görsel içeren mesajları, silmeyi, temizlemeyi, yeniden boyutlandırmayı ve yeniden bağlanmayı test et.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-featured">📋 İstemi kopyala</button></details>
+<details class="template-instructions"><summary>🎉 Sesli uyarılar</summary><label for="prompt-alerts">Düzenlenebilir istem</label><textarea id="prompt-alerts" class="template-prompt" rows="10" spellcheck="false">https://github.com/steveseguin/social_stream/blob/beta/multi-alerts.html dosyasını özelleştir. Önce ortak uyarı bağımlılıklarını ve https://socialstream.ninja/beta/docs/alert-effects.html sayfasını incele. Mevcut uyarı türü filtrelerini, kuyruğu, ses kütüphanesini, sessiz/ses düzeyi ve efekt kurallarını yeniden kullan. USD eşiklerini mevcut currency.js dönüştürme yolunda tut; biçimlendirilmiş para birimi dizelerini karşılaştırma. Etkinlik durumuna ve mevcut aralık anlamlarına uyarak $100 USD bağış kuralı için isteğe bağlı animasyon ve ses destekle. Yinelenen oynatmayı önle. Yalnızca benim sağladığım veya kullanmaya iznim olan sesleri kullan. Önce aşağıdaki geçerli SSN kaynak kodunu ve belgelerini incele. Bunları açamıyorsan dosyaları eklememi iste; aktarımı veya etkinlik şemasını tahmin etme. Başvuru kaynakları: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md ve https://socialstream.ninja/beta/docs/event-reference.html Başlangıç katmanının bağlantısını, session/password, label ve server seçeneklerini, moderasyon/silme/temizleme işlemesini ve mevcut mesaj alanlarını koru. Kimlik bilgilerini YOUR_SESSION_ID / YOUR_PASSWORD yer tutucuları olarak bırak, asla gerçek kimlik bilgileri kullanma. Chrome 80 ve OBS ile uyumlu klasik betikler kullan; göreli yerel bağımlılıkları koru ve HTML ile birlikte bulunması gereken dosyaları listele. chatname alanını düz metin olarak ele al; textonly yalnızca chatmessage için geçerlidir. Güvenli ifadeleri/rozetleri, yalnızca görsel içeren contentimg mesajlarını ve karma etkinlik/meta veri trafiğini koru; yalnızca meta veri içeren güncellemeleri sohbet olarak gösterme. Denetlenmemiş HTML ekleme veya yeni üst düzey veri yükü alanları uydurma. Tasarım: [renkleri, atmosferi, tipografiyi, yerleşimi ve hareketi açıkla]. Tuval: [genişlik x yükseklik]. Arka planı şeffaf, metni oyun görüntüsü üzerinde okunabilir, uzun adları/mesajları alan içinde tut ve azaltılmış hareket için stil sağla. Değiştirilen dosyaların tamamını, basit kurulum talimatlarını ve canlı oturuma asla bağlanmayan sahte verili demo modunu döndür. Uzun metni, emojiyi, yalnızca görsel içeren mesajları, silmeyi, temizlemeyi, yeniden boyutlandırmayı ve yeniden bağlanmayı test et.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-alerts">📋 İstemi kopyala</button></details>
+<details class="template-instructions"><summary>🎨 Yalnızca CSS ile yeni görünüm</summary><label for="prompt-css">Düzenlenebilir istem</label><textarea id="prompt-css" class="template-prompt" rows="10" spellcheck="false">Mevcut SSN katmanımın stilini yalnızca CSS kullanarak değiştir. URL'sini ve kaynak HTML/CSS'sini sağlayacağım. Tüm JavaScript'i ve mesaj yönlendirmesini aynı bırak. CSS yazmadan önce gerçek DOM seçicilerini incele. OBS Tarayıcı Kaynağı Özel CSS kutusu için CSS'yi ve gerekli yerel yazı tipi/görsel varlıklarını teslim et. Önce aşağıdaki geçerli SSN kaynak kodunu ve belgelerini incele. Bunları açamıyorsan dosyaları eklememi iste; aktarımı veya etkinlik şemasını tahmin etme. Başvuru kaynakları: https://github.com/steveseguin/social_stream/blob/beta/docs/customoverlays.md ve https://socialstream.ninja/beta/docs/event-reference.html Başlangıç katmanının bağlantısını, session/password, label ve server seçeneklerini, moderasyon/silme/temizleme işlemesini ve mevcut mesaj alanlarını koru. Kimlik bilgilerini YOUR_SESSION_ID / YOUR_PASSWORD yer tutucuları olarak bırak, asla gerçek kimlik bilgileri kullanma. Chrome 80 ve OBS ile uyumlu klasik betikler kullan; göreli yerel bağımlılıkları koru ve HTML ile birlikte bulunması gereken dosyaları listele. chatname alanını düz metin olarak ele al; textonly yalnızca chatmessage için geçerlidir. Güvenli ifadeleri/rozetleri, yalnızca görsel içeren contentimg mesajlarını ve karma etkinlik/meta veri trafiğini koru; yalnızca meta veri içeren güncellemeleri sohbet olarak gösterme. Denetlenmemiş HTML ekleme veya yeni üst düzey veri yükü alanları uydurma. Tasarım: [renkleri, atmosferi, tipografiyi, yerleşimi ve hareketi açıkla]. Tuval: [genişlik x yükseklik]. Arka planı şeffaf, metni oyun görüntüsü üzerinde okunabilir, uzun adları/mesajları alan içinde tut ve azaltılmış hareket için stil sağla. Değiştirilen dosyaların tamamını, basit kurulum talimatlarını ve canlı oturuma asla bağlanmayan sahte verili demo modunu döndür. Uzun metni, emojiyi, yalnızca görsel içeren mesajları, silmeyi, temizlemeyi, yeniden boyutlandırmayı ve yeniden bağlanmayı test et.</textarea><button type="button" class="btn btn-primary" data-copy-prompt="prompt-css">📋 İstemi kopyala</button></details>
+<p>Daha karmaşık bir bileşen mi dönüştürüyorsunuz? <a href="../../streamelements-importer-prompt.md">Tam StreamElements / Streamlabs dönüştürme istemini kullanın</a>.</p><p id="prompt-copy-status" role="status" aria-live="polite"></p></div></section>
+    <section class="guide-section alt">
+        <div class="container">
+            <h2>Video eğitimi</h2>
+            <p class="section-subtitle">Yapay zekâ yardımıyla özel sohbet katmanı oluşturmayı öğrenin</p>
+            
+            <div style="max-width: 800px; margin: 0 auto; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+                <iframe width="100%" height="100%" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/GDy5ijQPTkU" title="Social Stream Ninja için özel sohbet katmanı oluşturma" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            
+            <div style="max-width: 800px; margin: 3rem auto 0;">
+                <h3>Videodan hızlı kılavuz</h3>
+                <ol class="guide-steps">
+                    <li>Örnek katman şablonunu bulun (sampleoverlay.html)</li>
+                    <li>Şablon kodunu panonuza kopyalayın</li>
+                    <li>Özelleştirmeye yardımcı olması için Claude gibi bir yapay zekâ asistanı kullanın</li>
+                    <li>Yapay zekâdan CSS'yi tercih ettiğiniz stile göre değiştirmesini isteyin</li>
+                    <li>OBS'yi özelleştirilmiş şablonunuzu kullanacak şekilde yapılandırın</li>
+                    <li>Özel CSS'nizi OBS tarayıcı kaynağı ayarlarından uygulayın</li>
+                </ol>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CSS Modal (hidden by default) -->
+    <div id="css-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000; overflow: auto;">
+        <div style="background-color: var(--background-card); margin: 10% auto; padding: 20px; width: 80%; max-width: 800px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 id="css-modal-title" style="margin: 0;">CSS parçası</h2>
+                <button onclick="closeCssModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <pre id="css-modal-content" style="background-color: var(--background-dark); padding: 20px; border-radius: var(--radius-sm); overflow-x: auto; max-height: 60vh;"></pre>
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="copyCss()" class="btn btn-primary">Panoya kopyala</button>
+                <button onclick="closeCssModal()" class="btn btn-secondary">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+        <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>Canlı sosyal mesaj akışlarınızı ve daha fazlasını birleştirir. Ücretsiz ve açık kaynaklıdır.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../../icons/x.svg" alt="X.com"></a>
+					<a href="https://bsky.app/profile/socialstream.ninja" target="_blank"><img src="../../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Hızlı bağlantılar</h3>
+                    <ul>
+                        <li><a href="../index.html">Ana sayfa</a></li>
+                        <li><a href="features.html">Özellikler</a></li>
+                        <li><a href="download.html">İndir</a></li>
+                        <li><a href="guides.html">Kılavuzlar</a></li>
+                        <li><a href="commands.html">Komutlar ve API</a></li>
+                        <li><a href="supported-sites.html">Desteklenen siteler</a></li>
+                        <li><a href="templates.html">Şablonlar</a></li>
+                        <li><a href="support.html">Destek</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Kaynaklar</h3>
+                    <ul>
+                        <li><a href="guides.html#extension-getting-started">Kurulum kılavuzu</a></li>
+                        <li><a href="guides.html#extension-customization">Özelleştirme kılavuzu</a></li>
+                        <li><a href="guides.html#faq">SSS</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Sorun bildirin</a></li>
+                        <li><a href="../privacy.html">Gizlilik politikası</a></li>
+                        <li><a href="../TOS.html">Hizmet koşulları</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Topluluk</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Discord sunucumuza katılın</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub deposu</a></li>
+                        <li><a href="support.html#contribute">Katkıda bulunun</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">Bağış yapın</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 Lisansı. Geliştiren: <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> topluluğun katkılarıyla.</p>
+            </div>
+        </div>
+    </footer>
+	<script src="../../docs/js/main.js"></script>
+    <script src="../../docs/js/templates.js"></script>
+    <script>
+        // Current year for copyright
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        
+        function showCssModal(cssType) {
+            const modal = document.getElementById('css-modal');
+            const title = document.getElementById('css-modal-title');
+            const content = document.getElementById('css-modal-content');
+            
+            title.textContent = cssType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) + ' CSS';
+            content.textContent = cssSnippets[cssType] || 'CSS not found';
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeCssModal() {
+            document.getElementById('css-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+		function copyCss() {
+            const content = document.getElementById('css-modal-content').textContent;
+            navigator.clipboard.writeText(content)
+                .then(() => {
+                    alert(window.SSNSiteTranslate ? window.SSNSiteTranslate('CSS copied to clipboard!') : 'CSS copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Could not copy text: ', err);
+                    alert(window.SSNSiteTranslate ? window.SSNSiteTranslate('Failed to copy. Try selecting and copying manually.') : 'Failed to copy. Try selecting and copying manually.');
+                });
+        }
+		
+		
+        
+       document.addEventListener('DOMContentLoaded', () => {
+            // Number the steps
+			document.querySelectorAll('.steps-container').forEach(container => {
+				container.querySelectorAll('.step-number').forEach((el, index) => {
+					el.textContent = (index + 1).toString();
+				});
+            });
+            
+            // Auto-scroll to sections when clicking nav links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        e.preventDefault();
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
+ </script>
+</body>
+</html>

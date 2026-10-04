@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-cn/docs/chatbot-basics-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-cn/docs/chatbot-basics-guide.html">
+    <meta property="og:title" content="AI 聊天机器人的设置与使用 - Social Stream Ninja">
+    <meta property="og:description" content="设置和使用 Social Stream Ninja AI 聊天机器人，连接 AI 提供商、安全测试、控制直播回复，并排查没有响应的问题。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-cn/docs/chatbot-basics-guide.html">
+    <meta name="twitter:title" content="AI 聊天机器人的设置与使用 - Social Stream Ninja">
+    <meta name="twitter:description" content="设置和使用 Social Stream Ninja AI 聊天机器人，连接 AI 提供商、安全测试、控制直播回复，并排查没有响应的问题。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 聊天机器人的设置与使用 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="设置和使用 Social Stream Ninja AI 聊天机器人，连接 AI 提供商、安全测试、控制直播回复，并排查没有响应的问题。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/chatbot-basics-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{", OpenAI rejected the credential because its effective access does not include model requests.":"，表示 OpenAI 拒绝了该凭据，因为它的实际访问权限不包含模型请求。",", and":"，以及",", paste the complete key, enter a model available to that project, and select":"，粘贴完整密钥，输入该项目可用的模型，然后选择",", the global command-filter setting can discard that message before it reaches the AI bot.":"，全局命令过滤设置可能会在消息到达 AI 机器人之前将其丢弃。",", then":"，然后",". For the full provider list, see":"。完整提供商列表请参阅",". Never paste the key into a support message or diagnostic report.":"。切勿将密钥粘贴到支持消息或诊断报告中。",". The generated bot-overlay settings provide the common options.":"。生成的机器人叠加层设置包含常用选项。",". They do not clear the main featured-message overlay.":"。它们不会清除主精选消息叠加层。",". This is separate from both provider setup and the private":"。这与提供商配置及私人",". Use the generated link so it has the same session.":"。请使用生成的链接，以确保会话相同。","1. Configure an AI Provider":"1. 配置 AI 提供商","2. Enable and Configure the Primary Bot":"2. 启用并配置主机器人","3. Run a Safe End-to-End Test":"3. 安全地进行端到端测试","4. Know When Silence Is Normal":"4. 了解何时不回复属于正常情况","5. Choose Where Replies Go":"5. 选择回复目标","6. Clear and Auto-Hide Bot Replies":"6. 清除和自动隐藏机器人回复","A configured trigger must match the incoming message.":"传入消息必须匹配所配置的触发条件。","A short greeting such as":"简短的问候，例如","A working AI provider is only the first part of a live chat bot. The provider, the Primary bot, and the reply destination must each be configured.":"正常工作的 AI 提供商只是直播聊天机器人的第一部分。提供商、主机器人和回复目标都需要分别配置。","AI Chat Bot Setup and Use - Social Stream Ninja":"AI 聊天机器人的设置与使用 - Social Stream Ninja","AI Integration in Commands & API":"“命令与 API”中的 AI 集成","AI Modes Guide":"AI 模式指南","AI provider":"AI 提供商","API error guide":"API 错误指南","Add a distinctive word or name if every message should not be considered.":"如果不希望每条消息都被纳入考虑，请添加一个独特的词语或名字。","Additional Bot Instructions":"机器人的附加指令","Addressing the custom bot name directly makes the intent clearer.":"直接使用自定义机器人名称称呼它，能让意图更明确。","Adds a delay after TTS finishes. The default is 500 milliseconds.":"在 TTS 结束后增加延迟。默认为 500 毫秒。","After the overlay test works, turn":"叠加层测试成功后，将","Applies when platform send-back is enabled. Increase it if the bot posts too often.":"在启用向平台回发消息时生效。如果机器人发言过于频繁，请增大此值。","Bot overlay timing":"机器人叠加层显示时长","Bot replies ONLY go to the bot overlay page":"机器人回复仅发送到机器人叠加层页面","Browser-hosted local model:":"浏览器中运行的本地模型：","Chat Bot - Primary":"聊天机器人 - 主机器人","Chat Bots and AI services":"聊天机器人和 AI 服务","Chat capture":"聊天捕获","ChatGPT API":"ChatGPT API","Choose the page that matches the job. The private bot is not a substitute for testing the Primary live-chat path.":"根据任务选择对应页面。私人机器人不能替代对主机器人直播聊天路径的测试。","Choose the provider that matches the service you are actually running.":"选择与你实际运行的服务相匹配的提供商。","Clear It Manually":"手动清除","Clear bot overlay now":"立即清除机器人叠加层","Command filtering":"命令过滤","Commands & API":"命令与 API","Configure LLM Service Provider":"配置 LLM 服务提供商","Configure LLM section with Ollama selected, local endpoint and model fields filled in, and the provider test showing Connected":"“配置 LLM”区域已选择 Ollama，已填写本地端点和模型字段，提供商测试显示“已连接”","Confirm API billing and project budget separately from ChatGPT subscriptions, then reduce request rate or wait if the provider reports a temporary rate limit.":"单独确认 API 计费和项目预算，它们与 ChatGPT 订阅分开管理。如果提供商报告临时速率限制，请降低请求频率或稍后再试。","Confirm that this is a standard project API key, that the expected project is selected, and that the key is unrestricted or explicitly allowed to make model requests. If uncertain, create a new standard key in the correct project and replace the saved key in Social Stream.":"确认这是标准的项目 API 密钥，所选项目符合预期，且密钥未受限或已明确获准发起模型请求。如果不确定，请在正确的项目中创建新的标准密钥，并替换 Social Stream 中保存的密钥。","Confirm the message came directly from the source chat, then check the Primary enable toggle, trigger match, moderator-only mode, custom bot name, busy/cooldown limits, additional instructions, and temporary unscreened-reply mode.":"确认消息直接来自源聊天室，然后检查主机器人启用开关、触发条件匹配、仅限版主模式、自定义机器人名称、忙碌/冷却限制、附加指令，以及临时启用的不筛选回复模式。","Confirm the provider test says":"确认提供商测试显示","Connect an AI provider, enable the Primary bot, test safely, and troubleshoot missing replies.":"连接 AI 提供商、启用主机器人、安全测试，并排查没有回复的问题。","Connected":"已连接","Connected, but the viewer message is missing from Dock":"已连接，但停靠面板中没有观众消息","Create or review the key in the":"在以下页面创建或检查密钥：","Credits and permissions are separate:":"余额与权限彼此独立：","Custom API:":"自定义 API：","Custom styling:":"自定义样式：","Customize bot name":"自定义机器人名称","Decides which captured live messages should receive an AI reply.":"决定哪些捕获到的直播消息应获得 AI 回复。","Do not screen out any of the bot's replies":"不筛除机器人的任何回复","Download":"下载","Enable Hide after TTS, length-based auto-hide, or a fixed display time under the bot overlay options. Use":"在机器人叠加层选项中启用“TTS 后隐藏”、按长度自动隐藏或固定显示时长。使用","Enable only when that restriction is intentional.":"仅在确实需要此限制时启用。","Enable the LLM AI chat bot":"启用 LLM AI 聊天机器人","Enable the private chat bot option and use the generated link with the same session. This does not test the Primary live bot.":"启用私人聊天机器人选项，并使用相同会话的生成链接。这不会测试主直播机器人。","Endpoint, API key, model name, local service status, CORS/firewall, provider quota, and the exact error below the test button.":"端点、API 密钥、模型名称、本地服务状态、CORS/防火墙、提供商配额，以及测试按钮下的具体错误。","Enter the endpoint, model name, API key, or other fields shown for that provider.":"输入该提供商所显示的端点、模型名称、API 密钥或其他字段。","Estimates display time from the reply's word count.":"根据回复的词数估算显示时长。","Example":"示例","Features":"功能","For the wider AI feature set, see the":"关于更广泛的 AI 功能，请参阅","From the viewer account, send:":"通过观众账号发送：","Generates text with Ollama, a hosted API, or another supported service.":"使用 Ollama、托管 API 或其他受支持的服务生成文本。","Good First Test":"建议的首次测试设置","Guides":"指南","Hire":"雇用","Home":"首页","Hosted provider:":"托管服务提供商：","If automatic browser translation is active on the OpenAI Platform and the permission controls or labels behave unexpectedly, switch to the original English page before reviewing and saving the key settings. This helped one reported setup, but it is not a documented universal cause of OpenAI 401 errors.":"如果 OpenAI Platform 开启了浏览器自动翻译，且权限控件或标签行为异常，请先切回原始英文页面，再检查并保存密钥设置。这曾帮助解决一个报告中的配置问题，但并非已记录的、普遍导致 OpenAI 401 错误的原因。","If multiple modes are enabled,":"如果同时启用了多种模式，","If the error continues, copy the status, code, missing scope, and Request ID shown by Social Stream, then send the in-app diagnostic report soon after reproducing it. The report records safe request metadata but excludes API keys and prompt content. Provide the Request ID and timestamp to OpenAI support if the credential and project settings look correct.":"如果错误仍然存在，请复制 Social Stream 显示的状态、代码、缺失权限范围和 Request ID，然后在重现问题后尽快发送应用内诊断报告。报告会记录安全的请求元数据，但不包含 API 密钥或提示词内容。如果凭据和项目设置看起来正确，请将 Request ID 和时间戳提供给 OpenAI 支持人员。","If the test reports":"如果测试报告","Important:":"重要：","In Social Stream settings, select":"在 Social Stream 设置中选择","In Social Stream, select":"在 Social Stream 中选择","Inspiration":"灵感","It better mirrors a real viewer and avoids confusing the account used for outgoing replies with the account sending the test.":"这更接近真实观众的使用情况，也能避免将用于发送回复的账号与发送测试消息的账号混淆。","Keep":"保持","Keep low unless the provider and chat volume can handle more.":"保持较低值，除非提供商和聊天量允许更高值。","Keep on while the Primary bot should monitor live chat.":"需要主机器人监控直播聊天时，保持开启。","Keeps the reply visible until TTS playback finishes, then hides it. If playback never starts, a length-based fallback is used.":"保持回复可见，直到 TTS 播放结束后再隐藏。如果播放始终未开始，则改用按长度估算的备用时长。","Leave blank":"留空","Likely Area":"可能出问题的环节","List of words to trigger bot":"触发机器人的词语列表","Look for a missing character or space, confirm the key was not deleted or deactivated, confirm the intended organization/project, and make sure Social Stream is not still using an older saved key.":"检查是否遗漏字符或空格，确认密钥未被删除或停用、组织/项目符合预期，并确保 Social Stream 没有仍在使用之前保存的旧密钥。","Main navigation":"主导航","Manual clearing removes the visible reply and pending bot-overlay display queue, but it does not stop speech already playing.":"手动清除会移除当前可见的回复及等待显示的机器人叠加层队列，但不会停止正在播放的语音。","Max parallel bot replies":"最大并行机器人回复数","Meaning":"含义","Message reaches Dock, but no reply reaches the bot overlay":"消息到达停靠面板，但机器人叠加层没有收到回复","Messages identified as bot output, reflections, empty messages, or messages too similar to the previous reply can be ignored.":"被识别为机器人输出、回流、空消息或与上一条回复过于相似的消息，可能会被忽略。","Mode":"模式","Moderator-only mode ignores messages that are not marked as moderator messages.":"仅限版主模式会忽略未标记为版主消息的消息。","Need to install Ollama first? Use the":"需要先安装 Ollama？请使用","Normal Use":"日常使用","Off":"关闭","Ollama (Native Local API):":"Ollama（原生本地 API）：","Ollama keep-alive:":"Ollama 模型保活：","On":"开启","On temporarily":"暂时开启","Only the first test is processed":"只有第一次测试被处理","Open":"打开","Open navigation menu":"打开导航菜单","Open the":"打开","Open the Social Stream settings and expand":"打开 Social Stream 设置并展开","OpenAI / ChatGPT API Setup":"OpenAI / ChatGPT API 设置","OpenAI Platform API keys page":"OpenAI Platform 的 API 密钥页面","OpenAI credential":"OpenAI 凭据","OpenAI key permissions":"OpenAI 密钥权限","Option":"选项","Other AI Bot Pages":"其他 AI 机器人页面","Over the API WebSocket, send":"通过 API WebSocket 发送","Overlay Gallery":"叠加层图库","Overlay Page and TTS for Chat Bot":"聊天机器人的叠加层页面与 TTS","Overlay-only mode, platform/source write support, account authorization, chat input availability, account-role routing, and the Disable host chat setting.":"仅叠加层模式、平台/来源的写入支持、账号授权、聊天输入框可用性、账号角色路由，以及“禁用主播聊天”设置。","Overlay-only off":"关闭仅叠加层模式","Overlay-only on":"开启仅叠加层模式","Part":"组成部分","Primary bot decision":"主机器人的判断","Primary chat bot":"主聊天机器人","Private":"私人","Provider billing or limits":"提供商计费或限制","Provider setup":"提供商配置","Provider test fails":"提供商测试失败","Publishes generated replies to the bot output channel and can also send them through the captured chat source.":"将生成的回复发布到机器人输出频道，也可通过被捕获的聊天来源发送。","Rate limit per tab / source":"每个标签页 / 来源的频率限制","Reference table comparing the Primary bot overlay, private chatbot, censor bot, and AI cohost":"对比主机器人叠加层、私人聊天机器人、审查机器人和 AI 搭档的参考表","Replies go to the bot output channel and are not sent back to platform chat.":"回复会进入机器人输出频道，不会发回平台聊天室。","Replies still go to the bot output channel, and Social Stream also attempts to post through the originating captured source.":"回复仍会进入机器人输出频道，同时 Social Stream 也会尝试通过最初捕获消息的来源发布回复。","Reply destination":"回复目标","Reply reaches the overlay, but not platform chat":"回复到达叠加层，但未到达平台聊天室","Reply remains visible after TTS":"TTS 结束后回复仍然显示","Requirements":"要求","Result":"结果","Safety timeout if TTS remains active indefinitely. The default is 120,000 milliseconds.":"用于 TTS 持续活动、始终不结束时的安全超时。默认为 120,000 毫秒。","Select":"选择","Send a normal message from a second viewer account directly in the source platform's chat, such as YouTube or Twitch, and confirm it appears in the Social Stream dock. Do not use a message typed into the dock or host-chat controls for this first test; reflected bot or host messages can be skipped to prevent reply loops.":"通过第二个观众账号，直接在 YouTube 或 Twitch 等源平台的聊天室发送一条普通消息，并确认它出现在 Social Stream 停靠面板中。首次测试不要使用在停靠面板或主播聊天控件中输入的消息；为防止回复循环，回流的机器人或主播消息可能被跳过。","Send the test once and wait for the reply. A local model may still be loading, and later messages can be skipped while one reply is already running.":"只发送一次测试消息，然后等待回复。本地模型可能还在加载；当一个回复正在生成时，后续消息可能会被跳过。","Send-back routing":"回发路由","Separate private bot":"独立的私人机器人","Set Up and Use the AI Chat Bot":"设置和使用 AI 聊天机器人","Set up and use the Social Stream Ninja AI chat bot, connect an AI provider, test safely, control live replies, and troubleshoot missing responses.":"设置和使用 Social Stream Ninja AI 聊天机器人，连接 AI 提供商、安全测试、控制直播回复，并排查没有响应的问题。","Sets the minimum and maximum length-based display time. Defaults are 4,000 and 30,000 milliseconds.":"设置按长度计算的显示时间下限和上限。默认分别为 4,000 和 30,000 毫秒。","Setting":"设置","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 许可证。","Social Stream on/off state, source window, platform login, source allow/filter settings, and whether the correct live chat is open.":"Social Stream 开关状态、来源窗口、平台登录状态、来源允许/过滤设置，以及是否打开了正确的直播聊天室。","Standalone app users who want a separate Twitch identity can follow the":"独立应用用户如需使用单独的 Twitch 身份，可参阅","Support":"支持","Supported Sites":"支持的网站","Switch theme":"切换主题","Test selected chat bot":"测试所选聊天机器人","That":"无法由此确认","That live chat is being captured or that replies can be posted.":"直播聊天正在被捕获，或回复可以成功发布。","That the source platform or account permits send-back.":"源平台或账号允许回发消息。","The Primary bot is selective by default. An empty trigger list means every eligible message can be considered; it does not mean every message must receive a reply.":"主机器人默认会选择性回复。触发词列表为空表示每条符合条件的消息都可以纳入考虑，并不表示每条消息都必须得到回复。","The Primary bot, private chat, censor bot, and AI cohost are separate tools with different settings and histories.":"主机器人、私人聊天、审查机器人和 AI 搭档是彼此独立的工具，使用不同的设置和历史记录。","The custom bot name is a message prefix; it does not create a new platform account. Unless standalone-app account-role routing is configured, replies are posted through the account used by the captured source.":"自定义机器人名称只是消息前缀，不会创建新的平台账号。除非配置了独立应用的账号角色路由，否则回复会通过捕获来源所使用的账号发布。","The source mode must support sending, the account must be logged in and allowed to post, host chat must not be disabled, and the source must remain open.":"来源模式必须支持发送，账号必须已登录且允许发言，主播聊天不能被禁用，并且来源必须保持打开。","These controls affect the Primary Chat Bot page,":"这些控件影响主聊天机器人页面，","This confirms that the provider and model answered. It does not enable the Primary bot or test live-chat capture and posting.":"这确认提供商和模型已作答。它不会启用主机器人，也不会测试直播聊天的捕获和消息发布。","Timing":"计时","Trigger warning:":"触发词注意事项：","Troubleshoot by the Last Thing That Worked":"从最后一个正常环节开始排查","Turn Social Stream on and confirm the live source is open.":"开启 Social Stream，并确认直播来源已打开。","Turn off only when you are ready to post replies back to a supported chat source.":"只有在准备好向受支持的聊天来源回发回复时才关闭。","Twitch Bot Account guide":"Twitch 机器人账号指南","Understand the Three Separate Parts":"了解三个独立的组成部分","Use a plain-word trigger or allow that command through the global command filter.":"使用普通词语作为触发词，或在全局命令过滤器中允许该命令通过。","Use a short, plain-text name viewers can address directly.":"使用简短的纯文本名称，方便观众直接称呼它。","Use a standard OpenAI API key for model requests. An OpenAI Admin API key is intended for organization administration endpoints, not normal model calls. The key must belong to the project you intend to bill and its effective permissions must allow model requests.":"模型请求应使用标准的 OpenAI API 密钥。OpenAI Admin API 密钥用于组织管理端点，不用于常规模型调用。密钥必须属于预期计费的项目，且实际权限必须允许模型请求。","Use a standard key from the intended project, not an Admin key; verify that model requests are allowed; replace any old saved key; and retry from the original English OpenAI Platform page if automatic translation made the controls unreliable. Credits do not add this permission.":"使用预期项目的标准密钥，而非 Admin 密钥；验证已允许模型请求；替换之前保存的旧密钥；如果自动翻译导致控件不可靠，请在原始英文 OpenAI Platform 页面重试。充值余额不会增加此权限。","Use the first-test Primary bot settings above, including overlay-only mode.":"使用上方首次测试的主机器人设置，包括仅叠加层模式。","Uses one fixed display time in milliseconds.":"使用一个固定的显示时长，单位为毫秒。","Usually off so the model can remain silent when a reply is not useful.":"通常关闭，让模型在回复没有帮助时保持沉默。","Wait for the active request, respect the cooldown, and remember that keep-alive":"等待当前请求完成，遵守冷却时间，并记住保活设置","What It Does":"功能说明","What It Does Not Prove":"无法证明什么","What You See":"你看到的现象","What to Check":"检查内容","When platform send-back is enabled, the default cooldown is five seconds per source. The default parallel limit is one reply in every mode.":"启用向平台回发消息时，默认每个来源的冷却时间为五秒。所有模式的默认并行上限均为一条回复。","Why use a second account?":"为什么使用第二个账号？","Will respond to Moderators only":"仅回复版主","With Remote API Control enabled, open":"启用“远程 API 控制”后，打开","a green":"绿色的","adding API credit does not grant a missing key scope. OpenAI documents invalid credentials and endpoint permissions as 401 errors, while exhausted quota is normally a 429 error. See OpenAI's":"增加 API 余额不会授予密钥缺失的权限范围。OpenAI 将无效凭据和端点权限问题记录为 401 错误，而配额耗尽通常是 429 错误。请参阅 OpenAI 的","and":"和","and confirm that a real text response appears below the button.":"，并确认按钮下方出现真实的文本回复。","authentication reference":"身份验证参考","back off, choose a trigger and cooldown, and decide whether platform send-back should be enabled.":"重新关闭，选择触发词和冷却时间，并决定是否启用向平台回发消息。","can add a cold start to every request.":"可能导致每次请求都需要冷启动。","custom CSS used with the normal generated":"自定义 CSS 与常规生成的","does nothing":"没有反应","enter the API key and model required by that provider. Provider costs, quotas, and model names are controlled outside Social Stream Ninja.":"输入该提供商所需的 API 密钥和模型。提供商的费用、配额和模型名称由 Social Stream Ninja 之外的服务方控制。","file must be updated to receive later page fixes.":"文件需要自行更新，才能获得后续页面修复。","for manual API clearing.":"，即可通过 API 手动清除。","hides after 10 seconds.":"会在 10 秒后隐藏。","if a trigger starts with":"如果触发词以以下字符开头：","interface.":"界面彼此独立。","is a permission named by the server, not a setting to add to the prompt or model name.":"是服务器指定的一项权限，不是需要添加到提示词或模型名称中的设置。","is also accepted.":"也可使用。","is blank":"为空白","is open or that a separate platform bot account was created.":"已打开，或已创建单独的平台机器人账号。","link keeps these features. A copied or modified local":"链接一起使用时，会保留这些功能。复制或修改过的本地","link shown under":"链接，该链接显示在","may be ignored if the model does not think a response adds value.":"，如果模型认为回复不能带来价值，可能会被忽略。","ms":"毫秒","official Ollama download page":"Ollama 官方下载页面","or incorrect API key":"或 API 密钥不正确","quota or rate-limit error":"配额或速率限制错误","remains optional unless you want the overlay or TTS.":"仍是可选项，除非你需要叠加层或 TTS。","result only confirms that the selected provider and model answered one test prompt.":"结果仅确认所选提供商和模型回答了一次测试提示词。","short and direct at first, such as:":"一开始保持简短直接，例如：","takes priority, followed by":"优先，其次是","unloads the model after a request. It does not disable the bot, but every later reply may need another cold start.":"会在一次请求后卸载模型。它不会禁用机器人，但此后的每次回复可能都需要重新冷启动。","use the matching Local Gemma or Local Qwen option and follow its model-asset instructions.":"使用对应的 Local Gemma 或 Local Qwen 选项，并遵循其模型资源说明。","use this for OpenAI-compatible servers such as llama.cpp, LM Studio, vLLM, and similar services.":"用于 llama.cpp、LM Studio、vLLM 等兼容 OpenAI 的服务器和类似服务。","use this only for Ollama. The usual local endpoint is":"仅用于 Ollama。常用的本地端点为","with the same session to see or hear them. TTS also requires this page.":"，使用相同会话才能看到或听到回复。TTS 也需要此页面。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/chatbot-basics-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/chatbot-basics-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/chatbot-basics-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/chatbot-basics-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/chatbot-basics-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/chatbot-basics-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/chatbot-basics-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/chatbot-basics-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="chatbot-basics-guide.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/chatbot-basics-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/chatbot-basics-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/chatbot-basics-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/chatbot-basics-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/chatbot-basics-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/chatbot-basics-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/chatbot-basics-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/chatbot-basics-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/chatbot-basics-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>设置和使用 AI 聊天机器人</h1>
+            <p>连接 AI 提供商、启用主机器人、安全测试，并排查没有回复的问题。</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>了解三个独立的组成部分</h2>
+                <p>正常工作的 AI 提供商只是直播聊天机器人的第一部分。提供商、主机器人和回复目标都需要分别配置。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>组成部分</th><th>功能说明</th><th>无法证明什么</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Part">AI 提供商</td><td data-label="What It Does">使用 Ollama、托管 API 或其他受支持的服务生成文本。</td><td data-label="What It Does Not Prove">直播聊天正在被捕获，或回复可以成功发布。</td></tr>
+                        <tr><td data-label="Part">主聊天机器人</td><td data-label="What It Does">决定哪些捕获到的直播消息应获得 AI 回复。</td><td data-label="What It Does Not Prove">源平台或账号允许回发消息。</td></tr>
+                        <tr><td data-label="Part">回复目标</td><td data-label="What It Does">将生成的回复发布到机器人输出频道，也可通过被捕获的聊天来源发送。</td><td data-label="What It Does Not Prove">无法由此确认 <code>bot.html</code> 已打开，或已创建单独的平台机器人账号。</td></tr>
+                    </tbody>
+                </table>
+                <div class="guide-note">
+                    <p><strong>重要：</strong> 绿色的 <strong>已连接</strong> 结果仅确认所选提供商和模型回答了一次测试提示词。</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>1. 配置 AI 提供商</h2>
+                <ol class="guide-steps">
+                    <li>打开 Social Stream 设置并展开 <strong>聊天机器人和 AI 服务</strong>.</li>
+                    <li>打开 <strong>配置 LLM 服务提供商</strong>.</li>
+                    <li>选择与你实际运行的服务相匹配的提供商。</li>
+                    <li>输入该提供商所显示的端点、模型名称、API 密钥或其他字段。</li>
+                    <li>选择 <strong>测试所选聊天机器人</strong> ，并确认按钮下方出现真实的文本回复。</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-llm-provider-connected.png" alt="“配置 LLM”区域已选择 Ollama，已填写本地端点和模型字段，提供商测试显示“已连接”" class="guide-image guide-image-medium">
+                    <figcaption>这确认提供商和模型已作答。它不会启用主机器人，也不会测试直播聊天的捕获和消息发布。</figcaption>
+                </figure>
+                <ul class="guide-list">
+                    <li><strong>Ollama（原生本地 API）：</strong> 仅用于 Ollama。常用的本地端点为 <code>http://localhost:11434</code>.</li>
+                    <li><strong>自定义 API：</strong> 用于 llama.cpp、LM Studio、vLLM 等兼容 OpenAI 的服务器和类似服务。</li>
+                    <li><strong>托管服务提供商：</strong> 输入该提供商所需的 API 密钥和模型。提供商的费用、配额和模型名称由 Social Stream Ninja 之外的服务方控制。</li>
+                    <li><strong>浏览器中运行的本地模型：</strong> 使用对应的 Local Gemma 或 Local Qwen 选项，并遵循其模型资源说明。</li>
+                </ul>
+                <p>需要先安装 Ollama？请使用 <a href="https://ollama.com/download" target="_blank" rel="noopener">Ollama 官方下载页面</a>。完整提供商列表请参阅 <a href="commands.html#ai-integration">“命令与 API”中的 AI 集成</a>.</p>
+                <div class="guide-note">
+                    <p><strong>Ollama 模型保活：</strong> <code>0</code> 会在一次请求后卸载模型。它不会禁用机器人，但此后的每次回复可能都需要重新冷启动。</p>
+                </div>
+
+                <h3>OpenAI / ChatGPT API 设置</h3>
+                <p>模型请求应使用标准的 OpenAI API 密钥。OpenAI Admin API 密钥用于组织管理端点，不用于常规模型调用。密钥必须属于预期计费的项目，且实际权限必须允许模型请求。</p>
+                <ol class="guide-steps">
+                    <li>在以下页面创建或检查密钥： <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI Platform 的 API 密钥页面</a>。切勿将密钥粘贴到支持消息或诊断报告中。</li>
+                    <li>在 Social Stream 中选择 <strong>ChatGPT API</strong>，粘贴完整密钥，输入该项目可用的模型，然后选择 <strong>测试所选聊天机器人</strong>.</li>
+                    <li>如果测试报告 <code>Status: 401</code>, <code>Code: missing_scope</code>，以及 <code>Missing scope: model.request</code>，表示 OpenAI 拒绝了该凭据，因为它的实际访问权限不包含模型请求。 <code>model.request</code> 是服务器指定的一项权限，不是需要添加到提示词或模型名称中的设置。</li>
+                    <li>确认这是标准的项目 API 密钥，所选项目符合预期，且密钥未受限或已明确获准发起模型请求。如果不确定，请在正确的项目中创建新的标准密钥，并替换 Social Stream 中保存的密钥。</li>
+                    <li>如果 OpenAI Platform 开启了浏览器自动翻译，且权限控件或标签行为异常，请先切回原始英文页面，再检查并保存密钥设置。这曾帮助解决一个报告中的配置问题，但并非已记录的、普遍导致 OpenAI 401 错误的原因。</li>
+                </ol>
+                <div class="warning-note">
+                    <p><strong>余额与权限彼此独立：</strong> 增加 API 余额不会授予密钥缺失的权限范围。OpenAI 将无效凭据和端点权限问题记录为 401 错误，而配额耗尽通常是 429 错误。请参阅 OpenAI 的 <a href="https://developers.openai.com/api/docs/guides/error-codes" target="_blank" rel="noopener">API 错误指南</a> 和 <a href="https://developers.openai.com/api/reference/overview#start-here" target="_blank" rel="noopener">身份验证参考</a>.</p>
+                </div>
+                <p>如果错误仍然存在，请复制 Social Stream 显示的状态、代码、缺失权限范围和 Request ID，然后在重现问题后尽快发送应用内诊断报告。报告会记录安全的请求元数据，但不包含 API 密钥或提示词内容。如果凭据和项目设置看起来正确，请将 Request ID 和时间戳提供给 OpenAI 支持人员。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>2. 启用并配置主机器人</h2>
+                <p>打开 <strong>聊天机器人 - 主机器人</strong>。这与提供商配置及私人 <code>chatbot.html</code> 界面彼此独立。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>设置</th><th>建议的首次测试设置</th><th>日常使用</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Setting">启用 LLM AI 聊天机器人</td><td data-label="Good First Test">开启</td><td data-label="Normal Use">需要主机器人监控直播聊天时，保持开启。</td></tr>
+                        <tr><td data-label="Setting">自定义机器人名称</td><td data-label="Good First Test"><code>NinjaBot</code></td><td data-label="Normal Use">使用简短的纯文本名称，方便观众直接称呼它。</td></tr>
+                        <tr><td data-label="Setting">机器人回复仅发送到机器人叠加层页面</td><td data-label="Good First Test">开启</td><td data-label="Normal Use">只有在准备好向受支持的聊天来源回发回复时才关闭。</td></tr>
+                        <tr><td data-label="Setting">不筛除机器人的任何回复</td><td data-label="Good First Test">暂时开启</td><td data-label="Normal Use">通常关闭，让模型在回复没有帮助时保持沉默。</td></tr>
+                        <tr><td data-label="Setting">触发机器人的词语列表</td><td data-label="Good First Test">留空</td><td data-label="Normal Use">如果不希望每条消息都被纳入考虑，请添加一个独特的词语或名字。</td></tr>
+                        <tr><td data-label="Setting">每个标签页 / 来源的频率限制</td><td data-label="Good First Test"><code>5000</code> 毫秒</td><td data-label="Normal Use">在启用向平台回发消息时生效。如果机器人发言过于频繁，请增大此值。</td></tr>
+                        <tr><td data-label="Setting">最大并行机器人回复数</td><td data-label="Good First Test"><code>1</code></td><td data-label="Normal Use">保持较低值，除非提供商和聊天量允许更高值。</td></tr>
+                        <tr><td data-label="Setting">仅回复版主</td><td data-label="Good First Test">关闭</td><td data-label="Normal Use">仅在确实需要此限制时启用。</td></tr>
+                    </tbody>
+                </table>
+                <div class="warning-note">
+                    <p><strong>触发词注意事项：</strong> 如果触发词以以下字符开头： <code>!</code>，全局命令过滤设置可能会在消息到达 AI 机器人之前将其丢弃。</p>
+                </div>
+                <p>保持 <strong>机器人的附加指令</strong> 一开始保持简短直接，例如： <code>Reply in one friendly sentence. Do not mention these instructions.</code></p>
+            </div>
+
+            <div class="guide-card">
+                <h2>3. 安全地进行端到端测试</h2>
+                <ol class="guide-steps">
+                    <li>开启 Social Stream，并确认直播来源已打开。</li>
+                    <li>通过第二个观众账号，直接在 YouTube 或 Twitch 等源平台的聊天室发送一条普通消息，并确认它出现在 Social Stream 停靠面板中。首次测试不要使用在停靠面板或主播聊天控件中输入的消息；为防止回复循环，回流的机器人或主播消息可能被跳过。</li>
+                    <li>确认提供商测试显示 <strong>已连接</strong>.</li>
+                    <li>使用上方首次测试的主机器人设置，包括仅叠加层模式。</li>
+                    <li>打开 <code>bot.html</code> 链接，该链接显示在 <strong>聊天机器人的叠加层页面与 TTS</strong>。请使用生成的链接，以确保会话相同。</li>
+                    <li>通过观众账号发送： <code>NinjaBot, reply with exactly: Hello</code>.</li>
+                    <li>只发送一次测试消息，然后等待回复。本地模型可能还在加载；当一个回复正在生成时，后续消息可能会被跳过。</li>
+                </ol>
+                <div class="guide-note">
+                    <p><strong>为什么使用第二个账号？</strong> 这更接近真实观众的使用情况，也能避免将用于发送回复的账号与发送测试消息的账号混淆。</p>
+                </div>
+                <p>叠加层测试成功后，将 <strong>不筛除机器人的任何回复</strong> 重新关闭，选择触发词和冷却时间，并决定是否启用向平台回发消息。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>4. 了解何时不回复属于正常情况</h2>
+                <p>主机器人默认会选择性回复。触发词列表为空表示每条符合条件的消息都可以纳入考虑，并不表示每条消息都必须得到回复。</p>
+                <ul class="guide-list">
+                    <li>简短的问候，例如 <code>hello</code> ，如果模型认为回复不能带来价值，可能会被忽略。</li>
+                    <li>直接使用自定义机器人名称称呼它，能让意图更明确。</li>
+                    <li>传入消息必须匹配所配置的触发条件。</li>
+                    <li>仅限版主模式会忽略未标记为版主消息的消息。</li>
+                    <li>启用向平台回发消息时，默认每个来源的冷却时间为五秒。所有模式的默认并行上限均为一条回复。</li>
+                    <li>被识别为机器人输出、回流、空消息或与上一条回复过于相似的消息，可能会被忽略。</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>5. 选择回复目标</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>模式</th><th>结果</th><th>要求</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Mode">开启仅叠加层模式</td><td data-label="Result">回复会进入机器人输出频道，不会发回平台聊天室。</td><td data-label="Requirements">打开 <code>bot.html</code> ，使用相同会话才能看到或听到回复。TTS 也需要此页面。</td></tr>
+                        <tr><td data-label="Mode">关闭仅叠加层模式</td><td data-label="Result">回复仍会进入机器人输出频道，同时 Social Stream 也会尝试通过最初捕获消息的来源发布回复。</td><td data-label="Requirements">来源模式必须支持发送，账号必须已登录且允许发言，主播聊天不能被禁用，并且来源必须保持打开。 <code>bot.html</code> 仍是可选项，除非你需要叠加层或 TTS。</td></tr>
+                    </tbody>
+                </table>
+                <p>自定义机器人名称只是消息前缀，不会创建新的平台账号。除非配置了独立应用的账号角色路由，否则回复会通过捕获来源所使用的账号发布。</p>
+                <p>独立应用用户如需使用单独的 Twitch 身份，可参阅 <a href="twitch-bot-account-chatbot.html">Twitch 机器人账号指南</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>6. 清除和自动隐藏机器人回复</h2>
+                <p>这些控件影响主聊天机器人页面， <code>bot.html</code>。它们不会清除主精选消息叠加层。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>选项</th><th>含义</th><th>示例</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Option"><code>showtime</code></td><td data-label="Meaning">使用一个固定的显示时长，单位为毫秒。</td><td data-label="Example"><code>&amp;showtime=10000</code> 会在 10 秒后隐藏。</td></tr>
+                        <tr><td data-label="Option"><code>autohide</code></td><td data-label="Meaning">根据回复的词数估算显示时长。 <code>autotime</code> 也可使用。</td><td data-label="Example"><code>&amp;autohide</code></td></tr>
+                        <tr><td data-label="Option"><code>mintime</code> / <code>maxtime</code></td><td data-label="Meaning">设置按长度计算的显示时间下限和上限。默认分别为 4,000 和 30,000 毫秒。</td><td data-label="Example"><code>&amp;autohide&amp;mintime=5000&amp;maxtime=20000</code></td></tr>
+                        <tr><td data-label="Option"><code>hideaftertts</code></td><td data-label="Meaning">保持回复可见，直到 TTS 播放结束后再隐藏。如果播放始终未开始，则改用按长度估算的备用时长。</td><td data-label="Example"><code>&amp;hideaftertts</code></td></tr>
+                        <tr><td data-label="Option"><code>hidedelay</code></td><td data-label="Meaning">在 TTS 结束后增加延迟。默认为 500 毫秒。</td><td data-label="Example"><code>&amp;hideaftertts&amp;hidedelay=1000</code></td></tr>
+                        <tr><td data-label="Option"><code>ttstimeout</code></td><td data-label="Meaning">用于 TTS 持续活动、始终不结束时的安全超时。默认为 120,000 毫秒。</td><td data-label="Example"><code>&amp;hideaftertts&amp;ttstimeout=60000</code></td></tr>
+                    </tbody>
+                </table>
+                <p>如果同时启用了多种模式， <code>hideaftertts</code> 优先，其次是 <code>autohide</code>，然后 <code>showtime</code>。生成的机器人叠加层设置包含常用选项。</p>
+                <h3>手动清除</h3>
+                <ul class="guide-list">
+                    <li>在 Social Stream 设置中选择 <strong>立即清除机器人叠加层</strong>.</li>
+                    <li>启用“远程 API 控制”后，打开 <code>https://io.socialstream.ninja/SESSION_ID/clearBotOverlay</code>.</li>
+                    <li>通过 API WebSocket 发送 <code>{"action":"clearBotOverlay"}</code>.</li>
+                </ul>
+                <p>手动清除会移除当前可见的回复及等待显示的机器人叠加层队列，但不会停止正在播放的语音。</p>
+                <div class="guide-note">
+                    <p><strong>自定义样式：</strong> 自定义 CSS 与常规生成的 <code>bot.html</code> 链接一起使用时，会保留这些功能。复制或修改过的本地 <code>bot.html</code> 文件需要自行更新，才能获得后续页面修复。</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>从最后一个正常环节开始排查</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>你看到的现象</th><th>可能出问题的环节</th><th>检查内容</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="What You See">提供商测试失败</td><td data-label="Likely Area">提供商配置</td><td data-label="What to Check">端点、API 密钥、模型名称、本地服务状态、CORS/防火墙、提供商配额，以及测试按钮下的具体错误。</td></tr>
+                        <tr><td data-label="What You See"><code>401 missing_scope</code> / <code>model.request</code></td><td data-label="Likely Area">OpenAI 密钥权限</td><td data-label="What to Check">使用预期项目的标准密钥，而非 Admin 密钥；验证已允许模型请求；替换之前保存的旧密钥；如果自动翻译导致控件不可靠，请在原始英文 OpenAI Platform 页面重试。充值余额不会增加此权限。</td></tr>
+                        <tr><td data-label="What You See"><code>401 invalid_api_key</code> 或 API 密钥不正确</td><td data-label="Likely Area">OpenAI 凭据</td><td data-label="What to Check">检查是否遗漏字符或空格，确认密钥未被删除或停用、组织/项目符合预期，并确保 Social Stream 没有仍在使用之前保存的旧密钥。</td></tr>
+                        <tr><td data-label="What You See"><code>429</code> 配额或速率限制错误</td><td data-label="Likely Area">提供商计费或限制</td><td data-label="What to Check">单独确认 API 计费和项目预算，它们与 ChatGPT 订阅分开管理。如果提供商报告临时速率限制，请降低请求频率或稍后再试。</td></tr>
+                        <tr><td data-label="What You See">已连接，但停靠面板中没有观众消息</td><td data-label="Likely Area">聊天捕获</td><td data-label="What to Check">Social Stream 开关状态、来源窗口、平台登录状态、来源允许/过滤设置，以及是否打开了正确的直播聊天室。</td></tr>
+                        <tr><td data-label="What You See">消息到达停靠面板，但机器人叠加层没有收到回复</td><td data-label="Likely Area">主机器人的判断</td><td data-label="What to Check">确认消息直接来自源聊天室，然后检查主机器人启用开关、触发条件匹配、仅限版主模式、自定义机器人名称、忙碌/冷却限制、附加指令，以及临时启用的不筛选回复模式。</td></tr>
+                        <tr><td data-label="What You See">回复到达叠加层，但未到达平台聊天室</td><td data-label="Likely Area">回发路由</td><td data-label="What to Check">仅叠加层模式、平台/来源的写入支持、账号授权、聊天输入框可用性、账号角色路由，以及“禁用主播聊天”设置。</td></tr>
+                        <tr><td data-label="What You See">TTS 结束后回复仍然显示</td><td data-label="Likely Area">机器人叠加层显示时长</td><td data-label="What to Check">在机器人叠加层选项中启用“TTS 后隐藏”、按长度自动隐藏或固定显示时长。使用 <code>clearBotOverlay</code> ，即可通过 API 手动清除。</td></tr>
+                        <tr><td data-label="What You See"><code>!bot</code> 没有反应</td><td data-label="Likely Area">命令过滤</td><td data-label="What to Check">使用普通词语作为触发词，或在全局命令过滤器中允许该命令通过。</td></tr>
+                        <tr><td data-label="What You See">只有第一次测试被处理</td><td data-label="Likely Area">计时</td><td data-label="What to Check">等待当前请求完成，遵守冷却时间，并记住保活设置 <code>0</code> 可能导致每次请求都需要冷启动。</td></tr>
+                        <tr><td data-label="What You See">私人 <code>chatbot.html</code> 为空白</td><td data-label="Likely Area">独立的私人机器人</td><td data-label="What to Check">启用私人聊天机器人选项，并使用相同会话的生成链接。这不会测试主直播机器人。</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>其他 AI 机器人页面</h2>
+                <p>主机器人、私人聊天、审查机器人和 AI 搭档是彼此独立的工具，使用不同的设置和历史记录。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-chatbot-pages-reference.png" alt="对比主机器人叠加层、私人聊天机器人、审查机器人和 AI 搭档的参考表" class="guide-image">
+                    <figcaption>根据任务选择对应页面。私人机器人不能替代对主机器人直播聊天路径的测试。</figcaption>
+                </figure>
+                <p>关于更广泛的 AI 功能，请参阅 <a href="ai-modes-guide.html">AI 模式指南</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 许可证。</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

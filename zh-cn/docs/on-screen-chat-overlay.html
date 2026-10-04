@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-cn" data-site-root="../../" data-site-language="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-cn/docs/on-screen-chat-overlay.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:url" content="https://socialstream.ninja/zh-cn/docs/on-screen-chat-overlay.html">
+    <meta property="og:title" content="游戏时的屏幕聊天叠加层 - Social Stream Ninja">
+    <meta property="og:description" content="使用独立桌面应用或 Electron Capture，在游戏上方显示私有 Social Stream Ninja 聊天叠加层，涵盖透明效果、点击穿透快捷键、命令行示例和 OBS 捕获说明。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 标志">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-cn/docs/on-screen-chat-overlay.html">
+    <meta name="twitter:title" content="游戏时的屏幕聊天叠加层 - Social Stream Ninja">
+    <meta name="twitter:description" content="使用独立桌面应用或 Electron Capture，在游戏上方显示私有 Social Stream Ninja 聊天叠加层，涵盖透明效果、点击穿透快捷键、命令行示例和 OBS 捕获说明。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 标志">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游戏时的屏幕聊天叠加层 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="使用独立桌面应用或 Electron Capture，在游戏上方显示私有 Social Stream Ninja 聊天叠加层，涵盖透明效果、点击穿透快捷键、命令行示例和 OBS 捕获说明。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="zh-cn">
+<script id="ssn-site-language" type="application/json">{"language":"zh-cn","page":"docs/on-screen-chat-overlay.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切换到浅色主题","Switch to dark theme":"切换到深色主题","Light mode":"浅色模式","Dark mode":"深色模式","Open navigation menu":"打开导航菜单","Close navigation menu":"关闭导航菜单","Copy this document as Markdown to the clipboard":"将此文档以 Markdown 格式复制到剪贴板","Copy Markdown":"复制 Markdown","Copying…":"正在复制…","Markdown copied":"已复制 Markdown","Copy failed":"复制失败","Copy comprehensive Markdown for an AI assistant":"复制完整 Markdown 内容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"将此文档页面复制为 Markdown，供 AI 助手使用"},"strings":{"(or":"（或",". Activate your chat sources normally.":"。正常启用您的聊天来源。",". If the URL has no question mark yet, use":"。如果 URL 尚无问号，请使用",". Mouse clicks will pass through to the game.":"。鼠标点击将穿透到游戏。",". SSApp opens it as its own overlay window.":"。SSApp 会将其作为独立叠加层窗口打开。",". The browser extension and an OBS Browser Source cannot create a system-wide click-through window by themselves.":"。浏览器扩展和 OBS 浏览器来源本身无法创建系统级点击穿透窗口。",". The generated URL should contain":"。生成的 URL 应包含","A Dock or Featured URL with the wrong session ID will remain empty.":"使用错误会话 ID 的停靠面板或精选 URL 会一直为空。","A test recording confirms viewers cannot see the private overlay.":"测试录像确认观众看不到私有叠加层。","Action":"操作","Alternative transparent background mode; useful when the Dock's normal":"另一种透明背景模式；在停靠面板的普通","Always on top":"始终置顶","An exclusive fullscreen game may cover all normal desktop windows, including an always-on-top overlay.":"独占全屏游戏可能盖住所有普通桌面窗口，包括始终置顶的叠加层。","Avoid":"避免使用","Best When":"最适合的情况","Borderless or windowed fullscreen is the reliable game mode.":"无边框或窗口化全屏是可靠的游戏模式。","Capture third-party overlays (such as Steam)":"捕获第三方叠加层（例如 Steam）","Chat is arriving in Social Stream.":"聊天正在到达 Social Stream。","Choose The Chat View":"选择聊天视图","Choose a zero-based monitor when a monitor index is easier than desktop coordinates.":"当显示器编号比桌面坐标更方便时，使用从 0 开始的显示器编号。","Click the generated Dock or Featured link":"点击生成的停靠面板或精选链接","Click-through disables mouse interaction.":"点击穿透会禁用鼠标交互。","Click-through is enabled only after positioning.":"仅在定位完成后启用点击穿透。","Closing SSApp or Electron Capture closes the local overlay.":"关闭 SSApp 或 Electron Capture 会关闭本地叠加层。","Commands & API":"命令与 API","Continuous Chat Dock":"连续聊天停靠面板","Copy your generated Social Stream Dock, Featured, template, or custom overlay URL.":"复制生成的 Social Stream 停靠面板、精选、模板或自定义叠加层 URL。","Display Capture":"显示器捕获","Display capture includes what you see.":"显示器捕获包含您看到的所有内容。","Do not add this overlay URL as an OBS Browser Source":"不要将此叠加层 URL 添加为 OBS 浏览器来源","Do not attempt to bypass a game's security controls.":"不要尝试绕过游戏的安全控制。","Download":"下载","Electron Capture":"Electron Capture","Electron Capture Command-Line Launch":"通过命令行启动 Electron Capture","Electron Capture feature cards for Pin on Top, Frameless Window, Transparency Support, Click-Through Mode, Auto Screen Capture, and Game and App Capture":"Electron Capture 功能卡片，包含置顶、无边框窗口、透明支持、点击穿透模式、自动屏幕捕获以及游戏和应用捕获","Electron Capture provides the pin, frameless transparency, and click-through controls needed for a private on-screen overlay.":"Electron Capture 提供私有屏幕叠加层所需的置顶、无边框透明和点击穿透控件。","Example placement using the real SSApp Featured Chat overlay over a simulated gameplay scene. A Dock URL can show the full running chat instead.":"位置示例：在模拟游戏场景上显示真实 SSApp 精选聊天叠加层。也可以使用停靠面板 URL 显示完整的连续聊天。","Featured Chat Only":"仅精选聊天","Featured Chat Overlay":"精选聊天叠加层","Featured Chat Overlay:":"精选聊天叠加层：","Featured Chat is not the full feed.":"精选聊天不是完整消息流。","Features":"功能","For templates, custom CSS, fonts, and more URL controls, see the":"关于模板、自定义 CSS、字体和更多 URL 控件，请参见","Force transparent background":"强制透明背景","Frameless transparency, pinning, click-through, monitor selection, and command-line control.":"无边框透明、置顶、点击穿透、显示器选择和命令行控制。","Game Capture":"游戏捕获","Guides":"指南","Hide platform source labels or icons in the Dock.":"隐藏停靠面板中的平台来源标签或图标。","Hide the Dock toolbar after setup.":"设置完成后隐藏停靠面板工具栏。","Hire":"雇用","Home":"首页","If you cannot isolate the game from the monitor in your capture software, this overlay cannot be guaranteed private.":"如果捕获软件无法将游戏与整个显示器画面分开捕获，就无法保证该叠加层的私密性。","Important Limitations":"重要限制","In the Social Stream settings panel, find":"在 Social Stream 设置面板中找到","Initial position in the virtual desktop. Negative coordinates may be valid for monitors placed left or above the primary monitor.":"虚拟桌面中的初始位置。对于放在主显示器左侧或上方的显示器，负坐标可能有效。","Initial window size in pixels.":"初始窗口尺寸，单位为像素。","Inject a local CSS file for advanced styling.":"注入本地 CSS 文件以进行高级样式设置。","Inspiration":"灵感","Install and open the":"安装并打开","It only shows a message after you select one in the Dock.":"只有在停靠面板中选择消息后，它才会显示该消息。","Keep It On Your Monitor, Not On The Stream":"仅在自己的显示器上显示，不放入直播","Keep Social Stream chat visible on your monitor without automatically putting it on the stream.":"让 Social Stream 聊天在显示器上可见，而不会自动出现在直播中。","Leave OBS's":"将 OBS 的","Leave it off unless a page specifically needs screen capture or another elevated Electron feature.":"保持关闭，除非页面明确需要屏幕捕获或其他提升权限的 Electron 功能。","Limit the number of retained messages on supported pages.":"在支持的页面上限制保留的消息数量。","Main navigation":"主导航","Make UnClickable":"设为不可点击","Make a short local recording and watch it back before going live. Capture methods and games differ.":"正式直播前，录制一段简短的本地视频并回看。不同捕获方法和游戏的表现各有不同。","Make sure it includes":"确保其中包含","Method 1: Social Stream Standalone App":"方法 1：Social Stream 独立应用","Method 2: Electron Capture":"方法 2：Electron Capture","Move and resize it, then enable":"移动并调整其大小，然后启用","Move and size the window before locking it. Right-click the overlay for size presets and select":"锁定前先移动窗口并调整大小。右键点击叠加层以选择预设尺寸，并选择","No reliable system-wide transparency or mouse click-through.":"无法可靠地实现系统级透明或鼠标点击穿透。","Normal browser or OBS only":"仅普通浏览器或 OBS","OBS Game Capture is Windows-only. If your setup must capture the entire display, the on-screen overlay will also be captured. Use a separate monitor or a window/application capture method that excludes the overlay, then verify with a recording.":"OBS 游戏捕获仅适用于 Windows。如果您的设置必须捕获整个显示器，屏幕叠加层也会被捕获。请使用另一台显示器，或使用能排除叠加层的窗口／应用捕获方法，然后通过录像验证。","OBS captures the game/window, not the entire display.":"OBS 捕获游戏／窗口，而不是整个显示器。","On Windows, prefer an OBS":"在 Windows 上，优先使用 OBS 的","On-Screen Chat Overlay While Gaming - Social Stream Ninja":"游戏时的屏幕聊天叠加层 - Social Stream Ninja","On-Screen Chat While Gaming":"游戏时查看屏幕聊天","Open its options and enable":"打开其选项并启用","Open navigation menu":"打开导航菜单","Open the URL in Electron Capture.":"在 Electron Capture 中打开 URL。","Option":"选项","Overlay Customization guide":"叠加层自定义指南","Overlay Gallery":"叠加层图库","Positioning tip:":"定位提示：","Purpose":"用途","Quick Checklist":"快速检查清单","Reload the focused overlay window.":"重新加载当前获得焦点的叠加层窗口。","Remove the page background and request a transparent desktop window.":"移除页面背景并请求透明桌面窗口。","Right-click an SSApp overlay window to resize, pin, or make it click-through. Set click-through last so you do not lock yourself out while positioning it.":"右键点击 SSApp 叠加层窗口以调整大小、置顶或启用点击穿透。最后再设置点击穿透，以免定位时无法操作窗口。","Right-click its window and enable":"右键点击其窗口并启用","Run a separate Electron Capture process when you need more than one independent overlay.":"需要多个独立叠加层时，运行单独的 Electron Capture 进程。","SSApp Hotkeys":"SSApp 快捷键","SSApp overlay right-click menu showing Resize window, Always on top, and Make UnClickable until in-focus with the Ctrl Shift Alt X hotkey":"SSApp 叠加层右键菜单，显示调整窗口大小、始终置顶，以及“获得焦点前设为不可点击”和 Ctrl Shift Alt X 快捷键","Scale supported overlays down without changing window size.":"缩小支持的叠加层，而不改变窗口尺寸。","See Electron Capture's":"参见 Electron Capture 的","See Live Chat While Gaming! Transparent Overlay Guide":"游戏时查看实时聊天！透明叠加层指南","Show a private Social Stream Ninja chat overlay over a game using the standalone desktop app or Electron Capture, with transparency, click-through hotkeys, command-line examples, and OBS capture notes.":"使用独立桌面应用或 Electron Capture，在游戏上方显示私有 Social Stream Ninja 聊天叠加层，涵盖透明效果、点击穿透快捷键、命令行示例和 OBS 捕获说明。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja featured chat message positioned over a simulated gameplay scene":"Social Stream Ninja 精选聊天消息显示在模拟游戏场景上方","Social Stream Ninja logo":"Social Stream Ninja 标志","Social Stream Ninja standalone app":"Social Stream Ninja 独立应用","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 许可证。","Social Stream can sit above a game as a transparent, always-on-top window. This is a separate desktop window, not a game HUD injection.":"Social Stream 可以作为透明、始终置顶的窗口显示在游戏上方。这是单独的桌面窗口，不是向游戏 HUD 注入内容。","Social Stream standalone app":"Social Stream 独立应用","Some games and anti-cheat systems restrict overlays.":"有些游戏和反作弊系统限制叠加层。","Start always-on-top.":"以始终置顶方式启动。","Start in click-through mode. Remember the recovery hotkey before using it.":"以点击穿透模式启动。使用前请记住恢复快捷键。","Streaming Chat":"直播聊天","Streaming Chat / Dock:":"直播聊天／停靠面板：","Support":"支持","Supported Sites":"支持的网站","Switch theme":"切换主题","Template or custom overlay:":"模板或自定义叠加层：","The URL contains":"URL 包含","The chat should appear on the broadcast rather than privately on your monitor.":"需要将聊天显示在直播中，而不是仅在自己的显示器上私下查看。","The complete Social Stream overlay URL. Quote it because it contains":"完整的 Social Stream 叠加层 URL。请用引号包围，因为其中包含","The desktop app must stay open.":"桌面应用必须保持打开。","The desktop wrapper is pinned above the game.":"桌面容器窗口已置顶于游戏上方。","The game uses borderless or windowed fullscreen if exclusive fullscreen hides the overlay.":"如果独占全屏隐藏叠加层，游戏应使用无边框或窗口化全屏。","The overlay URL uses the correct session ID.":"叠加层 URL 使用正确的会话 ID。","The overlay stays private only when your streaming software captures the game or game window rather than the whole monitor.":"只有直播软件捕获游戏或游戏窗口而非整个显示器时，叠加层才会保持私密。","The portable Windows build is the simplest version to automate. Replace":"便携式 Windows 版本最容易自动化。替换","The session must match.":"会话必须匹配。","This older video shows the transparent, always-on-top, click-through chat setup. The app interface may look different in current versions.":"此旧视频展示透明、始终置顶、点击穿透的聊天设置。当前版本的应用界面可能有所不同。","Toggle mouse click-through so you can interact with the overlay again.":"切换鼠标点击穿透，以便再次与叠加层交互。","Transparency varies by operating system and graphics setup.":"透明效果因操作系统和图形设置而异。","Transparent popup windows, always-on-top, resizing, and click-through.":"透明弹出窗口、始终置顶、调整大小和点击穿透。","URL Option":"URL 选项","Update the desktop app and graphics driver if a transparent area appears white or black.":"如果透明区域显示为白色或黑色，请更新桌面应用和显卡驱动。","Use":"使用","Use a denser Dock layout.":"使用更紧凑的停靠面板布局。","Use the":"使用","Use the recovery hotkey before trying to right-click the window again.":"再次尝试右键点击窗口前，请使用恢复快捷键。","Use the same session ID as your active Social Stream setup. In the Social Stream settings panel, open the options for the view you chose and enable":"使用与当前 Social Stream 设置相同的会话 ID。在 Social Stream 设置面板中，打开所选视图的选项并启用","Useful Overlay URL Options":"实用叠加层 URL 选项","Video Walkthrough":"视频演示","What It Adds":"提供的功能","When placement is finished, right-click it again and select":"完成定位后，再次右键点击并选择","Windows / Linux":"Windows / Linux","Yes, With A Desktop Overlay Window":"可以，使用桌面叠加层窗口即可","You already capture chat in SSApp and want the shortest setup.":"您已在 SSApp 中捕获聊天，并希望以最少步骤完成设置。","You need a desktop wrapper.":"需要桌面容器应用。","You want exact size and position, reusable launch commands, or a dedicated overlay wrapper.":"您需要精确尺寸和位置、可重复使用的启动命令，或专用叠加层容器。","and":"和","and adjust the size and position for your display.":"并根据显示器调整尺寸和位置。","characters.":"字符。","complete command-line reference":"完整命令行参考","for additional parameters.":"了解其他参数。","for this workflow. It captures the entire monitor, including the chat overlay.":"用于此工作流程。它会捕获整个显示器，包括聊天叠加层。","from inside the standalone app":"从独立应用内部","if viewers should not see it.":"，如果不想让观众看到它。","is a separate free, open-source app that can wrap a Social Stream URL in a transparent desktop window. It is often the easier option when you only want a dedicated overlay window.":"是独立的免费开源应用，可以将 Social Stream URL 装入透明桌面窗口。如果您只需要专用叠加层窗口，它通常是更简单的选择。","is not needed for a normal Social Stream overlay.":"对于普通 Social Stream 叠加层并非必需。","macOS":"macOS","macOS And Linux":"macOS 和 Linux","macOS and Linux limitation:":"macOS 和 Linux 限制：","mode hides its scrollbar.":"模式隐藏滚动条时很有用。","on macOS) to toggle click-through later.":"，在 macOS 上使用）以便稍后切换点击穿透。","option off unless you have tested that it does not include this window.":"选项保持关闭，除非您已测试确认它不会包含此窗口。","options for exact placement.":"选项来精确定位。","or":"或","shows one message selected from the Dock. Use this when you only want highlighted messages.":"显示从停靠面板选中的一条消息。只想显示重点消息时使用。","shows the ongoing combined chat. This is usually the best choice while gaming.":"显示持续更新的合并聊天。游戏时通常最适合使用此选项。","source targeting the game.":"来源，并将目标设为游戏。","standalone desktop app":"独立桌面应用","transparent areas can be hard to grab. Keep the Dock menu visible while positioning it, use your operating system's window movement shortcuts, or use Electron Capture's":"透明区域可能难以拖动。定位时保持停靠面板菜单可见，使用操作系统的窗口移动快捷键，或使用 Electron Capture 的","works too, as long as the page supports a transparent background.":"也可以使用，只要页面支持透明背景。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/on-screen-chat-overlay.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/on-screen-chat-overlay.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主导航"><a href="../index.html">首页</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">灵感</a><a href="download.html">下载</a><a href="guides.html">指南</a><a href="commands.html">命令与 API</a><a href="supported-sites.html">支持的网站</a><a href="overlay-gallery.html" class="site-priority-gallery">叠加层图库</a><a href="services.html" class="site-priority-hire">雇用</a><a href="support.html">支持</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="简体中文"><span aria-hidden="true">🌐 </span><span lang="zh-cn">简体中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/on-screen-chat-overlay.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/on-screen-chat-overlay.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/on-screen-chat-overlay.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/on-screen-chat-overlay.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/on-screen-chat-overlay.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/on-screen-chat-overlay.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/on-screen-chat-overlay.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="on-screen-chat-overlay.html" lang="zh-cn" hreflang="zh-cn" aria-current="true">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/on-screen-chat-overlay.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/on-screen-chat-overlay.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/on-screen-chat-overlay.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/on-screen-chat-overlay.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/on-screen-chat-overlay.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/on-screen-chat-overlay.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/on-screen-chat-overlay.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/on-screen-chat-overlay.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/on-screen-chat-overlay.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切换主题"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="打开导航菜单" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>游戏时查看屏幕聊天</h1>
+            <p>让 Social Stream 聊天在显示器上可见，而不会自动出现在直播中。</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>可以，使用桌面叠加层窗口即可</h2>
+                <p>Social Stream 可以作为透明、始终置顶的窗口显示在游戏上方。这是单独的桌面窗口，不是向游戏 HUD 注入内容。</p>
+                <div class="guide-note">
+                    <p><strong>需要桌面容器应用。</strong> 使用 <a href="download.html">Social Stream Ninja 独立应用</a> 或 <a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a>。浏览器扩展和 OBS 浏览器来源本身无法创建系统级点击穿透窗口。</p>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>选项</th><th>最适合的情况</th><th>提供的功能</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Option">Social Stream 独立应用</td>
+                            <td data-label="Best When">您已在 SSApp 中捕获聊天，并希望以最少步骤完成设置。</td>
+                            <td data-label="What It Adds">透明弹出窗口、始终置顶、调整大小和点击穿透。</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Option">Electron Capture</td>
+                            <td data-label="Best When">您需要精确尺寸和位置、可重复使用的启动命令，或专用叠加层容器。</td>
+                            <td data-label="What It Adds">无边框透明、置顶、点击穿透、显示器选择和命令行控制。</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Option">仅普通浏览器或 OBS</td>
+                            <td data-label="Best When">需要将聊天显示在直播中，而不是仅在自己的显示器上私下查看。</td>
+                            <td data-label="What It Adds">无法可靠地实现系统级透明或鼠标点击穿透。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>视频演示</h2>
+                <p>此旧视频展示透明、始终置顶、点击穿透的聊天设置。当前版本的应用界面可能有所不同。</p>
+                <div class="video-container">
+                    <iframe
+                        src="https://www.youtube.com/embed/bMVVof_L0sI"
+                        title="游戏时查看实时聊天！透明叠加层指南"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>选择聊天视图</h2>
+                <ul class="guide-list">
+                    <li><strong>直播聊天／停靠面板：</strong> 显示持续更新的合并聊天。游戏时通常最适合使用此选项。</li>
+                    <li><strong>精选聊天叠加层：</strong> 显示从停靠面板选中的一条消息。只想显示重点消息时使用。</li>
+                    <li><strong>模板或自定义叠加层：</strong> 也可以使用，只要页面支持透明背景。</li>
+                </ul>
+                <p>使用与当前 Social Stream 设置相同的会话 ID。在 Social Stream 设置面板中，打开所选视图的选项并启用 <strong>强制透明背景</strong>。生成的 URL 应包含 <code>transparent</code>.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/on-screen-overlay-preview.png" alt="Social Stream Ninja 精选聊天消息显示在模拟游戏场景上方" class="guide-image">
+                    <figcaption>位置示例：在模拟游戏场景上显示真实 SSApp 精选聊天叠加层。也可以使用停靠面板 URL 显示完整的连续聊天。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>方法 1：Social Stream 独立应用</h2>
+                <ol class="guide-steps">
+                    <li>安装并打开 <a href="download.html">独立桌面应用</a>。正常启用您的聊天来源。</li>
+                    <li>在 Social Stream 设置面板中找到 <strong>直播聊天</strong> 或 <strong>精选聊天叠加层</strong>.</li>
+                    <li>打开其选项并启用 <strong>强制透明背景</strong>.</li>
+                    <li>点击生成的停靠面板或精选链接 <strong>从独立应用内部</strong>。SSApp 会将其作为独立叠加层窗口打开。</li>
+                    <li>锁定前先移动窗口并调整大小。右键点击叠加层以选择预设尺寸，并选择 <strong>始终置顶</strong>.</li>
+                    <li>完成定位后，再次右键点击并选择 <strong>设为不可点击</strong>。鼠标点击将穿透到游戏。</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/ssapp-on-screen-overlay-menu.png" alt="SSApp 叠加层右键菜单，显示调整窗口大小、始终置顶，以及“获得焦点前设为不可点击”和 Ctrl Shift Alt X 快捷键" class="guide-image">
+                    <figcaption>右键点击 SSApp 叠加层窗口以调整大小、置顶或启用点击穿透。最后再设置点击穿透，以免定位时无法操作窗口。</figcaption>
+                </figure>
+                <h3>SSApp 快捷键</h3>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Windows / Linux</th><th>macOS</th><th>操作</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+X</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+X</code></td>
+                            <td data-label="Action">切换鼠标点击穿透，以便再次与叠加层交互。</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Windows / Linux"><code>Ctrl+Shift+Alt+R</code></td>
+                            <td data-label="macOS"><code>Command+Shift+Option+R</code></td>
+                            <td data-label="Action">重新加载当前获得焦点的叠加层窗口。</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="guide-note">
+                    <p><strong>定位提示：</strong> 透明区域可能难以拖动。定位时保持停靠面板菜单可见，使用操作系统的窗口移动快捷键，或使用 Electron Capture 的 <code>--x</code> 和 <code>--y</code> 选项来精确定位。</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>方法 2：Electron Capture</h2>
+                <p><a href="https://electroncapture.app/" target="_blank" rel="noopener">Electron Capture</a> 是独立的免费开源应用，可以将 Social Stream URL 装入透明桌面窗口。如果您只需要专用叠加层窗口，它通常是更简单的选择。</p>
+                <ol class="guide-steps">
+                    <li>复制生成的 Social Stream 停靠面板、精选、模板或自定义叠加层 URL。</li>
+                    <li>确保其中包含 <code>&amp;transparent</code>。如果 URL 尚无问号，请使用 <code>?transparent</code>.</li>
+                    <li>在 Electron Capture 中打开 URL。</li>
+                    <li>右键点击其窗口并启用 <strong>始终置顶</strong>.</li>
+                    <li>移动并调整其大小，然后启用 <strong>设为不可点击</strong>.</li>
+                    <li>使用 <code>Ctrl+Shift+Alt+X</code> （或 <code>Command+Shift+Option+X</code> ，在 macOS 上使用）以便稍后切换点击穿透。</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/electron-capture-overlay-features.png" alt="Electron Capture 功能卡片，包含置顶、无边框窗口、透明支持、点击穿透模式、自动屏幕捕获以及游戏和应用捕获" class="guide-image">
+                    <figcaption>Electron Capture 提供私有屏幕叠加层所需的置顶、无边框透明和点击穿透控件。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>通过命令行启动 Electron Capture</h2>
+                <p>便携式 Windows 版本最容易自动化。替换 <code>YOUR_SESSION_ID</code> 并根据显示器调整尺寸和位置。</p>
+
+                <h3>连续聊天停靠面板</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/dock.html?session=YOUR_SESSION_ID&amp;transparent&amp;compact&amp;hidemenu" --width=520 --height=760 --x=1380 --y=80 --pin --unclickable --title="SSN Chat"</code></pre>
+
+                <h3>仅精选聊天</h3>
+                <pre><code>.\elecap.exe --url="https://socialstream.ninja/featured.html?session=YOUR_SESSION_ID&amp;transparent" --width=700 --height=500 --x=1160 --y=80 --pin --unclickable --title="SSN Featured"</code></pre>
+
+                <h3>macOS 和 Linux</h3>
+                <pre><code># macOS
+"/Applications/elecap.app/Contents/MacOS/elecap" --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable
+
+# Linux AppImage; replace the filename with the version you downloaded
+./elecap-VERSION-x86_64.AppImage --url='YOUR_OVERLAY_URL' --width=520 --height=760 --pin --unclickable</code></pre>
+
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>选项</th><th>用途</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Option"><code>--url</code></td><td data-label="Purpose">完整的 Social Stream 叠加层 URL。请用引号包围，因为其中包含 <code>&amp;</code> 字符。</td></tr>
+                        <tr><td data-label="Option"><code>--width</code>, <code>--height</code></td><td data-label="Purpose">初始窗口尺寸，单位为像素。</td></tr>
+                        <tr><td data-label="Option"><code>--x</code>, <code>--y</code></td><td data-label="Purpose">虚拟桌面中的初始位置。对于放在主显示器左侧或上方的显示器，负坐标可能有效。</td></tr>
+                        <tr><td data-label="Option"><code>--monitor=0</code></td><td data-label="Purpose">当显示器编号比桌面坐标更方便时，使用从 0 开始的显示器编号。</td></tr>
+                        <tr><td data-label="Option"><code>--pin</code></td><td data-label="Purpose">以始终置顶方式启动。</td></tr>
+                        <tr><td data-label="Option"><code>--unclickable</code></td><td data-label="Purpose">以点击穿透模式启动。使用前请记住恢复快捷键。</td></tr>
+                        <tr><td data-label="Option"><code>--css="C:\path\chat.css"</code></td><td data-label="Purpose">注入本地 CSS 文件以进行高级样式设置。</td></tr>
+                        <tr><td data-label="Option"><code>--multiinstance</code></td><td data-label="Purpose">需要多个独立叠加层时，运行单独的 Electron Capture 进程。</td></tr>
+                    </tbody>
+                </table>
+                <p>参见 Electron Capture 的 <a href="https://electroncapture.app/command-line.html" target="_blank" rel="noopener">完整命令行参考</a> 了解其他参数。</p>
+                <div class="guide-note">
+                    <p><strong><code>--node</code> 对于普通 Social Stream 叠加层并非必需。</strong> 保持关闭，除非页面明确需要屏幕捕获或其他提升权限的 Electron 功能。</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>实用叠加层 URL 选项</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>URL 选项</th><th>使用</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="URL Option"><code>transparent</code></td><td data-label="Use">移除页面背景并请求透明桌面窗口。</td></tr>
+                        <tr><td data-label="URL Option"><code>compact</code></td><td data-label="Use">使用更紧凑的停靠面板布局。</td></tr>
+                        <tr><td data-label="URL Option"><code>hidemenu</code></td><td data-label="Use">设置完成后隐藏停靠面板工具栏。</td></tr>
+                        <tr><td data-label="URL Option"><code>scale=0.85</code></td><td data-label="Use">缩小支持的叠加层，而不改变窗口尺寸。</td></tr>
+                        <tr><td data-label="URL Option"><code>limit=15</code></td><td data-label="Use">在支持的页面上限制保留的消息数量。</td></tr>
+                        <tr><td data-label="URL Option"><code>hidesource</code></td><td data-label="Use">隐藏停靠面板中的平台来源标签或图标。</td></tr>
+                        <tr><td data-label="URL Option"><code>chroma=0000</code></td><td data-label="Use">另一种透明背景模式；在停靠面板的普通 <code>transparent</code> 模式隐藏滚动条时很有用。</td></tr>
+                    </tbody>
+                </table>
+                <p>关于模板、自定义 CSS、字体和更多 URL 控件，请参见 <a href="overlay-customization-guide.html">叠加层自定义指南</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>仅在自己的显示器上显示，不放入直播</h2>
+                <p>只有直播软件捕获游戏或游戏窗口而非整个显示器时，叠加层才会保持私密。</p>
+                <ol class="guide-steps">
+                    <li><strong>不要将此叠加层 URL 添加为 OBS 浏览器来源</strong> ，如果不想让观众看到它。</li>
+                    <li>在 Windows 上，优先使用 OBS 的 <a href="https://obsproject.com/kb/game-capture-source" target="_blank" rel="noopener">游戏捕获</a> 来源，并将目标设为游戏。</li>
+                    <li>将 OBS 的 <strong>捕获第三方叠加层（例如 Steam）</strong> 选项保持关闭，除非您已测试确认它不会包含此窗口。</li>
+                    <li>避免使用 <a href="https://obsproject.com/kb/display-capture-sources" target="_blank" rel="noopener">显示器捕获</a> 用于此工作流程。它会捕获整个显示器，包括聊天叠加层。</li>
+                    <li>正式直播前，录制一段简短的本地视频并回看。不同捕获方法和游戏的表现各有不同。</li>
+                </ol>
+                <div class="warning-note">
+                    <p><strong>macOS 和 Linux 限制：</strong> OBS 游戏捕获仅适用于 Windows。如果您的设置必须捕获整个显示器，屏幕叠加层也会被捕获。请使用另一台显示器，或使用能排除叠加层的窗口／应用捕获方法，然后通过录像验证。</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>重要限制</h2>
+                <ul class="guide-list">
+                    <li><strong>无边框或窗口化全屏是可靠的游戏模式。</strong> 独占全屏游戏可能盖住所有普通桌面窗口，包括始终置顶的叠加层。</li>
+                    <li><strong>桌面应用必须保持打开。</strong> 关闭 SSApp 或 Electron Capture 会关闭本地叠加层。</li>
+                    <li><strong>会话必须匹配。</strong> 使用错误会话 ID 的停靠面板或精选 URL 会一直为空。</li>
+                    <li><strong>精选聊天不是完整消息流。</strong> 只有在停靠面板中选择消息后，它才会显示该消息。</li>
+                    <li><strong>点击穿透会禁用鼠标交互。</strong> 再次尝试右键点击窗口前，请使用恢复快捷键。</li>
+                    <li><strong>有些游戏和反作弊系统限制叠加层。</strong> 不要尝试绕过游戏的安全控制。</li>
+                    <li><strong>透明效果因操作系统和图形设置而异。</strong> 如果透明区域显示为白色或黑色，请更新桌面应用和显卡驱动。</li>
+                    <li><strong>显示器捕获包含您看到的所有内容。</strong> 如果捕获软件无法将游戏与整个显示器画面分开捕获，就无法保证该叠加层的私密性。</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>快速检查清单</h2>
+                <ol class="guide-steps">
+                    <li>聊天正在到达 Social Stream。</li>
+                    <li>叠加层 URL 使用正确的会话 ID。</li>
+                    <li>URL 包含 <code>transparent</code>.</li>
+                    <li>桌面容器窗口已置顶于游戏上方。</li>
+                    <li>仅在定位完成后启用点击穿透。</li>
+                    <li>如果独占全屏隐藏叠加层，游戏应使用无边框或窗口化全屏。</li>
+                    <li>OBS 捕获游戏／窗口，而不是整个显示器。</li>
+                    <li>测试录像确认观众看不到私有叠加层。</li>
+                </ol>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 许可证。</p>
+            </div>
+        </div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

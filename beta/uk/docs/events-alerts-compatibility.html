@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="uk" data-site-root="../../" data-site-language="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/uk/docs/events-alerts-compatibility.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="uk_UA">
+    <meta property="og:url" content="https://socialstream.ninja/beta/uk/docs/events-alerts-compatibility.html">
+    <meta property="og:title" content="Сумісність подій і сповіщень — Social Stream Ninja">
+    <meta property="og:description" content="Дізнайтеся, які події YouTube, Twitch і Kick надходять до сповіщень Social Stream Ninja, Event Flow, озвучення, цілей, оверлеїв і споживачів API.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Логотип Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/uk/docs/events-alerts-compatibility.html">
+    <meta name="twitter:title" content="Сумісність подій і сповіщень — Social Stream Ninja">
+    <meta name="twitter:description" content="Дізнайтеся, які події YouTube, Twitch і Kick надходять до сповіщень Social Stream Ninja, Event Flow, озвучення, цілей, оверлеїв і споживачів API.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Логотип Social Stream Ninja">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сумісність подій і сповіщень — Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Дізнайтеся, які події YouTube, Twitch і Kick надходять до сповіщень Social Stream Ninja, Event Flow, озвучення, цілей, оверлеїв і споживачів API.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="uk">
+<script id="ssn-site-language" type="application/json">{"language":"uk","page":"docs/events-alerts-compatibility.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Перемкнути на світлу тему","Switch to dark theme":"Перемкнути на темну тему","Light mode":"Світла тема","Dark mode":"Темна тема","Open navigation menu":"Відкрити меню навігації","Close navigation menu":"Закрити меню навігації","Copy this document as Markdown to the clipboard":"Скопіювати цей документ у форматі Markdown до буфера обміну","Copy Markdown":"Скопіювати Markdown","Copying…":"Копіювання…","Markdown copied":"Markdown скопійовано","Copy failed":"Не вдалося скопіювати","Copy comprehensive Markdown for an AI assistant":"Скопіювати повний Markdown для ШІ-асистента","Copy this documentation page as Markdown for an AI assistant":"Скопіювати цю сторінку документації як Markdown для ШІ-асистента"},"strings":{"## Verified maintainer context - Multi Alerts currently normalizes follow, subscription, donation/gift, bits, raid, auction, and Hype Train aliases into seven alert categories. Auction and Hype Train are opt-in. - Its current classifier accepts canonical names plus legacy aliases. A payload with `hasDonation` and no event is valid: bits/cheer wording routes it to Bits, while other amounts route it to Donation. - Count/status events such as `viewer_update`, `follower_update`, `subscriber_update`, and ad-break status intentionally do not become general alert cards. - Kick's current official subscribed event set includes chat, follows, new/renewed/gifted subscriptions, reward redemptions, KICKs gifts, bans, and livestream status. Kick currently has no official raid/host subscription; raid handling is compatibility-only. - TTS defaults to skipping non-donation rows with an `event` value. `readevents` disables that skip, while normal source/member/donation filters still apply. - The popup preview verifies overlay handling only. Platform capture still requires a live source, matching session, correct role/scopes, and a real event.":"## Перевірений контекст від супроводжувача - Multi Alerts наразі нормалізує псевдоніми підписок, платних підписок, донатів/подарунків, бітів, рейдів, аукціонів і Hype Train у сім категорій сповіщень. Auction і Hype Train вмикаються окремо. - Поточний класифікатор приймає канонічні назви та застарілі псевдоніми. Дані з `hasDonation` і без події є коректними: формулювання bits/cheer спрямовує їх до Bits, а інші суми — до Donation. - Події лічильників/стану, як-от `viewer_update`, `follower_update`, `subscriber_update` і стан рекламної перерви, навмисно не стають загальними картками сповіщень. - Поточний офіційний набір підписаних подій Kick включає чат, підписки, нові/поновлені/подаровані платні підписки, використання винагород, подарунки KICKs, блокування та стан прямої трансляції. Kick наразі не має офіційної підписки raid/host; обробка рейдів існує лише для сумісності. - Озвучення типово пропускає рядки без донатів зі значенням `event`. `readevents` вимикає цей пропуск, але звичайні фільтри джерел/учасників/донатів усе ще застосовуються. - Попередній перегляд у спливному вікні перевіряє лише обробку оверлею. Захоплення платформи все ще потребує живого джерела, однакової сесії, правильної ролі/дозволів і справжньої події.",", and fields your source emits. Use the Test Message tool before relying on a live event.":", і поля, які надсилає ваше джерело. Скористайтеся інструментом Test Message, перш ніж покладатися на живу подію.",", donation aliases":", псевдоніми донатів",", membership aliases":", псевдоніми членства",", membership fields, and selected":", поля членства й вибрані",", or a row with":", або рядок із","; API-delayed and public subscriptions only":"; із затримкою API та лише публічні підписки","A donation preview checks the overlay. Next, trigger or observe a real platform event to verify the source connection.":"Попередній перегляд донату перевіряє оверлей. Потім запустіть або дочекайтеся справжньої події платформи, щоб перевірити підключення джерела.","A donation-style chat row may instead use":"Рядок чату у стилі донату натомість може використовувати","A successful preview proves the alert layout works.":"Успішний перегляд підтверджує роботу макета сповіщення.","Activity":"Активність","Auction":"Аукціон","Auction-win alerts are opt-in.":"Сповіщення про перемоги в аукціонах вмикаються окремо.","Availability and naming depend on the platform source.":"Доступність і назви залежать від джерела платформи.","Bits":"Біти","Category":"Категорія","Channel reward":"Винагорода каналу","Chat plus lightweight page markers for gifts, rewards, and viewer updates.":"Чат і легкі позначки сторінки для подарунків, винагород та оновлень глядачів.","Chat-rendered rewards, gifted-sub notices, viewer updates, and a few page-only notices.":"Винагороди, відображені в чаті, повідомлення про подаровані підписки, оновлення глядачів і кілька сповіщень лише сторінки.","Check minimum cash/donation filters when small tips or cheers are missing.":"Перевірте фільтри мінімальної суми/донату, коли невеликі чайові або cheers відсутні.","Check minimum-value filters for donations and bits.":"Перевірте фільтри мінімального значення для донатів і бітів.","Check source filters if events work in the Dock but not in Multi Alerts.":"Перевірте фільтри джерел, якщо події працюють у доку, але не в Multi Alerts.","Choose the source mode deliberately and complete authentication when the desired official events require it; do not expect an official raid event.":"Свідомо виберіть режим джерела й пройдіть автентифікацію, якщо потрібні офіційні події її потребують; не очікуйте офіційної події рейду.","Classifies canonical":"Класифікує канонічні","Commands & API":"Команди й API","Common Event Names":"Поширені назви подій","Compatibility Rule":"Правило сумісності","Compatibility input only; not a current official Kick event subscription":"Вхід лише для сумісності; не поточна офіційна підписка подій Kick","Configure each alert category independently. Enabling an alert does not grant the platform permission needed to capture it.":"Налаштуйте кожну категорію сповіщень окремо. Увімкнення сповіщення не надає дозволу платформи, потрібного для його захоплення.","Confirm that category is enabled and not excluded by source or channel filters.":"Переконайтеся, що категорію ввімкнено й не виключено фільтрами джерела або каналу.","Confirm that the selected source actually emits the event type, not only chat messages.":"Переконайтеся, що вибране джерело справді надсилає цей тип події, а не лише повідомлення чату.","Confirm the source and Multi Alerts page use the same session ID and password.":"Переконайтеся, що джерело й сторінка Multi Alerts використовують однакові ID сесії та пароль.","Confirm the source received the event in its own log, Dock, or API output.":"Переконайтеся, що джерело отримало подію у власному журналі, доку або виводі API.","Connect and activate the platform source that provides the event.":"Підключіть і активуйте джерело платформи, що надає подію.","Connect captured platform events to Multi Alerts without confusing normal chat, donations, and event payloads.":"Підключайте захоплені події платформ до Multi Alerts, не плутаючи звичайний чат, донати та дані подій.","Create Test Messages":"Створити тестові повідомлення","Custom overlay / API consumer":"Власний оверлей / споживач API","Donation / gift":"Донат / подарунок","Download":"Завантажити","Enable The Alert Types You Want":"Увімкніть потрібні типи сповіщень","Event Flow":"Потоки подій","Event Flow Recipes":"Рецепти потоків подій","Event Reference":"Довідник подій","Event rows are skipped by default unless they are donation-style. Add":"Рядки подій типово пропускаються, якщо не мають стилю донату. Додайте","EventSub adds followers, subscriptions, renewals, cheers, raids, rewards, and supported count/status events when the account and scopes permit them.":"EventSub додає підписників, платні підписки, поновлення, cheers, рейди, винагороди й підтримувані події лічильників/стану, коли обліковий запис і дозволи це дозволяють.","Events and Alerts Compatibility":"Сумісність подій і сповіщень","Events and Alerts Compatibility - Social Stream Ninja":"Сумісність подій і сповіщень — Social Stream Ninja","Features":"Можливості","First Check":"Перша перевірка","Follow":"Підписка","Follow / public subscriber alert":"Підписка / сповіщення про публічного підписника","For Twitch or Kick, sign in again if chat works but protected events do not.":"Для Twitch або Kick увійдіть повторно, якщо чат працює, а захищені події — ні.","Gifted membership / subscription":"Подароване членство / підписка","Guide":"Посібник","Guides":"Посібники","Hire":"Найняти фахівця","Home":"Головна","Hype Train":"Hype Train","Hype Train alerts are opt-in and require eligible Twitch EventSub access.":"Сповіщення Hype Train вмикаються окремо й потребують відповідного доступу Twitch EventSub.","If multiple devices or connection modes are involved, review":"Якщо залучено кілька пристроїв або режимів підключення, перегляньте","Includes recurring, gifted, and membership-style events where supported.":"Включає повторювані, подаровані події та події членства, де підтримуються.","Inspiration":"Натхнення","Interact with the browser page once if custom alert audio is blocked by autoplay rules.":"Один раз взаємодійте зі сторінкою браузера, якщо правила автовідтворення блокують власний звук сповіщення.","It does not prove the platform source has permission to receive that live event.":"Це не доводить, що джерело платформи має дозвіл отримувати цю живу подію.","Keep that source page or standalone-app source window active.":"Залишайте цю сторінку джерела або вікно джерела окремого застосунку активним.","Keep the source window active long enough to observe a real event; a preview alone is not an end-to-end platform test.":"Залиште вікно джерела активним достатньо довго, щоб побачити справжню подію; сам перегляд не є наскрізною перевіркою платформи.","Kick":"Kick","Kick raid note:":"Примітка щодо рейдів Kick:","Kick setup and authentication":"Налаштування й автентифікація Kick","Main navigation":"Основна навігація","Major Platform Events":"Основні події платформ","Match the exact":"Зіставте точні","Multi Alerts":"Multi Alerts","Multi Alerts Categories":"Категорії Multi Alerts","Multi Alerts displays events that Social Stream has already captured. It does not sign in to Twitch, Kick, YouTube, TikTok, or another platform by itself.":"Multi Alerts показує події, які Social Stream уже захопив. Він сам не входить у Twitch, Kick, YouTube, TikTok або іншу платформу.","Multi Alerts donation preview showing a styled donation card and preview controls":"Попередній перегляд донату Multi Alerts зі стилізованою карткою донату й засобами керування переглядом","New member / subscriber":"Новий учасник / підписник","Normal mode uses donation amounts. Hype mode can also score membership, renewal, and gifted-membership fields.":"Звичайний режим використовує суми донатів. Режим ажіотажу також може оцінювати поля членства, поновлення й подарованого членства.","Notes":"Примітки","Official follow, subscription, gift, reward-redemption, KICKs, moderation, and live-status events when authenticated.":"Офіційні події підписок, платних підписок, подарунків, використання винагород, KICKs, модерації та стану ефіру після автентифікації.","Open navigation menu":"Відкрити меню навігації","Open the Multi Alerts options from Social Stream settings. Follows, subscriptions, donations, bits, and raids have their own enable, style, sound, and appearance controls. Auction and Hype Train alerts require their dedicated opt-in controls.":"Відкрийте параметри Multi Alerts у налаштуваннях Social Stream. Підписки, платні підписки, донати, біти й рейди мають власне ввімкнення, стиль, звук і оформлення. Сповіщення Auction і Hype Train потребують окремих спеціальних перемикачів.","Other sources":"Інші джерела","Overlay Gallery":"Галерея оверлеїв","Paid messages, memberships, membership gifts, viewer updates, and limited page-detected events.":"Платні повідомлення, членство, подарунки членства, оновлення глядачів і обмежені події, визначені сторінкою.","Paid support":"Платна підтримка","Platform":"Платформа","Platform Setup Notes":"Примітки щодо налаштування платформ","Preview Before Going Live":"Перегляньте перед виходом у прямий ефір","Queue alerts":"Черга сповіщень","Raid":"Рейд","Raid / host":"Рейд / хостинг","Renewal":"Поновлення","Requires a source that captures follow events and the necessary platform permission.":"Потребує джерела, що захоплює події підписки, і необхідного дозволу платформи.","See which YouTube, Twitch, and Kick events reach Social Stream Ninja alerts, Event Flow, TTS, goals, overlays, and API consumers.":"Дізнайтеся, які події YouTube, Twitch і Kick надходять до сповіщень Social Stream Ninja, Event Flow, озвучення, цілей, оверлеїв і споживачів API.","Sessions, Passwords, and Relay Modes":"Сесії, паролі та режими пересилання","Sign in with the broadcaster or permitted moderator and keep EventSub connected.":"Увійдіть як транслятор або дозволений модератор і залишайте EventSub підключеним.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja Multi Alerts options showing separate alert-type controls for follows, subscriptions, donations, bits, raids, auction wins, and Hype Trains":"Параметри Social Stream Ninja Multi Alerts з окремим керуванням типами сповіщень для підписок, платних підписок, донатів, бітів, рейдів, перемог в аукціонах і Hype Trains","Social Stream Ninja logo":"Логотип Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Ліцензія GPLv3.0.","Social Stream accepts a legacy raid/host-shaped payload for compatibility, but Kick's current official event catalog has no raid/host subscription. Do not make a Kick workflow depend on receiving one.":"Social Stream приймає застарілі дані у формі raid/host для сумісності, але поточний офіційний каталог подій Kick не має підписки raid/host. Не робіть процес Kick залежним від отримання такої події.","Standard Capture":"Стандартне захоплення","Standard Versus WebSocket Mode":"Режими Standard і WebSocket","Start With The Event Source":"Почніть із джерела події","Subscription":"Платна підписка","Support":"Підтримка","Supported Sites":"Підтримувані сайти","Supported sites":"Підтримувані сайти","Switch theme":"Перемкнути тему","TTS":"Озвучення","Test the alert overlay from its options before debugging the platform connection.":"Перевірте оверлей сповіщень через його параметри перед налагодженням підключення платформи.","The amount can be filtered with the minimum donation/cash option.":"Суму можна фільтрувати параметром мінімального донату/грошової суми.","The shared paid/member events plus member milestones, recent public-subscriber alerts, and supported count updates.":"Спільні платні події/події учасників, а також віхи членства, сповіщення про недавніх публічних підписників і підтримувані оновлення лічильників.","These are the current canonical event names when the selected source mode can deliver the activity.":"Це поточні канонічні назви подій, коли вибраний режим джерела може доставити відповідну активність.","Tip Jar / Goal Meter":"Скарбничка донатів / лічильник цілі","Tool":"Інструмент","Twitch":"Twitch","Twitch EventSub setup":"Налаштування Twitch EventSub","Use":"Використовуйте","Use the canonical payload fields from the Event Reference. Accept documented aliases only for backward compatibility.":"Використовуйте канонічні поля даних із довідника подій. Приймайте задокументовані псевдоніми лише для зворотної сумісності.","Use the preview controls to verify the selected category, text, amount, media, sound, animation, and queue behavior.":"Використовуйте засоби попереднього перегляду для перевірки вибраної категорії, тексту, суми, медіа, звуку, анімації та поведінки черги.","Use the same Social Stream session ID in the source, popup, Dock, and Multi Alerts URL.":"Використовуйте однаковий ID сесії Social Stream у джерелі, спливному вікні, доку й URL Multi Alerts.","Viewer counts, follower totals, stream status, and ad-break status are updates rather than normal alert cards. Use the":"Кількість глядачів, загальні підписники, стан трансляції та рекламної перерви є оновленнями, а не звичайними картками сповіщень. Використовуйте","WebSocket / API Capture":"Захоплення WebSocket / API","WebSocket mode is normally the right choice for event-driven alerts. Standard capture remains useful when only rendered chat is needed or authentication is unavailable.":"Режим WebSocket зазвичай є правильним вибором для сповіщень на основі подій. Стандартне захоплення залишається корисним, коли потрібен лише відображений чат або автентифікація недоступна.","When A Real Alert Is Missing":"Коли справжнє сповіщення відсутнє","Which Fields Each Tool Uses":"Які поля використовує кожен інструмент","YouTube":"YouTube","and":"і","for KICKs gifts;":"для подарунків KICKs;","for support/tip events. Both populate":"для подій підтримки/чайових. Обидва заповнюють","for working automation examples.":"для робочих прикладів автоматизації.","names, aliases,":"назви, псевдоніми,","to verify the expected event and":"щоб перевірити очікувану подію та","values into shared categories.":"значення в спільні категорії.","when building an API consumer or custom overlay.":"під час створення споживача API або власного оверлею.","when non-donation event messages should be spoken, then apply normal TTS filters.":"коли повідомлення подій без донатів мають озвучуватися, потім застосуйте звичайні фільтри озвучення.","when several events may arrive together.":"коли кілька подій можуть надходити разом."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/events-alerts-compatibility.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/events-alerts-compatibility.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Основна навігація"><a href="../index.html">Головна</a><a href="features.html">Можливості</a><a href="inspiration.html" class="site-priority-inspiration">Натхнення</a><a href="download.html">Завантажити</a><a href="guides.html">Посібники</a><a href="commands.html">Команди й API</a><a href="supported-sites.html">Підтримувані сайти</a><a href="overlay-gallery.html" class="site-priority-gallery">Галерея оверлеїв</a><a href="services.html" class="site-priority-hire">Найняти фахівця</a><a href="support.html">Підтримка</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Українська"><span aria-hidden="true">🌐 </span><span lang="uk">Українська</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/events-alerts-compatibility.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/events-alerts-compatibility.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/events-alerts-compatibility.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/events-alerts-compatibility.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/events-alerts-compatibility.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/events-alerts-compatibility.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/events-alerts-compatibility.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/events-alerts-compatibility.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/events-alerts-compatibility.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/events-alerts-compatibility.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/events-alerts-compatibility.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/events-alerts-compatibility.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="events-alerts-compatibility.html" lang="uk" hreflang="uk" aria-current="true">Українська</a><a class="site-language-link" href="../../ar/docs/events-alerts-compatibility.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/events-alerts-compatibility.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/events-alerts-compatibility.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/events-alerts-compatibility.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Перемкнути тему"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Відкрити меню навігації" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Сумісність подій і сповіщень</h1>
+            <p>Підключайте захоплені події платформ до Multi Alerts, не плутаючи звичайний чат, донати та дані подій.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Почніть із джерела події</h2>
+                <p>Multi Alerts показує події, які Social Stream уже захопив. Він сам не входить у Twitch, Kick, YouTube, TikTok або іншу платформу.</p>
+                <ol class="guide-steps">
+                    <li>Підключіть і активуйте джерело платформи, що надає подію.</li>
+                    <li>Залишайте цю сторінку джерела або вікно джерела окремого застосунку активним.</li>
+                    <li>Використовуйте однаковий ID сесії Social Stream у джерелі, спливному вікні, доку й URL Multi Alerts.</li>
+                    <li>Перевірте оверлей сповіщень через його параметри перед налагодженням підключення платформи.</li>
+                </ol>
+                <div class="guide-note">
+                    <p><strong>Успішний перегляд підтверджує роботу макета сповіщення.</strong> Це не доводить, що джерело платформи має дозвіл отримувати цю живу подію.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Категорії Multi Alerts</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Категорія</th><th>Поширені назви подій</th><th>Примітки</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Category">Підписка</td><td data-label="Common Event Names"><code>new_follower</code>, <code>follow</code>, <code>followed</code></td><td data-label="Notes">Потребує джерела, що захоплює події підписки, і необхідного дозволу платформи.</td></tr>
+                        <tr><td data-label="Category">Платна підписка</td><td data-label="Common Event Names"><code>new_subscriber</code>, <code>resub</code>, <code>subscription_gift</code>, псевдоніми членства</td><td data-label="Notes">Включає повторювані, подаровані події та події членства, де підтримуються.</td></tr>
+                        <tr><td data-label="Category">Донат / подарунок</td><td data-label="Common Event Names"><code>superchat</code>, <code>supersticker</code>, <code>gift</code>, <code>tip</code>, псевдоніми донатів</td><td data-label="Notes">Рядок чату у стилі донату натомість може використовувати <code>hasDonation</code> і <code>donoValue</code>.</td></tr>
+                        <tr><td data-label="Category">Біти</td><td data-label="Common Event Names"><code>cheer</code>, <code>bits</code></td><td data-label="Notes">Суму можна фільтрувати параметром мінімального донату/грошової суми.</td></tr>
+                        <tr><td data-label="Category">Рейд</td><td data-label="Common Event Names"><code>raid</code>, <code>host</code>, <code>redirect</code></td><td data-label="Notes">Доступність і назви залежать від джерела платформи.</td></tr>
+                        <tr><td data-label="Category">Аукціон</td><td data-label="Common Event Names"><code>auction_update</code></td><td data-label="Notes">Сповіщення про перемоги в аукціонах вмикаються окремо.</td></tr>
+                        <tr><td data-label="Category">Hype Train</td><td data-label="Common Event Names"><code>hype_train</code></td><td data-label="Notes">Сповіщення Hype Train вмикаються окремо й потребують відповідного доступу Twitch EventSub.</td></tr>
+                    </tbody>
+                </table>
+                <p>Кількість глядачів, загальні підписники, стан трансляції та рекламної перерви є оновленнями, а не звичайними картками сповіщень. Використовуйте <a href="event-reference.html">Довідник подій</a> під час створення споживача API або власного оверлею.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Основні події платформ</h2>
+                <p>Це поточні канонічні назви подій, коли вибраний режим джерела може доставити відповідну активність.</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Активність</th><th>YouTube</th><th>Twitch</th><th>Kick</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Activity">Новий учасник / підписник</td>
+                            <td data-label="YouTube"><code>sponsorship</code></td>
+                            <td data-label="Twitch"><code>new_subscriber</code></td>
+                            <td data-label="Kick"><code>new_subscriber</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">Поновлення</td>
+                            <td data-label="YouTube"><code>resub</code></td>
+                            <td data-label="Twitch"><code>resub</code></td>
+                            <td data-label="Kick"><code>resub</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">Подароване членство / підписка</td>
+                            <td data-label="YouTube"><code>giftpurchase</code>, <code>giftredemption</code></td>
+                            <td data-label="Twitch"><code>subscription_gift</code></td>
+                            <td data-label="Kick"><code>subscription_gift</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">Платна підтримка</td>
+                            <td data-label="YouTube"><code>superchat</code>, <code>supersticker</code>, <code>jeweldonation</code></td>
+                            <td data-label="Twitch"><code>cheer</code>, або рядок із <code>hasDonation</code></td>
+                            <td data-label="Kick"><code>gift</code> для подарунків KICKs; <code>donation</code> для подій підтримки/чайових. Обидва заповнюють <code>hasDonation</code>.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">Підписка / сповіщення про публічного підписника</td>
+                            <td data-label="YouTube"><code>new_follower</code>; із затримкою API та лише публічні підписки</td>
+                            <td data-label="Twitch"><code>new_follower</code></td>
+                            <td data-label="Kick"><code>new_follower</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">Винагорода каналу</td>
+                            <td data-label="YouTube">-</td>
+                            <td data-label="Twitch"><code>reward</code></td>
+                            <td data-label="Kick"><code>reward</code></td>
+                        </tr>
+                        <tr>
+                            <td data-label="Activity">Рейд / хостинг</td>
+                            <td data-label="YouTube">-</td>
+                            <td data-label="Twitch"><code>raid</code></td>
+                            <td data-label="Kick">Вхід лише для сумісності; не поточна офіційна підписка подій Kick</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="warning-note">
+                    <p><strong>Примітка щодо рейдів Kick:</strong> Social Stream приймає застарілі дані у формі raid/host для сумісності, але поточний офіційний каталог подій Kick не має підписки raid/host. Не робіть процес Kick залежним від отримання такої події.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Режими Standard і WebSocket</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Платформа</th><th>Стандартне захоплення</th><th>Захоплення WebSocket / API</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Platform">YouTube</td>
+                            <td data-label="Standard Capture">Платні повідомлення, членство, подарунки членства, оновлення глядачів і обмежені події, визначені сторінкою.</td>
+                            <td data-label="WebSocket / API Capture">Спільні платні події/події учасників, а також віхи членства, сповіщення про недавніх публічних підписників і підтримувані оновлення лічильників.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Platform">Twitch</td>
+                            <td data-label="Standard Capture">Винагороди, відображені в чаті, повідомлення про подаровані підписки, оновлення глядачів і кілька сповіщень лише сторінки.</td>
+                            <td data-label="WebSocket / API Capture">EventSub додає підписників, платні підписки, поновлення, cheers, рейди, винагороди й підтримувані події лічильників/стану, коли обліковий запис і дозволи це дозволяють.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Platform">Kick</td>
+                            <td data-label="Standard Capture">Чат і легкі позначки сторінки для подарунків, винагород та оновлень глядачів.</td>
+                            <td data-label="WebSocket / API Capture">Офіційні події підписок, платних підписок, подарунків, використання винагород, KICKs, модерації та стану ефіру після автентифікації.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>Режим WebSocket зазвичай є правильним вибором для сповіщень на основі подій. Стандартне захоплення залишається корисним, коли потрібен лише відображений чат або автентифікація недоступна.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Увімкніть потрібні типи сповіщень</h2>
+                <p>Відкрийте параметри Multi Alerts у налаштуваннях Social Stream. Підписки, платні підписки, донати, біти й рейди мають власне ввімкнення, стиль, звук і оформлення. Сповіщення Auction і Hype Train потребують окремих спеціальних перемикачів.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/multi-alert-types-options.png" alt="Параметри Social Stream Ninja Multi Alerts з окремим керуванням типами сповіщень для підписок, платних підписок, донатів, бітів, рейдів, перемог в аукціонах і Hype Trains" class="guide-image">
+                    <figcaption>Налаштуйте кожну категорію сповіщень окремо. Увімкнення сповіщення не надає дозволу платформи, потрібного для його захоплення.</figcaption>
+                </figure>
+                <ul class="guide-list">
+                    <li>Використовуйте <strong>Черга сповіщень</strong> коли кілька подій можуть надходити разом.</li>
+                    <li>Перевірте фільтри джерел, якщо події працюють у доку, але не в Multi Alerts.</li>
+                    <li>Перевірте фільтри мінімальної суми/донату, коли невеликі чайові або cheers відсутні.</li>
+                    <li>Один раз взаємодійте зі сторінкою браузера, якщо правила автовідтворення блокують власний звук сповіщення.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>Перегляньте перед виходом у прямий ефір</h2>
+                <p>Використовуйте засоби попереднього перегляду для перевірки вибраної категорії, тексту, суми, медіа, звуку, анімації та поведінки черги.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/multi-alerts-donation-preview.png" alt="Попередній перегляд донату Multi Alerts зі стилізованою карткою донату й засобами керування переглядом" class="guide-image">
+                    <figcaption>Попередній перегляд донату перевіряє оверлей. Потім запустіть або дочекайтеся справжньої події платформи, щоб перевірити підключення джерела.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Які поля використовує кожен інструмент</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Інструмент</th><th>Правило сумісності</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Tool">Multi Alerts</td><td data-label="Compatibility Rule">Класифікує канонічні <code>event</code> назви, псевдоніми, <code>hasDonation</code>, поля членства й вибрані <code>meta</code> значення в спільні категорії.</td></tr>
+                        <tr><td data-label="Tool">Потоки подій</td><td data-label="Compatibility Rule">Зіставте точні <code>type</code>, <code>event</code>, і поля, які надсилає ваше джерело. Скористайтеся інструментом Test Message, перш ніж покладатися на живу подію.</td></tr>
+                        <tr><td data-label="Tool">Озвучення</td><td data-label="Compatibility Rule">Рядки подій типово пропускаються, якщо не мають стилю донату. Додайте <code>&amp;readevents</code> коли повідомлення подій без донатів мають озвучуватися, потім застосуйте звичайні фільтри озвучення.</td></tr>
+                        <tr><td data-label="Tool">Скарбничка донатів / лічильник цілі</td><td data-label="Compatibility Rule">Звичайний режим використовує суми донатів. Режим ажіотажу також може оцінювати поля членства, поновлення й подарованого членства.</td></tr>
+                        <tr><td data-label="Tool">Власний оверлей / споживач API</td><td data-label="Compatibility Rule">Використовуйте канонічні поля даних із довідника подій. Приймайте задокументовані псевдоніми лише для зворотної сумісності.</td></tr>
+                    </tbody>
+                </table>
+                <p>Використовуйте <a href="test-message-guide.html">Створити тестові повідомлення</a> щоб перевірити очікувану подію та <a href="event-flow-recipes.html">Рецепти потоків подій</a> для робочих прикладів автоматизації.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Примітки щодо налаштування платформ</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>Платформа</th><th>Перша перевірка</th><th>Посібник</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Platform">Twitch</td><td data-label="First Check">Увійдіть як транслятор або дозволений модератор і залишайте EventSub підключеним.</td><td data-label="Guide"><a href="twitch-eventsub-setup.html">Налаштування Twitch EventSub</a></td></tr>
+                        <tr><td data-label="Platform">Kick</td><td data-label="First Check">Свідомо виберіть режим джерела й пройдіть автентифікацію, якщо потрібні офіційні події її потребують; не очікуйте офіційної події рейду.</td><td data-label="Guide"><a href="kick-setup-authentication.html">Налаштування й автентифікація Kick</a></td></tr>
+                        <tr><td data-label="Platform">Інші джерела</td><td data-label="First Check">Переконайтеся, що вибране джерело справді надсилає цей тип події, а не лише повідомлення чату.</td><td data-label="Guide"><a href="supported-sites.html">Підтримувані сайти</a></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Коли справжнє сповіщення відсутнє</h2>
+                <ol class="guide-steps">
+                    <li>Переконайтеся, що джерело отримало подію у власному журналі, доку або виводі API.</li>
+                    <li>Переконайтеся, що джерело й сторінка Multi Alerts використовують однакові ID сесії та пароль.</li>
+                    <li>Переконайтеся, що категорію ввімкнено й не виключено фільтрами джерела або каналу.</li>
+                    <li>Перевірте фільтри мінімального значення для донатів і бітів.</li>
+                    <li>Для Twitch або Kick увійдіть повторно, якщо чат працює, а захищені події — ні.</li>
+                    <li>Залиште вікно джерела активним достатньо довго, щоб побачити справжню подію; сам перегляд не є наскрізною перевіркою платформи.</li>
+                </ol>
+                <p>Якщо залучено кілька пристроїв або режимів підключення, перегляньте <a href="sessions-passwords-relay-modes.html">Сесії, паролі та режими пересилання</a>.</p>
+            </div>
+
+            <template data-copy-markdown-extra>
+## Перевірений контекст від супроводжувача
+
+- Multi Alerts наразі нормалізує псевдоніми підписок, платних підписок, донатів/подарунків, бітів, рейдів, аукціонів і Hype Train у сім категорій сповіщень. Auction і Hype Train вмикаються окремо.
+
+- Поточний класифікатор приймає канонічні назви та застарілі псевдоніми. Дані з `hasDonation` і без події є коректними: формулювання bits/cheer спрямовує їх до Bits, а інші суми — до Donation.
+
+- Події лічильників/стану, як-от `viewer_update`, `follower_update`, `subscriber_update` і стан рекламної перерви, навмисно не стають загальними картками сповіщень.
+
+- Поточний офіційний набір підписаних подій Kick включає чат, підписки, нові/поновлені/подаровані платні підписки, використання винагород, подарунки KICKs, блокування та стан прямої трансляції. Kick наразі не має офіційної підписки raid/host; обробка рейдів існує лише для сумісності.
+
+- Озвучення типово пропускає рядки без донатів зі значенням `event`. `readevents` вимикає цей пропуск, але звичайні фільтри джерел/учасників/донатів усе ще застосовуються.
+
+- Попередній перегляд у спливному вікні перевіряє лише обробку оверлею. Захоплення платформи все ще потребує живого джерела, однакової сесії, правильної ролі/дозволів і справжньої події.
+            </template>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. Ліцензія GPLv3.0.</p></div></div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Event Flow의 트리거, 조건, 작업으로 Social Stream Ninja를 자동화하세요. 라이브 채팅 이벤트를 소리, 미디어, 보상, OBS 컨트롤에 연결하세요.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/actions/event-flow-guide.html">
+    <meta property="og:title" content="Event Flow 가이드 - Social Stream Ninja">
+    <meta property="og:description" content="Event Flow의 트리거, 조건, 작업으로 Social Stream Ninja를 자동화하세요. 라이브 채팅 이벤트를 소리, 미디어, 보상, OBS 컨트롤에 연결하세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/actions/event-flow-guide.html">
+    <meta name="twitter:title" content="Event Flow 가이드 - Social Stream Ninja">
+    <meta name="twitter:description" content="Event Flow의 트리거, 조건, 작업으로 Social Stream Ninja를 자동화하세요. 라이브 채팅 이벤트를 소리, 미디어, 보상, OBS 컨트롤에 연결하세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Flow 가이드 - Social Stream Ninja</title>
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/actions/event-flow-guide.html">
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1f2937 40%, #312e81 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .guide-shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(4, 12, 38, 0.5);
+        }
+        header {
+            background: radial-gradient(circle at top left, rgba(109,40,217,0.15), transparent),
+                        linear-gradient(135deg, #4c1d95, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+        }
+        header p {
+            font-size: 1.2rem;
+            max-width: 640px;
+            opacity: 0.92;
+        }
+        .content {
+            padding: 45px 55px 65px;
+        }
+        section {
+            margin-bottom: 60px;
+        }
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 18px;
+            color: #312e81;
+        }
+        h3 {
+            font-size: 1.4rem;
+            margin: 25px 0 10px;
+            color: #4338ca;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 25px;
+            margin: 15px 0;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .panel {
+            background: #f7f7fb;
+            border: 1px solid rgba(67,56,202,0.12);
+            border-radius: 12px;
+            padding: 22px 25px;
+            margin: 22px 0;
+        }
+        .panel strong {
+            color: #312e81;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            padding: 22px;
+            border-radius: 14px;
+            margin: 25px 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 22px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+        }
+        .card h4 {
+            margin-bottom: 12px;
+            color: #4c1d95;
+        }
+        code {
+            background: rgba(226,232,240,0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .callout {
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin: 24px 0;
+            border-left: 4px solid;
+        }
+        .callout.tip { background: #eef2ff; border-color: #4338ca; }
+        .callout.warn { background: #fef3c7; border-color: #d97706; }
+        .callout.danger { background: #fee2e2; border-color: #b91c1c; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(255,255,255,0.14);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+        .var-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            font-size: 0.95rem;
+        }
+        .var-table th, .var-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .var-table th {
+            background: #f7f7fb;
+            color: #312e81;
+            font-weight: 600;
+        }
+        .var-table tr:hover {
+            background: rgba(99,102,241,0.04);
+        }
+        .var-table code {
+            background: rgba(99,102,241,0.1);
+            color: #4338ca;
+        }
+        /* ── Custom JS section additions ── */
+        .code-js {
+            background: #0d1117;
+            color: #e6edf3;
+            padding: 18px 22px;
+            border-radius: 10px;
+            margin: 16px 0;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.88rem;
+            line-height: 1.65;
+            overflow-x: auto;
+            white-space: pre;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .snippet-block {
+            margin: 28px 0;
+            border: 1px solid rgba(67,56,202,0.15);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .snippet-label {
+            background: rgba(67,56,202,0.07);
+            padding: 10px 18px;
+            font-weight: 600;
+            color: #312e81;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .snippet-desc {
+            padding: 10px 18px 0;
+            font-size: 0.93rem;
+            color: #475569;
+        }
+        .snippet-block .code-js {
+            border-radius: 0;
+            margin: 0;
+            border: none;
+            border-top: 1px solid rgba(0,0,0,0.15);
+        }
+        figure.screenshot {
+            margin: 24px 0;
+            text-align: center;
+        }
+        figure.screenshot img {
+            max-width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(15,23,42,0.12);
+            box-shadow: 0 8px 24px rgba(15,23,42,0.12);
+        }
+        figure.screenshot figcaption {
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: #64748b;
+            font-style: italic;
+        }
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 24px 0;
+            align-items: start;
+        }
+        .desktop-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: #312e81;
+            color: #e0e7ff;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            padding: 3px 10px;
+            border-radius: 999px;
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+        .snippet-heading {
+            margin: 28px 0 4px;
+            color: #4c1d95;
+        }
+        @media (max-width: 700px) {
+            header, .content { padding: 35px 20px; }
+            h1 { font-size: 2rem; }
+            .diagram { font-size: 0.85rem; }
+            .var-table { font-size: 0.85rem; display: block; max-width: 100%; overflow-x: auto; }
+            .var-table th, .var-table td { padding: 8px 10px; }
+            .panel code { overflow-wrap: anywhere; }
+            .two-col { grid-template-columns: 1fr; }
+            .code-js { font-size: 0.8rem; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"actions/event-flow-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"\"Desktop only\"":"\"데스크톱 전용\"","\"chat message contains !raffle\").":"\"채팅 메시지에 !raffle 포함\").","$5.00, 500 bits":"$5.00, 500 bits","(Send Test Event) before pushing a flow live.":"(Send Test Event)로 테스트한 뒤 흐름을 실제로 사용하세요.","(Twitch Message, Timers, Manual Trigger, etc.) ignore upstream input. They generate their own payload and always emit":"(Twitch Message, Timers, Manual Trigger 등)는 앞 단계 입력을 무시합니다. 자체 페이로드를 생성하고 항상 다음을 출력합니다:","(action). They are the escape hatch for anything the built-in nodes cannot express.":"(작업)입니다. 내장 노드로 표현할 수 없는 동작을 구현할 때 사용합니다.","(counters, toggles, timers) to track context between events.":"(카운터, 토글, 타이머)를 사용하여 이벤트 사이의 상태를 추적하세요.","(current flow result state),":"(현재 흐름 결과 상태),","(left ports) expect the message context.":"(왼쪽 포트)는 메시지 컨텍스트를 받습니다.","(paste into the action's JavaScript Code field):":"(작업의 JavaScript Code 입력란에 붙여 넣으세요):","(paste into the trigger's JavaScript Code field):":"(트리거의 JavaScript Code 입력란에 붙여 넣으세요):","(platform, type, chatname, chatmessage, etc.). Attach custom data under":"(platform, type, chatname, chatmessage 등). 사용자 지정 데이터는 다음 아래에 추가하세요:","(right ports) emit the same context plus any edits.":"(오른쪽 포트)는 수정 사항을 포함한 같은 컨텍스트를 출력합니다.","(see":"(참고:","(the event payload),":"(이벤트 페이로드),","(top-right of the editor) to send a synthetic message through the pipeline without needing a live stream. Set the chatname to a subscriber, add a message like":"(에디터 오른쪽 위). 생방송 없이도 처리 흐름으로 모의 메시지를 보낼 수 있습니다. chatname을 구독자 이름으로 설정하고 다음과 같은 메시지를 추가하세요:","(trigger) and":"(트리거) 및","(trigger) or a no-op (action) and logs to the DevTools console. The flow doesn't crash.":"(트리거)을 반환하거나 아무 작업도 하지 않으며(작업), DevTools 콘솔에 기록합니다. 흐름이 중단되지는 않습니다.","). Treat imported flow files like executable code. Only import flows from sources you trust.":")가 가능합니다. 가져오는 흐름 파일은 실행 코드처럼 취급하고 신뢰하는 출처의 흐름만 가져오세요.",", a new line, then":", 줄바꿈, 이어서",", and":", 그리고",", and confirm the Relay Chat destination receives the reformatted string.":"을 보내고 Relay Chat 대상에 재구성된 문자열이 수신되는지 확인하세요.",", and the OBS controls need a rendering surface. That surface is the Flow Actions overlay page served from":", OBS 컨트롤에는 렌더링 화면이 필요합니다. 그 화면은 다음 경로의 Flow Actions 오버레이 페이지입니다:",", not when it happens:":"를 설명하며 발생 시점을 뜻하지 않습니다:",", or":", 또는",", or leave it blank to use the Flow Actions TTS default.":"을 지정하거나 비워 두어 Flow Actions의 TTS 기본값을 사용하세요.",", plus":", 그리고",", so the output is":"이므로 출력은",", source / filter / mute / text actions will not work until OBS / obs-websocket is upgraded.":"이면 OBS / obs-websocket을 업그레이드하기 전까지 소스/필터/음소거/텍스트 작업이 작동하지 않습니다.",", then return":", 이어서 반환할 값:",". A flow built only from actions chained together looks valid but is permanently idle, because nothing ever starts the chain. Node names describe what the node":". 작업만 연결한 흐름은 유효해 보이지만 시작할 계기가 없어 항상 대기 상태입니다. 노드 이름은 해당 노드가 무엇을",". Connect that wire into NOT to invert the result.":"입니다. 해당 선을 NOT에 연결하면 결과가 반전됩니다.",". Drag a wire from the colored output you need (green = true, gray/red = false) to the next node.":". 필요한 색상의 출력(초록 = true, 회색/빨강 = false)에서 다음 노드로 선을 연결하세요.",". Each flow can subscribe to multiple platforms at once.":". 각 흐름은 여러 플랫폼을 동시에 구독할 수 있습니다.",". If you're accepting shared flows from others, audit the JS before activating them.":"가 가능합니다. 다른 사람이 공유한 흐름은 활성화하기 전에 JS를 검토하세요.",". Keep it running in your broadcasting software (OBS/Streamer.bot browser docks/etc.) so Event Flow actions have somewhere to appear.":"입니다. 방송 소프트웨어(OBS/Streamer.bot 브라우저 도크 등)에서 계속 실행하여 Event Flow 작업을 표시할 화면을 유지하세요.",". Keep it wired to something meaningful or disable the node so it does not accidentally unblock a flow.":"입니다. 의도치 않게 흐름을 통과시키지 않도록 의미 있는 입력에 연결하거나 노드를 끄세요.",". Open the editor through the":"입니다. 편집기는 다음을 통해 여세요:",". Paste it into an OBS Browser Source (1920×1080 suggested) or open it in any overlay browser.":"을 복사하세요. OBS 브라우저 소스(권장 1920×1080)에 붙여 넣거나 오버레이 브라우저에서 여세요.",". Returning the Promise lets Event Flow wait for submission and report errors.":"을 사용하세요. Promise를 반환하면 Event Flow가 제출 완료를 기다리고 오류를 보고할 수 있습니다.",". SSApp queues the job silently through the native Windows printer API and uses those saved settings. A flow can override them with options such as":"을 사용합니다. SSApp은 Windows 기본 프린터 API를 통해 작업을 조용히 대기열에 넣고 저장된 설정을 적용합니다. 흐름에서 다음과 같은 옵션으로 재정의할 수 있습니다:",". Scene switching works here, and recording / streaming / replay buffer actions can fall back to it.":"입니다. 장면 전환이 작동하며 녹화/방송/리플레이 버퍼 작업은 이 방식으로 대체할 수 있습니다.",". See the":". 참고:",". The fields below are always available; platform-specific events may include additional ones.":". 아래 필드는 항상 사용 가능하며 플랫폼별 이벤트에는 추가 필드가 포함될 수 있습니다.",". They can still output an updated payload if you want to keep chaining actions.":". 작업을 계속 연결하려면 업데이트한 페이로드를 출력할 수도 있습니다.",". This controls display on re-ingest, not sending. Follow the":"입니다. 이는 전송이 아니라 다시 수신될 때의 표시를 제어합니다. 참고할 가이드:",". Use two relay actions when a message should reach both variants. See":"를 구분합니다. 메시지를 두 유형 모두로 보내려면 릴레이 작업 두 개를 사용하세요. 참고:","0. Quick Orientation":"0. 빠른 둘러보기","1. What Moves Through a Node?":"1. 노드를 통과하는 데이터","2. Logic Node Cheatsheet":"2. 논리 노드 빠른 참조","3. Example Micro-Flows":"3. 간단한 흐름 예시","4. Preventing Echoes, Loops, and Relay Feedback":"4. 에코, 반복, 릴레이 피드백 방지","5. Inputs, Outputs, and Practical Questions":"5. 입력, 출력, 실용적인 질문","6. Template Variables Reference":"6. 템플릿 변수 참조","7. Best Practices Checklist":"7. 권장 사항 체크리스트","8. Further Exploration":"8. 더 알아보기","9. Custom JavaScript":"9. 사용자 지정 JavaScript",": add a standard Relay Chat node after the action and configure it to point at your Discord (or other) destination. No custom code is needed here. The reformatted":": 작업 뒤에 일반 Relay Chat 노드를 추가하고 Discord 등의 대상을 설정하세요. 여기에는 사용자 지정 코드가 필요하지 않습니다. 재구성한",": named triggers, a starter template, workflow discovery, extra data, HTTP/WebSocket/P2P examples, and dial gestures.":": 이름 있는 트리거, 시작 템플릿, 워크플로 검색, 추가 데이터, HTTP/WebSocket/P2P 예시, 다이얼 조작.","; see":"— 참고:","; with no trigger on top, nothing starts the chain.":"입니다. 앞에 트리거가 없으면 흐름이 시작되지 않습니다.","= continue,":"= 계속,","= stop). Use":"= 중지). 사용 방법:","A 50/50 coin flip between two audio clips. The RANDOM gate rolls once per matching message: when it passes, sound A plays; when it fails, the NOT gate flips the result and the AND gate lets sound B play instead.":"두 오디오 클립 중 하나를 50% 확률로 선택합니다. RANDOM 게이트는 일치하는 메시지마다 한 번 판단합니다. 통과하면 소리 A를 재생하고, 실패하면 NOT 게이트가 결과를 반전시켜 AND 게이트를 통해 소리 B가 재생됩니다.","A Custom Code trigger (blue) and Execute Custom Code action (green) placed on the canvas. Wire the trigger's output port to the action's input port to connect them.":"캔버스에 배치된 Custom Code 트리거(파랑)와 Execute Custom Code 작업(초록). 트리거 출력 포트에서 작업 입력 포트로 선을 연결하세요.","A bare NOT would output":"단독 NOT은 다음을 출력합니다:","A floating NOT node will still output":"연결되지 않은 NOT 노드도 다음을 출력합니다:","A recalculated gate bit (logic nodes) or passthrough bit (actions).":"다시 계산된 게이트 비트(논리 노드) 또는 그대로 전달된 비트(작업).","A reflection is an outgoing message captured again from a destination chat. Current Relay Chat actions skip these recognized reflections; there is no separate No Reflections checkbox. To hide or limit their display in the Dock and overlays, use a":"반사 메시지는 대상 채팅으로 보낸 메시지를 다시 캡처한 것입니다. 현재 Relay Chat 작업은 인식된 반사 메시지를 건너뛰며 별도의 No Reflections 체크박스는 없습니다. 도크와 오버레이에서 표시를 숨기거나 제한하려면 다음을 사용하세요:","A runtime error in your code returns":"코드에서 런타임 오류가 발생하면 반환되는 값:","A. Auto-reply Unless the Message Is a Command":"A. 명령이 아닌 메시지에 자동 답변","AND":"AND","Action Nodes":"작업 노드","Action code can call":"작업 코드에서 호출 가능한 함수:","Action nodes (green) never run on their own. They only fire when a trigger node (blue) above them evaluates":"작업 노드(초록)는 스스로 실행되지 않습니다. 앞 단계 트리거 노드(파랑)가 다음으로 평가될 때만 실행됩니다:","Action panel showing Execute Custom Code under the Integrations group":"Integrations 그룹의 Execute Custom Code가 표시된 작업 패널","Action properties. Return an object to merge changes back into the flow result.":"작업 속성. 객체를 반환하면 변경 사항이 흐름 결과에 병합됩니다.","Action snippets: return":"작업 코드 예시 — 반환 형식:","Actions":"동작","Add a visual indicator at the end of every message that passes through this action.":"이 작업을 통과하는 모든 메시지 끝에 시각적인 표시를 추가합니다.","Additional context":"추가 컨텍스트","Advanced":"고급","Advanced Access Level":"고급 접근 권한","Alias":"별칭","Allow All":"모두 허용(Allow All)","Allow First":"첫 번째 허용(Allow First)","An error of type":"오류 유형","Any Message":"모든 메시지 (Any Message)","Any Message trigger connected to Feature Message and Speak Text actions":"Feature Message 및 Speak Text 작업에 연결된 Any Message 트리거","Any Message trigger connected to a Play Audio Clip action":"Play Audio Clip 작업에 연결된 Any Message 트리거","Any node with a green output emits":"초록 출력이 있는 모든 노드는 다음을 출력합니다:","Append a badge or tag to the message":"메시지에 배지 또는 태그 추가","Arbitrary structured data attached to the event":"이벤트에 첨부된 임의의 구조화 데이터","Attach routing metadata for downstream nodes":"후속 노드용 라우팅 메타데이터 추가","Attached image URL":"첨부 이미지 URL","Available:":"사용 가능:","Avoid duplicate relay systems.":"중복 릴레이 시스템을 피하세요.","B. Require Multiple Checks with AND":"B. AND로 여러 조건 요구","Block All":"모두 차단(Block All)","Block message conditionally":"조건부 메시지 차단","Both nodes receive the full event payload as":"두 노드는 전체 이벤트 페이로드를 다음으로 받습니다:","Break cycles intentionally.":"순환을 의도적으로 끊으세요.","Browser Source API:":"브라우저 소스 API:","Build Social Stream Ninja automations with Event Flow triggers, conditions and actions. Connect live chat events to sounds, media, rewards and OBS controls.":"Event Flow의 트리거, 조건, 작업으로 Social Stream Ninja를 자동화하세요. 라이브 채팅 이벤트를 소리, 미디어, 보상, OBS 컨트롤에 연결하세요.","Build loyalty-based commands, keyword games, or raffle gating with AND/OR/NOT logic.":"AND/OR/NOT 논리로 참여 포인트 기반 명령, 키워드 게임, 추첨 참가 조건을 만드세요.","Build reliable automations for Social Stream Ninja. This guide walks through the basics, logic nodes, signal flow, and the practical tricks that creators ask about most (like avoiding chat echoes and knowing when to stack AND/NOT blocks).":"Social Stream Ninja의 안정적인 자동화를 만드세요. 기본 개념, 논리 노드, 신호 흐름과 채팅 에코 방지, AND/NOT 블록 조합처럼 크리에이터가 자주 묻는 실용적인 방법을 안내합니다.","C. NOT Node to Block Repeat Alerts":"C. NOT 노드로 반복 알림 차단","Call Webhook JSON:":"Call Webhook JSON:","Can a node emit a payload even if it returns false?":"노드가 false를 반환해도 페이로드를 출력할 수 있나요?","Can each Speak Text node use a different voice?":"Speak Text 노드마다 다른 음성을 사용할 수 있나요?","Canvas showing a Custom Code trigger and Execute Custom Code action side by side":"Custom Code 트리거와 Execute Custom Code 작업이 나란히 있는 캔버스","Chat message text":"채팅 메시지 텍스트","Check the":"확인할 항목:","Choose":"선택:","Choose Local File":"로컬 파일 선택 (Choose Local File)","Click":"클릭:","Click this button:":"다음 버튼을 클릭하세요:","Closing the Flow Actions page pauses every overlay/audio/OBS action in Event Flow. Hide it or put it on a separate monitor instead of closing it outright.":"Flow Actions 페이지를 닫으면 Event Flow의 모든 오버레이/오디오/OBS 작업이 멈춥니다. 완전히 닫지 말고 숨기거나 다른 모니터에 두세요.","Combine":"조합할 항목:","Combine role check and message content in a single expression that no built-in trigger covers.":"내장 트리거로 처리할 수 없는 역할 검사와 메시지 내용을 하나의 표현식으로 결합합니다.","Common Q & A":"자주 묻는 질문","Complete example: VIP feature request bot":"전체 예시 — VIP 기능 요청 봇","Condition, Compare, Regex, and Logic nodes emit two ports.":"Condition, Compare, Regex, Logic 노드는 포트 두 개로 출력합니다.","Confirm":"확인:","Continue the flow only when the message contains a specific word or phrase.":"메시지에 특정 단어나 문구가 있을 때만 흐름을 계속합니다.","Convert the standard YouTube donation label to EUR, exclude Jewels/Gifts, and select one sound or visual range.":"일반 YouTube 후원 표시를 EUR로 환산하고 Jewels/Gifts를 제외한 뒤 소리 또는 시각 효과 구간을 하나 선택합니다.","CoolViewer123":"CoolViewer123","Copy Local Flow Actions URL for OBS":"OBS용 로컬 흐름 동작 URL 복사 (Copy Local Flow Actions URL for OBS)","Copy any of these into the JavaScript Code textarea of the matching node type.":"해당하는 노드 유형의 JavaScript Code 입력란에 아래 예시를 복사하세요.","Core Variables (backward compatible)":"핵심 변수 (이전 버전 호환)","Counter target minus current value, clamped at 0":"카운터 목표에서 현재 값을 뺀 값, 최소 0","Counter target value":"카운터 목표값","Currency conversion:":"통화 환산:","Current counter value after a Counter or Check Counter step":"Counter 또는 Check Counter 단계 이후의 현재 카운터 값","Custom Code":"사용자 지정 코드 (Custom Code)","Custom Code lives under the":"Custom Code의 위치:","Custom Code trigger properties panel showing the JavaScript code editor":"JavaScript 코드 편집기가 표시된 Custom Code 트리거 속성 패널","Custom Code: Trigger node":"Custom Code — 트리거 노드","Custom JavaScript nodes":"사용자 지정 JavaScript 노드","Custom JavaScript nodes are disabled in the browser extension because Chrome's Manifest V3 Content Security Policy blocks":"Chrome Manifest V3의 콘텐츠 보안 정책이 다음을 차단하므로 브라우저 확장 프로그램에서는 사용자 지정 JavaScript 노드가 비활성화됩니다:","Custom code runs with renderer-process privileges.":"사용자 지정 코드는 렌더러 프로세스 권한으로 실행됩니다.","D. Randomly Play One of Two Sounds":"D. 두 소리 중 하나를 무작위 재생","Data type":"데이터 유형","Default behavior:":"기본 동작:","Description":"설명","Desktop app required.":"데스크톱 앱이 필요합니다.","Disable global Relay all when using equivalent Event Flow routes, and check for other services bridging the same chats. Custom metadata is not guaranteed to survive a trip through a platform chat.":"동등한 Event Flow 경로를 사용한다면 전역 Relay all을 끄고 같은 채팅을 연결하는 다른 서비스가 있는지 확인하세요. 사용자 지정 메타데이터는 플랫폼 채팅을 거친 뒤 유지된다고 보장할 수 없습니다.","Discord Call Webhook:":"Discord Call Webhook:","Display Media Overlay":"미디어 오버레이 표시 (Display Media Overlay)","Display name (alternate field)":"표시 이름 (대체 필드)","Display name of the sender":"발신자의 표시 이름","Display name of the user":"사용자의 표시 이름","Do I always need an AND node?":"항상 AND 노드가 필요한가요?","Do I have to use AND for every pair of filters?":"필터 두 개마다 AND를 사용해야 하나요?","Document meta fields.":"meta 필드를 문서화하세요.","Donation Alert:":"후원 알림:","Donation above a threshold":"기준 금액 이상 후원","Donation/tip display label":"후원/팁 표시 문구","Donation: animation + sound + OBS filter":"후원: 애니메이션 + 소리 + OBS 필터","Donation: celebration + voice":"후원: 축하 효과 + 음성","Drag":"드래그할 항목:","Editing code:":"코드 편집:","Effect":"효과","Emits":"전송:","Enable audio":"오디오 켜기","Errors are caught.":"오류가 처리됩니다.","Even if you didn't change anything, returning":"아무것도 변경하지 않았더라도 다음을 반환하면","Event Flow":"Event Flow","Event Flow Editor Guide":"Event Flow 편집기 가이드","Event Flow Editor: empty state":"Event Flow 편집기 — 빈 상태","Event Flow Guide - Social Stream Ninja":"Event Flow 가이드 - Social Stream Ninja","Event Flow System":"Event Flow 시스템","Event Flow plays through the":"Event Flow가 재생하는 위치:","Event Payload ─▶ State Check (isAlertMuted) └─false─▶ NOT ─▶ Play Celebration":"이벤트 페이로드 ─▶ 상태 확인 (isAlertMuted) └─false─▶ NOT ─▶ 축하 효과 재생","Event Reference":"이벤트 참고 문서","Event Sources":"이벤트 소스","Event type identifier":"이벤트 유형 식별자","Every flow starts with a trigger":"모든 흐름은 트리거로 시작합니다","Every message carries a JSON object. Mandatory keys follow":"모든 메시지는 JSON 객체를 전달합니다. 필수 키는 다음을 따릅니다:","Every project is saved locally until exported. Use":"내보내기 전까지 각 프로젝트는 로컬에 저장됩니다. 사용할 기능:","Example":"예시","Example Templates":"예시 템플릿","Example:":"예시:","Execute Custom Code":"사용자 지정 코드 실행 (Execute Custom Code)","Execute Custom Code action properties panel showing the code editor":"코드 편집기가 표시된 Execute Custom Code 작업 속성 패널","Execute Custom Code under the":"Execute Custom Code의 위치:","Execute Custom Code: Action node":"Execute Custom Code — 작업 노드","Export your flow whenever you reach a milestone. Imports are the easiest rollback if an experiment goes sideways.":"중요한 단계마다 흐름을 내보내세요. 실험이 잘못되었을 때 가져오기로 가장 쉽게 이전 상태로 돌아갈 수 있습니다.","Extended Variables":"확장 변수","Feature Message":"메시지 강조 (Feature Message)","Feeding the trigger into the AND as a second input restricts sound B to matching messages only. The same pattern works for any either/or pair of actions, not just audio.":"트리거를 AND의 두 번째 입력에 연결하면 조건에 일치하는 메시지에만 사운드 B가 재생됩니다. 이 패턴은 오디오뿐 아니라 둘 중 하나를 실행하는 모든 동작 쌍에 적용할 수 있습니다.","Field":"필드","Filter as early as possible to avoid extra processing down the line.":"후속 처리의 부담을 줄이려면 가능한 한 일찍 필터링하세요.","Fire only when a donation meets or exceeds a minimum amount.":"후원이 최소 금액 이상일 때만 실행합니다.","Flow Actions":"흐름 동작 (Flow Actions)","Flow Actions Overlay (Action Output)":"Flow Actions 오버레이 (작업 출력)","Flow using a RANDOM gate, NOT gate, and AND gate to play one of two audio clips at random":"RANDOM, NOT, AND 게이트로 두 오디오 클립 중 하나를 무작위로 재생하는 흐름","Flow-added fields also work.":"흐름에서 추가한 필드도 사용할 수 있습니다.","Format a donation announcement":"후원 안내 문구 구성","Formatted donation string if present":"있으면 형식이 지정된 후원 문자열","Gate signal":"게이트 신호","Great for multi-platform triggers: feed Twitch + YouTube message nodes into a single OR, then unify the downstream action.":"여러 플랫폼의 트리거에 유용합니다. Twitch와 YouTube 메시지 노드를 하나의 OR에 연결한 뒤 후속 작업을 통합하세요.","Group logic near the source.":"소스 가까이에 논리를 모으세요.","Hello everyone!":"여러분, 안녕하세요!","Here the Regex node emits":"여기서 Regex 노드의 출력:","Highlight My Message":"내 메시지 강조","Hook into the":"연결할 대상:","How do I match TikTok Team members?":"TikTok 팀 멤버를 어떻게 일치시키나요?","How do true/false values reach the NOT node?":"true/false 값은 NOT 노드에 어떻게 도달하나요?","How to open it (from the popup/dash):":"여는 방법 (팝업/대시보드):","If a node outputs false:":"노드가 false를 출력하면:","If an earlier action adds a top-level value to the message, later templates can read it directly. This is how":"앞선 작업이 메시지에 최상위 값을 추가하면 이후 템플릿에서 직접 읽을 수 있습니다. 다음 항목도 이 방식으로 작동합니다:","If an event does not have a particular field (e.g.,":"이벤트에 특정 필드가 없다면(예:","If nothing is connected to the NOT input it evaluates to":"NOT 입력에 아무것도 연결하지 않으면 결과는","If two branches feed each other, add a logic node that checks a state variable (\"currentlyRelaying\") so the flow exits early when the flag is set.":"두 분기가 서로 연결되어 있다면 상태 변수(\"currentlyRelaying\")를 확인하는 논리 노드를 추가하여 플래그가 설정되었을 때 흐름을 일찍 종료하세요.","If you do nothing with a":"다음과 같은 출력을 아무 곳에도 연결하지 않으면:","In a Play Audio Clip or Display Media Overlay action, click":"Play Audio Clip 또는 Display Media Overlay 작업에서 클릭하세요:","Incoming triggers and outgoing Relay Chat destinations both distinguish between":"수신 트리거와 발신 Relay Chat 대상은 모두","Input Expectations":"입력 조건","Inputs":"입력","Inputs: 1 boolean (true/false) derived from the previous node.":"입력: 이전 노드에서 나온 불리언(true/false) 하나.","Inputs: two or more boolean signals (A, B, ...). You can leave extra ports empty.":"입력: 둘 이상의 불리언 신호(A, B, ...). 추가 포트는 비워 둘 수 있습니다.","Inside the SSApp, code in Custom JS nodes has full access to the":"SSApp에서 Custom JS 노드의 코드는 다음에 완전히 접근할 수 있습니다:","Inspect the content and silently drop the message if a rule matches. This is useful for spam patterns the keyword filter can't express.":"내용을 검사하여 규칙과 일치하면 메시지를 알림 없이 버립니다. 키워드 필터로 표현할 수 없는 스팸 패턴에 유용합니다.","Integrations":"통합(Integrations)","Keep SSApp running. If a selected file moves, return to the action and click":"SSApp을 계속 실행하세요. 선택한 파일이 이동했다면 작업으로 돌아가 다음을 클릭하세요:","Keep the overlay open.":"오버레이를 열어 두세요.","Keyword match (case-insensitive)":"키워드 일치 (대소문자 구분 없음)","Launch + Basics":"시작과 기본 개념","Let the flow continue only for privileged users.":"권한이 있는 사용자만 흐름을 통과하게 합니다.","Listen / Stop":"듣기 / 중지","Logic nodes may emit both the":"논리 노드는 다음 두 가지를 모두 출력할 수 있습니다:","MEMBERSHIP, new_sponsor":"MEMBERSHIP, new_sponsor","Match messages that start with a command from a defined list (e.g.":"지정된 목록의 명령으로 시작하는 메시지를 일치시킵니다(예:","Media Files for Event Flow guide":"Event Flow용 미디어 파일 가이드","Member for 3 months":"멤버십 3개월","Membership state":"멤버십 상태","Membership state when applicable":"해당되는 경우 멤버십 상태","Message length gate":"메시지 길이 조건","Minimal safe return:":"최소한의 안전한 반환:","Missing variables become empty strings.":"없는 변수는 빈 문자열이 됩니다.","Mix multiple platforms inside a single automation (Kick + Twitch + YouTube routed through one flow).":"여러 플랫폼을 하나의 자동화에 결합하세요(Kick + Twitch + YouTube를 하나의 흐름으로 처리).","Most nodes expose one output. Whatever enters (payload + gate) exits unchanged unless the node edits it.":"대부분의 노드에는 출력이 하나 있습니다. 노드가 수정하지 않는 한 입력된 페이로드와 게이트가 그대로 출력됩니다.","Most side effects (like sending chat) do not alter the payload, but points actions can attach status fields such as":"채팅 전송 같은 대부분의 부수 작업은 페이로드를 바꾸지 않지만 포인트 작업은 다음과 같은 상태 필드를 추가할 수 있습니다:","Multi-condition: VIP + keyword":"복합 조건 — VIP + 키워드","Must return:":"필수 반환값:","NOT":"NOT","NOT & empty inputs:":"NOT과 빈 입력:","Name & color":"이름 및 색상","Need to remember participants, check later eligibility, run a unique-user draw, or clear one named list? Open the":"참가자 기억, 이후 참가 자격 확인, 중복 없는 사용자 추첨, 특정 이름의 목록 삭제가 필요한가요? 다음을 여세요:","No network sandbox.":"네트워크 샌드박스가 없습니다.","No. Many nodes already provide all-in-one filters (for example \"Filter User Level\" + \"Contains Text\"). Use AND only when the built-in options do not cover your combination, or when you want a reusable logic junction that other branches can share.":"아닙니다. 많은 노드가 이미 통합 필터를 제공합니다(예: Filter User Level + Contains Text). 내장 옵션으로 원하는 조합을 구현할 수 없거나 다른 분기와 공유할 수 있는 재사용 가능한 논리 연결점이 필요할 때만 AND를 사용하세요.","No. Many nodes include multiple checks (for example, the basic Message Filter supports keyword + role). Use AND only for advanced combinations or when merging signals from different nodes.":"아닙니다. 많은 노드에 여러 검사가 포함되어 있습니다(예: 기본 Message Filter는 키워드와 역할을 지원). 고급 조합이나 다른 노드의 신호를 합칠 때만 AND를 사용하세요.","Nodes at a Glance":"노드 한눈에 보기","Nodes such as":"다음과 같은 노드:","OBS Control Guide":"OBS 제어 가이드","OBS WebSocket:":"OBS WebSocket:","OBS control modes:":"OBS 제어 모드:","OR":"OR","Old 4.x installs:":"이전 4.x 설치 환경:","Once loaded, that overlay can:":"로드된 오버레이에서 가능한 작업:","Only process events from specific platforms.":"특정 플랫폼의 이벤트만 처리합니다.","Only process messages that have enough content (useful for TTS or relay to avoid single-emoji spam).":"충분한 내용이 있는 메시지만 처리합니다(TTS나 릴레이에서 이모지 하나만 보내는 도배를 피하는 데 유용).","Open":"열기","Open Code Editor":"코드 편집기 열기 (Open Code Editor)","Open the Event Flow editor from the main dashboard's menu (desktop or extension).":"메인 대시보드 메뉴에서 Event Flow 편집기를 여세요(데스크톱 또는 확장 프로그램).","Open the main Social Stream Ninja popup (the window loaded from":"Social Stream Ninja의 메인 팝업을 여세요(다음에서 로드되는 창:","Optional context (state variables, timers) that the node asks for explicitly.":"노드가 명시적으로 요청하는 선택적 컨텍스트(상태 변수, 타이머).","Output Patterns":"출력 패턴","Outputs":"출력","Outputs:":"출력:","Outputs: the inverted boolean plus the untouched payload.":"출력: 반전된 불리언과 변경되지 않은 페이로드.","Overlay diagnostics:":"오버레이 진단:","Pass the (possibly mutated) message back so downstream nodes receive your changes.":"수정한 메시지를 다시 전달하여 후속 노드가 변경 사항을 받도록 하세요.","Pass-Through vs. Override":"그대로 전달과 재정의","Password:":"비밀번호:","Payload":"페이로드","Payload Structure":"페이로드 구조","Place NOT after \"Contains Keyword\" to trigger an alert when a viewer":"\"Contains Keyword\" 뒤에 NOT을 배치하면 다음 조건에서 알림이 실행됩니다: 시청자가","Platform filter":"플랫폼 필터","Platform name (capitalized)":"플랫폼 이름 (첫 글자 대문자)","Platform name (raw)":"플랫폼 이름 (원본)","Platform user ID":"플랫폼 사용자 ID","Platform-aware message prefix":"플랫폼별 메시지 접두사","Play Audio Clip":"오디오 클립 재생 (Play Audio Clip)","Play sounds (TTS, audio clips) locally so viewers hear them.":"시청자가 들을 수 있도록 소리(TTS, 오디오 클립)를 로컬에서 재생합니다.","Points & Rewards":"포인트 및 보상","Prepend a platform label when relaying cross-platform so viewers know the source.":"플랫폼 간 릴레이 시 플랫폼 표시를 앞에 붙여 시청자가 출처를 알 수 있게 합니다.","Printer Control":"프린터 제어","Properties panel after placing the trigger. Write any expression that returns":"트리거 배치 후의 속성 패널. 다음을 반환하는 표현식을 작성하세요:","Ready for more depth?":"더 자세히 알아볼까요?","Recommended diagnostic path:":"권장 진단 경로:","Reflection Filter":"반향 필터(Reflection Filter)","Regex command detection":"정규식 명령 감지","Relay Chat":"채팅 릴레이(Relay Chat)","Relay Chat skips recognized reflections automatically.":"Relay Chat은 인식된 반사 메시지를 자동으로 건너뜁니다.","Relay Chat:":"Relay Chat:","Relay chat between services with filters (e.g., mirror Twitch to Discord but block commands).":"필터로 서비스 간 채팅을 전달하세요(예: Twitch를 Discord에 복제하되 명령은 차단).","Relaying chat between surfaces is powerful but can echo infinitely if you listen to your own output. Follow these safeguards:":"화면 간 채팅 릴레이는 유용하지만 자신의 출력을 다시 수신하면 무한히 반복될 수 있습니다. 다음 예방 조치를 따르세요:","Relink":"다시 연결 (Relink)","Remember:":"기억하세요:","Remove all @username mentions from a message before relaying it to another platform.":"다른 플랫폼으로 전달하기 전에 메시지에서 모든 @username 멘션을 제거합니다.","Return a plain object from your action code. Any fields you include are merged into the flow's":"작업 코드에서 일반 객체를 반환하세요. 포함된 필드는 흐름의 다음 객체에 병합됩니다:","Return field":"반환 필드","Reward name when the source exposes a top-level reward title field":"소스가 최상위 보상 제목 필드를 제공하는 경우 보상 이름","Rewrite the chatmessage into a consistent announcement string when a donation is present.":"후원이 있을 때 chatmessage를 일관된 안내 문자열로 다시 작성합니다.","Run Test":"테스트 실행 (Run Test)","Run custom workflows from Stream Deck or the API":"Stream Deck 또는 API에서 사용자 지정 워크플로 실행","Run the matching action check there before testing the full Event Flow automation.":"전체 Event Flow 자동화를 테스트하기 전에 해당 위치에서 관련 작업을 점검하세요.","Running the":"현재","SSApp / Desktop only":"SSApp / 데스크톱 전용","SSApp desktop app":"SSApp 데스크톱 앱","SSApp desktop app?":"SSApp 데스크톱 앱을 사용하나요?","Save & Close":"저장 후 닫기 (Save & Close)","Save versions.":"버전을 저장하세요.","Scroll to the “Flow Actions” card. Use the":"Flow Actions 카드로 스크롤하세요. 사용할 항목:","Secondary context line":"보조 설명 줄","Security considerations":"보안 고려 사항","See the dedicated":"전용 가이드:","Send Message":"메시지 전송 (Send Message)","Sender has VIP status":"발신자가 VIP 상태임","Sender is a moderator":"발신자가 관리자임","Sender is a subscriber":"발신자가 구독자임","Set":"설정:","Set OBS Text Source:":"OBS 텍스트 소스 설정:","Set Text Source:":"텍스트 소스 설정:","Several action nodes (Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label) support":"여러 작업 노드(Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label)는 다음을 지원합니다:","Should return:":"권장 반환값:","Show GIPHY or direct media URLs, text, and confetti triggered by your flows.":"흐름에서 트리거한 GIPHY 또는 직접 미디어 URL, 텍스트, 색종이 효과를 표시합니다.","Show Text:":"텍스트 표시:","Signature:":"함수 형식:","Single Output":"단일 출력","Snippet examples":"코드 예시","Social Stream Ninja logo":"Social Stream Ninja 로고","Some nodes (Set Variable, Math, Text Replace) mutate the payload but still forward the":"일부 노드(Set Variable, Math, Text Replace)는 페이로드를 수정하지만 다음 값은 그대로 전달합니다:","Source platform (lowercase)":"소스 플랫폼 (소문자)","Speak Text":"텍스트 읽기 (Speak Text)","Start with an alert template:":"알림 템플릿으로 시작하세요:","State Nodes":"상태 노드","Step 1: Custom Code trigger":"1단계 — Custom Code 트리거","Step 2: Execute Custom Code action":"2단계 — Execute Custom Code 작업","Step 3: Relay Chat action":"3단계 — Relay Chat 작업","Store repeats in State nodes.":"반복 여부를 상태 노드에 저장하세요.","Strip @mentions":"@멘션 제거","Structured event data (JSON)":"구조화된 이벤트 데이터 (JSON)","Subscriber / VIP / mod gate":"구독자 / VIP / 관리자 조건","Syntax errors too.":"구문 오류도 처리됩니다.","TTS:":"TTS:","Tag the message with a custom field that a later":"메시지에 사용자 지정 필드를 추가하여 이후의","Talk to OBS via the WebSocket settings that live under the Flow Actions section in the popup (scene switching, source toggles, GDI+/FreeType text updates, replay buffer, etc.).":"팝업의 Flow Actions 섹션에 있는 WebSocket 설정으로 OBS를 제어합니다(장면 전환, 소스 켜기/끄기, GDI+/FreeType 텍스트 업데이트, 리플레이 버퍼 등).","Template variables work in JSON string values at any nested object or array depth. Object keys are not templated, and a custom body without placeholders is sent unchanged.":"템플릿 변수는 중첩 깊이와 관계없이 객체나 배열의 JSON 문자열 값에서 작동합니다. 객체 키에는 템플릿을 적용하지 않으며 자리표시자가 없는 사용자 지정 본문은 그대로 전송됩니다.","Test Flow":"흐름 테스트 (Test Flow)","Test with the built-in simulator":"내장 시뮬레이터로 테스트하세요","Testing the flow.":"흐름 테스트.","The AND gate is not optional.":"AND 게이트가 반드시 필요합니다.","The AND node ensures only members using the right keyword relay to Discord. Both branches send their boolean result to the AND node; the payload from the":"AND 노드는 올바른 키워드를 사용하는 멤버만 Discord로 전달되도록 합니다. 두 분기가 불리언 결과를 AND 노드로 보냅니다. 다음으로 전달되는 것은","The Chrome extension cannot serve disk files by itself. Use Upload or a hosted URL when no desktop companion is available. See the":"Chrome 확장 프로그램은 단독으로 디스크 파일을 제공할 수 없습니다. 데스크톱 도우미를 사용할 수 없으면 Upload 또는 호스팅된 URL을 사용하세요. 참고:","The Event Flow Editor. The left panel lists all available nodes; the dotted canvas is where you build flows; the right panel shows properties for the selected node.":"Event Flow 편집기. 왼쪽 패널은 사용 가능한 모든 노드, 점선 캔버스는 흐름을 만드는 공간, 오른쪽 패널은 선택한 노드의 속성을 표시합니다.","The Event Flow editor is the “advanced automation” layer for Social Stream Ninja. It sits above the simple popup switches and lets you script your own routing logic. Use it when you need to:":"Event Flow 편집기는 Social Stream Ninja의 고급 자동화 기능입니다. 간단한 팝업 스위치 위에서 자체 라우팅 논리를 구성할 수 있습니다. 다음과 같은 경우에 사용하세요:","The Event Flow runtime passes two things through every wire:":"Event Flow 런타임은 모든 연결선을 통해 두 가지를 전달합니다:","The Test Flow panel for sending synthetic test events":"가상 테스트 이벤트를 전송하는 Test Flow 패널","The Test Flow panel. Fill in fields matching your trigger conditions and click":"Test Flow 패널. 트리거 조건에 맞게 입력한 뒤 다음을 클릭하세요:","The chat message text (may contain HTML)":"채팅 메시지 텍스트 (HTML 포함 가능)","The editor's Preview button plays locally; live playback needs the overlay open. If the browser blocks autoplay, click":"에디터의 Preview 버튼은 로컬에서 재생합니다. 실시간 재생에는 오버레이가 열려 있어야 합니다. 브라우저가 자동 재생을 차단하면 다음 버튼을 사용하세요:","The full message payload.":"전체 메시지 페이로드.","The gate bit (":"게이트 비트 (","The link looks like":"링크 형식:","The object":"객체","The same payload unless the node edits it.":"노드가 수정하지 않으면 같은 페이로드.","Thermal Label:":"감열 라벨:","Thermal Printer Guide":"감열 프린터 가이드","Thermal printing in SSApp:":"SSApp의 감열 인쇄:","These blocks answer the most common \"What does true/false mean?\" questions.":"이 블록은 true/false의 의미에 관한 가장 흔한 질문에 답합니다.","Think of the popup as “quick presets” and Event Flow as the toolkit for bespoke workflows.":"팝업은 빠른 프리셋, Event Flow는 맞춤 워크플로를 위한 도구 모음으로 생각하세요.","This flow is complete and fires on every message, but the sound plays on the Flow Actions overlay page,":"이 흐름은 완성되어 모든 메시지에 실행됩니다. 소리가 재생되는 곳은 Flow Actions 오버레이 페이지이며","This flow listens for":"이 흐름이 수신하는 대상:","This guide is intentionally standalone. Copy it locally, adapt it for your team, and keep experimenting inside the editor.":"이 가이드는 독립적으로 사용할 수 있도록 작성되었습니다. 로컬에 복사하거나 팀에 맞게 수정하고 편집기에서 계속 실험해 보세요.","TikTok Team Member":"TikTok 팀 멤버","Transform & Logic Nodes":"변환 및 논리 노드","Trigger custom overlays, audio, OBS scenes, or webhooks based on data you enrich in the flow.":"흐름에서 보강한 데이터를 바탕으로 사용자 지정 오버레이, 오디오, OBS 장면, 웹훅을 실행하세요.","Trigger panel showing Custom Code node under the Advanced group":"Advanced 그룹의 Custom Code 노드가 표시된 트리거 패널","Trigger snippets: return":"트리거 코드 예시 — 반환 형식:","Trigger ──▶ RANDOM (50%) ──▶ Play Sound A │ └──▶ NOT ──▶ AND ──▶ Play Sound B Trigger ──────────────────▲":"트리거 ──▶ RANDOM (50%) ──▶ 소리 A 재생 │ └──▶ NOT ──▶ AND ──▶ 소리 B 재생 트리거 ──────────────────▲","Triggers":"트리거","True":"참","True/False Outputs":"True/False 출력","Twitch Message ──▶ Regex Match \"^!\" ─┐ │ ├─false──▶ Auto Reply (\"Thanks for chatting!\") │ └─true──▶ Do nothing":"Twitch 메시지 ──▶ 정규식 일치 \"^!\" ─┐ │ ├─false──▶ 자동 답변 (\"채팅 감사합니다!\") │ └─true──▶ 아무 작업 없음","Twitch and YouTube relay walkthrough":"Twitch 및 YouTube 릴레이 안내","Twitch, YouTube":"Twitch, YouTube","Two action nodes chained together with no trigger node":"트리거 없이 작업 노드 두 개만 연결된 상태","Two nodes in the Event Flow editor let you write arbitrary JavaScript that runs inside the flow pipeline:":"Event Flow 편집기의 두 노드로 흐름 처리 과정 안에서 실행되는 임의의 JavaScript를 작성할 수 있습니다:","USD donation equivalent when the source provides one; valid zero values are honored. Event Flow falls back to":"소스가 제공하는 USD 환산 후원 값이며 유효한 0도 반영합니다. Event Flow의 대체 값:","USD donation equivalent, supplied or estimated; Event Flow derives threshold values from normalized":"제공되거나 추정된 USD 환산 후원 값. Event Flow는 정규화된 다음 값에서 기준값을 계산합니다:","Unlock":"잠금 해제 (Unlock)","Use":"사용:","Use AND when multiple conditions must be satisfied simultaneously (\"is subscriber\"":"여러 조건을 동시에 충족해야 하면 AND를 사용하세요(‘구독자임’","Use Debounce or Cooldown nodes":"Debounce 또는 Cooldown 노드를 사용하세요","Use counters, toggles, and timestamps to avoid double alerts.":"카운터, 토글, 타임스탬프로 중복 알림을 방지하세요.","User Memory guide":"사용자 메모리 가이드","User avatar URL":"사용자 아바타 URL","User's platform ID":"사용자의 플랫폼 ID","Using local media in the standalone app:":"독립 실행형 앱에서 로컬 미디어 사용:","Variable":"변수","Variable matching is case-insensitive.":"변수 일치는 대소문자를 구분하지 않습니다.","Variables + Logic":"변수 + 논리","Voice Override":"음성 재정의 (Voice Override)","What comes into a node?":"노드에는 무엇이 입력되나요?","What is this editor?":"이 편집기는 무엇인가요?","What leaves a node?":"노드에서 나오는 것은 무엇인가요?","What the action returns":"작업이 반환하는 내용","When to branch?":"언제 분기하나요?","When you add custom":"사용자 지정 항목을 추가할 때:","Whenever you want to react differently to":"다음에 서로 다르게 반응하려면 언제든지:","Work inside canvases called":"다음 이름의 캔버스에서 작업합니다:","Yes. Enter a provider-supported voice name or ID in":"예. 제공업체가 지원하는 음성 이름 또는 ID를 다음에 입력하세요:","Yes. The payload still travels through the false output; it is up to you to decide where that branch should go.":"예. 페이로드는 false 출력으로도 전달됩니다. 해당 분기를 어디로 보낼지는 사용자가 결정합니다.","YouTube Message ──▶ Contains \"!queue\" ─▶ AND ─▶ Relay to Discord Gifted Membership ─▶ User Role = Member ──▲":"YouTube 메시지 ──▶ \"!queue\" 포함 ─▶ AND ─▶ Discord로 전달 선물 회원권 ─▶ 사용자 역할 = 멤버 ──▲","YouTube Shorts and Event Flow":"YouTube Shorts 및 이벤트 흐름","YouTube Shorts destination note:":"YouTube Shorts 대상 참고 사항:","YouTube Super Chat or Super Sticker in a EUR range":"EUR 금액 구간에 해당하는 YouTube Super Chat 또는 Super Sticker","[copy link]":"[링크 복사]","a boolean:":"불리언 —","action can read from a template variable (":"작업에서 템플릿 변수로 읽을 수 있게 합니다 (","action with":"작업의 설정:","action.":"작업입니다.","actions":"작업","actions.html":"actions.html","all work the same way.":"모두 같은 방식으로 작동합니다.","an object or Promise merged into":"다음에 병합할 객체 또는 Promise:","and":"그리고","and Multi-Alerts now share a library of 17 sounds: applause, drumroll, whoosh, cash register and other effects, four labelled synthetic English phrases, and simple sounds.":"와 Multi-Alerts는 이제 17개 소리 라이브러리를 공유합니다. 박수, 드럼롤, 휙 지나가는 소리, 금전등록기 등 효과음과 이름이 표시된 합성 영어 문구 4개, 간단한 소리가 포함됩니다.","and use that generated localhost URL instead of the hosted Flow Actions URL.":"를 실행하고 호스팅된 Flow Actions URL 대신 생성된 localhost URL을 사용하세요.","any":"하나라도","append":"추가할 값:","at compile time is caught the same way. Check DevTools (F12) if a node appears to do nothing.":"도 컴파일 시 같은 방식으로 처리됩니다. 노드가 아무 동작도 하지 않는 것 같다면 DevTools(F12)를 확인하세요.","available only when":"사용 가능 조건:","becomes available on the gray/red port.":"는 회색/빨간 포트에 출력됩니다.","below), plus":"참고)와","bit telling the next node whether to run.":"비트로 다음 노드의 실행 여부를 알려 줍니다.","boolean":"불리언","browser source; Multi-Alerts plays through its own browser source. Keep sound enabled in only one for the same event to avoid duplicate playback. Tab to a flow node and press Enter or Space to edit its properties.":"브라우저 소스입니다. Multi-Alerts는 자체 브라우저 소스에서 재생합니다. 같은 이벤트가 중복 재생되지 않도록 둘 중 하나만 소리를 켜세요. Tab으로 흐름 노드에 이동하고 Enter 또는 Space를 눌러 속성을 편집할 수 있습니다.","button or click the URL inside the card.":"버튼을 사용하거나 카드 안의 URL을 클릭하세요.","by default. When a condition fails, it emits":"가 기본값입니다. 조건이 실패하면 다음을 출력합니다:","channel and an optional":"채널과 선택적인","channel.":"채널입니다.","checks the JavaScript syntax and saves the whole flow;":"는 JavaScript 문법을 검사하고 전체 흐름을 저장합니다.","cheer, raid, new_follower":"cheer, raid, new_follower","choose the printer and calibrate its paper width and safe margins under":"프린터 선택과 용지 폭/안전 여백 보정은 다음에서 하세요:","connected input is true.":"연결된 입력이 true일 때입니다.","continues downstream.":"의 페이로드입니다.","continues through the green port;":"는 초록 포트로 계속 진행됩니다.","conversion of normalized":"다음 정규화 값을 환산한 값:","docs/event-reference.html":"docs/event-reference.html","does":"하는지","does not use the keyword.":"키워드를 사용하지 않는 경우.","does the same. Cancel leaves the node unchanged.":"도 같은 작업을 합니다. Cancel은 노드를 변경하지 않습니다.","doesn't match your trigger.":"트리거 조건에 일치하지 않는 메시지.","downstream nodes stop executing unless they receive input on a separate branch (for example, the":"다른 분기에서 입력을 받지 않는 한 후속 노드의 실행이 멈춥니다(예: Condition 노드의","exposes":"는 다음을 제공합니다:","false":"false","features a message when the flow reaches it. It does not fire when you feature a message elsewhere.":"는 흐름이 도달했을 때 메시지를 강조합니다. 다른 곳에서 메시지를 강조했을 때 실행되는 것은 아닙니다.","fields. Tells downstream nodes the payload has been edited.":"필드를 바꿨을 때 사용합니다. 후속 노드에 페이로드가 수정되었음을 알립니다.","fire only when the gate remains":"는 게이트가 다음으로 유지될 때만 실행됩니다:","first branch":"첫 번째 분기","flows":"흐름 (flows)","flows through automatically.":"가 자동으로 전달됩니다.","for a complete setup.":"에서 전체 설정을 확인하세요.","for a large editing window.":"를 클릭하면 큰 편집 창이 열립니다.","for a ready-made animation and synthetic thank-you clip, or the advanced":"을 사용하면 미리 만들어진 애니메이션과 합성 감사 음성을 재생할 수 있습니다. 고급 템플릿:","for alerts that should only fire once every X seconds.":". 그러면 X초마다 한 번만 알림이 실행됩니다.","for arbitrary logic that no built-in node covers.":"를 사용하면 내장 노드로 처리할 수 없는 논리를 구현할 수 있습니다.","for detailed payload documentation across all platforms.":"에서 모든 플랫폼의 상세 페이로드 문서를 확인하세요.","for downstream logic.":"로 후속 논리를 구성하세요.","for every trigger, action, setup step, and tested recipe.":"에서 모든 트리거, 작업, 설정 단계, 검증된 예시를 확인하세요.","for printer setup, fixed-size labels, and a complete flow.":"에서 프린터 설정, 고정 크기 라벨, 완성된 흐름을 확인하세요.","for the full setup.":"에서 전체 설정을 확인하세요.","for the shared-state model, screenshots, and an importable example.":"에서 공유 상태 모델, 스크린샷, 가져올 수 있는 예시를 확인하세요.","from subscribers, VIPs, or mods, reformats it as a feature request, and relays it to a second destination (e.g. Discord).":"을 구독자, VIP, 관리자로부터 받아 기능 요청 형식으로 바꾸고 Discord 등의 두 번째 대상으로 전달합니다.","from the":"가 있는 위치:","group in the":"그룹, 패널:","group in the Actions panel.":"그룹은 Actions 패널에 있습니다.","group in the Triggers panel.":"그룹은 Triggers 패널에 있습니다.","https://...":"https://...","if":"조건:","if you are still using obs-websocket 4.x / port":"obs-websocket 4.x / 다음 포트를 아직 사용 중이라면:","if you changed":"변경한 경우:","if you want a small live OBS connection badge on the overlay while troubleshooting.":". 문제 해결 중 오버레이에 작은 실시간 OBS 연결 배지를 표시하고 싶을 때 사용하세요.","in the User Role node. It recognizes TikTok Fan Club/team levels and badges on the incoming message and does not depend on Main Chat Overlay settings.":"을 User Role 노드에서 선택하세요. 수신 메시지의 TikTok 팬클럽/팀 레벨과 배지를 인식하며 메인 채팅 오버레이 설정과는 무관합니다.","is a legacy alias":"는 이전 버전의 별칭입니다","is a node-based editor. Each line carries a message payload plus a boolean state (":"는 노드 기반 편집기입니다. 각 선은 메시지 페이로드와 불리언 상태를 함께 전달합니다 (","is running inside OBS Browser Source with":"가 OBS 브라우저 소스 안에서 다음과 함께 실행되어야 합니다:","keeps it flowing to the next node.":"가 다음 노드로 계속 전달됩니다.","keys, note them so overlays and remote clients stay consistent.":"키는 문서에 기록하여 오버레이와 원격 클라이언트가 일관되게 처리하도록 하세요.","labels for threshold comparisons, including 100 unknown named units = $0.01 USD. It does not parse":"표시를 기준 비교에 사용하며, 알 수 없는 이름의 단위는 100단위 = $0.01 USD로 계산합니다. 다음에서는 후원 값을 추출하지 않습니다:","labels such as value,":"표시 형식은 값,","logic nodes":"논리 노드","message API":"message API","not in the editor.":"에디터에서는 재생되지 않습니다.","number / string":"숫자 / 문자열","object":"객체","object and any APIs the preload script exposes (e.g.":"객체와 preload 스크립트가 제공하는 모든 API(예:","object; fields you omit keep their current values.":"객체입니다. 생략한 필드는 현재 값을 유지합니다.","obs-websocket-test.html":"obs-websocket-test.html","on a regular chat message), the placeholder is replaced with an empty string rather than showing the literal":"가 일반 채팅 메시지에 없는 경우), 자리표시자는 다음 텍스트를 그대로 표시하는 대신 빈 문자열로 바뀝니다:","on the Flow Actions page to retry the latest blocked clip. Clicking elsewhere on that page also enables playback. An OBS Browser Source normally allows autoplay.":"를 Flow Actions 페이지에서 클릭하여 가장 최근에 차단된 클립을 다시 재생하세요. 페이지의 다른 곳을 클릭해도 재생이 허용됩니다. OBS 브라우저 소스는 일반적으로 자동 재생을 허용합니다.","only if all connected inputs equal":"는 연결된 모든 입력이 다음과 같을 때만 출력됩니다:","optional. Only append":"선택 사항입니다. 다음은 필요한 경우에만 추가하세요:","or":"또는","or the extension icon).":"또는 확장 프로그램 아이콘).","output, the flow simply ends there. That is perfect for filters (\"block everything that fails the check\") but do not forget to connect the":"출력을 연결하지 않으면 흐름은 거기에서 끝납니다. 검사에 실패한 항목을 모두 차단하는 필터에는 적합하지만, 대체 경로가 필요하다면 다음 출력의 연결을 잊지 마세요:","outputs a value of":"는 알림이 음소거되었을 때","panel onto the canvas. It acts as a gate: the flow continues only when your code returns":"패널에서 캔버스로 끌어 놓으세요. 게이트 역할을 하며 코드가 다음을 반환할 때만 흐름이 진행됩니다:","panel. It can mutate the message, block it, or attach metadata that downstream nodes can read.":"패널에 있습니다. 메시지를 수정하거나 차단하거나 후속 노드가 읽을 수 있는 메타데이터를 추가할 수 있습니다.","path if you need fallbacks.":"경로를 연결하세요.","popup.html":"popup.html","previews locally with visible playback status. You can still upload a recording or choose an app-local file. For changing names or messages, use the existing":"는 재생 상태를 표시하며 로컬에서 미리 재생합니다. 녹음 파일을 업로드하거나 앱 로컬 파일을 선택할 수도 있습니다. 이름이나 메시지가 바뀌는 경우에는 기존 기능을 사용하세요:","prose for donation values.":"본문에서는 후원 값을 추출하지 않습니다.","read the payload and may rewrite fields, set state, or flip the gate signal to":"는 페이로드를 읽고 필드를 수정하거나 상태를 설정하거나 게이트 신호를 다음으로 바꿀 수 있습니다:","recommended for consistent control. Social Stream Ninja Flow Actions use the OBS WebSocket v5 API from OBS 28+ and expect the modern request set on port":"는 일관된 제어를 위해 권장됩니다. Social Stream Ninja Flow Actions는 OBS 28+의 OBS WebSocket v5 API를 사용하며 다음 포트의 최신 요청 집합을 기대합니다:","result API":"result API","select a Custom Code node and click":"Custom Code 노드를 선택하고 다음을 클릭하세요:","socket on a Condition node). That makes it easy to build fallback logic without duplicating whole flows.":"포트). 전체 흐름을 복제하지 않고 대체 논리를 쉽게 만들 수 있습니다.","socket to our reply, so regular chatters get an acknowledgement while commands simply pass through.":"출력을 답변에 연결하므로 일반 채팅 참여자는 응답을 받고 명령은 그대로 통과합니다.","sources":"소스","state from their input. Others (NOT, AND, OR) recalculate the boolean themselves.":"상태를 입력에서 그대로 전달합니다. NOT, AND, OR 같은 노드는 불리언을 다시 계산합니다.","string":"문자열","succeed.":"가 성공하는지 확인하세요.","system so viewers can intentionally trigger flows.":"시스템을 사용하면 시청자가 의도적으로 흐름을 실행할 수 있습니다.","template variables":"템플릿 변수","template. New alert templates start disabled so you can configure and test them first. For the OBS template, choose a source and the same normally-off filter in both filter actions.":"템플릿도 사용할 수 있습니다. 새 알림 템플릿은 먼저 설정하고 테스트하도록 비활성화 상태로 시작합니다. OBS 템플릿에서는 소스를 고르고, 두 필터 작업 모두에 평소 꺼져 있는 동일한 필터를 지정하세요.","text.":"텍스트.","that get replaced with event data at runtime. Wrap variable names in curly braces like":"를 지원하며 실행 시 이벤트 데이터로 대체됩니다. 변수 이름을 중괄호로 감싸세요. 예:","the object":"객체","to back up or share.":"로 백업하거나 공유하세요.","to build queue systems, raffles, or scoring engines.":"로 대기열, 추첨, 점수 시스템을 만드세요.","to continue the flow":"이면 흐름을 계속합니다","to convert the formatted donation label into EUR. It returns a number, or":"로 형식이 지정된 후원 표시를 EUR로 환산하세요. 숫자를 반환하며, 다음 상황에서는","to enable them. In extension mode the nodes appear greyed-out with the label":"을 사용하면 활성화됩니다. 확장 프로그램 모드에서는 노드가 회색으로 표시되고 다음 라벨이 붙습니다:","to filter decisions, and":"로 판단을 필터링하고","to inject events,":"로 이벤트를 주입하고","to let the flow continue,":"이면 흐름을 계속하고","to make things happen (send chat, control overlays, relay messages, etc.).":"으로 실제 작업을 실행합니다(채팅 전송, 오버레이 제어, 메시지 전달 등).","to prevent the message from being displayed or relayed.":"이면 메시지 표시와 릴레이를 차단합니다.","to stop it.":"이면 중지합니다.","to the Flow Actions URL if your OBS server is configured to require authentication.":"를 OBS 서버에 인증이 필요한 경우 Flow Actions URL에 추가하세요.","to the URL for":"를 다음 페이지의 URL에 추가하세요:","to validate the full pipeline.":"로 전체 처리 과정을 검증하세요.","trigger (or Message Contains, a regex, a donation event, etc.) starts the chain; both actions then run for each matching message.":"트리거(또는 Message Contains, 정규식, 후원 이벤트 등)가 흐름을 시작하며, 이후 두 작업이 일치하는 메시지마다 실행됩니다.","true":"true","twitch, youtube":"twitch, youtube","unless the node itself errors.":"단, 노드 자체에 오류가 있으면 제외됩니다.","updates OBS Text (GDI+) and Text (FreeType 2) inputs directly and supports Event Flow template variables such as":"는 OBS Text (GDI+)와 Text (FreeType 2) 입력을 직접 업데이트하며 다음과 같은 Event Flow 템플릿 변수를 지원합니다:","use":"사용할 값:","value, value + unit, or compact unit/value. Unknown named virtual units use 100 units = $0.01 USD; unpriced TikTok gifts use one coin per gift ($0.01 each).":"값, 값 + 단위 또는 축약된 단위/값을 지원합니다. 알 수 없는 이름의 가상 단위는 100단위 = $0.01 USD로 계산하며, 가격이 없는 TikTok 선물은 선물 하나당 1코인($0.01)으로 계산합니다.","vs":"대비","when the alert is muted. By inverting that result, the NOT node makes sure we only play the celebration when the flag is":"를 출력합니다. NOT 노드가 결과를 반전시켜 플래그가 다음일 때만 축하 효과를 재생합니다:","when the message is a command. We route the":"는 메시지가 명령일 때의 값입니다.","when the requested target currency is unsupported. The converter uses Social Stream Ninja's approximate internal rates; it does not contact an external exchange service.":"를 반환합니다. 요청한 대상 통화가 지원되지 않는 경우입니다. 변환기는 Social Stream Ninja의 대략적인 내부 환율을 사용하며 외부 환전 서비스에 접속하지 않습니다.","whenever the RANDOM gate sits idle, so sound B would play on every chat message that":"를 RANDOM 게이트가 대기 중일 때마다 반환하므로 사운드 B는 다음과 같은 모든 채팅 메시지에서 재생됩니다:","your code runs as":"코드는 다음 형식으로 실행됩니다:","your nodes so future-you knows which branch is which.":"를 노드에 지정하여 나중에도 각 분기를 알아볼 수 있게 하세요.","{\"viewers\":100}":"{\"viewers\":100}","– a":"– 다음의","– the event or message data object.":"– 이벤트 또는 메시지 데이터 객체.","┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│ Relay Chat │ │ │ │ │ │ (to Discord) │ │ Gate: VIP/sub/mod │ │ Reformat message text │ │ │ │ + starts with │ │ → \"📋 Feature Request │ │ │ │ !feature │ │ from {name}: {text}\" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘":"┌──────────────────────┐ ┌──────────────────────────┐ ┌──────────────────┐ │ Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│ Relay Chat │ │ │ │ │ │ (to Discord) │ │ Gate: VIP/sub/mod │ │ Reformat message text │ │ │ │ + starts with │ │ → \"📋 Feature Request │ │ │ │ !feature │ │ from {name}: {text}\" │ │ │ └──────────────────────┘ └──────────────────────────┘ └──────────────────┘","✅ Works. An":"✅ 작동합니다. 다음의","❌ Never runs. Feature Message and Speak Text are both":"❌ 실행되지 않습니다. Feature Message와 Speak Text는 모두"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/actions/event-flow-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/actions/event-flow-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="guide-shell">
+        <header>
+            <p class="badge">Event Flow 시스템</p>
+            <h1>Event Flow 편집기 가이드</h1>
+            <p>Social Stream Ninja의 안정적인 자동화를 만드세요. 기본 개념, 논리 노드, 신호 흐름과 채팅 에코 방지, AND/NOT 블록 조합처럼 크리에이터가 자주 묻는 실용적인 방법을 안내합니다.</p>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/event-flow-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/event-flow-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/event-flow-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/event-flow-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/event-flow-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/event-flow-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/event-flow-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/event-flow-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/event-flow-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/event-flow-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/event-flow-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="event-flow-guide.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/actions/event-flow-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/event-flow-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/event-flow-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/event-flow-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/event-flow-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></header>
+        <div class="content">
+            <section>
+                <h2>0. 빠른 둘러보기</h2>
+                <div class="panel">
+                    <strong>Event Flow</strong> 는 노드 기반 편집기입니다. 각 선은 메시지 페이로드와 불리언 상태를 함께 전달합니다 (<em>true</em> = 계속, <em>false</em> = 중지). 사용 방법: <strong>소스</strong> 로 이벤트를 주입하고 <strong>논리 노드</strong> 로 판단을 필터링하고 <strong>작업</strong> 으로 실제 작업을 실행합니다(채팅 전송, 오버레이 제어, 메시지 전달 등).
+                </div>
+                <div class="callout">
+                    참가자 기억, 이후 참가 자격 확인, 중복 없는 사용자 추첨, 특정 이름의 목록 삭제가 필요한가요? 다음을 여세요: <a href="user-memory-guide.html">사용자 메모리 가이드</a> 에서 공유 상태 모델, 스크린샷, 가져올 수 있는 예시를 확인하세요.
+                </div>
+                <h3 id="what-is-event-flow">이 편집기는 무엇인가요?</h3>
+                <p>Event Flow 편집기는 Social Stream Ninja의 고급 자동화 기능입니다. 간단한 팝업 스위치 위에서 자체 라우팅 논리를 구성할 수 있습니다. 다음과 같은 경우에 사용하세요:</p>
+                <ul>
+                    <li>필터로 서비스 간 채팅을 전달하세요(예: Twitch를 Discord에 복제하되 명령은 차단).</li>
+                    <li>AND/OR/NOT 논리로 참여 포인트 기반 명령, 키워드 게임, 추첨 참가 조건을 만드세요.</li>
+                    <li>흐름에서 보강한 데이터를 바탕으로 사용자 지정 오버레이, 오디오, OBS 장면, 웹훅을 실행하세요.</li>
+                    <li>여러 플랫폼을 하나의 자동화에 결합하세요(Kick + Twitch + YouTube를 하나의 흐름으로 처리).</li>
+                </ul>
+                <p>팝업은 빠른 프리셋, Event Flow는 맞춤 워크플로를 위한 도구 모음으로 생각하세요.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>시작과 기본 개념</h4>
+                        <ul>
+                            <li>메인 대시보드 메뉴에서 Event Flow 편집기를 여세요(데스크톱 또는 확장 프로그램).</li>
+                            <li>내보내기 전까지 각 프로젝트는 로컬에 저장됩니다. 사용할 기능: <code>Export</code> 로 백업하거나 공유하세요.</li>
+                            <li>다음 이름의 캔버스에서 작업합니다: <em>흐름 (flows)</em>. 각 흐름은 여러 플랫폼을 동시에 구독할 수 있습니다.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>노드 한눈에 보기</h4>
+                        <ul>
+                            <li><strong>입력</strong> (왼쪽 포트)는 메시지 컨텍스트를 받습니다.</li>
+                            <li><strong>출력</strong> (오른쪽 포트)는 수정 사항을 포함한 같은 컨텍스트를 출력합니다.</li>
+                            <li>논리 노드는 다음 두 가지를 모두 출력할 수 있습니다: <code>true</code> 채널과 선택적인 <code>false</code> 채널입니다.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>페이로드 구조</h4>
+                        <p>모든 메시지는 JSON 객체를 전달합니다. 필수 키는 다음을 따릅니다: <a href="../docs/event-reference.html" target="_blank" rel="noopener">docs/event-reference.html</a> (platform, type, chatname, chatmessage 등). 사용자 지정 데이터는 다음 아래에 추가하세요: <code>meta</code>.</p>
+                    </div>
+                </div>
+                <h3 id="every-flow-needs-a-trigger">모든 흐름은 트리거로 시작합니다</h3>
+                <p>작업 노드(초록)는 스스로 실행되지 않습니다. 앞 단계 트리거 노드(파랑)가 다음으로 평가될 때만 실행됩니다: <code>true</code>. 작업만 연결한 흐름은 유효해 보이지만 시작할 계기가 없어 항상 대기 상태입니다. 노드 이름은 해당 노드가 무엇을 <em>하는지</em>를 설명하며 발생 시점을 뜻하지 않습니다: <em>메시지 강조 (Feature Message)</em> 는 흐름이 도달했을 때 메시지를 강조합니다. 다른 곳에서 메시지를 강조했을 때 실행되는 것은 아닙니다.</p>
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-missing-trigger.png" alt="트리거 없이 작업 노드 두 개만 연결된 상태">
+                        <figcaption>❌ 실행되지 않습니다. Feature Message와 Speak Text는 모두 <em>작업</em>입니다. 앞에 트리거가 없으면 흐름이 시작되지 않습니다.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/flow-trigger-first.png" alt="Feature Message 및 Speak Text 작업에 연결된 Any Message 트리거">
+                        <figcaption>✅ 작동합니다. 다음의 <em>모든 메시지 (Any Message)</em> 트리거(또는 Message Contains, 정규식, 후원 이벤트 등)가 흐름을 시작하며, 이후 두 작업이 일치하는 메시지마다 실행됩니다.</figcaption>
+                    </figure>
+                </div>
+            </section>
+            <section id="flow-actions-overlay">
+                <h2>Flow Actions 오버레이 (작업 출력)</h2>
+                <div class="panel">
+                    <strong>알림 템플릿으로 시작하세요:</strong>
+                    <p>선택: <em>후원: 축하 효과 + 음성</em> 을 사용하면 미리 만들어진 애니메이션과 합성 감사 음성을 재생할 수 있습니다. 고급 템플릿: <em>후원: 애니메이션 + 소리 + OBS 필터</em> 템플릿도 사용할 수 있습니다. 새 알림 템플릿은 먼저 설정하고 테스트하도록 비활성화 상태로 시작합니다. OBS 템플릿에서는 소스를 고르고, 두 필터 작업 모두에 평소 꺼져 있는 동일한 필터를 지정하세요.</p>
+                    <p><em>오디오 클립 재생 (Play Audio Clip)</em> 와 Multi-Alerts는 이제 17개 소리 라이브러리를 공유합니다. 박수, 드럼롤, 휙 지나가는 소리, 금전등록기 등 효과음과 이름이 표시된 합성 영어 문구 4개, 간단한 소리가 포함됩니다. <em>듣기 / 중지</em> 는 재생 상태를 표시하며 로컬에서 미리 재생합니다. 녹음 파일을 업로드하거나 앱 로컬 파일을 선택할 수도 있습니다. 이름이나 메시지가 바뀌는 경우에는 기존 기능을 사용하세요: <em>텍스트 읽기 (Speak Text)</em> 작업입니다.</p>
+                    <p>Event Flow가 재생하는 위치: <strong>흐름 동작 (Flow Actions)</strong> 브라우저 소스입니다. Multi-Alerts는 자체 브라우저 소스에서 재생합니다. 같은 이벤트가 중복 재생되지 않도록 둘 중 하나만 소리를 켜세요. Tab으로 흐름 노드에 이동하고 Enter 또는 Space를 눌러 속성을 편집할 수 있습니다.</p>
+                </div>
+                <p>다음과 같은 노드: <em>오디오 클립 재생 (Play Audio Clip)</em>, <em>미디어 오버레이 표시 (Display Media Overlay)</em>, OBS 컨트롤에는 렌더링 화면이 필요합니다. 그 화면은 다음 경로의 Flow Actions 오버레이 페이지입니다: <a href="../../actions.html" target="_blank" rel="noopener">actions.html</a>입니다. 방송 소프트웨어(OBS/Streamer.bot 브라우저 도크 등)에서 계속 실행하여 Event Flow 작업을 표시할 화면을 유지하세요.</p>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-audio-overlay.png" alt="Play Audio Clip 작업에 연결된 Any Message 트리거">
+                    <figcaption>이 흐름은 완성되어 모든 메시지에 실행됩니다. 소리가 재생되는 곳은 Flow Actions 오버레이 페이지이며 <em>에디터에서는 재생되지 않습니다.</em> 에디터의 Preview 버튼은 로컬에서 재생합니다. 실시간 재생에는 오버레이가 열려 있어야 합니다. 브라우저가 자동 재생을 차단하면 다음 버튼을 사용하세요: <strong>오디오 켜기</strong> 를 Flow Actions 페이지에서 클릭하여 가장 최근에 차단된 클립을 다시 재생하세요. 페이지의 다른 곳을 클릭해도 재생이 허용됩니다. OBS 브라우저 소스는 일반적으로 자동 재생을 허용합니다.</figcaption>
+                </figure>
+                <div class="panel">
+                    <strong>여는 방법 (팝업/대시보드):</strong>
+                    <ol>
+                        <li>Social Stream Ninja의 메인 팝업을 여세요(다음에서 로드되는 창: <a href="../../popup.html" target="_blank" rel="noopener">popup.html</a> 또는 확장 프로그램 아이콘).</li>
+                        <li>Flow Actions 카드로 스크롤하세요. 사용할 항목: <em>[링크 복사]</em> 버튼을 사용하거나 카드 안의 URL을 클릭하세요.</li>
+                        <li>링크 형식: <code>https://socialstream.ninja/actions.html?session=YOURSESSION</code>을 복사하세요. OBS 브라우저 소스(권장 1920×1080)에 붙여 넣거나 오버레이 브라우저에서 여세요.</li>
+                    </ol>
+                </div>
+                <div class="panel">
+                    <strong>독립 실행형 앱에서 로컬 미디어 사용:</strong>
+                    <ol>
+                        <li>Play Audio Clip 또는 Display Media Overlay 작업에서 클릭하세요: <em>로컬 파일 선택 (Choose Local File)</em>.</li>
+                        <li>클릭: <em>OBS용 로컬 흐름 동작 URL 복사 (Copy Local Flow Actions URL for OBS)</em> 를 실행하고 호스팅된 Flow Actions URL 대신 생성된 localhost URL을 사용하세요.</li>
+                        <li>SSApp을 계속 실행하세요. 선택한 파일이 이동했다면 작업으로 돌아가 다음을 클릭하세요: <em>다시 연결 (Relink)</em>.</li>
+                    </ol>
+                    <p>Chrome 확장 프로그램은 단독으로 디스크 파일을 제공할 수 없습니다. 데스크톱 도우미를 사용할 수 없으면 Upload 또는 호스팅된 URL을 사용하세요. 참고: <a href="../docs/media-hosting-event-flow.html" target="_blank" rel="noopener">Event Flow용 미디어 파일 가이드</a> 에서 전체 설정을 확인하세요.</p>
+                </div>
+                <p>로드된 오버레이에서 가능한 작업:</p>
+                <ul>
+                    <li>흐름에서 트리거한 GIPHY 또는 직접 미디어 URL, 텍스트, 색종이 효과를 표시합니다.</li>
+                    <li>시청자가 들을 수 있도록 소리(TTS, 오디오 클립)를 로컬에서 재생합니다.</li>
+                    <li>팝업의 Flow Actions 섹션에 있는 WebSocket 설정으로 OBS를 제어합니다(장면 전환, 소스 켜기/끄기, GDI+/FreeType 텍스트 업데이트, 리플레이 버퍼 등).</li>
+                </ul>
+                <div class="panel">
+                    <strong>OBS 제어 모드:</strong>
+                    <ul>
+                        <li><strong>브라우저 소스 API:</strong> 사용 가능 조건: <code>actions.html</code> 가 OBS 브라우저 소스 안에서 다음과 함께 실행되어야 합니다: <em>고급 접근 권한</em>입니다. 장면 전환이 작동하며 녹화/방송/리플레이 버퍼 작업은 이 방식으로 대체할 수 있습니다.</li>
+                        <li><strong>OBS WebSocket:</strong> 는 일관된 제어를 위해 권장됩니다. Social Stream Ninja Flow Actions는 OBS 28+의 OBS WebSocket v5 API를 사용하며 다음 포트의 최신 요청 집합을 기대합니다: <code>4455</code>.</li>
+                        <li><strong>비밀번호:</strong> 선택 사항입니다. 다음은 필요한 경우에만 추가하세요: <code>&amp;obspw=...</code> 를 OBS 서버에 인증이 필요한 경우 Flow Actions URL에 추가하세요.</li>
+                        <li><strong>오버레이 진단:</strong> 추가할 값: <code>&amp;obsdebug=1</code> 를 다음 페이지의 URL에 추가하세요: <code>actions.html</code> . 문제 해결 중 오버레이에 작은 실시간 OBS 연결 배지를 표시하고 싶을 때 사용하세요.</li>
+                        <li><strong>텍스트 소스 설정:</strong> 는 OBS Text (GDI+)와 Text (FreeType 2) 입력을 직접 업데이트하며 다음과 같은 Event Flow 템플릿 변수를 지원합니다: <code>{counterValue}</code> 그리고 <code>{counterTarget}</code>.</li>
+                        <li><strong>이전 4.x 설치 환경:</strong> obs-websocket 4.x / 다음 포트를 아직 사용 중이라면: <code>4444</code>이면 OBS / obs-websocket을 업그레이드하기 전까지 소스/필터/음소거/텍스트 작업이 작동하지 않습니다.</li>
+                    </ul>
+                    <p>전용 가이드: <a href="obs-control-guide.html">OBS 제어 가이드</a> 에서 모든 트리거, 작업, 설정 단계, 검증된 예시를 확인하세요.</p>
+                </div>
+                <div class="panel">
+                    <strong>권장 진단 경로:</strong>
+                    <ol>
+                        <li>열기 <a href="../../obs-websocket-test.html" target="_blank" rel="noopener">obs-websocket-test.html</a>.</li>
+                        <li>확인: <code>GetVersion</code>, <code>GetCurrentProgramScene</code>, 그리고 <code>GetSceneList</code> 가 성공하는지 확인하세요.</li>
+                        <li>전체 Event Flow 자동화를 테스트하기 전에 해당 위치에서 관련 작업을 점검하세요.</li>
+                    </ol>
+                </div>
+                <div class="panel warn">
+                    <strong>오버레이를 열어 두세요.</strong> Flow Actions 페이지를 닫으면 Event Flow의 모든 오버레이/오디오/OBS 작업이 멈춥니다. 완전히 닫지 말고 숨기거나 다른 모니터에 두세요.
+                </div>
+            </section>
+
+            <section>
+                <h2>1. 노드를 통과하는 데이터</h2>
+                <p>Event Flow 런타임은 모든 연결선을 통해 두 가지를 전달합니다:</p>
+                <ol>
+                    <li><strong>페이로드</strong> – 이벤트 또는 메시지 데이터 객체.</li>
+                    <li><strong>게이트 신호</strong> – 다음의 <em>true</em>/<em>false</em> 비트로 다음 노드의 실행 여부를 알려 줍니다.</li>
+                </ol>
+                <div class="panel">
+                    <strong>노드가 false를 출력하면:</strong> 다른 분기에서 입력을 받지 않는 한 후속 노드의 실행이 멈춥니다(예: Condition 노드의 <code>false</code> 포트). 전체 흐름을 복제하지 않고 대체 논리를 쉽게 만들 수 있습니다.
+                </div>
+                <h3>입력 조건</h3>
+                <ul>
+                    <li><strong>이벤트 소스</strong> (Twitch Message, Timers, Manual Trigger 등)는 앞 단계 입력을 무시합니다. 자체 페이로드를 생성하고 항상 다음을 출력합니다: <code>true</code> 단, 노드 자체에 오류가 있으면 제외됩니다.</li>
+                    <li><strong>변환 및 논리 노드</strong> 는 페이로드를 읽고 필드를 수정하거나 상태를 설정하거나 게이트 신호를 다음으로 바꿀 수 있습니다: <code>false</code>.</li>
+                    <li><strong>작업 노드</strong> 는 게이트가 다음으로 유지될 때만 실행됩니다: <code>true</code>. 작업을 계속 연결하려면 업데이트한 페이로드를 출력할 수도 있습니다.</li>
+                </ul>
+                <h3>출력 패턴</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>단일 출력</h4>
+                        <p>대부분의 노드에는 출력이 하나 있습니다. 노드가 수정하지 않는 한 입력된 페이로드와 게이트가 그대로 출력됩니다.</p>
+                    </div>
+                    <div class="card">
+                        <h4>True/False 출력</h4>
+                        <p>Condition, Compare, Regex, Logic 노드는 포트 두 개로 출력합니다. <em>참</em> 는 초록 포트로 계속 진행됩니다. <em>false</em> 는 회색/빨간 포트에 출력됩니다.</p>
+                    </div>
+                    <div class="card">
+                        <h4>그대로 전달과 재정의</h4>
+                        <p>일부 노드(Set Variable, Math, Text Replace)는 페이로드를 수정하지만 다음 값은 그대로 전달합니다: <em>true</em>/<em>false</em> 상태를 입력에서 그대로 전달합니다. NOT, AND, OR 같은 노드는 불리언을 다시 계산합니다.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>2. 논리 노드 빠른 참조</h2>
+                <p>이 블록은 true/false의 의미에 관한 가장 흔한 질문에 답합니다.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>NOT</h4>
+                        <ul>
+                            <li>입력: 이전 노드에서 나온 불리언(true/false) 하나.</li>
+                            <li>출력: 반전된 불리언과 변경되지 않은 페이로드.</li>
+                            <li><strong>기본 동작:</strong> NOT 입력에 아무것도 연결하지 않으면 결과는 <code>false</code>이므로 출력은 <code>true</code>.</li>
+                        </ul>
+                        <div class="panel">
+                            <strong>예시:</strong> "Contains Keyword" 뒤에 NOT을 배치하면 다음 조건에서 알림이 실행됩니다: 시청자가 <em>키워드를 사용하지 않는 경우.</em>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>AND</h4>
+                        <ul>
+                            <li>입력: 둘 이상의 불리언 신호(A, B, ...). 추가 포트는 비워 둘 수 있습니다.</li>
+                            <li>출력: <code>true</code> 는 연결된 모든 입력이 다음과 같을 때만 출력됩니다: <code>true</code>.</li>
+                            <li>여러 조건을 동시에 충족해야 하면 AND를 사용하세요(‘구독자임’ <em>그리고</em> "채팅 메시지에 !raffle 포함").</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>OR</h4>
+                        <ul>
+                            <li>전송: <code>true</code> 조건: <strong>하나라도</strong> 연결된 입력이 true일 때입니다.</li>
+                            <li>여러 플랫폼의 트리거에 유용합니다. Twitch와 YouTube 메시지 노드를 하나의 OR에 연결한 뒤 후속 작업을 통합하세요.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="callout tip">
+                    <strong>항상 AND 노드가 필요한가요?</strong><br>
+                    아닙니다. 많은 노드가 이미 통합 필터를 제공합니다(예: Filter User Level + Contains Text). 내장 옵션으로 원하는 조합을 구현할 수 없거나 다른 분기와 공유할 수 있는 재사용 가능한 논리 연결점이 필요할 때만 AND를 사용하세요.
+                </div>
+                <div class="callout.warn">
+                    <strong>NOT과 빈 입력:</strong> 연결되지 않은 NOT 노드도 다음을 출력합니다: <code>true</code>입니다. 의도치 않게 흐름을 통과시키지 않도록 의미 있는 입력에 연결하거나 노드를 끄세요.
+                </div>
+            </section>
+
+            <section>
+                <h2>3. 간단한 흐름 예시</h2>
+                <h3>A. 명령이 아닌 메시지에 자동 답변</h3>
+                <div class="diagram">
+Twitch 메시지 ──▶ 정규식 일치 "^!" ─┐ │ ├─false──▶ 자동 답변 ("채팅 감사합니다!") │ └─true──▶ 아무 작업 없음
+                </div>
+                <p>여기서 Regex 노드의 출력: <code>true</code> 는 메시지가 명령일 때의 값입니다. <code>false</code> 출력을 답변에 연결하므로 일반 채팅 참여자는 응답을 받고 명령은 그대로 통과합니다.</p>
+                <h3>B. AND로 여러 조건 요구</h3>
+                <div class="diagram">
+YouTube 메시지 ──▶ "!queue" 포함 ─▶ AND ─▶ Discord로 전달 선물 회원권 ─▶ 사용자 역할 = 멤버 ──▲
+                </div>
+                <p>AND 노드는 올바른 키워드를 사용하는 멤버만 Discord로 전달되도록 합니다. 두 분기가 불리언 결과를 AND 노드로 보냅니다. 다음으로 전달되는 것은 <em>첫 번째 분기</em> 의 페이로드입니다.</p>
+                <h3>C. NOT 노드로 반복 알림 차단</h3>
+                <div class="diagram">
+이벤트 페이로드 ─▶ 상태 확인 (isAlertMuted) └─false─▶ NOT ─▶ 축하 효과 재생
+                </div>
+                <p><code>State Check</code> 는 알림이 음소거되었을 때 <code>true</code> 를 출력합니다. NOT 노드가 결과를 반전시켜 플래그가 다음일 때만 축하 효과를 재생합니다: <code>false</code>.</p>
+                <h3>D. 두 소리 중 하나를 무작위 재생</h3>
+                <figure class="screenshot">
+                    <img src="../../actions/img/flow-random-two-sounds.png" alt="RANDOM, NOT, AND 게이트로 두 오디오 클립 중 하나를 무작위로 재생하는 흐름">
+                    <figcaption>두 오디오 클립 중 하나를 50% 확률로 선택합니다. RANDOM 게이트는 일치하는 메시지마다 한 번 판단합니다. 통과하면 소리 A를 재생하고, 실패하면 NOT 게이트가 결과를 반전시켜 AND 게이트를 통해 소리 B가 재생됩니다.</figcaption>
+                </figure>
+                <div class="diagram">
+트리거 ──▶ RANDOM (50%) ──▶ 소리 A 재생 │ └──▶ NOT ──▶ AND ──▶ 소리 B 재생 트리거 ──────────────────▲
+                </div>
+                <p><strong>AND 게이트가 반드시 필요합니다.</strong> 단독 NOT은 다음을 출력합니다: <code>true</code> 를 RANDOM 게이트가 대기 중일 때마다 반환하므로 사운드 B는 다음과 같은 모든 채팅 메시지에서 재생됩니다: <em>트리거 조건에 일치하지 않는 메시지.</em> 트리거를 AND의 두 번째 입력에 연결하면 조건에 일치하는 메시지에만 사운드 B가 재생됩니다. 이 패턴은 오디오뿐 아니라 둘 중 하나를 실행하는 모든 동작 쌍에 적용할 수 있습니다.</p>
+            </section>
+
+            <section>
+                <h2>4. 에코, 반복, 릴레이 피드백 방지</h2>
+                <p>화면 간 채팅 릴레이는 유용하지만 자신의 출력을 다시 수신하면 무한히 반복될 수 있습니다. 다음 예방 조치를 따르세요:</p>
+                <div class="callout tip">
+                    <strong>YouTube Shorts 대상 참고 사항:</strong><br>
+                    수신 트리거와 발신 Relay Chat 대상은 모두 <code>youtube</code> 그리고 <code>youtubeshorts</code>를 구분합니다. 메시지를 두 유형 모두로 보내려면 릴레이 작업 두 개를 사용하세요. 참고: <a href="../docs/source-types-guide.html#youtube-shorts-event-flow">YouTube Shorts 및 이벤트 흐름</a>.
+                </div>
+                <div class="callout.danger">
+                    <strong>Relay Chat은 인식된 반사 메시지를 자동으로 건너뜁니다.</strong><br>
+                    반사 메시지는 대상 채팅으로 보낸 메시지를 다시 캡처한 것입니다. 현재 Relay Chat 작업은 인식된 반사 메시지를 건너뛰며 별도의 No Reflections 체크박스는 없습니다. 도크와 오버레이에서 표시를 숨기거나 제한하려면 다음을 사용하세요: <strong>반향 필터(Reflection Filter)</strong> 작업의 설정: <strong>모두 차단(Block All)</strong>, <strong>첫 번째 허용(Allow First)</strong>, 또는 <strong>모두 허용(Allow All)</strong>입니다. 이는 전송이 아니라 다시 수신될 때의 표시를 제어합니다. 참고할 가이드: <a href="../docs/chat-relay-guide.html">Twitch 및 YouTube 릴레이 안내</a> 에서 전체 설정을 확인하세요.
+                </div>
+                <ul>
+                    <li><strong>중복 릴레이 시스템을 피하세요.</strong> 동등한 Event Flow 경로를 사용한다면 전역 Relay all을 끄고 같은 채팅을 연결하는 다른 서비스가 있는지 확인하세요. 사용자 지정 메타데이터는 플랫폼 채팅을 거친 뒤 유지된다고 보장할 수 없습니다.</li>
+                    <li><strong>Debounce 또는 Cooldown 노드를 사용하세요</strong> . 그러면 X초마다 한 번만 알림이 실행됩니다.</li>
+                    <li><strong>순환을 의도적으로 끊으세요.</strong> 두 분기가 서로 연결되어 있다면 상태 변수("currentlyRelaying")를 확인하는 논리 노드를 추가하여 플래그가 설정되었을 때 흐름을 일찍 종료하세요.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>5. 입력, 출력, 실용적인 질문</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h4>노드에는 무엇이 입력되나요?</h4>
+                        <ul>
+                            <li>전체 메시지 페이로드.</li>
+                            <li>게이트 비트 (<code>true</code>/<code>false</code>).</li>
+                            <li>노드가 명시적으로 요청하는 선택적 컨텍스트(상태 변수, 타이머).</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>노드에서 나오는 것은 무엇인가요?</h4>
+                        <ul>
+                            <li>노드가 수정하지 않으면 같은 페이로드.</li>
+                            <li>다시 계산된 게이트 비트(논리 노드) 또는 그대로 전달된 비트(작업).</li>
+                            <li>채팅 전송 같은 대부분의 부수 작업은 페이로드를 바꾸지 않지만 포인트 작업은 다음과 같은 상태 필드를 추가할 수 있습니다: <code>pointsTotal</code> 또는 <code>pointsSpendError</code> 로 후속 논리를 구성하세요.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>언제 분기하나요?</h4>
+                        <p>다음에 서로 다르게 반응하려면 언제든지: <code>true</code> 대비 <code>false</code>. 필요한 색상의 출력(초록 = true, 회색/빨강 = false)에서 다음 노드로 선을 연결하세요.</p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <strong>기억하세요:</strong> 다음과 같은 출력을 아무 곳에도 연결하지 않으면: <code>false</code> 출력을 연결하지 않으면 흐름은 거기에서 끝납니다. 검사에 실패한 항목을 모두 차단하는 필터에는 적합하지만, 대체 경로가 필요하다면 다음 출력의 연결을 잊지 마세요: <code>false</code> 경로를 연결하세요.
+                </div>
+                <h3>자주 묻는 질문</h3>
+                <ul>
+                    <li><strong>필터 두 개마다 AND를 사용해야 하나요?</strong> 아닙니다. 많은 노드에 여러 검사가 포함되어 있습니다(예: 기본 Message Filter는 키워드와 역할을 지원). 고급 조합이나 다른 노드의 신호를 합칠 때만 AND를 사용하세요.</li>
+                    <li><strong>true/false 값은 NOT 노드에 어떻게 도달하나요?</strong> 초록 출력이 있는 모든 노드는 다음을 출력합니다: <code>true</code> 가 기본값입니다. 조건이 실패하면 다음을 출력합니다: <code>false</code>입니다. 해당 선을 NOT에 연결하면 결과가 반전됩니다.</li>
+                    <li><strong>노드가 false를 반환해도 페이로드를 출력할 수 있나요?</strong> 예. 페이로드는 false 출력으로도 전달됩니다. 해당 분기를 어디로 보낼지는 사용자가 결정합니다.</li>
+					<li><strong>TikTok 팀 멤버를 어떻게 일치시키나요?</strong> 선택: <em>TikTok 팀 멤버</em> 을 User Role 노드에서 선택하세요. 수신 메시지의 TikTok 팬클럽/팀 레벨과 배지를 인식하며 메인 채팅 오버레이 설정과는 무관합니다.</li>
+					<li><strong>Speak Text 노드마다 다른 음성을 사용할 수 있나요?</strong> 예. 제공업체가 지원하는 음성 이름 또는 ID를 다음에 입력하세요: <em>음성 재정의 (Voice Override)</em>을 지정하거나 비워 두어 Flow Actions의 TTS 기본값을 사용하세요.</li>
+                </ul>
+            </section>
+
+            <section id="template-variables">
+                <h2>6. 템플릿 변수 참조</h2>
+                <p>여러 작업 노드(Show Text, Set Text Source, Send Message, Relay Chat, TTS Speak, Call Webhook, Print Thermal Label)는 다음을 지원합니다: <strong>템플릿 변수</strong> 를 지원하며 실행 시 이벤트 데이터로 대체됩니다. 변수 이름을 중괄호로 감싸세요. 예: <code>{username}</code>.</p>
+
+                <h3>핵심 변수 (이전 버전 호환)</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>변수</th><th>별칭</th><th>설명</th><th>예시</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{username}</code></td><td><code>{chatname}</code></td><td>사용자의 표시 이름</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{message}</code></td><td><code>{chatmessage}</code></td><td>채팅 메시지 텍스트</td><td>여러분, 안녕하세요!</td></tr>
+                        <tr><td><code>{source}</code></td><td>-</td><td>플랫폼 이름 (첫 글자 대문자)</td><td>Twitch, YouTube</td></tr>
+                        <tr><td><code>{type}</code></td><td>-</td><td>플랫폼 이름 (원본)</td><td>twitch, youtube</td></tr>
+                        <tr><td><code>{donation}</code></td><td><code>{hasDonation}</code></td><td>후원/팁 표시 문구</td><td>$5.00, 500 bits</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>확장 변수</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>변수</th><th>설명</th><th>예시</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{displayname}</code></td><td>표시 이름 (대체 필드)</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{donoValue}</code></td><td>제공되거나 추정된 USD 환산 후원 값. Event Flow는 정규화된 다음 값에서 기준값을 계산합니다: <code>hasDonation</code> 표시 형식은 값, <code>$</code>값, 값 + 단위 또는 축약된 단위/값을 지원합니다. 알 수 없는 이름의 가상 단위는 100단위 = $0.01 USD로 계산하며, 가격이 없는 TikTok 선물은 선물 하나당 1코인($0.01)으로 계산합니다. <code>{donationAmount}</code> 는 이전 버전의 별칭입니다</td><td>5.00</td></tr>
+                        <tr><td><code>{event}</code></td><td>이벤트 유형 식별자</td><td>cheer, raid, new_follower</td></tr>
+                        <tr><td><code>{membership}</code></td><td>멤버십 상태</td><td>MEMBERSHIP, new_sponsor</td></tr>
+                        <tr><td><code>{subtitle}</code></td><td>추가 컨텍스트</td><td>멤버십 3개월</td></tr>
+                        <tr><td><code>{userid}</code></td><td>사용자의 플랫폼 ID</td><td>12345678</td></tr>
+                        <tr><td><code>{chatimg}</code></td><td>사용자 아바타 URL</td><td>https://...</td></tr>
+                        <tr><td><code>{contentimg}</code></td><td>첨부 이미지 URL</td><td>https://...</td></tr>
+                        <tr><td><code>{rewardTitle}</code></td><td>소스가 최상위 보상 제목 필드를 제공하는 경우 보상 이름</td><td>내 메시지 강조</td></tr>
+                        <tr><td><code>{meta}</code></td><td>구조화된 이벤트 데이터 (JSON)</td><td>{"viewers":100}</td></tr>
+                        <tr><td><code>{counterValue}</code></td><td>Counter 또는 Check Counter 단계 이후의 현재 카운터 값</td><td>12</td></tr>
+                        <tr><td><code>{counterTarget}</code></td><td>카운터 목표값</td><td>30</td></tr>
+                        <tr><td><code>{counterRemaining}</code></td><td>카운터 목표에서 현재 값을 뺀 값, 최소 0</td><td>18</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>변수 일치는 대소문자를 구분하지 않습니다.</strong> <code>{USERNAME}</code>, <code>{Username}</code>, 그리고 <code>{username}</code> 모두 같은 방식으로 작동합니다.
+                </div>
+                <div class="panel">
+                    <strong>흐름에서 추가한 필드도 사용할 수 있습니다.</strong> 앞선 작업이 메시지에 최상위 값을 추가하면 이후 템플릿에서 직접 읽을 수 있습니다. 다음 항목도 이 방식으로 작동합니다: <code>Check Counter</code> 는 다음을 제공합니다: <code>{counterValue}</code>, <code>{counterTarget}</code>, 그리고 <code>{counterRemaining}</code>.
+                </div>
+                <div class="panel">
+                    <strong>Call Webhook JSON:</strong> 템플릿 변수는 중첩 깊이와 관계없이 객체나 배열의 JSON 문자열 값에서 작동합니다. 객체 키에는 템플릿을 적용하지 않으며 자리표시자가 없는 사용자 지정 본문은 그대로 전송됩니다.
+                </div>
+
+                <h3>예시 템플릿</h3>
+                <ul>
+                    <li><strong>텍스트 표시:</strong> <code>{username} just cheered {hasDonation}!</code></li>
+                    <li><strong>OBS 텍스트 소스 설정:</strong> <code>{username}: now {counterValue}, need {counterTarget}</code></li>
+                    <li><strong>Relay Chat:</strong> <code>[{source}] {username}: {message}</code></li>
+                    <li><strong>TTS:</strong> <code>{username} says {message}</code></li>
+                    <li><strong>후원 알림:</strong> <code>{username} donated {donation} - {subtitle}</code></li>
+					<li><strong>감열 라벨:</strong> <code>{username}</code>, 줄바꿈, 이어서 <code>{donation}</code>. 참고: <a href="../docs/thermal-printer-guide.html">감열 프린터 가이드</a> 에서 프린터 설정, 고정 크기 라벨, 완성된 흐름을 확인하세요.</li>
+                    <li><strong>Discord Call Webhook:</strong> <code>{&quot;content&quot;:&quot;{message}&quot;,&quot;username&quot;:&quot;{username}&quot;,&quot;avatar_url&quot;:&quot;{chatimg}&quot;}</code></li>
+                </ul>
+
+                <div class="callout tip">
+                    <strong>없는 변수는 빈 문자열이 됩니다.</strong> 이벤트에 특정 필드가 없다면(예: <code>{donation}</code> 가 일반 채팅 메시지에 없는 경우), 자리표시자는 다음 텍스트를 그대로 표시하는 대신 빈 문자열로 바뀝니다: <code>{donation}</code> 텍스트.
+                </div>
+            </section>
+
+            <section>
+                <h2>7. 권장 사항 체크리스트</h2>
+                <ul>
+                    <li><strong>이름 및 색상</strong> 를 노드에 지정하여 나중에도 각 분기를 알아볼 수 있게 하세요.</li>
+                    <li><strong>내장 시뮬레이터로 테스트하세요</strong> (Send Test Event)로 테스트한 뒤 흐름을 실제로 사용하세요.</li>
+                    <li><strong>소스 가까이에 논리를 모으세요.</strong> 후속 처리의 부담을 줄이려면 가능한 한 일찍 필터링하세요.</li>
+                    <li><strong>반복 여부를 상태 노드에 저장하세요.</strong> 카운터, 토글, 타임스탬프로 중복 알림을 방지하세요.</li>
+                    <li><strong>meta 필드를 문서화하세요.</strong> 사용자 지정 항목을 추가할 때: <code>meta</code> 키는 문서에 기록하여 오버레이와 원격 클라이언트가 일관되게 처리하도록 하세요.</li>
+                </ul>
+                <div class="callout tip">
+                    <strong>버전을 저장하세요.</strong> 중요한 단계마다 흐름을 내보내세요. 실험이 잘못되었을 때 가져오기로 가장 쉽게 이전 상태로 돌아갈 수 있습니다.
+                </div>
+            </section>
+
+            <section>
+                <h2>8. 더 알아보기</h2>
+                <p><a href="../docs/streamdeck-event-flow.html">Stream Deck 또는 API에서 사용자 지정 워크플로 실행</a>: 이름 있는 트리거, 시작 템플릿, 워크플로 검색, 추가 데이터, HTTP/WebSocket/P2P 예시, 다이얼 조작.</p>
+                <p>더 자세히 알아볼까요?</p>
+                <ul>
+                    <li>사용: <strong>상태 노드</strong> (카운터, 토글, 타이머)를 사용하여 이벤트 사이의 상태를 추적하세요.</li>
+                    <li>조합할 항목: <strong>변수 + 논리</strong> 로 대기열, 추첨, 점수 시스템을 만드세요.</li>
+                    <li>연결할 대상: <strong>포인트 및 보상</strong> 시스템을 사용하면 시청자가 의도적으로 흐름을 실행할 수 있습니다.</li>
+                    <li>현재 <strong>SSApp 데스크톱 앱을 사용하나요?</strong> 잠금 해제 (Unlock) <a href="#custom-js"><strong>사용자 지정 JavaScript 노드</strong></a> 를 사용하면 내장 노드로 처리할 수 없는 논리를 구현할 수 있습니다.</li>
+                    <li>확인할 항목: <a href="../docs/event-reference.html"><strong>이벤트 참고 문서</strong></a> 에서 모든 플랫폼의 상세 페이로드 문서를 확인하세요.</li>
+                </ul>
+                <p>이 가이드는 독립적으로 사용할 수 있도록 작성되었습니다. 로컬에 복사하거나 팀에 맞게 수정하고 편집기에서 계속 실험해 보세요.</p>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 SECTION 9: CUSTOM JAVASCRIPT
+                 Direct link anchors:
+                   #custom-js              → section root
+                   #custom-js-trigger      → Custom Code trigger node
+                   #custom-js-action       → Execute Custom Code action node
+                   #custom-js-message-api  → message object reference table
+                   #custom-js-result-api   → result return object reference
+                   #custom-js-examples     → snippet library
+                   #custom-js-example-flow → complete worked example
+            ══════════════════════════════════════════════════════════════ -->
+            <section id="custom-js">
+                <h2>9. 사용자 지정 JavaScript <span class="desktop-badge">SSApp / 데스크톱 전용</span></h2>
+                <p>Event Flow 편집기의 두 노드로 흐름 처리 과정 안에서 실행되는 임의의 JavaScript를 작성할 수 있습니다: <strong>사용자 지정 코드 (Custom Code)</strong> (트리거) 및 <strong>사용자 지정 코드 실행 (Execute Custom Code)</strong> (작업)입니다. 내장 노드로 표현할 수 없는 동작을 구현할 때 사용합니다.</p>
+
+                <div class="callout warn">
+                    <strong>데스크톱 앱이 필요합니다.</strong> Chrome Manifest V3의 콘텐츠 보안 정책이 다음을 차단하므로 브라우저 확장 프로그램에서는 사용자 지정 JavaScript 노드가 비활성화됩니다: <code>new Function()</code> / <code>eval()</code>입니다. 편집기는 다음을 통해 여세요: <strong>SSApp 데스크톱 앱</strong> 을 사용하면 활성화됩니다. 확장 프로그램 모드에서는 노드가 회색으로 표시되고 다음 라벨이 붙습니다: <em>"데스크톱 전용"</em>.
+                </div>
+
+                <div class="panel">
+                    <strong>코드 편집:</strong> Custom Code 노드를 선택하고 다음을 클릭하세요: <strong>코드 편집기 열기 (Open Code Editor)</strong> 를 클릭하면 큰 편집 창이 열립니다. <strong>저장 후 닫기 (Save &amp; Close)</strong> 는 JavaScript 문법을 검사하고 전체 흐름을 저장합니다. <code>Ctrl+S</code> 또는 <code>Cmd+S</code> 도 같은 작업을 합니다. Cancel은 노드를 변경하지 않습니다.
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/editor-overview.png" alt="Event Flow 편집기 — 빈 상태">
+                    <figcaption>Event Flow 편집기. 왼쪽 패널은 사용 가능한 모든 노드, 점선 캔버스는 흐름을 만드는 공간, 오른쪽 패널은 선택한 노드의 속성을 표시합니다.</figcaption>
+                </figure>
+
+                <!-- ─── Trigger ─── -->
+                <h3 id="custom-js-trigger">Custom Code — 트리거 노드</h3>
+                <p>드래그할 항목: <strong>사용자 지정 코드 (Custom Code)</strong> 가 있는 위치: <em>고급</em> 그룹, 패널: <strong>트리거</strong> 패널에서 캔버스로 끌어 놓으세요. 게이트 역할을 하며 코드가 다음을 반환할 때만 흐름이 진행됩니다: <code>true</code>.</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/trigger-panel.png" alt="Advanced 그룹의 Custom Code 노드가 표시된 트리거 패널">
+                        <figcaption>Custom Code의 위치: <em>고급</em> 그룹은 Triggers 패널에 있습니다.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-trigger-props.png" alt="JavaScript 코드 편집기가 표시된 Custom Code 트리거 속성 패널">
+                        <figcaption>트리거 배치 후의 속성 패널. 다음을 반환하는 표현식을 작성하세요: <code>true</code> 또는 <code>false</code>.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>함수 형식:</strong> 코드는 다음 형식으로 실행됩니다: <code>function(message) { ... }</code><br>
+                    <strong>필수 반환값:</strong> 불리언 — <code>true</code> 이면 흐름을 계속하고 <code>false</code> 이면 중지합니다.<br>
+                    <strong>사용 가능:</strong> 객체 <code>message</code> (참고: <a href="#custom-js-message-api">message API</a> 참고)와 <code>convertCurrency(value, targetCurrency, source)</code> 그리고 <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <!-- ─── Action ─── -->
+                <h3 id="custom-js-action">Execute Custom Code — 작업 노드</h3>
+                <p>드래그할 항목: <strong>사용자 지정 코드 실행 (Execute Custom Code)</strong> 가 있는 위치: <em>통합(Integrations)</em> 그룹, 패널: <strong>동작</strong> 패널에 있습니다. 메시지를 수정하거나 차단하거나 후속 노드가 읽을 수 있는 메타데이터를 추가할 수 있습니다.</p>
+
+                <div class="two-col">
+                    <figure class="screenshot">
+                        <img src="../../actions/img/action-panel.png" alt="Integrations 그룹의 Execute Custom Code가 표시된 작업 패널">
+                        <figcaption>Execute Custom Code의 위치: <em>통합(Integrations)</em> 그룹은 Actions 패널에 있습니다.</figcaption>
+                    </figure>
+                    <figure class="screenshot">
+                        <img src="../../actions/img/customjs-action-props.png" alt="코드 편집기가 표시된 Execute Custom Code 작업 속성 패널">
+                        <figcaption>작업 속성. 객체를 반환하면 변경 사항이 흐름 결과에 병합됩니다.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="panel">
+                    <strong>함수 형식:</strong> 코드는 다음 형식으로 실행됩니다: <code>function(message, result) { ... }</code><br>
+                    <strong>권장 반환값:</strong> 다음에 병합할 객체 또는 Promise: <code>result</code>— 참고: <a href="#custom-js-result-api">result API</a>.<br>
+                    <strong>사용 가능:</strong> <code>message</code> (이벤트 페이로드), <code>result</code> (현재 흐름 결과 상태), <code>printThermal(html, options)</code>, 그리고 <code>convertCurrency(value, targetCurrency, source)</code> 그리고 <code>convertToUSD(value, source)</code>.
+                </div>
+
+                <div class="panel">
+                    <strong>SSApp의 감열 인쇄:</strong> 프린터 선택과 용지 폭/안전 여백 보정은 다음에서 하세요: <em>프린터 제어</em>, 이어서 반환할 값: <code>printThermal('&lt;strong&gt;' + message.chatname + '&lt;/strong&gt;')</code>을 사용합니다. SSApp은 Windows 기본 프린터 API를 통해 작업을 조용히 대기열에 넣고 저장된 설정을 적용합니다. 흐름에서 다음과 같은 옵션으로 재정의할 수 있습니다: <code>{ width: '58mm', marginLeft: '3mm', marginRight: '3mm', marginTop: '2mm', marginBottom: '2mm', feed: '3mm', marginType: 'printableArea' }</code>을 사용하세요. Promise를 반환하면 Event Flow가 제출 완료를 기다리고 오류를 보고할 수 있습니다.
+                </div>
+
+                <!-- ─── Both nodes on canvas ─── -->
+                <figure class="screenshot">
+                    <img src="../../actions/img/both-nodes-canvas.png" alt="Custom Code 트리거와 Execute Custom Code 작업이 나란히 있는 캔버스">
+                    <figcaption>캔버스에 배치된 Custom Code 트리거(파랑)와 Execute Custom Code 작업(초록). 트리거 출력 포트에서 작업 입력 포트로 선을 연결하세요.</figcaption>
+                </figure>
+
+                <!-- ─── message API ─── -->
+                <h3 id="custom-js-message-api">객체 <code>message</code></h3>
+                <p>두 노드는 전체 이벤트 페이로드를 다음으로 받습니다: <code>message</code>. 아래 필드는 항상 사용 가능하며 플랫폼별 이벤트에는 추가 필드가 포함될 수 있습니다.</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>필드</th><th>데이터 유형</th><th>설명</th><th>예시</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>message.chatmessage</code></td><td>문자열</td><td>채팅 메시지 텍스트 (HTML 포함 가능)</td><td><code>"Hello stream!"</code></td></tr>
+                        <tr><td><code>message.chatname</code></td><td>문자열</td><td>발신자의 표시 이름</td><td><code>"CoolViewer"</code></td></tr>
+                        <tr><td><code>message.userid</code></td><td>문자열</td><td>플랫폼 사용자 ID</td><td><code>"12345678"</code></td></tr>
+                        <tr><td><code>message.type</code></td><td>문자열</td><td>소스 플랫폼 (소문자)</td><td><code>"twitch"</code>, <code>"youtube"</code>, <code>"kick"</code></td></tr>
+                        <tr><td><code>message.hasDonation</code></td><td>문자열</td><td>있으면 형식이 지정된 후원 문자열</td><td><code>"$5.00"</code>, <code>"500 bits"</code></td></tr>
+                        <tr><td><code>message.donoValue</code></td><td>숫자 / 문자열</td><td>소스가 제공하는 USD 환산 후원 값이며 유효한 0도 반영합니다. Event Flow의 대체 값: <code>currency.js</code> 다음 정규화 값을 환산한 값: <code>hasDonation</code> 표시를 기준 비교에 사용하며, 알 수 없는 이름의 단위는 100단위 = $0.01 USD로 계산합니다. 다음에서는 후원 값을 추출하지 않습니다: <code>chatmessage</code> 본문에서는 후원 값을 추출하지 않습니다.</td><td><code>5</code></td></tr>
+                        <tr><td><code>message.event</code></td><td>문자열</td><td>이벤트 유형 식별자</td><td><code>"new_follower"</code>, <code>"cheer"</code>, <code>"raid"</code></td></tr>
+                        <tr><td><code>message.membership</code></td><td>문자열</td><td>해당되는 경우 멤버십 상태</td><td><code>"MEMBERSHIP"</code></td></tr>
+                        <tr><td><code>message.subtitle</code></td><td>문자열</td><td>보조 설명 줄</td><td><code>"Member for 3 months"</code></td></tr>
+                        <tr><td><code>message.mod</code></td><td>불리언</td><td>발신자가 관리자임</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.subscriber</code></td><td>불리언</td><td>발신자가 구독자임</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.vip</code></td><td>불리언</td><td>발신자가 VIP 상태임</td><td><code>true</code></td></tr>
+                        <tr><td><code>message.chatimg</code></td><td>문자열</td><td>사용자 아바타 URL</td><td><code>"https://..."</code></td></tr>
+                        <tr><td><code>message.meta</code></td><td>객체</td><td>이벤트에 첨부된 임의의 구조화 데이터</td><td><code>{ viewers: 120 }</code></td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>통화 환산:</strong> 사용할 값: <code>convertCurrency(message.hasDonation, 'EUR', message.type)</code> 로 형식이 지정된 후원 표시를 EUR로 환산하세요. 숫자를 반환하며, 다음 상황에서는 <code>null</code> 를 반환합니다. 요청한 대상 통화가 지원되지 않는 경우입니다. 변환기는 Social Stream Ninja의 대략적인 내부 환율을 사용하며 외부 환전 서비스에 접속하지 않습니다.
+                </div>
+
+                <!-- ─── result API ─── -->
+                <h3 id="custom-js-result-api">작업이 반환하는 내용</h3>
+                <p>작업 코드에서 일반 객체를 반환하세요. 포함된 필드는 흐름의 다음 객체에 병합됩니다: <code>result</code> 객체입니다. 생략한 필드는 현재 값을 유지합니다.</p>
+
+                <table class="var-table">
+                    <thead>
+                        <tr><th>반환 필드</th><th>데이터 유형</th><th>효과</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>modified</code></td><td>불리언</td><td>설정: <code>true</code> 변경한 경우: <code>message</code> 필드를 바꿨을 때 사용합니다. 후속 노드에 페이로드가 수정되었음을 알립니다.</td></tr>
+                        <tr><td><code>message</code></td><td>객체</td><td>수정한 메시지를 다시 전달하여 후속 노드가 변경 사항을 받도록 하세요.</td></tr>
+                        <tr><td><code>blocked</code></td><td>불리언</td><td>설정: <code>true</code> 이면 메시지 표시와 릴레이를 차단합니다.</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>최소한의 안전한 반환:</strong> <code>return { modified: false, message };</code><br>
+                    아무것도 변경하지 않았더라도 다음을 반환하면 <code>message</code> 가 다음 노드로 계속 전달됩니다.
+                </div>
+
+                <!-- ─── Snippet Examples ─── -->
+                <h3 id="custom-js-examples">코드 예시</h3>
+                <p>해당하는 노드 유형의 JavaScript Code 입력란에 아래 예시를 복사하세요.</p>
+
+                <h4 class="snippet-heading">트리거 코드 예시 — 반환 형식: <code>true</code> 이면 흐름을 계속합니다</h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">키워드 일치 (대소문자 구분 없음)</div>
+                    <div class="snippet-desc">메시지에 특정 단어나 문구가 있을 때만 흐름을 계속합니다.</div>
+                    <div class="code-js">// Matches "!hello" anywhere in the message
+return (message.chatmessage || '').toLowerCase().includes('!hello');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">정규식 명령 감지</div>
+                    <div class="snippet-desc">지정된 목록의 명령으로 시작하는 메시지를 일치시킵니다(예: <code>!queue</code>, <code>!raffle</code>, <code>!enter</code>).</div>
+                    <div class="code-js">return /^!(queue|raffle|enter)\b/i.test(message.chatmessage || '');</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">기준 금액 이상 후원</div>
+                    <div class="snippet-desc">후원이 최소 금액 이상일 때만 실행합니다.</div>
+                    <div class="code-js">const amount = message.donoValue !== undefined && message.donoValue !== null && message.donoValue !== ''
+  ? Number(message.donoValue)
+  : (typeof convertToUSD === 'function' ? convertToUSD(message.hasDonation || '', message.type || '') : Number(String(message.hasDonation || '').replace(/[^0-9.]/g, '') || 0));
+return amount >= 5;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">EUR 금액 구간에 해당하는 YouTube Super Chat 또는 Super Sticker</div>
+                    <div class="snippet-desc">일반 YouTube 후원 표시를 EUR로 환산하고 Jewels/Gifts를 제외한 뒤 소리 또는 시각 효과 구간을 하나 선택합니다.</div>
+                    <div class="code-js">var eventName = String(message.event || '').toLowerCase();
+if (eventName !== 'superchat' &amp;&amp; eventName !== 'supersticker') return false;
+
+var eurValue = convertCurrency(message.hasDonation || '', 'EUR', message.type || '');
+if (typeof eurValue !== 'number' || !isFinite(eurValue)) return false;
+
+message.eurValue = eurValue;
+return eurValue &gt;= 10 &amp;&amp; eurValue &lt; 25;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">플랫폼 필터</div>
+                    <div class="snippet-desc">특정 플랫폼의 이벤트만 처리합니다.</div>
+                    <div class="code-js">return ['twitch', 'youtube'].includes(message.type);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">구독자 / VIP / 관리자 조건</div>
+                    <div class="snippet-desc">권한이 있는 사용자만 흐름을 통과하게 합니다.</div>
+                    <div class="code-js">return !!(message.subscriber || message.vip || message.mod);</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">복합 조건 — VIP + 키워드</div>
+                    <div class="snippet-desc">내장 트리거로 처리할 수 없는 역할 검사와 메시지 내용을 하나의 표현식으로 결합합니다.</div>
+                    <div class="code-js">const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test(message.chatmessage || '');
+return isPrivileged && isCommand;</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">메시지 길이 조건</div>
+                    <div class="snippet-desc">충분한 내용이 있는 메시지만 처리합니다(TTS나 릴레이에서 이모지 하나만 보내는 도배를 피하는 데 유용).</div>
+                    <div class="code-js">return (message.chatmessage || '').replace(/<[^>]+>/g, '').trim().length >= 20;</div>
+                </div>
+
+                <h4 class="snippet-heading" style="margin-top:36px;">작업 코드 예시 — 반환 형식: <code>{ modified, message }</code></h4>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">메시지에 배지 또는 태그 추가</div>
+                    <div class="snippet-desc">이 작업을 통과하는 모든 메시지 끝에 시각적인 표시를 추가합니다.</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').trimEnd() + ' ✅';
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">조건부 메시지 차단</div>
+                    <div class="snippet-desc">내용을 검사하여 규칙과 일치하면 메시지를 알림 없이 버립니다. 키워드 필터로 표현할 수 없는 스팸 패턴에 유용합니다.</div>
+                    <div class="code-js">const text = (message.chatmessage || '').toLowerCase();
+const spamPatterns = ['buy followers', 'free nitro', 'click here'];
+
+if (spamPatterns.some(p => text.includes(p))) {
+    return { blocked: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">@멘션 제거</div>
+                    <div class="snippet-desc">다른 플랫폼으로 전달하기 전에 메시지에서 모든 @username 멘션을 제거합니다.</div>
+                    <div class="code-js">message.chatmessage = (message.chatmessage || '').replace(/@\w+/g, '').trim();
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">후원 안내 문구 구성</div>
+                    <div class="snippet-desc">후원이 있을 때 chatmessage를 일관된 안내 문자열로 다시 작성합니다.</div>
+                    <div class="code-js">const amount = parseFloat(message.donoValue || 0);
+if (amount > 0) {
+    const note = (message.chatmessage || '').trim();
+    message.chatmessage = `💰 ${message.chatname} donated $${amount.toFixed(2)}!`
+        + (note ? ` "${note}"` : '');
+    return { modified: true, message };
+}
+return { modified: false, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">후속 노드용 라우팅 메타데이터 추가</div>
+                    <div class="snippet-desc">메시지에 사용자 지정 필드를 추가하여 이후의 <em>채팅 릴레이(Relay Chat)</em> 또는 <em>메시지 전송 (Send Message)</em> 작업에서 템플릿 변수로 읽을 수 있게 합니다 (<code>{meta}</code>).</div>
+                    <div class="code-js">message.meta = message.meta || {};
+
+// Assign a donation tier so the next node can use {meta} to decide overlay colour
+const amount = parseFloat(message.donoValue || 0);
+message.meta.donationTier = amount >= 20 ? 'gold' : amount >= 5 ? 'silver' : 'bronze';
+
+return { modified: true, message };</div>
+                </div>
+
+                <div class="snippet-block">
+                    <div class="snippet-label">플랫폼별 메시지 접두사</div>
+                    <div class="snippet-desc">플랫폼 간 릴레이 시 플랫폼 표시를 앞에 붙여 시청자가 출처를 알 수 있게 합니다.</div>
+                    <div class="code-js">const labels = {
+    twitch:  '[Twitch]',
+    youtube: '[YouTube]',
+    kick:    '[Kick]',
+    tiktok:  '[TikTok]',
+};
+const label = labels[message.type] || `[${message.type || 'Chat'}]`;
+message.chatmessage = `${label} ${message.chatname}: ${message.chatmessage || ''}`;
+return { modified: true, message };</div>
+                </div>
+
+                <!-- ─── Complete worked example ─── -->
+                <h3 id="custom-js-example-flow">전체 예시 — VIP 기능 요청 봇</h3>
+                <p>이 흐름이 수신하는 대상: <code>!feature &lt;text&gt;</code> 을 구독자, VIP, 관리자로부터 받아 기능 요청 형식으로 바꾸고 Discord 등의 두 번째 대상으로 전달합니다.</p>
+
+                <div class="diagram">
+┌──────────────────────┐     ┌──────────────────────────┐     ┌──────────────────┐
+│  Custom Code Trigger │────▶│ Execute Custom Code Action│────▶│  Relay Chat      │
+│                      │     │                          │     │  (to Discord)    │
+│  Gate: VIP/sub/mod   │     │  Reformat message text   │     │                  │
+│  + starts with       │     │  → "📋 Feature Request   │     │                  │
+│    !feature          │     │     from {name}: {text}" │     │                  │
+└──────────────────────┘     └──────────────────────────┘     └──────────────────┘</div>
+
+                <p><strong>1단계 — Custom Code 트리거</strong> (트리거의 JavaScript Code 입력란에 붙여 넣으세요):</p>
+                <div class="code-js">// Only let VIPs, subscribers, and mods through, and only for !feature commands
+const isPrivileged = !!(message.subscriber || message.vip || message.mod);
+const isCommand    = /^!feature\b/i.test((message.chatmessage || '').trim());
+return isPrivileged && isCommand;</div>
+
+                <p><strong>2단계 — Execute Custom Code 작업</strong> (작업의 JavaScript Code 입력란에 붙여 넣으세요):</p>
+                <div class="code-js">// Strip the "!feature" command word and format a clean announcement
+const featureText = (message.chatmessage || '')
+    .replace(/^!feature\s*/i, '')
+    .trim();
+
+if (!featureText) {
+    // No text after the command: block rather than relay an empty request
+    return { blocked: true, message };
+}
+
+message.chatmessage = `📋 Feature request from ${message.chatname}: ${featureText}`;
+return { modified: true, message };</div>
+
+                <p><strong>3단계 — Relay Chat 작업</strong>: 작업 뒤에 일반 Relay Chat 노드를 추가하고 Discord 등의 대상을 설정하세요. 여기에는 사용자 지정 코드가 필요하지 않습니다. 재구성한 <code>message.chatmessage</code> 가 자동으로 전달됩니다.</p>
+
+                <div class="callout tip">
+                    <strong>흐름 테스트.</strong> 다음 버튼을 클릭하세요: <strong>흐름 테스트 (Test Flow)</strong> (에디터 오른쪽 위). 생방송 없이도 처리 흐름으로 모의 메시지를 보낼 수 있습니다. chatname을 구독자 이름으로 설정하고 다음과 같은 메시지를 추가하세요: <code>!feature dark mode support</code>을 보내고 Relay Chat 대상에 재구성된 문자열이 수신되는지 확인하세요.
+                </div>
+
+                <figure class="screenshot">
+                    <img src="../../actions/img/test-panel.png" alt="가상 테스트 이벤트를 전송하는 Test Flow 패널">
+                    <figcaption>Test Flow 패널. 트리거 조건에 맞게 입력한 뒤 다음을 클릭하세요: <em>테스트 실행 (Run Test)</em> 로 전체 처리 과정을 검증하세요.</figcaption>
+                </figure>
+
+                <!-- ─── Security note ─── -->
+                <h3 id="custom-js-security">보안 고려 사항</h3>
+                <div class="callout warn">
+                    <strong>사용자 지정 코드는 렌더러 프로세스 권한으로 실행됩니다.</strong> SSApp에서 Custom JS 노드의 코드는 다음에 완전히 접근할 수 있습니다: <code>window</code> 객체와 preload 스크립트가 제공하는 모든 API(예: <code>window.ninjafy</code>)가 가능합니다. 가져오는 흐름 파일은 실행 코드처럼 취급하고 신뢰하는 출처의 흐름만 가져오세요.
+                </div>
+                <ul>
+                    <li><strong>네트워크 샌드박스가 없습니다.</strong> 작업 코드에서 호출 가능한 함수: <code>fetch()</code>가 가능합니다. 다른 사람이 공유한 흐름은 활성화하기 전에 JS를 검토하세요.</li>
+                    <li><strong>오류가 처리됩니다.</strong> 코드에서 런타임 오류가 발생하면 반환되는 값: <code>false</code> (트리거)을 반환하거나 아무 작업도 하지 않으며(작업), DevTools 콘솔에 기록합니다. 흐름이 중단되지는 않습니다.</li>
+                    <li><strong>구문 오류도 처리됩니다.</strong> 오류 유형 <code>SyntaxError</code> 도 컴파일 시 같은 방식으로 처리됩니다. 노드가 아무 동작도 하지 않는 것 같다면 DevTools(F12)를 확인하세요.</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

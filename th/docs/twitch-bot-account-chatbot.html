@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="th" data-site-root="../../" data-site-language="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/th/docs/twitch-bot-account-chatbot.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="th_TH">
+    <meta property="og:url" content="https://socialstream.ninja/th/docs/twitch-bot-account-chatbot.html">
+    <meta property="og:title" content="บัญชีบอตสำหรับตอบกลับอัตโนมัติ - Social Stream Ninja">
+    <meta property="og:description" content="ใช้บัญชีบอต Twitch WebSocket หรือแหล่งข้อมูลตอบกลับอย่างเดียวแยก เพื่อส่งคำตอบอัตโนมัติของ Social Stream Ninja จากอีกบัญชี">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="โลโก้ Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/th/docs/twitch-bot-account-chatbot.html">
+    <meta name="twitter:title" content="บัญชีบอตสำหรับตอบกลับอัตโนมัติ - Social Stream Ninja">
+    <meta name="twitter:description" content="ใช้บัญชีบอต Twitch WebSocket หรือแหล่งข้อมูลตอบกลับอย่างเดียวแยก เพื่อส่งคำตอบอัตโนมัติของ Social Stream Ninja จากอีกบัญชี">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="โลโก้ Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บัญชีบอตสำหรับตอบกลับอัตโนมัติ - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="ใช้บัญชีบอต Twitch WebSocket หรือแหล่งข้อมูลตอบกลับอย่างเดียวแยก เพื่อส่งคำตอบอัตโนมัติของ Social Stream Ninja จากอีกบัญชี">
+    <style>
+        .bot-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin: 22px 0;
+        }
+        .bot-guide-card {
+            background: var(--card-bg, #fff);
+            border: 1px solid rgba(127, 127, 127, 0.22);
+            border-radius: 8px;
+            padding: 18px;
+        }
+        .bot-guide-card h3 {
+            margin-top: 0;
+        }
+        .bot-guide-shot {
+            display: block;
+            width: auto;
+            max-width: 100%;
+            border: 1px solid rgba(127, 127, 127, 0.28);
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            margin: 16px auto 8px;
+        }
+        .bot-guide-caption {
+            color: var(--text-secondary);
+            font-size: 1.4rem;
+            margin-bottom: 22px;
+        }
+        .dark-mode .bot-guide-card {
+            background: #161b22;
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="th">
+<script id="ssn-site-language" type="application/json">{"language":"th","page":"docs/twitch-bot-account-chatbot.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"เปลี่ยนเป็นธีมสว่าง","Switch to dark theme":"เปลี่ยนเป็นธีมมืด","Light mode":"โหมดสว่าง","Dark mode":"โหมดมืด","Open navigation menu":"เปิดเมนูนำทาง","Close navigation menu":"ปิดเมนูนำทาง","Copy this document as Markdown to the clipboard":"คัดลอกเอกสารนี้ในรูปแบบ Markdown ไปยังคลิปบอร์ด","Copy Markdown":"คัดลอก Markdown","Copying…":"กำลังคัดลอก…","Markdown copied":"คัดลอก Markdown แล้ว","Copy failed":"คัดลอกไม่สำเร็จ","Copy comprehensive Markdown for an AI assistant":"คัดลอก Markdown ฉบับครบถ้วนสำหรับผู้ช่วย AI","Copy this documentation page as Markdown for an AI assistant":"คัดลอกเอกสารหน้านี้เป็น Markdown สำหรับผู้ช่วย AI"},"strings":{", and its separate session at the top.":" และเซสชันแยกของตัวเองที่ด้านบน",", click":" คลิก",", the separate bot source takes priority. SSN will not also send the same reply through the attached Twitch WebSocket bot account.":" แหล่งข้อมูลบอตแยกจะมีลำดับความสำคัญสูงกว่า SSN จะไม่ส่งคำตอบเดียวกันซ้ำผ่านบัญชีบอตที่แนบกับ Twitch WebSocket","A separate SSApp Twitch source configured as Reply only with Role Bot and a bot-account browser session":"แหล่งข้อมูล Twitch แยกใน SSApp ที่ตั้งเป็น Reply only พร้อม Role Bot และเซสชันเบราว์เซอร์ของบัญชีบอต","Account role":"บทบาทบัญชี (Account role)","Account roles can support more advanced routing setups.":"บทบาทบัญชีรองรับการกำหนดเส้นทางขั้นสูงขึ้นได้","Activate the bot source and leave it running whenever it needs to send replies.":"เปิดใช้งานแหล่งข้อมูลบอตและให้ทำงานตลอดเวลาที่ต้องส่งคำตอบ","Add the same channel or source again. If SSApp asks whether to make it a reply-only bot source, choose":"เพิ่มช่องหรือแหล่งข้อมูลเดิมอีกครั้ง หาก SSApp ถามว่าจะทำเป็นแหล่งข้อมูลบอตสำหรับตอบกลับอย่างเดียวหรือไม่ ให้เลือก","Add your normal source for capturing chat.":"เพิ่มแหล่งข้อมูลปกติสำหรับเก็บแชต","Automatic reply account: @BotName":"บัญชีตอบกลับอัตโนมัติ: @BotName","Automatic reply account: Main account":"บัญชีตอบกลับอัตโนมัติ: บัญชีหลัก","Best for":"เหมาะกับ","Bot":"บอต","Bot Accounts for Automatic Replies":"บัญชีบอตสำหรับตอบกลับอัตโนมัติ","Bot Accounts for Automatic Replies - Social Stream Ninja":"บัญชีบอตสำหรับตอบกลับอัตโนมัติ - Social Stream Ninja","Bot reply-only (no capture)":"บอตตอบอย่างเดียว (ไม่เก็บข้อมูล)","Both methods make automatic replies appear under a bot account instead of your main account. They do it in different ways.":"ทั้งสองวิธีทำให้คำตอบอัตโนมัติปรากฏในนามบัญชีบอตแทนบัญชีหลัก แต่ใช้วิธีการต่างกัน","Browser Session Settings":"การตั้งค่าเซสชันเบราว์เซอร์ (Browser Session Settings)","Can work with other platforms that support outgoing replies.":"ใช้กับแพลตฟอร์มอื่นที่รองรับการส่งคำตอบกลับได้","Chatbot and scheduled automatic replies use the bot account.":"แชตบอตและคำตอบอัตโนมัติตามเวลาใช้บัญชีบอต","Choose the simple Twitch WebSocket option or the existing separate reply-only source method.":"เลือกตัวเลือก Twitch WebSocket แบบง่าย หรือวิธีแหล่งข้อมูลตอบกลับอย่างเดียวแยกต่างหากที่มีอยู่เดิม","Click":"คลิก","Click the source's":"คลิก","Commands & API":"คำสั่งและ API","Connect bot account":"เชื่อมบัญชีบอต (Connect bot account)","Cons":"ข้อเสีย","Download":"ดาวน์โหลด","Enter this value:":"ป้อนค่านี้:","Extra source?":"ต้องเพิ่มแหล่งข้อมูล?","Features":"ฟีเจอร์","Guides":"คู่มือ","Hire":"จ้างงาน","Home":"หน้าแรก","If Both Methods Are Configured":"หากตั้งค่าทั้งสองวิธี","If reply-only is disabled, the second source can capture duplicate messages.":"หากปิด Reply only แหล่งข้อมูลที่สองอาจเก็บข้อความซ้ำ","In SSApp, find your Twitch source and make sure":"ใน SSApp หาแหล่งข้อมูล Twitch แล้วตรวจสอบว่า","In Twitch Shared Chat, bot replies stay in this source's channel.":"ใน Twitch Shared Chat คำตอบบอตจะอยู่ในช่องของแหล่งข้อมูลนี้","In the settings panel on the right, switch to full mode and search for":"ในแผงตั้งค่าด้านขวา เปลี่ยนเป็นโหมดเต็มแล้วค้นหา","Inspiration":"ไอเดียสร้างสรรค์","It does not create another source or permanent browser session.":"วิธีนี้ไม่ได้สร้างแหล่งใหม่หรือเซสชันเบราว์เซอร์ถาวร","It is not available for Twitch Standard mode, other platforms, or the browser extension.":"ไม่มีตัวเลือกนี้ในโหมด Twitch Standard แพลตฟอร์มอื่น หรือส่วนขยายเบราว์เซอร์","Main navigation":"เมนูหลัก","Manual sends still use the main Twitch account.":"การส่งด้วยตนเองยังใช้บัญชี Twitch หลัก","Method":"วิธี","Method 1: Twitch WebSocket Bot Account":"วิธีที่ 1: บัญชีบอต Twitch WebSocket","Method 2: Separate Reply-Only Bot Source":"วิธีที่ 2: แหล่งข้อมูลบอตตอบกลับอย่างเดียวแยกต่างหาก","More settings must be kept in sync.":"ต้องดูแลการตั้งค่าหลายส่วนให้ตรงกัน","No":"ไม่มี","No second source to create or keep running.":"ไม่ต้องสร้างหรือเปิดแหล่งข้อมูลที่สองไว้","On the second source, open":"ในแหล่งข้อมูลที่สอง ให้เปิด","Open its gear menu. Enable":"เปิดเมนูรูปเฟือง แล้วเปิด","Open navigation menu":"เปิดเมนูนำทาง","Overlay Gallery":"แกลเลอรีโอเวอร์เลย์","Pros":"ข้อดี","Replies still use the main account:":"คำตอบยังใช้บัญชีหลัก:","Reply only":"ตอบกลับอย่างเดียว (Reply only)","Requires a second source and a separate session.":"ต้องมีแหล่งข้อมูลที่สองและเซสชันแยก","Review the explanation, then click":"อ่านคำอธิบาย แล้วคลิก","Role: Bot":"บทบาท: บอต (Role: Bot)","SSApp Automatic reply account dialog with the Connect bot account button":"กล่อง Automatic reply account ของ SSApp พร้อมปุ่ม Connect bot account","SSApp Twitch WebSocket source with its gear menu open and Automatic reply account set to Main account":"แหล่งข้อมูล Twitch WebSocket ใน SSApp ที่เปิดเมนูรูปเฟืองและตั้ง Automatic reply account เป็น Main account","SSApp opens a separate Twitch sign-in window. Sign in with the account that should send bot replies.":"SSApp เปิดหน้าต่างลงชื่อเข้าใช้ Twitch แยก ให้ลงชื่อเข้าใช้บัญชีที่ควรส่งคำตอบบอต","SSN setting Send bot replies through these SSApp account roles filled with bot":"การตั้งค่า Send bot replies through these SSApp account roles ของ SSN ที่ป้อนค่า bot","Send bot replies through these SSApp account roles":"ส่งคำตอบบอตผ่านบทบาทบัญชี SSApp เหล่านี้","Separate reply-only bot source":"แหล่งข้อมูลบอตตอบกลับอย่างเดียวแยกต่างหาก","Set":"ตั้งค่า","Sign in":"ลงชื่อเข้าใช้","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"โลโก้ Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja สัญญาอนุญาต GPLv3.0","Support":"การสนับสนุน","Supported Sites":"เว็บไซต์ที่รองรับ","Switch theme":"เปลี่ยนธีม","The attached Twitch bot cannot send:":"บอต Twitch ที่แนบไว้ส่งไม่ได้:","The bot must be a moderator, or the channel owner may need to reconnect once to approve Twitch bot access.":"บอตต้องเป็นผู้ดูแล หรือเจ้าของช่องอาจต้องเชื่อมต่อใหม่หนึ่งครั้งเพื่ออนุมัติสิทธิ์บอต Twitch","The bot source has its own browser session and source controls.":"แหล่งข้อมูลบอตมีเซสชันเบราว์เซอร์และตัวควบคุมแหล่งข้อมูลของตัวเอง","The bot source must be active to send.":"แหล่งข้อมูลบอตต้องทำงานอยู่จึงจะส่งได้","The easiest Twitch-only setup":"การตั้งค่าที่ง่ายที่สุดสำหรับ Twitch โดยเฉพาะ","The finished second source shows":"แหล่งข้อมูลที่สองที่ตั้งค่าเสร็จจะแสดง","The new attached-account method is only for Twitch WebSocket sources in the SSApp desktop app.":"วิธีแนบบัญชีใหม่นี้ใช้เฉพาะแหล่งข้อมูล Twitch WebSocket ในแอปเดสก์ท็อป SSApp","The new option is missing:":"ไม่พบตัวเลือกใหม่:","The screenshots below use Twitch, but this method is not Twitch-only. It can also be used with other SSApp sources that support signing in and sending replies.":"ภาพหน้าจอด้านล่างใช้ Twitch แต่วิธีนี้ไม่ได้จำกัดเฉพาะ Twitch ใช้กับแหล่งข้อมูล SSApp อื่นที่รองรับการลงชื่อเข้าใช้และส่งคำตอบกลับได้ด้วย","The separate sign-in window prevents your normal browser's Twitch login from silently choosing the wrong account.":"หน้าต่างลงชื่อเข้าใช้แยกช่วยป้องกันไม่ให้การเข้าสู่ระบบ Twitch ในเบราว์เซอร์ปกติเลือกบัญชีผิดโดยไม่แจ้ง","The separate source captures duplicate chat:":"แหล่งข้อมูลแยกเก็บแชตซ้ำ:","The separate source sends nothing:":"แหล่งข้อมูลแยกไม่ส่งอะไร:","The wrong Twitch account was selected:":"เลือกบัญชี Twitch ผิด:","This attaches a second Twitch login to your existing WebSocket source.":"วิธีนี้จะเชื่อมการเข้าสู่ระบบ Twitch อีกบัญชีเข้ากับแหล่ง WebSocket ที่มีอยู่","This is the original SSApp method and it is still supported. It creates a second source, gives that source its own browser session, and routes automatic replies through sources with the":"นี่คือวิธี SSApp ดั้งเดิมที่ยังรองรับอยู่ โดยสร้างแหล่งข้อมูลที่สอง ให้เซสชันเบราว์เซอร์ของตัวเอง และกำหนดเส้นทางคำตอบอัตโนมัติผ่านแหล่งข้อมูลที่มีบทบาท","This section appears only when that Twitch source is using WebSocket mode.":"ส่วนนี้ปรากฏเฉพาะเมื่อแหล่งข้อมูล Twitch ใช้โหมด WebSocket","Tip: Click or tap any screenshot to open it at full size.":"เคล็ดลับ: คลิกหรือแตะภาพหน้าจอเพื่อเปิดขนาดเต็ม","Troubleshooting":"การแก้ปัญหา","Twitch Standard mode or another platform that can send replies":"โหมด Twitch Standard หรือแพลตฟอร์มอื่นที่ส่งคำตอบกลับได้","Twitch WebSocket bot account":"บัญชีบอต Twitch WebSocket","Twitch WebSocket sending":"การส่งผ่าน Twitch WebSocket","Twitch only.":"เฉพาะ Twitch","Under":"ใน","Use a Twitch WebSocket bot account or a separate reply-only source to send Social Stream Ninja automatic replies from another account.":"ใช้บัญชีบอต Twitch WebSocket หรือแหล่งข้อมูลตอบกลับอย่างเดียวแยก เพื่อส่งคำตอบอัตโนมัติของ Social Stream Ninja จากอีกบัญชี","Use one method for a given reply path. If":"ใช้วิธีเดียวสำหรับเส้นทางตอบกลับหนึ่งเส้นทาง หาก","Very little setup after the WebSocket source is connected.":"ตั้งค่าเพิ่มน้อยมากหลังเชื่อมแหล่งข้อมูล WebSocket แล้ว","WebSocket":"WebSocket","WebSocket mode only.":"เฉพาะโหมด WebSocket","When the sign-in finishes, the source menu changes to":"เมื่อลงชื่อเข้าใช้เสร็จ เมนูแหล่งข้อมูลเปลี่ยนเป็น","Which Method Should I Use?":"ควรใช้วิธีใด?","Works with Twitch Standard mode.":"ใช้ได้กับโหมด Twitch Standard","Yes":"ใช่","activate it, confirm it is signed in as the bot, and verify the routing field contains exactly":"เปิดใช้งาน ยืนยันว่าลงชื่อเข้าใช้เป็นบอต และตรวจว่าช่องกำหนดเส้นทางมีค่าตรงทุกตัวเป็น","and cycle":"แล้วสลับ","and use a separate session such as":"และใช้เซสชันแยก เช่น","bot replies":"bot replies","choose the account again and sign into the separate SSApp Twitch window with the bot account.":"เลือกบัญชีใหม่ แล้วลงชื่อเข้าใช้หน้าต่าง Twitch แยกของ SSApp ด้วยบัญชีบอต","confirm this is the SSApp desktop app and the Twitch source is set to WebSocket mode.":"ยืนยันว่าเป็นแอปเดสก์ท็อป SSApp และแหล่งข้อมูล Twitch ตั้งเป็นโหมด WebSocket","enable":"เปิดใช้","gear button":"ปุ่มรูปเฟืองของแหล่งข้อมูล","in this field. The two relay-role fields above it are separate settings and can stay blank.":"ในช่องนี้ ช่องบทบาทส่งต่อสองช่องด้านบนเป็นการตั้งค่าแยกและปล่อยว่างได้","is configured as":"ตั้งเป็น","is selected.":"ถูกเลือกอยู่","make the bot a moderator. If it is not a moderator, reconnect the main Twitch account once using the channel owner and approve the requested permission.":"ให้บอตเป็นผู้ดูแล หากไม่ใช่ผู้ดูแล ให้เชื่อมบัญชี Twitch หลักใหม่หนึ่งครั้งด้วยบัญชีเจ้าของช่องและอนุมัติสิทธิ์ที่ร้องขอ","on that second source and sign in with the bot account.":"บนแหล่งข้อมูลที่สองนั้น แล้วลงชื่อเข้าใช้ด้วยบัญชีบอต","role.":"ดังกล่าว","to":"เป็น","until it says":"จนแสดงว่า","verify the attached account is shown by username, or verify the separate source says":"ตรวจสอบว่าบัญชีที่แนบแสดงชื่อผู้ใช้ หรือแหล่งข้อมูลแยกแสดงว่า"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/twitch-bot-account-chatbot.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="เมนูหลัก"><a href="../index.html">หน้าแรก</a><a href="features.html">ฟีเจอร์</a><a href="inspiration.html" class="site-priority-inspiration">ไอเดียสร้างสรรค์</a><a href="download.html">ดาวน์โหลด</a><a href="guides.html">คู่มือ</a><a href="commands.html">คำสั่งและ API</a><a href="supported-sites.html">เว็บไซต์ที่รองรับ</a><a href="overlay-gallery.html" class="site-priority-gallery">แกลเลอรีโอเวอร์เลย์</a><a href="services.html" class="site-priority-hire">จ้างงาน</a><a href="support.html">การสนับสนุน</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="ไทย"><span aria-hidden="true">🌐 </span><span lang="th">ไทย</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/twitch-bot-account-chatbot.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/twitch-bot-account-chatbot.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/twitch-bot-account-chatbot.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/twitch-bot-account-chatbot.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/twitch-bot-account-chatbot.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/twitch-bot-account-chatbot.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/twitch-bot-account-chatbot.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/twitch-bot-account-chatbot.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/twitch-bot-account-chatbot.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/twitch-bot-account-chatbot.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/twitch-bot-account-chatbot.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/twitch-bot-account-chatbot.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/twitch-bot-account-chatbot.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/twitch-bot-account-chatbot.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/twitch-bot-account-chatbot.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/twitch-bot-account-chatbot.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="twitch-bot-account-chatbot.html" lang="th" hreflang="th" aria-current="true">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="เปลี่ยนธีม"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="เปิดเมนูนำทาง" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>บัญชีบอตสำหรับตอบกลับอัตโนมัติ</h1>
+            <p>เลือกตัวเลือก Twitch WebSocket แบบง่าย หรือวิธีแหล่งข้อมูลตอบกลับอย่างเดียวแยกต่างหากที่มีอยู่เดิม</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>ควรใช้วิธีใด?</h2>
+                <p>ทั้งสองวิธีทำให้คำตอบอัตโนมัติปรากฏในนามบัญชีบอตแทนบัญชีหลัก แต่ใช้วิธีการต่างกัน</p>
+                <div class="guide-note">
+                    <p><strong>วิธีแนบบัญชีใหม่นี้ใช้เฉพาะแหล่งข้อมูล Twitch WebSocket ในแอปเดสก์ท็อป SSApp</strong> ไม่มีตัวเลือกนี้ในโหมด Twitch Standard แพลตฟอร์มอื่น หรือส่วนขยายเบราว์เซอร์</p>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr>
+                            <th>วิธี</th>
+                            <th>เหมาะกับ</th>
+                            <th>ต้องเพิ่มแหล่งข้อมูล?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Method"><strong>บัญชีบอต Twitch WebSocket</strong></td>
+                            <td data-label="Best for">การตั้งค่าที่ง่ายที่สุดสำหรับ Twitch โดยเฉพาะ</td>
+                            <td data-label="Extra source?">ไม่มี</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Method"><strong>แหล่งข้อมูลบอตตอบกลับอย่างเดียวแยกต่างหาก</strong></td>
+                            <td data-label="Best for">โหมด Twitch Standard หรือแพลตฟอร์มอื่นที่ส่งคำตอบกลับได้</td>
+                            <td data-label="Extra source?">ใช่</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>วิธีที่ 1: บัญชีบอต Twitch WebSocket</h2>
+                <p>วิธีนี้จะเชื่อมการเข้าสู่ระบบ Twitch อีกบัญชีเข้ากับแหล่ง WebSocket ที่มีอยู่ <strong>วิธีนี้ไม่ได้สร้างแหล่งใหม่หรือเซสชันเบราว์เซอร์ถาวร</strong></p>
+                <p><small>เคล็ดลับ: คลิกหรือแตะภาพหน้าจอเพื่อเปิดขนาดเต็ม</small></p>
+                <ol class="guide-steps">
+                    <li>ใน SSApp หาแหล่งข้อมูล Twitch แล้วตรวจสอบว่า <strong>WebSocket</strong> ถูกเลือกอยู่</li>
+                    <li>คลิก <strong>ปุ่มรูปเฟืองของแหล่งข้อมูล</strong>.</li>
+                    <li>ใน <strong>การส่งผ่าน Twitch WebSocket</strong> คลิก <strong>บัญชีตอบกลับอัตโนมัติ: บัญชีหลัก</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-websocket-bot-menu.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-websocket-bot-menu.png" alt="แหล่งข้อมูล Twitch WebSocket ใน SSApp ที่เปิดเมนูรูปเฟืองและตั้ง Automatic reply account เป็น Main account">
+                </a>
+                <p class="bot-guide-caption">ส่วนนี้ปรากฏเฉพาะเมื่อแหล่งข้อมูล Twitch ใช้โหมด WebSocket</p>
+
+                <ol class="guide-steps" start="4">
+                    <li>อ่านคำอธิบาย แล้วคลิก <strong>เชื่อมบัญชีบอต (Connect bot account)</strong>.</li>
+                    <li>SSApp เปิดหน้าต่างลงชื่อเข้าใช้ Twitch แยก ให้ลงชื่อเข้าใช้บัญชีที่ควรส่งคำตอบบอต</li>
+                    <li>เมื่อลงชื่อเข้าใช้เสร็จ เมนูแหล่งข้อมูลเปลี่ยนเป็น <strong>บัญชีตอบกลับอัตโนมัติ: @BotName</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-bot-account-dialog.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-bot-account-dialog.png" alt="กล่อง Automatic reply account ของ SSApp พร้อมปุ่ม Connect bot account">
+                </a>
+                <p class="bot-guide-caption">หน้าต่างลงชื่อเข้าใช้แยกช่วยป้องกันไม่ให้การเข้าสู่ระบบ Twitch ในเบราว์เซอร์ปกติเลือกบัญชีผิดโดยไม่แจ้ง</p>
+
+                <div class="bot-guide-grid">
+                    <div class="bot-guide-card">
+                        <h3>ข้อดี</h3>
+                        <ul class="guide-list">
+                            <li>ไม่ต้องสร้างหรือเปิดแหล่งข้อมูลที่สองไว้</li>
+                            <li>ตั้งค่าเพิ่มน้อยมากหลังเชื่อมแหล่งข้อมูล WebSocket แล้ว</li>
+                            <li>แชตบอตและคำตอบอัตโนมัติตามเวลาใช้บัญชีบอต</li>
+                            <li>ใน Twitch Shared Chat คำตอบบอตจะอยู่ในช่องของแหล่งข้อมูลนี้</li>
+                        </ul>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>ข้อเสีย</h3>
+                        <ul class="guide-list">
+                            <li>เฉพาะ Twitch</li>
+                            <li>เฉพาะโหมด WebSocket</li>
+                            <li>การส่งด้วยตนเองยังใช้บัญชี Twitch หลัก</li>
+                            <li>บอตต้องเป็นผู้ดูแล หรือเจ้าของช่องอาจต้องเชื่อมต่อใหม่หนึ่งครั้งเพื่ออนุมัติสิทธิ์บอต Twitch</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>วิธีที่ 2: แหล่งข้อมูลบอตตอบกลับอย่างเดียวแยกต่างหาก</h2>
+                <p>นี่คือวิธี SSApp ดั้งเดิมที่ยังรองรับอยู่ โดยสร้างแหล่งข้อมูลที่สอง ให้เซสชันเบราว์เซอร์ของตัวเอง และกำหนดเส้นทางคำตอบอัตโนมัติผ่านแหล่งข้อมูลที่มีบทบาท <code>bot</code> ดังกล่าว</p>
+                <p>ภาพหน้าจอด้านล่างใช้ Twitch แต่วิธีนี้ไม่ได้จำกัดเฉพาะ Twitch ใช้กับแหล่งข้อมูล SSApp อื่นที่รองรับการลงชื่อเข้าใช้และส่งคำตอบกลับได้ด้วย</p>
+                <ol class="guide-steps">
+                    <li>เพิ่มแหล่งข้อมูลปกติสำหรับเก็บแชต</li>
+                    <li>เพิ่มช่องหรือแหล่งข้อมูลเดิมอีกครั้ง หาก SSApp ถามว่าจะทำเป็นแหล่งข้อมูลบอตสำหรับตอบกลับอย่างเดียวหรือไม่ ให้เลือก <strong>ใช่</strong>.</li>
+                    <li>ในแหล่งข้อมูลที่สอง ให้เปิด <strong>การตั้งค่าเซสชันเบราว์เซอร์ (Browser Session Settings)</strong> และใช้เซสชันแยก เช่น <code>bot-account</code>.</li>
+                    <li>คลิก <strong>ลงชื่อเข้าใช้</strong> บนแหล่งข้อมูลที่สองนั้น แล้วลงชื่อเข้าใช้ด้วยบัญชีบอต</li>
+                    <li>เปิดเมนูรูปเฟือง แล้วเปิด <strong>บอตตอบอย่างเดียว (ไม่เก็บข้อมูล)</strong> แล้วสลับ <strong>บทบาทบัญชี (Account role)</strong> จนแสดงว่า <strong>บอต</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-separate-reply-only-bot-source.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-separate-reply-only-bot-source.png" alt="แหล่งข้อมูล Twitch แยกใน SSApp ที่ตั้งเป็น Reply only พร้อม Role Bot และเซสชันเบราว์เซอร์ของบัญชีบอต">
+                </a>
+                <p class="bot-guide-caption">แหล่งข้อมูลที่สองที่ตั้งค่าเสร็จจะแสดง <strong>ตอบกลับอย่างเดียว (Reply only)</strong>, <strong>บทบาท: บอต (Role: Bot)</strong> และเซสชันแยกของตัวเองที่ด้านบน</p>
+
+                <ol class="guide-steps" start="6">
+                    <li>ในแผงตั้งค่าด้านขวา เปลี่ยนเป็นโหมดเต็มแล้วค้นหา <strong>bot replies</strong>.</li>
+                    <li>ตั้งค่า <strong>ส่งคำตอบบอตผ่านบทบาทบัญชี SSApp เหล่านี้</strong> เป็น <code>bot</code>.</li>
+                    <li>เปิดใช้งานแหล่งข้อมูลบอตและให้ทำงานตลอดเวลาที่ต้องส่งคำตอบ</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssn-bot-reply-role-routing.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssn-bot-reply-role-routing.png" alt="การตั้งค่า Send bot replies through these SSApp account roles ของ SSN ที่ป้อนค่า bot">
+                </a>
+                <p class="bot-guide-caption">ป้อนค่านี้: <code>bot</code> ในช่องนี้ ช่องบทบาทส่งต่อสองช่องด้านบนเป็นการตั้งค่าแยกและปล่อยว่างได้</p>
+
+                <div class="bot-guide-grid">
+                    <div class="bot-guide-card">
+                        <h3>ข้อดี</h3>
+                        <ul class="guide-list">
+                            <li>ใช้ได้กับโหมด Twitch Standard</li>
+                            <li>ใช้กับแพลตฟอร์มอื่นที่รองรับการส่งคำตอบกลับได้</li>
+                            <li>แหล่งข้อมูลบอตมีเซสชันเบราว์เซอร์และตัวควบคุมแหล่งข้อมูลของตัวเอง</li>
+                            <li>บทบาทบัญชีรองรับการกำหนดเส้นทางขั้นสูงขึ้นได้</li>
+                        </ul>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>ข้อเสีย</h3>
+                        <ul class="guide-list">
+                            <li>ต้องมีแหล่งข้อมูลที่สองและเซสชันแยก</li>
+                            <li>แหล่งข้อมูลบอตต้องทำงานอยู่จึงจะส่งได้</li>
+                            <li>ต้องดูแลการตั้งค่าหลายส่วนให้ตรงกัน</li>
+                            <li>หากปิด Reply only แหล่งข้อมูลที่สองอาจเก็บข้อความซ้ำ</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>หากตั้งค่าทั้งสองวิธี</h2>
+                <p>ใช้วิธีเดียวสำหรับเส้นทางตอบกลับหนึ่งเส้นทาง หาก <strong>ส่งคำตอบบอตผ่านบทบาทบัญชี SSApp เหล่านี้</strong> ตั้งเป็น <code>bot</code> แหล่งข้อมูลบอตแยกจะมีลำดับความสำคัญสูงกว่า SSN จะไม่ส่งคำตอบเดียวกันซ้ำผ่านบัญชีบอตที่แนบกับ Twitch WebSocket</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>การแก้ปัญหา</h2>
+                <ul class="guide-list">
+                    <li><strong>ไม่พบตัวเลือกใหม่:</strong> ยืนยันว่าเป็นแอปเดสก์ท็อป SSApp และแหล่งข้อมูล Twitch ตั้งเป็นโหมด WebSocket</li>
+                    <li><strong>บอต Twitch ที่แนบไว้ส่งไม่ได้:</strong> ให้บอตเป็นผู้ดูแล หากไม่ใช่ผู้ดูแล ให้เชื่อมบัญชี Twitch หลักใหม่หนึ่งครั้งด้วยบัญชีเจ้าของช่องและอนุมัติสิทธิ์ที่ร้องขอ</li>
+                    <li><strong>เลือกบัญชี Twitch ผิด:</strong> เลือกบัญชีใหม่ แล้วลงชื่อเข้าใช้หน้าต่าง Twitch แยกของ SSApp ด้วยบัญชีบอต</li>
+                    <li><strong>แหล่งข้อมูลแยกไม่ส่งอะไร:</strong> เปิดใช้งาน ยืนยันว่าลงชื่อเข้าใช้เป็นบอต และตรวจว่าช่องกำหนดเส้นทางมีค่าตรงทุกตัวเป็น <code>bot</code>.</li>
+                    <li><strong>แหล่งข้อมูลแยกเก็บแชตซ้ำ:</strong> เปิดใช้ <strong>บอตตอบอย่างเดียว (ไม่เก็บข้อมูล)</strong>.</li>
+                    <li><strong>คำตอบยังใช้บัญชีหลัก:</strong> ตรวจสอบว่าบัญชีที่แนบแสดงชื่อผู้ใช้ หรือแหล่งข้อมูลแยกแสดงว่า <strong>บทบาท: บอต (Role: Bot)</strong>.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja สัญญาอนุญาต GPLv3.0</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

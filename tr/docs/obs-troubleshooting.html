@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/tr/docs/obs-troubleshooting.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/tr/docs/obs-troubleshooting.html">
+    <meta property="og:title" content="OBS sorun giderme - Social Stream Ninja">
+    <meta property="og:description" content="Boş Social Stream Ninja OBS katmanları, yanlış oturumlar, sessiz TTS, tarayıcı kaynağı önbelleği ve kaynak yakalama sorunlarını giderin.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/tr/docs/obs-troubleshooting.html">
+    <meta name="twitter:title" content="OBS sorun giderme - Social Stream Ninja">
+    <meta name="twitter:description" content="Boş Social Stream Ninja OBS katmanları, yanlış oturumlar, sessiz TTS, tarayıcı kaynağı önbelleği ve kaynak yakalama sorunlarını giderin.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS sorun giderme - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Boş Social Stream Ninja OBS katmanları, yanlış oturumlar, sessiz TTS, tarayıcı kaynağı önbelleği ve kaynak yakalama sorunlarını giderin.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/obs-troubleshooting.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{", replace its URL, apply the change, and reopen that dock.":", URL'sini değiştirin, değişikliği uygulayın ve paneli yeniden açın.",", right-click it, and choose":", sağ tıklayın ve şunu seçin:",", then paste the new link over the old one.":", ardından yeni bağlantıyı eskisinin üzerine yapıştırın.",", then send one fake test message from Social Stream Ninja.":", ardından Social Stream Ninja'dan bir sahte test mesajı gönderin.",". Administrator mode is not a normal fix for a blank Dock.":". Yönetici modu, boş Panel için normal bir çözüm değildir.","Audio routing issue.":"Ses yönlendirme sorunu.","Bottom of OBS Browser Source Properties with Refresh cache of current page highlighted":"Geçerli sayfanın önbelleğini yenile seçeneğinin vurgulandığı OBS Tarayıcı Kaynağı Özellikleri'nin alt kısmı","Check The Overlay URL":"Katman URL'sini kontrol edin","Check login, live page, popout/source page, app mode, or platform guide.":"Girişi, canlı sayfayı, açılır sohbet/kaynak sayfasını, uygulama modunu veya platform kılavuzunu kontrol edin.","Check provider vs system TTS and OBS audio capture.":"Sağlayıcı TTS'si ile sistem TTS'sini ve OBS ses yakalamasını kontrol edin.","Click":"Tıklayın:","Close the old Dock page or window, then click the newly generated":"Eski Panel sayfasını veya penceresini kapatın, ardından yeni oluşturulan","Commands & API":"Komutlar ve API","Common Fixes":"Yaygın çözümler","Decision Tree":"Karar ağacı","Detailed help:":"Ayrıntılı yardım:","Do these in this order. Refreshing the cache alone does not add a changed session, password, or server-routing option to an old URL.":"Bunları bu sırayla yapın. Yalnızca önbelleği yenilemek, eski URL'ye değişen oturum, parola veya sunucu yönlendirme seçeneğini eklemez.","Dock":"Panel","Dock is empty":"Panel boş","Dock works, browser overlay blank":"Panel çalışıyor, tarayıcı katmanı boş","Dock works, browser overlay works":"Panel çalışıyor, tarayıcı katmanı çalışıyor","Docks → Custom Browser Docks":"Paneller → Özel Tarayıcı Panelleri","Download":"İndir","Export your Social Stream Ninja settings and OBS scene collection for support":"Destek için Social Stream Ninja ayarlarınızı ve OBS sahne koleksiyonunuzu dışa aktarın","Featured overlay preview showing a selected message":"Seçili bir mesajı gösteren öne çıkan katman önizlemesi","Features":"Özellikler","Find out whether the source, session, overlay, or OBS browser source is the problem.":"Sorunun kaynakta, oturumda, katmanda veya OBS tarayıcı kaynağında olup olmadığını bulun.","Guides":"Kılavuzlar","Hire":"Hizmet alın","Home":"Ana sayfa","If TTS Is Silent In OBS":"OBS'de TTS sessizse","If it is still stale:":"Hâlâ eski görünüyorsa:","If messages appear in the dock, Social Stream Ninja is receiving chat.":"Panelde mesajlar görünüyorsa Social Stream Ninja sohbeti alıyor demektir.","If support has confirmed a Windows privilege mismatch, follow":"Destek ekibi Windows yetki uyuşmazlığını doğruladıysa şunu izleyin:","Image works, TTS silent":"Görsel çalışıyor, TTS sessiz","In OBS, find the Social Stream source in":"OBS'de Social Stream kaynağını şu bölümde bulun:","In Social Stream Ninja, copy a freshly generated link for the exact Dock or overlay you use. Copy the whole link instead of editing its parameters by hand.":"Social Stream Ninja'da kullandığınız Panel veya katman için yeni oluşturulmuş bir bağlantı kopyalayın. Parametrelerini elle düzenlemek yerine tüm bağlantıyı kopyalayın.","Inspiration":"İlham","Local file":"Yerel dosya","Main navigation":"Ana gezinme","Make sure":"Şunu doğrulayın:","Make the source visible and check that width/height are not tiny.":"Kaynağı görünür yapın ve genişlik/yüksekliğin çok küçük olmadığını kontrol edin.","Meaning":"Anlamı","Next Step":"Sonraki adım","OBS Browser Source Properties showing the Local file checkbox and URL field":"Yerel dosya onay kutusunu ve URL alanını gösteren OBS Tarayıcı Kaynağı Özellikleri","OBS Troubleshooting":"OBS sorun giderme","OBS Troubleshooting - Social Stream Ninja":"OBS sorun giderme - Social Stream Ninja","OBS audio capture note explaining system TTS limitations":"Sistem TTS'sinin sınırlamalarını açıklayan OBS ses yakalama notu","OBS browser source is the likely issue.":"Sorun büyük olasılıkla OBS tarayıcı kaynağıdır.","OK":"Tamam","Open navigation menu":"Gezinme menüsünü aç","Open the same OBS URL in a normal browser to separate OBS issues from Social Stream Ninja issues.":"OBS sorunlarını Social Stream Ninja sorunlarından ayırmak için aynı OBS URL'sini normal bir tarayıcıda açın.","Overlay Gallery":"Katman galerisi","Plain system TTS is the common trap. It may speak through your speakers while OBS Browser Source hears nothing.":"Standart sistem TTS'si yaygın bir yanılgıdır. Hoparlörlerinizden konuşabilirken OBS Tarayıcı Kaynağı hiçbir şey duymayabilir.","Properties":"Özellikler","Refresh OBS source, check URL, dimensions, visibility, cache, and custom CSS.":"OBS kaynağını yenileyin; URL'yi, boyutları, görünürlüğü, önbelleği ve özel CSS'yi kontrol edin.","Refresh cache of current page":"Geçerli sayfanın önbelleğini yenile","Reopen A Dock Link":"Panel bağlantısını yeniden açın","Replace The Saved OBS URL And Refresh Its Cache":"Kayıtlı OBS URL'sini değiştirin ve önbelleğini yenileyin","Replace the entire URL with the freshly generated Social Stream link. Screenshot from the":"Tüm URL'yi yeni oluşturulan Social Stream bağlantısıyla değiştirin. Ekran görüntüsünün kaynağı:","Replace the saved URL, then refresh the Browser Source cache":"Kayıtlı URL'yi değiştirin, ardından Tarayıcı Kaynağı önbelleğini yenileyin","Run OBS and Social Stream as Administrator":"OBS ve Social Stream'i yönetici olarak çalıştırın","Scroll to the bottom of the Properties window and click":"Özellikler penceresinin en altına kaydırıp şuna tıklayın:","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja dock showing received chat messages":"Alınan sohbet mesajlarını gösteren Social Stream Ninja paneli","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 Lisansı.","Some overlays only show content after a message is featured or a matching event happens.":"Bazı katmanlar yalnızca bir mesaj öne çıkarıldıktan veya eşleşen bir etkinlik gerçekleştikten sonra içerik gösterir.","Source/platform capture is not working yet.":"Kaynak/platform yakalaması henüz çalışmıyor.","Sources":"Kaynaklar","Spin and Wheel's OBS setup page":"Spin and Wheel'in OBS kurulum sayfası","Start With The Dock":"Panelle başlayın","Still stuck?":"Hâlâ takıldınız mı?","Support":"Destek","Supported Sites":"Desteklenen siteler","Switch theme":"Temayı değiştir","TTS Setup Guide":"TTS kurulum kılavuzu","Temporarily remove custom OBS CSS to rule out hidden text or opacity.":"Gizli metin veya opaklık ihtimalini elemek için özel OBS CSS'sini geçici olarak kaldırın.","Test":"Test","The cache button is near the bottom of Browser Source Properties. UI example cropped from":"Önbellek düğmesi Tarayıcı Kaynağı Özellikleri'nin altına yakındır. Arayüz örneği şuradan kırpılmıştır:","The dock is the fastest test. If the dock is empty, do not debug OBS yet. Fix the platform source first.":"En hızlı test paneldir. Panel boşsa henüz OBS'de hata aramayın. Önce platform kaynağını düzeltin.","Troubleshoot blank Social Stream Ninja OBS overlays, wrong sessions, silent TTS, browser source cache, and source capture problems.":"Boş Social Stream Ninja OBS katmanları, yanlış oturumlar, sessiz TTS, tarayıcı kaynağı önbelleği ve kaynak yakalama sorunlarını giderin.","URL":"URL","Use provider/browser TTS for easier OBS capture, or route system audio separately.":"OBS'de daha kolay yakalama için sağlayıcı/tarayıcı TTS'sini kullanın veya sistem sesini ayrıca yönlendirin.","Use the exact same session ID everywhere. A one-character difference creates a separate room.":"Her yerde tam olarak aynı oturum kimliğini kullanın. Tek karakterlik fark ayrı bir oda oluşturur.","Use the same session and pick a page that matches the expected output.":"Aynı oturumu kullanın ve beklenen çıktıya uygun bir sayfa seçin.","Wrong overlay page, wrong session, or no matching payload.":"Yanlış katman sayfası, yanlış oturum veya eşleşen veri yükü yok.","close Properties, open it again, and repeat the test. Removing and recreating the Browser Source with the fresh link is the last resort.":"Özellikler'i kapatıp yeniden açın ve testi tekrarlayın. Tarayıcı Kaynağı'nı kaldırıp yeni bağlantıyla yeniden oluşturmak son çaredir.","is not selected. Select everything in":"seçili olmasın. Şu alandaki her şeyi seçin:","link in Social Stream Ninja. If it is saved as an OBS Custom Browser Dock, open":"bağlantıya Social Stream Ninja'da tıklayın. OBS Özel Tarayıcı Paneli olarak kayıtlıysa şunu açın:","official OBS Browser Source guide":"resmî OBS Tarayıcı Kaynağı kılavuzu"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/obs-troubleshooting.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/obs-troubleshooting.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme"><a href="../index.html">Ana sayfa</a><a href="features.html">Özellikler</a><a href="inspiration.html" class="site-priority-inspiration">İlham</a><a href="download.html">İndir</a><a href="guides.html">Kılavuzlar</a><a href="commands.html">Komutlar ve API</a><a href="supported-sites.html">Desteklenen siteler</a><a href="overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a><a href="services.html" class="site-priority-hire">Hizmet alın</a><a href="support.html">Destek</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-troubleshooting.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-troubleshooting.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/obs-troubleshooting.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-troubleshooting.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-troubleshooting.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-troubleshooting.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-troubleshooting.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/obs-troubleshooting.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-troubleshooting.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-troubleshooting.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-troubleshooting.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/obs-troubleshooting.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/obs-troubleshooting.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/obs-troubleshooting.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="obs-troubleshooting.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/obs-troubleshooting.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/obs-troubleshooting.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>OBS sorun giderme</h1><p>Sorunun kaynakta, oturumda, katmanda veya OBS tarayıcı kaynağında olup olmadığını bulun.</p></div></section>
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Panelle başlayın</h2>
+                <p>En hızlı test paneldir. Panel boşsa henüz OBS'de hata aramayın. Önce platform kaynağını düzeltin.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-dock-message-check.png" alt="Alınan sohbet mesajlarını gösteren Social Stream Ninja paneli" class="guide-image">
+                    <figcaption>Panelde mesajlar görünüyorsa Social Stream Ninja sohbeti alıyor demektir.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card" id="replace-url-and-cache">
+                <h2>Kayıtlı OBS URL'sini değiştirin ve önbelleğini yenileyin</h2>
+                <p>Bunları bu sırayla yapın. Yalnızca önbelleği yenilemek, eski URL'ye değişen oturum, parola veya sunucu yönlendirme seçeneğini eklemez.</p>
+                <ol class="guide-steps">
+                    <li>Social Stream Ninja'da kullandığınız Panel veya katman için yeni oluşturulmuş bir bağlantı kopyalayın. Parametrelerini elle düzenlemek yerine tüm bağlantıyı kopyalayın.</li>
+                    <li>OBS'de Social Stream kaynağını şu bölümde bulun: <strong>Kaynaklar</strong>, sağ tıklayın ve şunu seçin: <strong>Özellikler</strong>.</li>
+                    <li>Şunu doğrulayın: <strong>Yerel dosya</strong> seçili olmasın. Şu alandaki her şeyi seçin: <strong>URL</strong>, ardından yeni bağlantıyı eskisinin üzerine yapıştırın.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-browser-source-url.png" alt="Yerel dosya onay kutusunu ve URL alanını gösteren OBS Tarayıcı Kaynağı Özellikleri" class="guide-image">
+                    <figcaption>Tüm URL'yi yeni oluşturulan Social Stream bağlantısıyla değiştirin. Ekran görüntüsünün kaynağı: <a href="https://obsproject.com/kb/browser-source">resmî OBS Tarayıcı Kaynağı kılavuzu</a>.</figcaption>
+                </figure>
+                <ol class="guide-steps" start="4">
+                    <li>Özellikler penceresinin en altına kaydırıp şuna tıklayın: <strong>Geçerli sayfanın önbelleğini yenile</strong>.</li>
+                    <li>Tıklayın: <strong>Tamam</strong>, ardından Social Stream Ninja'dan bir sahte test mesajı gönderin.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-browser-source-refresh-cache.png" alt="Geçerli sayfanın önbelleğini yenile seçeneğinin vurgulandığı OBS Tarayıcı Kaynağı Özellikleri&#x27;nin alt kısmı" class="guide-image guide-image-medium">
+                    <figcaption>Önbellek düğmesi Tarayıcı Kaynağı Özellikleri'nin altına yakındır. Arayüz örneği şuradan kırpılmıştır: <a href="https://spinandwheel.com/obs-setup/">Spin and Wheel'in OBS kurulum sayfası</a>.</figcaption>
+                </figure>
+                <div class="guide-note">
+                    <p><strong>Hâlâ eski görünüyorsa:</strong> Özellikler'i kapatıp yeniden açın ve testi tekrarlayın. Tarayıcı Kaynağı'nı kaldırıp yeni bağlantıyla yeniden oluşturmak son çaredir.</p>
+                </div>
+                <h3>Panel bağlantısını yeniden açın</h3>
+                <p>Eski Panel sayfasını veya penceresini kapatın, ardından yeni oluşturulan <strong>Panel</strong> bağlantıya Social Stream Ninja'da tıklayın. OBS Özel Tarayıcı Paneli olarak kayıtlıysa şunu açın: <strong>Paneller → Özel Tarayıcı Panelleri</strong>, URL'sini değiştirin, değişikliği uygulayın ve paneli yeniden açın.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Karar ağacı</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Test</th><th>Anlamı</th><th>Sonraki adım</th></tr></thead>
+                    <tbody>
+                        <tr><td data-label="Test">Panel boş</td><td data-label="Meaning">Kaynak/platform yakalaması henüz çalışmıyor.</td><td data-label="Next Step">Girişi, canlı sayfayı, açılır sohbet/kaynak sayfasını, uygulama modunu veya platform kılavuzunu kontrol edin.</td></tr>
+                        <tr><td data-label="Test">Panel çalışıyor, tarayıcı katmanı çalışıyor</td><td data-label="Meaning">Sorun büyük olasılıkla OBS tarayıcı kaynağıdır.</td><td data-label="Next Step">OBS kaynağını yenileyin; URL'yi, boyutları, görünürlüğü, önbelleği ve özel CSS'yi kontrol edin.</td></tr>
+                        <tr><td data-label="Test">Panel çalışıyor, tarayıcı katmanı boş</td><td data-label="Meaning">Yanlış katman sayfası, yanlış oturum veya eşleşen veri yükü yok.</td><td data-label="Next Step">Aynı oturumu kullanın ve beklenen çıktıya uygun bir sayfa seçin.</td></tr>
+                        <tr><td data-label="Test">Görsel çalışıyor, TTS sessiz</td><td data-label="Meaning">Ses yönlendirme sorunu.</td><td data-label="Next Step">Sağlayıcı TTS'si ile sistem TTS'sini ve OBS ses yakalamasını kontrol edin.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Katman URL'sini kontrol edin</h2>
+                <p>Her yerde tam olarak aynı oturum kimliğini kullanın. Tek karakterlik fark ayrı bir oda oluşturur.</p>
+                <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION</pre>
+                <pre>https://socialstream.ninja/featured.html?session=YOUR_SESSION</pre>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/obs-featured-overlay-preview.png" alt="Seçili bir mesajı gösteren öne çıkan katman önizlemesi" class="guide-image">
+                    <figcaption>Bazı katmanlar yalnızca bir mesaj öne çıkarıldıktan veya eşleşen bir etkinlik gerçekleştikten sonra içerik gösterir.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>OBS'de TTS sessizse</h2>
+                <p>Standart sistem TTS'si yaygın bir yanılgıdır. Hoparlörlerinizden konuşabilirken OBS Tarayıcı Kaynağı hiçbir şey duymayabilir.</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-tts-obs-audio.png" alt="Sistem TTS&#x27;sinin sınırlamalarını açıklayan OBS ses yakalama notu" class="guide-image">
+                    <figcaption>OBS'de daha kolay yakalama için sağlayıcı/tarayıcı TTS'sini kullanın veya sistem sesini ayrıca yönlendirin.</figcaption>
+                </figure>
+                <p>Ayrıntılı yardım: <a href="tts-setup-guide.html">TTS kurulum kılavuzu</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Yaygın çözümler</h2>
+                <ul class="guide-list">
+                    <li><a href="#replace-url-and-cache">Kayıtlı URL'yi değiştirin, ardından Tarayıcı Kaynağı önbelleğini yenileyin</a>.</li>
+                    <li>Kaynağı görünür yapın ve genişlik/yüksekliğin çok küçük olmadığını kontrol edin.</li>
+                    <li>Gizli metin veya opaklık ihtimalini elemek için özel OBS CSS'sini geçici olarak kaldırın.</li>
+                    <li>OBS sorunlarını Social Stream Ninja sorunlarından ayırmak için aynı OBS URL'sini normal bir tarayıcıda açın.</li>
+                </ul>
+                <p>Destek ekibi Windows yetki uyuşmazlığını doğruladıysa şunu izleyin: <a href="windows-administrator-mode.html">OBS ve Social Stream'i yönetici olarak çalıştırın</a>. Yönetici modu, boş Panel için normal bir çözüm değildir.</p>
+                <p>Hâlâ takıldınız mı? <a href="export-settings-for-support.html">Destek için Social Stream Ninja ayarlarınızı ve OBS sahne koleksiyonunuzu dışa aktarın</a>.</p>
+            </div>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 Lisansı.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script><script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

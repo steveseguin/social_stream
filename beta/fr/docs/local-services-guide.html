@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr" data-site-root="../../" data-site-language="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/fr/docs/local-services-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/fr/docs/local-services-guide.html">
+    <meta property="og:title" content="Serveurs et services locaux - Social Stream Ninja">
+    <meta property="og:description" content="Choisissez le bon service local Social Stream Ninja : relais WebSocket, API de contrôle local et MCP, hébergement sans interface ou serveur multimédia Event Flow.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/fr/docs/local-services-guide.html">
+    <meta name="twitter:title" content="Serveurs et services locaux - Social Stream Ninja">
+    <meta name="twitter:description" content="Choisissez le bon service local Social Stream Ninja : relais WebSocket, API de contrôle local et MCP, hébergement sans interface ou serveur multimédia Event Flow.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Serveurs et services locaux - Social Stream Ninja</title>
+	<meta name="description" content="Choisissez le bon service local Social Stream Ninja : relais WebSocket, API de contrôle local et MCP, hébergement sans interface ou serveur multimédia Event Flow.">
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="fr">
+<script id="ssn-site-language" type="application/json">{"language":"fr","page":"docs/local-services-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Passer au thème clair","Switch to dark theme":"Passer au thème sombre","Light mode":"Mode clair","Dark mode":"Mode sombre","Open navigation menu":"Ouvrir le menu de navigation","Close navigation menu":"Fermer le menu de navigation","Copy this document as Markdown to the clipboard":"Copier ce document au format Markdown dans le presse-papiers","Copy Markdown":"Copier le Markdown","Copying…":"Copie en cours…","Markdown copied":"Markdown copié","Copy failed":"Échec de la copie","Copy comprehensive Markdown for an AI assistant":"Copier le Markdown complet pour un assistant IA","Copy this documentation page as Markdown for an AI assistant":"Copier cette page de documentation en Markdown pour un assistant IA"},"strings":{", and":", et",", it uses the desktop app's local relay instead. See":", elle utilise à la place le relais local de l'application de bureau. Voir",". It is separate from":". Il est distinct de",". See the":". Consultez le","1. Enable Local Server":"1. Activer le serveur local","2. Local Control API and MCP":"2. API de contrôle local et MCP","3. Headless Home Server or VPS":"3. Serveur domestique ou VPS sans interface","4. Local Media Server":"4. Serveur multimédia local","Choose the correct Social Stream Ninja local service: the WebSocket relay, local control API and MCP, headless hosting, or Event Flow media server.":"Choisissez le bon service local Social Stream Ninja : relais WebSocket, API de contrôle local et MCP, hébergement sans interface ou serveur multimédia Event Flow.","Commands & API":"Commandes et API","Default Address":"Adresse par défaut","Dock sends its commands to Extension via server":"Le Dock envoie ses commandes à l'extension via le serveur","Download":"Télécharger","Enable Local Server":"Activer le serveur local (Enable Local Server)","Enable Local Server guide":"Guide Enable Local Server","Enable it under":"Activez-le sous","Features":"Fonctionnalités","File > Local AI / Automation":"Fichier > IA locale / Automatisation (File > Local AI / Automation)","Guides":"Guides","Headless SSApp hosting":"Hébergement SSApp sans interface","Headless mode does not create a public control API. Remote control uses Social Stream's normal WebRTC or WebSocket transport. See the":"Le mode sans interface ne crée pas d'API de contrôle publique. Le contrôle à distance utilise le transport WebRTC ou WebSocket normal de Social Stream. Consultez le","Headless mode runs the full Electron desktop app with its source windows hidden. On Linux it still needs a display backend such as Xvfb. This is useful when a dedicated computer should keep capturing chat without a monitor attached.":"Le mode sans interface exécute l'application de bureau Electron complète en masquant ses fenêtres de sources. Sous Linux, il nécessite toujours un système d'affichage tel que Xvfb. Cela est utile lorsqu'un ordinateur dédié doit continuer à capturer le chat sans moniteur connecté.","Hire":"Faire appel à nos services","Home":"Accueil","I Want To":"Je souhaite","Inspiration":"Inspiration","It does not host the Social Stream website, capture a platform by itself, or provide the HTTP automation API. Start with the":"Il n'héberge pas le site Social Stream, ne capture pas de plateforme à lui seul et ne fournit pas l'API HTTP d'automatisation. Commencez par le","It is not a general web or file server. See":"Ce n'est pas un serveur web ou de fichiers généraliste. Voir","Let an AI tool or local script inspect and control the desktop app":"Permettre à un outil IA ou un script local d'inspecter et de contrôler l'application de bureau","Local Control API and MCP":"API de contrôle local et MCP","Local Control API and MCP guide":"Guide de l'API de contrôle local et de MCP","Local Servers and Services Explained":"Comprendre les serveurs et services locaux","Local Servers and Services Explained - Social Stream Ninja":"Serveurs et services locaux - Social Stream Ninja","Local media server":"Serveur multimédia local","Main navigation":"Navigation principale","Media Files for Event Flow":"Fichiers multimédias pour Event Flow","No new public API; remote control uses the normal Social Stream session.":"Aucune nouvelle API publique ; le contrôle à distance utilise la session Social Stream habituelle.","Older upgraded installs may use":"Les anciennes installations mises à niveau peuvent utiliser","Open navigation menu":"Ouvrir le menu de navigation","Other Temporary Local Ports":"Autres ports locaux temporaires","Overlay Gallery":"Galerie d’incrustations","Play an approved local audio, image, or video file in Event Flow":"Lire un fichier local audio, image ou vidéo approuvé dans Event Flow","Quick Chooser":"Sélecteur rapide","Relay chat and supported commands between Social Stream pages without the normal remote transport":"Relayer le chat et les commandes prises en charge entre les pages Social Stream sans le transport distant habituel","Routing flags are page-specific. Do not copy a server flag from one page to another and assume it has the same meaning.":"Les options de routage sont propres aux pages. Ne copiez pas une option serveur d'une page à l'autre en supposant qu'elle a la même signification.","Run the complete desktop app on a Linux home server or VPS without a monitor":"Exécuter l'application de bureau complète sur un serveur domestique Linux ou un VPS sans moniteur","Send chat messages to API server":"Envoyer les messages de chat au serveur API","Server Fallback Is Different":"Le repli serveur est différent","Sessions, Passwords, Relay, and Server Modes":"Sessions, mots de passe, relais et modes serveur","Settings such as":"Des paramètres tels que","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja uses several different local services. Choose the one that matches what you want to do.":"Social Stream Ninja utilise plusieurs services locaux différents. Choisissez celui qui correspond à ce que vous souhaitez faire.","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Some sign-in and account-link workflows briefly open a loopback callback port and close it when the workflow ends. These temporary listeners are not general SSN servers or automation APIs.":"Certains flux de connexion et d'association de compte ouvrent brièvement un port de rappel local de bouclage et le ferment à la fin. Ces écouteurs temporaires ne sont pas des serveurs SSN généralistes ni des API d'automatisation.","Support":"Assistance","Supported Sites":"Sites pris en charge","Switch theme":"Changer de thème","The desktop app starts this automatically when local Event Flow media is available. It serves only files approved through SSApp and selected runtime assets through a random per-profile token path.":"L'application de bureau le démarre automatiquement lorsque des médias Event Flow locaux sont disponibles. Il sert uniquement les fichiers approuvés via SSApp et certaines ressources d'exécution via un chemin à jeton aléatoire propre au profil.","This File-menu option starts a room- and channel-aware WebSocket relay inside the desktop app. Supported Social Stream pages can use it to exchange chat and commands on the same computer. It is an alternative endpoint for page-specific server routing.":"Cette option du menu Fichier démarre un relais WebSocket prenant en compte les salons et canaux dans l'application de bureau. Les pages Social Stream prises en charge peuvent l'utiliser pour échanger du chat et des commandes sur le même ordinateur. C'est un autre point de terminaison pour le routage serveur propre à chaque page.","This opt-in loopback API lets programs on the SSApp computer manage supported sources and settings, read status and diagnostics, inspect app or source windows, and follow captured events. The bundled MCP adapter presents those operations as tools to compatible AI clients.":"Cette API locale de bouclage, à activer, permet aux programmes de l'ordinateur SSApp de gérer les sources et paramètres pris en charge, de lire l'état et les diagnostics, d'inspecter les fenêtres de l'application ou des sources et de suivre les événements capturés. L'adaptateur MCP inclus présente ces opérations comme outils aux clients IA compatibles.","Those settings normally use Social Stream's hosted WebSocket service. When a supported page also has":"Ces paramètres utilisent normalement le service WebSocket hébergé de Social Stream. Lorsqu'une page prise en charge possède aussi","Use":"Utilisez","Use freshly generated links.":"Utilisez des liens fraîchement générés.","and":"et","choose how chat and commands are routed. Their generated URL flags include":"choisissent le routage du chat et des commandes. Les options URL générées comprennent","for the routing controls.":"pour les commandes de routage.","headless hosting guide":"guide d'hébergement sans interface","to choose between local files, uploads, and cloud hosting.":"pour choisir entre fichiers locaux, téléversements et hébergement cloud."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/local-services-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/local-services-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/local-services-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/local-services-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/local-services-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/local-services-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/local-services-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/local-services-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/local-services-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/local-services-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/local-services-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/local-services-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/local-services-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/local-services-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/local-services-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/local-services-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/local-services-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/local-services-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="guides-page">
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navigation principale"><a href="../index.html">Accueil</a><a href="features.html">Fonctionnalités</a><a href="inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="download.html">Télécharger</a><a href="guides.html">Guides</a><a href="commands.html">Commandes et API</a><a href="supported-sites.html">Sites pris en charge</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie d’incrustations</a><a href="services.html" class="site-priority-hire">Faire appel à nos services</a><a href="support.html">Assistance</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Français"><span aria-hidden="true">🌐 </span><span lang="fr">Français</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/local-services-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/local-services-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/local-services-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/local-services-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="local-services-guide.html" lang="fr" hreflang="fr" aria-current="true">Français</a><a class="site-language-link" href="../../de/docs/local-services-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/local-services-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/local-services-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/local-services-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/local-services-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/local-services-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/local-services-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/local-services-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/local-services-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/local-services-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/local-services-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/local-services-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Changer de thème"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Ouvrir le menu de navigation" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+	<section class="page-hero">
+		<div class="container">
+			<h1>Comprendre les serveurs et services locaux</h1>
+			<p>Social Stream Ninja utilise plusieurs services locaux différents. Choisissez celui qui correspond à ce que vous souhaitez faire.</p>
+		</div>
+	</section>
+
+	<main class="guide-section">
+		<div class="container">
+			<div class="guide-card">
+				<h2>Sélecteur rapide</h2>
+				<table class="guide-table guide-table-stack">
+					<thead>
+						<tr><th>Je souhaite</th><th>Utilisez</th><th>Adresse par défaut</th></tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td data-label="I Want To"><span>Relayer le chat et les commandes prises en charge entre les pages Social Stream sans le transport distant habituel</span></td>
+							<td data-label="Use"><span><a href="local-websocket-server-guide.html"><strong>Activer le serveur local (Enable Local Server)</strong></a></span></td>
+							<td data-label="Default Address"><span><code>ws://127.0.0.1:3003</code><br>Les anciennes installations mises à niveau peuvent utiliser <code>3000</code>.</span></td>
+						</tr>
+						<tr>
+							<td data-label="I Want To"><span>Permettre à un outil IA ou un script local d'inspecter et de contrôler l'application de bureau</span></td>
+							<td data-label="Use"><span><a href="llm-control-guide.html"><strong>API de contrôle local et MCP</strong></a></span></td>
+							<td data-label="Default Address"><span><code>http://127.0.0.1:17777</code></span></td>
+						</tr>
+						<tr>
+							<td data-label="I Want To"><span>Exécuter l'application de bureau complète sur un serveur domestique Linux ou un VPS sans moniteur</span></td>
+							<td data-label="Use"><span><a href="headless-server-guide.html"><strong>Hébergement SSApp sans interface</strong></a></span></td>
+							<td data-label="Default Address"><span>Aucune nouvelle API publique ; le contrôle à distance utilise la session Social Stream habituelle.</span></td>
+						</tr>
+						<tr>
+							<td data-label="I Want To"><span>Lire un fichier local audio, image ou vidéo approuvé dans Event Flow</span></td>
+							<td data-label="Use"><span><a href="media-hosting-event-flow.html"><strong>Serveur multimédia local</strong></a></span></td>
+							<td data-label="Default Address"><span><code>http://127.0.0.1:3001</code></span></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card">
+				<h2>1. Activer le serveur local</h2>
+				<p>Cette option du menu Fichier démarre un relais WebSocket prenant en compte les salons et canaux dans l'application de bureau. Les pages Social Stream prises en charge peuvent l'utiliser pour échanger du chat et des commandes sur le même ordinateur. C'est un autre point de terminaison pour le routage serveur propre à chaque page.</p>
+				<p>Il n'héberge pas le site Social Stream, ne capture pas de plateforme à lui seul et ne fournit pas l'API HTTP d'automatisation. Commencez par le <a href="local-websocket-server-guide.html">Guide Enable Local Server</a>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>2. API de contrôle local et MCP</h2>
+				<p>Cette API locale de bouclage, à activer, permet aux programmes de l'ordinateur SSApp de gérer les sources et paramètres pris en charge, de lire l'état et les diagnostics, d'inspecter les fenêtres de l'application ou des sources et de suivre les événements capturés. L'adaptateur MCP inclus présente ces opérations comme outils aux clients IA compatibles.</p>
+				<p>Activez-le sous <strong>Fichier &gt; IA locale / Automatisation (File &gt; Local AI / Automation)</strong>. Il est distinct de <strong>Activer le serveur local (Enable Local Server)</strong>. Consultez le <a href="llm-control-guide.html">Guide de l'API de contrôle local et de MCP</a>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>3. Serveur domestique ou VPS sans interface</h2>
+				<p>Le mode sans interface exécute l'application de bureau Electron complète en masquant ses fenêtres de sources. Sous Linux, il nécessite toujours un système d'affichage tel que Xvfb. Cela est utile lorsqu'un ordinateur dédié doit continuer à capturer le chat sans moniteur connecté.</p>
+				<p>Le mode sans interface ne crée pas d'API de contrôle publique. Le contrôle à distance utilise le transport WebRTC ou WebSocket normal de Social Stream. Consultez le <a href="headless-server-guide.html">guide d'hébergement sans interface</a>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>4. Serveur multimédia local</h2>
+				<p>L'application de bureau le démarre automatiquement lorsque des médias Event Flow locaux sont disponibles. Il sert uniquement les fichiers approuvés via SSApp et certaines ressources d'exécution via un chemin à jeton aléatoire propre au profil.</p>
+				<p>Ce n'est pas un serveur web ou de fichiers généraliste. Voir <a href="media-hosting-event-flow.html">Fichiers multimédias pour Event Flow</a> pour choisir entre fichiers locaux, téléversements et hébergement cloud.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Le repli serveur est différent</h2>
+				<p>Des paramètres tels que <strong>Envoyer les messages de chat au serveur API</strong> et <strong>Le Dock envoie ses commandes à l'extension via le serveur</strong> choisissent le routage du chat et des commandes. Les options URL générées comprennent <code>server</code>, <code>server2</code>, et <code>server3</code>.</p>
+				<p>Ces paramètres utilisent normalement le service WebSocket hébergé de Social Stream. Lorsqu'une page prise en charge possède aussi <code>localserver</code>, elle utilise à la place le relais local de l'application de bureau. Voir <a href="sessions-passwords-relay-modes.html">Sessions, mots de passe, relais et modes serveur</a> pour les commandes de routage.</p>
+				<div class="warning-note">
+					<p><strong>Utilisez des liens fraîchement générés.</strong> Les options de routage sont propres aux pages. Ne copiez pas une option serveur d'une page à l'autre en supposant qu'elle a la même signification.</p>
+				</div>
+			</div>
+
+			<div class="guide-card">
+				<h2>Autres ports locaux temporaires</h2>
+				<p>Certains flux de connexion et d'association de compte ouvrent brièvement un port de rappel local de bouclage et le ferment à la fin. Ces écouteurs temporaires ne sont pas des serveurs SSN généralistes ni des API d'automatisation.</p>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. Licence GPLv3.0.</p></div></div></footer>
+	<script data-copy-markdown src="../../docs/js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

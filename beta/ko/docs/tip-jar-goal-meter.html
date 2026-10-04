@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ko/docs/tip-jar-goal-meter.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ko/docs/tip-jar-goal-meter.html">
+    <meta property="og:title" content="후원 저금통 및 목표 게이지 가이드 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja 후원 저금통과 목표 게이지를 설정하고 후원, 회원권, 선물 회원권 누락 문제를 해결하세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ko/docs/tip-jar-goal-meter.html">
+    <meta name="twitter:title" content="후원 저금통 및 목표 게이지 가이드 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja 후원 저금통과 목표 게이지를 설정하고 후원, 회원권, 선물 회원권 누락 문제를 해결하세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>후원 저금통 및 목표 게이지 가이드 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja 후원 저금통과 목표 게이지를 설정하고 후원, 회원권, 선물 회원권 누락 문제를 해결하세요.">
+    <style>
+        .quick-note {
+            background: rgba(26, 115, 232, 0.08);
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            padding: 1.4rem 1.6rem;
+            margin: 1.5rem 0;
+        }
+        .dark-mode .quick-note { background: rgba(26, 115, 232, 0.18); }
+        .warning-note { background: rgba(251, 188, 5, 0.14); border-left-color: #f9ab00; }
+        .dark-mode .warning-note { background: rgba(251, 188, 5, 0.2); }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/tip-jar-goal-meter.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"(12–96 pixels), and":"(12–96픽셀),","(six-digit hex color),":"(6자리 16진수 색상),",") only if you want the updated spacing, colors, and typography. The new styles below are separately selectable.":")을 활성화하세요. 아래 새 스타일은 별도로 선택할 수 있습니다.","): a circular percentage display above the goal total.":"): 목표 총합 위에 원형으로 백분율을 표시합니다.","): a compact panel with a large total and slim progress bar.":"): 큰 총합과 얇은 진행 막대가 있는 작은 패널입니다.","): a goal panel with twenty progress segments.":"): 진행 상태를 20개 구간으로 표시하는 목표 패널입니다.","): a wide, low panel with the title beside the total.":"): 총합 옆에 제목이 있는 넓고 낮은 패널입니다.","): the same goal shown as a progress bar with recent supporters.":"): 같은 목표를 진행 막대와 최근 후원자로 표시합니다.",", then open its options.":"를 선택한 뒤 옵션을 여세요.",". Explicit fill start/end colors take precedence over the accent for the progress fill. Leave values blank to use each style's defaults. Bar text size and “bar only” apply to Fluid Goal Bar; a custom jar image applies only to Jar.":"입니다. 진행 영역의 시작/끝 색상을 명시하면 강조색보다 우선합니다. 값을 비우면 각 스타일의 기본값을 사용합니다. 막대 텍스트 크기와 ‘막대만’은 Fluid Goal Bar에 적용되며, 사용자 지정 저금통 이미지는 Jar에만 적용됩니다.",". The overlay displays progress such as":"으로 지정하세요. 오버레이의 진행 표시 예:",". This is off by default and only changes the goal display; donation values, conversion, and Bits or other unit labels stay the same.":"처럼 표시됩니다. 기본적으로 꺼져 있으며 목표 표시만 바꿉니다. 후원 값, 환산, Bits 등의 단위 표시는 유지됩니다.",": a progress bar with recent supporters in a dark panel.":": 어두운 패널에 진행 막대와 최근 후원자를 표시합니다.",": a simple text readout.":": 간단한 텍스트 표시입니다.",": a small bar suited to a corner;":": 모서리에 적합한 작은 막대입니다.",": a thermometer for a side column.":": 화면 측면에 배치하기 좋은 온도계입니다.",": a wide animated bar for a prominent goal.":": 목표를 눈에 띄게 보여 주는 넓은 애니메이션 막대입니다.",": large totals and percentage;":": 총합과 백분율을 크게 표시합니다.",": the classic cup with falling items.":": 아이템이 떨어지는 기본 컵입니다.","A paid message with a currency amount":"통화 금액이 포함된 유료 메시지","A separate virtual-gift event with a native-unit amount":"플랫폼 고유 단위 수량이 포함된 별도의 가상 선물 이벤트","Activate the YouTube, Twitch, or other source in Social Stream Ninja.":"Social Stream Ninja에서 YouTube, Twitch 등의 소스를 활성화하세요.","All donations":"모든 후원","All styles use the same donation totals, filters, count goals, Hype scoring, and recurring goals. Choose one under":"모든 스타일은 같은 후원 합계, 필터, 횟수 목표, Hype 점수, 반복 목표를 사용합니다. 선택 위치:","An old amount returns":"이전 금액이 다시 나타남","Avoid double counting:":"중복 집계 방지:","Bar style (":"막대 스타일 (","Best for":"적합한 대상","Carry extra points":"초과 포인트 이월","Changing Jar to Bar only changes the appearance.":"Jar를 Bar로 바꾸면 외형만 변경됩니다.","Choose a style":"스타일 선택","Choose the display style, goal, title, source/event filters, and persistence behavior.":"표시 스타일, 목표, 제목, 소스/이벤트 필터, 저장 방식을 선택하세요.","Choose what counts, assign supporter values, add the overlay to OBS, and troubleshoot totals that look wrong.":"집계 대상을 선택하고 후원자별 값을 설정한 뒤 OBS에 오버레이를 추가하세요. 합계가 잘못 표시될 때의 해결 방법도 안내합니다.","Choose whether the goal measures donation value or the number of qualifying donations.":"목표를 후원 금액으로 측정할지 조건에 맞는 후원 횟수로 측정할지 선택하세요.","Commands & API":"명령 및 API","Compact Bar":"작은 막대 (Compact Bar)","Copy the updated Tip Jar link and add it to OBS as a Browser Source.":"업데이트된 후원 저금통 링크를 복사하여 OBS에 브라우저 소스로 추가하세요.","Count YouTube Super Chats instead of money":"금액 대신 YouTube Super Chat 횟수 집계","Count individual gift recipients too":"개별 선물 수령자도 집계","Count unit label":"횟수 단위 이름","Disable individual gift-recipient counting.":"개별 선물 수령자 집계를 비활성화하세요.","Donation count":"후원 횟수","Donation mode or Hype scoring?":"후원 모드와 Hype 점수 중 무엇을 사용할까요?","Donation points per USD:":"USD당 후원 포인트:","Donation type filter":"후원 유형 필터","Donations, memberships/subscriptions, renewals, and gifted memberships/subscriptions":"후원, 회원 가입/구독, 갱신, 선물 회원권/구독권","Download":"다운로드","Each qualifying paid event as one, regardless of its value":"금액과 관계없이 조건에 맞는 유료 이벤트마다 1회","Enable":"활성화","Enable Exclude YouTube gifted memberships, or exclude all gifts from Hype scoring.":"YouTube 선물 회원권 제외를 활성화하거나 Hype 점수에서 모든 선물을 제외하세요.","Enable Hype Cup Scoring and leave donation type on All donations.":"Hype Cup Scoring을 활성화하고 후원 유형을 모든 후원으로 유지하세요.","Enable Hype Cup Scoring when memberships or subscriptions should move the goal.":"회원 가입이나 구독으로 목표를 진행하려면 Hype Cup Scoring을 활성화하세요.","Event Reference":"이벤트 참고 문서","Existing styles keep their original appearance by default. Enable":"기존 스타일은 기본적으로 원래 외형을 유지합니다. 간격, 색상, 글꼴을 새롭게 적용하려면","Features":"기능","Fluid Goal Bar":"유동 목표 막대 (Fluid Goal Bar)","For the four new panels, optional controls include":"네 가지 새 패널에는 다음 선택 설정이 있습니다:","Gift memberships appear twice":"선물 회원권이 두 번 표시됨","Gift recipient":"선물 수령자","Gifted memberships":"선물 회원권","Gifted memberships add less than expected":"선물 회원권의 증가량이 예상보다 적음","Gifted memberships move a Hype goal":"선물 회원권으로 Hype 목표가 증가함","Gifted sub/member points:":"선물 구독권/회원권 포인트:","Gifted-membership events provide the number of memberships and membership level, but not the purchase price or creator's net revenue. Their exact cash value cannot be calculated from the event.":"선물 회원권 이벤트에는 회원권 수와 등급이 포함되지만 구매 가격이나 크리에이터의 순수익은 포함되지 않습니다. 이벤트만으로 정확한 현금 가치를 계산할 수 없습니다.","Goal Card":"목표 카드 (Goal Card)","Goal Meter":"목표 게이지","Goal completion and saved totals":"목표 달성과 저장된 합계","Goal measures":"목표 측정 기준","Goal meter bar overlay showing $63.50 of a $100 goal with recent supporters listed below":"$100 목표 중 $63.50을 표시하고 아래에 최근 후원자가 나열된 목표 게이지 막대 오버레이","Goals such as 7 / 20 Super Chats":"Super Chat 7 / 20회 같은 목표","Guides":"가이드","Hide dollar signs":"달러 기호 숨기기","Hire":"작업 의뢰","Home":"홈","How Hype values work":"Hype 값의 작동 방식","How it counts":"집계 방식","Hype Cup Scoring":"Hype Cup 점수 (Hype Cup Scoring)","Hype goals reset after completion by default; the completion delay controls how long the completed value stays visible.":"Hype 목표는 기본적으로 달성 후 초기화됩니다. 완료 지연은 달성한 값을 얼마 동안 표시할지 결정합니다.","Hype mode uses gift count × configured gift points":"Hype 모드는 선물 수 × 설정된 선물 포인트를 사용합니다","Hype resets by default; use a rolling goal for a cumulative total.":"Hype는 기본적으로 초기화됩니다. 누적 합계를 원하면 누적 목표를 사용하세요.","Ignored for points by default to prevent double counting":"중복 집계를 방지하기 위해 기본적으로 포인트에서 제외","Inspiration":"아이디어","Jar":"저금통 (Jar)","Jar style: each qualifying donation fires a celebration and updates the goal total.":"저금통 스타일: 조건에 맞는 후원마다 축하 효과가 재생되고 목표 합계가 업데이트됩니다.","Jewels / virtual gifts":"Jewels / 가상 선물","Keep amount between sessions":"세션 간 금액 유지","Keep total and advance target":"합계 유지 및 목표 증가","Leave":"유지:","Leave Hype Cup Scoring off for a donation-only goal. Enable it for a mixed supporter goal.":"후원만 집계하는 목표에서는 Hype Cup Scoring을 끄세요. 여러 후원 활동을 합치는 목표에서는 활성화하세요.","Lower Third":"하단 자막형 (Lower Third)","Main navigation":"기본 탐색 메뉴","Meaning":"의미","Minimal":"최소","Mixed-goal filter:":"혼합 목표 필터:","Mode":"모드","Money or native-unit goals":"금액 또는 플랫폼 고유 단위 목표","Normal Tip Jar":"일반 후원 저금통","Normal donation goals retain their total unless a reset is requested.":"일반 후원 목표는 초기화를 요청하지 않는 한 합계를 유지합니다.","Normal or Hype mode":"일반 또는 Hype 모드","Nothing updates":"아무것도 업데이트되지 않음","Number of qualifying donations":"조건에 맞는 후원 횟수","One combined supporter-points goal":"후원자 포인트를 합친 하나의 목표","One viewer received a membership from the bundle":"시청자 한 명이 묶음 선물 중 회원권 하나를 받음","Open":"열기","Open navigation menu":"탐색 메뉴 열기","Open the safe style preview gallery":"안전한 스타일 미리보기 갤러리 열기","Other count goals:":"기타 횟수 목표:","Overlay Gallery":"오버레이 갤러리","Paid event filter":"유료 이벤트 필터","Persistence is enabled in the same browser or OBS profile.":"같은 브라우저 또는 OBS 프로필에서 합계 저장이 활성화되어 있습니다.","Persistent totals are separated by normal/Hype mode and active source/unit filters, but not by Social Stream session ID. Reset the saved amount before reusing the same browser profile for a different goal.":"저장된 합계는 일반/Hype 모드와 활성 소스/단위 필터별로 구분되지만 Social Stream 세션 ID별로 구분되지는 않습니다. 같은 브라우저 프로필을 다른 목표에 재사용하기 전에 저장된 금액을 초기화하세요.","Point unit label:":"포인트 단위 이름:","Progress Ring":"진행 원형 (Progress Ring)","Recurring goal increment":"반복 목표 증가량","Refreshed appearance":"새로운 외형 (Refreshed appearance)","Resources":"자료","Segmented Bar":"구간 막대 (Segmented Bar)","Session check:":"세션 확인:","Set":"설정:","Set Paid event filter to Super Chats only.":"유료 이벤트 필터를 Super Chats only로 설정하세요.","Set it up":"설정하기","Set the goal target, such as":"목표값을 예를 들어","Set up the Social Stream Ninja Tip Jar and Goal Meter and troubleshoot missing donations, memberships, and gifted memberships.":"Social Stream Ninja 후원 저금통과 목표 게이지를 설정하고 후원, 회원권, 선물 회원권 누락 문제를 해결하세요.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 로고","Someone bought memberships for other viewers":"누군가 다른 시청자를 위해 회원권을 구매함","Source filter":"소스 필터","Source is active, overlay is open, session IDs match, and filters match the event.":"소스가 활성화되어 있고, 오버레이가 열려 있고, 세션 ID가 일치하고, 필터가 해당 이벤트와 맞아야 합니다.","Style, Goal, and Filters → Display Style":"스타일, 목표 및 필터 → 표시 스타일 (Style, Goal, and Filters → Display Style)","Sub/member points:":"구독/회원 포인트:","Super Chat / Super Sticker":"Super Chat / Super Sticker","Super Chat count includes Super Stickers":"Super Chat 횟수에 Super Sticker가 포함됨","Super Chat value does not affect a count goal: a $1 Super Chat and a $100 Super Chat each add one. Memberships, gifted memberships, Super Stickers, and YouTube Gifts do not move a Super Chat-only goal.":"Super Chat 금액은 횟수 목표에 영향을 주지 않습니다. $1 Super Chat과 $100 Super Chat 모두 1회씩 증가합니다. 회원권, 선물 회원권, Super Sticker, YouTube Gifts는 Super Chat 전용 목표를 증가시키지 않습니다.","Super Chats count but memberships do not":"Super Chat은 집계되지만 회원권은 집계되지 않음","Super Chats only":"Super Chat만 (Super Chats only)","Super Chats, Cheers/Bits, tips, and other payloads with a donation amount":"Super Chat, Cheer/Bits, 팁 및 후원 금액이 포함된 기타 페이로드","Support":"지원","Supported Sites":"지원 사이트","Switch theme":"테마 전환","Symptom":"증상","Text Only":"텍스트만 (Text Only)","The new panels support Default, Neon, and Gold themes. Existing fill-color settings also work on them; the ring uses a solid stroke that changes with progress. Backgrounds outside the overlay remain transparent for OBS.":"새 패널은 Default, Neon, Gold 테마를 지원합니다. 기존 채우기 색상 설정도 적용되며, 원형은 진행도에 따라 색이 바뀌는 단색 선을 사용합니다. 오버레이 바깥 배경은 OBS용으로 투명하게 유지됩니다.","The paid event filter can count only Super Stickers or combine Super Chats and Super Stickers. Use":"유료 이벤트 필터로 Super Sticker만 집계하거나 Super Chat과 Super Sticker를 함께 집계할 수 있습니다. 사용할 설정:","The popup's test buttons currently test donation rows. For membership or gift issues, use the Dock or Events Dashboard with the same session to confirm the event arrives before troubleshooting the goal.":"팝업의 테스트 버튼은 현재 후원 행을 테스트합니다. 회원권이나 선물에 문제가 있다면 목표를 점검하기 전에 같은 세션의 도크 또는 이벤트 대시보드에서 이벤트가 수신되는지 확인하세요.","The source and copied overlay URL must use the same session ID. Keep session and password values private.":"소스와 복사한 오버레이 URL은 같은 세션 ID를 사용해야 합니다. 세션과 비밀번호는 비공개로 유지하세요.","They use fixed gift points, not an unavailable purchase price.":"알 수 없는 구매 가격 대신 고정 선물 포인트를 사용합니다.","Tip Jar and Goal Meter":"후원함 및 목표 미터","Tip Jar and Goal Meter Guide":"후원 저금통 및 목표 게이지 가이드","Tip Jar and Goal Meter Guide - Social Stream Ninja":"후원 저금통 및 목표 게이지 가이드 - Social Stream Ninja","Tip jar overlay celebrating a $20 tip with confetti and a toast showing Ryu tipped $20.00":"$20 후원을 색종이 효과로 축하하며 Ryu가 $20.00을 후원했다는 알림을 표시하는 후원 저금통 오버레이","Total drops after reaching the goal":"목표 달성 후 합계가 줄어듦","Troubleshooting":"문제 해결","Use the matching native-unit filter":"해당 플랫폼 고유 단위 필터 사용","Vertical Bar":"세로 막대 (Vertical Bar)","What it counts":"집계 대상","What to check":"확인할 사항","YouTube":"YouTube","YouTube event":"YouTube 이벤트","YouTube gifts are not all the same":"YouTube 선물은 모두 같지 않습니다","changes the displayed label. Using":"는 표시되는 단위 이름을 바꿉니다. 예를 들어","creates a cumulative rolling goal.":"를 사용하면 누적 목표가 됩니다.","creates repeating levels.":"으로 반복 단계를 만듭니다.","does not make membership points an exact cash value.":"를 사용해도 회원 포인트가 정확한 현금 가치로 바뀌지는 않습니다.","fixed points for each gift. A bundle of 5 contributes":"선물 하나당 고정 포인트입니다. 5개 묶음의 기여량:","fixed points for each new membership/subscription or renewal.":"신규 회원 가입/구독 또는 갱신마다 주어지는 고정 포인트입니다.","in the same section (or add":"를 같은 섹션에서 활성화하세요(또는","instead of":"를 사용하세요. 대체할 값:","multiplier applied after supported cash donations are converted to USD.":"지원되는 현금 후원을 USD로 환산한 뒤 적용하는 배율입니다.","off.":"꺼짐.","on":"위치:","only when recipient points should be added on top of the original gift bundle.":"는 원래 선물 묶음에 수령자 포인트를 추가로 더하려는 경우에만 사용하세요.","preserves points beyond the completed goal.":"은 달성한 목표를 초과한 포인트를 유지합니다.","stores the amount and history in that browser or OBS profile.":"는 해당 브라우저 또는 OBS 프로필에 금액과 내역을 저장합니다.","to":"대상:","to compare sample layouts on light or dark backgrounds. Previews do not connect to live overlays or read or save donation totals. Paste your existing tip jar link in the gallery to copy a styled link while keeping its session, goal, and filter settings.":"에서 밝거나 어두운 배경의 예시 레이아웃을 비교하세요. 미리보기는 실제 오버레이에 연결하지 않으며 후원 합계를 읽거나 저장하지 않습니다. 갤러리에 기존 후원 저금통 링크를 붙여 넣으면 세션, 목표, 필터 설정을 유지한 채 스타일이 적용된 링크를 복사할 수 있습니다.","to override the automatic label.":"로 자동 단위 이름을 바꿀 수 있습니다.","to the overlay URL) to display":"를 오버레이 URL에 추가하세요). 표시 형식:","when memberships and gifts should also count. A specific donation-unit filter currently limits Hype scoring to matching donation rows.":"를 사용하면 회원권과 선물도 집계됩니다. 현재 특정 후원 단위 필터를 적용하면 Hype 점수는 해당 단위의 후원 행만 집계합니다.","© 2026 Social Stream Ninja. All rights reserved.":"© 2026 Social Stream Ninja. 모든 권리 보유."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tip-jar-goal-meter.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tip-jar-goal-meter.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="기본 탐색 메뉴"><a href="../index.html">홈</a><a href="features.html">기능</a><a href="inspiration.html" class="site-priority-inspiration">아이디어</a><a href="download.html">다운로드</a><a href="guides.html">가이드</a><a href="commands.html">명령 및 API</a><a href="supported-sites.html">지원 사이트</a><a href="overlay-gallery.html" class="site-priority-gallery">오버레이 갤러리</a><a href="services.html" class="site-priority-hire">작업 의뢰</a><a href="support.html">지원</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tip-jar-goal-meter.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tip-jar-goal-meter.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tip-jar-goal-meter.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tip-jar-goal-meter.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tip-jar-goal-meter.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tip-jar-goal-meter.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tip-jar-goal-meter.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tip-jar-goal-meter.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tip-jar-goal-meter.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tip-jar-goal-meter.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tip-jar-goal-meter.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="tip-jar-goal-meter.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/tip-jar-goal-meter.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tip-jar-goal-meter.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tip-jar-goal-meter.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/tip-jar-goal-meter.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/tip-jar-goal-meter.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="테마 전환"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="탐색 메뉴 열기" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>후원 저금통 및 목표 게이지 가이드</h1>
+            <p>집계 대상을 선택하고 후원자별 값을 설정한 뒤 OBS에 오버레이를 추가하세요. 합계가 잘못 표시될 때의 해결 방법도 안내합니다.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <h3>후원 모드와 Hype 점수 중 무엇을 사용할까요?</h3>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>모드</th><th>집계 대상</th><th>적합한 대상</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Mode">일반 후원 저금통</td><td data-label="What it counts">Super Chat, Cheer/Bits, 팁 및 후원 금액이 포함된 기타 페이로드</td><td data-label="Best for">금액 또는 플랫폼 고유 단위 목표</td></tr>
+                            <tr><td data-label="Mode">후원 횟수</td><td data-label="What it counts">금액과 관계없이 조건에 맞는 유료 이벤트마다 1회</td><td data-label="Best for">Super Chat 7 / 20회 같은 목표</td></tr>
+                            <tr><td data-label="Mode">Hype Cup 점수 (Hype Cup Scoring)</td><td data-label="What it counts">후원, 회원 가입/구독, 갱신, 선물 회원권/구독권</td><td data-label="Best for">후원자 포인트를 합친 하나의 목표</td></tr>
+                        </tbody>
+                    </table>
+                    <div class="quick-note"><strong>Jar를 Bar로 바꾸면 외형만 변경됩니다.</strong> 회원 가입이나 구독으로 목표를 진행하려면 Hype Cup Scoring을 활성화하세요.</div>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/tip-jar-donation-celebration.png" alt="$20 후원을 색종이 효과로 축하하며 Ryu가 $20.00을 후원했다는 알림을 표시하는 후원 저금통 오버레이" class="guide-image guide-image-medium">
+                        <figcaption>저금통 스타일: 조건에 맞는 후원마다 축하 효과가 재생되고 목표 합계가 업데이트됩니다.</figcaption>
+                    </figure>
+                    <figure class="guide-figure">
+                        <img src="../../docs/images/guides/goal-meter-bar-demo.png" alt="$100 목표 중 $63.50을 표시하고 아래에 최근 후원자가 나열된 목표 게이지 막대 오버레이" class="guide-image guide-image-medium">
+                        <figcaption>막대 스타일 (<code>style=meter</code>): 같은 목표를 진행 막대와 최근 후원자로 표시합니다.</figcaption>
+                    </figure>
+                </div>
+
+                <div class="guide-card">
+                    <h3>스타일 선택</h3>
+                    <p><a href="../../tipjar-preview.html">안전한 스타일 미리보기 갤러리 열기</a> 에서 밝거나 어두운 배경의 예시 레이아웃을 비교하세요. 미리보기는 실제 오버레이에 연결하지 않으며 후원 합계를 읽거나 저장하지 않습니다. 갤러리에 기존 후원 저금통 링크를 붙여 넣으면 세션, 목표, 필터 설정을 유지한 채 스타일이 적용된 링크를 복사할 수 있습니다.</p>
+                    <p>기존 스타일은 기본적으로 원래 외형을 유지합니다. 간격, 색상, 글꼴을 새롭게 적용하려면 <strong>새로운 외형 (Refreshed appearance)</strong> (<code>&amp;refresh</code>)을 활성화하세요. 아래 새 스타일은 별도로 선택할 수 있습니다.</p>
+                    <p>모든 스타일은 같은 후원 합계, 필터, 횟수 목표, Hype 점수, 반복 목표를 사용합니다. 선택 위치: <strong>스타일, 목표 및 필터 → 표시 스타일 (Style, Goal, and Filters → Display Style)</strong>.</p>
+                    <p>활성화 <strong>달러 기호 숨기기</strong> 를 같은 섹션에서 활성화하세요(또는 <code>&amp;hidecurrency</code> 를 오버레이 URL에 추가하세요). 표시 형식: <code>0.00 / 500</code> 를 사용하세요. 대체할 값: <code>$0.00 / $500</code>처럼 표시됩니다. 기본적으로 꺼져 있으며 목표 표시만 바꿉니다. 후원 값, 환산, Bits 등의 단위 표시는 유지됩니다.</p>
+                    <ul>
+                        <li><strong>저금통 (Jar)</strong>: 아이템이 떨어지는 기본 컵입니다.</li>
+                        <li><strong>목표 게이지</strong>: 어두운 패널에 진행 막대와 최근 후원자를 표시합니다.</li>
+                        <li><strong>유동 목표 막대 (Fluid Goal Bar)</strong>: 목표를 눈에 띄게 보여 주는 넓은 애니메이션 막대입니다.</li>
+                        <li><strong>작은 막대 (Compact Bar)</strong>: 모서리에 적합한 작은 막대입니다. <strong>세로 막대 (Vertical Bar)</strong>: 화면 측면에 배치하기 좋은 온도계입니다.</li>
+                        <li><strong>최소</strong>: 총합과 백분율을 크게 표시합니다. <strong>텍스트만 (Text Only)</strong>: 간단한 텍스트 표시입니다.</li>
+                        <li><strong>목표 카드 (Goal Card)</strong> (<code>style=card</code>): 큰 총합과 얇은 진행 막대가 있는 작은 패널입니다.</li>
+                        <li><strong>진행 원형 (Progress Ring)</strong> (<code>style=ring</code>): 목표 총합 위에 원형으로 백분율을 표시합니다.</li>
+                        <li><strong>하단 자막형 (Lower Third)</strong> (<code>style=lowerthird</code>): 총합 옆에 제목이 있는 넓고 낮은 패널입니다.</li>
+                        <li><strong>구간 막대 (Segmented Bar)</strong> (<code>style=segmented</code>): 진행 상태를 20개 구간으로 표시하는 목표 패널입니다.</li>
+                    </ul>
+                    <p>새 패널은 Default, Neon, Gold 테마를 지원합니다. 기존 채우기 색상 설정도 적용되며, 원형은 진행도에 따라 색이 바뀌는 단색 선을 사용합니다. 오버레이 바깥 배경은 OBS용으로 투명하게 유지됩니다.</p>
+                    <p>네 가지 새 패널에는 다음 선택 설정이 있습니다: <code>panelopacity=0.5</code> (0–1), <code>accent=%2366d9b2</code> (6자리 16진수 색상), <code>amountsize=32</code> (12–96픽셀), <code>hidepercent</code>입니다. 진행 영역의 시작/끝 색상을 명시하면 강조색보다 우선합니다. 값을 비우면 각 스타일의 기본값을 사용합니다. 막대 텍스트 크기와 ‘막대만’은 Fluid Goal Bar에 적용되며, 사용자 지정 저금통 이미지는 Jar에만 적용됩니다.</p>
+                </div>
+
+                <div class="guide-card">
+                    <h3>설정하기</h3>
+                    <ol class="guide-steps">
+                        <li>Social Stream Ninja에서 YouTube, Twitch 등의 소스를 활성화하세요.</li>
+                        <li>열기 <strong>후원함 및 목표 미터</strong>를 선택한 뒤 옵션을 여세요.</li>
+                        <li>후원만 집계하는 목표에서는 Hype Cup Scoring을 끄세요. 여러 후원 활동을 합치는 목표에서는 활성화하세요.</li>
+                        <li>목표를 후원 금액으로 측정할지 조건에 맞는 후원 횟수로 측정할지 선택하세요.</li>
+                        <li>표시 스타일, 목표, 제목, 소스/이벤트 필터, 저장 방식을 선택하세요.</li>
+                        <li>업데이트된 후원 저금통 링크를 복사하여 OBS에 브라우저 소스로 추가하세요.</li>
+                    </ol>
+                    <div class="quick-note warning-note"><strong>세션 확인:</strong> 소스와 복사한 오버레이 URL은 같은 세션 ID를 사용해야 합니다. 세션과 비밀번호는 비공개로 유지하세요.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>금액 대신 YouTube Super Chat 횟수 집계</h3>
+                    <ol class="guide-steps">
+                        <li>유지: <strong>Hype Cup 점수 (Hype Cup Scoring)</strong> 꺼짐.</li>
+                        <li>설정: <strong>목표 측정 기준</strong> 대상: <strong>조건에 맞는 후원 횟수</strong>.</li>
+                        <li>설정: <strong>소스 필터</strong> 대상: <strong>YouTube</strong>.</li>
+                        <li>설정: <strong>유료 이벤트 필터</strong> 대상: <strong>Super Chat만 (Super Chats only)</strong>.</li>
+                        <li>목표값을 예를 들어 <code>20</code>으로 지정하세요. 오버레이의 진행 표시 예: <code>7 / 20 Super Chats</code>.</li>
+                    </ol>
+                    <p>Super Chat 금액은 횟수 목표에 영향을 주지 않습니다. $1 Super Chat과 $100 Super Chat 모두 1회씩 증가합니다. 회원권, 선물 회원권, Super Sticker, YouTube Gifts는 Super Chat 전용 목표를 증가시키지 않습니다.</p>
+                    <div class="quick-note"><strong>기타 횟수 목표:</strong> 유료 이벤트 필터로 Super Sticker만 집계하거나 Super Chat과 Super Sticker를 함께 집계할 수 있습니다. 사용할 설정: <strong>횟수 단위 이름</strong> 로 자동 단위 이름을 바꿀 수 있습니다.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>Hype 값의 작동 방식</h3>
+                    <ul class="guide-list">
+                        <li><strong>구독/회원 포인트:</strong> 신규 회원 가입/구독 또는 갱신마다 주어지는 고정 포인트입니다.</li>
+                        <li><strong>선물 구독권/회원권 포인트:</strong> 선물 하나당 고정 포인트입니다. 5개 묶음의 기여량: <code>5 × giftpoints</code>.</li>
+                        <li><strong>USD당 후원 포인트:</strong> 지원되는 현금 후원을 USD로 환산한 뒤 적용하는 배율입니다.</li>
+                        <li><strong>포인트 단위 이름:</strong> 는 표시되는 단위 이름을 바꿉니다. 예를 들어 <code>$</code> 를 사용해도 회원 포인트가 정확한 현금 가치로 바뀌지는 않습니다.</li>
+                    </ul>
+                    <div class="quick-note warning-note"><strong>혼합 목표 필터:</strong> 유지: <strong>후원 유형 필터</strong> 위치: <strong>모든 후원</strong> 를 사용하면 회원권과 선물도 집계됩니다. 현재 특정 후원 단위 필터를 적용하면 Hype 점수는 해당 단위의 후원 행만 집계합니다.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>YouTube 선물은 모두 같지 않습니다</h3>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>YouTube 이벤트</th><th>의미</th><th>집계 방식</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="YouTube event">Super Chat / Super Sticker</td><td data-label="Meaning">통화 금액이 포함된 유료 메시지</td><td data-label="How it counts">일반 또는 Hype 모드</td></tr>
+                            <tr><td data-label="YouTube event">선물 회원권</td><td data-label="Meaning">누군가 다른 시청자를 위해 회원권을 구매함</td><td data-label="How it counts">Hype 모드는 선물 수 × 설정된 선물 포인트를 사용합니다</td></tr>
+                            <tr><td data-label="YouTube event">선물 수령자</td><td data-label="Meaning">시청자 한 명이 묶음 선물 중 회원권 하나를 받음</td><td data-label="How it counts">중복 집계를 방지하기 위해 기본적으로 포인트에서 제외</td></tr>
+                            <tr><td data-label="YouTube event">Jewels / 가상 선물</td><td data-label="Meaning">플랫폼 고유 단위 수량이 포함된 별도의 가상 선물 이벤트</td><td data-label="How it counts">해당 플랫폼 고유 단위 필터 사용</td></tr>
+                        </tbody>
+                    </table>
+                    <p>선물 회원권 이벤트에는 회원권 수와 등급이 포함되지만 구매 가격이나 크리에이터의 순수익은 포함되지 않습니다. 이벤트만으로 정확한 현금 가치를 계산할 수 없습니다.</p>
+                    <div class="quick-note warning-note"><strong>중복 집계 방지:</strong> 활성화 <strong>개별 선물 수령자도 집계</strong> 는 원래 선물 묶음에 수령자 포인트를 추가로 더하려는 경우에만 사용하세요.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>목표 달성과 저장된 합계</h3>
+                    <ul class="guide-list">
+                        <li>일반 후원 목표는 초기화를 요청하지 않는 한 합계를 유지합니다.</li>
+                        <li>Hype 목표는 기본적으로 달성 후 초기화됩니다. 완료 지연은 달성한 값을 얼마 동안 표시할지 결정합니다.</li>
+                        <li><strong>초과 포인트 이월</strong> 은 달성한 목표를 초과한 포인트를 유지합니다.</li>
+                        <li><strong>합계 유지 및 목표 증가</strong> 를 사용하면 누적 목표가 됩니다.</li>
+                        <li><strong>반복 목표 증가량</strong> 으로 반복 단계를 만듭니다.</li>
+                        <li><strong>세션 간 금액 유지</strong> 는 해당 브라우저 또는 OBS 프로필에 금액과 내역을 저장합니다.</li>
+                    </ul>
+                    <div class="quick-note">저장된 합계는 일반/Hype 모드와 활성 소스/단위 필터별로 구분되지만 Social Stream 세션 ID별로 구분되지는 않습니다. 같은 브라우저 프로필을 다른 목표에 재사용하기 전에 저장된 금액을 초기화하세요.</div>
+                </div>
+
+                <div class="guide-card">
+                    <h3>문제 해결</h3>
+                    <table class="guide-table guide-table-stack">
+                        <thead><tr><th>증상</th><th>확인할 사항</th></tr></thead>
+                        <tbody>
+                            <tr><td data-label="Symptom">아무것도 업데이트되지 않음</td><td data-label="What to check">소스가 활성화되어 있고, 오버레이가 열려 있고, 세션 ID가 일치하고, 필터가 해당 이벤트와 맞아야 합니다.</td></tr>
+                            <tr><td data-label="Symptom">Super Chat은 집계되지만 회원권은 집계되지 않음</td><td data-label="What to check">Hype Cup Scoring을 활성화하고 후원 유형을 모든 후원으로 유지하세요.</td></tr>
+                            <tr><td data-label="Symptom">선물 회원권의 증가량이 예상보다 적음</td><td data-label="What to check">알 수 없는 구매 가격 대신 고정 선물 포인트를 사용합니다.</td></tr>
+                            <tr><td data-label="Symptom">목표 달성 후 합계가 줄어듦</td><td data-label="What to check">Hype는 기본적으로 초기화됩니다. 누적 합계를 원하면 누적 목표를 사용하세요.</td></tr>
+                            <tr><td data-label="Symptom">이전 금액이 다시 나타남</td><td data-label="What to check">같은 브라우저 또는 OBS 프로필에서 합계 저장이 활성화되어 있습니다.</td></tr>
+                            <tr><td data-label="Symptom">선물 회원권이 두 번 표시됨</td><td data-label="What to check">개별 선물 수령자 집계를 비활성화하세요.</td></tr>
+                            <tr><td data-label="Symptom">Super Chat 횟수에 Super Sticker가 포함됨</td><td data-label="What to check">유료 이벤트 필터를 Super Chats only로 설정하세요.</td></tr>
+                            <tr><td data-label="Symptom">선물 회원권으로 Hype 목표가 증가함</td><td data-label="What to check">YouTube 선물 회원권 제외를 활성화하거나 Hype 점수에서 모든 선물을 제외하세요.</td></tr>
+                        </tbody>
+                    </table>
+                    <p>팝업의 테스트 버튼은 현재 후원 행을 테스트합니다. 회원권이나 선물에 문제가 있다면 목표를 점검하기 전에 같은 세션의 도크 또는 이벤트 대시보드에서 이벤트가 수신되는지 확인하세요.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo"><img src="../../media/logo.png" alt="Social Stream Ninja 로고"><span>Social Stream Ninja</span></div>
+                <div class="footer-links"><div class="footer-section"><h4>자료</h4><ul><li><a href="guides.html">가이드</a></li><li><a href="event-reference.html">이벤트 참고 문서</a></li><li><a href="support.html">지원</a></li></ul></div></div>
+            </div>
+            <div class="footer-bottom"><p>© 2026 Social Stream Ninja. 모든 권리 보유.</p></div>
+        </div>
+    </footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+	<head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="noindex, follow">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/docs/windows-administrator-mode.html">
+    <meta property="og:title" content="Spuštění OBS a Social Stream jako správce ve Windows - Social Stream Ninja">
+    <meta property="og:description" content="Jak otestovat nebo trvale zapnout režim správce Windows pro OBS Studio a desktopovou aplikaci Social Stream Ninja a jak ho opět vypnout.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/docs/windows-administrator-mode.html">
+    <meta name="twitter:title" content="Spuštění OBS a Social Stream jako správce ve Windows - Social Stream Ninja">
+    <meta name="twitter:description" content="Jak otestovat nebo trvale zapnout režim správce Windows pro OBS Studio a desktopovou aplikaci Social Stream Ninja a jak ho opět vypnout.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem("darkMode");
+				var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+				if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+					document.documentElement.classList.add("dark-mode");
+				}
+			})();
+		</script>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Spuštění OBS a Social Stream jako správce ve Windows - Social Stream Ninja</title>
+		<link rel="stylesheet" href="../../docs/css/styles.css" />
+		<link rel="stylesheet" href="../../docs/css/guides.css" />
+		<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon" />
+		<meta name="description" content="Jak otestovat nebo trvale zapnout režim správce Windows pro OBS Studio a desktopovou aplikaci Social Stream Ninja a jak ho opět vypnout.">
+		<link rel="canonical" href="https://socialstream.ninja/beta/cs/docs/windows-administrator-mode.html">
+		<style>
+			.admin-screenshot {
+				width: min(100%, 43.2rem);
+				margin-left: auto;
+				margin-right: auto;
+			}
+		</style>
+	<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/windows-administrator-mode.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{", and approve its prompt too.":", a potvrďte také jeho výzvu.",", not by administrator mode.":", nikoli režimem správce.",", then choose":", poté vyberte",". If Windows opens another shortcut, right-click that shortcut and choose":". Pokud Windows otevře dalšího zástupce, klikněte na něj pravým tlačítkem a vyberte","A blank unified chat, an old Browser Source URL, or a stale OBS cache is usually fixed by":"Prázdný sjednocený chat, starou URL zdroje prohlížeče nebo zastaralou mezipaměť OBS obvykle vyřeší","A typical per-user installation is:":"Typická instalace pro jednoho uživatele je:","Always Run OBS As Administrator":"Vždy spouštět OBS jako správce","Always Run Social Stream As Administrator":"Vždy spouštět Social Stream jako správce","Apply":"Použít","Approve the Windows User Account Control prompt.":"Potvrďte výzvu Řízení uživatelských účtů Windows.","Clear":"Vymažte","Close OBS Studio and the Social Stream desktop app.":"Zavřete OBS Studio a desktopovou aplikaci Social Stream.","Close OBS Studio.":"Zavřete OBS Studio.","Close Social Stream.":"Zavřete Social Stream.","Close the app.":"Zavřete aplikaci.","Commands & API":"Příkazy a API","Compatibility":"Kompatibilita","Do not disable User Account Control. For background on elevated applications, see":"Nevypínejte Řízení uživatelských účtů. Další informace o aplikacích se zvýšenými oprávněními najdete v","Do the same for the other app so OBS and Social Stream return to the same normal privilege level.":"Totéž proveďte u druhé aplikace, aby se OBS i Social Stream vrátily na stejnou běžnou úroveň oprávnění.","Download":"Stáhnout","Features":"Funkce","Guides":"Návody","Hire":"Najmout odborníka","Home":"Domů","How to test or permanently enable Windows administrator mode for OBS Studio and the Social Stream Ninja desktop app, and how to turn it off again.":"Jak otestovat nebo trvale zapnout režim správce Windows pro OBS Studio a desktopovou aplikaci Social Stream Ninja a jak ho opět vypnout.","If one app is elevated and the other is not, Windows can limit how they interact. For a permission-mismatch test, close both apps first and run both at the same privilege level.":"Pokud jedna aplikace běží se zvýšenými oprávněními a druhá ne, Windows může omezit jejich vzájemnou spolupráci. Při testu nesouladu oprávnění nejprve obě zavřete a spusťte je se stejnou úrovní oprávnění.","If you are testing a mismatch between the two apps, right-click the Social Stream shortcut, choose":"Pokud testujete nesoulad mezi oběma aplikacemi, klikněte pravým tlačítkem na zástupce Social Stream, vyberte","Inspiration":"Inspirace","It confirms whether elevation matters without permanently changing either app.":"Ověříte tak vliv zvýšených oprávnění bez trvalé změny kterékoli aplikace.","Main navigation":"Hlavní navigace","Microsoft's administrator mode explanation":"vysvětlení režimu správce od Microsoftu","OBS and Social Stream normally should not need administrator access.":"OBS a Social Stream obvykle přístup správce nepotřebují.","OK":"OK","One-Time Administrator Test":"Jednorázový test správce","Only Use This For A Confirmed Permission Problem":"Používejte pouze při potvrzeném problému s oprávněními","Open file location":"Otevřít umístění souboru","Open navigation menu":"Otevřít navigační nabídku","Open the":"Otevřete","Open the executable's":"U spustitelného souboru otevřete","Overlay Gallery":"Galerie překryvů","Prefer this test first.":"Nejprve upřednostněte tento test.","Properties":"Vlastnosti (Properties)","Properties → Compatibility":"Vlastnosti → Kompatibilita","Repeat the exact workflow that previously failed. When finished, close both apps; the one-time elevation ends when they exit.":"Zopakujte přesně postup, který předtím selhal. Po dokončení obě aplikace zavřete; jednorázové zvýšení oprávnění končí jejich ukončením.","Right-click":"Klikněte pravým tlačítkem na","Right-click its shortcut and choose":"Klikněte pravým tlačítkem na jeho zástupce a vyberte","Right-click the OBS Studio shortcut and choose":"Klikněte pravým tlačítkem na zástupce OBS Studio a vyberte","Run OBS and Social Stream as Administrator":"Spustit OBS a Social Stream jako správce","Run OBS and Social Stream as Administrator on Windows - Social Stream Ninja":"Spuštění OBS a Social Stream jako správce ve Windows - Social Stream Ninja","Run as administrator":"Spustit jako správce","Run this program as an administrator":"Spouštět tento program jako správce","Select":"Vyberte","Select the unchecked administrator checkbox shown for OBS Studio. This screenshot was captured from the current Windows app properties without changing the setting.":"Zaškrtněte zobrazené nezaškrtnuté políčko správce pro OBS Studio. Snímek byl pořízen z aktuálních vlastností aplikace ve Windows bez změny nastavení.","Select the unchecked administrator checkbox shown for the Social Stream desktop app. This screenshot was captured from the current Windows app properties without changing the setting.":"Zaškrtněte zobrazené nezaškrtnuté políčko správce pro desktopovou aplikaci Social Stream. Snímek byl pořízen z aktuálních vlastností aplikace ve Windows bez změny nastavení.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licence GPLv3.0.","Start both normally unless a Windows privilege mismatch has been confirmed or support has specifically asked you to test this.":"Obě aplikace spouštějte běžně, pokud nebyl potvrzen nesoulad oprávnění Windows nebo vás podpora výslovně nepožádala o tento test.","Support":"Podpora","Supported Sites":"Podporované weby","Switch theme":"Přepnout vzhled","The default 64-bit OBS path is commonly:":"Výchozí cesta k 64bitovému OBS obvykle je:","Turn Administrator Mode Off Again":"Opětovné vypnutí režimu správce","Windows Compatibility tab for obs64.exe showing Run this program as an administrator":"Karta Kompatibilita Windows pro obs64.exe s volbou Spouštět tento program jako správce","Windows Compatibility tab for socialstream.exe showing Run this program as an administrator":"Karta Kompatibilita Windows pro socialstream.exe s volbou Spouštět tento program jako správce","Windows steps for a one-time test or a persistent setting, with matching examples for both apps.":"Postupy pro jednorázový test nebo trvalé nastavení ve Windows s odpovídajícími příklady pro obě aplikace.","Your path may differ for portable or custom installations.":"U přenosných nebo vlastních instalací se cesta může lišit.","Your path may differ if you chose another installation location.":"Pokud jste zvolili jiné umístění instalace, cesta se může lišit.","again.":"znovu.","and":"a","and choose":"a vyberte","obs64.exe":"obs64.exe","replacing the URL and refreshing the cache":"nahrazení URL a obnovení mezipaměti","socialstream.exe":"socialstream.exe","tab.":"kartě."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/windows-administrator-mode.html">
+<!-- ssn-languages:end --></head>
+	<body>
+		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Hlavní navigace"><a href="../index.html">Domů</a><a href="features.html">Funkce</a><a href="inspiration.html" class="site-priority-inspiration">Inspirace</a><a href="download.html">Stáhnout</a><a href="guides.html">Návody</a><a href="commands.html">Příkazy a API</a><a href="supported-sites.html">Podporované weby</a><a href="overlay-gallery.html" class="site-priority-gallery">Galerie překryvů</a><a href="services.html" class="site-priority-hire">Najmout odborníka</a><a href="support.html">Podpora</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/windows-administrator-mode.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/windows-administrator-mode.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/windows-administrator-mode.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/windows-administrator-mode.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/windows-administrator-mode.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/windows-administrator-mode.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/windows-administrator-mode.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/windows-administrator-mode.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/windows-administrator-mode.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/windows-administrator-mode.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/windows-administrator-mode.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/windows-administrator-mode.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/windows-administrator-mode.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/windows-administrator-mode.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/windows-administrator-mode.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="windows-administrator-mode.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/windows-administrator-mode.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Přepnout vzhled"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Otevřít navigační nabídku" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+		<section class="page-hero">
+			<div class="container">
+				<h1>Spustit OBS a Social Stream jako správce</h1>
+				<p>Postupy pro jednorázový test nebo trvalé nastavení ve Windows s odpovídajícími příklady pro obě aplikace.</p>
+			</div>
+		</section>
+
+		<main class="guide-section">
+			<div class="container">
+				<div class="guide-card">
+					<h2>Používejte pouze při potvrzeném problému s oprávněními</h2>
+					<div class="warning-note">
+						<p><strong>OBS a Social Stream obvykle přístup správce nepotřebují.</strong> Obě aplikace spouštějte běžně, pokud nebyl potvrzen nesoulad oprávnění Windows nebo vás podpora výslovně nepožádala o tento test.</p>
+					</div>
+					<p>Prázdný sjednocený chat, starou URL zdroje prohlížeče nebo zastaralou mezipaměť OBS obvykle vyřeší <a href="obs-troubleshooting.html#replace-url-and-cache">nahrazení URL a obnovení mezipaměti</a>, nikoli režimem správce.</p>
+					<p>Pokud jedna aplikace běží se zvýšenými oprávněními a druhá ne, Windows může omezit jejich vzájemnou spolupráci. Při testu nesouladu oprávnění nejprve obě zavřete a spusťte je se stejnou úrovní oprávnění.</p>
+				</div>
+
+				<div class="guide-card">
+					<h2>Jednorázový test správce</h2>
+					<ol class="guide-steps">
+						<li>Zavřete OBS Studio a desktopovou aplikaci Social Stream.</li>
+						<li>Klikněte pravým tlačítkem na zástupce OBS Studio a vyberte <strong>Spustit jako správce</strong>.</li>
+						<li>Potvrďte výzvu Řízení uživatelských účtů Windows.</li>
+						<li>Pokud testujete nesoulad mezi oběma aplikacemi, klikněte pravým tlačítkem na zástupce Social Stream, vyberte <strong>Spustit jako správce</strong>, a potvrďte také jeho výzvu.</li>
+						<li>Zopakujte přesně postup, který předtím selhal. Po dokončení obě aplikace zavřete; jednorázové zvýšení oprávnění končí jejich ukončením.</li>
+					</ol>
+					<div class="guide-note">
+						<p><strong>Nejprve upřednostněte tento test.</strong> Ověříte tak vliv zvýšených oprávnění bez trvalé změny kterékoli aplikace.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="persistent-admin">
+					<h2>Vždy spouštět Social Stream jako správce</h2>
+					<ol class="guide-steps">
+						<li>Zavřete Social Stream.</li>
+						<li>Klikněte pravým tlačítkem na jeho zástupce a vyberte <strong>Otevřít umístění souboru</strong>. Pokud Windows otevře dalšího zástupce, klikněte na něj pravým tlačítkem a vyberte <strong>Otevřít umístění souboru</strong> znovu.</li>
+						<li>Klikněte pravým tlačítkem na <strong>socialstream.exe</strong> a vyberte <strong>Vlastnosti (Properties)</strong>.</li>
+						<li>Otevřete <strong>Kompatibilita</strong> kartě.</li>
+						<li>Vyberte <strong>Spouštět tento program jako správce</strong>, poté vyberte <strong>Použít</strong> a <strong>OK</strong>.</li>
+					</ol>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/windows-admin-ssapp-compatibility.jpg" alt="Karta Kompatibilita Windows pro socialstream.exe s volbou Spouštět tento program jako správce" class="guide-image admin-screenshot" />
+						<figcaption>Zaškrtněte zobrazené nezaškrtnuté políčko správce pro desktopovou aplikaci Social Stream. Snímek byl pořízen z aktuálních vlastností aplikace ve Windows bez změny nastavení.</figcaption>
+					</figure>
+					<p>Typická instalace pro jednoho uživatele je:</p>
+					<pre><code>%LOCALAPPDATA%\Programs\socialstream\socialstream.exe</code></pre>
+					<p>Pokud jste zvolili jiné umístění instalace, cesta se může lišit.</p>
+				</div>
+
+				<div class="guide-card">
+					<h2>Vždy spouštět OBS jako správce</h2>
+					<ol class="guide-steps">
+						<li>Zavřete OBS Studio.</li>
+						<li>Klikněte pravým tlačítkem na zástupce OBS Studio a vyberte <strong>Otevřít umístění souboru</strong>.</li>
+						<li>Klikněte pravým tlačítkem na <strong>obs64.exe</strong> a vyberte <strong>Vlastnosti (Properties)</strong>.</li>
+						<li>Otevřete <strong>Kompatibilita</strong> kartě.</li>
+						<li>Vyberte <strong>Spouštět tento program jako správce</strong>, poté vyberte <strong>Použít</strong> a <strong>OK</strong>.</li>
+					</ol>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/windows-admin-obs-compatibility.jpg" alt="Karta Kompatibilita Windows pro obs64.exe s volbou Spouštět tento program jako správce" class="guide-image admin-screenshot" />
+						<figcaption>Zaškrtněte zobrazené nezaškrtnuté políčko správce pro OBS Studio. Snímek byl pořízen z aktuálních vlastností aplikace ve Windows bez změny nastavení.</figcaption>
+					</figure>
+					<p>Výchozí cesta k 64bitovému OBS obvykle je:</p>
+					<pre><code>%ProgramFiles%\obs-studio\bin\64bit\obs64.exe</code></pre>
+					<p>U přenosných nebo vlastních instalací se cesta může lišit.</p>
+				</div>
+
+				<div class="guide-card">
+					<h2>Opětovné vypnutí režimu správce</h2>
+					<ol class="guide-steps">
+						<li>Zavřete aplikaci.</li>
+						<li>U spustitelného souboru otevřete <strong>Vlastnosti → Kompatibilita</strong> kartě.</li>
+						<li>Vymažte <strong>Spouštět tento program jako správce</strong>, poté vyberte <strong>Použít</strong> a <strong>OK</strong>.</li>
+						<li>Totéž proveďte u druhé aplikace, aby se OBS i Social Stream vrátily na stejnou běžnou úroveň oprávnění.</li>
+					</ol>
+					<p>Nevypínejte Řízení uživatelských účtů. Další informace o aplikacích se zvýšenými oprávněními najdete v <a href="https://learn.microsoft.com/en-us/windows/powertoys/administrator">vysvětlení režimu správce od Microsoftu</a>.</p>
+				</div>
+			</div>
+		</main>
+
+		<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. Licence GPLv3.0.</p></div></div></footer>
+		<script data-copy-markdown src="../../docs/js/main.js"></script>
+		<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+	</body>
+</html>

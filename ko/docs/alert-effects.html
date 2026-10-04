@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ko" data-site-root="../../" data-site-language="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="description" content="Social Stream Ninja 알림에 소리, 애니메이션, 시각 효과를 추가하세요. 효과를 미리 보고 OBS 오버레이에 표시되는 방식을 설정하세요.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ko/docs/alert-effects.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ko_KR">
+    <meta property="og:url" content="https://socialstream.ninja/ko/docs/alert-effects.html">
+    <meta property="og:title" content="알림 효과 설정 | Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja 알림에 소리, 애니메이션, 시각 효과를 추가하세요. 효과를 미리 보고 OBS 오버레이에 표시되는 방식을 설정하세요.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 로고">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ko/docs/alert-effects.html">
+    <meta name="twitter:title" content="알림 효과 설정 | Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja 알림에 소리, 애니메이션, 시각 효과를 추가하세요. 효과를 미리 보고 OBS 오버레이에 표시되는 방식을 설정하세요.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 로고">
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>알림 효과 설정 | Social Stream Ninja</title>
+<link rel="stylesheet" href="../../docs/css/styles.css">
+<link rel="stylesheet" href="../../docs/css/guides.css">
+<style>
+main.container { padding-top: 10.4rem; }
+</style>
+<script>
+(function () {
+    var saved = localStorage.getItem('darkMode');
+    if (saved === 'true' || (saved !== 'false' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark-mode');
+})();
+</script>
+
+<meta name="ssn-site-translation" content="ko">
+<script id="ssn-site-language" type="application/json">{"language":"ko","page":"docs/alert-effects.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"밝은 테마로 전환","Switch to dark theme":"어두운 테마로 전환","Light mode":"밝은 모드","Dark mode":"어두운 모드","Open navigation menu":"탐색 메뉴 열기","Close navigation menu":"탐색 메뉴 닫기","Copy this document as Markdown to the clipboard":"이 문서를 Markdown 형식으로 클립보드에 복사","Copy Markdown":"Markdown 복사","Copying…":"복사 중…","Markdown copied":"Markdown을 복사했습니다","Copy failed":"복사 실패","Copy comprehensive Markdown for an AI assistant":"AI 도우미용 전체 Markdown 복사","Copy this documentation page as Markdown for an AI assistant":"이 문서 페이지를 AI 도우미용 Markdown으로 복사"},"strings":{"Add an optional direct GIF, image, or video URL, or upload media. A GIPHY page link is not a direct media URL. GIF images have no audio; choose a separate sound.":"선택적으로 GIF, 이미지, 동영상의 직접 URL을 추가하거나 미디어를 업로드하세요. GIPHY 페이지 링크는 미디어 직접 URL이 아닙니다. GIF 이미지에는 오디오가 없으므로 소리를 별도로 선택하세요.","Add sounds, animations and visual effects to Social Stream Ninja alerts. Preview effects and configure how they appear in your OBS overlay.":"Social Stream Ninja 알림에 소리, 애니메이션, 시각 효과를 추가하세요. 효과를 미리 보고 OBS 오버레이에 표시되는 방식을 설정하세요.","Alert effects setup | Social Stream Ninja":"알림 효과 설정 | Social Stream Ninja","Amount limits and priority":"금액 제한 및 우선순위","Animation and sound alerts":"애니메이션 및 소리 알림","Choose a sound and use Listen to hear it locally. Custom URL and upload options are below the picker.":"소리를 선택하고 듣기(Listen)로 로컬에서 들어보세요. 사용자 지정 URL과 업로드 옵션은 선택기 아래에 있습니다.","Clear sound removes the custom sound override; default alert audio still applies. Disable Play alert sound to mute overlay audio. Enable alert pauses a rule while preserving its settings. Reset alert clears that rule alone.":"소리 지우기(Clear sound)는 사용자 지정 소리만 제거하며 기본 알림 오디오는 여전히 적용됩니다. 오버레이 오디오를 음소거하려면 알림 소리 재생(Play alert sound)을 끄세요. 알림 활성화(Enable alert)를 끄면 설정을 유지한 채 규칙을 일시 중지합니다. 알림 초기화(Reset alert)는 해당 규칙만 지웁니다.","Donations and bits use estimated USD values from the currency helper. For exactly $100, set both limits to 100. For $100 or more, leave the maximum blank. Blank limits allow any amount; other event types should have no amount limits.":"후원과 비트에는 통화 도우미가 추정한 USD 금액을 사용합니다. 정확히 $100에 맞추려면 두 제한을 모두 100으로 설정하세요. $100 이상이면 최댓값을 비워 두세요. 두 값을 비우면 모든 금액을 허용합니다. 다른 이벤트 유형에는 금액 제한을 두지 마세요.","Enable an alert, then choose the event. The $100 donation preset fills both amount limits and supplies a synthetic Thank you sound if none is selected.":"알림을 활성화한 다음 이벤트를 선택하세요. $100 후원 사전 설정은 두 금액 제한을 채우며, 선택된 소리가 없으면 합성된 Thank you 소리를 제공합니다.","Event Flow and OBS effects":"Event Flow 및 OBS 효과","Event Flow guide":"Event Flow 가이드","Open Multi-Alerts → Event animations & sound effects.":"Multi-Alerts → Event animations & sound effects를 여세요.","Preview and sound":"미리보기 및 소리","Set up your first alert":"첫 알림 설정하기","Social Stream Ninja logo":"Social Stream Ninja 로고","Social Stream Ninja · Guides":"Social Stream Ninja · 가이드","Test alert opens and focuses the local preview. It does not send an event to your live channels. The preview uses your current overlay settings, filters, media, and timing. Sound volume is under Sound & Timing.":"알림 테스트(Test alert)는 로컬 미리보기를 열고 포커스를 맞춥니다. 실시간 채널에 이벤트를 보내지 않습니다. 미리보기에는 현재 오버레이 설정, 필터, 미디어, 타이밍이 적용됩니다. 소리 크기는 Sound & Timing에서 설정합니다.","The first matching alert wins. Put specific rules before broad ones. Platform and category filters still apply.":"처음 일치하는 알림이 적용됩니다. 구체적인 규칙을 일반적인 규칙보다 먼저 배치하세요. 플랫폼 및 카테고리 필터도 적용됩니다.","Use Event Flow templates for sequences and OBS effects. Those media and sound actions play in the Flow Actions overlay. Use one overlay for each event's sound to avoid hearing it twice. OBS templates need a source and filter selected before use.":"연속 동작과 OBS 효과에는 Event Flow 템플릿을 사용하세요. 해당 미디어와 소리 동작은 Flow Actions 오버레이에서 재생됩니다. 같은 소리가 두 번 들리지 않도록 이벤트마다 소리를 담당하는 오버레이 하나를 사용하세요. OBS 템플릿은 사용 전에 소스와 필터를 선택해야 합니다.","Use Test alert, then add your Multi-Alerts link as an OBS browser source.":"알림 테스트(Test alert)를 사용한 다음 Multi-Alerts 링크를 OBS 브라우저 소스로 추가하세요.","Voiced phrases are labelled synthetic recordings. For names or changing text, use the Event Flow editor's Speak Text action.":"음성 문구에는 합성 녹음이라는 라벨이 붙습니다. 이름이나 변하는 텍스트에는 Event Flow 편집기의 Speak Text 동작을 사용하세요."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/alert-effects.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/alert-effects.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/alert-effects.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/alert-effects.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/alert-effects.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/alert-effects.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/alert-effects.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/alert-effects.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/alert-effects.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/alert-effects.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/alert-effects.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/alert-effects.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/alert-effects.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/alert-effects.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/alert-effects.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/alert-effects.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/alert-effects.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/alert-effects.html">
+<!-- ssn-languages:end --></head>
+<body>
+<header>
+<div class="container">
+<a href="guides.html">Social Stream Ninja · 가이드</a>
+<!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="한국어"><span aria-hidden="true">🌐 </span><span lang="ko">한국어</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/alert-effects.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/alert-effects.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/alert-effects.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/alert-effects.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/alert-effects.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/alert-effects.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/alert-effects.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/alert-effects.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/alert-effects.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/alert-effects.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/alert-effects.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="alert-effects.html" lang="ko" hreflang="ko" aria-current="true">한국어</a><a class="site-language-link" href="../../uk/docs/alert-effects.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/alert-effects.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/alert-effects.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/alert-effects.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/alert-effects.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+</header>
+<main class="container">
+<h1>애니메이션 및 소리 알림</h1>
+<section class="guide-card">
+<h2>첫 알림 설정하기</h2>
+<ol>
+<li>Multi-Alerts → Event animations &amp; sound effects를 여세요.</li>
+<li>알림을 활성화한 다음 이벤트를 선택하세요. $100 후원 사전 설정은 두 금액 제한을 채우며, 선택된 소리가 없으면 합성된 Thank you 소리를 제공합니다.</li>
+<li>선택적으로 GIF, 이미지, 동영상의 직접 URL을 추가하거나 미디어를 업로드하세요. GIPHY 페이지 링크는 미디어 직접 URL이 아닙니다. GIF 이미지에는 오디오가 없으므로 소리를 별도로 선택하세요.</li>
+<li>소리를 선택하고 듣기(Listen)로 로컬에서 들어보세요. 사용자 지정 URL과 업로드 옵션은 선택기 아래에 있습니다.</li>
+<li>알림 테스트(Test alert)를 사용한 다음 Multi-Alerts 링크를 OBS 브라우저 소스로 추가하세요.</li>
+</ol>
+</section>
+<section class="guide-card">
+<h2>금액 제한 및 우선순위</h2>
+<p>후원과 비트에는 통화 도우미가 추정한 USD 금액을 사용합니다. 정확히 $100에 맞추려면 두 제한을 모두 100으로 설정하세요. $100 이상이면 최댓값을 비워 두세요. 두 값을 비우면 모든 금액을 허용합니다. 다른 이벤트 유형에는 금액 제한을 두지 마세요.</p>
+<p>처음 일치하는 알림이 적용됩니다. 구체적인 규칙을 일반적인 규칙보다 먼저 배치하세요. 플랫폼 및 카테고리 필터도 적용됩니다.</p>
+</section>
+<section class="guide-card" id="testing">
+<h2>미리보기 및 소리</h2>
+<p>알림 테스트(Test alert)는 로컬 미리보기를 열고 포커스를 맞춥니다. 실시간 채널에 이벤트를 보내지 않습니다. 미리보기에는 현재 오버레이 설정, 필터, 미디어, 타이밍이 적용됩니다. 소리 크기는 Sound &amp; Timing에서 설정합니다.</p>
+<p>소리 지우기(Clear sound)는 사용자 지정 소리만 제거하며 기본 알림 오디오는 여전히 적용됩니다. 오버레이 오디오를 음소거하려면 알림 소리 재생(Play alert sound)을 끄세요. 알림 활성화(Enable alert)를 끄면 설정을 유지한 채 규칙을 일시 중지합니다. 알림 초기화(Reset alert)는 해당 규칙만 지웁니다.</p>
+<p>음성 문구에는 합성 녹음이라는 라벨이 붙습니다. 이름이나 변하는 텍스트에는 Event Flow 편집기의 Speak Text 동작을 사용하세요.</p>
+</section>
+<section class="guide-card">
+<h2>Event Flow 및 OBS 효과</h2>
+<p>연속 동작과 OBS 효과에는 Event Flow 템플릿을 사용하세요. 해당 미디어와 소리 동작은 Flow Actions 오버레이에서 재생됩니다. 같은 소리가 두 번 들리지 않도록 이벤트마다 소리를 담당하는 오버레이 하나를 사용하세요. OBS 템플릿은 사용 전에 소스와 필터를 선택해야 합니다.</p>
+<p>
+<a href="../actions/event-flow-guide.html">Event Flow 가이드</a>
+</p>
+</section>
+</main>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ru" data-site-root="../../" data-site-language="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/ru/docs/twitch-bot-account-chatbot.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:url" content="https://socialstream.ninja/beta/ru/docs/twitch-bot-account-chatbot.html">
+    <meta property="og:title" content="Боты для автоответов - Social Stream Ninja">
+    <meta property="og:description" content="Используйте аккаунт бота Twitch WebSocket или отдельный источник только для ответов, чтобы отправлять автоматические ответы Social Stream Ninja от другого аккаунта.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Логотип Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/ru/docs/twitch-bot-account-chatbot.html">
+    <meta name="twitter:title" content="Боты для автоответов - Social Stream Ninja">
+    <meta name="twitter:description" content="Используйте аккаунт бота Twitch WebSocket или отдельный источник только для ответов, чтобы отправлять автоматические ответы Social Stream Ninja от другого аккаунта.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Логотип Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Боты для автоответов - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Используйте аккаунт бота Twitch WebSocket или отдельный источник только для ответов, чтобы отправлять автоматические ответы Social Stream Ninja от другого аккаунта.">
+    <style>
+        .bot-guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin: 22px 0;
+        }
+        .bot-guide-card {
+            background: var(--card-bg, #fff);
+            border: 1px solid rgba(127, 127, 127, 0.22);
+            border-radius: 8px;
+            padding: 18px;
+        }
+        .bot-guide-card h3 {
+            margin-top: 0;
+        }
+        .bot-guide-shot {
+            display: block;
+            width: auto;
+            max-width: 100%;
+            border: 1px solid rgba(127, 127, 127, 0.28);
+            border-radius: 8px;
+            box-shadow: var(--shadow-md);
+            margin: 16px auto 8px;
+        }
+        .bot-guide-caption {
+            color: var(--text-secondary);
+            font-size: 1.4rem;
+            margin-bottom: 22px;
+        }
+        .dark-mode .bot-guide-card {
+            background: #161b22;
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ru">
+<script id="ssn-site-language" type="application/json">{"language":"ru","page":"docs/twitch-bot-account-chatbot.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Переключиться на светлую тему","Switch to dark theme":"Переключиться на тёмную тему","Light mode":"Светлая тема","Dark mode":"Тёмная тема","Open navigation menu":"Открыть меню навигации","Close navigation menu":"Закрыть меню навигации","Copy this document as Markdown to the clipboard":"Скопировать этот документ в формате Markdown в буфер обмена","Copy Markdown":"Копировать Markdown","Copying…":"Копирование…","Markdown copied":"Markdown скопирован","Copy failed":"Не удалось скопировать","Copy comprehensive Markdown for an AI assistant":"Скопировать полное описание в Markdown для ИИ-помощника","Copy this documentation page as Markdown for an AI assistant":"Скопировать эту страницу документации в Markdown для ИИ-помощника"},"strings":{", and its separate session at the top.":", а вверху — его отдельный сеанс.",", click":", нажмите",", the separate bot source takes priority. SSN will not also send the same reply through the attached Twitch WebSocket bot account.":", отдельный источник бота имеет приоритет. SSN не отправит тот же ответ ещё и через прикреплённый аккаунт бота Twitch WebSocket.","A separate SSApp Twitch source configured as Reply only with Role Bot and a bot-account browser session":"Отдельный источник Twitch в SSApp с включённым Reply only, ролью Bot и браузерным сеансом аккаунта бота","Account role":"Роль аккаунта (Account role)","Account roles can support more advanced routing setups.":"Роли аккаунтов позволяют создавать более сложные схемы маршрутизации.","Activate the bot source and leave it running whenever it needs to send replies.":"Активируйте источник бота и оставляйте его работающим, когда он должен отправлять ответы.","Add the same channel or source again. If SSApp asks whether to make it a reply-only bot source, choose":"Добавьте тот же канал или источник ещё раз. Если SSApp предложит сделать его источником бота только для ответов, выберите","Add your normal source for capturing chat.":"Добавьте обычный источник для захвата чата.","Automatic reply account: @BotName":"Аккаунт для автоматических ответов: @BotName","Automatic reply account: Main account":"Аккаунт для автоматических ответов: основной аккаунт","Best for":"Подходит для","Bot":"Бот (Bot)","Bot Accounts for Automatic Replies":"Учётные записи ботов для автоматических ответов","Bot Accounts for Automatic Replies - Social Stream Ninja":"Боты для автоответов - Social Stream Ninja","Bot reply-only (no capture)":"Бот только для ответов, без захвата","Both methods make automatic replies appear under a bot account instead of your main account. They do it in different ways.":"Оба способа позволяют публиковать автоматические ответы от аккаунта бота вместо основного аккаунта. Они делают это по-разному.","Browser Session Settings":"Настройки сеанса браузера (Browser Session Settings)","Can work with other platforms that support outgoing replies.":"Может работать с другими платформами, поддерживающими отправку ответов.","Chatbot and scheduled automatic replies use the bot account.":"Чат-бот и запланированные автоматические ответы используют аккаунт бота.","Choose the simple Twitch WebSocket option or the existing separate reply-only source method.":"Выберите простой вариант Twitch WebSocket или существующий способ с отдельным источником только для ответов.","Click":"Нажмите","Click the source's":"Нажмите у источника","Commands & API":"Команды и API","Connect bot account":"Подключить аккаунт бота (Connect bot account)","Cons":"Минусы","Download":"Скачать","Enter this value:":"Введите значение:","Extra source?":"Дополнительный источник?","Features":"Возможности","Guides":"Руководства","Hire":"Найти специалиста","Home":"Главная","If Both Methods Are Configured":"Если настроены оба способа","If reply-only is disabled, the second source can capture duplicate messages.":"Если режим «Только ответы» отключён, второй источник может захватывать сообщения повторно.","In SSApp, find your Twitch source and make sure":"В SSApp найдите источник Twitch и убедитесь, что","In Twitch Shared Chat, bot replies stay in this source's channel.":"В Twitch Shared Chat ответы бота остаются в канале этого источника.","In the settings panel on the right, switch to full mode and search for":"На панели настроек справа переключитесь в полный режим и найдите","Inspiration":"Идеи","It does not create another source or permanent browser session.":"Это не создаёт ещё один источник или постоянную сессию браузера.","It is not available for Twitch Standard mode, other platforms, or the browser extension.":"Он недоступен для стандартного режима Twitch, других платформ и расширения браузера.","Main navigation":"Основная навигация","Manual sends still use the main Twitch account.":"Ручная отправка по-прежнему использует основной аккаунт Twitch.","Method":"Способ","Method 1: Twitch WebSocket Bot Account":"Способ 1: аккаунт бота Twitch WebSocket","Method 2: Separate Reply-Only Bot Source":"Способ 2: отдельный источник бота только для ответов","More settings must be kept in sync.":"Нужно согласовывать больше настроек.","No":"Нет","No second source to create or keep running.":"Не требуется создавать и держать работающим второй источник.","On the second source, open":"Во втором источнике откройте","Open its gear menu. Enable":"Откройте его меню с шестерёнкой. Включите","Open navigation menu":"Открыть меню навигации","Overlay Gallery":"Галерея оверлеев","Pros":"Плюсы","Replies still use the main account:":"Ответы всё ещё отправляются с основного аккаунта:","Reply only":"Только ответы (Reply only)","Requires a second source and a separate session.":"Требует второго источника и отдельного сеанса.","Review the explanation, then click":"Прочтите пояснение, затем нажмите","Role: Bot":"Роль: бот (Role: Bot)","SSApp Automatic reply account dialog with the Connect bot account button":"Диалог Automatic reply account в SSApp с кнопкой Connect bot account","SSApp Twitch WebSocket source with its gear menu open and Automatic reply account set to Main account":"Источник Twitch WebSocket в SSApp с открытым меню шестерёнки и значением Main account в Automatic reply account","SSApp opens a separate Twitch sign-in window. Sign in with the account that should send bot replies.":"SSApp откроет отдельное окно входа Twitch. Войдите в аккаунт, от которого должны отправляться ответы бота.","SSN setting Send bot replies through these SSApp account roles filled with bot":"Настройка SSN Send bot replies through these SSApp account roles со значением bot","Send bot replies through these SSApp account roles":"Отправлять ответы бота через эти роли аккаунтов SSApp (Send bot replies through these SSApp account roles)","Separate reply-only bot source":"Отдельный источник бота только для ответов","Set":"Установите","Sign in":"Войти","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Логотип Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Лицензия GPLv3.0.","Support":"Поддержка","Supported Sites":"Поддерживаемые сайты","Switch theme":"Сменить тему","The attached Twitch bot cannot send:":"Прикреплённый бот Twitch не может отправлять сообщения:","The bot must be a moderator, or the channel owner may need to reconnect once to approve Twitch bot access.":"Бот должен быть модератором, либо владельцу канала может потребоваться один раз переподключиться и разрешить доступ бота Twitch.","The bot source has its own browser session and source controls.":"У источника бота собственный браузерный сеанс и элементы управления.","The bot source must be active to send.":"Для отправки источник бота должен быть активен.","The easiest Twitch-only setup":"Самая простая настройка только для Twitch","The finished second source shows":"Готовый второй источник показывает","The new attached-account method is only for Twitch WebSocket sources in the SSApp desktop app.":"Новый способ с прикреплённым аккаунтом работает только для источников Twitch WebSocket в приложении SSApp для компьютера.","The new option is missing:":"Нового параметра нет:","The screenshots below use Twitch, but this method is not Twitch-only. It can also be used with other SSApp sources that support signing in and sending replies.":"На снимках ниже показан Twitch, но этот способ подходит не только для него. Его также можно использовать с другими источниками SSApp, поддерживающими вход в аккаунт и отправку ответов.","The separate sign-in window prevents your normal browser's Twitch login from silently choosing the wrong account.":"Отдельное окно входа не позволяет Twitch незаметно выбрать неверный аккаунт из обычного браузера.","The separate source captures duplicate chat:":"Отдельный источник захватывает чат повторно:","The separate source sends nothing:":"Отдельный источник ничего не отправляет:","The wrong Twitch account was selected:":"Выбран неверный аккаунт Twitch:","This attaches a second Twitch login to your existing WebSocket source.":"Это подключает второй аккаунт Twitch к существующему источнику WebSocket.","This is the original SSApp method and it is still supported. It creates a second source, gives that source its own browser session, and routes automatic replies through sources with the":"Это первоначальный способ SSApp, который по-прежнему поддерживается. Он создаёт второй источник, назначает ему отдельный браузерный сеанс и направляет автоматические ответы через источники с ролью","This section appears only when that Twitch source is using WebSocket mode.":"Этот раздел появляется, только когда источник Twitch использует режим WebSocket.","Tip: Click or tap any screenshot to open it at full size.":"Совет: нажмите на любой снимок экрана, чтобы открыть его в полном размере.","Troubleshooting":"Устранение неполадок","Twitch Standard mode or another platform that can send replies":"Стандартный режим Twitch или другая платформа с отправкой ответов","Twitch WebSocket bot account":"Аккаунт бота Twitch WebSocket","Twitch WebSocket sending":"Отправка через Twitch WebSocket","Twitch only.":"Только Twitch.","Under":"В разделе","Use a Twitch WebSocket bot account or a separate reply-only source to send Social Stream Ninja automatic replies from another account.":"Используйте аккаунт бота Twitch WebSocket или отдельный источник только для ответов, чтобы отправлять автоматические ответы Social Stream Ninja от другого аккаунта.","Use one method for a given reply path. If":"Используйте один способ для каждого маршрута ответов. Если","Very little setup after the WebSocket source is connected.":"После подключения источника WebSocket почти не требует настройки.","WebSocket":"WebSocket","WebSocket mode only.":"Только режим WebSocket.","When the sign-in finishes, the source menu changes to":"После завершения входа пункт меню источника изменится на","Which Method Should I Use?":"Какой способ выбрать?","Works with Twitch Standard mode.":"Работает со стандартным режимом Twitch.","Yes":"Да","activate it, confirm it is signed in as the bot, and verify the routing field contains exactly":"активируйте его, убедитесь, что выполнен вход как бот, и проверьте, что поле маршрутизации содержит ровно","and cycle":"и переключайте","and use a separate session such as":"и используйте отдельный сеанс, например","bot replies":"bot replies","choose the account again and sign into the separate SSApp Twitch window with the bot account.":"снова выберите аккаунт и войдите в отдельном окне Twitch в SSApp под аккаунтом бота.","confirm this is the SSApp desktop app and the Twitch source is set to WebSocket mode.":"убедитесь, что это приложение SSApp для компьютера, а источник Twitch использует режим WebSocket.","enable":"включите","gear button":"кнопку с шестерёнкой","in this field. The two relay-role fields above it are separate settings and can stay blank.":"в этом поле. Два поля ролей ретрансляции над ним — отдельные настройки; их можно оставить пустыми.","is configured as":"устанавливается в","is selected.":"выбран.","make the bot a moderator. If it is not a moderator, reconnect the main Twitch account once using the channel owner and approve the requested permission.":"сделайте бота модератором. Если он не модератор, один раз переподключите основной аккаунт Twitch под владельцем канала и предоставьте запрошенное разрешение.","on that second source and sign in with the bot account.":"для второго источника и войдите под аккаунтом бота.","role.":".","to":"на","until it says":"пока не появится","verify the attached account is shown by username, or verify the separate source says":"убедитесь, что прикреплённый аккаунт показан по имени пользователя, или проверьте, что отдельный источник показывает"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/twitch-bot-account-chatbot.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/twitch-bot-account-chatbot.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Основная навигация"><a href="../index.html">Главная</a><a href="features.html">Возможности</a><a href="inspiration.html" class="site-priority-inspiration">Идеи</a><a href="download.html">Скачать</a><a href="guides.html">Руководства</a><a href="commands.html">Команды и API</a><a href="supported-sites.html">Поддерживаемые сайты</a><a href="overlay-gallery.html" class="site-priority-gallery">Галерея оверлеев</a><a href="services.html" class="site-priority-hire">Найти специалиста</a><a href="support.html">Поддержка</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Русский"><span aria-hidden="true">🌐 </span><span lang="ru">Русский</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/twitch-bot-account-chatbot.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/twitch-bot-account-chatbot.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/twitch-bot-account-chatbot.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="twitch-bot-account-chatbot.html" lang="ru" hreflang="ru" aria-current="true">Русский</a><a class="site-language-link" href="../../fr/docs/twitch-bot-account-chatbot.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/twitch-bot-account-chatbot.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/twitch-bot-account-chatbot.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/twitch-bot-account-chatbot.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/twitch-bot-account-chatbot.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/twitch-bot-account-chatbot.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/twitch-bot-account-chatbot.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/twitch-bot-account-chatbot.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/twitch-bot-account-chatbot.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/twitch-bot-account-chatbot.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/twitch-bot-account-chatbot.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/twitch-bot-account-chatbot.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/twitch-bot-account-chatbot.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Сменить тему"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Открыть меню навигации" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Учётные записи ботов для автоматических ответов</h1>
+            <p>Выберите простой вариант Twitch WebSocket или существующий способ с отдельным источником только для ответов.</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Какой способ выбрать?</h2>
+                <p>Оба способа позволяют публиковать автоматические ответы от аккаунта бота вместо основного аккаунта. Они делают это по-разному.</p>
+                <div class="guide-note">
+                    <p><strong>Новый способ с прикреплённым аккаунтом работает только для источников Twitch WebSocket в приложении SSApp для компьютера.</strong> Он недоступен для стандартного режима Twitch, других платформ и расширения браузера.</p>
+                </div>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr>
+                            <th>Способ</th>
+                            <th>Подходит для</th>
+                            <th>Дополнительный источник?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Method"><strong>Аккаунт бота Twitch WebSocket</strong></td>
+                            <td data-label="Best for">Самая простая настройка только для Twitch</td>
+                            <td data-label="Extra source?">Нет</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Method"><strong>Отдельный источник бота только для ответов</strong></td>
+                            <td data-label="Best for">Стандартный режим Twitch или другая платформа с отправкой ответов</td>
+                            <td data-label="Extra source?">Да</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>Способ 1: аккаунт бота Twitch WebSocket</h2>
+                <p>Это подключает второй аккаунт Twitch к существующему источнику WebSocket. <strong>Это не создаёт ещё один источник или постоянную сессию браузера.</strong></p>
+                <p><small>Совет: нажмите на любой снимок экрана, чтобы открыть его в полном размере.</small></p>
+                <ol class="guide-steps">
+                    <li>В SSApp найдите источник Twitch и убедитесь, что <strong>WebSocket</strong> выбран.</li>
+                    <li>Нажмите у источника <strong>кнопку с шестерёнкой</strong>.</li>
+                    <li>В разделе <strong>Отправка через Twitch WebSocket</strong>, нажмите <strong>Аккаунт для автоматических ответов: основной аккаунт</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-websocket-bot-menu.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-websocket-bot-menu.png" alt="Источник Twitch WebSocket в SSApp с открытым меню шестерёнки и значением Main account в Automatic reply account">
+                </a>
+                <p class="bot-guide-caption">Этот раздел появляется, только когда источник Twitch использует режим WebSocket.</p>
+
+                <ol class="guide-steps" start="4">
+                    <li>Прочтите пояснение, затем нажмите <strong>Подключить аккаунт бота (Connect bot account)</strong>.</li>
+                    <li>SSApp откроет отдельное окно входа Twitch. Войдите в аккаунт, от которого должны отправляться ответы бота.</li>
+                    <li>После завершения входа пункт меню источника изменится на <strong>Аккаунт для автоматических ответов: @BotName</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-bot-account-dialog.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-twitch-bot-account-dialog.png" alt="Диалог Automatic reply account в SSApp с кнопкой Connect bot account">
+                </a>
+                <p class="bot-guide-caption">Отдельное окно входа не позволяет Twitch незаметно выбрать неверный аккаунт из обычного браузера.</p>
+
+                <div class="bot-guide-grid">
+                    <div class="bot-guide-card">
+                        <h3>Плюсы</h3>
+                        <ul class="guide-list">
+                            <li>Не требуется создавать и держать работающим второй источник.</li>
+                            <li>После подключения источника WebSocket почти не требует настройки.</li>
+                            <li>Чат-бот и запланированные автоматические ответы используют аккаунт бота.</li>
+                            <li>В Twitch Shared Chat ответы бота остаются в канале этого источника.</li>
+                        </ul>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>Минусы</h3>
+                        <ul class="guide-list">
+                            <li>Только Twitch.</li>
+                            <li>Только режим WebSocket.</li>
+                            <li>Ручная отправка по-прежнему использует основной аккаунт Twitch.</li>
+                            <li>Бот должен быть модератором, либо владельцу канала может потребоваться один раз переподключиться и разрешить доступ бота Twitch.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Способ 2: отдельный источник бота только для ответов</h2>
+                <p>Это первоначальный способ SSApp, который по-прежнему поддерживается. Он создаёт второй источник, назначает ему отдельный браузерный сеанс и направляет автоматические ответы через источники с ролью <code>bot</code> .</p>
+                <p>На снимках ниже показан Twitch, но этот способ подходит не только для него. Его также можно использовать с другими источниками SSApp, поддерживающими вход в аккаунт и отправку ответов.</p>
+                <ol class="guide-steps">
+                    <li>Добавьте обычный источник для захвата чата.</li>
+                    <li>Добавьте тот же канал или источник ещё раз. Если SSApp предложит сделать его источником бота только для ответов, выберите <strong>Да</strong>.</li>
+                    <li>Во втором источнике откройте <strong>Настройки сеанса браузера (Browser Session Settings)</strong> и используйте отдельный сеанс, например <code>bot-account</code>.</li>
+                    <li>Нажмите <strong>Войти</strong> для второго источника и войдите под аккаунтом бота.</li>
+                    <li>Откройте его меню с шестерёнкой. Включите <strong>Бот только для ответов, без захвата</strong> и переключайте <strong>Роль аккаунта (Account role)</strong> пока не появится <strong>Бот (Bot)</strong>.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssapp-separate-reply-only-bot-source.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssapp-separate-reply-only-bot-source.png" alt="Отдельный источник Twitch в SSApp с включённым Reply only, ролью Bot и браузерным сеансом аккаунта бота">
+                </a>
+                <p class="bot-guide-caption">Готовый второй источник показывает <strong>Только ответы (Reply only)</strong>, <strong>Роль: бот (Role: Bot)</strong>, а вверху — его отдельный сеанс.</p>
+
+                <ol class="guide-steps" start="6">
+                    <li>На панели настроек справа переключитесь в полный режим и найдите <strong>bot replies</strong>.</li>
+                    <li>Установите <strong>Отправлять ответы бота через эти роли аккаунтов SSApp (Send bot replies through these SSApp account roles)</strong> на <code>bot</code>.</li>
+                    <li>Активируйте источник бота и оставляйте его работающим, когда он должен отправлять ответы.</li>
+                </ol>
+                <a href="../../docs/images/twitch-bot-account-chatbot/ssn-bot-reply-role-routing.png" target="_blank" rel="noopener">
+                    <img class="bot-guide-shot" src="../../docs/images/twitch-bot-account-chatbot/ssn-bot-reply-role-routing.png" alt="Настройка SSN Send bot replies through these SSApp account roles со значением bot">
+                </a>
+                <p class="bot-guide-caption">Введите значение: <code>bot</code> в этом поле. Два поля ролей ретрансляции над ним — отдельные настройки; их можно оставить пустыми.</p>
+
+                <div class="bot-guide-grid">
+                    <div class="bot-guide-card">
+                        <h3>Плюсы</h3>
+                        <ul class="guide-list">
+                            <li>Работает со стандартным режимом Twitch.</li>
+                            <li>Может работать с другими платформами, поддерживающими отправку ответов.</li>
+                            <li>У источника бота собственный браузерный сеанс и элементы управления.</li>
+                            <li>Роли аккаунтов позволяют создавать более сложные схемы маршрутизации.</li>
+                        </ul>
+                    </div>
+                    <div class="bot-guide-card">
+                        <h3>Минусы</h3>
+                        <ul class="guide-list">
+                            <li>Требует второго источника и отдельного сеанса.</li>
+                            <li>Для отправки источник бота должен быть активен.</li>
+                            <li>Нужно согласовывать больше настроек.</li>
+                            <li>Если режим «Только ответы» отключён, второй источник может захватывать сообщения повторно.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Если настроены оба способа</h2>
+                <p>Используйте один способ для каждого маршрута ответов. Если <strong>Отправлять ответы бота через эти роли аккаунтов SSApp (Send bot replies through these SSApp account roles)</strong> устанавливается в <code>bot</code>, отдельный источник бота имеет приоритет. SSN не отправит тот же ответ ещё и через прикреплённый аккаунт бота Twitch WebSocket.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Устранение неполадок</h2>
+                <ul class="guide-list">
+                    <li><strong>Нового параметра нет:</strong> убедитесь, что это приложение SSApp для компьютера, а источник Twitch использует режим WebSocket.</li>
+                    <li><strong>Прикреплённый бот Twitch не может отправлять сообщения:</strong> сделайте бота модератором. Если он не модератор, один раз переподключите основной аккаунт Twitch под владельцем канала и предоставьте запрошенное разрешение.</li>
+                    <li><strong>Выбран неверный аккаунт Twitch:</strong> снова выберите аккаунт и войдите в отдельном окне Twitch в SSApp под аккаунтом бота.</li>
+                    <li><strong>Отдельный источник ничего не отправляет:</strong> активируйте его, убедитесь, что выполнен вход как бот, и проверьте, что поле маршрутизации содержит ровно <code>bot</code>.</li>
+                    <li><strong>Отдельный источник захватывает чат повторно:</strong> включите <strong>Бот только для ответов, без захвата</strong>.</li>
+                    <li><strong>Ответы всё ещё отправляются с основного аккаунта:</strong> убедитесь, что прикреплённый аккаунт показан по имени пользователя, или проверьте, что отдельный источник показывает <strong>Роль: бот (Role: Bot)</strong>.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. Лицензия GPLv3.0.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

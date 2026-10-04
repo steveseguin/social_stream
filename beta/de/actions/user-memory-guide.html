@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="de" data-site-root="../../" data-site-language="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Nutze den Event-Flow-Nutzerspeicher in Social Stream Ninja, um zuschauerspezifische Werte zu speichern und Automatisierungen zu erstellen, die auf frühere Interaktionen reagieren.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/de/actions/user-memory-guide.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="de_DE">
+    <meta property="og:url" content="https://socialstream.ninja/beta/de/actions/user-memory-guide.html">
+    <meta property="og:title" content="Anleitung zum Nutzerspeicher – Social Stream Ninja">
+    <meta property="og:description" content="Nutze den Event-Flow-Nutzerspeicher in Social Stream Ninja, um zuschauerspezifische Werte zu speichern und Automatisierungen zu erstellen, die auf frühere Interaktionen reagieren.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja-Logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/de/actions/user-memory-guide.html">
+    <meta name="twitter:title" content="Anleitung zum Nutzerspeicher – Social Stream Ninja">
+    <meta name="twitter:description" content="Nutze den Event-Flow-Nutzerspeicher in Social Stream Ninja, um zuschauerspezifische Werte zu speichern und Automatisierungen zu erstellen, die auf frühere Interaktionen reagieren.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja-Logo">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anleitung zum Nutzerspeicher – Social Stream Ninja</title>
+    <style>
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            color: #e5e7eb;
+            background: #090c13;
+            line-height: 1.65;
+        }
+        a { color: #5eead4; }
+        code {
+            padding: 2px 6px;
+            border-radius: 5px;
+            color: #f5d0fe;
+            background: rgba(192, 132, 252, 0.14);
+        }
+        .shell { max-width: 1120px; margin: 0 auto; }
+        header {
+            padding: 64px 32px 48px;
+            background:
+                radial-gradient(circle at 78% 15%, rgba(192,132,252,0.28), transparent 32%),
+                linear-gradient(145deg, #111827, #172554 62%, #312e81);
+            border-bottom: 1px solid rgba(192,132,252,0.3);
+        }
+        header .eyebrow {
+            color: #c4b5fd;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        h1 { margin: 8px 0 14px; font-size: clamp(2.2rem, 6vw, 4rem); line-height: 1.08; }
+        header p { max-width: 760px; margin: 0; color: #cbd5e1; font-size: 1.12rem; }
+        nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+        nav a, .button {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 999px;
+            color: #f8fafc;
+            text-decoration: none;
+            background: rgba(15,23,42,0.34);
+        }
+        main { padding: 44px 32px 72px; }
+        section { margin: 0 0 68px; scroll-margin-top: 20px; }
+        h2 { margin: 0 0 16px; color: #ddd6fe; font-size: 2rem; }
+        h3 { margin: 28px 0 10px; color: #c4b5fd; }
+        p { margin: 10px 0; color: #cbd5e1; }
+        ul, ol { color: #cbd5e1; }
+        li { margin: 7px 0; }
+        .lead, .callout, .card {
+            border: 1px solid rgba(148,163,184,0.2);
+            border-radius: 14px;
+            background: #111827;
+        }
+        .lead, .callout { padding: 18px 20px; }
+        .callout { margin: 20px 0; border-color: rgba(94,234,212,0.25); }
+        .warning { border-color: rgba(251,191,36,0.35); background: rgba(120,53,15,0.18); }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+            gap: 16px;
+            margin: 22px 0;
+        }
+        .card { padding: 18px; }
+        .card h3, .card h4 { margin-top: 0; }
+        .wire-key { display: flex; flex-wrap: wrap; gap: 18px; margin: 18px 0; color: #cbd5e1; }
+        .wire { display: inline-flex; align-items: center; gap: 9px; }
+        .wire::before { content: ""; width: 46px; border-top: 3px solid #2dd4bf; }
+        .wire.state::before { border-top: 3px dashed #c084fc; }
+        figure {
+            margin: 24px 0;
+            border: 1px solid rgba(148,163,184,0.22);
+            border-radius: 14px;
+            overflow: hidden;
+            background: #15171d;
+        }
+        figure img { display: block; width: 100%; height: auto; }
+        figcaption { padding: 12px 16px; color: #94a3b8; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #111827; }
+        th, td { padding: 12px 14px; border: 1px solid #293244; text-align: left; vertical-align: top; }
+        th { color: #ddd6fe; background: #172033; }
+        table:focus { outline: 2px solid #c4b5fd; outline-offset: 2px; }
+        .flow {
+            padding: 16px 18px;
+            margin: 14px 0;
+            border-radius: 12px;
+            color: #e2e8f0;
+            background: #070b12;
+            border: 1px solid #253047;
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+            white-space: pre-wrap;
+        }
+        .recipe { padding-left: 18px; border-left: 4px solid #8b5cf6; margin: 28px 0; }
+        .recipe h3 { margin-top: 0; }
+        .two-col { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 22px; align-items: start; }
+        footer { padding: 24px 32px 42px; color: #94a3b8; border-top: 1px solid #1f2937; }
+        @media (max-width: 760px) {
+            header, main, footer { padding-left: 18px; padding-right: 18px; }
+            .two-col { grid-template-columns: 1fr; }
+            table { font-size: 0.9rem; display: block; max-width: 100%; overflow-x: auto; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="de">
+<script id="ssn-site-language" type="application/json">{"language":"de","page":"actions/user-memory-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Zum hellen Design wechseln","Switch to dark theme":"Zum dunklen Design wechseln","Light mode":"Heller Modus","Dark mode":"Dunkler Modus","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Copy this document as Markdown to the clipboard":"Dieses Dokument als Markdown in die Zwischenablage kopieren","Copy Markdown":"Markdown kopieren","Copying…":"Wird kopiert…","Markdown copied":"Markdown kopiert","Copy failed":"Kopieren fehlgeschlagen","Copy comprehensive Markdown for an AI assistant":"Umfassende Markdown-Dokumentation für einen KI-Assistenten kopieren","Copy this documentation page as Markdown for an AI assistant":"Diese Dokumentationsseite als Markdown für einen KI-Assistenten kopieren"},"strings":{", or":", oder",", selecting the exact memory.":", wobei du den exakten Speicher auswählst.",", so other platforms speak for everyone while TikTok stays restricted.":", damit andere Plattformen für alle sprechen, während TikTok eingeschränkt bleibt.",". Confirm the captured row in Test Flow/Event Reference and match the cleanest field your source provides.":". Prüfe die erfasste Zeile in Test Flow/Event Reference und verwende das eindeutigste Feld deiner Quelle.",". It reads the incoming TikTok badge/level data directly; the Main Chat Overlay’s “treat as members” display setting is not required.":". Es liest die eingehenden TikTok-Abzeichen-/Leveldaten direkt; die Anzeigeeinstellung „treat as members“ des Main Chat Overlays ist nicht erforderlich.","? command + TikTok source + (TikTok Team Member OR User Is Remembered) → AND → Speak Text ? command + NOT TikTok source → AND ────────────────────────────────→ Speak Text":"? Befehl + TikTok-Quelle + (TikTok Team Member ODER User Is Remembered) → AND → Text sprechen ? Befehl + NICHT TikTok-Quelle → AND ────────────────────────────────→ Text sprechen","A":"Ein","A like did not add anyone":"Ein Like hat niemanden hinzugefügt","A real SSApp flow with two remembered entrants. The event path stays teal; shared-state references are dashed purple.":"Ein echter SSApp-Flow mit zwei gespeicherten Teilnehmern. Der Ereignispfad bleibt türkis; Verweise auf gemeinsamen Zustand sind gestrichelt violett.","A saved memory came back":"Ein gespeicherter Speicherinhalt ist zurückgekehrt","A trigger/check that returns true when the current message belongs to someone in the selected memory.":"Ein Auslöser/eine Prüfung, die true zurückgibt, wenn die aktuelle Nachricht von jemandem im gewählten Speicher stammt.","Across restarts":"Über Neustarts hinweg","Actual Test Flow output: Alice was selected and the memory count fell to one because “remove selected” was enabled.":"Tatsächliche Test-Flow-Ausgabe: Alice wurde gewählt und die Speicheranzahl sank auf eins, weil „remove selected“ aktiviert war.","Add User Role: moderator/admin (or an exact host-user check) into an AND gate before the action.":"Füge vor der Aktion „User Role: moderator/admin“ (oder eine Prüfung des exakten Host-Nutzers) in ein AND-Gatter ein.","Add the checks and actions you need, then link each one to the named memory using its side diamond or dropdown.":"Füge die benötigten Prüfungen und Aktionen hinzu und verknüpfe sie über die seitliche Raute oder Dropdown-Liste mit dem benannten Speicher.","Adds the current event’s user once. Repeated participation increases that user’s participation count without adding duplicate draw entries.":"Fügt den Nutzer des aktuellen Ereignisses einmal hinzu. Wiederholte Teilnahme erhöht seinen Teilnahmezähler, ohne doppelte Loseinträge hinzuzufügen.","Also clears a User Memory when that memory is the selected reset target.":"Leert auch einen User Memory, wenn dieser als Rücksetzziel ausgewählt ist.","Anyone can run the draw/reset command":"Jeder kann den Ziehungs-/Rücksetzbefehl ausführen","Automatic":"Automatisch","Available operations":"Verfügbare Operationen","Both branches still require the leading":"Beide Zweige benötigen weiterhin das führende","Check whether the events came from different platforms. Platform + user ID intentionally creates separate identities.":"Prüfe, ob die Ereignisse von unterschiedlichen Plattformen kamen. Plattform + Nutzer-ID erzeugt bewusst getrennte Identitäten.","Choose":"Wähle","Clear All Users":"Alle Nutzer löschen","Clear All Users Now":"Alle Nutzer jetzt löschen","Clear after inactivity, on stream start, or on stream stop. A value of 0 disables inactivity reset.":"Nach Inaktivität, beim Stream-Start oder Stream-Ende leeren. Ein Wert von 0 deaktiviert das Zurücksetzen bei Inaktivität.","Connect the normal event path with teal wires and use":"Verbinde den normalen Ereignispfad mit türkisen Linien und verwende","Dashed purple: this node uses that memory":"Gestrichelt violett: Dieser Knoten verwendet diesen Speicher","Download the participation + draw example flow":"Beispielflow für Teilnahme und Verlosung herunterladen","Drag":"Ziehe","Drag the small purple side diamond onto a User Memory node, or choose the memory by name in the node properties. Internally the operation stores the state node’s ID. Selecting the memory highlights every linked operation, and deleting it warns before those links are broken.":"Ziehe die kleine violette Seitenraute auf einen User-Memory-Knoten oder wähle den Speicher in den Knoteneigenschaften nach Namen. Intern speichert die Operation die ID des Zustandsknotens. Die Auswahl des Speichers hebt alle verknüpften Operationen hervor; vor dem Löschen wird gewarnt, dass diese Verbindungen getrennt werden.","Draw outputs":"Ziehungsausgaben","Empties only the selected User Memory object.":"Leert nur das ausgewählte User-Memory-Objekt.","Enable":"Aktivieren","Event Flow Guide":"Event-Flow-Leitfaden","Event Flow canvas showing Remember User and User Is Remembered linked to the Prize Draw Entrants memory with dashed purple lines":"Event-Flow-Arbeitsfläche mit Remember User und User Is Remembered, die über gestrichelte violette Linien mit dem Speicher Prize Draw Entrants verbunden sind","Event Flow shared state":"Gemeinsamer Zustand in Event Flow","Event Type → Other: gift":"Ereignistyp → Other: gift","Event Type → Other: liked → Remember User ···→ [Liked Stream]":"Ereignistyp → Other: liked → Nutzer merken ···→ [Stream gelikt]","Every reset option belongs to this one named memory. Other User Memory nodes are not touched.":"Jede Rücksetzoption gehört zu diesem einen benannten Speicher. Andere User-Memory-Knoten bleiben unberührt.","Field":"Feld","For TikTok Team/Fan status, choose":"Wähle für TikTok-Team-/Fanstatus","Forget User":"Nutzer vergessen","From a flow":"Aus einem Flow","Gift payloads differ by capture mode. A common setup is":"Geschenknutzdaten unterscheiden sich je nach Erfassungsmodus. Eine häufige Einrichtung ist","Heart Me Eligible":"Heart-Me-berechtigt","How it works":"So funktioniert es","How many times that person has participated.":"Wie oft diese Person teilgenommen hat.","Identity rule:":"Identitätsregel:","Liked Stream":"Stream gelikt","Manual":"Manuell","Meaning":"Bedeutung","Memory actions add fields to the message so downstream Show Text, Send Message, webhook, or custom actions can use them.":"Speicheraktionen ergänzen die Nachricht um Felder, die nachgelagerte Show-Text-, Send-Message-, Webhook- oder eigene Aktionen verwenden können.","Message Contains: Heart Me":"Nachricht enthält: Heart Me","Message Starts With !enter → Remember User ···→ [Prize Draw Entrants] Moderator + Message Starts With !draw → AND → Pick Random User ···→ [Prize Draw Entrants] Moderator + Message Starts With !resetdraw → AND → Clear All Users ···→ [Prize Draw Entrants]":"Nachricht beginnt mit !enter → Nutzer merken ···→ [Verlosungsteilnehmer] Moderator + Nachricht beginnt mit !draw → AND → Zufälligen Nutzer wählen ···→ [Verlosungsteilnehmer] Moderator + Nachricht beginnt mit !resetdraw → AND → Alle Nutzer löschen ···→ [Verlosungsteilnehmer]","Name it for the list it owns, such as":"Benenne ihn nach der verwalteten Liste, etwa","Node":"Knoten","One named memory, many tools":"Ein benannter Speicher, viele Werkzeuge","Pick Random User":"Zufälligen Nutzer wählen","Practical recipes":"Praktische Rezepte","Prize Draw Entrants":"Verlosungsteilnehmer","Recipes":"Beispiele","Remember User":"Nutzer merken","Remember people who liked or participated":"Personen merken, die gelikt oder teilgenommen haben","Remember unique participants, check them on later messages, draw a random winner, and reset exactly the list you intended without turning a platform role into permanent global state.":"Merke eindeutige Teilnehmer, prüfe sie bei späteren Nachrichten, ziehe einen zufälligen Gewinner und setze genau die gewünschte Liste zurück — ohne eine Plattformrolle in dauerhaften globalen Zustand zu verwandeln.","Remove selected user":"Ausgewählten Nutzer entfernen","Removes only the current event’s user.":"Entfernt nur den Nutzer des aktuellen Ereignisses.","Reset State Node":"Zustandsknoten zurücksetzen","Reset and persistence":"Zurücksetzen und dauerhaft speichern","Save across restarts":"Über Neustarts hinweg speichern","Select the operation and choose a User Memory target, or drag its purple side diamond to the memory hub.":"Wähle die Operation und einen User Memory als Ziel oder ziehe ihre violette Seitenraute auf den Speicherknoten.","Selects one unique remembered user. It can optionally remove the winner so they cannot win again.":"Wählt einen eindeutigen gespeicherten Nutzer. Optional kann der Gewinner entfernt werden, damit er nicht erneut gewinnt.","Session memories start empty with the app. Saved memories reload until that specific memory is cleared.":"Sitzungsspeicher starten mit der App leer. Dauerhaft gespeicherte Inhalte werden erneut geladen, bis genau dieser Speicher geleert wird.","Set it up":"Einrichten","Social Stream Ninja logo":"Social Stream Ninja-Logo","Social Stream Ninja ·":"Social Stream Ninja ·","Solid teal: this event runs next":"Durchgezogen türkis: Dieses Ereignis läuft als Nächstes","State Nodes Guide":"Anleitung zu Zustandsknoten","State Nodes → User Memory":"Zustandsknoten → Nutzerspeicher","TTS":"Sprachausgabe","Test Flow":"Flow testen","Test Flow result showing a selected prize draw user and one remaining entrant":"Test-Flow-Ergebnis mit ausgewähltem Gewinner und einem verbleibenden Teilnehmer","The dashed line is missing":"Die gestrichelte Linie fehlt","The drawn user’s display name.":"Der Anzeigename des gezogenen Nutzers.","The drawn user’s stable ID and platform.":"Die stabile ID und Plattform des gezogenen Nutzers.","The event probably had no user identity. Inspect the event payload; aggregate counts cannot become named entrants.":"Das Ereignis hatte vermutlich keine Nutzeridentität. Prüfe die Ereignisnutzdaten; aggregierte Zähler können nicht zu benannten Teilnehmern werden.","The hub reports its current unique-user count and owns persistence/reset settings.":"Der Speicherknoten zeigt seine aktuelle Anzahl eindeutiger Nutzer und verwaltet die Speicher-/Rücksetzeinstellungen.","The latest reason template saved by Remember User.":"Die zuletzt von Remember User gespeicherte Begründungsvorlage.","The same person appears twice":"Dieselbe Person erscheint zweimal","The selected memory’s name.":"Der Name des ausgewählten Speichers.","The winner’s recorded participation count.":"Der gespeicherte Teilnahmezähler des Gewinners.","This app session":"Diese App-Sitzung","This works when the captured like/participation event names a user. Aggregate like-count updates do not identify a person and therefore cannot be remembered. Use a separate memory for each kind of participation if you want independent checks or draws.":"Dies funktioniert, wenn das erfasste Like-/Teilnahmeereignis einen Nutzer nennt. Aggregierte Like-Zähler identifizieren keine Person und können deshalb nicht gespeichert werden. Verwende für jede Teilnahmeart einen separaten Speicher, wenn du unabhängige Prüfungen oder Verlosungen möchtest.","TikTok Heart Me or Team Member →":"TikTok Heart Me oder Team Member →","TikTok gift event + “Heart Me” match → AND → Remember User ···→ [Heart Me Eligible]":"TikTok-Geschenkereignis + „Heart Me“-Treffer → AND → Nutzer merken ···→ [Heart-Me-berechtigt]","Troubleshooting":"Fehlerbehebung","True only when Remember User added a new unique person.":"Nur true, wenn Remember User eine neue eindeutige Person hinzugefügt hat.","Unique users currently remembered.":"Aktuell gespeicherte eindeutige Nutzer.","Unique-entry prize draw":"Verlosung mit einmaliger Teilnahme","Use":"Verwende","Use Clear All Users on that memory. Changing a flow or clearing a different memory does not erase it.":"Verwende „Clear All Users“ für diesen Speicher. Das Ändern eines Flows oder Leeren eines anderen Speichers löscht ihn nicht.","Use Event Flow user memory in Social Stream Ninja to store viewer-specific values and build automations that respond to previous interactions.":"Nutze den Event-Flow-Nutzerspeicher in Social Stream Ninja, um zuschauerspezifische Werte zu speichern und Automatisierungen zu erstellen, die auf frühere Interaktionen reagieren.","Use draw and participation outputs":"Ziehungs- und Teilnahmeausgaben verwenden","Use the gift event to remember the sender; do not try to turn the one gift row into a permanent “member” role.":"Verwende das Geschenkereignis, um den Absender zu merken; versuche nicht, die einzelne Geschenkzeile in eine dauerhafte „member“-Rolle umzuwandeln.","User Is Remembered":"Nutzer ist gespeichert","User Memory":"Nutzerspeicher","User Memory Guide - Social Stream Ninja":"Anleitung zum Nutzerspeicher – Social Stream Ninja","User Memory node properties showing two current users and Save across restarts":"Eigenschaften eines User-Memory-Knotens mit zwei aktuellen Nutzern und „Save across restarts“","User Memory reset properties including inactivity, stream start, stream stop, and Clear All Users Now":"User-Memory-Rücksetzeigenschaften mit Inaktivität, Stream-Start, Stream-Ende und „Clear All Users Now“","User Role → TikTok Team Member":"Nutzerrolle → TikTok Team Member","What it does":"Was es macht","Whether the draw removed the selected winner.":"Ob die Ziehung den ausgewählten Gewinner entfernt hat.","in the memory properties while building/testing.":"in den Speichereigenschaften beim Erstellen/Testen.","it means all users inside the selected memory, not all Event Flow state, not every draw, and not every memory in Social Stream Ninja.":"es bedeutet alle Nutzer innerhalb des ausgewählten Speichers — nicht den gesamten Event-Flow-Zustand, jede Verlosung oder jeden Speicher in Social Stream Ninja.","onto the canvas.":"auf die Arbeitsfläche.","or":"oder","or the generic":"oder den allgemeinen","plus":"plus","state node owns one isolated set of people. Every Remember, Forget, Check, Draw, or Clear node selects that state node. Create another User Memory node when you need a separate list, for example, one for “liked the stream” and another for “entered the giveaway.”":"Zustandsknoten verwaltet eine isolierte Personengruppe. Jeder Remember-, Forget-, Check-, Draw- oder Clear-Knoten wählt diesen Zustandsknoten. Erstelle einen weiteren User-Memory-Knoten, wenn du eine separate Liste brauchst — etwa eine für „hat den Stream gelikt“ und eine für „hat am Gewinnspiel teilgenommen“.","users are keyed by platform plus user ID. The displayed username is used only as a fallback. An anonymous or aggregate event with no user identity is safely ignored.":"Nutzer werden über Plattform plus Nutzer-ID identifiziert. Der angezeigte Benutzername dient nur als Ersatz. Ein anonymes oder aggregiertes Ereignis ohne Nutzeridentität wird sicher ignoriert.","when winners should not be drawn twice. In a public stream, protect draw/reset commands with a moderator, admin, or exact-user check.":"wenn Gewinner nicht zweimal gezogen werden sollen. Schütze in einem öffentlichen Stream Ziehungs-/Rücksetzbefehle mit einer Moderator-, Admin- oder exakten Nutzerprüfung.","with two different usernames before going live.":"mit zwei unterschiedlichen Benutzernamen, bevor du live gehst.","“Clear all” is scoped:":"„Alle löschen“ hat einen begrenzten Geltungsbereich:"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/actions/user-memory-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header>
+        <div class="shell">
+            <div class="eyebrow">Gemeinsamer Zustand in Event Flow</div>
+            <h1>Nutzerspeicher</h1>
+            <p>Merke eindeutige Teilnehmer, prüfe sie bei späteren Nachrichten, ziehe einen zufälligen Gewinner und setze genau die gewünschte Liste zurück — ohne eine Plattformrolle in dauerhaften globalen Zustand zu verwandeln.</p>
+            <nav>
+                <a href="#model">So funktioniert es</a>
+                <a href="#setup">Einrichten</a>
+                <a href="#recipes">Beispiele</a>
+                <a href="#reset">Zurücksetzen und dauerhaft speichern</a>
+                <a href="#outputs">Ziehungsausgaben</a>
+            </nav>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Deutsch"><span aria-hidden="true">🌐 </span><span lang="de">Deutsch</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/user-memory-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/user-memory-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/user-memory-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/user-memory-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/user-memory-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="user-memory-guide.html" lang="de" hreflang="de" aria-current="true">Deutsch</a><a class="site-language-link" href="../../ja/actions/user-memory-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/user-memory-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/user-memory-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/user-memory-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/user-memory-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/user-memory-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/user-memory-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/user-memory-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/user-memory-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/user-memory-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/user-memory-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+    </header>
+
+    <main class="shell">
+        <section id="model">
+            <h2>Ein benannter Speicher, viele Werkzeuge</h2>
+            <div class="lead">
+                Ein <strong>Nutzerspeicher</strong> Zustandsknoten verwaltet eine isolierte Personengruppe. Jeder Remember-, Forget-, Check-, Draw- oder Clear-Knoten wählt diesen Zustandsknoten. Erstelle einen weiteren User-Memory-Knoten, wenn du eine separate Liste brauchst — etwa eine für „hat den Stream gelikt“ und eine für „hat am Gewinnspiel teilgenommen“.
+            </div>
+            <div class="wire-key">
+                <span class="wire">Durchgezogen türkis: Dieses Ereignis läuft als Nächstes</span>
+                <span class="wire state">Gestrichelt violett: Dieser Knoten verwendet diesen Speicher</span>
+            </div>
+            <p>Ziehe die kleine violette Seitenraute auf einen User-Memory-Knoten oder wähle den Speicher in den Knoteneigenschaften nach Namen. Intern speichert die Operation die ID des Zustandsknotens. Die Auswahl des Speichers hebt alle verknüpften Operationen hervor; vor dem Löschen wird gewarnt, dass diese Verbindungen getrennt werden.</p>
+            <figure>
+                <img src="../../actions/img/user-memory-shared-state.png" alt="Event-Flow-Arbeitsfläche mit Remember User und User Is Remembered, die über gestrichelte violette Linien mit dem Speicher Prize Draw Entrants verbunden sind">
+                <figcaption>Ein echter SSApp-Flow mit zwei gespeicherten Teilnehmern. Der Ereignispfad bleibt türkis; Verweise auf gemeinsamen Zustand sind gestrichelt violett.</figcaption>
+            </figure>
+        </section>
+
+        <section id="setup">
+            <h2>Einrichten</h2>
+            <ol>
+                <li>Ziehe <strong>Zustandsknoten → Nutzerspeicher</strong> auf die Arbeitsfläche.</li>
+                <li>Benenne ihn nach der verwalteten Liste, etwa <em>Heart-Me-berechtigt</em>, <em>Stream gelikt</em>, oder <em>Verlosungsteilnehmer</em>.</li>
+                <li>Wähle <strong>Diese App-Sitzung</strong> oder <strong>Über Neustarts hinweg speichern</strong>.</li>
+                <li>Füge die benötigten Prüfungen und Aktionen hinzu und verknüpfe sie über die seitliche Raute oder Dropdown-Liste mit dem benannten Speicher.</li>
+                <li>Verbinde den normalen Ereignispfad mit türkisen Linien und verwende <strong>Flow testen</strong> mit zwei unterschiedlichen Benutzernamen, bevor du live gehst.</li>
+            </ol>
+            <div class="two-col">
+                <div>
+                    <h3>Verfügbare Operationen</h3>
+                    <table tabindex="0">
+                        <thead><tr><th>Knoten</th><th>Was es macht</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Nutzer merken</strong></td><td>Fügt den Nutzer des aktuellen Ereignisses einmal hinzu. Wiederholte Teilnahme erhöht seinen Teilnahmezähler, ohne doppelte Loseinträge hinzuzufügen.</td></tr>
+                            <tr><td><strong>Nutzer ist gespeichert</strong></td><td>Ein Auslöser/eine Prüfung, die true zurückgibt, wenn die aktuelle Nachricht von jemandem im gewählten Speicher stammt.</td></tr>
+                            <tr><td><strong>Nutzer vergessen</strong></td><td>Entfernt nur den Nutzer des aktuellen Ereignisses.</td></tr>
+                            <tr><td><strong>Zufälligen Nutzer wählen</strong></td><td>Wählt einen eindeutigen gespeicherten Nutzer. Optional kann der Gewinner entfernt werden, damit er nicht erneut gewinnt.</td></tr>
+                            <tr><td><strong>Alle Nutzer löschen</strong></td><td>Leert nur das ausgewählte User-Memory-Objekt.</td></tr>
+                            <tr><td><strong>Zustandsknoten zurücksetzen</strong></td><td>Leert auch einen User Memory, wenn dieser als Rücksetzziel ausgewählt ist.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <figure>
+                    <img src="../../actions/img/user-memory-settings.png" alt="Eigenschaften eines User-Memory-Knotens mit zwei aktuellen Nutzern und „Save across restarts“">
+                    <figcaption>Der Speicherknoten zeigt seine aktuelle Anzahl eindeutiger Nutzer und verwaltet die Speicher-/Rücksetzeinstellungen.</figcaption>
+                </figure>
+            </div>
+            <div class="callout">
+                <strong>Identitätsregel:</strong> Nutzer werden über Plattform plus Nutzer-ID identifiziert. Der angezeigte Benutzername dient nur als Ersatz. Ein anonymes oder aggregiertes Ereignis ohne Nutzeridentität wird sicher ignoriert.
+            </div>
+        </section>
+
+        <section id="recipes">
+            <h2>Praktische Rezepte</h2>
+
+            <div class="recipe">
+                <h3>TikTok Heart Me oder Team Member → <code>?</code> Sprachausgabe</h3>
+                <p>Verwende das Geschenkereignis, um den Absender zu merken; versuche nicht, die einzelne Geschenkzeile in eine dauerhafte „member“-Rolle umzuwandeln.</p>
+                <div class="flow">TikTok-Geschenkereignis + „Heart Me“-Treffer → AND → Nutzer merken ···→ [Heart-Me-berechtigt]</div>
+                <div class="flow">? Befehl + TikTok-Quelle + (TikTok Team Member ODER User Is Remembered) → AND → Text sprechen ? Befehl + NICHT TikTok-Quelle → AND ────────────────────────────────→ Text sprechen</div>
+                <ul>
+                    <li>Wähle für TikTok-Team-/Fanstatus <strong>Nutzerrolle → TikTok Team Member</strong>. Es liest die eingehenden TikTok-Abzeichen-/Leveldaten direkt; die Anzeigeeinstellung „treat as members“ des Main Chat Overlays ist nicht erforderlich.</li>
+                    <li>Geschenknutzdaten unterscheiden sich je nach Erfassungsmodus. Eine häufige Einrichtung ist <strong>Ereignistyp → Other: gift</strong> plus <strong>Nachricht enthält: Heart Me</strong>. Prüfe die erfasste Zeile in Test Flow/Event Reference und verwende das eindeutigste Feld deiner Quelle.</li>
+                    <li>Beide Zweige benötigen weiterhin das führende <code>?</code>, damit andere Plattformen für alle sprechen, während TikTok eingeschränkt bleibt.</li>
+                </ul>
+            </div>
+
+            <div class="recipe">
+                <h3>Personen merken, die gelikt oder teilgenommen haben</h3>
+                <div class="flow">Ereignistyp → Other: liked → Nutzer merken ···→ [Stream gelikt]</div>
+                <p>Dies funktioniert, wenn das erfasste Like-/Teilnahmeereignis einen Nutzer nennt. Aggregierte Like-Zähler identifizieren keine Person und können deshalb nicht gespeichert werden. Verwende für jede Teilnahmeart einen separaten Speicher, wenn du unabhängige Prüfungen oder Verlosungen möchtest.</p>
+            </div>
+
+            <div class="recipe">
+                <h3>Verlosung mit einmaliger Teilnahme</h3>
+                <div class="flow">Nachricht beginnt mit !enter → Nutzer merken ···→ [Verlosungsteilnehmer] Moderator + Nachricht beginnt mit !draw → AND → Zufälligen Nutzer wählen ···→ [Verlosungsteilnehmer] Moderator + Nachricht beginnt mit !resetdraw → AND → Alle Nutzer löschen ···→ [Verlosungsteilnehmer]</div>
+                <p>Aktivieren <strong>Ausgewählten Nutzer entfernen</strong> wenn Gewinner nicht zweimal gezogen werden sollen. Schütze in einem öffentlichen Stream Ziehungs-/Rücksetzbefehle mit einer Moderator-, Admin- oder exakten Nutzerprüfung.</p>
+                <p><a class="button" href="../../actions/examples/user-memory-participation-draw.json" download>Beispielflow für Teilnahme und Verlosung herunterladen</a></p>
+            </div>
+        </section>
+
+        <section id="reset">
+            <h2>Zurücksetzen und dauerhaft speichern</h2>
+            <div class="grid">
+                <div class="card"><h3>Manuell</h3><p>Verwende <strong>Alle Nutzer jetzt löschen</strong> in den Speichereigenschaften beim Erstellen/Testen.</p></div>
+                <div class="card"><h3>Aus einem Flow</h3><p>Verwende <strong>Alle Nutzer löschen</strong> oder den allgemeinen <strong>Zustandsknoten zurücksetzen</strong>, wobei du den exakten Speicher auswählst.</p></div>
+                <div class="card"><h3>Automatisch</h3><p>Nach Inaktivität, beim Stream-Start oder Stream-Ende leeren. Ein Wert von 0 deaktiviert das Zurücksetzen bei Inaktivität.</p></div>
+                <div class="card"><h3>Über Neustarts hinweg</h3><p>Sitzungsspeicher starten mit der App leer. Dauerhaft gespeicherte Inhalte werden erneut geladen, bis genau dieser Speicher geleert wird.</p></div>
+            </div>
+            <figure>
+                <img src="../../actions/img/user-memory-reset-controls.png" alt="User-Memory-Rücksetzeigenschaften mit Inaktivität, Stream-Start, Stream-Ende und „Clear All Users Now“">
+                <figcaption>Jede Rücksetzoption gehört zu diesem einen benannten Speicher. Andere User-Memory-Knoten bleiben unberührt.</figcaption>
+            </figure>
+            <div class="callout warning">
+                <strong>„Alle löschen“ hat einen begrenzten Geltungsbereich:</strong> es bedeutet alle Nutzer innerhalb des ausgewählten Speichers — nicht den gesamten Event-Flow-Zustand, jede Verlosung oder jeden Speicher in Social Stream Ninja.
+            </div>
+        </section>
+
+        <section id="outputs">
+            <h2>Ziehungs- und Teilnahmeausgaben verwenden</h2>
+            <p>Speicheraktionen ergänzen die Nachricht um Felder, die nachgelagerte Show-Text-, Send-Message-, Webhook- oder eigene Aktionen verwenden können.</p>
+            <table tabindex="0">
+                <thead><tr><th>Feld</th><th>Bedeutung</th></tr></thead>
+                <tbody>
+                    <tr><td><code>userMemoryName</code></td><td>Der Name des ausgewählten Speichers.</td></tr>
+                    <tr><td><code>userMemoryCount</code></td><td>Aktuell gespeicherte eindeutige Nutzer.</td></tr>
+                    <tr><td><code>userMemoryAdded</code></td><td>Nur true, wenn Remember User eine neue eindeutige Person hinzugefügt hat.</td></tr>
+                    <tr><td><code>userMemoryEntryCount</code></td><td>Wie oft diese Person teilgenommen hat.</td></tr>
+                    <tr><td><code>selectedUser</code></td><td>Der Anzeigename des gezogenen Nutzers.</td></tr>
+                    <tr><td><code>selectedUserId</code>, <code>selectedUserSource</code></td><td>Die stabile ID und Plattform des gezogenen Nutzers.</td></tr>
+                    <tr><td><code>selectedUserParticipationCount</code></td><td>Der gespeicherte Teilnahmezähler des Gewinners.</td></tr>
+                    <tr><td><code>selectedUserReason</code></td><td>Die zuletzt von Remember User gespeicherte Begründungsvorlage.</td></tr>
+                    <tr><td><code>selectedUserRemoved</code></td><td>Ob die Ziehung den ausgewählten Gewinner entfernt hat.</td></tr>
+                </tbody>
+            </table>
+            <figure>
+                <img src="../../actions/img/user-memory-draw-result.png" alt="Test-Flow-Ergebnis mit ausgewähltem Gewinner und einem verbleibenden Teilnehmer">
+                <figcaption>Tatsächliche Test-Flow-Ausgabe: Alice wurde gewählt und die Speicheranzahl sank auf eins, weil „remove selected“ aktiviert war.</figcaption>
+            </figure>
+        </section>
+
+        <section>
+            <h2>Fehlerbehebung</h2>
+            <table tabindex="0">
+                <tbody>
+                    <tr><th>Die gestrichelte Linie fehlt</th><td>Wähle die Operation und einen User Memory als Ziel oder ziehe ihre violette Seitenraute auf den Speicherknoten.</td></tr>
+                    <tr><th>Dieselbe Person erscheint zweimal</th><td>Prüfe, ob die Ereignisse von unterschiedlichen Plattformen kamen. Plattform + Nutzer-ID erzeugt bewusst getrennte Identitäten.</td></tr>
+                    <tr><th>Ein Like hat niemanden hinzugefügt</th><td>Das Ereignis hatte vermutlich keine Nutzeridentität. Prüfe die Ereignisnutzdaten; aggregierte Zähler können nicht zu benannten Teilnehmern werden.</td></tr>
+                    <tr><th>Ein gespeicherter Speicherinhalt ist zurückgekehrt</th><td>Verwende „Clear All Users“ für diesen Speicher. Das Ändern eines Flows oder Leeren eines anderen Speichers löscht ihn nicht.</td></tr>
+                    <tr><th>Jeder kann den Ziehungs-/Rücksetzbefehl ausführen</th><td>Füge vor der Aktion „User Role: moderator/admin“ (oder eine Prüfung des exakten Host-Nutzers) in ein AND-Gatter ein.</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer><div class="shell">Social Stream Ninja · <a href="event-flow-guide.html">Event-Flow-Leitfaden</a> · <a href="state-nodes-guide.html">Anleitung zu Zustandsknoten</a></div></footer>
+</body>
+</html>

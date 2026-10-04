@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/test-message-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/test-message-guide.html">
+    <meta property="og:title" content="建立測試訊息 - Social Stream Ninja">
+    <meta property="og:description" content="向 Social Stream Ninja 工作階段傳送可控的模擬聊天訊息、贊助、會員、突襲、獎勵和其他事件，以便安全測試。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/test-message-guide.html">
+    <meta name="twitter:title" content="建立測試訊息 - Social Stream Ninja">
+    <meta name="twitter:description" content="向 Social Stream Ninja 工作階段傳送可控的模擬聊天訊息、贊助、會員、突襲、獎勵和其他事件，以便安全測試。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>建立測試訊息 - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="向 Social Stream Ninja 工作階段傳送可控的模擬聊天訊息、贊助、會員、突襲、獎勵和其他事件，以便安全測試。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/test-message-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{", enable":"，啟用",", including compatible event pages.":"，包括相容的事件頁面。",", then reload the dock or overlay and try again.":"，然後重新載入停駐面板或疊加畫面並重試。",", verify the JSON, and submit it.":"，檢查 JSON 並提交。",". SSApp uses the same setting name.":"。SSApp 使用相同的設定名稱。","A submitted message behaves like incoming session traffic and can trigger alerts, sounds, webhooks, OBS actions, or other automations.":"提交的訊息會像傳入的工作階段流量一樣運作，可能觸發提醒、聲音、webhook、OBS 動作或其他自動化。","An automation runs more than once:":"自動化執行不只一次：","Chat Message":"聊天訊息（Chat Message）","Choose The Right Delivery Mode":"選擇正確的傳遞模式","Choose a preset, adjust its fields, and select":"選擇預設組合、調整欄位，然後選擇","Choose the":"選擇","Commands & API":"指令與 API","Common Fixes":"常見解決方式","Confirm the item appears in the dock or target overlay and that the expected automation runs.":"確認項目出現在停駐面板或目標疊加畫面中，並且預期的自動化已執行。","Copy your Session ID from Social Stream or from the":"從 Social Stream 或以下位置複製工作階段 ID：","Create Test Message":"建立測試訊息","Create Test Message page":"建立測試訊息頁面","Create Test Messages":"建立測試訊息","Create Test Messages - Social Stream Ninja":"建立測試訊息 - Social Stream Ninja","Direct mode says sent but nothing appears:":"直接模式顯示已傳送，但沒有內容出現：","Direct to channel 1":"直接傳送至通道 1","Direct to channel 4":"直接傳送至通道 4","Donation / Cheer":"贊助 / Cheer","Download":"下載","Enter a test name and message.":"輸入測試名稱和訊息。","Event Reference":"事件參考","Example: One Fake 1,000 KICKs Message":"範例：一則模擬的 1,000 KICKs 訊息","Extension API ingest":"擴充功能 API 接收（Extension API ingest）","Extension API ingest fails:":"Extension API ingest 失敗：","Features":"功能","For field definitions and real platform examples, see the":"有關欄位定義和真實平台範例，請參閱","Global settings and tools":"全域設定與工具","Guides":"指南","Has Donation":"含贊助（Has Donation）","Hire":"聘用","Home":"首頁","If you are unsure, use":"如果不確定，使用","Inspiration":"靈感","Kick":"Kick","Kick test behaves like Twitch:":"Kick 測試表現得像 Twitch：","Leave":"將","Load Preset":"載入預設組合（Load Preset）","Main navigation":"主導覽","Mechanics":"運作方式","Nothing appears:":"沒有內容出現：","Only include":"僅包含","Open":"開啟","Open Social Stream Ninja and make sure the service is active.":"開啟 Social Stream Ninja，並確認服務處於作用中。","Open navigation menu":"開啟導覽選單","Overlay Gallery":"疊加畫面圖庫","Payload JSON":"承載資料 JSON（Payload JSON）","Presets provide a starting payload for common cases such as donations, subscribers, gifted subscriptions, raids, rewards, viewer updates, first-time chatters, and train events.":"預設組合為常見情況提供起始承載資料，例如贊助、訂閱者、贈送訂閱、突襲、獎勵、觀眾更新、首次聊天者和列車事件。","Quick Start For SSApp Or The Extension":"SSApp 或擴充功能快速入門","Required Setup":"必要設定","Review the Payload JSON, then select":"檢查 Payload JSON，然後選擇","Same Session ID and":"相同的工作階段 ID，以及","Select":"選擇","Send Via":"傳送方式（Send Via）","Send controlled fake chat messages, donations, memberships, raids, rewards, and other events into a Social Stream Ninja session for safe testing.":"向 Social Stream Ninja 工作階段傳送可控的模擬聊天訊息、贊助、會員、突襲、獎勵和其他事件，以便安全測試。","Send controlled fake messages and events into your Social Stream session.":"向 Social Stream 工作階段傳送可控的模擬訊息和事件。","Set":"設定","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 授權條款。","Submit":"提交（Submit）","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","Testing a target that uses":"測試使用以下設定的目標：","Testing normal docks, overlays, alerts, Event Flow, or SSApp.":"測試一般停駐面板、疊加畫面、提醒、Event Flow 或 SSApp。","The":"此","The minimal payload is:":"最小承載資料為：","The target dock was opened with":"目標停駐面板開啟時使用了","The target must be listening on the matching server channel.":"目標必須監聽相符的伺服器通道。","This creates one Kick-style support message worth 1,000 KICKs. It does not create 1,000 separate messages.":"這會建立一則價值 1,000 KICKs 的 Kick 樣式支持訊息，不會建立 1,000 則獨立訊息。","Type":"輸入","Under":"位於","Update JSON from Fields":"從欄位更新 JSON（Update JSON from Fields）","Use":"使用","Use It When":"適用情境","Use a test session when possible.":"盡可能使用測試工作階段。","Using Presets And Custom JSON":"使用預設組合和自訂 JSON","What This Tool Does":"此工具的作用","Wrong event fires:":"觸發了錯誤的事件：","You can edit":"您可以直接編輯","You can include the session in the URL:":"可以在 URL 中包含工作階段：","and":"和","and enter that Session ID.":"並輸入該工作階段 ID。","as shown above.":"如上所示。","builds a basic message from the visible fields.":"根據可見欄位建立基本訊息。","by itself.":"本身。","carries the visible support amount, such as":"帶有可見的支持金額，例如","check whether multiple docks, action pages, or Event Flow instances are open on the same session.":"檢查同一工作階段是否開啟了多個停駐面板、動作頁面或 Event Flow 實例。","confirm the target page is open and uses the same Session ID.":"確認目標頁面已開啟，並使用相同工作階段 ID。","directly when testing a specific field or event shape.":"以測試特定欄位或事件結構。","enable":"啟用","enabled.":"已啟用。","for normal testing.":"用於一般測試。","for this example. The":"用於本範例。","inspect the Payload JSON for leftover fields from another preset.":"檢查 Payload JSON 是否殘留其他預設組合的欄位。","mode.":"模式。","or":"或","preset includes Twitch-specific cheer fields.":"預設組合包含 Twitch 專屬的 cheer 欄位。","preset.":"預設組合。","remote API control of extension":"擴充功能的遠端 API 控制","replaces the JSON with the selected preset and current field values.":"使用所選預設組合和目前欄位值取代 JSON。","sends synthetic Social Stream payloads to your dock, overlays, alerts, or Event Flow setup. Use it to test without waiting for a real chat message, donation, membership, raid, reward, or other event.":"將模擬 Social Stream 承載資料傳送至停駐面板、疊加畫面、提醒或 Event Flow 設定。用它測試，無需等候真實聊天訊息、贊助、會員、突襲、獎勵或其他事件。","set to":"設為","to":"為","use Extension API ingest unless the target URL has the matching":"使用 Extension API ingest，除非目標 URL 具有相符的","use the Chat Message preset and set":"使用 Chat Message 預設組合，並設定","value in your dock or overlay URL.":"值，位於停駐面板或疊加畫面 URL 中。","when you are testing a real named event. A normal donation-style chat row can use":"當測試真實的具名事件時。一般贊助樣式聊天列可以使用"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/test-message-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/test-message-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/test-message-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/test-message-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/test-message-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/test-message-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/test-message-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/test-message-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/test-message-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/test-message-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/test-message-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/test-message-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/test-message-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/test-message-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/test-message-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/test-message-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/test-message-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/test-message-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/test-message-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/test-message-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/test-message-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/test-message-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/test-message-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/test-message-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/test-message-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/test-message-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="test-message-guide.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/test-message-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/test-message-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/test-message-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/test-message-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/test-message-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/test-message-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/test-message-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/test-message-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+	<section class="page-hero">
+		<div class="container">
+			<h1>建立測試訊息</h1>
+			<p>向 Social Stream 工作階段傳送可控的模擬訊息和事件。</p>
+		</div>
+	</section>
+
+	<main class="guide-section">
+		<div class="container">
+			<div class="guide-card">
+				<h2>此工具的作用</h2>
+				<p>此 <a href="../../createtestmessage.html">建立測試訊息頁面</a> 將模擬 Social Stream 承載資料傳送至停駐面板、疊加畫面、提醒或 Event Flow 設定。用它測試，無需等候真實聊天訊息、贊助、會員、突襲、獎勵或其他事件。</p>
+				<div class="warning-note"><strong>盡可能使用測試工作階段。</strong> 提交的訊息會像傳入的工作階段流量一樣運作，可能觸發提醒、聲音、webhook、OBS 動作或其他自動化。</div>
+			</div>
+
+			<div class="guide-card">
+				<h2>SSApp 或擴充功能快速入門</h2>
+				<ol class="guide-steps">
+					<li>開啟 Social Stream Ninja，並確認服務處於作用中。</li>
+					<li>位於 <strong>全域設定與工具</strong> &rarr; <strong>運作方式</strong>，啟用 <strong>擴充功能的遠端 API 控制</strong>。SSApp 使用相同的設定名稱。</li>
+					<li>從 Social Stream 或以下位置複製工作階段 ID： <code>session=</code> 值，位於停駐面板或疊加畫面 URL 中。</li>
+					<li>開啟 <a href="../../createtestmessage.html">建立測試訊息</a> 並輸入該工作階段 ID。</li>
+					<li>將 <strong>傳送方式（Send Via）</strong> 設為 <strong>擴充功能 API 接收（Extension API ingest）</strong> 用於一般測試。</li>
+					<li>選擇預設組合、調整欄位，然後選擇 <strong>載入預設組合（Load Preset）</strong>.</li>
+					<li>檢查 Payload JSON，然後選擇 <strong>提交（Submit）</strong>.</li>
+					<li>確認項目出現在停駐面板或目標疊加畫面中，並且預期的自動化已執行。</li>
+				</ol>
+				<div class="guide-note"><p>可以在 URL 中包含工作階段： <code>createtestmessage.html?session=YOUR_SESSION_ID</code>.</p></div>
+			</div>
+
+			<div class="guide-card">
+				<h2>範例：一則模擬的 1,000 KICKs 訊息</h2>
+				<p>這會建立一則價值 1,000 KICKs 的 Kick 樣式支持訊息，不會建立 1,000 則獨立訊息。</p>
+				<ol class="guide-steps">
+					<li>選擇 <strong>聊天訊息（Chat Message）</strong> 預設組合。</li>
+					<li>設定 <strong>輸入</strong> 為 <strong>Kick</strong>.</li>
+					<li>輸入測試名稱和訊息。</li>
+					<li>設定 <strong>含贊助（Has Donation）</strong> 為 <code>1000 KICKs</code>.</li>
+					<li>選擇 <strong>從欄位更新 JSON（Update JSON from Fields）</strong>，檢查 JSON 並提交。</li>
+				</ol>
+				<p>最小承載資料為：</p>
+				<pre><code>{
+  "type": "kick",
+  "chatname": "Test Supporter",
+  "chatmessage": "Thanks for the stream!",
+  "hasDonation": "1000 KICKs"
+}</code></pre>
+				<div class="guide-note"><p>使用 <strong>聊天訊息（Chat Message）</strong> 用於本範例。 <strong>贊助 / Cheer</strong> 預設組合包含 Twitch 專屬的 cheer 欄位。</p></div>
+			</div>
+
+			<div class="guide-card">
+				<h2>使用預設組合和自訂 JSON</h2>
+				<p>預設組合為常見情況提供起始承載資料，例如贊助、訂閱者、贈送訂閱、突襲、獎勵、觀眾更新、首次聊天者和列車事件。</p>
+				<ul class="guide-list">
+					<li><strong>載入預設組合（Load Preset）</strong> 使用所選預設組合和目前欄位值取代 JSON。</li>
+					<li><strong>從欄位更新 JSON（Update JSON from Fields）</strong> 根據可見欄位建立基本訊息。</li>
+					<li>您可以直接編輯 <strong>承載資料 JSON（Payload JSON）</strong> 以測試特定欄位或事件結構。</li>
+					<li><code>hasDonation</code> 帶有可見的支持金額，例如 <code>1000 KICKs</code> 或 <code>$10.00</code>.</li>
+					<li>僅包含 <code>event</code> 當測試真實的具名事件時。一般贊助樣式聊天列可以使用 <code>hasDonation</code> 本身。</li>
+				</ul>
+				<p>有關欄位定義和真實平台範例，請參閱 <a href="event-reference.html">事件參考</a>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>選擇正確的傳遞模式</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>傳送方式（Send Via）</th><th>適用情境</th><th>必要設定</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Send Via">擴充功能 API 接收（Extension API ingest）</td><td data-label="Use It When">測試一般停駐面板、疊加畫面、提醒、Event Flow 或 SSApp。</td><td data-label="Required Setup">相同的工作階段 ID，以及 <strong>擴充功能的遠端 API 控制</strong> 已啟用。</td></tr>
+						<tr><td data-label="Send Via">直接傳送至通道 1</td><td data-label="Use It When">目標停駐面板開啟時使用了 <code>&amp;server</code>.</td><td data-label="Required Setup">目標必須監聽相符的伺服器通道。</td></tr>
+						<tr><td data-label="Send Via">直接傳送至通道 4</td><td data-label="Use It When">測試使用以下設定的目標： <code>&amp;server2</code>，包括相容的事件頁面。</td><td data-label="Required Setup">目標必須監聽相符的伺服器通道。</td></tr>
+					</tbody>
+				</table>
+				<p>如果不確定，使用 <strong>擴充功能 API 接收（Extension API ingest）</strong>.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>常見解決方式</h2>
+				<ul class="guide-list">
+					<li><strong>沒有內容出現：</strong> 確認目標頁面已開啟，並使用相同工作階段 ID。</li>
+					<li><strong>Extension API ingest 失敗：</strong> 啟用 <strong>擴充功能的遠端 API 控制</strong>，然後重新載入停駐面板或疊加畫面並重試。</li>
+					<li><strong>直接模式顯示已傳送，但沒有內容出現：</strong> 使用 Extension API ingest，除非目標 URL 具有相符的 <code>&amp;server</code> 或 <code>&amp;server2</code> 模式。</li>
+					<li><strong>觸發了錯誤的事件：</strong> 檢查 Payload JSON 是否殘留其他預設組合的欄位。</li>
+					<li><strong>Kick 測試表現得像 Twitch：</strong> 使用 Chat Message 預設組合，並設定 <code>type</code> 和 <code>hasDonation</code> 如上所示。</li>
+					<li><strong>自動化執行不只一次：</strong> 檢查同一工作階段是否開啟了多個停駐面板、動作頁面或 Event Flow 實例。</li>
+				</ul>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0 授權條款。</p></div></div></footer>
+	<script data-copy-markdown src="../../docs/js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://socialstream.ninja/docs/chat-history-guide.html">
+    <meta property="og:title" content="Chat history and loyalty points - Social Stream Ninja">
+    <meta property="og:description" content="Understand the local message database, which features depend on it, and how to keep loyalty points working.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/docs/chat-history-guide.html">
+    <meta name="twitter:title" content="Chat history and loyalty points - Social Stream Ninja">
+    <meta name="twitter:description" content="Understand the local message database, which features depend on it, and how to keep loyalty points working.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat history and loyalty points - Social Stream Ninja</title>
+<meta name="description" content="Understand the local message database, which features depend on it, and how to keep loyalty points working.">
+<link rel="canonical" href="https://socialstream.ninja/docs/chat-history-guide.html">
+<script>
+(function () {
+    var savedTheme = localStorage.getItem('darkMode');
+    if (savedTheme === 'true' || (savedTheme !== 'false' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark-mode');
+    }
+})();
+</script>
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/guides.css">
+<link rel="stylesheet" href="css/site-shell.css">
+<link rel="stylesheet" href="css/workflow-guides.css">
+<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+<script src="js/site-shell.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="css/site-language.css">
+<script src="js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/chat-history-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/chat-history-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation">
+<a href="../index.html">Home</a>
+<a href="features.html">Features</a>
+<a href="inspiration.html" class="site-priority-inspiration">Inspiration</a>
+<a href="download.html">Download</a>
+<a href="guides.html">Guides</a>
+<a href="commands.html">Commands &amp; API</a>
+<a href="supported-sites.html">Supported Sites</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a>
+<a href="services.html" class="site-priority-hire">Hire</a>
+<a href="support.html">Support</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="English"><span aria-hidden="true">🌐 </span><span lang="en">English</span></summary><div class="site-language-options"><a class="site-language-link" href="chat-history-guide.html" lang="en" hreflang="en" aria-current="true">English</a><a class="site-language-link" href="../es/docs/chat-history-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../pt-br/docs/chat-history-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../ru/docs/chat-history-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../fr/docs/chat-history-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../de/docs/chat-history-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../ja/docs/chat-history-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../zh-cn/docs/chat-history-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../zh-tw/docs/chat-history-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../it/docs/chat-history-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../pl/docs/chat-history-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../ko/docs/chat-history-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../uk/docs/chat-history-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../ar/docs/chat-history-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../tr/docs/chat-history-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../cs/docs/chat-history-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../th/docs/chat-history-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button>
+<button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button>
+</div>
+</div>
+</header>
+<section class="page-hero"><div class="container">
+<h1>Chat history and loyalty points</h1>
+<p>How local message storage affects history, points and viewer recognition.</p>
+</div></section>
+<main class="guide-section"><div class="container">
+<nav class="workflow-toc" aria-label="On this page">
+<a href="guides.html">All guides</a>
+<a href="#storage">Local history</a>
+<a href="#points">Keep points working</a>
+<a href="#initialization">Existing message history</a>
+</nav>
+<section class="guide-card" id="storage">
+<h2>What the local message database does</h2>
+<p>SSN saves captured messages in a database on the browser or desktop installation doing the capture. The chat history page uses that database to look up earlier messages.</p>
+<p>The <strong>Disable the local message database</strong> setting stops new messages from being stored. Live capture and dock display can continue, so seeing messages in the dock does not confirm that history is being saved.</p>
+<p>First-time chatter detection and related history-based viewer recognition also depend on the local database.</p>
+</section>
+<section class="guide-card" id="points">
+<h2>Keep loyalty points working</h2>
+<p>Points earning and the <code>!points</code>, <code>!leaderboard</code> and <code>!rewards</code> command handlers run when captured messages are stored. Disabling the local message database stops those handlers, even when the points switches are enabled.</p>
+<ol class="guide-steps">
+<li>Find <strong>Disable the local message database</strong> in SSN settings and leave it off.</li>
+<li>In <strong>Points System</strong>, enable loyalty points and the chat commands you want to use.</li>
+<li>Have a viewer send a message and then <code>!points</code>. Check their account for the correct platform.</li>
+</ol>
+<p>Balances are stored separately from message history. Use <strong>Points System → Backup &amp; Restore → Export Points</strong> to back them up. Sharing a session ID with another installation does not synchronize either database.</p>
+<p>See the <a href="loyalty-points-guide.html">loyalty points guide</a> for earning, rankings, rewards and backups.</p>
+</section>
+<section class="guide-card" id="initialization">
+<h2>How existing history is used</h2>
+<p>When the points ledger is empty and has not already been initialized or reset, SSN can calculate initial points from saved chat history. This runs once to initialize balances.</p>
+<p>Historical engagements use the live earning rules: the first qualifying engagement earns base points, and later qualifying engagements can receive streak bonuses. Only available message history can be considered; keep a points export when moving or recovering an installation.</p>
+</section>
+</div></main>
+<footer><div class="container"><div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">Browse all guides</a></p>
+</div></div></footer>
+<script data-copy-markdown src="js/main.js"></script>
+</body>
+</html>

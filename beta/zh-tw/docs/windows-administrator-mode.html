@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+	<head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="noindex, follow">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/windows-administrator-mode.html">
+    <meta property="og:title" content="在 Windows 上以系統管理員身分執行 OBS 與 Social Stream - Social Stream Ninja">
+    <meta property="og:description" content="如何測試或永久啟用 OBS Studio 與 Social Stream Ninja 桌面應用程式的 Windows 系統管理員模式，以及如何再次關閉。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/windows-administrator-mode.html">
+    <meta name="twitter:title" content="在 Windows 上以系統管理員身分執行 OBS 與 Social Stream - Social Stream Ninja">
+    <meta name="twitter:description" content="如何測試或永久啟用 OBS Studio 與 Social Stream Ninja 桌面應用程式的 Windows 系統管理員模式，以及如何再次關閉。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+		<script>
+			(function () {
+				var savedTheme = localStorage.getItem("darkMode");
+				var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+				if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+					document.documentElement.classList.add("dark-mode");
+				}
+			})();
+		</script>
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>在 Windows 上以系統管理員身分執行 OBS 與 Social Stream - Social Stream Ninja</title>
+		<link rel="stylesheet" href="../../docs/css/styles.css" />
+		<link rel="stylesheet" href="../../docs/css/guides.css" />
+		<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon" />
+		<meta name="description" content="如何測試或永久啟用 OBS Studio 與 Social Stream Ninja 桌面應用程式的 Windows 系統管理員模式，以及如何再次關閉。">
+		<link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/windows-administrator-mode.html">
+		<style>
+			.admin-screenshot {
+				width: min(100%, 43.2rem);
+				margin-left: auto;
+				margin-right: auto;
+			}
+		</style>
+	<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/windows-administrator-mode.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{", and approve its prompt too.":"，也核准其提示。",", not by administrator mode.":"，而非管理員模式。",", then choose":"，然後選擇",". If Windows opens another shortcut, right-click that shortcut and choose":"。若 Windows 開啟另一個捷徑，以滑鼠右鍵點選該捷徑並選擇","A blank unified chat, an old Browser Source URL, or a stale OBS cache is usually fixed by":"統一聊天空白、瀏覽器來源 URL 過舊或 OBS 快取過期，通常透過以下方式解決：","A typical per-user installation is:":"典型的個別使用者安裝路徑為：","Always Run OBS As Administrator":"一律以系統管理員身分執行 OBS","Always Run Social Stream As Administrator":"一律以系統管理員身分執行 Social Stream","Apply":"套用","Approve the Windows User Account Control prompt.":"核准 Windows 使用者帳戶控制提示。","Clear":"清除","Close OBS Studio and the Social Stream desktop app.":"關閉 OBS Studio 與 Social Stream 桌面應用程式。","Close OBS Studio.":"關閉 OBS Studio。","Close Social Stream.":"關閉 Social Stream。","Close the app.":"關閉應用程式。","Commands & API":"指令與 API","Compatibility":"相容性","Do not disable User Account Control. For background on elevated applications, see":"不要停用使用者帳戶控制。關於提升權限的應用程式，請參閱","Do the same for the other app so OBS and Social Stream return to the same normal privilege level.":"對另一個應用程式執行相同操作，讓 OBS 與 Social Stream 恢復為相同的一般權限等級。","Download":"下載","Features":"功能","Guides":"指南","Hire":"聘用","Home":"首頁","How to test or permanently enable Windows administrator mode for OBS Studio and the Social Stream Ninja desktop app, and how to turn it off again.":"如何測試或永久啟用 OBS Studio 與 Social Stream Ninja 桌面應用程式的 Windows 系統管理員模式，以及如何再次關閉。","If one app is elevated and the other is not, Windows can limit how they interact. For a permission-mismatch test, close both apps first and run both at the same privilege level.":"若一個應用程式已提升權限而另一個沒有，Windows 可能限制它們的互動。測試權限不一致時，先關閉兩個應用程式，再以相同權限等級執行。","If you are testing a mismatch between the two apps, right-click the Social Stream shortcut, choose":"若要測試兩個應用程式的權限不一致，以滑鼠右鍵點選 Social Stream 捷徑，選擇","Inspiration":"靈感","It confirms whether elevation matters without permanently changing either app.":"這樣可確認提升權限是否有影響，而不永久變更任何一個應用程式。","Main navigation":"主導覽","Microsoft's administrator mode explanation":"Microsoft 對系統管理員模式的說明","OBS and Social Stream normally should not need administrator access.":"OBS 與 Social Stream 通常不應需要系統管理員權限。","OK":"確定","One-Time Administrator Test":"一次性系統管理員測試","Only Use This For A Confirmed Permission Problem":"僅用於已確認的權限問題","Open file location":"開啟檔案位置（Open file location）","Open navigation menu":"開啟導覽選單","Open the":"開啟","Open the executable's":"開啟執行檔的","Overlay Gallery":"疊加畫面圖庫","Prefer this test first.":"優先進行此測試。","Properties":"內容","Properties → Compatibility":"內容 → 相容性（Properties → Compatibility）","Repeat the exact workflow that previously failed. When finished, close both apps; the one-time elevation ends when they exit.":"重複先前失敗的實際操作流程。完成後關閉兩個應用程式；一次性權限提升會在結束時終止。","Right-click":"以滑鼠右鍵點選","Right-click its shortcut and choose":"以滑鼠右鍵點選其捷徑並選擇","Right-click the OBS Studio shortcut and choose":"以滑鼠右鍵點選 OBS Studio 捷徑並選擇","Run OBS and Social Stream as Administrator":"以系統管理員身分執行 OBS 與 Social Stream","Run OBS and Social Stream as Administrator on Windows - Social Stream Ninja":"在 Windows 上以系統管理員身分執行 OBS 與 Social Stream - Social Stream Ninja","Run as administrator":"以系統管理員身分執行（Run as administrator）","Run this program as an administrator":"以系統管理員身分執行此程式（Run this program as an administrator）","Select":"選擇","Select the unchecked administrator checkbox shown for OBS Studio. This screenshot was captured from the current Windows app properties without changing the setting.":"勾選圖中 OBS Studio 尚未勾選的系統管理員核取方塊。此截圖取自目前 Windows 應用程式內容，未變更設定。","Select the unchecked administrator checkbox shown for the Social Stream desktop app. This screenshot was captured from the current Windows app properties without changing the setting.":"勾選圖中 Social Stream 桌面應用程式尚未勾選的系統管理員核取方塊。此截圖取自目前 Windows 應用程式內容，未變更設定。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 授權條款。","Start both normally unless a Windows privilege mismatch has been confirmed or support has specifically asked you to test this.":"正常啟動兩個應用程式，除非已確認 Windows 權限不一致，或支援人員明確要求進行此測試。","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","The default 64-bit OBS path is commonly:":"預設的 64 位元 OBS 路徑通常為：","Turn Administrator Mode Off Again":"再次關閉系統管理員模式","Windows Compatibility tab for obs64.exe showing Run this program as an administrator":"obs64.exe 的 Windows 相容性索引標籤，顯示「以系統管理員身分執行此程式」","Windows Compatibility tab for socialstream.exe showing Run this program as an administrator":"socialstream.exe 的 Windows 相容性索引標籤，顯示「以系統管理員身分執行此程式」","Windows steps for a one-time test or a persistent setting, with matching examples for both apps.":"Windows 上一次性測試或永久設定的步驟，並提供兩個應用程式的對應範例。","Your path may differ for portable or custom installations.":"可攜版或自訂安裝的路徑可能不同。","Your path may differ if you chose another installation location.":"若選擇了其他安裝位置，路徑可能不同。","again.":"，再次操作。","and":"和","and choose":"並選擇","obs64.exe":"obs64.exe","replacing the URL and refreshing the cache":"取代 URL 並重新整理快取","socialstream.exe":"socialstream.exe","tab.":"分頁。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/windows-administrator-mode.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/windows-administrator-mode.html">
+<!-- ssn-languages:end --></head>
+	<body>
+		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/windows-administrator-mode.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/windows-administrator-mode.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/windows-administrator-mode.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/windows-administrator-mode.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/windows-administrator-mode.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/windows-administrator-mode.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/windows-administrator-mode.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/windows-administrator-mode.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="windows-administrator-mode.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/windows-administrator-mode.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/windows-administrator-mode.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/windows-administrator-mode.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/windows-administrator-mode.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/windows-administrator-mode.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/windows-administrator-mode.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/windows-administrator-mode.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/windows-administrator-mode.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+		<section class="page-hero">
+			<div class="container">
+				<h1>以系統管理員身分執行 OBS 與 Social Stream</h1>
+				<p>Windows 上一次性測試或永久設定的步驟，並提供兩個應用程式的對應範例。</p>
+			</div>
+		</section>
+
+		<main class="guide-section">
+			<div class="container">
+				<div class="guide-card">
+					<h2>僅用於已確認的權限問題</h2>
+					<div class="warning-note">
+						<p><strong>OBS 與 Social Stream 通常不應需要系統管理員權限。</strong> 正常啟動兩個應用程式，除非已確認 Windows 權限不一致，或支援人員明確要求進行此測試。</p>
+					</div>
+					<p>統一聊天空白、瀏覽器來源 URL 過舊或 OBS 快取過期，通常透過以下方式解決： <a href="obs-troubleshooting.html#replace-url-and-cache">取代 URL 並重新整理快取</a>，而非管理員模式。</p>
+					<p>若一個應用程式已提升權限而另一個沒有，Windows 可能限制它們的互動。測試權限不一致時，先關閉兩個應用程式，再以相同權限等級執行。</p>
+				</div>
+
+				<div class="guide-card">
+					<h2>一次性系統管理員測試</h2>
+					<ol class="guide-steps">
+						<li>關閉 OBS Studio 與 Social Stream 桌面應用程式。</li>
+						<li>以滑鼠右鍵點選 OBS Studio 捷徑並選擇 <strong>以系統管理員身分執行（Run as administrator）</strong>.</li>
+						<li>核准 Windows 使用者帳戶控制提示。</li>
+						<li>若要測試兩個應用程式的權限不一致，以滑鼠右鍵點選 Social Stream 捷徑，選擇 <strong>以系統管理員身分執行（Run as administrator）</strong>，也核准其提示。</li>
+						<li>重複先前失敗的實際操作流程。完成後關閉兩個應用程式；一次性權限提升會在結束時終止。</li>
+					</ol>
+					<div class="guide-note">
+						<p><strong>優先進行此測試。</strong> 這樣可確認提升權限是否有影響，而不永久變更任何一個應用程式。</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="persistent-admin">
+					<h2>一律以系統管理員身分執行 Social Stream</h2>
+					<ol class="guide-steps">
+						<li>關閉 Social Stream。</li>
+						<li>以滑鼠右鍵點選其捷徑並選擇 <strong>開啟檔案位置（Open file location）</strong>。若 Windows 開啟另一個捷徑，以滑鼠右鍵點選該捷徑並選擇 <strong>開啟檔案位置（Open file location）</strong> ，再次操作。</li>
+						<li>以滑鼠右鍵點選 <strong>socialstream.exe</strong> 並選擇 <strong>內容</strong>.</li>
+						<li>開啟 <strong>相容性</strong> 分頁。</li>
+						<li>選擇 <strong>以系統管理員身分執行此程式（Run this program as an administrator）</strong>，然後選擇 <strong>套用</strong> 和 <strong>確定</strong>.</li>
+					</ol>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/windows-admin-ssapp-compatibility.jpg" alt="socialstream.exe 的 Windows 相容性索引標籤，顯示「以系統管理員身分執行此程式」" class="guide-image admin-screenshot" />
+						<figcaption>勾選圖中 Social Stream 桌面應用程式尚未勾選的系統管理員核取方塊。此截圖取自目前 Windows 應用程式內容，未變更設定。</figcaption>
+					</figure>
+					<p>典型的個別使用者安裝路徑為：</p>
+					<pre><code>%LOCALAPPDATA%\Programs\socialstream\socialstream.exe</code></pre>
+					<p>若選擇了其他安裝位置，路徑可能不同。</p>
+				</div>
+
+				<div class="guide-card">
+					<h2>一律以系統管理員身分執行 OBS</h2>
+					<ol class="guide-steps">
+						<li>關閉 OBS Studio。</li>
+						<li>以滑鼠右鍵點選 OBS Studio 捷徑並選擇 <strong>開啟檔案位置（Open file location）</strong>.</li>
+						<li>以滑鼠右鍵點選 <strong>obs64.exe</strong> 並選擇 <strong>內容</strong>.</li>
+						<li>開啟 <strong>相容性</strong> 分頁。</li>
+						<li>選擇 <strong>以系統管理員身分執行此程式（Run this program as an administrator）</strong>，然後選擇 <strong>套用</strong> 和 <strong>確定</strong>.</li>
+					</ol>
+					<figure class="guide-figure">
+						<img src="../../docs/images/guides/windows-admin-obs-compatibility.jpg" alt="obs64.exe 的 Windows 相容性索引標籤，顯示「以系統管理員身分執行此程式」" class="guide-image admin-screenshot" />
+						<figcaption>勾選圖中 OBS Studio 尚未勾選的系統管理員核取方塊。此截圖取自目前 Windows 應用程式內容，未變更設定。</figcaption>
+					</figure>
+					<p>預設的 64 位元 OBS 路徑通常為：</p>
+					<pre><code>%ProgramFiles%\obs-studio\bin\64bit\obs64.exe</code></pre>
+					<p>可攜版或自訂安裝的路徑可能不同。</p>
+				</div>
+
+				<div class="guide-card">
+					<h2>再次關閉系統管理員模式</h2>
+					<ol class="guide-steps">
+						<li>關閉應用程式。</li>
+						<li>開啟執行檔的 <strong>內容 → 相容性（Properties → Compatibility）</strong> 分頁。</li>
+						<li>清除 <strong>以系統管理員身分執行此程式（Run this program as an administrator）</strong>，然後選擇 <strong>套用</strong> 和 <strong>確定</strong>.</li>
+						<li>對另一個應用程式執行相同操作，讓 OBS 與 Social Stream 恢復為相同的一般權限等級。</li>
+					</ol>
+					<p>不要停用使用者帳戶控制。關於提升權限的應用程式，請參閱 <a href="https://learn.microsoft.com/en-us/windows/powertoys/administrator">Microsoft 對系統管理員模式的說明</a>.</p>
+				</div>
+			</div>
+		</main>
+
+		<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja。GPLv3.0 授權條款。</p></div></div></footer>
+		<script data-copy-markdown src="../../docs/js/main.js"></script>
+		<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+	</body>
+</html>

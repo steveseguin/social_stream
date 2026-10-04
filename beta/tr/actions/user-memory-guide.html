@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="İzleyiciye özel değerleri saklamak ve önceki etkileşimlere yanıt veren otomasyonlar oluşturmak için Social Stream Ninja Etkinlik Akışı kullanıcı belleğini kullanın.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/tr/actions/user-memory-guide.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/beta/tr/actions/user-memory-guide.html">
+    <meta property="og:title" content="Kullanıcı Belleği Rehberi - Social Stream Ninja">
+    <meta property="og:description" content="İzleyiciye özel değerleri saklamak ve önceki etkileşimlere yanıt veren otomasyonlar oluşturmak için Social Stream Ninja Etkinlik Akışı kullanıcı belleğini kullanın.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/tr/actions/user-memory-guide.html">
+    <meta name="twitter:title" content="Kullanıcı Belleği Rehberi - Social Stream Ninja">
+    <meta name="twitter:description" content="İzleyiciye özel değerleri saklamak ve önceki etkileşimlere yanıt veren otomasyonlar oluşturmak için Social Stream Ninja Etkinlik Akışı kullanıcı belleğini kullanın.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kullanıcı Belleği Rehberi - Social Stream Ninja</title>
+    <style>
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            color: #e5e7eb;
+            background: #090c13;
+            line-height: 1.65;
+        }
+        a { color: #5eead4; }
+        code {
+            padding: 2px 6px;
+            border-radius: 5px;
+            color: #f5d0fe;
+            background: rgba(192, 132, 252, 0.14);
+        }
+        .shell { max-width: 1120px; margin: 0 auto; }
+        header {
+            padding: 64px 32px 48px;
+            background:
+                radial-gradient(circle at 78% 15%, rgba(192,132,252,0.28), transparent 32%),
+                linear-gradient(145deg, #111827, #172554 62%, #312e81);
+            border-bottom: 1px solid rgba(192,132,252,0.3);
+        }
+        header .eyebrow {
+            color: #c4b5fd;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        h1 { margin: 8px 0 14px; font-size: clamp(2.2rem, 6vw, 4rem); line-height: 1.08; }
+        header p { max-width: 760px; margin: 0; color: #cbd5e1; font-size: 1.12rem; }
+        nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
+        nav a, .button {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 999px;
+            color: #f8fafc;
+            text-decoration: none;
+            background: rgba(15,23,42,0.34);
+        }
+        main { padding: 44px 32px 72px; }
+        section { margin: 0 0 68px; scroll-margin-top: 20px; }
+        h2 { margin: 0 0 16px; color: #ddd6fe; font-size: 2rem; }
+        h3 { margin: 28px 0 10px; color: #c4b5fd; }
+        p { margin: 10px 0; color: #cbd5e1; }
+        ul, ol { color: #cbd5e1; }
+        li { margin: 7px 0; }
+        .lead, .callout, .card {
+            border: 1px solid rgba(148,163,184,0.2);
+            border-radius: 14px;
+            background: #111827;
+        }
+        .lead, .callout { padding: 18px 20px; }
+        .callout { margin: 20px 0; border-color: rgba(94,234,212,0.25); }
+        .warning { border-color: rgba(251,191,36,0.35); background: rgba(120,53,15,0.18); }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(245px, 1fr));
+            gap: 16px;
+            margin: 22px 0;
+        }
+        .card { padding: 18px; }
+        .card h3, .card h4 { margin-top: 0; }
+        .wire-key { display: flex; flex-wrap: wrap; gap: 18px; margin: 18px 0; color: #cbd5e1; }
+        .wire { display: inline-flex; align-items: center; gap: 9px; }
+        .wire::before { content: ""; width: 46px; border-top: 3px solid #2dd4bf; }
+        .wire.state::before { border-top: 3px dashed #c084fc; }
+        figure {
+            margin: 24px 0;
+            border: 1px solid rgba(148,163,184,0.22);
+            border-radius: 14px;
+            overflow: hidden;
+            background: #15171d;
+        }
+        figure img { display: block; width: 100%; height: auto; }
+        figcaption { padding: 12px 16px; color: #94a3b8; font-size: 0.9rem; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #111827; }
+        th, td { padding: 12px 14px; border: 1px solid #293244; text-align: left; vertical-align: top; }
+        th { color: #ddd6fe; background: #172033; }
+        table:focus { outline: 2px solid #c4b5fd; outline-offset: 2px; }
+        .flow {
+            padding: 16px 18px;
+            margin: 14px 0;
+            border-radius: 12px;
+            color: #e2e8f0;
+            background: #070b12;
+            border: 1px solid #253047;
+            font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+            white-space: pre-wrap;
+        }
+        .recipe { padding-left: 18px; border-left: 4px solid #8b5cf6; margin: 28px 0; }
+        .recipe h3 { margin-top: 0; }
+        .two-col { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 22px; align-items: start; }
+        footer { padding: 24px 32px 42px; color: #94a3b8; border-top: 1px solid #1f2937; }
+        @media (max-width: 760px) {
+            header, main, footer { padding-left: 18px; padding-right: 18px; }
+            .two-col { grid-template-columns: 1fr; }
+            table { font-size: 0.9rem; display: block; max-width: 100%; overflow-x: auto; }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"actions/user-memory-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{", or":", veya",", selecting the exact memory.":", tam olarak ilgili belleği seçerek.",", so other platforms speak for everyone while TikTok stays restricted.":", böylece diğer platformlar herkesi seslendirirken TikTok kısıtlı kalır.",". Confirm the captured row in Test Flow/Event Reference and match the cleanest field your source provides.":". Yakalanan satırı Akışı Test Et/Etkinlik Referansı'nda doğrulayın ve kaynağınızın sunduğu en uygun alanı eşleştirin.",". It reads the incoming TikTok badge/level data directly; the Main Chat Overlay’s “treat as members” display setting is not required.":". Gelen TikTok rozet/seviye verilerini doğrudan okur; Ana Sohbet Katmanı'nın “üye olarak değerlendir” görüntüleme ayarı gerekmez.","? command + TikTok source + (TikTok Team Member OR User Is Remembered) → AND → Speak Text ? command + NOT TikTok source → AND ────────────────────────────────→ Speak Text":"? command + TikTok source + (TikTok Team Member OR User Is Remembered) → AND → Speak Text ? command + NOT TikTok source → AND ────────────────────────────────→ Speak Text","A":"Bir","A like did not add anyone":"Beğeni kimseyi eklemedi","A real SSApp flow with two remembered entrants. The event path stays teal; shared-state references are dashed purple.":"İki katılımcıyı hatırlayan gerçek SSApp akışı. Etkinlik yolu turkuaz, ortak durum başvuruları kesikli mordur.","A saved memory came back":"Kaydedilen bellek geri geldi","A trigger/check that returns true when the current message belongs to someone in the selected memory.":"Mevcut mesaj seçili bellekteki birine aitse doğru döndüren tetikleyici/kontrol.","Across restarts":"Yeniden başlatmalar arasında","Actual Test Flow output: Alice was selected and the memory count fell to one because “remove selected” was enabled.":"Gerçek Akışı Test Et çıktısı: Alice seçildi ve “seçileni kaldır” açık olduğundan bellek sayısı bire düştü.","Add User Role: moderator/admin (or an exact host-user check) into an AND gate before the action.":"Eylemden önce AND kapısına Kullanıcı Rolü: moderatör/yönetici (veya tam sunucu kullanıcısı kontrolü) ekleyin.","Add the checks and actions you need, then link each one to the named memory using its side diamond or dropdown.":"Gereken kontrolleri ve eylemleri ekleyin; ardından her birini yanındaki elmas veya açılır listeyle adlandırılmış belleğe bağlayın.","Adds the current event’s user once. Repeated participation increases that user’s participation count without adding duplicate draw entries.":"Mevcut etkinliğin kullanıcısını bir kez ekler. Tekrarlanan katılım, yinelenen çekiliş girdisi eklemeden kullanıcının katılım sayısını artırır.","Also clears a User Memory when that memory is the selected reset target.":"Seçili sıfırlama hedefi Kullanıcı Belleği olduğunda onu da temizler.","Anyone can run the draw/reset command":"Çekiliş/sıfırlama komutunu herkes çalıştırabiliyor","Automatic":"Otomatik","Available operations":"Kullanılabilir işlemler","Both branches still require the leading":"Her iki dal da baştaki şu komutu gerektirir:","Check whether the events came from different platforms. Platform + user ID intentionally creates separate identities.":"Etkinliklerin farklı platformlardan gelip gelmediğini kontrol edin. Platform + kullanıcı kimliği bilinçli olarak ayrı kimlikler oluşturur.","Choose":"Seçin:","Clear All Users":"Tüm Kullanıcıları Temizle","Clear All Users Now":"Tüm Kullanıcıları Şimdi Temizle","Clear after inactivity, on stream start, or on stream stop. A value of 0 disables inactivity reset.":"Hareketsizlikten sonra, yayın başlangıcında veya bitişinde temizleyin. 0 değeri hareketsizlik sıfırlamasını kapatır.","Connect the normal event path with teal wires and use":"Normal etkinlik yolunu turkuaz bağlantılarla bağlayın ve şunu kullanın:","Dashed purple: this node uses that memory":"Kesikli mor: bu düğüm o belleği kullanır","Download the participation + draw example flow":"Katılım + çekiliş örnek akışını indirin","Drag":"Sürükleyin:","Drag the small purple side diamond onto a User Memory node, or choose the memory by name in the node properties. Internally the operation stores the state node’s ID. Selecting the memory highlights every linked operation, and deleting it warns before those links are broken.":"Küçük mor yan elması Kullanıcı Belleği düğümüne sürükleyin veya düğüm özelliklerinden belleği adıyla seçin. İşlem dahili olarak durum düğümünün kimliğini saklar. Belleği seçmek bağlı tüm işlemleri vurgular; silmek bu bağlantılar kopmadan önce uyarır.","Draw outputs":"Çekiliş çıktıları","Empties only the selected User Memory object.":"Yalnızca seçilen Kullanıcı Belleği nesnesini boşaltır.","Enable":"Şunu etkinleştirin:","Event Flow Guide":"Etkinlik Akışı Kılavuzu","Event Flow canvas showing Remember User and User Is Remembered linked to the Prize Draw Entrants memory with dashed purple lines":"Kullanıcıyı Hatırla ve Kullanıcı Hatırlanıyor düğümlerini kesikli mor çizgilerle Ödül Çekilişi Katılımcıları belleğine bağlı gösteren Etkinlik Akışı tuvali","Event Flow shared state":"Etkinlik Akışı ortak durumu","Event Type → Other: gift":"Etkinlik Türü → Diğer: gift","Event Type → Other: liked → Remember User ···→ [Liked Stream]":"Etkinlik Türü → Diğer: liked → Kullanıcıyı Hatırla ···→ [Yayını Beğenenler]","Every reset option belongs to this one named memory. Other User Memory nodes are not touched.":"Her sıfırlama seçeneği bu tek adlandırılmış belleğe aittir. Diğer Kullanıcı Belleği düğümleri etkilenmez.","Field":"Alan","For TikTok Team/Fan status, choose":"TikTok Takım/Hayran durumu için şunu seçin:","Forget User":"Kullanıcıyı Unut","From a flow":"Bir akıştan","Gift payloads differ by capture mode. A common setup is":"Hediye verileri yakalama moduna göre değişir. Yaygın kurulum:","Heart Me Eligible":"Heart Me Uygunluğu","How it works":"Nasıl çalışır","How many times that person has participated.":"Bu kişinin kaç kez katıldığı.","Identity rule:":"Kimlik kuralı:","Liked Stream":"Yayını Beğenenler","Manual":"Elle","Meaning":"Anlamı","Memory actions add fields to the message so downstream Show Text, Send Message, webhook, or custom actions can use them.":"Bellek eylemleri mesaja alanlar ekler; böylece sonraki Metin Göster, Mesaj Gönder, webhook veya özel eylemler bunları kullanabilir.","Message Contains: Heart Me":"Mesaj Şunu İçerir: Heart Me","Message Starts With !enter → Remember User ···→ [Prize Draw Entrants] Moderator + Message Starts With !draw → AND → Pick Random User ···→ [Prize Draw Entrants] Moderator + Message Starts With !resetdraw → AND → Clear All Users ···→ [Prize Draw Entrants]":"Message Starts With !enter → Remember User ···→ [Prize Draw Entrants] Moderator + Message Starts With !draw → AND → Pick Random User ···→ [Prize Draw Entrants] Moderator + Message Starts With !resetdraw → AND → Clear All Users ···→ [Prize Draw Entrants]","Name it for the list it owns, such as":"Tuttuğu listeye göre adlandırın; örneğin","Node":"Düğüm","One named memory, many tools":"Tek adlandırılmış bellek, birçok araç","Pick Random User":"Rastgele Kullanıcı Seç","Practical recipes":"Pratik tarifler","Prize Draw Entrants":"Ödül Çekilişi Katılımcıları","Recipes":"Tarifler","Remember User":"Kullanıcıyı Hatırla","Remember people who liked or participated":"Beğenen veya katılan kişileri hatırlayın","Remember unique participants, check them on later messages, draw a random winner, and reset exactly the list you intended without turning a platform role into permanent global state.":"Benzersiz katılımcıları hatırlayın, sonraki mesajlarda kontrol edin, rastgele kazanan çekin ve tam istediğiniz listeyi sıfırlayın — platform rolünü kalıcı genel duruma dönüştürmeden.","Remove selected user":"Seçilen kullanıcıyı kaldır","Removes only the current event’s user.":"Yalnızca mevcut etkinliğin kullanıcısını kaldırır.","Reset State Node":"Durum Düğümünü Sıfırla","Reset and persistence":"Sıfırlama ve kalıcılık","Save across restarts":"Yeniden başlatmalar arasında kaydet","Select the operation and choose a User Memory target, or drag its purple side diamond to the memory hub.":"İşlemi seçip Kullanıcı Belleği hedefi belirleyin veya mor yan elmasını bellek merkezine sürükleyin.","Selects one unique remembered user. It can optionally remove the winner so they cannot win again.":"Hatırlanan benzersiz kullanıcılardan birini seçer. İsteğe bağlı olarak kazananı kaldırabilir; böylece tekrar kazanamaz.","Session memories start empty with the app. Saved memories reload until that specific memory is cleared.":"Oturum bellekleri uygulamayla boş başlar. Kaydedilmiş bellekler, ilgili bellek temizlenene kadar yeniden yüklenir.","Set it up":"Kurulum","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja ·":"Social Stream Ninja ·","Solid teal: this event runs next":"Düz turkuaz: sırada bu etkinlik çalışır","State Nodes Guide":"Durum Düğümleri Rehberi","State Nodes → User Memory":"Durum Düğümleri → Kullanıcı Belleği","TTS":"TTS","Test Flow":"Akışı Test Et","Test Flow result showing a selected prize draw user and one remaining entrant":"Seçilen çekiliş kullanıcısını ve kalan bir katılımcıyı gösteren Akışı Test Et sonucu","The dashed line is missing":"Kesikli çizgi yok","The drawn user’s display name.":"Çekilişte seçilen kullanıcının görünen adı.","The drawn user’s stable ID and platform.":"Çekilişte seçilen kullanıcının sabit kimliği ve platformu.","The event probably had no user identity. Inspect the event payload; aggregate counts cannot become named entrants.":"Etkinlik muhtemelen kullanıcı kimliği içermiyordu. Etkinlik verisini inceleyin; toplu sayımlar adlandırılmış katılımcılara dönüşemez.","The hub reports its current unique-user count and owns persistence/reset settings.":"Merkez mevcut benzersiz kullanıcı sayısını bildirir ve kalıcılık/sıfırlama ayarlarını tutar.","The latest reason template saved by Remember User.":"Kullanıcıyı Hatırla tarafından kaydedilen son gerekçe şablonu.","The same person appears twice":"Aynı kişi iki kez görünüyor","The selected memory’s name.":"Seçili belleğin adı.","The winner’s recorded participation count.":"Kazananın kayıtlı katılım sayısı.","This app session":"Bu uygulama oturumu","This works when the captured like/participation event names a user. Aggregate like-count updates do not identify a person and therefore cannot be remembered. Use a separate memory for each kind of participation if you want independent checks or draws.":"Bu, yakalanan beğeni/katılım etkinliği kullanıcı adı verdiğinde çalışır. Toplu beğeni sayısı güncellemeleri kişiyi tanımlamaz ve bu yüzden hatırlanamaz. Bağımsız kontroller veya çekilişler istiyorsanız her katılım türü için ayrı bellek kullanın.","TikTok Heart Me or Team Member →":"TikTok Heart Me veya Takım Üyesi →","TikTok gift event + “Heart Me” match → AND → Remember User ···→ [Heart Me Eligible]":"TikTok gift event + “Heart Me” match → AND → Remember User ···→ [Heart Me Eligible]","Troubleshooting":"Sorun giderme","True only when Remember User added a new unique person.":"Yalnızca Kullanıcıyı Hatırla yeni benzersiz kişi eklediğinde doğru.","Unique users currently remembered.":"Şu anda hatırlanan benzersiz kullanıcılar.","Unique-entry prize draw":"Kişi başına tek katılımlı ödül çekilişi","Use":"Kullanın:","Use Clear All Users on that memory. Changing a flow or clearing a different memory does not erase it.":"O bellekte Tüm Kullanıcıları Temizle'yi kullanın. Akışı değiştirmek veya başka belleği temizlemek onu silmez.","Use Event Flow user memory in Social Stream Ninja to store viewer-specific values and build automations that respond to previous interactions.":"İzleyiciye özel değerleri saklamak ve önceki etkileşimlere yanıt veren otomasyonlar oluşturmak için Social Stream Ninja Etkinlik Akışı kullanıcı belleğini kullanın.","Use draw and participation outputs":"Çekiliş ve katılım çıktılarını kullanın","Use the gift event to remember the sender; do not try to turn the one gift row into a permanent “member” role.":"Göndereni hatırlamak için hediye etkinliğini kullanın; tek hediye satırını kalıcı “üye” rolüne dönüştürmeye çalışmayın.","User Is Remembered":"Kullanıcı Hatırlanıyor","User Memory":"Kullanıcı Belleği","User Memory Guide - Social Stream Ninja":"Kullanıcı Belleği Rehberi - Social Stream Ninja","User Memory node properties showing two current users and Save across restarts":"İki mevcut kullanıcıyı ve Yeniden başlatmalar arasında kaydet seçeneğini gösteren Kullanıcı Belleği düğüm özellikleri","User Memory reset properties including inactivity, stream start, stream stop, and Clear All Users Now":"Hareketsizlik, yayın başlangıcı, yayın bitişi ve Tüm Kullanıcıları Şimdi Temizle seçeneklerini içeren Kullanıcı Belleği sıfırlama özellikleri","User Role → TikTok Team Member":"Kullanıcı Rolü → TikTok Takım Üyesi","What it does":"Ne yapar","Whether the draw removed the selected winner.":"Çekilişin seçilen kazananı kaldırıp kaldırmadığı.","in the memory properties while building/testing.":"oluştururken/test ederken bellek özelliklerinde.","it means all users inside the selected memory, not all Event Flow state, not every draw, and not every memory in Social Stream Ninja.":"seçili bellekteki tüm kullanıcıları ifade eder — tüm Etkinlik Akışı durumunu, her çekilişi veya Social Stream Ninja'daki her belleği değil.","onto the canvas.":"tuvale.","or":"veya","or the generic":"veya genel","plus":"ve ayrıca","state node owns one isolated set of people. Every Remember, Forget, Check, Draw, or Clear node selects that state node. Create another User Memory node when you need a separate list, for example, one for “liked the stream” and another for “entered the giveaway.”":"durum düğümü, birbirinden ayrılmış tek kişi kümesini tutar. Her Hatırla, Unut, Kontrol, Çekiliş veya Temizle düğümü bu durum düğümünü seçer. Ayrı liste gerektiğinde başka Kullanıcı Belleği düğümü oluşturun — örneğin biri “yayını beğenen”, diğeri “çekilişe katılan” kişiler için.","users are keyed by platform plus user ID. The displayed username is used only as a fallback. An anonymous or aggregate event with no user identity is safely ignored.":"kullanıcılar platform ve kullanıcı kimliğiyle anahtarlanır. Görünen kullanıcı adı yalnızca alternatif olarak kullanılır. Kullanıcı kimliği olmayan anonim veya toplu etkinlik güvenle yok sayılır.","when winners should not be drawn twice. In a public stream, protect draw/reset commands with a moderator, admin, or exact-user check.":"kazananların iki kez seçilmemesi gerektiğinde. Herkese açık yayında çekiliş/sıfırlama komutlarını moderatör, yönetici veya tam kullanıcı kontrolüyle koruyun.","with two different usernames before going live.":"yayına başlamadan önce iki farklı kullanıcı adıyla.","“Clear all” is scoped:":"“Tümünü temizle” belirli kapsamla sınırlıdır:"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/actions/user-memory-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/actions/user-memory-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header>
+        <div class="shell">
+            <div class="eyebrow">Etkinlik Akışı ortak durumu</div>
+            <h1>Kullanıcı Belleği</h1>
+            <p>Benzersiz katılımcıları hatırlayın, sonraki mesajlarda kontrol edin, rastgele kazanan çekin ve tam istediğiniz listeyi sıfırlayın — platform rolünü kalıcı genel duruma dönüştürmeden.</p>
+            <nav>
+                <a href="#model">Nasıl çalışır</a>
+                <a href="#setup">Kurulum</a>
+                <a href="#recipes">Tarifler</a>
+                <a href="#reset">Sıfırlama ve kalıcılık</a>
+                <a href="#outputs">Çekiliş çıktıları</a>
+            </nav>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/user-memory-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/user-memory-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/user-memory-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/user-memory-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/user-memory-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/actions/user-memory-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/actions/user-memory-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/user-memory-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/user-memory-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/user-memory-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/user-memory-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/user-memory-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/user-memory-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/user-memory-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="user-memory-guide.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/actions/user-memory-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/user-memory-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+    </header>
+
+    <main class="shell">
+        <section id="model">
+            <h2>Tek adlandırılmış bellek, birçok araç</h2>
+            <div class="lead">
+                Bir <strong>Kullanıcı Belleği</strong> durum düğümü, birbirinden ayrılmış tek kişi kümesini tutar. Her Hatırla, Unut, Kontrol, Çekiliş veya Temizle düğümü bu durum düğümünü seçer. Ayrı liste gerektiğinde başka Kullanıcı Belleği düğümü oluşturun — örneğin biri “yayını beğenen”, diğeri “çekilişe katılan” kişiler için.
+            </div>
+            <div class="wire-key">
+                <span class="wire">Düz turkuaz: sırada bu etkinlik çalışır</span>
+                <span class="wire state">Kesikli mor: bu düğüm o belleği kullanır</span>
+            </div>
+            <p>Küçük mor yan elması Kullanıcı Belleği düğümüne sürükleyin veya düğüm özelliklerinden belleği adıyla seçin. İşlem dahili olarak durum düğümünün kimliğini saklar. Belleği seçmek bağlı tüm işlemleri vurgular; silmek bu bağlantılar kopmadan önce uyarır.</p>
+            <figure>
+                <img src="../../actions/img/user-memory-shared-state.png" alt="Kullanıcıyı Hatırla ve Kullanıcı Hatırlanıyor düğümlerini kesikli mor çizgilerle Ödül Çekilişi Katılımcıları belleğine bağlı gösteren Etkinlik Akışı tuvali">
+                <figcaption>İki katılımcıyı hatırlayan gerçek SSApp akışı. Etkinlik yolu turkuaz, ortak durum başvuruları kesikli mordur.</figcaption>
+            </figure>
+        </section>
+
+        <section id="setup">
+            <h2>Kurulum</h2>
+            <ol>
+                <li>Sürükleyin: <strong>Durum Düğümleri → Kullanıcı Belleği</strong> tuvale.</li>
+                <li>Tuttuğu listeye göre adlandırın; örneğin <em>Heart Me Uygunluğu</em>, <em>Yayını Beğenenler</em>, veya <em>Ödül Çekilişi Katılımcıları</em>.</li>
+                <li>Seçin: <strong>Bu uygulama oturumu</strong> veya <strong>Yeniden başlatmalar arasında kaydet</strong>.</li>
+                <li>Gereken kontrolleri ve eylemleri ekleyin; ardından her birini yanındaki elmas veya açılır listeyle adlandırılmış belleğe bağlayın.</li>
+                <li>Normal etkinlik yolunu turkuaz bağlantılarla bağlayın ve şunu kullanın: <strong>Akışı Test Et</strong> yayına başlamadan önce iki farklı kullanıcı adıyla.</li>
+            </ol>
+            <div class="two-col">
+                <div>
+                    <h3>Kullanılabilir işlemler</h3>
+                    <table tabindex="0">
+                        <thead><tr><th>Düğüm</th><th>Ne yapar</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Kullanıcıyı Hatırla</strong></td><td>Mevcut etkinliğin kullanıcısını bir kez ekler. Tekrarlanan katılım, yinelenen çekiliş girdisi eklemeden kullanıcının katılım sayısını artırır.</td></tr>
+                            <tr><td><strong>Kullanıcı Hatırlanıyor</strong></td><td>Mevcut mesaj seçili bellekteki birine aitse doğru döndüren tetikleyici/kontrol.</td></tr>
+                            <tr><td><strong>Kullanıcıyı Unut</strong></td><td>Yalnızca mevcut etkinliğin kullanıcısını kaldırır.</td></tr>
+                            <tr><td><strong>Rastgele Kullanıcı Seç</strong></td><td>Hatırlanan benzersiz kullanıcılardan birini seçer. İsteğe bağlı olarak kazananı kaldırabilir; böylece tekrar kazanamaz.</td></tr>
+                            <tr><td><strong>Tüm Kullanıcıları Temizle</strong></td><td>Yalnızca seçilen Kullanıcı Belleği nesnesini boşaltır.</td></tr>
+                            <tr><td><strong>Durum Düğümünü Sıfırla</strong></td><td>Seçili sıfırlama hedefi Kullanıcı Belleği olduğunda onu da temizler.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <figure>
+                    <img src="../../actions/img/user-memory-settings.png" alt="İki mevcut kullanıcıyı ve Yeniden başlatmalar arasında kaydet seçeneğini gösteren Kullanıcı Belleği düğüm özellikleri">
+                    <figcaption>Merkez mevcut benzersiz kullanıcı sayısını bildirir ve kalıcılık/sıfırlama ayarlarını tutar.</figcaption>
+                </figure>
+            </div>
+            <div class="callout">
+                <strong>Kimlik kuralı:</strong> kullanıcılar platform ve kullanıcı kimliğiyle anahtarlanır. Görünen kullanıcı adı yalnızca alternatif olarak kullanılır. Kullanıcı kimliği olmayan anonim veya toplu etkinlik güvenle yok sayılır.
+            </div>
+        </section>
+
+        <section id="recipes">
+            <h2>Pratik tarifler</h2>
+
+            <div class="recipe">
+                <h3>TikTok Heart Me veya Takım Üyesi → <code>?</code> TTS</h3>
+                <p>Göndereni hatırlamak için hediye etkinliğini kullanın; tek hediye satırını kalıcı “üye” rolüne dönüştürmeye çalışmayın.</p>
+                <div class="flow">TikTok gift event + “Heart Me” match → AND → Remember User ···→ [Heart Me Eligible]</div>
+                <div class="flow">? command + TikTok source + (TikTok Team Member OR User Is Remembered) → AND → Speak Text
+? command + NOT TikTok source → AND ────────────────────────────────→ Speak Text</div>
+                <ul>
+                    <li>TikTok Takım/Hayran durumu için şunu seçin: <strong>Kullanıcı Rolü → TikTok Takım Üyesi</strong>. Gelen TikTok rozet/seviye verilerini doğrudan okur; Ana Sohbet Katmanı'nın “üye olarak değerlendir” görüntüleme ayarı gerekmez.</li>
+                    <li>Hediye verileri yakalama moduna göre değişir. Yaygın kurulum: <strong>Etkinlik Türü → Diğer: gift</strong> ve ayrıca <strong>Mesaj Şunu İçerir: Heart Me</strong>. Yakalanan satırı Akışı Test Et/Etkinlik Referansı'nda doğrulayın ve kaynağınızın sunduğu en uygun alanı eşleştirin.</li>
+                    <li>Her iki dal da baştaki şu komutu gerektirir: <code>?</code>, böylece diğer platformlar herkesi seslendirirken TikTok kısıtlı kalır.</li>
+                </ul>
+            </div>
+
+            <div class="recipe">
+                <h3>Beğenen veya katılan kişileri hatırlayın</h3>
+                <div class="flow">Etkinlik Türü → Diğer: liked → Kullanıcıyı Hatırla ···→ [Yayını Beğenenler]</div>
+                <p>Bu, yakalanan beğeni/katılım etkinliği kullanıcı adı verdiğinde çalışır. Toplu beğeni sayısı güncellemeleri kişiyi tanımlamaz ve bu yüzden hatırlanamaz. Bağımsız kontroller veya çekilişler istiyorsanız her katılım türü için ayrı bellek kullanın.</p>
+            </div>
+
+            <div class="recipe">
+                <h3>Kişi başına tek katılımlı ödül çekilişi</h3>
+                <div class="flow">Message Starts With !enter → Remember User ···→ [Prize Draw Entrants]
+Moderator + Message Starts With !draw → AND → Pick Random User ···→ [Prize Draw Entrants]
+Moderator + Message Starts With !resetdraw → AND → Clear All Users ···→ [Prize Draw Entrants]</div>
+                <p>Şunu etkinleştirin: <strong>Seçilen kullanıcıyı kaldır</strong> kazananların iki kez seçilmemesi gerektiğinde. Herkese açık yayında çekiliş/sıfırlama komutlarını moderatör, yönetici veya tam kullanıcı kontrolüyle koruyun.</p>
+                <p><a class="button" href="../../actions/examples/user-memory-participation-draw.json" download>Katılım + çekiliş örnek akışını indirin</a></p>
+            </div>
+        </section>
+
+        <section id="reset">
+            <h2>Sıfırlama ve kalıcılık</h2>
+            <div class="grid">
+                <div class="card"><h3>Elle</h3><p>Kullanın: <strong>Tüm Kullanıcıları Şimdi Temizle</strong> oluştururken/test ederken bellek özelliklerinde.</p></div>
+                <div class="card"><h3>Bir akıştan</h3><p>Kullanın: <strong>Tüm Kullanıcıları Temizle</strong> veya genel <strong>Durum Düğümünü Sıfırla</strong>, tam olarak ilgili belleği seçerek.</p></div>
+                <div class="card"><h3>Otomatik</h3><p>Hareketsizlikten sonra, yayın başlangıcında veya bitişinde temizleyin. 0 değeri hareketsizlik sıfırlamasını kapatır.</p></div>
+                <div class="card"><h3>Yeniden başlatmalar arasında</h3><p>Oturum bellekleri uygulamayla boş başlar. Kaydedilmiş bellekler, ilgili bellek temizlenene kadar yeniden yüklenir.</p></div>
+            </div>
+            <figure>
+                <img src="../../actions/img/user-memory-reset-controls.png" alt="Hareketsizlik, yayın başlangıcı, yayın bitişi ve Tüm Kullanıcıları Şimdi Temizle seçeneklerini içeren Kullanıcı Belleği sıfırlama özellikleri">
+                <figcaption>Her sıfırlama seçeneği bu tek adlandırılmış belleğe aittir. Diğer Kullanıcı Belleği düğümleri etkilenmez.</figcaption>
+            </figure>
+            <div class="callout warning">
+                <strong>“Tümünü temizle” belirli kapsamla sınırlıdır:</strong> seçili bellekteki tüm kullanıcıları ifade eder — tüm Etkinlik Akışı durumunu, her çekilişi veya Social Stream Ninja'daki her belleği değil.
+            </div>
+        </section>
+
+        <section id="outputs">
+            <h2>Çekiliş ve katılım çıktılarını kullanın</h2>
+            <p>Bellek eylemleri mesaja alanlar ekler; böylece sonraki Metin Göster, Mesaj Gönder, webhook veya özel eylemler bunları kullanabilir.</p>
+            <table tabindex="0">
+                <thead><tr><th>Alan</th><th>Anlamı</th></tr></thead>
+                <tbody>
+                    <tr><td><code>userMemoryName</code></td><td>Seçili belleğin adı.</td></tr>
+                    <tr><td><code>userMemoryCount</code></td><td>Şu anda hatırlanan benzersiz kullanıcılar.</td></tr>
+                    <tr><td><code>userMemoryAdded</code></td><td>Yalnızca Kullanıcıyı Hatırla yeni benzersiz kişi eklediğinde doğru.</td></tr>
+                    <tr><td><code>userMemoryEntryCount</code></td><td>Bu kişinin kaç kez katıldığı.</td></tr>
+                    <tr><td><code>selectedUser</code></td><td>Çekilişte seçilen kullanıcının görünen adı.</td></tr>
+                    <tr><td><code>selectedUserId</code>, <code>selectedUserSource</code></td><td>Çekilişte seçilen kullanıcının sabit kimliği ve platformu.</td></tr>
+                    <tr><td><code>selectedUserParticipationCount</code></td><td>Kazananın kayıtlı katılım sayısı.</td></tr>
+                    <tr><td><code>selectedUserReason</code></td><td>Kullanıcıyı Hatırla tarafından kaydedilen son gerekçe şablonu.</td></tr>
+                    <tr><td><code>selectedUserRemoved</code></td><td>Çekilişin seçilen kazananı kaldırıp kaldırmadığı.</td></tr>
+                </tbody>
+            </table>
+            <figure>
+                <img src="../../actions/img/user-memory-draw-result.png" alt="Seçilen çekiliş kullanıcısını ve kalan bir katılımcıyı gösteren Akışı Test Et sonucu">
+                <figcaption>Gerçek Akışı Test Et çıktısı: Alice seçildi ve “seçileni kaldır” açık olduğundan bellek sayısı bire düştü.</figcaption>
+            </figure>
+        </section>
+
+        <section>
+            <h2>Sorun giderme</h2>
+            <table tabindex="0">
+                <tbody>
+                    <tr><th>Kesikli çizgi yok</th><td>İşlemi seçip Kullanıcı Belleği hedefi belirleyin veya mor yan elmasını bellek merkezine sürükleyin.</td></tr>
+                    <tr><th>Aynı kişi iki kez görünüyor</th><td>Etkinliklerin farklı platformlardan gelip gelmediğini kontrol edin. Platform + kullanıcı kimliği bilinçli olarak ayrı kimlikler oluşturur.</td></tr>
+                    <tr><th>Beğeni kimseyi eklemedi</th><td>Etkinlik muhtemelen kullanıcı kimliği içermiyordu. Etkinlik verisini inceleyin; toplu sayımlar adlandırılmış katılımcılara dönüşemez.</td></tr>
+                    <tr><th>Kaydedilen bellek geri geldi</th><td>O bellekte Tüm Kullanıcıları Temizle'yi kullanın. Akışı değiştirmek veya başka belleği temizlemek onu silmez.</td></tr>
+                    <tr><th>Çekiliş/sıfırlama komutunu herkes çalıştırabiliyor</th><td>Eylemden önce AND kapısına Kullanıcı Rolü: moderatör/yönetici (veya tam sunucu kullanıcısı kontrolü) ekleyin.</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer><div class="shell">Social Stream Ninja · <a href="event-flow-guide.html">Etkinlik Akışı Kılavuzu</a> · <a href="state-nodes-guide.html">Durum Düğümleri Rehberi</a></div></footer>
+</body>
+</html>

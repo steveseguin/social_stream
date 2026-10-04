@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-site-root="../../" data-site-language="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/pt-br/docs/obs-control-dock-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:url" content="https://socialstream.ninja/pt-br/docs/obs-control-dock-guide.html">
+    <meta property="og:title" content="Guia do dock de controle do OBS - Social Stream Ninja">
+    <meta property="og:description" content="Adicione o dock de controle do Social Stream Ninja ao OBS para iniciar créditos remotamente, controlar o chat em destaque, executar cronômetros e gerenciar uma lista de espera.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logotipo do Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/pt-br/docs/obs-control-dock-guide.html">
+    <meta name="twitter:title" content="Guia do dock de controle do OBS - Social Stream Ninja">
+    <meta name="twitter:description" content="Adicione o dock de controle do Social Stream Ninja ao OBS para iniciar créditos remotamente, controlar o chat em destaque, executar cronômetros e gerenciar uma lista de espera.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logotipo do Social Stream Ninja">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Guia do dock de controle do OBS - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Adicione o dock de controle do Social Stream Ninja ao OBS para iniciar créditos remotamente, controlar o chat em destaque, executar cronômetros e gerenciar uma lista de espera.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="pt-br">
+<script id="ssn-site-language" type="application/json">{"language":"pt-br","page":"docs/obs-control-dock-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Mudar para o tema claro","Switch to dark theme":"Mudar para o tema escuro","Light mode":"Modo claro","Dark mode":"Modo escuro","Open navigation menu":"Abrir menu de navegação","Close navigation menu":"Fechar menu de navegação","Copy this document as Markdown to the clipboard":"Copiar este documento em Markdown para a área de transferência","Copy Markdown":"Copiar Markdown","Copying…":"Copiando…","Markdown copied":"Markdown copiado","Copy failed":"Falha ao copiar","Copy comprehensive Markdown for an AI assistant":"Copiar Markdown completo para um assistente de IA","Copy this documentation page as Markdown for an AI assistant":"Copiar esta página de documentação como Markdown para um assistente de IA"},"strings":{", close the settings window, and place the new dock where you want it in OBS.":", feche a janela de configurações e posicione o novo dock onde quiser no OBS.",", use the generated Dock link after enabling its server setting, or add":", use o link de dock gerado após ativar a configuração de servidor dele, ou adicione",". Copy that private control URL into OBS's Custom Browser Docks. For a products-only dock, use":". Copie essa URL privada de controle para os Docks de navegador personalizados do OBS. Para um dock apenas de produtos, use",". If the URL did not include a session, enter it in the dock and select":". Se a URL não incluir uma sessão, insira-a no dock e selecione",". Keep Social Stream Ninja active during the stream.":". Mantenha o Social Stream Ninja ativo durante a transmissão.",". This lets the app collect chatters, members, and donors while the Credits Browser Source is closed.":". Isso permite que o aplicativo registre participantes do chat, membros e doadores enquanto a Fonte de navegador de créditos estiver fechada.","Add the Social Stream Ninja control dock to OBS and remotely start Credits, control featured chat, run timers, and manage a waitlist.":"Adicione o dock de controle do Social Stream Ninja ao OBS para iniciar créditos remotamente, controlar o chat em destaque, executar cronômetros e gerenciar uma lista de espera.","Add the generated Credits URL to the OBS ending scene using the same Session ID.":"Adicione a URL gerada de créditos à cena de encerramento do OBS usando o mesmo ID de sessão.","Apply":"Aplicar","At the end of the stream, switch to the ending scene first so the Credits Browser Source is loaded and connected.":"No fim da transmissão, mude primeiro para a cena de encerramento para que a Fonte de navegador de créditos seja carregada e conectada.","Background collection":"Coleta em segundo plano","Before the stream, set Credits":"Antes da transmissão, defina nos créditos","Button":"Botão","Clears the saved Background collection for the active Social Stream session.":"Limpa a coleta em segundo plano salva para a sessão ativa do Social Stream.","Commands & API":"Comandos e API","Confirm the dock says":"Confirme que o dock mostra","Connected":"Conectado","Copy the Session ID shown in Social Stream Ninja.":"Copie o ID de sessão mostrado no Social Stream Ninja.","Credits Roll Guide":"Guia de créditos","Credits says no source accepted the command:":"Os créditos informam que nenhuma fonte aceitou o comando:","Custom Browser Docks":"Docks de navegador personalizados","Direct API examples":"Exemplos de API direta","Disconnected:":"Desconectado:","Displays built-in participant, member, and donor examples. It does not prove that real names were collected.":"Exibe exemplos integrados de participantes, membros e doadores. Não comprova que nomes reais tenham sido coletados.","Dock sends its commands to Extension via server":"Dock envia comandos à extensão pelo servidor (Dock sends its commands to Extension via server)","Docks":"Docks","Download":"Baixar","Duration:":"Duração:","Enable":"Ative","Enable Dock to use and publish via API server":"Permitir que o dock use e publique pelo servidor de API","Featured Chat button has no visible effect:":"O botão Chat em destaque não tem efeito visível:","Featured Chat:":"Chat em destaque:","Features":"Recursos","For this control dock":"Para este dock de controle","Global settings and tools":"Configurações e ferramentas globais","Guides":"Guias","Hide products:":"Ocultar produtos:","Hire":"Contratar","Home":"Início","If you intentionally use direct API transport for":"Se você usar intencionalmente o transporte direto da API para","In OBS, open":"No OBS, abra","In Social Stream Ninja, open":"No Social Stream Ninja, abra","In Social Stream, open Monetization, save and enable your products, then choose":"No Social Stream, abra Monetização, salve e ative seus produtos e escolha","Inspiration":"Inspiração","Keep Social Stream on and enable":"Mantenha o Social Stream ligado e ative","Keep common Social Stream controls inside OBS, including Credits Start, Preview, Test, and Reset.":"Mantenha controles comuns do Social Stream dentro do OBS, incluindo Iniciar, Prévia, Testar e Redefinir créditos.","Lets the control dock send commands to the Social Stream app or extension on channel 1.":"Permite que o dock de controle envie comandos ao aplicativo ou à extensão do Social Stream no canal 1.","Load before Start:":"Carregue antes de iniciar:","Main navigation":"Navegação principal","Mechanics":"Mecânica","Name the dock":"Nomeie o dock como","Next:":"Próximo:","Not required":"Não necessário","OBS Control Dock Guide":"Guia do dock de controle do OBS","OBS Control Dock Guide - Social Stream Ninja":"Guia do dock de controle do OBS - Social Stream Ninja","OBS product controls with a saved product selector, duration, Show, Next, Hide products, Resume schedule, and selected product state":"Controles de produtos no OBS com seletor de produto salvo, duração, Mostrar, Próximo, Ocultar produtos, Retomar programação e estado do produto selecionado","Open OBS control dock":"Abrir dock de controle do OBS","Open navigation menu":"Abrir menu de navegação","Open the Control Dock":"Abra o dock de controle","Optional direct server transport for the Streaming Chat Dock.":"Transporte direto opcional pelo servidor para o Dock de chat da transmissão.","Other controls and their required pages":"Outros controles e as páginas necessárias","Overlay Gallery":"Galeria de overlays","Preview":"Prévia","Product controls":"Controles de produtos","Products & support links":"Produtos e links de apoio","Purpose":"Finalidade","Quick setup":"Configuração rápida","Replace":"Substitua","Required":"Necessário","Reset Saved Credits":"Redefinir créditos salvos","Result":"Resultado","Resume schedule:":"Retomar programação:","Runs the real collected list.":"Executa a lista real coletada.","Runs the real list without consuming page-collected entries.":"Executa a lista real sem consumir as entradas coletadas pela página.","Save & connect":"Salvar e conectar","See the":"Veja:","Select":"Selecione","Send chat messages to API server":"Enviar mensagens de chat ao servidor da API (Send chat messages to API server)","Session needed:":"Sessão necessária:","Setting":"Configuração","Show, Next, and Hide return to the saved schedule after this many seconds. Use 0 to keep the override until changed.":"Mostrar, Próximo e Ocultar voltam à programação salva após esse número de segundos. Use 0 para manter a substituição até que seja alterada.","Show:":"Mostrar:","Social Stream Controls":"Controles do Social Stream","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logotipo do Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licença GPLv3.0.","Start Credits":"Iniciar créditos","State:":"Estado:","Support":"Suporte","Supported Sites":"Sites compatíveis","Switch theme":"Alternar tema","Test Credits":"Testar créditos","Test uses built-in names. Select Background collection before the stream and confirm normal chat sources are capturing.":"O teste usa nomes integrados. Selecione Coleta em segundo plano antes da transmissão e confirme que as fontes normais de chat estão capturando.","Test works but Start is empty:":"O teste funciona, mas Iniciar está vazio:","The control dock already opens its own WebSocket control connection. OBS's":"O dock de controle já abre sua própria conexão de controle WebSocket. As configurações","The dock reconnects automatically if the API connection drops. A green":"O dock reconecta automaticamente se a conexão com a API cair. Um status verde","The dock, popup, Stream Deck, and Event Flow share the same controls. Edit and save the catalog in Social Stream. See":"O dock, o popup, o Stream Deck e o Event Flow compartilham os mesmos controles. Edite e salve o catálogo no Social Stream. Veja","The same buttons can be scripted with HTTP GET requests:":"Os mesmos botões podem ser automatizados com requisições HTTP GET:","Timer:":"Cronômetro:","Trigger Mode":"Modo de acionamento","Troubleshooting":"Solução de problemas","Used when an external program needs to receive captured chat on channel 4.":"Usado quando um programa externo precisa receber o chat capturado no canal 4.","Used when the Streaming Chat Dock itself must send commands back through the server.":"Usado quando o próprio Dock de chat da transmissão precisa enviar comandos de volta pelo servidor.","Using it with end-of-stream Credits":"Usar com os créditos de encerramento","Waitlist & Giveaway:":"Lista de espera e sorteio:","WebSocket Server Settings":"Configurações do servidor WebSocket","What each Credits button does":"O que cada botão de créditos faz","Which server settings are required?":"Quais configurações de servidor são necessárias?","advance from the current product.":"avance a partir do produto atual.","and use this URL:":"e use esta URL:","are unrelated and can remain off.":"do OBS não têm relação com isso e podem ficar desativadas.","as described above. Add the separate monetization overlay URL as an OBS Browser Source for viewers. The control dock is for you; never share its session URL with viewers.":"como descrito acima. Adicione a URL separada da sobreposição de monetização como Fonte de navegador do OBS para os espectadores. O dock de controle é para você; nunca compartilhe sua URL de sessão com os espectadores.","background collection can work while the Credits page is closed, but Start, Preview, and Test need a connected Credits Browser Source to display anything.":"a coleta em segundo plano pode funcionar com a página de créditos fechada, mas Iniciar, Prévia e Testar precisam de uma Fonte de navegador de créditos conectada para exibir algo.","configure the waitlist in Social Stream first; Reset clears the current entries.":"configure a lista de espera primeiro no Social Stream; Redefinir apaga as entradas atuais.","confirm the Streaming Chat Dock and featured overlay use the same session and are loaded.":"confirme que o Dock de chat da transmissão e a sobreposição de destaque usam a mesma sessão e estão carregados.","enable remote API control, confirm Social Stream is active, and reopen the dock after changing its URL.":"ative o controle remoto por API, confirme que o Social Stream está ativo e reabra o dock depois de alterar a URL.","for collection modes, filters, and troubleshooting missing names.":"para modos de coleta, filtros e solução de problemas de nomes ausentes.","for more actions.":"para mais ações.","for setup and automation.":"para configuração e automação.","full API sandbox":"ambiente completo de testes da API","hide promotional cards; activity alerts continue.":"oculte cartões promocionais; os alertas de atividade continuam.","in the OBS control dock.":"no dock de controle do OBS.","is not required on the control-dock or Credits URLs.":"não é necessário nas URLs do dock de controle ou dos créditos.","keep the Timer page connected on the same session if it needs to display the timer.":"mantenha a página Timer conectada à mesma sessão se ela precisar exibir o cronômetro.","keep the normal Streaming Chat Dock and featured overlay connected on the same session.":"mantenha o Dock de chat da transmissão normal e a sobreposição de destaque conectados à mesma sessão.","or the":"ou o","refreshes every five seconds while this section is open. It reports Social Stream's selection, not whether an OBS scene is visible. Lost or unconfirmed connections disable product buttons until state is available again.":"é atualizado a cada cinco segundos enquanto esta seção está aberta. Ele informa a seleção do Social Stream, não se uma cena do OBS está visível. Conexões perdidas ou não confirmadas desativam os botões de produtos até que o estado fique disponível novamente.","remote API control of extension":"controle remoto da extensão por API","return to your saved first-product or rotation setting.":"volte à configuração salva de primeiro produto ou rotação.","reveal the ending scene, wait for its Browser Source to load, then retry.":"mostre a cena de encerramento, espere sua Fonte de navegador carregar e tente novamente.","select a saved product and pin it.":"selecione um produto salvo e fixe-o.","status only confirms the control connection; the target page still needs to be open when a command displays something.":"confirma apenas a conexão de controle; a página de destino ainda precisa estar aberta quando um comando exibe algo.","to":"como","to that Dock URL. This is optional and does not change how Credits commands work.":"a essa URL do dock. Isso é opcional e não muda o funcionamento dos comandos de créditos.","use the exact Session ID from Social Stream, without the word":"use o ID de sessão exato do Social Stream, sem a palavra","with the active Social Stream session. See":"com a sessão ativa do Social Stream. Veja"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/obs-control-dock-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/obs-control-dock-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navegação principal"><a href="../index.html">Início</a><a href="features.html">Recursos</a><a href="inspiration.html" class="site-priority-inspiration">Inspiração</a><a href="download.html">Baixar</a><a href="guides.html">Guias</a><a href="commands.html">Comandos e API</a><a href="supported-sites.html">Sites compatíveis</a><a href="overlay-gallery.html" class="site-priority-gallery">Galeria de overlays</a><a href="services.html" class="site-priority-hire">Contratar</a><a href="support.html">Suporte</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Português (Brasil)"><span aria-hidden="true">🌐 </span><span lang="pt-br">Português (Brasil)</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/obs-control-dock-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/obs-control-dock-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="obs-control-dock-guide.html" lang="pt-br" hreflang="pt-br" aria-current="true">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/obs-control-dock-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/obs-control-dock-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/obs-control-dock-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/obs-control-dock-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/obs-control-dock-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/obs-control-dock-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/obs-control-dock-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/obs-control-dock-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/obs-control-dock-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/obs-control-dock-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/obs-control-dock-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/obs-control-dock-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/obs-control-dock-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/obs-control-dock-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Alternar tema"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Abrir menu de navegação" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+	<section class="page-hero">
+		<div class="container">
+			<h1>Guia do dock de controle do OBS</h1>
+			<p>Mantenha controles comuns do Social Stream dentro do OBS, incluindo Iniciar, Prévia, Testar e Redefinir créditos.</p>
+		</div>
+	</section>
+
+	<main class="guide-section">
+		<div class="container">
+			<div class="guide-card">
+				<h2>Configuração rápida</h2>
+				<ol class="guide-steps">
+					<li>No Social Stream Ninja, abra <strong>Configurações e ferramentas globais</strong> &rarr; <strong>Mecânica</strong>.</li>
+					<li>Ative <strong>controle remoto da extensão por API</strong>. Mantenha o Social Stream Ninja ativo durante a transmissão.</li>
+					<li>Copie o ID de sessão mostrado no Social Stream Ninja.</li>
+					<li>No OBS, abra <strong>Docks</strong> &rarr; <strong>Docks de navegador personalizados</strong>.</li>
+					<li>Nomeie o dock como <strong>Controles do Social Stream</strong> e use esta URL:</li>
+				</ol>
+				<pre><code>https://socialstream.ninja/obs-control-dock.html?session=YOUR_SESSION_ID</code></pre>
+				<ol class="guide-steps" start="6">
+					<li>Selecione <strong>Aplicar</strong>, feche a janela de configurações e posicione o novo dock onde quiser no OBS.</li>
+					<li>Confirme que o dock mostra <strong>Conectado</strong>. Se a URL não incluir uma sessão, insira-a no dock e selecione <strong>Salvar e conectar</strong>.</li>
+				</ol>
+				<p><a href="../../obs-control-dock.html" class="btn btn-primary">Abra o dock de controle</a></p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Quais configurações de servidor são necessárias?</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Configuração</th><th>Para este dock de controle</th><th>Finalidade</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Setting">controle remoto da extensão por API</td><td data-label="For this control dock"><strong>Necessário</strong></td><td data-label="Purpose">Permite que o dock de controle envie comandos ao aplicativo ou à extensão do Social Stream no canal 1.</td></tr>
+						<tr><td data-label="Setting">Permitir que o dock use e publique pelo servidor de API</td><td data-label="For this control dock">Não necessário</td><td data-label="Purpose">Transporte direto opcional pelo servidor para o Dock de chat da transmissão.</td></tr>
+						<tr><td data-label="Setting">Enviar mensagens de chat ao servidor da API (Send chat messages to API server)</td><td data-label="For this control dock">Não necessário</td><td data-label="Purpose">Usado quando um programa externo precisa receber o chat capturado no canal 4.</td></tr>
+						<tr><td data-label="Setting">Dock envia comandos à extensão pelo servidor (Dock sends its commands to Extension via server)</td><td data-label="For this control dock">Não necessário</td><td data-label="Purpose">Usado quando o próprio Dock de chat da transmissão precisa enviar comandos de volta pelo servidor.</td></tr>
+					</tbody>
+				</table>
+				<div class="guide-note"><strong><code>&amp;server</code> não é necessário nas URLs do dock de controle ou dos créditos.</strong> O dock de controle já abre sua própria conexão de controle WebSocket. As configurações <strong>Configurações do servidor WebSocket</strong> do OBS não têm relação com isso e podem ficar desativadas.</div>
+				<p>Se você usar intencionalmente o transporte direto da API para <code>dock.html</code>, use o link de dock gerado após ativar a configuração de servidor dele, ou adicione <code>&amp;server</code> a essa URL do dock. Isso é opcional e não muda o funcionamento dos comandos de créditos.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Usar com os créditos de encerramento</h2>
+				<ol class="guide-steps">
+					<li>Antes da transmissão, defina nos créditos <strong>Modo de acionamento</strong> como <strong>Coleta em segundo plano</strong>. Isso permite que o aplicativo registre participantes do chat, membros e doadores enquanto a Fonte de navegador de créditos estiver fechada.</li>
+					<li>Adicione a URL gerada de créditos à cena de encerramento do OBS usando o mesmo ID de sessão.</li>
+					<li>No fim da transmissão, mude primeiro para a cena de encerramento para que a Fonte de navegador de créditos seja carregada e conectada.</li>
+					<li>Selecione <strong>Iniciar créditos</strong> no dock de controle do OBS.</li>
+				</ol>
+				<div class="warning-note"><strong>Carregue antes de iniciar:</strong> a coleta em segundo plano pode funcionar com a página de créditos fechada, mas Iniciar, Prévia e Testar precisam de uma Fonte de navegador de créditos conectada para exibir algo.</div>
+				<p>Veja: <a href="credits-roll-guide.html">Guia de créditos</a> para modos de coleta, filtros e solução de problemas de nomes ausentes.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>O que cada botão de créditos faz</h2>
+				<table class="guide-table guide-table-stack">
+					<thead><tr><th>Botão</th><th>Resultado</th></tr></thead>
+					<tbody>
+						<tr><td data-label="Button">Iniciar créditos</td><td data-label="Result">Executa a lista real coletada.</td></tr>
+						<tr><td data-label="Button">Prévia</td><td data-label="Result">Executa a lista real sem consumir as entradas coletadas pela página.</td></tr>
+						<tr><td data-label="Button">Testar créditos</td><td data-label="Result">Exibe exemplos integrados de participantes, membros e doadores. Não comprova que nomes reais tenham sido coletados.</td></tr>
+						<tr><td data-label="Button">Redefinir créditos salvos</td><td data-label="Result">Limpa a coleta em segundo plano salva para a sessão ativa do Social Stream.</td></tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="guide-card" id="commerce">
+				<h2>Produtos e links de apoio</h2>
+				<p>No Social Stream, abra Monetização, salve e ative seus produtos e escolha <strong>Abrir dock de controle do OBS</strong>. Copie essa URL privada de controle para os Docks de navegador personalizados do OBS. Para um dock apenas de produtos, use <code>obs-control-dock.html?session=YOUR_SESSION_ID&amp;commerce</code>.</p>
+				<p>Mantenha o Social Stream ligado e ative <strong>controle remoto da extensão por API</strong> como descrito acima. Adicione a URL separada da sobreposição de monetização como Fonte de navegador do OBS para os espectadores. O dock de controle é para você; nunca compartilhe sua URL de sessão com os espectadores.</p>
+				<a href="../../docs/images/monetization/obs-native-product-controls.png"><img src="../../docs/images/monetization/obs-native-product-controls.png" alt="Controles de produtos no OBS com seletor de produto salvo, duração, Mostrar, Próximo, Ocultar produtos, Retomar programação e estado do produto selecionado" style="display:block;width:100%;max-width:390px;height:auto;margin:16px auto;"></a>
+				<ul class="guide-list">
+					<li><strong>Mostrar:</strong> selecione um produto salvo e fixe-o. <strong>Próximo:</strong> avance a partir do produto atual.</li>
+					<li><strong>Ocultar produtos:</strong> oculte cartões promocionais; os alertas de atividade continuam. <strong>Retomar programação:</strong> volte à configuração salva de primeiro produto ou rotação.</li>
+					<li><strong>Duração:</strong> Mostrar, Próximo e Ocultar voltam à programação salva após esse número de segundos. Use 0 para manter a substituição até que seja alterada.</li>
+					<li><strong>Estado:</strong> é atualizado a cada cinco segundos enquanto esta seção está aberta. Ele informa a seleção do Social Stream, não se uma cena do OBS está visível. Conexões perdidas ou não confirmadas desativam os botões de produtos até que o estado fique disponível novamente.</li>
+				</ul>
+				<p>O dock, o popup, o Stream Deck e o Event Flow compartilham os mesmos controles. Edite e salve o catálogo no Social Stream. Veja <a href="product-controls.html">Controles de produtos</a> para configuração e automação.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Outros controles e as páginas necessárias</h2>
+				<ul class="guide-list">
+					<li><strong>Chat em destaque:</strong> mantenha o Dock de chat da transmissão normal e a sobreposição de destaque conectados à mesma sessão.</li>
+					<li><strong>Cronômetro:</strong> mantenha a página Timer conectada à mesma sessão se ela precisar exibir o cronômetro.</li>
+					<li><strong>Lista de espera e sorteio:</strong> configure a lista de espera primeiro no Social Stream; Redefinir apaga as entradas atuais.</li>
+				</ul>
+				<p>O dock reconecta automaticamente se a conexão com a API cair. Um status verde <strong>Conectado</strong> confirma apenas a conexão de controle; a página de destino ainda precisa estar aberta quando um comando exibe algo.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Exemplos de API direta</h2>
+				<p>Os mesmos botões podem ser automatizados com requisições HTTP GET:</p>
+				<pre><code>https://io.socialstream.ninja/SESSION_ID/creditsStart
+https://io.socialstream.ninja/SESSION_ID/creditsPreview
+https://io.socialstream.ninja/SESSION_ID/creditsTest
+https://io.socialstream.ninja/SESSION_ID/creditsReset</code></pre>
+				<p>Substitua <code>SESSION_ID</code> com a sessão ativa do Social Stream. Veja <a href="commands.html">Comandos e API</a> ou o <a href="../../sampleapi.html">ambiente completo de testes da API</a> para mais ações.</p>
+			</div>
+
+			<div class="guide-card">
+				<h2>Solução de problemas</h2>
+				<ul class="guide-list">
+					<li><strong>Sessão necessária:</strong> use o ID de sessão exato do Social Stream, sem a palavra <code>session=</code>.</li>
+					<li><strong>Desconectado:</strong> ative o controle remoto por API, confirme que o Social Stream está ativo e reabra o dock depois de alterar a URL.</li>
+					<li><strong>Os créditos informam que nenhuma fonte aceitou o comando:</strong> mostre a cena de encerramento, espere sua Fonte de navegador carregar e tente novamente.</li>
+					<li><strong>O teste funciona, mas Iniciar está vazio:</strong> O teste usa nomes integrados. Selecione Coleta em segundo plano antes da transmissão e confirme que as fontes normais de chat estão capturando.</li>
+					<li><strong>O botão Chat em destaque não tem efeito visível:</strong> confirme que o Dock de chat da transmissão e a sobreposição de destaque usam a mesma sessão e estão carregados.</li>
+				</ul>
+			</div>
+		</div>
+	</main>
+
+	<footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. Licença GPLv3.0.</p></div></div></footer>
+	<script data-copy-markdown src="../../docs/js/main.js"></script>
+	<script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

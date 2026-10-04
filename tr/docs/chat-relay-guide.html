@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/tr/docs/chat-relay-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/tr/docs/chat-relay-guide.html">
+    <meta property="og:title" content="Platformlar arasında sohbet aktarımı - Social Stream Ninja">
+    <meta property="og:description" content="Twitch ve YouTube arasında kontrollü bir aktarım kurun, göndericileri seçin ve tekrarlanan mesajları teşhis edin.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/tr/docs/chat-relay-guide.html">
+    <meta name="twitter:title" content="Platformlar arasında sohbet aktarımı - Social Stream Ninja">
+    <meta name="twitter:description" content="Twitch ve YouTube arasında kontrollü bir aktarım kurun, göndericileri seçin ve tekrarlanan mesajları teşhis edin.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Platformlar arasında sohbet aktarımı - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="Twitch ve YouTube arasında kontrollü bir aktarım kurun, göndericileri seçin ve tekrarlanan mesajları teşhis edin.">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/chat-relay-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{", and keep the message template":", mesaj şablonunu ise şu şekilde bırakın:",". A blank list means all eligible destinations. That list controls destinations, not which incoming platforms can trigger a relay. Disable the Event Flow relay pair before enabling this alternative.":". Boş liste, uygun tüm hedefler anlamına gelir. Bu liste, hangi gelen platformların aktarımı tetikleyebileceğini değil, hedefleri kontrol eder. Bu alternatifi etkinleştirmeden önce Etkinlik Akışı aktarım çiftini devre dışı bırakın.",". Choose Twitch as its source.":". Kaynak olarak Twitch'i seçin.",". Save and enable it. Send a fresh message from each side and confirm each produces one cross-platform copy.":". Kaydedip etkinleştirin. Her iki taraftan yeni bir mesaj gönderin ve her birinin diğer platformda tek bir kopya oluşturduğunu doğrulayın.","1. Confirm both chats can receive replies":"1. Her iki sohbetin de yanıt alabildiğini doğrulayın","2. Create Twitch → YouTube in Event Flow":"2. Etkinlik Akışı'nda Twitch → YouTube yönünü oluşturun","3. Add the return direction":"3. Dönüş yönünü ekleyin","4. Understand reflections":"4. Yansımaları anlayın","5. Narrow what you relay":"5. Aktardığınız mesajları daraltın","A reflection is a message SSN sent that gets captured again from the destination chat. Current Relay Chat actions skip recognized reflections automatically. They also exclude the originating tab.":"Yansıma, SSN'nin gönderdiği bir mesajın hedef sohbetten yeniden yakalanmasıdır. Mevcut Sohbeti Aktar işlemleri, tanınan yansımaları otomatik olarak atlar. Ayrıca kaynak sekmeyi de hariç tutar.","AND":"VE","Add a":"Şunu ekleyin:","All guides":"Tüm kılavuzlar","Allow All":"Tümüne izin ver","Allow First":"İlkine izin ver","Block All":"Tümünü engelle","Bot accounts for replies":"Yanıtlar için bot hesapları","Browse all guides":"Tüm kılavuzlara göz atın","Build and verify one direction before enabling the return direction.":"Dönüş yönünü etkinleştirmeden önce tek bir yönü oluşturup doğrulayın.","Commands & API":"Komutlar ve API","Connect your Twitch and YouTube Live chats to the same SSN session. Confirm both appear in the Dock, then send one manual reply to each from a message with a known source tab. Use your own test channels. A read-only capture source cannot send a relay.":"Twitch ve YouTube Live sohbetlerinizi aynı SSN oturumuna bağlayın. İkisinin de Panelde göründüğünü doğrulayın; ardından kaynak sekmesi bilinen bir mesajdan her birine elle bir yanıt gönderin. Kendi test kanallarınızı kullanın. Salt okunur bir yakalama kaynağı aktarım gönderemez.","Create a second flow named":"Şu adla ikinci bir akış oluşturun:","Destination: YouTube":"Hedef: YouTube","Download":"İndir","Event Flow Editor":"Etkinlik Akışı düzenleyicisi","Event Flow guide":"Etkinlik Akışı kılavuzu","Features":"Özellikler","For commands, add a":"Komutlar için şunu ekleyin:","From Source":"Kaynaktan","From Source: YouTube → Relay Chat: Twitch":"Kaynaktan: YouTube → Sohbeti Aktar: Twitch","Global settings and tools → Commands → Pick relay destinations":"Genel Ayarlar ve Araçlar → Komutlar → Aktarım Hedeflerini Seç","Guides":"Kılavuzlar","Hire":"Hizmet alın","Home":"Ana sayfa","If you choose the simpler global relay instead, use":"Bunun yerine daha basit genel aktarımı seçerseniz şunu kullanın:","Inspiration":"İlham","Keep":"Şunu bırakın:","Keep only the intended destination chats open for this setup. A platform destination can include multiple eligible source tabs on that platform. If you use a separate Twitch bot account, complete":"Bu kurulumda yalnızca amaçladığınız hedef sohbetleri açık tutun. Bir platform hedefi, o platformdaki birden fazla uygun kaynak sekmesini içerebilir. Ayrı bir Twitch bot hesabı kullanıyorsanız şu kurulumu tamamlayın:","Main navigation":"Ana gezinme","Message Starts With":"Mesaj şununla başlar","Messages multiply:":"Mesajlar çoğalıyorsa:","NOT":"DEĞİL","Nothing sends:":"Hiçbir şey gönderilmiyorsa:","On this page":"Bu sayfada","Only the Dock shows duplicates:":"Yinelenen mesajlar yalnızca Panelde görünüyorsa:","Open navigation menu":"Gezinme menüsünü aç","Open the":"Şunu açın:","Overlay Gallery":"Katman galerisi","Reflection Filter":"Yansıma filtresi","Relay Chat":"Sohbeti aktar","Relay Destination":"Aktarım hedefi","Relay all messages (!NOT RECOMMENDED!)":"Tüm mesajları aktar (!ÖNERİLMEZ!)","Relay chat between platforms":"Platformlar arasında sohbet aktarın","Relay chat between platforms - Social Stream Ninja":"Platformlar arasında sohbet aktarımı - Social Stream Ninja","SSApp’s account-role allow/block fields in the same Commands section can restrict which accounts send relays. Use the role assigned to your intended sender; an unmatched role can leave no eligible destination.":"Aynı Komutlar bölümündeki SSApp hesap rolü izin/engel alanları, hangi hesapların aktarım göndereceğini sınırlayabilir. Gönderici olarak kullanmak istediğiniz hesaba atanmış rolü kullanın; eşleşmeyen bir rol, uygun hedef kalmamasına yol açabilir.","Save Flow":"Akışı kaydet","Select":"Seçin:","Select that action. Set":"Bu işlemi seçin. Şunu ayarlayın:","Send a fresh normal message in your own Twitch test chat. Confirm one labelled copy arrives in YouTube.":"Kendi Twitch test sohbetinize yeni, normal bir mesaj gönderin. YouTube'a etiketli tek bir kopyanın ulaştığını doğrulayın.","Set up a deliberate Twitch and YouTube relay, choose senders, and diagnose repeated messages.":"Twitch ve YouTube arasında kontrollü bir aktarım kurun, göndericileri seçin ve tekrarlanan mesajları teşhis edin.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja ·":"Social Stream Ninja ·","Support":"Destek","Supported Sites":"Desteklenen siteler","Switch theme":"Temayı değiştir","Test Flow actions can send real messages. Use controlled destinations; a synthetic test does not prove the real source’s account routing.":"Akışı Test Et işlemleri gerçek mesajlar gönderebilir. Kontrolünüzdeki hedefleri kullanın; yapay bir test, gerçek kaynağın hesap yönlendirmesini kanıtlamaz.","The current Relay Chat properties do not have a “No Reflections” checkbox. Use the separate Reflection Filter for display control. If an external service rewrites a relayed message, automatic recognition may not catch it.":"Mevcut Sohbeti Aktar özelliklerinde “Yansıma Yok” onay kutusu bulunmaz. Görüntüleme kontrolü için ayrı Yansıma Filtresini kullanın. Harici bir hizmet aktarılan mesajı yeniden yazarsa otomatik tanıma bunu yakalayamayabilir.","To hide the captured echo from the Dock and overlays, add a":"Yakalanan yankıyı Panelden ve katmanlardan gizlemek için şunu ekleyin:","Troubleshooting":"Sorun giderme","Twitch":"Twitch","Twitch to YouTube":"Twitch'ten YouTube'a","User & Source":"Kullanıcı ve kaynak","Wrong YouTube destination:":"Yanlış YouTube hedefine gidiyorsa:","YouTube":"YouTube","YouTube Shorts":"YouTube Shorts","YouTube Shorts has its own source type and destination. Choose":"YouTube Shorts'un kendine ait kaynak türü ve hedefi vardır. Şunu seçin:","YouTube chat":"YouTube sohbeti","YouTube to Twitch":"YouTube'dan Twitch'e","[twitch] Name: message":"[twitch] Ad: mesaj","action and connect the trigger output to the action input.":"işlemini ve tetikleyici çıkışını işlem girişine bağlayın.","action early in the relevant flow and select":"işlemini ilgili akışın başlarına yerleştirin ve şunu seçin:","and connect it through a":"ve şunun üzerinden bağlayın:","and enable the saved flow. Keep SSN active.":"ve kaydedilen akışı etkinleştirin. SSN'yi etkin tutun.","and enter":"ve şunu girin:","before Relay Chat. See the":"ile Sohbeti Aktar'dan önce birleştirin. Bkz.","check YouTube versus YouTube Shorts and close unintended eligible chats.":"YouTube ile YouTube Shorts ayrımını kontrol edin ve istemediğiniz uygun sohbetleri kapatın.","disable the relay flows first. Check for duplicate capture sources, global Relay all, and external relay bots before retesting one direction.":"önce aktarım akışlarını devre dışı bırakın. Tek yönü yeniden test etmeden önce yinelenen yakalama kaynaklarını, genel Tümünü Aktar ayarını ve harici aktarım botlarını kontrol edin.","displays them. This controls display after capture, not where a relay is sent.":"bunları gösterir. Bu, aktarımın nereye gönderildiğini değil, yakalamadan sonraki görüntülemeyi kontrol eder.","first.":"öncelikle.","for connecting logic gates. Test both a normal line and a command.":"mantık kapılarını bağlamak için. Hem normal bir satırı hem de bir komutu test edin.","from SSN’s menu (also linked from the Actions overlay section). Create a flow and give it a clear name such as":"SSN menüsünden (İşlemler katmanı bölümünden de bağlantı verilir). Bir akış oluşturun ve şu gibi açık bir ad verin:","gate; combine that result with your source condition using":"kapısı; bu sonucu kaynak koşulunuzla şu kapıyı kullanarak birleştirin:","inspect Reflection Filter display policy and global Message - Visibility echo settings.":"Yansıma Filtresi görüntüleme politikasını ve genel Mesaj - Görünürlük yankı ayarlarını inceleyin.","keeps one matching reflection within its configured window;":"yapılandırılmış zaman aralığında eşleşen tek bir yansımayı tutar;","off when using these flows, so a second relay system is not doing the same work. Also check whether another bot or multistream service is already bridging the chats.":"bu akışları kullanırken kapalı; böylece ikinci bir aktarım sistemi aynı işi yapmaz. Başka bir botun veya çoklu yayın hizmetinin sohbetler arasında zaten köprü kurup kurmadığını da kontrol edin.","retry a manual reply, verify login/posting permission, enable the saved flow, and check destination and account-role restrictions.":"elle yanıt göndermeyi yeniden deneyin, oturum açma ve gönderme iznini doğrulayın, kaydedilen akışı etkinleştirin, hedef ve hesap rolü kısıtlamalarını kontrol edin.","to":"şu değere:","trigger from":"tetikleyicisini şu bölümden ekleyin:","trigger set to":"tetikleyicisini şu değere ayarlayın:","where appropriate; it is not interchangeable with YouTube.":"uygun olduğunda; YouTube ile birbirinin yerine kullanılamaz."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/chat-relay-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme">
+<a href="../index.html">Ana sayfa</a>
+<a href="features.html">Özellikler</a>
+<a href="inspiration.html" class="site-priority-inspiration">İlham</a>
+<a href="download.html">İndir</a>
+<a href="guides.html">Kılavuzlar</a>
+<a href="commands.html">Komutlar ve API</a>
+<a href="supported-sites.html">Desteklenen siteler</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a>
+<a href="services.html" class="site-priority-hire">Hizmet alın</a>
+<a href="support.html">Destek</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/chat-relay-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/chat-relay-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/chat-relay-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/chat-relay-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/chat-relay-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/chat-relay-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/chat-relay-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/chat-relay-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/chat-relay-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/chat-relay-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/chat-relay-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/chat-relay-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/chat-relay-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/chat-relay-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="chat-relay-guide.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/chat-relay-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/chat-relay-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="Temayı değiştir">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>Platformlar arasında sohbet aktarın</h1>
+<p>Twitch ve YouTube arasında kontrollü bir aktarım kurun, göndericileri seçin ve tekrarlanan mesajları teşhis edin.</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="Bu sayfada">
+<a href="guides.html">Tüm kılavuzlar</a>
+<a href="#prepare">1. Her iki sohbetin de yanıt alabildiğini doğrulayın</a>
+<a href="#one-way">2. Etkinlik Akışı'nda Twitch → YouTube yönünü oluşturun</a>
+<a href="#return">3. Dönüş yönünü ekleyin</a>
+<a href="#echoes">4. Yansımaları anlayın</a>
+<a href="#advanced">5. Aktardığınız mesajları daraltın</a>
+<a href="#check">Sorun giderme</a>
+</nav>
+<section class="guide-card" id="prepare">
+<h2>1. Her iki sohbetin de yanıt alabildiğini doğrulayın</h2>
+<p>Twitch ve YouTube Live sohbetlerinizi aynı SSN oturumuna bağlayın. İkisinin de Panelde göründüğünü doğrulayın; ardından kaynak sekmesi bilinen bir mesajdan her birine elle bir yanıt gönderin. Kendi test kanallarınızı kullanın. Salt okunur bir yakalama kaynağı aktarım gönderemez.</p>
+<p>Bu kurulumda yalnızca amaçladığınız hedef sohbetleri açık tutun. Bir platform hedefi, o platformdaki birden fazla uygun kaynak sekmesini içerebilir. Ayrı bir Twitch bot hesabı kullanıyorsanız şu kurulumu tamamlayın: <a href="twitch-bot-account-chatbot.html">Yanıtlar için bot hesapları</a> öncelikle.</p>
+</section>
+<section class="guide-card" id="one-way">
+<h2>2. Etkinlik Akışı'nda Twitch → YouTube yönünü oluşturun</h2>
+<p>Şunu açın: <strong>Etkinlik Akışı düzenleyicisi</strong> SSN menüsünden (İşlemler katmanı bölümünden de bağlantı verilir). Bir akış oluşturun ve şu gibi açık bir ad verin: <strong>Twitch'ten YouTube'a</strong>.</p>
+<ol class="guide-steps">
+<li>Şunu ekleyin: <strong>Kaynaktan</strong> tetikleyicisini şu bölümden ekleyin: <strong>Kullanıcı ve kaynak</strong>. Kaynak olarak Twitch'i seçin.</li>
+<li>Şunu ekleyin: <strong>Sohbeti aktar</strong> işlemini ve tetikleyici çıkışını işlem girişine bağlayın.</li>
+<li>Bu işlemi seçin. Şunu ayarlayın: <strong>Aktarım hedefi</strong> şu değere: <strong>YouTube</strong>, mesaj şablonunu ise şu şekilde bırakın: <code>[{source}] {username}: {message}</code>.</li>
+<li>Seçin: <strong>Akışı kaydet</strong> ve kaydedilen akışı etkinleştirin. SSN'yi etkin tutun.</li>
+<li>Kendi Twitch test sohbetinize yeni, normal bir mesaj gönderin. YouTube'a etiketli tek bir kopyanın ulaştığını doğrulayın.</li>
+</ol>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>Kaynaktan</strong>
+<span>Twitch</span>
+</li>
+<li>
+<strong>Sohbeti aktar</strong>
+<span>Hedef: YouTube</span>
+</li>
+<li>
+<strong>YouTube sohbeti</strong>
+<span>[twitch] Ad: mesaj</span>
+</li>
+</ol>
+<figcaption>Dönüş yönünü etkinleştirmeden önce tek bir yönü oluşturup doğrulayın.</figcaption>
+</figure>
+<p>YouTube Shorts'un kendine ait kaynak türü ve hedefi vardır. Şunu seçin: <strong>YouTube Shorts</strong> uygun olduğunda; YouTube ile birbirinin yerine kullanılamaz.</p>
+</section>
+<section class="guide-card" id="return">
+<h2>3. Dönüş yönünü ekleyin</h2>
+<p>Şu adla ikinci bir akış oluşturun: <strong>YouTube'dan Twitch'e</strong>: <strong>Kaynaktan: YouTube → Sohbeti Aktar: Twitch</strong>. Kaydedip etkinleştirin. Her iki taraftan yeni bir mesaj gönderin ve her birinin diğer platformda tek bir kopya oluşturduğunu doğrulayın.</p>
+<p>Şunu bırakın: <strong>Tüm mesajları aktar (!ÖNERİLMEZ!)</strong> bu akışları kullanırken kapalı; böylece ikinci bir aktarım sistemi aynı işi yapmaz. Başka bir botun veya çoklu yayın hizmetinin sohbetler arasında zaten köprü kurup kurmadığını da kontrol edin.</p>
+</section>
+<section class="guide-card" id="echoes">
+<h2>4. Yansımaları anlayın</h2>
+<p>Yansıma, SSN'nin gönderdiği bir mesajın hedef sohbetten yeniden yakalanmasıdır. Mevcut Sohbeti Aktar işlemleri, tanınan yansımaları otomatik olarak atlar. Ayrıca kaynak sekmeyi de hariç tutar.</p>
+<p>Yakalanan yankıyı Panelden ve katmanlardan gizlemek için şunu ekleyin: <strong>Yansıma filtresi</strong> işlemini ilgili akışın başlarına yerleştirin ve şunu seçin: <strong>Tümünü engelle</strong>. <strong>İlkine izin ver</strong> yapılandırılmış zaman aralığında eşleşen tek bir yansımayı tutar; <strong>Tümüne izin ver</strong> bunları gösterir. Bu, aktarımın nereye gönderildiğini değil, yakalamadan sonraki görüntülemeyi kontrol eder.</p>
+<div class="guide-note">Mevcut Sohbeti Aktar özelliklerinde “Yansıma Yok” onay kutusu bulunmaz. Görüntüleme kontrolü için ayrı Yansıma Filtresini kullanın. Harici bir hizmet aktarılan mesajı yeniden yazarsa otomatik tanıma bunu yakalayamayabilir.</div>
+</section>
+<section class="guide-card" id="advanced">
+<h2>5. Aktardığınız mesajları daraltın</h2>
+<p>Komutlar için şunu ekleyin: <strong>Mesaj şununla başlar</strong> tetikleyicisini şu değere ayarlayın: <code>!</code> ve şunun üzerinden bağlayın: <strong>DEĞİL</strong> kapısı; bu sonucu kaynak koşulunuzla şu kapıyı kullanarak birleştirin: <strong>VE</strong> ile Sohbeti Aktar'dan önce birleştirin. Bkz. <a href="../actions/event-flow-guide.html">Etkinlik Akışı kılavuzu</a> mantık kapılarını bağlamak için. Hem normal bir satırı hem de bir komutu test edin.</p>
+<p>Bunun yerine daha basit genel aktarımı seçerseniz şunu kullanın: <strong>Genel Ayarlar ve Araçlar → Komutlar → Aktarım Hedeflerini Seç</strong> ve şunu girin: <code>twitch,youtube</code>. Boş liste, uygun tüm hedefler anlamına gelir. Bu liste, hangi gelen platformların aktarımı tetikleyebileceğini değil, hedefleri kontrol eder. Bu alternatifi etkinleştirmeden önce Etkinlik Akışı aktarım çiftini devre dışı bırakın.</p>
+<p>Aynı Komutlar bölümündeki SSApp hesap rolü izin/engel alanları, hangi hesapların aktarım göndereceğini sınırlayabilir. Gönderici olarak kullanmak istediğiniz hesaba atanmış rolü kullanın; eşleşmeyen bir rol, uygun hedef kalmamasına yol açabilir.</p>
+</section>
+<section class="guide-card" id="check">
+<h2>Sorun giderme</h2>
+<ul class="guide-list">
+<li>
+<strong>Hiçbir şey gönderilmiyorsa:</strong> elle yanıt göndermeyi yeniden deneyin, oturum açma ve gönderme iznini doğrulayın, kaydedilen akışı etkinleştirin, hedef ve hesap rolü kısıtlamalarını kontrol edin.</li>
+<li>
+<strong>Mesajlar çoğalıyorsa:</strong> önce aktarım akışlarını devre dışı bırakın. Tek yönü yeniden test etmeden önce yinelenen yakalama kaynaklarını, genel Tümünü Aktar ayarını ve harici aktarım botlarını kontrol edin.</li>
+<li>
+<strong>Yinelenen mesajlar yalnızca Panelde görünüyorsa:</strong> Yansıma Filtresi görüntüleme politikasını ve genel Mesaj - Görünürlük yankı ayarlarını inceleyin.</li>
+<li>
+<strong>Yanlış YouTube hedefine gidiyorsa:</strong> YouTube ile YouTube Shorts ayrımını kontrol edin ve istemediğiniz uygun sohbetleri kapatın.</li>
+</ul>
+<p>Akışı Test Et işlemleri gerçek mesajlar gönderebilir. Kontrolünüzdeki hedefleri kullanın; yapay bir test, gerçek kaynağın hesap yönlendirmesini kanıtlamaz.</p>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">Tüm kılavuzlara göz atın</a>
+</p>
+</div>
+</div>
+</footer>
+<script data-copy-markdown src="../../docs/js/main.js">
+</script>
+</body>
+</html>

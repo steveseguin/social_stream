@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ja/docs/chatbot-basics-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/ja/docs/chatbot-basics-guide.html">
+    <meta property="og:title" content="AIチャットボットの設定と使い方 - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream NinjaのAIチャットボットを設定し、AIプロバイダーの接続、安全なテスト、ライブ返信の制御、応答しない問題への対処を行います。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ja/docs/chatbot-basics-guide.html">
+    <meta name="twitter:title" content="AIチャットボットの設定と使い方 - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream NinjaのAIチャットボットを設定し、AIプロバイダーの接続、安全なテスト、ライブ返信の制御、応答しない問題への対処を行います。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIチャットボットの設定と使い方 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream NinjaのAIチャットボットを設定し、AIプロバイダーの接続、安全なテスト、ライブ返信の制御、応答しない問題への対処を行います。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/chatbot-basics-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{", OpenAI rejected the credential because its effective access does not include model requests.":"の場合、実際のアクセス権にモデルへのリクエストが含まれていないため、OpenAIが認証情報を拒否しています。",", and":"、および",", paste the complete key, enter a model available to that project, and select":"を選び、キー全体を貼り付け、そのプロジェクトで使えるモデルを入力して、次を選択します：",", the global command-filter setting can discard that message before it reaches the AI bot.":"の場合、全体のコマンドフィルターによって、AIボットに届く前にメッセージが破棄されることがあります。",", then":"、次に",". For the full provider list, see":"。プロバイダーの全一覧はこちら：",". Never paste the key into a support message or diagnostic report.":"。サポートへのメッセージや診断レポートに、キーを貼り付けないでください。",". The generated bot-overlay settings provide the common options.":"。生成されるボットオーバーレイの設定に、よく使う項目が用意されています。",". They do not clear the main featured-message overlay.":"。メインの注目メッセージオーバーレイは消去しません。",". This is separate from both provider setup and the private":"。これは、プロバイダーの設定とも、非公開の次の機能とも別です：",". Use the generated link so it has the same session.":"。同じセッションになるよう、生成されたリンクを使ってください。","1. Configure an AI Provider":"1. AIプロバイダーを設定する","2. Enable and Configure the Primary Bot":"2. メインボットを有効にして設定する","3. Run a Safe End-to-End Test":"3. 一連の動作を安全にテストする","4. Know When Silence Is Normal":"4. 応答しないことが正常な場合を知る","5. Choose Where Replies Go":"5. 返信先を選ぶ","6. Clear and Auto-Hide Bot Replies":"6. ボットの返信を消去・自動非表示にする","A configured trigger must match the incoming message.":"設定したトリガーが受信メッセージと一致する必要があります。","A short greeting such as":"次のような短いあいさつ：","A working AI provider is only the first part of a live chat bot. The provider, the Primary bot, and the reply destination must each be configured.":"AIプロバイダーが動くだけでは、ライブチャットボットの準備は完了しません。プロバイダー、メインボット、返信先をそれぞれ設定する必要があります。","AI Chat Bot Setup and Use - Social Stream Ninja":"AIチャットボットの設定と使い方 - Social Stream Ninja","AI Integration in Commands & API":"コマンドとAPIのAI連携","AI Modes Guide":"AIモードガイド","AI provider":"AIプロバイダー","API error guide":"APIエラーガイド","Add a distinctive word or name if every message should not be considered.":"すべてのメッセージを検討対象にしたくない場合は、特徴的な単語や名前を追加してください。","Additional Bot Instructions":"ボットへの追加指示（Additional Bot Instructions）","Addressing the custom bot name directly makes the intent clearer.":"設定したボット名で直接呼びかけると、意図が明確になります。","Adds a delay after TTS finishes. The default is 500 milliseconds.":"読み上げ終了後の待ち時間を追加します。既定値は500ミリ秒です。","After the overlay test works, turn":"オーバーレイのテストが成功したら、次の設定を変更します：","Applies when platform send-back is enabled. Increase it if the bot posts too often.":"プラットフォームへの返信が有効な場合に適用されます。ボットの投稿が多すぎる場合は長くしてください。","Bot overlay timing":"ボットオーバーレイの表示時間","Bot replies ONLY go to the bot overlay page":"ボットの返信をボットオーバーレイページだけに送る（Bot replies ONLY go to the bot overlay page）","Browser-hosted local model:":"ブラウザで動くローカルモデル：","Chat Bot - Primary":"チャットボット - メイン（Chat Bot - Primary）","Chat Bots and AI services":"チャットボットとAIサービス（Chat Bots and AI services）","Chat capture":"チャットの取り込み","ChatGPT API":"ChatGPT API","Choose the page that matches the job. The private bot is not a substitute for testing the Primary live-chat path.":"用途に合ったページを選んでください。非公開ボットでは、メインのライブチャット経路のテストを代用できません。","Choose the provider that matches the service you are actually running.":"実際に動かしているサービスに合うプロバイダーを選んでください。","Clear It Manually":"手動で消去する","Clear bot overlay now":"今すぐボットオーバーレイを消去","Command filtering":"コマンドのフィルタリング","Commands & API":"コマンドとAPI","Configure LLM Service Provider":"LLMサービスプロバイダーの設定（Configure LLM Service Provider）","Configure LLM section with Ollama selected, local endpoint and model fields filled in, and the provider test showing Connected":"Ollamaを選択し、ローカルのエンドポイントとモデルを入力済みで、プロバイダーテストがConnectedとなっているConfigure LLMセクション","Confirm API billing and project budget separately from ChatGPT subscriptions, then reduce request rate or wait if the provider reports a temporary rate limit.":"ChatGPTのサブスクリプションとは別に、APIの課金とプロジェクト予算を確認してください。プロバイダーが一時的なレート制限を通知した場合は、リクエスト頻度を下げるか待ちます。","Confirm that this is a standard project API key, that the expected project is selected, and that the key is unrestricted or explicitly allowed to make model requests. If uncertain, create a new standard key in the correct project and replace the saved key in Social Stream.":"通常のプロジェクトAPIキーであること、正しいプロジェクトを選んでいること、キーが無制限か、モデルへのリクエストを明示的に許可していることを確認します。不明な場合は、正しいプロジェクトで新しい通常キーを作成し、Social Streamに保存したキーを置き換えてください。","Confirm the message came directly from the source chat, then check the Primary enable toggle, trigger match, moderator-only mode, custom bot name, busy/cooldown limits, additional instructions, and temporary unscreened-reply mode.":"メッセージがソースのチャットから直接届いたことを確認し、メインボットの有効化スイッチ、トリガーの一致、モデレーター限定モード、独自のボット名、処理中・クールダウンの制限、追加指示、一時的な返信選別解除モードを確認してください。","Confirm the provider test says":"プロバイダーテストで次の表示になることを確認します：","Connect an AI provider, enable the Primary bot, test safely, and troubleshoot missing replies.":"AIプロバイダーを接続し、メインボットを有効にして安全にテストし、返信がない問題を調べます。","Connected":"接続済み（Connected）","Connected, but the viewer message is missing from Dock":"接続済みなのに、視聴者のメッセージがドックにない","Create or review the key in the":"キーの作成・確認はこちら：","Credits and permissions are separate:":"クレジットと権限は別です：","Custom API:":"独自API：","Custom styling:":"独自スタイル：","Customize bot name":"ボット名のカスタマイズ（Customize bot name）","Decides which captured live messages should receive an AI reply.":"取り込んだライブメッセージのうち、AIが返信する対象を決めます。","Do not screen out any of the bot's replies":"ボットの返信を一切選別しない（Do not screen out any of the bot's replies）","Download":"ダウンロード","Enable Hide after TTS, length-based auto-hide, or a fixed display time under the bot overlay options. Use":"ボットオーバーレイの設定で、Hide after TTS、長さに基づく自動非表示、固定表示時間のいずれかを有効にします。使う項目：","Enable only when that restriction is intentional.":"その制限が必要な場合だけ有効にしてください。","Enable the LLM AI chat bot":"LLM AIチャットボットを有効化（Enable the LLM AI chat bot）","Enable the private chat bot option and use the generated link with the same session. This does not test the Primary live bot.":"非公開チャットボットのオプションを有効にし、同じセッションの生成リンクを使います。これではメインのライブボットはテストできません。","Endpoint, API key, model name, local service status, CORS/firewall, provider quota, and the exact error below the test button.":"エンドポイント、APIキー、モデル名、ローカルサービスの状態、CORS・ファイアウォール、プロバイダーの利用枠、テストボタンの下にある正確なエラーを確認します。","Enter the endpoint, model name, API key, or other fields shown for that provider.":"そのプロバイダー用に表示されたエンドポイント、モデル名、APIキーなどの欄を入力します。","Estimates display time from the reply's word count.":"返信の単語数から表示時間を見積もります。","Example":"例","Features":"機能","For the wider AI feature set, see the":"AI機能全体については、こちらをご覧ください：","From the viewer account, send:":"視聴者アカウントから送信する例：","Generates text with Ollama, a hosted API, or another supported service.":"Ollama、ホスト型API、その他の対応サービスでテキストを生成します。","Good First Test":"最初におすすめのテスト","Guides":"ガイド","Hire":"仕事を依頼する","Home":"ホーム","Hosted provider:":"ホスト型プロバイダー：","If automatic browser translation is active on the OpenAI Platform and the permission controls or labels behave unexpectedly, switch to the original English page before reviewing and saving the key settings. This helped one reported setup, but it is not a documented universal cause of OpenAI 401 errors.":"OpenAI Platformでブラウザの自動翻訳が有効なときに権限の操作やラベルが予期せず動作する場合は、元の英語ページに切り替えてからキー設定を確認・保存してください。報告された1つの環境では有効でしたが、OpenAIの401エラーの一般的な原因として文書化されているわけではありません。","If multiple modes are enabled,":"複数のモードを有効にした場合、","If the error continues, copy the status, code, missing scope, and Request ID shown by Social Stream, then send the in-app diagnostic report soon after reproducing it. The report records safe request metadata but excludes API keys and prompt content. Provide the Request ID and timestamp to OpenAI support if the credential and project settings look correct.":"エラーが続く場合は、Social Streamに表示されたステータス、コード、不足しているスコープ、Request IDをコピーし、再現直後にアプリ内の診断レポートを送ってください。レポートには安全なリクエストメタデータを記録しますが、APIキーやプロンプト内容は含みません。認証情報とプロジェクト設定が正しい場合は、Request IDと日時をOpenAIサポートに伝えてください。","If the test reports":"テストで次が報告される場合：","Important:":"重要：","In Social Stream settings, select":"Social Stream設定で次を選びます：","In Social Stream, select":"Social Streamで次を選びます：","Inspiration":"活用アイデア","It better mirrors a real viewer and avoids confusing the account used for outgoing replies with the account sending the test.":"実際の視聴者に近い状況を再現でき、返信に使うアカウントとテスト送信元のアカウントを混同せずに済みます。","Keep":"次の項目は維持します：","Keep low unless the provider and chat volume can handle more.":"プロバイダーとチャット量に余裕がない限り、低い値にしてください。","Keep on while the Primary bot should monitor live chat.":"メインボットがライブチャットを監視する間はオンにします。","Keeps the reply visible until TTS playback finishes, then hides it. If playback never starts, a length-based fallback is used.":"読み上げ再生が終わるまで返信を表示し、その後非表示にします。再生が始まらない場合は、長さに基づく代替処理を使います。","Leave blank":"空欄にする","Likely Area":"考えられる箇所","List of words to trigger bot":"ボットを呼び出す単語一覧（List of words to trigger bot）","Look for a missing character or space, confirm the key was not deleted or deactivated, confirm the intended organization/project, and make sure Social Stream is not still using an older saved key.":"文字の欠落や空白を確認し、キーが削除・無効化されていないこと、組織・プロジェクトが正しいこと、Social Streamが古い保存済みキーを使っていないことを確認してください。","Main navigation":"メインナビゲーション","Manual clearing removes the visible reply and pending bot-overlay display queue, but it does not stop speech already playing.":"手動消去では、表示中の返信と待機中のボットオーバーレイ表示キューを消しますが、再生中の読み上げは止まりません。","Max parallel bot replies":"ボット返信の最大並列数（Max parallel bot replies）","Meaning":"意味","Message reaches Dock, but no reply reaches the bot overlay":"メッセージはドックに届くのに、ボットオーバーレイに返信が来ない","Messages identified as bot output, reflections, empty messages, or messages too similar to the previous reply can be ignored.":"ボット出力、反射メッセージ、空メッセージ、前の返信に似すぎているメッセージと判定されたものは、無視される場合があります。","Mode":"モード","Moderator-only mode ignores messages that are not marked as moderator messages.":"モデレーター限定モードでは、モデレーターメッセージとして識別されていないものを無視します。","Need to install Ollama first? Use the":"先にOllamaをインストールする必要がある場合はこちら：","Normal Use":"通常の使い方","Off":"オフ","Ollama (Native Local API):":"Ollama（ネイティブローカルAPI）：","Ollama keep-alive:":"Ollamaのkeep-alive：","On":"次のページで：","On temporarily":"一時的にオン","Only the first test is processed":"最初のテストしか処理されない","Open":"開く項目：","Open navigation menu":"ナビゲーションメニューを開く","Open the":"開く項目：","Open the Social Stream settings and expand":"Social Stream設定を開き、次を展開します：","OpenAI / ChatGPT API Setup":"OpenAI / ChatGPT APIの設定","OpenAI Platform API keys page":"OpenAI PlatformのAPIキーページ","OpenAI credential":"OpenAIの認証情報","OpenAI key permissions":"OpenAIキーの権限","Option":"選択肢","Other AI Bot Pages":"その他のAIボットページ","Over the API WebSocket, send":"API WebSocket経由で次を送信します：","Overlay Gallery":"オーバーレイギャラリー","Overlay Page and TTS for Chat Bot":"チャットボット用オーバーレイページと読み上げ","Overlay-only mode, platform/source write support, account authorization, chat input availability, account-role routing, and the Disable host chat setting.":"オーバーレイ専用モード、プラットフォーム・ソースの書き込み対応、アカウント認証、チャット入力の可用性、アカウントロールの経路、Disable host chat設定を確認します。","Overlay-only off":"オーバーレイ専用をオフ","Overlay-only on":"オーバーレイ専用をオン","Part":"構成要素","Primary bot decision":"メインボットの判断","Primary chat bot":"メインチャットボット","Private":"非公開","Provider billing or limits":"プロバイダーの課金・制限","Provider setup":"プロバイダー設定","Provider test fails":"プロバイダーテストが失敗する","Publishes generated replies to the bot output channel and can also send them through the captured chat source.":"生成した返信をボット出力チャンネルに送り、取り込み元のチャットソース経由でも送信できます。","Rate limit per tab / source":"タブ・ソースごとのレート制限（Rate limit per tab / source）","Reference table comparing the Primary bot overlay, private chatbot, censor bot, and AI cohost":"メインボットのオーバーレイ、非公開チャットボット、検閲ボット、AI共同司会の比較表","Replies go to the bot output channel and are not sent back to platform chat.":"返信はボット出力チャンネルへ送られ、プラットフォームのチャットには投稿されません。","Replies still go to the bot output channel, and Social Stream also attempts to post through the originating captured source.":"返信は引き続きボット出力チャンネルへ送られ、Social Streamは取り込み元のソース経由での投稿も試みます。","Reply destination":"返信先","Reply reaches the overlay, but not platform chat":"返信はオーバーレイに届くが、プラットフォームのチャットに届かない","Reply remains visible after TTS":"読み上げ後も返信が表示されたままになる","Requirements":"要件","Result":"結果","Safety timeout if TTS remains active indefinitely. The default is 120,000 milliseconds.":"読み上げがいつまでも動作中になる場合の安全用タイムアウトです。既定値は120,000ミリ秒です。","Select":"選択する項目：","Send a normal message from a second viewer account directly in the source platform's chat, such as YouTube or Twitch, and confirm it appears in the Social Stream dock. Do not use a message typed into the dock or host-chat controls for this first test; reflected bot or host messages can be skipped to prevent reply loops.":"別の視聴者アカウントからYouTubeやTwitchなどの元のプラットフォームのチャットへ直接、通常メッセージを送り、Social Streamドックに表示されるか確認します。最初のテストでは、ドックや配信者用チャット欄に入力したメッセージは使わないでください。応答のループを防ぐため、反射したボットや配信者のメッセージは除外される場合があります。","Send the test once and wait for the reply. A local model may still be loading, and later messages can be skipped while one reply is already running.":"テストは1回送って返信を待ちます。ローカルモデルがまだ読み込み中の場合があり、1件の返信を処理している間は後続のメッセージが無視されることがあります。","Send-back routing":"返信の送信経路","Separate private bot":"独立した非公開ボット","Set Up and Use the AI Chat Bot":"AIチャットボットの設定と使用","Set up and use the Social Stream Ninja AI chat bot, connect an AI provider, test safely, control live replies, and troubleshoot missing responses.":"Social Stream NinjaのAIチャットボットを設定し、AIプロバイダーの接続、安全なテスト、ライブ返信の制御、応答しない問題への対処を行います。","Sets the minimum and maximum length-based display time. Defaults are 4,000 and 30,000 milliseconds.":"長さに基づく表示時間の下限と上限を設定します。既定値は4,000ミリ秒と30,000ミリ秒です。","Setting":"設定","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0ライセンス。","Social Stream on/off state, source window, platform login, source allow/filter settings, and whether the correct live chat is open.":"Social Streamのオン・オフ、ソースウィンドウ、プラットフォームへのログイン、ソースの許可・フィルター設定、正しいライブチャットを開いているかを確認します。","Standalone app users who want a separate Twitch identity can follow the":"スタンドアロンアプリで別のTwitch名義を使いたい場合はこちら：","Support":"サポート","Supported Sites":"対応サイト","Switch theme":"テーマを切り替え","Test selected chat bot":"選択したチャットボットをテスト","That":"その","That live chat is being captured or that replies can be posted.":"ライブチャットを取り込めていることや、返信を投稿できること。","That the source platform or account permits send-back.":"元のプラットフォームやアカウントが返信投稿を許可していること。","The Primary bot is selective by default. An empty trigger list means every eligible message can be considered; it does not mean every message must receive a reply.":"メインボットは既定で返信対象を選びます。トリガー一覧が空欄なら、条件を満たすすべてのメッセージを検討できますが、すべてに返信するという意味ではありません。","The Primary bot, private chat, censor bot, and AI cohost are separate tools with different settings and histories.":"メインボット、非公開チャット、検閲ボット、AI共同司会は、それぞれ別の設定と履歴を持つ独立したツールです。","The custom bot name is a message prefix; it does not create a new platform account. Unless standalone-app account-role routing is configured, replies are posted through the account used by the captured source.":"独自のボット名はメッセージの接頭辞であり、新しいプラットフォームアカウントを作るものではありません。スタンドアロンアプリでアカウントロールによる経路を設定していない限り、取り込みソースが使うアカウントから返信が投稿されます。","The source mode must support sending, the account must be logged in and allowed to post, host chat must not be disabled, and the source must remain open.":"ソースのモードが送信に対応し、アカウントがログイン済みで投稿権限を持ち、配信者チャットが無効になっておらず、ソースが開いたままである必要があります。","These controls affect the Primary Chat Bot page,":"これらの操作が対象とするのは、メインチャットボットのページです：","This confirms that the provider and model answered. It does not enable the Primary bot or test live-chat capture and posting.":"これはプロバイダーとモデルが応答したことを確認するものです。メインボットを有効にする操作でも、ライブチャットの取り込みや投稿のテストでもありません。","Timing":"タイミング","Trigger warning:":"トリガーの注意：","Troubleshoot by the Last Thing That Worked":"最後に成功した段階から問題を調べる","Turn Social Stream on and confirm the live source is open.":"Social Streamをオンにして、ライブソースが開いていることを確認します。","Turn off only when you are ready to post replies back to a supported chat source.":"対応するチャットソースへ返信を投稿する準備ができてから、オフにしてください。","Twitch Bot Account guide":"Twitchボットアカウントガイド","Understand the Three Separate Parts":"3つの独立した構成要素を理解する","Use a plain-word trigger or allow that command through the global command filter.":"通常の単語をトリガーにするか、そのコマンドを全体のコマンドフィルターで許可してください。","Use a short, plain-text name viewers can address directly.":"視聴者が直接呼びかけられる、短いプレーンテキストの名前を使います。","Use a standard OpenAI API key for model requests. An OpenAI Admin API key is intended for organization administration endpoints, not normal model calls. The key must belong to the project you intend to bill and its effective permissions must allow model requests.":"モデルへのリクエストには通常のOpenAI APIキーを使ってください。OpenAI Admin APIキーは組織管理用エンドポイント向けで、通常のモデル呼び出し用ではありません。課金対象にしたいプロジェクトのキーであり、実際の権限でモデルへのリクエストが許可されている必要があります。","Use a standard key from the intended project, not an Admin key; verify that model requests are allowed; replace any old saved key; and retry from the original English OpenAI Platform page if automatic translation made the controls unreliable. Credits do not add this permission.":"Adminキーではなく目的のプロジェクトの通常キーを使い、モデルへのリクエストが許可されているか確認し、古い保存済みキーを置き換えてください。自動翻訳で操作が不安定になった場合は、元の英語のOpenAI Platformページからやり直します。クレジットを追加しても、この権限は付与されません。","Use the first-test Primary bot settings above, including overlay-only mode.":"上記の初回テスト用メインボット設定を使い、オーバーレイ専用モードも有効にします。","Uses one fixed display time in milliseconds.":"ミリ秒単位の固定表示時間を1つ使います。","Usually off so the model can remain silent when a reply is not useful.":"通常はオフにし、返信が役立たない場合にモデルが沈黙できるようにします。","Wait for the active request, respect the cooldown, and remember that keep-alive":"処理中のリクエストが終わるのを待ち、クールダウンを守ってください。また、keep-aliveの設定が","What It Does":"できること","What It Does Not Prove":"確認できないこと","What You See":"表示される状態","What to Check":"確認する項目","When platform send-back is enabled, the default cooldown is five seconds per source. The default parallel limit is one reply in every mode.":"プラットフォームへの返信が有効な場合、既定のクールダウンはソースごとに5秒です。並列処理の既定上限は、どのモードでも返信1件です。","Why use a second account?":"なぜ別のアカウントを使うの？","Will respond to Moderators only":"モデレーターのみに返信（Will respond to Moderators only）","With Remote API Control enabled, open":"Remote API Controlを有効にして、次を開きます：","a green":"緑色の","adding API credit does not grant a missing key scope. OpenAI documents invalid credentials and endpoint permissions as 401 errors, while exhausted quota is normally a 429 error. See OpenAI's":"APIクレジットを追加しても、不足しているキースコープは付与されません。OpenAIでは無効な認証情報やエンドポイントの権限を401エラーとして説明しています。一方、利用枠の枯渇は通常429エラーです。OpenAIの参照先：","and":"および","and confirm that a real text response appears below the button.":"を選び、ボタンの下に実際のテキスト応答が出ることを確認します。","authentication reference":"認証リファレンス","back off, choose a trigger and cooldown, and decide whether platform send-back should be enabled.":"をオフに戻し、トリガーとクールダウンを設定して、プラットフォームへの返信を有効にするか決めます。","can add a cold start to every request.":"だと、毎回のリクエストでコールドスタートが発生する可能性があります。","custom CSS used with the normal generated":"独自CSSを、通常生成される次のものと一緒に使えます：","does nothing":"何も起こりません","enter the API key and model required by that provider. Provider costs, quotas, and model names are controlled outside Social Stream Ninja.":"そのプロバイダーが必要とするAPIキーとモデルを入力します。料金、利用枠、モデル名はSocial Stream Ninjaの外部で管理されます。","file must be updated to receive later page fixes.":"ファイルには、その後のページ修正を反映するため更新が必要です。","for manual API clearing.":"でAPIから手動消去できます。","hides after 10 seconds.":"は10秒後に非表示にします。","if a trigger starts with":"トリガーが次で始まる場合：","interface.":"のインターフェースです。","is a permission named by the server, not a setting to add to the prompt or model name.":"はサーバーが示す権限名であり、プロンプトやモデル名に追加する設定ではありません。","is also accepted.":"も使えます。","is blank":"が空欄の場合","is open or that a separate platform bot account was created.":"が開いていることや、別のプラットフォーム用ボットアカウントが作成されたこと。","link keeps these features. A copied or modified local":"のリンクでは、これらの機能を保持できます。コピー・変更したローカルの","link shown under":"のリンクが次の場所に表示されます：","may be ignored if the model does not think a response adds value.":"は、モデルが返信しても価値がないと判断すると無視される場合があります。","ms":"ミリ秒","official Ollama download page":"Ollama公式ダウンロードページ","or incorrect API key":"またはAPIキーが不正","quota or rate-limit error":"利用枠またはレート制限のエラー","remains optional unless you want the overlay or TTS.":"は、オーバーレイや読み上げが不要なら任意です。","result only confirms that the selected provider and model answered one test prompt.":"という結果は、選んだプロバイダーとモデルがテスト用プロンプト1件に応答したことだけを示します。","short and direct at first, such as:":"は最初は短く明確にします。例：","takes priority, followed by":"が優先され、次に","unloads the model after a request. It does not disable the bot, but every later reply may need another cold start.":"ではリクエスト後にモデルをアンロードします。ボットが無効になるわけではありませんが、それ以降の返信では毎回コールドスタートが必要になる場合があります。","use the matching Local Gemma or Local Qwen option and follow its model-asset instructions.":"対応するLocal GemmaまたはLocal Qwenを選び、そのモデルアセットの手順に従ってください。","use this for OpenAI-compatible servers such as llama.cpp, LM Studio, vLLM, and similar services.":"llama.cpp、LM Studio、vLLMなどのOpenAI互換サーバーに使います。","use this only for Ollama. The usual local endpoint is":"Ollamaの場合だけ使ってください。通常のローカルエンドポイントは","with the same session to see or hear them. TTS also requires this page.":"を同じセッションで開くと、表示や音声を確認できます。読み上げにもこのページが必要です。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/chatbot-basics-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/chatbot-basics-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション"><a href="../index.html">ホーム</a><a href="features.html">機能</a><a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a><a href="download.html">ダウンロード</a><a href="guides.html">ガイド</a><a href="commands.html">コマンドとAPI</a><a href="supported-sites.html">対応サイト</a><a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a><a href="services.html" class="site-priority-hire">仕事を依頼する</a><a href="support.html">サポート</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/chatbot-basics-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/chatbot-basics-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/chatbot-basics-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/chatbot-basics-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/chatbot-basics-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/chatbot-basics-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="chatbot-basics-guide.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/chatbot-basics-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/chatbot-basics-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/chatbot-basics-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/chatbot-basics-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/chatbot-basics-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/chatbot-basics-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/chatbot-basics-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/chatbot-basics-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/chatbot-basics-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/chatbot-basics-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="テーマを切り替え"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>AIチャットボットの設定と使用</h1>
+            <p>AIプロバイダーを接続し、メインボットを有効にして安全にテストし、返信がない問題を調べます。</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>3つの独立した構成要素を理解する</h2>
+                <p>AIプロバイダーが動くだけでは、ライブチャットボットの準備は完了しません。プロバイダー、メインボット、返信先をそれぞれ設定する必要があります。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>構成要素</th><th>できること</th><th>確認できないこと</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Part">AIプロバイダー</td><td data-label="What It Does">Ollama、ホスト型API、その他の対応サービスでテキストを生成します。</td><td data-label="What It Does Not Prove">ライブチャットを取り込めていることや、返信を投稿できること。</td></tr>
+                        <tr><td data-label="Part">メインチャットボット</td><td data-label="What It Does">取り込んだライブメッセージのうち、AIが返信する対象を決めます。</td><td data-label="What It Does Not Prove">元のプラットフォームやアカウントが返信投稿を許可していること。</td></tr>
+                        <tr><td data-label="Part">返信先</td><td data-label="What It Does">生成した返信をボット出力チャンネルに送り、取り込み元のチャットソース経由でも送信できます。</td><td data-label="What It Does Not Prove">その <code>bot.html</code> が開いていることや、別のプラットフォーム用ボットアカウントが作成されたこと。</td></tr>
+                    </tbody>
+                </table>
+                <div class="guide-note">
+                    <p><strong>重要：</strong> 緑色の <strong>接続済み（Connected）</strong> という結果は、選んだプロバイダーとモデルがテスト用プロンプト1件に応答したことだけを示します。</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>1. AIプロバイダーを設定する</h2>
+                <ol class="guide-steps">
+                    <li>Social Stream設定を開き、次を展開します： <strong>チャットボットとAIサービス（Chat Bots and AI services）</strong>.</li>
+                    <li>開く項目： <strong>LLMサービスプロバイダーの設定（Configure LLM Service Provider）</strong>.</li>
+                    <li>実際に動かしているサービスに合うプロバイダーを選んでください。</li>
+                    <li>そのプロバイダー用に表示されたエンドポイント、モデル名、APIキーなどの欄を入力します。</li>
+                    <li>選択する項目： <strong>選択したチャットボットをテスト</strong> を選び、ボタンの下に実際のテキスト応答が出ることを確認します。</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-llm-provider-connected.png" alt="Ollamaを選択し、ローカルのエンドポイントとモデルを入力済みで、プロバイダーテストがConnectedとなっているConfigure LLMセクション" class="guide-image guide-image-medium">
+                    <figcaption>これはプロバイダーとモデルが応答したことを確認するものです。メインボットを有効にする操作でも、ライブチャットの取り込みや投稿のテストでもありません。</figcaption>
+                </figure>
+                <ul class="guide-list">
+                    <li><strong>Ollama（ネイティブローカルAPI）：</strong> Ollamaの場合だけ使ってください。通常のローカルエンドポイントは <code>http://localhost:11434</code>.</li>
+                    <li><strong>独自API：</strong> llama.cpp、LM Studio、vLLMなどのOpenAI互換サーバーに使います。</li>
+                    <li><strong>ホスト型プロバイダー：</strong> そのプロバイダーが必要とするAPIキーとモデルを入力します。料金、利用枠、モデル名はSocial Stream Ninjaの外部で管理されます。</li>
+                    <li><strong>ブラウザで動くローカルモデル：</strong> 対応するLocal GemmaまたはLocal Qwenを選び、そのモデルアセットの手順に従ってください。</li>
+                </ul>
+                <p>先にOllamaをインストールする必要がある場合はこちら： <a href="https://ollama.com/download" target="_blank" rel="noopener">Ollama公式ダウンロードページ</a>。プロバイダーの全一覧はこちら： <a href="commands.html#ai-integration">コマンドとAPIのAI連携</a>.</p>
+                <div class="guide-note">
+                    <p><strong>Ollamaのkeep-alive：</strong> <code>0</code> ではリクエスト後にモデルをアンロードします。ボットが無効になるわけではありませんが、それ以降の返信では毎回コールドスタートが必要になる場合があります。</p>
+                </div>
+
+                <h3>OpenAI / ChatGPT APIの設定</h3>
+                <p>モデルへのリクエストには通常のOpenAI APIキーを使ってください。OpenAI Admin APIキーは組織管理用エンドポイント向けで、通常のモデル呼び出し用ではありません。課金対象にしたいプロジェクトのキーであり、実際の権限でモデルへのリクエストが許可されている必要があります。</p>
+                <ol class="guide-steps">
+                    <li>キーの作成・確認はこちら： <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">OpenAI PlatformのAPIキーページ</a>。サポートへのメッセージや診断レポートに、キーを貼り付けないでください。</li>
+                    <li>Social Streamで次を選びます： <strong>ChatGPT API</strong>を選び、キー全体を貼り付け、そのプロジェクトで使えるモデルを入力して、次を選択します： <strong>選択したチャットボットをテスト</strong>.</li>
+                    <li>テストで次が報告される場合： <code>Status: 401</code>, <code>Code: missing_scope</code>、および <code>Missing scope: model.request</code>の場合、実際のアクセス権にモデルへのリクエストが含まれていないため、OpenAIが認証情報を拒否しています。 <code>model.request</code> はサーバーが示す権限名であり、プロンプトやモデル名に追加する設定ではありません。</li>
+                    <li>通常のプロジェクトAPIキーであること、正しいプロジェクトを選んでいること、キーが無制限か、モデルへのリクエストを明示的に許可していることを確認します。不明な場合は、正しいプロジェクトで新しい通常キーを作成し、Social Streamに保存したキーを置き換えてください。</li>
+                    <li>OpenAI Platformでブラウザの自動翻訳が有効なときに権限の操作やラベルが予期せず動作する場合は、元の英語ページに切り替えてからキー設定を確認・保存してください。報告された1つの環境では有効でしたが、OpenAIの401エラーの一般的な原因として文書化されているわけではありません。</li>
+                </ol>
+                <div class="warning-note">
+                    <p><strong>クレジットと権限は別です：</strong> APIクレジットを追加しても、不足しているキースコープは付与されません。OpenAIでは無効な認証情報やエンドポイントの権限を401エラーとして説明しています。一方、利用枠の枯渇は通常429エラーです。OpenAIの参照先： <a href="https://developers.openai.com/api/docs/guides/error-codes" target="_blank" rel="noopener">APIエラーガイド</a> および <a href="https://developers.openai.com/api/reference/overview#start-here" target="_blank" rel="noopener">認証リファレンス</a>.</p>
+                </div>
+                <p>エラーが続く場合は、Social Streamに表示されたステータス、コード、不足しているスコープ、Request IDをコピーし、再現直後にアプリ内の診断レポートを送ってください。レポートには安全なリクエストメタデータを記録しますが、APIキーやプロンプト内容は含みません。認証情報とプロジェクト設定が正しい場合は、Request IDと日時をOpenAIサポートに伝えてください。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>2. メインボットを有効にして設定する</h2>
+                <p>開く項目： <strong>チャットボット - メイン（Chat Bot - Primary）</strong>。これは、プロバイダーの設定とも、非公開の次の機能とも別です： <code>chatbot.html</code> のインターフェースです。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>設定</th><th>最初におすすめのテスト</th><th>通常の使い方</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Setting">LLM AIチャットボットを有効化（Enable the LLM AI chat bot）</td><td data-label="Good First Test">次のページで：</td><td data-label="Normal Use">メインボットがライブチャットを監視する間はオンにします。</td></tr>
+                        <tr><td data-label="Setting">ボット名のカスタマイズ（Customize bot name）</td><td data-label="Good First Test"><code>NinjaBot</code></td><td data-label="Normal Use">視聴者が直接呼びかけられる、短いプレーンテキストの名前を使います。</td></tr>
+                        <tr><td data-label="Setting">ボットの返信をボットオーバーレイページだけに送る（Bot replies ONLY go to the bot overlay page）</td><td data-label="Good First Test">次のページで：</td><td data-label="Normal Use">対応するチャットソースへ返信を投稿する準備ができてから、オフにしてください。</td></tr>
+                        <tr><td data-label="Setting">ボットの返信を一切選別しない（Do not screen out any of the bot's replies）</td><td data-label="Good First Test">一時的にオン</td><td data-label="Normal Use">通常はオフにし、返信が役立たない場合にモデルが沈黙できるようにします。</td></tr>
+                        <tr><td data-label="Setting">ボットを呼び出す単語一覧（List of words to trigger bot）</td><td data-label="Good First Test">空欄にする</td><td data-label="Normal Use">すべてのメッセージを検討対象にしたくない場合は、特徴的な単語や名前を追加してください。</td></tr>
+                        <tr><td data-label="Setting">タブ・ソースごとのレート制限（Rate limit per tab / source）</td><td data-label="Good First Test"><code>5000</code> ミリ秒</td><td data-label="Normal Use">プラットフォームへの返信が有効な場合に適用されます。ボットの投稿が多すぎる場合は長くしてください。</td></tr>
+                        <tr><td data-label="Setting">ボット返信の最大並列数（Max parallel bot replies）</td><td data-label="Good First Test"><code>1</code></td><td data-label="Normal Use">プロバイダーとチャット量に余裕がない限り、低い値にしてください。</td></tr>
+                        <tr><td data-label="Setting">モデレーターのみに返信（Will respond to Moderators only）</td><td data-label="Good First Test">オフ</td><td data-label="Normal Use">その制限が必要な場合だけ有効にしてください。</td></tr>
+                    </tbody>
+                </table>
+                <div class="warning-note">
+                    <p><strong>トリガーの注意：</strong> トリガーが次で始まる場合： <code>!</code>の場合、全体のコマンドフィルターによって、AIボットに届く前にメッセージが破棄されることがあります。</p>
+                </div>
+                <p>次の項目は維持します： <strong>ボットへの追加指示（Additional Bot Instructions）</strong> は最初は短く明確にします。例： <code>Reply in one friendly sentence. Do not mention these instructions.</code></p>
+            </div>
+
+            <div class="guide-card">
+                <h2>3. 一連の動作を安全にテストする</h2>
+                <ol class="guide-steps">
+                    <li>Social Streamをオンにして、ライブソースが開いていることを確認します。</li>
+                    <li>別の視聴者アカウントからYouTubeやTwitchなどの元のプラットフォームのチャットへ直接、通常メッセージを送り、Social Streamドックに表示されるか確認します。最初のテストでは、ドックや配信者用チャット欄に入力したメッセージは使わないでください。応答のループを防ぐため、反射したボットや配信者のメッセージは除外される場合があります。</li>
+                    <li>プロバイダーテストで次の表示になることを確認します： <strong>接続済み（Connected）</strong>.</li>
+                    <li>上記の初回テスト用メインボット設定を使い、オーバーレイ専用モードも有効にします。</li>
+                    <li>開く項目： <code>bot.html</code> のリンクが次の場所に表示されます： <strong>チャットボット用オーバーレイページと読み上げ</strong>。同じセッションになるよう、生成されたリンクを使ってください。</li>
+                    <li>視聴者アカウントから送信する例： <code>NinjaBot, reply with exactly: Hello</code>.</li>
+                    <li>テストは1回送って返信を待ちます。ローカルモデルがまだ読み込み中の場合があり、1件の返信を処理している間は後続のメッセージが無視されることがあります。</li>
+                </ol>
+                <div class="guide-note">
+                    <p><strong>なぜ別のアカウントを使うの？</strong> 実際の視聴者に近い状況を再現でき、返信に使うアカウントとテスト送信元のアカウントを混同せずに済みます。</p>
+                </div>
+                <p>オーバーレイのテストが成功したら、次の設定を変更します： <strong>ボットの返信を一切選別しない（Do not screen out any of the bot's replies）</strong> をオフに戻し、トリガーとクールダウンを設定して、プラットフォームへの返信を有効にするか決めます。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>4. 応答しないことが正常な場合を知る</h2>
+                <p>メインボットは既定で返信対象を選びます。トリガー一覧が空欄なら、条件を満たすすべてのメッセージを検討できますが、すべてに返信するという意味ではありません。</p>
+                <ul class="guide-list">
+                    <li>次のような短いあいさつ： <code>hello</code> は、モデルが返信しても価値がないと判断すると無視される場合があります。</li>
+                    <li>設定したボット名で直接呼びかけると、意図が明確になります。</li>
+                    <li>設定したトリガーが受信メッセージと一致する必要があります。</li>
+                    <li>モデレーター限定モードでは、モデレーターメッセージとして識別されていないものを無視します。</li>
+                    <li>プラットフォームへの返信が有効な場合、既定のクールダウンはソースごとに5秒です。並列処理の既定上限は、どのモードでも返信1件です。</li>
+                    <li>ボット出力、反射メッセージ、空メッセージ、前の返信に似すぎているメッセージと判定されたものは、無視される場合があります。</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>5. 返信先を選ぶ</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>モード</th><th>結果</th><th>要件</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Mode">オーバーレイ専用をオン</td><td data-label="Result">返信はボット出力チャンネルへ送られ、プラットフォームのチャットには投稿されません。</td><td data-label="Requirements">開く項目： <code>bot.html</code> を同じセッションで開くと、表示や音声を確認できます。読み上げにもこのページが必要です。</td></tr>
+                        <tr><td data-label="Mode">オーバーレイ専用をオフ</td><td data-label="Result">返信は引き続きボット出力チャンネルへ送られ、Social Streamは取り込み元のソース経由での投稿も試みます。</td><td data-label="Requirements">ソースのモードが送信に対応し、アカウントがログイン済みで投稿権限を持ち、配信者チャットが無効になっておらず、ソースが開いたままである必要があります。 <code>bot.html</code> は、オーバーレイや読み上げが不要なら任意です。</td></tr>
+                    </tbody>
+                </table>
+                <p>独自のボット名はメッセージの接頭辞であり、新しいプラットフォームアカウントを作るものではありません。スタンドアロンアプリでアカウントロールによる経路を設定していない限り、取り込みソースが使うアカウントから返信が投稿されます。</p>
+                <p>スタンドアロンアプリで別のTwitch名義を使いたい場合はこちら： <a href="twitch-bot-account-chatbot.html">Twitchボットアカウントガイド</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>6. ボットの返信を消去・自動非表示にする</h2>
+                <p>これらの操作が対象とするのは、メインチャットボットのページです： <code>bot.html</code>。メインの注目メッセージオーバーレイは消去しません。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>選択肢</th><th>意味</th><th>例</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Option"><code>showtime</code></td><td data-label="Meaning">ミリ秒単位の固定表示時間を1つ使います。</td><td data-label="Example"><code>&amp;showtime=10000</code> は10秒後に非表示にします。</td></tr>
+                        <tr><td data-label="Option"><code>autohide</code></td><td data-label="Meaning">返信の単語数から表示時間を見積もります。 <code>autotime</code> も使えます。</td><td data-label="Example"><code>&amp;autohide</code></td></tr>
+                        <tr><td data-label="Option"><code>mintime</code> / <code>maxtime</code></td><td data-label="Meaning">長さに基づく表示時間の下限と上限を設定します。既定値は4,000ミリ秒と30,000ミリ秒です。</td><td data-label="Example"><code>&amp;autohide&amp;mintime=5000&amp;maxtime=20000</code></td></tr>
+                        <tr><td data-label="Option"><code>hideaftertts</code></td><td data-label="Meaning">読み上げ再生が終わるまで返信を表示し、その後非表示にします。再生が始まらない場合は、長さに基づく代替処理を使います。</td><td data-label="Example"><code>&amp;hideaftertts</code></td></tr>
+                        <tr><td data-label="Option"><code>hidedelay</code></td><td data-label="Meaning">読み上げ終了後の待ち時間を追加します。既定値は500ミリ秒です。</td><td data-label="Example"><code>&amp;hideaftertts&amp;hidedelay=1000</code></td></tr>
+                        <tr><td data-label="Option"><code>ttstimeout</code></td><td data-label="Meaning">読み上げがいつまでも動作中になる場合の安全用タイムアウトです。既定値は120,000ミリ秒です。</td><td data-label="Example"><code>&amp;hideaftertts&amp;ttstimeout=60000</code></td></tr>
+                    </tbody>
+                </table>
+                <p>複数のモードを有効にした場合、 <code>hideaftertts</code> が優先され、次に <code>autohide</code>、次に <code>showtime</code>。生成されるボットオーバーレイの設定に、よく使う項目が用意されています。</p>
+                <h3>手動で消去する</h3>
+                <ul class="guide-list">
+                    <li>Social Stream設定で次を選びます： <strong>今すぐボットオーバーレイを消去</strong>.</li>
+                    <li>Remote API Controlを有効にして、次を開きます： <code>https://io.socialstream.ninja/SESSION_ID/clearBotOverlay</code>.</li>
+                    <li>API WebSocket経由で次を送信します： <code>{"action":"clearBotOverlay"}</code>.</li>
+                </ul>
+                <p>手動消去では、表示中の返信と待機中のボットオーバーレイ表示キューを消しますが、再生中の読み上げは止まりません。</p>
+                <div class="guide-note">
+                    <p><strong>独自スタイル：</strong> 独自CSSを、通常生成される次のものと一緒に使えます： <code>bot.html</code> のリンクでは、これらの機能を保持できます。コピー・変更したローカルの <code>bot.html</code> ファイルには、その後のページ修正を反映するため更新が必要です。</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>最後に成功した段階から問題を調べる</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>表示される状態</th><th>考えられる箇所</th><th>確認する項目</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="What You See">プロバイダーテストが失敗する</td><td data-label="Likely Area">プロバイダー設定</td><td data-label="What to Check">エンドポイント、APIキー、モデル名、ローカルサービスの状態、CORS・ファイアウォール、プロバイダーの利用枠、テストボタンの下にある正確なエラーを確認します。</td></tr>
+                        <tr><td data-label="What You See"><code>401 missing_scope</code> / <code>model.request</code></td><td data-label="Likely Area">OpenAIキーの権限</td><td data-label="What to Check">Adminキーではなく目的のプロジェクトの通常キーを使い、モデルへのリクエストが許可されているか確認し、古い保存済みキーを置き換えてください。自動翻訳で操作が不安定になった場合は、元の英語のOpenAI Platformページからやり直します。クレジットを追加しても、この権限は付与されません。</td></tr>
+                        <tr><td data-label="What You See"><code>401 invalid_api_key</code> またはAPIキーが不正</td><td data-label="Likely Area">OpenAIの認証情報</td><td data-label="What to Check">文字の欠落や空白を確認し、キーが削除・無効化されていないこと、組織・プロジェクトが正しいこと、Social Streamが古い保存済みキーを使っていないことを確認してください。</td></tr>
+                        <tr><td data-label="What You See"><code>429</code> 利用枠またはレート制限のエラー</td><td data-label="Likely Area">プロバイダーの課金・制限</td><td data-label="What to Check">ChatGPTのサブスクリプションとは別に、APIの課金とプロジェクト予算を確認してください。プロバイダーが一時的なレート制限を通知した場合は、リクエスト頻度を下げるか待ちます。</td></tr>
+                        <tr><td data-label="What You See">接続済みなのに、視聴者のメッセージがドックにない</td><td data-label="Likely Area">チャットの取り込み</td><td data-label="What to Check">Social Streamのオン・オフ、ソースウィンドウ、プラットフォームへのログイン、ソースの許可・フィルター設定、正しいライブチャットを開いているかを確認します。</td></tr>
+                        <tr><td data-label="What You See">メッセージはドックに届くのに、ボットオーバーレイに返信が来ない</td><td data-label="Likely Area">メインボットの判断</td><td data-label="What to Check">メッセージがソースのチャットから直接届いたことを確認し、メインボットの有効化スイッチ、トリガーの一致、モデレーター限定モード、独自のボット名、処理中・クールダウンの制限、追加指示、一時的な返信選別解除モードを確認してください。</td></tr>
+                        <tr><td data-label="What You See">返信はオーバーレイに届くが、プラットフォームのチャットに届かない</td><td data-label="Likely Area">返信の送信経路</td><td data-label="What to Check">オーバーレイ専用モード、プラットフォーム・ソースの書き込み対応、アカウント認証、チャット入力の可用性、アカウントロールの経路、Disable host chat設定を確認します。</td></tr>
+                        <tr><td data-label="What You See">読み上げ後も返信が表示されたままになる</td><td data-label="Likely Area">ボットオーバーレイの表示時間</td><td data-label="What to Check">ボットオーバーレイの設定で、Hide after TTS、長さに基づく自動非表示、固定表示時間のいずれかを有効にします。使う項目： <code>clearBotOverlay</code> でAPIから手動消去できます。</td></tr>
+                        <tr><td data-label="What You See"><code>!bot</code> 何も起こりません</td><td data-label="Likely Area">コマンドのフィルタリング</td><td data-label="What to Check">通常の単語をトリガーにするか、そのコマンドを全体のコマンドフィルターで許可してください。</td></tr>
+                        <tr><td data-label="What You See">最初のテストしか処理されない</td><td data-label="Likely Area">タイミング</td><td data-label="What to Check">処理中のリクエストが終わるのを待ち、クールダウンを守ってください。また、keep-aliveの設定が <code>0</code> だと、毎回のリクエストでコールドスタートが発生する可能性があります。</td></tr>
+                        <tr><td data-label="What You See">非公開 <code>chatbot.html</code> が空欄の場合</td><td data-label="Likely Area">独立した非公開ボット</td><td data-label="What to Check">非公開チャットボットのオプションを有効にし、同じセッションの生成リンクを使います。これではメインのライブボットはテストできません。</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>その他のAIボットページ</h2>
+                <p>メインボット、非公開チャット、検閲ボット、AI共同司会は、それぞれ別の設定と履歴を持つ独立したツールです。</p>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/guide-chatbot-pages-reference.png" alt="メインボットのオーバーレイ、非公開チャットボット、検閲ボット、AI共同司会の比較表" class="guide-image">
+                    <figcaption>用途に合ったページを選んでください。非公開ボットでは、メインのライブチャット経路のテストを代用できません。</figcaption>
+                </figure>
+                <p>AI機能全体については、こちらをご覧ください： <a href="ai-modes-guide.html">AIモードガイド</a>.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2025</span> Social Stream Ninja。GPLv3.0ライセンス。</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

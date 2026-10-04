@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="it" data-site-root="../../" data-site-language="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/it/docs/media-hosting-event-flow.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="it_IT">
+    <meta property="og:url" content="https://socialstream.ninja/it/docs/media-hosting-event-flow.html">
+    <meta property="og:title" content="File multimediali per Event Flow - Social Stream Ninja">
+    <meta property="og:description" content="Come usare audio, immagini, GIF e video caricati, locali o ospitati nel cloud con Social Stream Ninja Event Flow e OBS.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo di Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/it/docs/media-hosting-event-flow.html">
+    <meta name="twitter:title" content="File multimediali per Event Flow - Social Stream Ninja">
+    <meta name="twitter:description" content="Come usare audio, immagini, GIF e video caricati, locali o ospitati nel cloud con Social Stream Ninja Event Flow e OBS.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo di Social Stream Ninja">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File multimediali per Event Flow - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Come usare audio, immagini, GIF e video caricati, locali o ospitati nel cloud con Social Stream Ninja Event Flow e OBS.">
+    <style>
+        .answer-card {
+            border: 2px solid var(--primary-color);
+            background: linear-gradient(135deg, rgba(157, 70, 255, 0.12), rgba(66, 211, 146, 0.08));
+        }
+        .route-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+            margin: 1.4rem 0 0;
+        }
+        .route-card {
+            position: relative;
+            padding: 1.4rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--background-light);
+        }
+        .route-card::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            right: -1.1rem;
+            width: 1.1rem;
+            height: 2px;
+            background: var(--primary-color);
+        }
+        .route-card:last-child::after {
+            display: none;
+        }
+        .route-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.8rem;
+            height: 2.8rem;
+            margin-bottom: 0.8rem;
+            border-radius: 50%;
+            color: var(--on-primary);
+            background: var(--primary-color);
+            font-weight: 700;
+        }
+        .route-card strong,
+        .choice-card strong {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        .route-card p,
+        .choice-card p {
+            margin: 0;
+        }
+        .choice-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+            margin: 1.2rem 0;
+        }
+        .choice-card {
+            padding: 1.4rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--background-light);
+        }
+        .choice-card.recommended {
+            border-color: var(--primary-color);
+        }
+        .choice-label {
+            display: inline-block;
+            margin-bottom: 0.8rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            color: var(--primary-color);
+            background: rgba(157, 70, 255, 0.12);
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        .screenshot-crop {
+            width: min(100%, 42rem);
+            height: 16rem;
+            margin: 1.4rem auto 0;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: #202024;
+            box-shadow: var(--shadow-sm);
+        }
+        .screenshot-crop img {
+            display: block;
+            width: 42rem;
+            max-width: none;
+            height: auto;
+            transform: translateY(-34rem);
+        }
+        .path-map {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            gap: 1rem;
+            align-items: center;
+            margin: 1.4rem 0;
+        }
+        .path-box {
+            padding: 1.2rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--background-light);
+            text-align: center;
+        }
+        .path-arrow {
+            color: var(--primary-color);
+            font-size: 2.4rem;
+            font-weight: 700;
+        }
+        .code-label {
+            margin: 1.2rem 0 0.4rem;
+            color: var(--text-secondary);
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+        .compact-note {
+            margin: 1.2rem 0;
+        }
+        @media (max-width: 760px) {
+            .route-grid,
+            .choice-grid,
+            .path-map {
+                grid-template-columns: 1fr;
+            }
+            .route-card::after {
+                display: none;
+            }
+            .path-arrow {
+                transform: rotate(90deg);
+                text-align: center;
+            }
+            .screenshot-crop {
+                height: 15rem;
+            }
+            .screenshot-crop img {
+                width: 35rem;
+                transform: translateY(-28rem);
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="it">
+<script id="ssn-site-language" type="application/json">{"language":"it","page":"docs/media-hosting-event-flow.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Passa al tema chiaro","Switch to dark theme":"Passa al tema scuro","Light mode":"Modalità chiara","Dark mode":"Modalità scura","Open navigation menu":"Apri il menu di navigazione","Close navigation menu":"Chiudi il menu di navigazione","Copy this document as Markdown to the clipboard":"Copia questo documento in formato Markdown negli appunti","Copy Markdown":"Copia Markdown","Copying…":"Copia in corso…","Markdown copied":"Markdown copiato","Copy failed":"Copia non riuscita","Copy comprehensive Markdown for an AI assistant":"Copia il Markdown completo per un assistente IA","Copy this documentation page as Markdown for an AI assistant":"Copia questa pagina di documentazione in Markdown per un assistente IA"},"strings":{", and":", e",", choose the file, and finish the upload in the page that opens.":", scegli il file e completa il caricamento nella pagina che si apre.",", then create a":", poi crea al suo interno una cartella chiamata",": works, but is more fragile":": funziona, ma è meno affidabile","A few small public files or occasional release downloads.":"Pochi file pubblici piccoli o download occasionali delle release.","A reward or message triggers the action.":"Una ricompensa o un messaggio attiva l'azione.","Add the exact origin of any other page that fetches the files. Origins do not contain paths or a trailing slash. If a custom domain was already cached before adding CORS, purge that hostname's cache.":"Aggiungi l'origine esatta di qualsiasi altra pagina che recupera i file. Le origini non contengono percorsi né una barra finale. Se un dominio personalizzato era già nella cache prima di aggiungere CORS, svuota la cache di quel nome host.","Advanced fallback: run your own local server":"Alternativa avanzata: esegui un tuo server locale","Amazon S3 or another S3-compatible host":"Amazon S3 o un altro host compatibile con S3","Anyone with the object URL can access the media. Do not upload private, licensed, or personal files that should not be shared.":"Chiunque abbia l'URL dell'oggetto può accedere ai media. Non caricare file privati, soggetti a licenza o personali che non devono essere condivisi.","Backblaze B2":"Backblaze B2","Backblaze B2 CORS Example":"Esempio CORS per Backblaze B2","Before Going Live":"Prima di andare in diretta","Best for a modest library and the least setup.":"Ideale per una libreria modesta e una configurazione minima.","Best for lots of media, backups, and use from multiple computers.":"Ideale per molti media, backup e uso da più computer.","Best general choice for a public alert library.":"Migliore scelta generale per una libreria pubblica di avvisi.","Both the Flow Actions page and media must be local. A hosted":"Sia la pagina Flow Actions sia i media devono essere locali. Una pagina ospitata","Bucket → Settings → CORS Policy":"Bucket → Settings → CORS Policy","Built-in Upload":"Caricamento integrato","Choose Local File":"Scegli file locale","Click":"Fai clic su","Cloud Object Storage":"Archiviazione di oggetti nel cloud","Cloud file is blocked:":"Il file cloud è bloccato:","Cloudflare R2":"Cloudflare R2","Cloudflare R2 Setup":"Configurazione Cloudflare R2","Commands & API":"Comandi e API","Confirm that the action says the file is available and the local server is running.":"Conferma che l'azione indichi che il file è disponibile e che il server locale sia in esecuzione.","Confirm that the returned":"Conferma che l’URL restituito","Copy Local Flow Actions URL for OBS":"Copia URL Flow Actions locale per OBS","Create an R2 bucket using the":"Crea un bucket R2 usando la classe","Desktop Local Media":"Media locali desktop","Display Media Overlay":"Mostra overlay multimediale","Do not share the generated URL. It contains a private random capability used to protect the local server.":"Non condividere l'URL generato. Contiene una credenziale casuale privata usata per proteggere il server locale.","Download":"Scarica","Download and extract the":"Scarica ed estrai la","Enable public read for the media, set correct content types, and add a read-only CORS rule if browser requests require it.":"Abilita la lettura pubblica dei media, imposta i tipi di contenuto corretti e aggiungi una regola CORS di sola lettura se le richieste del browser lo richiedono.","Event Flow":"Event Flow","Event Flow Display Media Overlay properties showing the Media URL field and Upload button":"Proprietà di Display Media Overlay in Event Flow con il campo Media URL e il pulsante Upload","Existing cloud accounts and advanced access controls.":"Account cloud esistenti e controlli di accesso avanzati.","Fastest":"Il più rapido","Features":"Funzioni","Flow Actions":"Flow Actions","Flow Actions URL for the OBS Browser Source":"URL Flow Actions per la sorgente browser OBS","GitHub":"GitHub","Good For":"Adatto a","Guides":"Guide","Hire":"Incarica un professionista","Home":"Home","Hosted Flow Actions cannot play the local item:":"Flow Actions ospitato non riesce a riprodurre l'elemento locale:","How an Event Flow media action reaches OBS":"Come un'azione multimediale Event Flow raggiunge OBS","How to use uploaded, local, or cloud-hosted audio, images, GIFs, and videos with Social Stream Ninja Event Flow and OBS.":"Come usare audio, immagini, GIF e video caricati, locali o ospitati nel cloud con Social Stream Ninja Event Flow e OBS.","If OBS refuses a local file, use the local HTTP server method above.":"Se OBS rifiuta un file locale, usa il metodo del server HTTP locale sopra.","If the file is moved or renamed, Event Flow shows it as missing. Click":"Se il file viene spostato o rinominato, Event Flow lo mostra come mancante. Fai clic su","If the upload site shows a 1 GB account allowance and your library will exceed it, use the local-folder or cloud-storage option below.":"Se il sito di caricamento indica un limite di 1 GB per account e la tua libreria lo supererà, usa l'opzione cartella locale o archiviazione cloud sotto.","If you do not want to run a local server, point OBS at a local Flow Actions page and use local media URLs too:":"Se non vuoi eseguire un server locale, indirizza OBS a una pagina Flow Actions locale e usa anche URL multimediali locali:","Image":"Immagine","Important Notes":"Note importanti","In Event Flow, select":"In Event Flow, seleziona","In the bucket's Settings, enable public access. Use the public development URL only for testing, or connect a custom domain for regular live use.":"Nelle impostazioni del bucket, abilita l'accesso pubblico. Usa l'URL pubblico di sviluppo solo per i test oppure collega un dominio personalizzato per l'uso regolare in diretta.","Inspiration":"Ispirazione","Install Python if it is not already installed.":"Installa Python se non è già installato.","Keep SSApp running while OBS uses the Local Flow Actions URL.":"Mantieni SSApp in esecuzione mentre OBS usa l'URL Flow Actions locale.","Large or shared libraries":"Librerie grandi o condivise","Local Flow Actions URL":"URL Flow Actions locale","Local file is missing:":"Il file locale manca:","Local media":"Media locali","Local media URL map":"Mappa degli URL dei media locali","Local server is offline:":"Il server locale è offline:","Low-cost S3-compatible storage with public file URLs.":"Archiviazione economica compatibile con S3 con URL pubblici dei file.","Main navigation":"Navigazione principale","Make the bucket public, use the direct file URL, and apply a download-only rule if a browser reports a CORS error:":"Rendi pubblico il bucket, usa l'URL diretto del file e applica una regola di solo download se un browser segnala un errore CORS:","Media Files for Event Flow":"File multimediali per Event Flow","Media Files for Event Flow - Social Stream Ninja":"File multimediali per Event Flow - Social Stream Ninja","Media URL":"URL multimediale","Media URLs to paste into Event Flow":"URL multimediali da incollare in Event Flow","No storage bill":"Nessun costo di archiviazione","Normal repositories block files over 100 MiB, and GitHub Pages sites have a 1 GB published-site limit. Releases allow larger assets, but they are awkward as a managed alert-media library.":"I repository normali bloccano i file superiori a 100 MiB e i siti GitHub Pages hanno un limite di 1 GB per il sito pubblicato. Le release consentono risorse più grandi, ma sono scomode come libreria gestita di media per gli avvisi.","Nothing reaches OBS:":"Non arriva nulla a OBS:","OBS Browser Source":"Sorgente browser OBS","OBS loads the sound, image, GIF, or video.":"OBS carica il suono, l'immagine, la GIF o il video.","Official references:":"Riferimenti ufficiali:","Open PowerShell or Command Prompt and run this command. Leave the window open while streaming.":"Apri PowerShell o il Prompt dei comandi ed esegui questo comando. Lascia aperta la finestra durante la diretta.","Open an object URL in a private/incognito browser window. It should load the file directly without a login or share page.":"Apri l'URL di un oggetto in una finestra privata/in incognito del browser. Deve caricare direttamente il file senza accesso o pagina di condivisione.","Open navigation menu":"Apri il menu di navigazione","Open the Flow Actions page in OBS with the same session ID used by Event Flow.":"Apri la pagina Flow Actions in OBS con lo stesso ID sessione usato da Event Flow.","Open the exact media URL in a private/incognito window. It must load the file directly.":"Apri l'URL multimediale esatto in una finestra privata/in incognito. Deve caricare direttamente il file.","Option 1: Use the Built-in Upload":"Opzione 1: usa il caricamento integrato","Option 2: Keep the Library on the OBS Computer":"Opzione 2: mantieni la libreria sul computer OBS","Option 3: Host a Larger Library Online":"Opzione 3: ospita online una libreria più grande","Overlay Gallery":"Galleria degli overlay","Paste that URL into an OBS Browser Source, save the flow, and test the action.":"Incolla quell'URL in una sorgente browser OBS, salva il flusso e prova l'azione.","Paste that direct HTTPS URL into the Event Flow action.":"Incolla quell'URL HTTPS diretto nell'azione Event Flow.","Pick the Best Route":"Scegli il percorso migliore","Plain images and audio normally load without custom CORS settings. If a custom overlay, font, video player, or browser fetch reports a CORS error, open":"Le normali immagini e l'audio di solito si caricano senza impostazioni CORS personalizzate. Se un overlay personalizzato, un font, un lettore video o un fetch del browser segnala un errore CORS, apri","Play Audio Clip":"Riproduci clip audio","Prefer MP3 for audio, PNG/WebP/GIF for images, and H.264/AAC MP4 for video compatibility.":"Preferisci MP3 per l'audio, PNG/WebP/GIF per le immagini e MP4 H.264/AAC per la compatibilità video.","Preview":"Anteprima","Provider":"Provider","Public means public.":"Pubblico significa pubblico.","R2 CORS":"CORS R2","R2 pricing":"Prezzi R2","Recommended when SSApp, OBS, and the files are on the same computer.":"Consigliato quando SSApp, OBS e i file sono sullo stesso computer.","Relink":"Ricollega","Reveal in Folder":"Mostra nella cartella","Save the flow and keep":"Salva il flusso e mantieni","See Backblaze's":"Consulta la documentazione di Backblaze:","Select":"Seleziona","Short Answer":"Risposta breve","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Logo di Social Stream Ninja","Social Stream Ninja source folder":"cartella dei sorgenti Social Stream Ninja","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. Licenza GPLv3.0.","Standard":"Standard","Standard storage currently includes 10 GB-month per month and free Internet egress. Use a custom domain for production;":"L'archiviazione Standard include attualmente 10 GB-mese al mese e traffico in uscita Internet gratuito. Usa un dominio personalizzato per la produzione;","Start the Social Stream standalone app and open Event Flow.":"Avvia l'app autonoma Social Stream e apri Event Flow.","Start the manual local HTTP server":"Avvia il server HTTP locale manuale","Support":"Supporto","Supported Sites":"Siti supportati","Switch theme":"Cambia tema","The Chrome extension cannot serve files from your disk by itself. Extension users should continue using Upload or a hosted media URL unless they also run a supported desktop companion.":"L'estensione Chrome non può servire da sola i file del tuo disco. Gli utenti dell'estensione devono continuare a usare Upload o un URL multimediale ospitato, a meno che eseguano anche un'app desktop complementare supportata.","The Social Stream desktop app can play approved local files without uploading them.":"L'app desktop Social Stream può riprodurre file locali approvati senza caricarli online.","The Upload button creates a hosted URL. It is not a local file picker for Event Flow playback.":"Il pulsante Upload crea un URL ospitato. Non è un selettore di file locali per la riproduzione Event Flow.","The extension cannot expose arbitrary files from your disk to OBS by itself. Without a supported companion bridge, use":"L'estensione non può esporre da sola file arbitrari del disco a OBS. Senza un bridge complementare supportato, usa","The extension uses the same Event Flow format, so desktop-created flows remain compatible. Local actions store an opaque media ID rather than a Windows, macOS, or Linux path.":"L'estensione usa lo stesso formato Event Flow, quindi i flussi creati sul desktop restano compatibili. Le azioni locali memorizzano un ID multimediale opaco invece di un percorso Windows, macOS o Linux.","The first 10 GB is currently free; storage and excess egress are paid after the included amounts.":"I primi 10 GB sono attualmente gratuiti; oltre le quantità incluse, archiviazione e traffico in uscita aggiuntivo sono a pagamento.","The following manual setup remains available if you are not using SSApp's managed Local Media Library.":"La configurazione manuale seguente resta disponibile se non usi la Libreria multimediale locale gestita di SSApp.","The hosted":"La pagina ospitata","The setting":"L’opzione","The standalone desktop app includes a Local Media Library and a loopback server that only listens on this computer. Event Flow stores a stable media ID instead of putting your disk path into the flow.":"L'app desktop autonoma include una Libreria multimediale locale e un server loopback che ascolta solo su questo computer. Event Flow memorizza un ID multimediale stabile invece di inserire il percorso del disco nel flusso.","URL appears in the action.":"compaia nell’azione.","URL downloads instead of playing:":"L'URL scarica invece di riprodurre:","Upload":"Carica","Upload your media with clear folder names such as":"Carica i media usando nomi chiari per le cartelle, come","Use":"Usa","Use Event Flow's test panel, then refresh the OBS Browser Source once before the real stream.":"Usa il pannello di test di Event Flow, poi aggiorna una volta la sorgente browser OBS prima della diretta reale.","Use forward slashes and avoid spaces or special characters in folder and file names.":"Usa barre normali ed evita spazi o caratteri speciali nei nomi di cartelle e file.","Use the generated Local Flow Actions URL.":"Usa l'URL Flow Actions locale generato.","Use your own sounds, images, GIFs, and videos in OBS.":"Usa i tuoi suoni, immagini, GIF e video in OBS.","Video/Embed":"Video/Incorporamento","What About the Chrome Extension?":"E l'estensione Chrome?","Windows command":"Comando Windows","and add a read-only policy:":"e aggiungi una regola di sola lettura:","and choose its new location; existing flows keep working.":"e scegli la sua nuova posizione; i flussi esistenti continuano a funzionare.","and select an audio, image, GIF, or video file.":"e seleziona un file audio, immagine, GIF o video.","confirm the Flow Actions URL and Event Flow use the same session ID.":"conferma che l'URL Flow Actions ed Event Flow usino lo stesso ID sessione.","folder inside it.":".","for PNG, JPG, WebP, or GIF media. Use":"per media PNG, JPG, WebP o GIF. Usa","for video or embed URLs.":"per URL video o di incorporamento.","in Event Flow, then copy the generated":"in Event Flow, poi copia il link generato:","into OBS.":"in OBS.","is rate-limited and intended for development.":"ha limiti di frequenza ed è destinato allo sviluppo.","keeps the server on this computer. This simple server is for local streaming use, not public Internet hosting.":"mantiene il server su questo computer. Questo semplice server è destinato allo streaming locale, non all’hosting pubblico su Internet.","macOS or Linux command":"Comando macOS o Linux","make it public and check the CORS origin, method, and headers.":"rendilo pubblico e controlla origine, metodo e intestazioni CORS.","official CORS rule reference":"riferimento ufficiale delle regole CORS","open in OBS.":"aperto in OBS.","open the action in SSApp and use":"apri l'azione in SSApp e usa","or":"oppure","or a normal hosted URL. If an imported flow references local media, the extension explains that the desktop app or bridge is required instead of silently failing.":"oppure un normale URL ospitato. Se un flusso importato fa riferimento a media locali, l'estensione spiega che serve l'app desktop o il bridge invece di fallire silenziosamente.","page cannot read that path.":"non può leggere quel percorso.","page cannot resolve a desktop-library media ID.":"non può risolvere un ID multimediale della libreria desktop.","public R2 buckets":"bucket R2 pubblici","receives the action.":"riceve l'azione.","replace the OBS URL with the one generated by SSApp.":"sostituisci l'URL OBS con quello generato da SSApp.","start SSApp and copy the Local Flow Actions URL again if the port or security token changed.":"avvia SSApp e copia di nuovo l'URL Flow Actions locale se la porta o il token di sicurezza sono cambiati.","storage class.":"di archiviazione.","the host is sending the wrong content type or a download-only response.":"l'host sta inviando il tipo di contenuto errato oppure una risposta di solo download.","to check the selected file.":"per controllare il file selezionato.","when you need to locate the original file.":"quando devi trovare il file originale."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/media-hosting-event-flow.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Navigazione principale"><a href="../index.html">Home</a><a href="features.html">Funzioni</a><a href="inspiration.html" class="site-priority-inspiration">Ispirazione</a><a href="download.html">Scarica</a><a href="guides.html">Guide</a><a href="commands.html">Comandi e API</a><a href="supported-sites.html">Siti supportati</a><a href="overlay-gallery.html" class="site-priority-gallery">Galleria degli overlay</a><a href="services.html" class="site-priority-hire">Incarica un professionista</a><a href="support.html">Supporto</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Italiano"><span aria-hidden="true">🌐 </span><span lang="it">Italiano</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/media-hosting-event-flow.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/media-hosting-event-flow.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/media-hosting-event-flow.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/media-hosting-event-flow.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/media-hosting-event-flow.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/media-hosting-event-flow.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/media-hosting-event-flow.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/media-hosting-event-flow.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/media-hosting-event-flow.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="media-hosting-event-flow.html" lang="it" hreflang="it" aria-current="true">Italiano</a><a class="site-language-link" href="../../pl/docs/media-hosting-event-flow.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/media-hosting-event-flow.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/media-hosting-event-flow.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/media-hosting-event-flow.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/media-hosting-event-flow.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/media-hosting-event-flow.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/media-hosting-event-flow.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Cambia tema"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Apri il menu di navigazione" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero"><div class="container"><h1>File multimediali per Event Flow</h1><p>Usa i tuoi suoni, immagini, GIF e video in OBS.</p></div></section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card answer-card">
+                <h2>Risposta breve</h2>
+                <p><strong>L'app desktop Social Stream può riprodurre file locali approvati senza caricarli online.</strong> Usa <strong>Scegli file locale</strong> in Event Flow, poi copia il link generato: <strong>URL Flow Actions locale</strong> in OBS.</p>
+                <p>L'estensione Chrome non può servire da sola i file del tuo disco. Gli utenti dell'estensione devono continuare a usare Upload o un URL multimediale ospitato, a meno che eseguano anche un'app desktop complementare supportata.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Scegli il percorso migliore</h2>
+                <div class="choice-grid">
+                    <div class="choice-card">
+                        <span class="choice-label">Il più rapido</span>
+                        <strong>Caricamento integrato</strong>
+                        <p>Ideale per una libreria modesta e una configurazione minima.</p>
+                    </div>
+                    <div class="choice-card recommended">
+                        <span class="choice-label">Nessun costo di archiviazione</span>
+                        <strong>Media locali desktop</strong>
+                        <p>Consigliato quando SSApp, OBS e i file sono sullo stesso computer.</p>
+                    </div>
+                    <div class="choice-card">
+                        <span class="choice-label">Librerie grandi o condivise</span>
+                        <strong>Archiviazione di oggetti nel cloud</strong>
+                        <p>Ideale per molti media, backup e uso da più computer.</p>
+                    </div>
+                </div>
+                <div class="route-grid" aria-label="Come un&#x27;azione multimediale Event Flow raggiunge OBS">
+                    <div class="route-card"><span class="route-number">1</span><strong>Event Flow</strong><p>Una ricompensa o un messaggio attiva l'azione.</p></div>
+                    <div class="route-card"><span class="route-number">2</span><strong>Flow Actions</strong><p><code>actions.html</code> riceve l'azione.</p></div>
+                    <div class="route-card"><span class="route-number">3</span><strong>URL multimediale</strong><p>OBS carica il suono, l'immagine, la GIF o il video.</p></div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Opzione 1: usa il caricamento integrato</h2>
+                <ol class="guide-steps">
+                    <li>In Event Flow, seleziona <strong>Riproduci clip audio</strong> oppure <strong>Mostra overlay multimediale</strong>.</li>
+                    <li>Fai clic su <strong>Carica</strong>, scegli il file e completa il caricamento nella pagina che si apre.</li>
+                    <li>Conferma che l’URL restituito <code>https://fileuploads.socialstream.ninja/media/...</code> compaia nell’azione.</li>
+                    <li>Salva il flusso e mantieni <code>actions.html?session=YOUR_SESSION</code> aperto in OBS.</li>
+                </ol>
+                <p>Se il sito di caricamento indica un limite di 1 GB per account e la tua libreria lo supererà, usa l'opzione cartella locale o archiviazione cloud sotto.</p>
+                <figure class="guide-figure">
+                    <div class="screenshot-crop">
+                        <img src="../../docs/images/kick-channel-points-event-flow/event-flow-media-action-values.png" alt="Proprietà di Display Media Overlay in Event Flow con il campo Media URL e il pulsante Upload">
+                    </div>
+                    <figcaption>Il pulsante Upload crea un URL ospitato. Non è un selettore di file locali per la riproduzione Event Flow.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Opzione 2: mantieni la libreria sul computer OBS</h2>
+                <p>L'app desktop autonoma include una Libreria multimediale locale e un server loopback che ascolta solo su questo computer. Event Flow memorizza un ID multimediale stabile invece di inserire il percorso del disco nel flusso.</p>
+                <ol class="guide-steps">
+                    <li>Avvia l'app autonoma Social Stream e apri Event Flow.</li>
+                    <li>Seleziona <strong>Riproduci clip audio</strong> oppure <strong>Mostra overlay multimediale</strong>.</li>
+                    <li>Fai clic su <strong>Scegli file locale</strong> e seleziona un file audio, immagine, GIF o video.</li>
+                    <li>Conferma che l'azione indichi che il file è disponibile e che il server locale sia in esecuzione.</li>
+                    <li>Fai clic su <strong>Copia URL Flow Actions locale per OBS</strong>.</li>
+                    <li>Incolla quell'URL in una sorgente browser OBS, salva il flusso e prova l'azione.</li>
+                </ol>
+                <ul class="guide-list">
+                    <li>Usa <strong>Anteprima</strong> per controllare il file selezionato.</li>
+                    <li>Se il file viene spostato o rinominato, Event Flow lo mostra come mancante. Fai clic su <strong>Ricollega</strong> e scegli la sua nuova posizione; i flussi esistenti continuano a funzionare.</li>
+                    <li>Usa <strong>Mostra nella cartella</strong> quando devi trovare il file originale.</li>
+                    <li>Mantieni SSApp in esecuzione mentre OBS usa l'URL Flow Actions locale.</li>
+                    <li>Non condividere l'URL generato. Contiene una credenziale casuale privata usata per proteggere il server locale.</li>
+                </ul>
+                <div class="warning-note compact-note">
+                    <p><strong>Usa l'URL Flow Actions locale generato.</strong> La pagina ospitata <code>https://socialstream.ninja/actions.html</code> non può risolvere un ID multimediale della libreria desktop.</p>
+                </div>
+
+                <h3>Alternativa avanzata: esegui un tuo server locale</h3>
+                <p>La configurazione manuale seguente resta disponibile se non usi la Libreria multimediale locale gestita di SSApp.</p>
+                <p>Scarica ed estrai la <a href="https://github.com/steveseguin/social_stream" target="_blank" rel="noopener">cartella dei sorgenti Social Stream Ninja</a>, poi crea al suo interno una cartella chiamata <code>user-media</code> .</p>
+                <pre>C:\SSN\social_stream\
+  actions.html
+  user-media\
+    audio\booty.mp3
+    images\reward.png
+    video\celebration.mp4</pre>
+
+                <h3>Avvia il server HTTP locale manuale</h3>
+                <ol class="guide-steps">
+                    <li>Installa Python se non è già installato.</li>
+                    <li>Apri PowerShell o il Prompt dei comandi ed esegui questo comando. Lascia aperta la finestra durante la diretta.</li>
+                </ol>
+                <p class="code-label">Comando Windows</p>
+                <pre>py -m http.server 8765 --bind 127.0.0.1 --directory "C:\SSN\social_stream"</pre>
+                <p class="code-label">Comando macOS o Linux</p>
+                <pre>python3 -m http.server 8765 --bind 127.0.0.1 --directory "/path/to/social_stream"</pre>
+                <p class="code-label">URL Flow Actions per la sorgente browser OBS</p>
+                <pre>http://127.0.0.1:8765/actions.html?session=YOUR_SESSION_ID</pre>
+                <p class="code-label">URL multimediali da incollare in Event Flow</p>
+                <pre>http://127.0.0.1:8765/user-media/audio/booty.mp3
+http://127.0.0.1:8765/user-media/images/reward.png
+http://127.0.0.1:8765/user-media/video/celebration.mp4</pre>
+                <div class="path-map" aria-label="Mappa degli URL dei media locali">
+                    <div class="path-box"><strong>Sorgente browser OBS</strong><br><code>127.0.0.1:8765/actions.html</code></div>
+                    <div class="path-arrow" aria-hidden="true">&#8596;</div>
+                    <div class="path-box"><strong>Media locali</strong><br><code>127.0.0.1:8765/user-media/...</code></div>
+                </div>
+                <p>L’opzione <code>--bind 127.0.0.1</code> mantiene il server su questo computer. Questo semplice server è destinato allo streaming locale, non all’hosting pubblico su Internet.</p>
+
+                <h3><code>file://</code>: funziona, ma è meno affidabile</h3>
+                <p>Se non vuoi eseguire un server locale, indirizza OBS a una pagina Flow Actions locale e usa anche URL multimediali locali:</p>
+                <pre>file:///C:/SSN/social_stream/actions.html?session=YOUR_SESSION_ID
+file:///C:/SSN/social_stream/user-media/audio/booty.mp3</pre>
+                <ul class="guide-list">
+                    <li>Usa barre normali ed evita spazi o caratteri speciali nei nomi di cartelle e file.</li>
+                    <li>Sia la pagina Flow Actions sia i media devono essere locali. Una pagina ospitata <code>actions.html</code> non può leggere quel percorso.</li>
+                    <li>Se OBS rifiuta un file locale, usa il metodo del server HTTP locale sopra.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>E l'estensione Chrome?</h2>
+                <p>L'estensione usa lo stesso formato Event Flow, quindi i flussi creati sul desktop restano compatibili. Le azioni locali memorizzano un ID multimediale opaco invece di un percorso Windows, macOS o Linux.</p>
+                <p>L'estensione non può esporre da sola file arbitrari del disco a OBS. Senza un bridge complementare supportato, usa <strong>Carica</strong> oppure un normale URL ospitato. Se un flusso importato fa riferimento a media locali, l'estensione spiega che serve l'app desktop o il bridge invece di fallire silenziosamente.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Opzione 3: ospita online una libreria più grande</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Provider</th><th>Adatto a</th><th>Note importanti</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Provider"><a href="https://developers.cloudflare.com/r2/" target="_blank" rel="noopener">Cloudflare R2</a></td>
+                            <td data-label="Good For">Migliore scelta generale per una libreria pubblica di avvisi.</td>
+                            <td data-label="Important Notes">L'archiviazione Standard include attualmente 10 GB-mese al mese e traffico in uscita Internet gratuito. Usa un dominio personalizzato per la produzione; <code>r2.dev</code> ha limiti di frequenza ed è destinato allo sviluppo.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Provider"><a href="https://www.backblaze.com/cloud-storage/pricing" target="_blank" rel="noopener">Backblaze B2</a></td>
+                            <td data-label="Good For">Archiviazione economica compatibile con S3 con URL pubblici dei file.</td>
+                            <td data-label="Important Notes">I primi 10 GB sono attualmente gratuiti; oltre le quantità incluse, archiviazione e traffico in uscita aggiuntivo sono a pagamento.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Provider">Amazon S3 o un altro host compatibile con S3</td>
+                            <td data-label="Good For">Account cloud esistenti e controlli di accesso avanzati.</td>
+                            <td data-label="Important Notes">Abilita la lettura pubblica dei media, imposta i tipi di contenuto corretti e aggiungi una regola CORS di sola lettura se le richieste del browser lo richiedono.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Provider"><a href="https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github" target="_blank" rel="noopener">GitHub</a></td>
+                            <td data-label="Good For">Pochi file pubblici piccoli o download occasionali delle release.</td>
+                            <td data-label="Important Notes">I repository normali bloccano i file superiori a 100 MiB e i siti GitHub Pages hanno un limite di 1 GB per il sito pubblicato. Le release consentono risorse più grandi, ma sono scomode come libreria gestita di media per gli avvisi.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="warning-note compact-note">
+                    <p><strong>Pubblico significa pubblico.</strong> Chiunque abbia l'URL dell'oggetto può accedere ai media. Non caricare file privati, soggetti a licenza o personali che non devono essere condivisi.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Configurazione Cloudflare R2</h2>
+                <ol class="guide-steps">
+                    <li>Crea un bucket R2 usando la classe <strong>Standard</strong> di archiviazione.</li>
+                    <li>Carica i media usando nomi chiari per le cartelle, come <code>audio/</code>, <code>images/</code>, e <code>video/</code>.</li>
+                    <li>Nelle impostazioni del bucket, abilita l'accesso pubblico. Usa l'URL pubblico di sviluppo solo per i test oppure collega un dominio personalizzato per l'uso regolare in diretta.</li>
+                    <li>Apri l'URL di un oggetto in una finestra privata/in incognito del browser. Deve caricare direttamente il file senza accesso o pagina di condivisione.</li>
+                    <li>Incolla quell'URL HTTPS diretto nell'azione Event Flow.</li>
+                </ol>
+                <p>Le normali immagini e l'audio di solito si caricano senza impostazioni CORS personalizzate. Se un overlay personalizzato, un font, un lettore video o un fetch del browser segnala un errore CORS, apri <strong>Bucket &rarr; Settings &rarr; CORS Policy</strong> e aggiungi una regola di sola lettura:</p>
+                <pre>[
+  {
+    "AllowedOrigins": [
+      "https://socialstream.ninja",
+      "http://127.0.0.1:8765"
+    ],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedHeaders": ["Range"],
+    "ExposeHeaders": [
+      "Content-Length",
+      "Content-Range",
+      "Accept-Ranges"
+    ],
+    "MaxAgeSeconds": 3600
+  }
+]</pre>
+                <p>Aggiungi l'origine esatta di qualsiasi altra pagina che recupera i file. Le origini non contengono percorsi né una barra finale. Se un dominio personalizzato era già nella cache prima di aggiungere CORS, svuota la cache di quel nome host.</p>
+                <p>Riferimenti ufficiali: <a href="https://developers.cloudflare.com/r2/buckets/public-buckets/" target="_blank" rel="noopener">bucket R2 pubblici</a>, <a href="https://developers.cloudflare.com/r2/buckets/cors/" target="_blank" rel="noopener">CORS R2</a>, e <a href="https://developers.cloudflare.com/r2/pricing/" target="_blank" rel="noopener">Prezzi R2</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Esempio CORS per Backblaze B2</h2>
+                <p>Rendi pubblico il bucket, usa l'URL diretto del file e applica una regola di solo download se un browser segnala un errore CORS:</p>
+                <pre>[
+  {
+    "corsRuleName": "allowSSNMedia",
+    "allowedOrigins": ["https://socialstream.ninja"],
+    "allowedHeaders": ["range"],
+    "allowedOperations": ["b2_download_file_by_name"],
+    "exposeHeaders": [
+      "content-length",
+      "content-range",
+      "accept-ranges"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]</pre>
+                <p>Consulta la documentazione di Backblaze: <a href="https://www.backblaze.com/docs/cloud-storage-cross-origin-resource-sharing-rules" target="_blank" rel="noopener">riferimento ufficiale delle regole CORS</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Prima di andare in diretta</h2>
+                <ol class="guide-steps">
+                    <li>Apri l'URL multimediale esatto in una finestra privata/in incognito. Deve caricare direttamente il file.</li>
+                    <li>Usa <strong>Immagine</strong> per media PNG, JPG, WebP o GIF. Usa <strong>Video/Incorporamento</strong> per URL video o di incorporamento.</li>
+                    <li>Preferisci MP3 per l'audio, PNG/WebP/GIF per le immagini e MP4 H.264/AAC per la compatibilità video.</li>
+                    <li>Apri la pagina Flow Actions in OBS con lo stesso ID sessione usato da Event Flow.</li>
+                    <li>Usa il pannello di test di Event Flow, poi aggiorna una volta la sorgente browser OBS prima della diretta reale.</li>
+                </ol>
+                <ul class="guide-list">
+                    <li><strong>L'URL scarica invece di riprodurre:</strong> l'host sta inviando il tipo di contenuto errato oppure una risposta di solo download.</li>
+                    <li><strong>Il file cloud è bloccato:</strong> rendilo pubblico e controlla origine, metodo e intestazioni CORS.</li>
+                    <li><strong>Il file locale manca:</strong> apri l'azione in SSApp e usa <strong>Ricollega</strong>.</li>
+                    <li><strong>Il server locale è offline:</strong> avvia SSApp e copia di nuovo l'URL Flow Actions locale se la porta o il token di sicurezza sono cambiati.</li>
+                    <li><strong>Flow Actions ospitato non riesce a riprodurre l'elemento locale:</strong> sostituisci l'URL OBS con quello generato da SSApp.</li>
+                    <li><strong>Non arriva nulla a OBS:</strong> conferma che l'URL Flow Actions ed Event Flow usino lo stesso ID sessione.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. Licenza GPLv3.0.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

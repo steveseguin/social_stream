@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/zh-tw/docs/kick-setup-authentication.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/zh-tw/docs/kick-setup-authentication.html">
+    <meta property="og:title" content="Kick 設定與驗證 - Social Stream Ninja">
+    <meta property="og:description" content="將 Kick 聊天和提醒連接到 Social Stream Ninja，選擇標準或 WebSocket 模式、安全登入，並解決頻道 slug 或 OAuth 問題。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/zh-tw/docs/kick-setup-authentication.html">
+    <meta name="twitter:title" content="Kick 設定與驗證 - Social Stream Ninja">
+    <meta name="twitter:description" content="將 Kick 聊天和提醒連接到 Social Stream Ninja，選擇標準或 WebSocket 模式、安全登入，並解決頻道 slug 或 OAuth 問題。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kick 設定與驗證 - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="將 Kick 聊天和提醒連接到 Social Stream Ninja，選擇標準或 WebSocket 模式、安全登入，並解決頻道 slug 或 OAuth 問題。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/kick-setup-authentication.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{"## Verified maintainer context Current `sources/websocket/kick.js` OAuth scopes: `user:read`, `channel:read`, `channel:write`, `channel:rewards:read`, `chat:write`, `events:subscribe`, `moderation:ban`, `moderation:chat_message:manage`, `kicks:read`. Current default official subscriptions: `chat.message.sent`, `channel.followed`, `channel.subscription.new`, `channel.subscription.renewal`, `channel.subscription.gifts`, `channel.reward.redemption.updated`, `kicks.gifted`, `moderation.banned`, `livestream.status.updated`. The source can add custom and newly advertised donation/support event names when Kick returns them from its event-type endpoint. Do not document those dynamic names as guaranteed. The current official Kick event list has no raid/host webhook. Standard browser capture is implemented by the current manifest-injected `sources/kick.js`. The structured source is `sources/websocket/kick.html` plus `sources/websocket/kick.js`; the stale `sources/kick_new.js` file is not the manifest source of truth.":"## 經核實的維護者說明\n\n目前 `sources/websocket/kick.js` 的 OAuth 權限範圍：\n\n`user:read`、`channel:read`、`channel:write`、`channel:rewards:read`、`chat:write`、`events:subscribe`、`moderation:ban`、`moderation:chat_message:manage`、`kicks:read`。\n\n目前預設的官方訂閱：\n\n`chat.message.sent`、`channel.followed`、`channel.subscription.new`、`channel.subscription.renewal`、`channel.subscription.gifts`、`channel.reward.redemption.updated`、`kicks.gifted`、`moderation.banned`、`livestream.status.updated`。\n\n當 Kick 從事件類型端點傳回自訂或新公布的贊助／支持事件名稱時，來源可以新增它們。不要將這些動態名稱記錄為保證可用。目前官方 Kick 事件清單沒有 raid/host webhook。\n\n標準瀏覽器擷取由目前資訊清單注入的 `sources/kick.js` 實作。結構化來源由 `sources/websocket/kick.html` 加 `sources/websocket/kick.js` 構成；過時的 `sources/kick_new.js` 檔案不是資訊清單所用來源的依據。",", and":"，以及",", and the":"，以及",", the source value is":"，來源值為",". You may paste the full URL or enter only that slug.":"。可以貼上完整 URL，也可以只輸入該 slug。","A display name may contain underscores while the URL uses hyphens. Copy the slug from the address bar instead of retyping the displayed name.":"顯示名稱可能包含底線，而 URL 使用連字號。請從網址列複製 slug，不要根據顯示名稱重新輸入。","A fresh Kick WebSocket source before sign-in. In the desktop app, External browser is usually easiest when embedded login is blocked or a CAPTCHA appears.":"登入前的新 Kick WebSocket 來源。桌面應用程式中，內嵌登入被阻止或出現 CAPTCHA 時，「外部瀏覽器」通常最方便。","Activate source":"啟用來源","Add source → Kick":"新增來源 → Kick","Ban/unban users and manage chat messages when the account has permission.":"帳號有權限時，封鎖／解除封鎖使用者並管理聊天訊息。","Best For":"最適合","Bridge":"橋接","Browser Extension WebSocket Setup":"瀏覽器擴充功能 WebSocket 設定","Channel":"頻道","Channel write":"頻道寫入","Chat socket":"聊天通訊端","Chat write":"聊天寫入","Chat:":"聊天：","Check that":"檢查","Check the Social Stream dock before debugging OBS. If the dock receives Kick data, the remaining problem is the overlay or OBS URL.":"排查 OBS 前先檢查 Social Stream 停駐面板。如果停駐面板能收到 Kick 資料，剩餘問題就在疊加畫面或 OBS URL。","Choose A Kick Source Mode":"選擇 Kick 來源模式","Commands & API":"指令與 API","Confirm the signed-in account owns or may moderate the channel before testing send/moderation controls.":"測試傳送／管理控制項前，確認登入帳號擁有該頻道，或具有其管理權限。","Connect Kick chat and alerts to Social Stream Ninja, choose Standard or WebSocket mode, sign in safely, and fix channel slug or OAuth problems.":"將 Kick 聊天和提醒連接到 Social Stream Ninja，選擇標準或 WebSocket 模式、安全登入，並解決頻道 slug 或 OAuth 問題。","Connect channel":"連接頻道","Copy the exact channel slug from the Kick URL.":"從 Kick URL 複製準確的頻道 slug。","Desktop App Setup":"桌面應用程式設定","Download":"下載","Event subscriptions":"事件訂閱","Events and Alerts Compatibility guide":"事件與提醒相容性指南","External browser":"外部瀏覽器","Features":"功能","Fix A Kick Source That Will Not Connect":"修正無法連線的 Kick 來源","Follows:":"追蹤：","For":"對於","For Standard capture, open":"標準擷取模式下，開啟","Guides":"指南","Hire":"聘用","Home":"首頁","If chat works but official alerts do not, sign in again and wait for":"如果聊天正常但官方提醒無效，請重新登入並等待","If embedded login or CAPTCHA fails, use":"如果內嵌登入或 CAPTCHA 失敗，請使用","In the Kick source window, select":"在 Kick 來源視窗中選擇","Inspiration":"靈感","Install and enable the current Social Stream Ninja extension.":"安裝並啟用目前版本的 Social Stream Ninja 擴充功能。","KICKs":"KICKs","KICKs gifts:":"KICKs 禮物：","Keep the page open while streaming.":"直播期間保持頁面開啟。","Keep the source window open and check the Channel, Chat socket, Bridge, and Subscriptions status chips.":"保持來源視窗開啟，並檢查「頻道」、「聊天通訊端」、「橋接」和「訂閱」狀態標籤。","Kick API reference":"Kick API 參考","Kick Alerts for Social Stream source showing channel status, chat socket, bridge, subscription status, authentication methods, and channel slug input":"Kick Alerts for Social Stream 來源，顯示頻道狀態、聊天通訊端、橋接、訂閱狀態、驗證方式和頻道 slug 輸入框","Kick Setup and Authentication":"Kick 設定與驗證","Kick Setup and Authentication - Social Stream Ninja":"Kick 設定與驗證 - Social Stream Ninja","Kick WebSocket source page":"Kick WebSocket 來源頁面","Kick display names can differ from URL slugs.":"Kick 顯示名稱可能與 URL slug 不同。","Kick's current OAuth flow uses authorization-code login with PKCE. Do not paste an access token, refresh token, client secret, or browser cookie into a guide, chat, or support ticket.":"Kick 目前的 OAuth 流程使用帶 PKCE 的授權碼登入。不要將存取權杖、更新權杖、用戶端密鑰或瀏覽器 Cookie 貼到指南、聊天或支援案件中。","Kick's current official webhook list does not publish a raid/host event. Social Stream has compatibility handling if Kick exposes one through a connected feed, but a Kick raid alert should not be treated as guaranteed.":"Kick 目前官方 webhook 清單沒有發佈 raid/host 事件。如果 Kick 透過已連接的資料來源提供此事件，Social Stream 提供相容處理，但不能認為 Kick raid 提醒保證可用。","Leave":"將","Main navigation":"主導覽","Mode":"模式","Moderation":"管理","Moderation:":"管理：","OAuth 2.1":"OAuth 2.1","Official Events The Current Source Subscribes To":"目前來源訂閱的官方事件","Official references:":"官方參考：","Open navigation menu":"開啟導覽選單","Open the":"開啟","Overlay Gallery":"疊加畫面圖庫","Paste the full Kick channel URL or enter its URL slug.":"貼上完整 Kick 頻道 URL，或輸入其 URL slug。","Permission Group":"權限群組","Public chat can connect separately, but OAuth is required for official event subscriptions, sending chat, and channel/moderation controls.":"公開聊天可以單獨連線，但官方事件訂閱、傳送聊天以及頻道／管理控制需要 OAuth。","Raid/host note:":"Raid/host 說明：","Read KICKs-related support information.":"讀取 KICKs 相關支持資訊。","Read channel reward information and normalize reward redemptions.":"讀取頻道獎勵資訊，並標準化獎勵兌換。","Reading visible Kick chat from the normal or popout chat page.":"從普通聊天頁或彈出聊天頁讀取可見的 Kick 聊天。","Replace":"替換","Resolve the signed-in user, channel, category, and current channel information.":"解析登入使用者、頻道、分類和目前頻道資訊。","Rewards":"獎勵","Rewards:":"獎勵：","See Kick's current official":"請參閱 Kick 目前官方的","Select":"選擇","Send broadcaster or bot chat from the source.":"從來源傳送主播或機器人聊天訊息。","Sign in with Kick":"使用 Kick 登入","Sign-In":"登入","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0 授權條款。","Standard":"標準","Stream status:":"直播狀態：","Structured chat plus official follow, subscription, reward, KICKs, moderation, and live-status events.":"結構化聊天，以及官方的追蹤、訂閱、獎勵、KICKs、管理和直播狀態事件。","Subscribe to official real-time Kick events.":"訂閱 Kick 官方即時事件。","Subscriptions":"訂閱","Subscriptions:":"訂閱：","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","Update stream title/category from Advanced Controls.":"從「進階控制」更新直播標題／分類。","Use The URL Slug, Not The Display Name":"使用 URL Slug，而非顯示名稱","Use the exact channel URL slug, then choose simple page capture or the richer WebSocket alert source.":"使用準確的頻道 URL slug，然後選擇簡單的頁面擷取，或更豐富的 WebSocket 提醒來源。","Used For":"用途","User and channel read":"使用者與頻道讀取","Usually not required for public chat capture. The page still must load and show chat.":"公開聊天擷取通常不需要。頁面仍必須能載入並顯示聊天。","WebSocket":"WebSocket","What The Current Kick Login Requests":"目前 Kick 登入請求的權限","and":"和","and Social Stream's":"以及 Social Stream 的","and approve the requested permissions.":"並核准所請求的權限。","changes from disconnected.":"從中斷狀態變為已連線。","if the page has not connected automatically.":"，適用於頁面未自動連線的情況。","in the desktop app.":"，位於桌面應用程式中。","new, renewal, and gifts →":"新訂閱、續訂和贈送 →","or":"或","or its popout chat and leave chat visible.":"或其彈出聊天頁，並保持聊天可見。","scopes":"權限範圍","selected for structured alerts. Kick currently defaults to WebSocket mode in the app.":"保持選取狀態，以使用結構化提醒。應用程式中的 Kick 目前預設使用 WebSocket 模式。","shows the intended slug and":"顯示預期的 slug，並且","to connect.":"進行連線。","to enable official event subscriptions and account controls.":"，啟用官方事件訂閱和帳號控制。","webhook event list":"webhook 事件清單","with the KICKs amount.":"，並帶有 KICKs 數量。","with the channel's exact URL slug.":"為頻道準確的 URL slug。","→ Social Stream":"→ Social Stream"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/kick-setup-authentication.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/kick-setup-authentication.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="主導覽"><a href="../index.html">首頁</a><a href="features.html">功能</a><a href="inspiration.html" class="site-priority-inspiration">靈感</a><a href="download.html">下載</a><a href="guides.html">指南</a><a href="commands.html">指令與 API</a><a href="supported-sites.html">支援的網站</a><a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a><a href="services.html" class="site-priority-hire">聘用</a><a href="support.html">支援</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/kick-setup-authentication.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/kick-setup-authentication.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/kick-setup-authentication.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/kick-setup-authentication.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/kick-setup-authentication.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/kick-setup-authentication.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/kick-setup-authentication.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/kick-setup-authentication.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="kick-setup-authentication.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/kick-setup-authentication.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/kick-setup-authentication.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/kick-setup-authentication.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/kick-setup-authentication.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/kick-setup-authentication.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/kick-setup-authentication.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/kick-setup-authentication.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/kick-setup-authentication.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="切換主題"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Kick 設定與驗證</h1>
+            <p>使用準確的頻道 URL slug，然後選擇簡單的頁面擷取，或更豐富的 WebSocket 提醒來源。</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>選擇 Kick 來源模式</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>模式</th><th>最適合</th><th>登入</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Mode">標準</td>
+                            <td data-label="Best For">從普通聊天頁或彈出聊天頁讀取可見的 Kick 聊天。</td>
+                            <td data-label="Sign-In">公開聊天擷取通常不需要。頁面仍必須能載入並顯示聊天。</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Mode">WebSocket</td>
+                            <td data-label="Best For">結構化聊天，以及官方的追蹤、訂閱、獎勵、KICKs、管理和直播狀態事件。</td>
+                            <td data-label="Sign-In">公開聊天可以單獨連線，但官方事件訂閱、傳送聊天以及頻道／管理控制需要 OAuth。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>使用 URL Slug，而非顯示名稱</h2>
+                <p>對於 <code>https://kick.com/example-channel</code>，來源值為 <code>example-channel</code>。可以貼上完整 URL，也可以只輸入該 slug。</p>
+                <div class="warning-note">
+                    <p><strong>Kick 顯示名稱可能與 URL slug 不同。</strong> 顯示名稱可能包含底線，而 URL 使用連字號。請從網址列複製 slug，不要根據顯示名稱重新輸入。</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>桌面應用程式設定</h2>
+                <ol class="guide-steps">
+                    <li>選擇 <strong>新增來源 → Kick</strong>.</li>
+                    <li>貼上完整 Kick 頻道 URL，或輸入其 URL slug。</li>
+                    <li>將 <strong>WebSocket</strong> 保持選取狀態，以使用結構化提醒。應用程式中的 Kick 目前預設使用 WebSocket 模式。</li>
+                    <li>選擇 <strong>啟用來源</strong>.</li>
+                    <li>在 Kick 來源視窗中選擇 <strong>使用 Kick 登入</strong> 並核准所請求的權限。</li>
+                    <li>保持來源視窗開啟，並檢查「頻道」、「聊天通訊端」、「橋接」和「訂閱」狀態標籤。</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/kick-authentication-source.png" alt="Kick Alerts for Social Stream 來源，顯示頻道狀態、聊天通訊端、橋接、訂閱狀態、驗證方式和頻道 slug 輸入框" class="guide-image">
+                    <figcaption>登入前的新 Kick WebSocket 來源。桌面應用程式中，內嵌登入被阻止或出現 CAPTCHA 時，「外部瀏覽器」通常最方便。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>瀏覽器擴充功能 WebSocket 設定</h2>
+                <ol class="guide-steps">
+                    <li>安裝並啟用目前版本的 Social Stream Ninja 擴充功能。</li>
+                    <li>開啟 <a href="https://socialstream.ninja/sources/websocket/kick.html?channel=example-channel" target="_blank" rel="noopener">Kick WebSocket 來源頁面</a>.</li>
+                    <li>替換 <code>example-channel</code> 為頻道準確的 URL slug。</li>
+                    <li>選擇 <strong>連接頻道</strong> ，適用於頁面未自動連線的情況。</li>
+                    <li>選擇 <strong>使用 Kick 登入</strong> ，啟用官方事件訂閱和帳號控制。</li>
+                    <li>直播期間保持頁面開啟。</li>
+                </ol>
+                <pre><code>https://socialstream.ninja/sources/websocket/kick.html?channel=CHANNEL_SLUG</code></pre>
+                <p>標準擷取模式下，開啟 <code>https://kick.com/CHANNEL_SLUG</code> 或其彈出聊天頁，並保持聊天可見。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>目前 Kick 登入請求的權限</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>權限群組</th><th>用途</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Permission Group">使用者與頻道讀取</td><td data-label="Used For">解析登入使用者、頻道、分類和目前頻道資訊。</td></tr>
+                        <tr><td data-label="Permission Group">頻道寫入</td><td data-label="Used For">從「進階控制」更新直播標題／分類。</td></tr>
+                        <tr><td data-label="Permission Group">獎勵</td><td data-label="Used For">讀取頻道獎勵資訊，並標準化獎勵兌換。</td></tr>
+                        <tr><td data-label="Permission Group">聊天寫入</td><td data-label="Used For">從來源傳送主播或機器人聊天訊息。</td></tr>
+                        <tr><td data-label="Permission Group">事件訂閱</td><td data-label="Used For">訂閱 Kick 官方即時事件。</td></tr>
+                        <tr><td data-label="Permission Group">管理</td><td data-label="Used For">帳號有權限時，封鎖／解除封鎖使用者並管理聊天訊息。</td></tr>
+                        <tr><td data-label="Permission Group">KICKs</td><td data-label="Used For">讀取 KICKs 相關支持資訊。</td></tr>
+                    </tbody>
+                </table>
+                <p>Kick 目前的 OAuth 流程使用帶 PKCE 的授權碼登入。不要將存取權杖、更新權杖、用戶端密鑰或瀏覽器 Cookie 貼到指南、聊天或支援案件中。</p>
+                <p>官方參考： <a href="https://github.com/KickEngineering/KickDevDocs/blob/main/getting-started/generating-tokens-oauth2-flow.md" target="_blank" rel="noopener">OAuth 2.1</a>, <a href="https://github.com/KickEngineering/KickDevDocs/blob/main/scopes/scopes.md" target="_blank" rel="noopener">權限範圍</a>，以及 <a href="https://api.kick.com/swagger/index.html" target="_blank" rel="noopener">Kick API 參考</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>目前來源訂閱的官方事件</h2>
+                <ul class="guide-list">
+                    <li><strong>聊天：</strong> <code>chat.message.sent</code>.</li>
+                    <li><strong>追蹤：</strong> <code>channel.followed</code> → Social Stream <code>new_follower</code>.</li>
+                    <li><strong>訂閱：</strong> 新訂閱、續訂和贈送 → <code>new_subscriber</code>, <code>resub</code>，以及 <code>subscription_gift</code>.</li>
+                    <li><strong>獎勵：</strong> <code>channel.reward.redemption.updated</code> → <code>reward</code>.</li>
+                    <li><strong>KICKs 禮物：</strong> <code>kicks.gifted</code> → <code>donation</code> ，並帶有 KICKs 數量。</li>
+                    <li><strong>管理：</strong> <code>moderation.banned</code>.</li>
+                    <li><strong>直播狀態：</strong> <code>livestream.status.updated</code> → <code>stream_online</code> 或 <code>stream_offline</code>.</li>
+                </ul>
+                <div class="guide-note">
+                    <p><strong>Raid/host 說明：</strong> Kick 目前官方 webhook 清單沒有發佈 raid/host 事件。如果 Kick 透過已連接的資料來源提供此事件，Social Stream 提供相容處理，但不能認為 Kick raid 提醒保證可用。</p>
+                </div>
+                <p>請參閱 Kick 目前官方的 <a href="https://github.com/KickEngineering/KickDevDocs/blob/main/events/event-types.md" target="_blank" rel="noopener">webhook 事件清單</a> 以及 Social Stream 的 <a href="events-alerts-compatibility.html">事件與提醒相容性指南</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>修正無法連線的 Kick 來源</h2>
+                <ol class="guide-steps">
+                    <li>從 Kick URL 複製準確的頻道 slug。</li>
+                    <li>檢查 <strong>頻道</strong> 顯示預期的 slug，並且 <strong>聊天通訊端</strong> 從中斷狀態變為已連線。</li>
+                    <li>如果聊天正常但官方提醒無效，請重新登入並等待 <strong>橋接</strong> 和 <strong>訂閱</strong> 進行連線。</li>
+                    <li>如果內嵌登入或 CAPTCHA 失敗，請使用 <strong>外部瀏覽器</strong> ，位於桌面應用程式中。</li>
+                    <li>測試傳送／管理控制項前，確認登入帳號擁有該頻道，或具有其管理權限。</li>
+                    <li>排查 OBS 前先檢查 Social Stream 停駐面板。如果停駐面板能收到 Kick 資料，剩餘問題就在疊加畫面或 OBS URL。</li>
+                </ol>
+            </div>
+
+            <template data-copy-markdown-extra>
+## 經核實的維護者說明
+
+目前 `sources/websocket/kick.js` 的 OAuth 權限範圍：
+
+`user:read`、`channel:read`、`channel:write`、`channel:rewards:read`、`chat:write`、`events:subscribe`、`moderation:ban`、`moderation:chat_message:manage`、`kicks:read`。
+
+目前預設的官方訂閱：
+
+`chat.message.sent`、`channel.followed`、`channel.subscription.new`、`channel.subscription.renewal`、`channel.subscription.gifts`、`channel.reward.redemption.updated`、`kicks.gifted`、`moderation.banned`、`livestream.status.updated`。
+
+當 Kick 從事件類型端點傳回自訂或新公布的贊助／支持事件名稱時，來源可以新增它們。不要將這些動態名稱記錄為保證可用。目前官方 Kick 事件清單沒有 raid/host webhook。
+
+標準瀏覽器擷取由目前資訊清單注入的 `sources/kick.js` 實作。結構化來源由 `sources/websocket/kick.html` 加 `sources/websocket/kick.js` 構成；過時的 `sources/kick_new.js` 檔案不是資訊清單所用來源的依據。
+            </template>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja。GPLv3.0 授權條款。</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>

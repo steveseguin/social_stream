@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/tr/docs/media-hosting-event-flow.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/tr/docs/media-hosting-event-flow.html">
+    <meta property="og:title" content="Etkinlik Akışı için medya dosyaları - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja Etkinlik Akışı ve OBS ile yüklenen, yerel veya bulutta barındırılan ses, görsel, GIF ve videoları kullanma.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/tr/docs/media-hosting-event-flow.html">
+    <meta name="twitter:title" content="Etkinlik Akışı için medya dosyaları - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja Etkinlik Akışı ve OBS ile yüklenen, yerel veya bulutta barındırılan ses, görsel, GIF ve videoları kullanma.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem("darkMode");
+            var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+            if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+                document.documentElement.classList.add("dark-mode");
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Etkinlik Akışı için medya dosyaları - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja Etkinlik Akışı ve OBS ile yüklenen, yerel veya bulutta barındırılan ses, görsel, GIF ve videoları kullanma.">
+    <style>
+        .answer-card {
+            border: 2px solid var(--primary-color);
+            background: linear-gradient(135deg, rgba(157, 70, 255, 0.12), rgba(66, 211, 146, 0.08));
+        }
+        .route-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+            margin: 1.4rem 0 0;
+        }
+        .route-card {
+            position: relative;
+            padding: 1.4rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--background-light);
+        }
+        .route-card::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            right: -1.1rem;
+            width: 1.1rem;
+            height: 2px;
+            background: var(--primary-color);
+        }
+        .route-card:last-child::after {
+            display: none;
+        }
+        .route-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.8rem;
+            height: 2.8rem;
+            margin-bottom: 0.8rem;
+            border-radius: 50%;
+            color: var(--on-primary);
+            background: var(--primary-color);
+            font-weight: 700;
+        }
+        .route-card strong,
+        .choice-card strong {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        .route-card p,
+        .choice-card p {
+            margin: 0;
+        }
+        .choice-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1rem;
+            margin: 1.2rem 0;
+        }
+        .choice-card {
+            padding: 1.4rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--background-light);
+        }
+        .choice-card.recommended {
+            border-color: var(--primary-color);
+        }
+        .choice-label {
+            display: inline-block;
+            margin-bottom: 0.8rem;
+            padding: 0.25rem 0.65rem;
+            border-radius: 999px;
+            color: var(--primary-color);
+            background: rgba(157, 70, 255, 0.12);
+            font-size: 1.3rem;
+            font-weight: 700;
+        }
+        .screenshot-crop {
+            width: min(100%, 42rem);
+            height: 16rem;
+            margin: 1.4rem auto 0;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: #202024;
+            box-shadow: var(--shadow-sm);
+        }
+        .screenshot-crop img {
+            display: block;
+            width: 42rem;
+            max-width: none;
+            height: auto;
+            transform: translateY(-34rem);
+        }
+        .path-map {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            gap: 1rem;
+            align-items: center;
+            margin: 1.4rem 0;
+        }
+        .path-box {
+            padding: 1.2rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--background-light);
+            text-align: center;
+        }
+        .path-arrow {
+            color: var(--primary-color);
+            font-size: 2.4rem;
+            font-weight: 700;
+        }
+        .code-label {
+            margin: 1.2rem 0 0.4rem;
+            color: var(--text-secondary);
+            font-size: 1.35rem;
+            font-weight: 600;
+        }
+        .compact-note {
+            margin: 1.2rem 0;
+        }
+        @media (max-width: 760px) {
+            .route-grid,
+            .choice-grid,
+            .path-map {
+                grid-template-columns: 1fr;
+            }
+            .route-card::after {
+                display: none;
+            }
+            .path-arrow {
+                transform: rotate(90deg);
+                text-align: center;
+            }
+            .screenshot-crop {
+                height: 15rem;
+            }
+            .screenshot-crop img {
+                width: 35rem;
+                transform: translateY(-28rem);
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/media-hosting-event-flow.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{", and":", ve",", choose the file, and finish the upload in the page that opens.":", dosyayı seçin ve açılan sayfada yüklemeyi tamamlayın.",", then create a":", ardından şunu oluşturun:",": works, but is more fragile":": çalışır, ancak daha kırılgandır","A few small public files or occasional release downloads.":"Birkaç küçük herkese açık dosya veya ara sıra sürüm indirmeleri.","A reward or message triggers the action.":"Bir ödül veya mesaj eylemi tetikler.","Add the exact origin of any other page that fetches the files. Origins do not contain paths or a trailing slash. If a custom domain was already cached before adding CORS, purge that hostname's cache.":"Dosyaları getiren diğer sayfaların tam kökenini ekleyin. Kökenler yol veya sonda eğik çizgi içermez. CORS eklenmeden önce özel alan adı zaten önbelleğe alınmışsa o ana makine adının önbelleğini temizleyin.","Advanced fallback: run your own local server":"Gelişmiş alternatif: kendi yerel sunucunuzu çalıştırın","Amazon S3 or another S3-compatible host":"Amazon S3 veya başka bir S3 uyumlu barındırıcı","Anyone with the object URL can access the media. Do not upload private, licensed, or personal files that should not be shared.":"Nesne URL'sine sahip herkes medyaya erişebilir. Paylaşılmaması gereken özel, lisanslı veya kişisel dosyaları yüklemeyin.","Backblaze B2":"Backblaze B2","Backblaze B2 CORS Example":"Backblaze B2 CORS örneği","Before Going Live":"Yayına çıkmadan önce","Best for a modest library and the least setup.":"Orta boy bir kütüphane ve en az kurulum için en uygunu.","Best for lots of media, backups, and use from multiple computers.":"Çok sayıda medya, yedekler ve birden fazla bilgisayardan kullanım için en uygunu.","Best general choice for a public alert library.":"Herkese açık bir uyarı kütüphanesi için genel olarak en iyi seçenek.","Both the Flow Actions page and media must be local. A hosted":"Hem Flow Actions sayfası hem medya yerel olmalıdır. Barındırılan bir","Bucket → Settings → CORS Policy":"Bucket → Settings → CORS Policy","Built-in Upload":"Yerleşik yükleme","Choose Local File":"Yerel dosya seç","Click":"Tıklayın:","Cloud Object Storage":"Bulut nesne depolama","Cloud file is blocked:":"Bulut dosyası engelleniyor:","Cloudflare R2":"Cloudflare R2","Cloudflare R2 Setup":"Cloudflare R2 kurulumu","Commands & API":"Komutlar ve API","Confirm that the action says the file is available and the local server is running.":"Eylemin dosyanın kullanılabilir olduğunu belirttiğini ve yerel sunucunun çalıştığını doğrulayın.","Confirm that the returned":"Döndürülen değerin","Copy Local Flow Actions URL for OBS":"OBS için Yerel Flow Actions URL'sini kopyala","Create an R2 bucket using the":"Şunu kullanarak bir R2 bucket oluşturun:","Desktop Local Media":"Masaüstü yerel medya","Display Media Overlay":"Medya katmanını göster","Do not share the generated URL. It contains a private random capability used to protect the local server.":"Oluşturulan URL'yi paylaşmayın. Yerel sunucuyu korumak için kullanılan özel, rastgele bir erişim yetkisi içerir.","Download":"İndir","Download and extract the":"Şunu indirip çıkartın:","Enable public read for the media, set correct content types, and add a read-only CORS rule if browser requests require it.":"Medya için herkese açık okumayı etkinleştirin, doğru içerik türlerini ayarlayın ve tarayıcı istekleri gerektiriyorsa salt okunur bir CORS kuralı ekleyin.","Event Flow":"Etkinlik Akışı","Event Flow Display Media Overlay properties showing the Media URL field and Upload button":"Medya URL'si alanını ve Yükle düğmesini gösteren Etkinlik Akışı Medya Katmanını Göster özellikleri","Existing cloud accounts and advanced access controls.":"Mevcut bulut hesapları ve gelişmiş erişim kontrolleri.","Fastest":"En hızlı","Features":"Özellikler","Flow Actions":"Flow Actions","Flow Actions URL for the OBS Browser Source":"OBS Tarayıcı Kaynağı için Flow Actions URL'si","GitHub":"GitHub","Good For":"Uygun kullanım","Guides":"Kılavuzlar","Hire":"Hizmet alın","Home":"Ana sayfa","Hosted Flow Actions cannot play the local item:":"Barındırılan Flow Actions yerel öğeyi oynatamıyor:","How an Event Flow media action reaches OBS":"Etkinlik Akışı medya eylemi OBS'ye nasıl ulaşır?","How to use uploaded, local, or cloud-hosted audio, images, GIFs, and videos with Social Stream Ninja Event Flow and OBS.":"Social Stream Ninja Etkinlik Akışı ve OBS ile yüklenen, yerel veya bulutta barındırılan ses, görsel, GIF ve videoları kullanma.","If OBS refuses a local file, use the local HTTP server method above.":"OBS yerel dosyayı reddederse yukarıdaki yerel HTTP sunucusu yöntemini kullanın.","If the file is moved or renamed, Event Flow shows it as missing. Click":"Dosya taşınır veya yeniden adlandırılırsa Etkinlik Akışı onu eksik gösterir. Şuna tıklayın:","If the upload site shows a 1 GB account allowance and your library will exceed it, use the local-folder or cloud-storage option below.":"Yükleme sitesi 1 GB hesap kotası gösteriyorsa ve kütüphaneniz bunu aşacaksa aşağıdaki yerel klasör veya bulut depolama seçeneğini kullanın.","If you do not want to run a local server, point OBS at a local Flow Actions page and use local media URLs too:":"Yerel sunucu çalıştırmak istemiyorsanız OBS'yi yerel bir Flow Actions sayfasına yönlendirin ve yerel medya URL'leri de kullanın:","Image":"Görsel","Important Notes":"Önemli notlar","In Event Flow, select":"Etkinlik Akışı'nda şunu seçin:","In the bucket's Settings, enable public access. Use the public development URL only for testing, or connect a custom domain for regular live use.":"Bucket ayarlarında herkese açık erişimi etkinleştirin. Herkese açık geliştirme URL'sini yalnızca test için kullanın veya düzenli canlı kullanım için özel bir alan adı bağlayın.","Inspiration":"İlham","Install Python if it is not already installed.":"Yüklü değilse Python'u yükleyin.","Keep SSApp running while OBS uses the Local Flow Actions URL.":"OBS Yerel Flow Actions URL'sini kullanırken SSApp'i çalışır durumda tutun.","Large or shared libraries":"Büyük veya paylaşılan kütüphaneler","Local Flow Actions URL":"Yerel Flow Actions URL'si","Local file is missing:":"Yerel dosya eksik:","Local media":"Yerel medya","Local media URL map":"Yerel medya URL eşlemesi","Local server is offline:":"Yerel sunucu çevrimdışı:","Low-cost S3-compatible storage with public file URLs.":"Herkese açık dosya URL'leri sunan düşük maliyetli S3 uyumlu depolama.","Main navigation":"Ana gezinme","Make the bucket public, use the direct file URL, and apply a download-only rule if a browser reports a CORS error:":"Bucket'ı herkese açık yapın, doğrudan dosya URL'sini kullanın ve tarayıcı CORS hatası bildirirse yalnızca indirmeye izin veren bir kural uygulayın:","Media Files for Event Flow":"Etkinlik Akışı için medya dosyaları","Media Files for Event Flow - Social Stream Ninja":"Etkinlik Akışı için medya dosyaları - Social Stream Ninja","Media URL":"Medya URL'si","Media URLs to paste into Event Flow":"Etkinlik Akışı'na yapıştırılacak medya URL'leri","No storage bill":"Depolama faturası yok","Normal repositories block files over 100 MiB, and GitHub Pages sites have a 1 GB published-site limit. Releases allow larger assets, but they are awkward as a managed alert-media library.":"Normal depolar 100 MiB üzerindeki dosyaları engeller ve GitHub Pages sitelerinde yayımlanan site sınırı 1 GB'dir. Releases daha büyük varlıklara izin verir, ancak yönetilen bir uyarı medya kütüphanesi olarak kullanımları zahmetlidir.","Nothing reaches OBS:":"OBS'ye hiçbir şey ulaşmıyor:","OBS Browser Source":"OBS Tarayıcı Kaynağı","OBS loads the sound, image, GIF, or video.":"OBS sesi, görseli, GIF'i veya videoyu yükler.","Official references:":"Resmî kaynaklar:","Open PowerShell or Command Prompt and run this command. Leave the window open while streaming.":"PowerShell veya Komut İstemi'ni açıp bu komutu çalıştırın. Yayın sırasında pencereyi açık bırakın.","Open an object URL in a private/incognito browser window. It should load the file directly without a login or share page.":"Bir nesne URL'sini gizli tarayıcı penceresinde açın. Giriş veya paylaşım sayfası olmadan dosyayı doğrudan yüklemelidir.","Open navigation menu":"Gezinme menüsünü aç","Open the Flow Actions page in OBS with the same session ID used by Event Flow.":"Flow Actions sayfasını OBS'de Etkinlik Akışı'nın kullandığı oturum kimliğiyle açın.","Open the exact media URL in a private/incognito window. It must load the file directly.":"Medyanın tam URL'sini gizli pencerede açın. Dosyayı doğrudan yüklemelidir.","Option 1: Use the Built-in Upload":"Seçenek 1: Yerleşik yüklemeyi kullanın","Option 2: Keep the Library on the OBS Computer":"Seçenek 2: Kütüphaneyi OBS bilgisayarında tutun","Option 3: Host a Larger Library Online":"Seçenek 3: Daha büyük bir kütüphaneyi çevrimiçi barındırın","Overlay Gallery":"Katman galerisi","Paste that URL into an OBS Browser Source, save the flow, and test the action.":"Bu URL'yi bir OBS Tarayıcı Kaynağı'na yapıştırın, akışı kaydedin ve eylemi test edin.","Paste that direct HTTPS URL into the Event Flow action.":"Bu doğrudan HTTPS URL'sini Etkinlik Akışı eylemine yapıştırın.","Pick the Best Route":"En uygun yolu seçin","Plain images and audio normally load without custom CORS settings. If a custom overlay, font, video player, or browser fetch reports a CORS error, open":"Normal görseller ve sesler genellikle özel CORS ayarı olmadan yüklenir. Özel bir katman, yazı tipi, video oynatıcı veya tarayıcı getirme isteği CORS hatası bildirirse şunu açın:","Play Audio Clip":"Ses klibi oynat","Prefer MP3 for audio, PNG/WebP/GIF for images, and H.264/AAC MP4 for video compatibility.":"Uyumluluk için seste MP3, görsellerde PNG/WebP/GIF ve videoda H.264/AAC MP4 tercih edin.","Preview":"Önizleme","Provider":"Sağlayıcı","Public means public.":"Herkese açık demek, herkese açık demektir.","R2 CORS":"R2 CORS","R2 pricing":"R2 fiyatlandırması","Recommended when SSApp, OBS, and the files are on the same computer.":"SSApp, OBS ve dosyalar aynı bilgisayardaysa önerilir.","Relink":"Yeniden bağla","Reveal in Folder":"Klasörde göster","Save the flow and keep":"Akışı kaydedin ve şunu","See Backblaze's":"Backblaze'in şu kaynağına bakın:","Select":"Seçin:","Short Answer":"Kısa yanıt","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja source folder":"Social Stream Ninja kaynak klasörü","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 Lisansı.","Standard":"Standart","Standard storage currently includes 10 GB-month per month and free Internet egress. Use a custom domain for production;":"Standart depolama şu anda ayda 10 GB-ay ve ücretsiz internete veri çıkışı içerir. Üretim kullanımı için özel bir alan adı kullanın;","Start the Social Stream standalone app and open Event Flow.":"Social Stream bağımsız uygulamasını başlatıp Etkinlik Akışı'nı açın.","Start the manual local HTTP server":"Elle yönetilen yerel HTTP sunucusunu başlatın","Support":"Destek","Supported Sites":"Desteklenen siteler","Switch theme":"Temayı değiştir","The Chrome extension cannot serve files from your disk by itself. Extension users should continue using Upload or a hosted media URL unless they also run a supported desktop companion.":"Chrome uzantısı kendi başına diskinizdeki dosyaları sunamaz. Uzantı kullanıcıları, desteklenen bir masaüstü yardımcı uygulamasını da çalıştırmıyorlarsa Yükle seçeneğini veya barındırılan medya URL'sini kullanmaya devam etmelidir.","The Social Stream desktop app can play approved local files without uploading them.":"Social Stream masaüstü uygulaması, onaylı yerel dosyaları yüklemeden oynatabilir.","The Upload button creates a hosted URL. It is not a local file picker for Event Flow playback.":"Yükle düğmesi barındırılan bir URL oluşturur. Etkinlik Akışı oynatımı için yerel dosya seçici değildir.","The extension cannot expose arbitrary files from your disk to OBS by itself. Without a supported companion bridge, use":"Uzantı kendi başına diskinizdeki keyfî dosyaları OBS'ye açamaz. Desteklenen bir yardımcı köprü yoksa şunu kullanın:","The extension uses the same Event Flow format, so desktop-created flows remain compatible. Local actions store an opaque media ID rather than a Windows, macOS, or Linux path.":"Uzantı aynı Etkinlik Akışı biçimini kullanır, bu nedenle masaüstünde oluşturulan akışlar uyumlu kalır. Yerel eylemler Windows, macOS veya Linux yolu yerine opak bir medya kimliği saklar.","The first 10 GB is currently free; storage and excess egress are paid after the included amounts.":"İlk 10 GB şu anda ücretsizdir; dahil edilen miktarları aşan depolama ve veri çıkışı ücretlidir.","The following manual setup remains available if you are not using SSApp's managed Local Media Library.":"SSApp'in yönetilen Yerel Medya Kütüphanesi'ni kullanmıyorsanız aşağıdaki elle kurulum hâlâ kullanılabilir.","The hosted":"Barındırılan","The setting":"Ayar:","The standalone desktop app includes a Local Media Library and a loopback server that only listens on this computer. Event Flow stores a stable media ID instead of putting your disk path into the flow.":"Bağımsız masaüstü uygulaması bir Yerel Medya Kütüphanesi ve yalnızca bu bilgisayarda dinleyen bir yerel döngü sunucusu içerir. Etkinlik Akışı, disk yolunuzu akışa koymak yerine sabit bir medya kimliği saklar.","URL appears in the action.":"URL'sinin eylemde göründüğünü doğrulayın.","URL downloads instead of playing:":"URL oynatmak yerine indiriyor:","Upload":"Yükle","Upload your media with clear folder names such as":"Medyanızı şu gibi anlaşılır klasör adlarıyla yükleyin:","Use":"Kullanın:","Use Event Flow's test panel, then refresh the OBS Browser Source once before the real stream.":"Etkinlik Akışı'nın test panelini kullanın, ardından gerçek yayından önce OBS Tarayıcı Kaynağı'nı bir kez yenileyin.","Use forward slashes and avoid spaces or special characters in folder and file names.":"İleri eğik çizgi kullanın; klasör ve dosya adlarında boşluk veya özel karakterlerden kaçının.","Use the generated Local Flow Actions URL.":"Oluşturulan Yerel Flow Actions URL'sini kullanın.","Use your own sounds, images, GIFs, and videos in OBS.":"OBS'de kendi seslerinizi, görsellerinizi, GIF'lerinizi ve videolarınızı kullanın.","Video/Embed":"Video/Gömülü içerik","What About the Chrome Extension?":"Peki Chrome uzantısı?","Windows command":"Windows komutu","and add a read-only policy:":"ve salt okunur bir politika ekleyin:","and choose its new location; existing flows keep working.":"ve yeni konumunu seçin; mevcut akışlar çalışmaya devam eder.","and select an audio, image, GIF, or video file.":"ve bir ses, görsel, GIF veya video dosyası seçin.","confirm the Flow Actions URL and Event Flow use the same session ID.":"Flow Actions URL'sinin ve Etkinlik Akışı'nın aynı oturum kimliğini kullandığını doğrulayın.","folder inside it.":"klasörünü içinde oluşturun.","for PNG, JPG, WebP, or GIF media. Use":"PNG, JPG, WebP veya GIF medyası için. Şunu kullanın:","for video or embed URLs.":"video veya gömülü içerik URL'leri için.","in Event Flow, then copy the generated":"Etkinlik Akışı'nda, ardından oluşturulan şu URL'yi kopyalayın:","into OBS.":"OBS'ye.","is rate-limited and intended for development.":"hız sınırına tabidir ve geliştirme amaçlıdır.","keeps the server on this computer. This simple server is for local streaming use, not public Internet hosting.":"sunucuyu bu bilgisayarla sınırlar. Bu basit sunucu, yerel yayın kullanımı içindir; İnternet üzerinden herkese açık barındırma için değildir.","macOS or Linux command":"macOS veya Linux komutu","make it public and check the CORS origin, method, and headers.":"herkese açık yapın ve CORS kökenini, yöntemini ve başlıklarını kontrol edin.","official CORS rule reference":"resmî CORS kuralı başvuru kaynağı","open in OBS.":"OBS'de açık tutun.","open the action in SSApp and use":"eylemi SSApp'te açıp şunu kullanın:","or":"veya","or a normal hosted URL. If an imported flow references local media, the extension explains that the desktop app or bridge is required instead of silently failing.":"veya normal bir barındırılan URL. İçe aktarılan akış yerel medyaya başvuruyorsa uzantı sessizce başarısız olmak yerine masaüstü uygulamasının veya köprünün gerekli olduğunu açıklar.","page cannot read that path.":"sayfası bu yolu okuyamaz.","page cannot resolve a desktop-library media ID.":"sayfası masaüstü kütüphanesi medya kimliğini çözümleyemez.","public R2 buckets":"herkese açık R2 bucket'ları","receives the action.":"eylemi alır.","replace the OBS URL with the one generated by SSApp.":"OBS URL'sini SSApp'in oluşturduğu URL ile değiştirin.","start SSApp and copy the Local Flow Actions URL again if the port or security token changed.":"SSApp'i başlatın ve bağlantı noktası veya güvenlik belirteci değiştiyse Yerel Flow Actions URL'sini yeniden kopyalayın.","storage class.":"depolama sınıfı.","the host is sending the wrong content type or a download-only response.":"barındırıcı yanlış içerik türü veya yalnızca indirmeye izin veren bir yanıt gönderiyordur.","to check the selected file.":"seçilen dosyayı kontrol etmek için.","when you need to locate the original file.":"orijinal dosyanın yerini bulmanız gerektiğinde."}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/media-hosting-event-flow.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/media-hosting-event-flow.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme"><a href="../index.html">Ana sayfa</a><a href="features.html">Özellikler</a><a href="inspiration.html" class="site-priority-inspiration">İlham</a><a href="download.html">İndir</a><a href="guides.html">Kılavuzlar</a><a href="commands.html">Komutlar ve API</a><a href="supported-sites.html">Desteklenen siteler</a><a href="overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a><a href="services.html" class="site-priority-hire">Hizmet alın</a><a href="support.html">Destek</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/media-hosting-event-flow.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/media-hosting-event-flow.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/media-hosting-event-flow.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/media-hosting-event-flow.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/media-hosting-event-flow.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/media-hosting-event-flow.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/media-hosting-event-flow.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/media-hosting-event-flow.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/media-hosting-event-flow.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/media-hosting-event-flow.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/media-hosting-event-flow.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/media-hosting-event-flow.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/media-hosting-event-flow.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/media-hosting-event-flow.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="media-hosting-event-flow.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/media-hosting-event-flow.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/media-hosting-event-flow.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero"><div class="container"><h1>Etkinlik Akışı için medya dosyaları</h1><p>OBS'de kendi seslerinizi, görsellerinizi, GIF'lerinizi ve videolarınızı kullanın.</p></div></section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card answer-card">
+                <h2>Kısa yanıt</h2>
+                <p><strong>Social Stream masaüstü uygulaması, onaylı yerel dosyaları yüklemeden oynatabilir.</strong> Kullanın: <strong>Yerel dosya seç</strong> Etkinlik Akışı'nda, ardından oluşturulan şu URL'yi kopyalayın: <strong>Yerel Flow Actions URL'si</strong> OBS'ye.</p>
+                <p>Chrome uzantısı kendi başına diskinizdeki dosyaları sunamaz. Uzantı kullanıcıları, desteklenen bir masaüstü yardımcı uygulamasını da çalıştırmıyorlarsa Yükle seçeneğini veya barındırılan medya URL'sini kullanmaya devam etmelidir.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>En uygun yolu seçin</h2>
+                <div class="choice-grid">
+                    <div class="choice-card">
+                        <span class="choice-label">En hızlı</span>
+                        <strong>Yerleşik yükleme</strong>
+                        <p>Orta boy bir kütüphane ve en az kurulum için en uygunu.</p>
+                    </div>
+                    <div class="choice-card recommended">
+                        <span class="choice-label">Depolama faturası yok</span>
+                        <strong>Masaüstü yerel medya</strong>
+                        <p>SSApp, OBS ve dosyalar aynı bilgisayardaysa önerilir.</p>
+                    </div>
+                    <div class="choice-card">
+                        <span class="choice-label">Büyük veya paylaşılan kütüphaneler</span>
+                        <strong>Bulut nesne depolama</strong>
+                        <p>Çok sayıda medya, yedekler ve birden fazla bilgisayardan kullanım için en uygunu.</p>
+                    </div>
+                </div>
+                <div class="route-grid" aria-label="Etkinlik Akışı medya eylemi OBS&#x27;ye nasıl ulaşır?">
+                    <div class="route-card"><span class="route-number">1</span><strong>Etkinlik Akışı</strong><p>Bir ödül veya mesaj eylemi tetikler.</p></div>
+                    <div class="route-card"><span class="route-number">2</span><strong>Flow Actions</strong><p><code>actions.html</code> eylemi alır.</p></div>
+                    <div class="route-card"><span class="route-number">3</span><strong>Medya URL'si</strong><p>OBS sesi, görseli, GIF'i veya videoyu yükler.</p></div>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Seçenek 1: Yerleşik yüklemeyi kullanın</h2>
+                <ol class="guide-steps">
+                    <li>Etkinlik Akışı'nda şunu seçin: <strong>Ses klibi oynat</strong> veya <strong>Medya katmanını göster</strong>.</li>
+                    <li>Tıklayın: <strong>Yükle</strong>, dosyayı seçin ve açılan sayfada yüklemeyi tamamlayın.</li>
+                    <li>Döndürülen değerin <code>https://fileuploads.socialstream.ninja/media/...</code> URL'sinin eylemde göründüğünü doğrulayın.</li>
+                    <li>Akışı kaydedin ve şunu <code>actions.html?session=YOUR_SESSION</code> OBS'de açık tutun.</li>
+                </ol>
+                <p>Yükleme sitesi 1 GB hesap kotası gösteriyorsa ve kütüphaneniz bunu aşacaksa aşağıdaki yerel klasör veya bulut depolama seçeneğini kullanın.</p>
+                <figure class="guide-figure">
+                    <div class="screenshot-crop">
+                        <img src="../../docs/images/kick-channel-points-event-flow/event-flow-media-action-values.png" alt="Medya URL&#x27;si alanını ve Yükle düğmesini gösteren Etkinlik Akışı Medya Katmanını Göster özellikleri">
+                    </div>
+                    <figcaption>Yükle düğmesi barındırılan bir URL oluşturur. Etkinlik Akışı oynatımı için yerel dosya seçici değildir.</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>Seçenek 2: Kütüphaneyi OBS bilgisayarında tutun</h2>
+                <p>Bağımsız masaüstü uygulaması bir Yerel Medya Kütüphanesi ve yalnızca bu bilgisayarda dinleyen bir yerel döngü sunucusu içerir. Etkinlik Akışı, disk yolunuzu akışa koymak yerine sabit bir medya kimliği saklar.</p>
+                <ol class="guide-steps">
+                    <li>Social Stream bağımsız uygulamasını başlatıp Etkinlik Akışı'nı açın.</li>
+                    <li>Seçin: <strong>Ses klibi oynat</strong> veya <strong>Medya katmanını göster</strong>.</li>
+                    <li>Tıklayın: <strong>Yerel dosya seç</strong> ve bir ses, görsel, GIF veya video dosyası seçin.</li>
+                    <li>Eylemin dosyanın kullanılabilir olduğunu belirttiğini ve yerel sunucunun çalıştığını doğrulayın.</li>
+                    <li>Tıklayın: <strong>OBS için Yerel Flow Actions URL'sini kopyala</strong>.</li>
+                    <li>Bu URL'yi bir OBS Tarayıcı Kaynağı'na yapıştırın, akışı kaydedin ve eylemi test edin.</li>
+                </ol>
+                <ul class="guide-list">
+                    <li>Kullanın: <strong>Önizleme</strong> seçilen dosyayı kontrol etmek için.</li>
+                    <li>Dosya taşınır veya yeniden adlandırılırsa Etkinlik Akışı onu eksik gösterir. Şuna tıklayın: <strong>Yeniden bağla</strong> ve yeni konumunu seçin; mevcut akışlar çalışmaya devam eder.</li>
+                    <li>Kullanın: <strong>Klasörde göster</strong> orijinal dosyanın yerini bulmanız gerektiğinde.</li>
+                    <li>OBS Yerel Flow Actions URL'sini kullanırken SSApp'i çalışır durumda tutun.</li>
+                    <li>Oluşturulan URL'yi paylaşmayın. Yerel sunucuyu korumak için kullanılan özel, rastgele bir erişim yetkisi içerir.</li>
+                </ul>
+                <div class="warning-note compact-note">
+                    <p><strong>Oluşturulan Yerel Flow Actions URL'sini kullanın.</strong> Barındırılan <code>https://socialstream.ninja/actions.html</code> sayfası masaüstü kütüphanesi medya kimliğini çözümleyemez.</p>
+                </div>
+
+                <h3>Gelişmiş alternatif: kendi yerel sunucunuzu çalıştırın</h3>
+                <p>SSApp'in yönetilen Yerel Medya Kütüphanesi'ni kullanmıyorsanız aşağıdaki elle kurulum hâlâ kullanılabilir.</p>
+                <p>Şunu indirip çıkartın: <a href="https://github.com/steveseguin/social_stream" target="_blank" rel="noopener">Social Stream Ninja kaynak klasörü</a>, ardından şunu oluşturun: <code>user-media</code> klasörünü içinde oluşturun.</p>
+                <pre>C:\SSN\social_stream\
+  actions.html
+  user-media\
+    audio\booty.mp3
+    images\reward.png
+    video\celebration.mp4</pre>
+
+                <h3>Elle yönetilen yerel HTTP sunucusunu başlatın</h3>
+                <ol class="guide-steps">
+                    <li>Yüklü değilse Python'u yükleyin.</li>
+                    <li>PowerShell veya Komut İstemi'ni açıp bu komutu çalıştırın. Yayın sırasında pencereyi açık bırakın.</li>
+                </ol>
+                <p class="code-label">Windows komutu</p>
+                <pre>py -m http.server 8765 --bind 127.0.0.1 --directory "C:\SSN\social_stream"</pre>
+                <p class="code-label">macOS veya Linux komutu</p>
+                <pre>python3 -m http.server 8765 --bind 127.0.0.1 --directory "/path/to/social_stream"</pre>
+                <p class="code-label">OBS Tarayıcı Kaynağı için Flow Actions URL'si</p>
+                <pre>http://127.0.0.1:8765/actions.html?session=YOUR_SESSION_ID</pre>
+                <p class="code-label">Etkinlik Akışı'na yapıştırılacak medya URL'leri</p>
+                <pre>http://127.0.0.1:8765/user-media/audio/booty.mp3
+http://127.0.0.1:8765/user-media/images/reward.png
+http://127.0.0.1:8765/user-media/video/celebration.mp4</pre>
+                <div class="path-map" aria-label="Yerel medya URL eşlemesi">
+                    <div class="path-box"><strong>OBS Tarayıcı Kaynağı</strong><br><code>127.0.0.1:8765/actions.html</code></div>
+                    <div class="path-arrow" aria-hidden="true">&#8596;</div>
+                    <div class="path-box"><strong>Yerel medya</strong><br><code>127.0.0.1:8765/user-media/...</code></div>
+                </div>
+                <p>Ayar: <code>--bind 127.0.0.1</code> sunucuyu bu bilgisayarla sınırlar. Bu basit sunucu, yerel yayın kullanımı içindir; İnternet üzerinden herkese açık barındırma için değildir.</p>
+
+                <h3><code>file://</code>: çalışır, ancak daha kırılgandır</h3>
+                <p>Yerel sunucu çalıştırmak istemiyorsanız OBS'yi yerel bir Flow Actions sayfasına yönlendirin ve yerel medya URL'leri de kullanın:</p>
+                <pre>file:///C:/SSN/social_stream/actions.html?session=YOUR_SESSION_ID
+file:///C:/SSN/social_stream/user-media/audio/booty.mp3</pre>
+                <ul class="guide-list">
+                    <li>İleri eğik çizgi kullanın; klasör ve dosya adlarında boşluk veya özel karakterlerden kaçının.</li>
+                    <li>Hem Flow Actions sayfası hem medya yerel olmalıdır. Barındırılan bir <code>actions.html</code> sayfası bu yolu okuyamaz.</li>
+                    <li>OBS yerel dosyayı reddederse yukarıdaki yerel HTTP sunucusu yöntemini kullanın.</li>
+                </ul>
+            </div>
+
+            <div class="guide-card">
+                <h2>Peki Chrome uzantısı?</h2>
+                <p>Uzantı aynı Etkinlik Akışı biçimini kullanır, bu nedenle masaüstünde oluşturulan akışlar uyumlu kalır. Yerel eylemler Windows, macOS veya Linux yolu yerine opak bir medya kimliği saklar.</p>
+                <p>Uzantı kendi başına diskinizdeki keyfî dosyaları OBS'ye açamaz. Desteklenen bir yardımcı köprü yoksa şunu kullanın: <strong>Yükle</strong> veya normal bir barındırılan URL. İçe aktarılan akış yerel medyaya başvuruyorsa uzantı sessizce başarısız olmak yerine masaüstü uygulamasının veya köprünün gerekli olduğunu açıklar.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Seçenek 3: Daha büyük bir kütüphaneyi çevrimiçi barındırın</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead><tr><th>Sağlayıcı</th><th>Uygun kullanım</th><th>Önemli notlar</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Provider"><a href="https://developers.cloudflare.com/r2/" target="_blank" rel="noopener">Cloudflare R2</a></td>
+                            <td data-label="Good For">Herkese açık bir uyarı kütüphanesi için genel olarak en iyi seçenek.</td>
+                            <td data-label="Important Notes">Standart depolama şu anda ayda 10 GB-ay ve ücretsiz internete veri çıkışı içerir. Üretim kullanımı için özel bir alan adı kullanın; <code>r2.dev</code> hız sınırına tabidir ve geliştirme amaçlıdır.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Provider"><a href="https://www.backblaze.com/cloud-storage/pricing" target="_blank" rel="noopener">Backblaze B2</a></td>
+                            <td data-label="Good For">Herkese açık dosya URL'leri sunan düşük maliyetli S3 uyumlu depolama.</td>
+                            <td data-label="Important Notes">İlk 10 GB şu anda ücretsizdir; dahil edilen miktarları aşan depolama ve veri çıkışı ücretlidir.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Provider">Amazon S3 veya başka bir S3 uyumlu barındırıcı</td>
+                            <td data-label="Good For">Mevcut bulut hesapları ve gelişmiş erişim kontrolleri.</td>
+                            <td data-label="Important Notes">Medya için herkese açık okumayı etkinleştirin, doğru içerik türlerini ayarlayın ve tarayıcı istekleri gerektiriyorsa salt okunur bir CORS kuralı ekleyin.</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Provider"><a href="https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github" target="_blank" rel="noopener">GitHub</a></td>
+                            <td data-label="Good For">Birkaç küçük herkese açık dosya veya ara sıra sürüm indirmeleri.</td>
+                            <td data-label="Important Notes">Normal depolar 100 MiB üzerindeki dosyaları engeller ve GitHub Pages sitelerinde yayımlanan site sınırı 1 GB'dir. Releases daha büyük varlıklara izin verir, ancak yönetilen bir uyarı medya kütüphanesi olarak kullanımları zahmetlidir.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="warning-note compact-note">
+                    <p><strong>Herkese açık demek, herkese açık demektir.</strong> Nesne URL'sine sahip herkes medyaya erişebilir. Paylaşılmaması gereken özel, lisanslı veya kişisel dosyaları yüklemeyin.</p>
+                </div>
+            </div>
+
+            <div class="guide-card">
+                <h2>Cloudflare R2 kurulumu</h2>
+                <ol class="guide-steps">
+                    <li>Şunu kullanarak bir R2 bucket oluşturun: <strong>Standart</strong> depolama sınıfı.</li>
+                    <li>Medyanızı şu gibi anlaşılır klasör adlarıyla yükleyin: <code>audio/</code>, <code>images/</code>, ve <code>video/</code>.</li>
+                    <li>Bucket ayarlarında herkese açık erişimi etkinleştirin. Herkese açık geliştirme URL'sini yalnızca test için kullanın veya düzenli canlı kullanım için özel bir alan adı bağlayın.</li>
+                    <li>Bir nesne URL'sini gizli tarayıcı penceresinde açın. Giriş veya paylaşım sayfası olmadan dosyayı doğrudan yüklemelidir.</li>
+                    <li>Bu doğrudan HTTPS URL'sini Etkinlik Akışı eylemine yapıştırın.</li>
+                </ol>
+                <p>Normal görseller ve sesler genellikle özel CORS ayarı olmadan yüklenir. Özel bir katman, yazı tipi, video oynatıcı veya tarayıcı getirme isteği CORS hatası bildirirse şunu açın: <strong>Bucket &rarr; Settings &rarr; CORS Policy</strong> ve salt okunur bir politika ekleyin:</p>
+                <pre>[
+  {
+    "AllowedOrigins": [
+      "https://socialstream.ninja",
+      "http://127.0.0.1:8765"
+    ],
+    "AllowedMethods": ["GET", "HEAD"],
+    "AllowedHeaders": ["Range"],
+    "ExposeHeaders": [
+      "Content-Length",
+      "Content-Range",
+      "Accept-Ranges"
+    ],
+    "MaxAgeSeconds": 3600
+  }
+]</pre>
+                <p>Dosyaları getiren diğer sayfaların tam kökenini ekleyin. Kökenler yol veya sonda eğik çizgi içermez. CORS eklenmeden önce özel alan adı zaten önbelleğe alınmışsa o ana makine adının önbelleğini temizleyin.</p>
+                <p>Resmî kaynaklar: <a href="https://developers.cloudflare.com/r2/buckets/public-buckets/" target="_blank" rel="noopener">herkese açık R2 bucket'ları</a>, <a href="https://developers.cloudflare.com/r2/buckets/cors/" target="_blank" rel="noopener">R2 CORS</a>, ve <a href="https://developers.cloudflare.com/r2/pricing/" target="_blank" rel="noopener">R2 fiyatlandırması</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Backblaze B2 CORS örneği</h2>
+                <p>Bucket'ı herkese açık yapın, doğrudan dosya URL'sini kullanın ve tarayıcı CORS hatası bildirirse yalnızca indirmeye izin veren bir kural uygulayın:</p>
+                <pre>[
+  {
+    "corsRuleName": "allowSSNMedia",
+    "allowedOrigins": ["https://socialstream.ninja"],
+    "allowedHeaders": ["range"],
+    "allowedOperations": ["b2_download_file_by_name"],
+    "exposeHeaders": [
+      "content-length",
+      "content-range",
+      "accept-ranges"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]</pre>
+                <p>Backblaze'in şu kaynağına bakın: <a href="https://www.backblaze.com/docs/cloud-storage-cross-origin-resource-sharing-rules" target="_blank" rel="noopener">resmî CORS kuralı başvuru kaynağı</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Yayına çıkmadan önce</h2>
+                <ol class="guide-steps">
+                    <li>Medyanın tam URL'sini gizli pencerede açın. Dosyayı doğrudan yüklemelidir.</li>
+                    <li>Kullanın: <strong>Görsel</strong> PNG, JPG, WebP veya GIF medyası için. Şunu kullanın: <strong>Video/Gömülü içerik</strong> video veya gömülü içerik URL'leri için.</li>
+                    <li>Uyumluluk için seste MP3, görsellerde PNG/WebP/GIF ve videoda H.264/AAC MP4 tercih edin.</li>
+                    <li>Flow Actions sayfasını OBS'de Etkinlik Akışı'nın kullandığı oturum kimliğiyle açın.</li>
+                    <li>Etkinlik Akışı'nın test panelini kullanın, ardından gerçek yayından önce OBS Tarayıcı Kaynağı'nı bir kez yenileyin.</li>
+                </ol>
+                <ul class="guide-list">
+                    <li><strong>URL oynatmak yerine indiriyor:</strong> barındırıcı yanlış içerik türü veya yalnızca indirmeye izin veren bir yanıt gönderiyordur.</li>
+                    <li><strong>Bulut dosyası engelleniyor:</strong> herkese açık yapın ve CORS kökenini, yöntemini ve başlıklarını kontrol edin.</li>
+                    <li><strong>Yerel dosya eksik:</strong> eylemi SSApp'te açıp şunu kullanın: <strong>Yeniden bağla</strong>.</li>
+                    <li><strong>Yerel sunucu çevrimdışı:</strong> SSApp'i başlatın ve bağlantı noktası veya güvenlik belirteci değiştiyse Yerel Flow Actions URL'sini yeniden kopyalayın.</li>
+                    <li><strong>Barındırılan Flow Actions yerel öğeyi oynatamıyor:</strong> OBS URL'sini SSApp'in oluşturduğu URL ile değiştirin.</li>
+                    <li><strong>OBS'ye hiçbir şey ulaşmıyor:</strong> Flow Actions URL'sinin ve Etkinlik Akışı'nın aynı oturum kimliğini kullandığını doğrulayın.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja. GPLv3.0 Lisansı.</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById("current-year").textContent = new Date().getFullYear();</script>
+</body>
+</html>

@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="tr" data-site-root="../../" data-site-language="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="tr_TR">
+    <meta property="og:url" content="https://socialstream.ninja/tr/docs/youtube-project-setup.html">
+    <meta property="og:title" content="YouTube Proje Kurulumu - Social Stream Ninja">
+    <meta property="og:description" content="Social Stream Ninja masaüstü uygulamasıyla kendi YouTube API projenizi kullanmak için ayrıntılı kurulum rehberi.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logosu">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/tr/docs/youtube-project-setup.html">
+    <meta name="twitter:title" content="YouTube Proje Kurulumu - Social Stream Ninja">
+    <meta name="twitter:description" content="Social Stream Ninja masaüstü uygulamasıyla kendi YouTube API projenizi kullanmak için ayrıntılı kurulum rehberi.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logosu">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Proje Kurulumu - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Social Stream Ninja masaüstü uygulamasıyla kendi YouTube API projenizi kullanmak için ayrıntılı kurulum rehberi.">
+    <link rel="canonical" href="https://socialstream.ninja/tr/docs/youtube-project-setup.html">
+    <style>
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .setup-grid .guide-card {
+            margin-bottom: 0;
+        }
+
+        .mini-label {
+            display: inline-block;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .callout-box {
+            background: rgba(26, 115, 232, 0.08);
+            border-left: 4px solid #1a73e8;
+            border-radius: 0 8px 8px 0;
+            padding: 1.6rem;
+            margin: 2rem 0;
+        }
+
+        .callout-box.warning {
+            background: rgba(251, 188, 5, 0.14);
+            border-left-color: #f9ab00;
+        }
+
+        .steps-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+
+        .steps-table th,
+        .steps-table td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.2rem;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        .steps-table th {
+            color: var(--primary-color);
+        }
+
+        .steps-table code,
+        .guide-card code,
+        .callout-box code {
+            word-break: break-word;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            margin-top: 2rem;
+        }
+
+        .footer-links a {
+            text-decoration: none;
+        }
+
+        @media (max-width: 700px) {
+            .field-table, .steps-table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+    </style>
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="tr">
+<script id="ssn-site-language" type="application/json">{"language":"tr","page":"docs/youtube-project-setup.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Açık temaya geç","Switch to dark theme":"Koyu temaya geç","Light mode":"Açık mod","Dark mode":"Koyu mod","Open navigation menu":"Gezinme menüsünü aç","Close navigation menu":"Gezinme menüsünü kapat","Copy this document as Markdown to the clipboard":"Bu belgeyi Markdown biçiminde panoya kopyala","Copy Markdown":"Markdown'ı kopyala","Copying…":"Kopyalanıyor…","Markdown copied":"Markdown kopyalandı","Copy failed":"Kopyalama başarısız","Copy comprehensive Markdown for an AI assistant":"Bir yapay zekâ asistanı için kapsamlı Markdown'ı kopyala","Copy this documentation page as Markdown for an AI assistant":"Bu belge sayfasını bir yapay zekâ asistanı için Markdown olarak kopyala"},"strings":{", and":", ve",", restrict it to":", şu API ile sınırlayın:","API Key":"API Anahtarı","API key":"API anahtarı","API restrictions":"API kısıtlamaları","Account validation failed:":"Hesap doğrulaması başarısız:","Add the exact origins and redirect URIs shown below.":"Aşağıda gösterilen kaynak adreslerini ve yönlendirme URI'lerini aynen ekleyin.","Authorized JavaScript origins":"Yetkilendirilmiş JavaScript kaynakları","Authorized redirect URIs":"Yetkilendirilmiş yönlendirme URI'leri","Back To Guides":"Rehberlere Dön","Choose":"Seçin:","Click":"Tıklayın:","Commands & API":"Komutlar ve API","Common problems":"Yaygın sorunlar","Complete the Google login in the external browser window.":"Harici tarayıcı penceresinde Google girişini tamamlayın.","Create a new project or pick a dedicated existing one.":"Yeni proje oluşturun veya bu iş için ayrılmış mevcut birini seçin.","Create an":"Şunu oluşturun:","Create credentials.":"Kimlik bilgilerini oluşturun.","Create the API key safely":"API anahtarını güvenle oluşturun","Create the OAuth client":"OAuth istemcisini oluşturun","Create the project":"Projeyi oluşturun","Delete temporary projects once you are done testing.":"Test bittikten sonra geçici projeleri silin.","Desktop app rule:":"Masaüstü uygulaması kuralı:","Detailed setup guide for using your own YouTube API project with the Social Stream Ninja desktop app.":"Social Stream Ninja masaüstü uygulamasıyla kendi YouTube API projenizi kullanmak için ayrıntılı kurulum rehberi.","Do not confuse these two fields in Google Cloud:":"Google Cloud'daki bu iki alanı karıştırmayın:","Do not paste them into screenshots, chat logs, or bug reports.":"Bunları ekran görüntülerine, sohbet kayıtlarına veya hata raporlarına yapıştırmayın.","Do not use HTTP referrer restrictions for the desktop app.":"Masaüstü uygulaması için HTTP yönlendiren kısıtlamalarını kullanmayın.","Download":"İndir","Download Desktop App":"Masaüstü Uygulamasını İndir","Enable":"Şunu etkinleştirin:","Expected result:":"Beklenen sonuç:","Features":"Özellikler","Field":"Alan","Guides":"Kılavuzlar","HTTP referrer restrictions are for browser pages, not this local desktop auth flow.":"HTTP yönlendiren kısıtlamaları tarayıcı sayfaları içindir; bu yerel masaüstü kimlik doğrulama akışı için değildir.","Hire":"Hizmet alın","Home":"Ana sayfa","How to create a Google Cloud project for the SSN Standalone desktop app without weakening your key security.":"Anahtar güvenliğinizi zayıflatmadan SSN Bağımsız masaüstü uygulaması için Google Cloud projesi oluşturma.","If the app is in testing, add your Google account as a test user.":"Uygulama test aşamasındaysa Google hesabınızı test kullanıcısı olarak ekleyin.","If you accidentally expose them, rotate or delete them.":"Yanlışlıkla ifşa ederseniz yenileyin veya silin.","Important:":"Önemli:","Inspiration":"İlham","Keep the credentials safe":"Kimlik bilgilerini güvende tutun","Main navigation":"Ana gezinme","OAuth Client ID":"OAuth İstemci Kimliği","OAuth Client Secret":"OAuth İstemci Gizli Anahtarı","OAuth client ID":"OAuth istemci kimliği","Open Google Cloud Console.":"Google Cloud Console'u açın.","Open navigation menu":"Gezinme menüsünü aç","Open that key's restrictions.":"Bu anahtarın kısıtlamalarını açın.","Open the OAuth consent screen settings.":"OAuth izin ekranı ayarlarını açın.","Open the YouTube source page inside the desktop app.":"Masaüstü uygulamasında YouTube kaynak sayfasını açın.","Overlay Gallery":"Katman galerisi","Overview":"Genel bakış","Paste the":"Şunu yapıştırın:","Paste the values into the desktop app":"Değerleri masaüstü uygulamasına yapıştırın","Save":"Kaydet","Security":"Güvenlik","Sign in with YouTube":"YouTube ile giriş yap","Sign out if needed.":"Gerekirse çıkış yapın.","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja logosu","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja. GPLv3.0 Lisansı.","Step 1":"1. Adım","Step 2":"2. Adım","Step 3":"3. Adım","Step 4":"4. Adım","Support":"Destek","Supported Sites":"Desteklenen siteler","Switch theme":"Temayı değiştir","Treat the Client Secret and API key as sensitive.":"İstemci Gizli Anahtarı ve API anahtarını hassas bilgi olarak değerlendirin.","Troubleshooting":"Sorun giderme","Under":"Şu bölümde:","Use a dedicated test project if you are experimenting.":"Deneme yapıyorsanız ayrı bir test projesi kullanın.","Use this only if you want the desktop app to use":"Bunu yalnızca masaüstü uygulamasının şunu kullanmasını istiyorsanız kullanın:","Use type":"Tür olarak şunu kullanın:","Value":"Değer","Web application":"Web uygulaması","What this setup is for":"Bu kurulum ne içindir","YouTube Data API v3":"YouTube Data API v3","YouTube Project Setup":"YouTube Proje Kurulumu","YouTube Project Setup - Social Stream Ninja":"YouTube Proje Kurulumu - Social Stream Ninja","all three values below must come from the":"aşağıdaki üç değer de şu kaynaktan gelmelidir:","if everything matches, Google sign-in works and the desktop app uses your saved YouTube project instead of the default shared one.":"her şey eşleşiyorsa Google girişi çalışır ve masaüstü uygulaması varsayılan paylaşılan proje yerine kaydedilmiş YouTube projenizi kullanır.","in the same project.":"aynı projede.","instead of Social Stream Ninja's default shared project.":"Social Stream Ninja'nın varsayılan paylaşılan projesi yerine.","must be just the origin, with no path.":"yalnızca kaynak adresini içermelidir; yol içermemelidir.","must include the full":"tam olarak şu","on older builds, this could happen when OAuth and API key came from different projects.":"eski sürümlerde OAuth ve API anahtarı farklı projelerden geldiğinde bu olabiliyordu.","only.":"yalnızca.","path.":"yolunu içermelidir.","same Google Cloud project":"aynı Google Cloud projesi","the Client ID and Client Secret do not match.":"İstemci Kimliği ve İstemci Gizli Anahtarı eşleşmiyor.","the redirect URI is not an exact match.":"yönlendirme URI'si tam eşleşmiyor.","your API key project is out of YouTube quota.":"API anahtarı projenizin YouTube kotası tükenmiş.","your own YouTube API quota":"kendi YouTube API kotanızı"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/youtube-project-setup.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/youtube-project-setup.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Ana gezinme"><a href="../index.html">Ana sayfa</a><a href="features.html">Özellikler</a><a href="inspiration.html" class="site-priority-inspiration">İlham</a><a href="download.html">İndir</a><a href="guides.html">Kılavuzlar</a><a href="commands.html">Komutlar ve API</a><a href="supported-sites.html">Desteklenen siteler</a><a href="overlay-gallery.html" class="site-priority-gallery">Katman galerisi</a><a href="services.html" class="site-priority-hire">Hizmet alın</a><a href="support.html">Destek</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Türkçe"><span aria-hidden="true">🌐 </span><span lang="tr">Türkçe</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/youtube-project-setup.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/youtube-project-setup.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/youtube-project-setup.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/youtube-project-setup.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/youtube-project-setup.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/youtube-project-setup.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/youtube-project-setup.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/youtube-project-setup.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/youtube-project-setup.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/youtube-project-setup.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/youtube-project-setup.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/youtube-project-setup.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/youtube-project-setup.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/youtube-project-setup.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="youtube-project-setup.html" lang="tr" hreflang="tr" aria-current="true">Türkçe</a><a class="site-language-link" href="../../cs/docs/youtube-project-setup.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/youtube-project-setup.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="Temayı değiştir"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Gezinme menüsünü aç" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>YouTube Proje Kurulumu</h1>
+            <p>Anahtar güvenliğinizi zayıflatmadan SSN Bağımsız masaüstü uygulaması için Google Cloud projesi oluşturma.</p>
+        </div>
+    </section>
+
+    <main>
+        <section class="guide-section">
+            <div class="container">
+                <div class="guide-card">
+                    <span class="mini-label">Genel bakış</span>
+                    <h3>Bu kurulum ne içindir</h3>
+                    <p>Bunu yalnızca masaüstü uygulamasının şunu kullanmasını istiyorsanız kullanın: <strong>kendi YouTube API kotanızı</strong> Social Stream Ninja'nın varsayılan paylaşılan projesi yerine.</p>
+                    <div class="callout-box">
+                        <strong>Önemli:</strong> aşağıdaki üç değer de şu kaynaktan gelmelidir: <strong>aynı Google Cloud projesi</strong>:
+                        <ul class="guide-list">
+                            <li>OAuth İstemci Kimliği</li>
+                            <li>OAuth İstemci Gizli Anahtarı</li>
+                            <li>API Anahtarı</li>
+                        </ul>
+                    </div>
+                    <div class="callout-box warning">
+                        <strong>Google Cloud'daki bu iki alanı karıştırmayın:</strong>
+                        <ul class="guide-list">
+                            <li><strong>Yetkilendirilmiş JavaScript kaynakları</strong> yalnızca kaynak adresini içermelidir; yol içermemelidir.</li>
+                            <li><strong>Yetkilendirilmiş yönlendirme URI'leri</strong> tam olarak şu <code>/sources/websocket/youtube.html</code> yolunu içermelidir.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="setup-grid">
+                    <div class="guide-card">
+                        <span class="mini-label">1. Adım</span>
+                        <h3>Projeyi oluşturun</h3>
+                        <ol class="guide-steps">
+                            <li>Google Cloud Console'u açın.</li>
+                            <li>Yeni proje oluşturun veya bu iş için ayrılmış mevcut birini seçin.</li>
+                            <li>Şunu etkinleştirin: <strong>YouTube Data API v3</strong>.</li>
+                            <li>OAuth izin ekranı ayarlarını açın.</li>
+                            <li>Uygulama test aşamasındaysa Google hesabınızı test kullanıcısı olarak ekleyin.</li>
+                        </ol>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">2. Adım</span>
+                        <h3>OAuth istemcisini oluşturun</h3>
+                        <ol class="guide-steps">
+                            <li>Kimlik bilgilerini oluşturun.</li>
+                            <li>Seçin: <strong>OAuth istemci kimliği</strong>.</li>
+                            <li>Tür olarak şunu kullanın: <strong>Web uygulaması</strong>.</li>
+                            <li>Aşağıda gösterilen kaynak adreslerini ve yönlendirme URI'lerini aynen ekleyin.</li>
+                        </ol>
+                        <table class="steps-table">
+                            <thead>
+                                <tr>
+                                    <th>Alan</th>
+                                    <th>Değer</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Yetkilendirilmiş JavaScript kaynakları</td>
+                                    <td><code>http://localhost:8181</code><br><code>http://localhost:8080</code></td>
+                                </tr>
+                                <tr>
+                                    <td>Yetkilendirilmiş yönlendirme URI'leri</td>
+                                    <td><code>http://localhost:8181/sources/websocket/youtube.html</code><br><code>http://localhost:8080/sources/websocket/youtube.html</code></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">3. Adım</span>
+                        <h3>API anahtarını güvenle oluşturun</h3>
+                        <ol class="guide-steps">
+                            <li>Şunu oluşturun: <strong>API anahtarı</strong> aynı projede.</li>
+                            <li>Bu anahtarın kısıtlamalarını açın.</li>
+                            <li>Şu bölümde: <strong>API kısıtlamaları</strong>, şu API ile sınırlayın: <strong>YouTube Data API v3</strong> yalnızca.</li>
+                            <li><strong>Masaüstü uygulaması için HTTP yönlendiren kısıtlamalarını kullanmayın.</strong></li>
+                        </ol>
+                        <div class="guide-note">
+                            <p><strong>Masaüstü uygulaması kuralı:</strong> HTTP yönlendiren kısıtlamaları tarayıcı sayfaları içindir; bu yerel masaüstü kimlik doğrulama akışı için değildir.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="guide-card">
+                    <span class="mini-label">4. Adım</span>
+                    <h3>Değerleri masaüstü uygulamasına yapıştırın</h3>
+                    <ol class="guide-steps">
+                        <li>Masaüstü uygulamasında YouTube kaynak sayfasını açın.</li>
+                        <li>Şunu yapıştırın: <strong>OAuth İstemci Kimliği</strong>, <strong>OAuth İstemci Gizli Anahtarı</strong>, ve <strong>API Anahtarı</strong>.</li>
+                        <li>Tıklayın: <strong>Kaydet</strong>.</li>
+                        <li>Gerekirse çıkış yapın.</li>
+                        <li>Tıklayın: <strong>YouTube ile giriş yap</strong>.</li>
+                        <li>Harici tarayıcı penceresinde Google girişini tamamlayın.</li>
+                    </ol>
+                    <div class="callout-box">
+                        <strong>Beklenen sonuç:</strong> her şey eşleşiyorsa Google girişi çalışır ve masaüstü uygulaması varsayılan paylaşılan proje yerine kaydedilmiş YouTube projenizi kullanır.
+                    </div>
+                </div>
+
+                <div class="setup-grid">
+                    <div class="guide-card">
+                        <span class="mini-label">Güvenlik</span>
+                        <h3>Kimlik bilgilerini güvende tutun</h3>
+                        <ul class="guide-list">
+                            <li>İstemci Gizli Anahtarı ve API anahtarını hassas bilgi olarak değerlendirin.</li>
+                            <li>Bunları ekran görüntülerine, sohbet kayıtlarına veya hata raporlarına yapıştırmayın.</li>
+                            <li>Yanlışlıkla ifşa ederseniz yenileyin veya silin.</li>
+                            <li>Deneme yapıyorsanız ayrı bir test projesi kullanın.</li>
+                            <li>Test bittikten sonra geçici projeleri silin.</li>
+                        </ul>
+                    </div>
+
+                    <div class="guide-card">
+                        <span class="mini-label">Sorun giderme</span>
+                        <h3>Yaygın sorunlar</h3>
+                        <ul class="guide-list">
+                            <li><strong><code>redirect_uri_mismatch</code>:</strong> yönlendirme URI'si tam eşleşmiyor.</li>
+                            <li><strong><code>invalid_client</code>:</strong> İstemci Kimliği ve İstemci Gizli Anahtarı eşleşmiyor.</li>
+                            <li><strong><code>quotaExceeded</code>:</strong> API anahtarı projenizin YouTube kotası tükenmiş.</li>
+                            <li><strong>Hesap doğrulaması başarısız:</strong> eski sürümlerde OAuth ve API anahtarı farklı projelerden geldiğinde bu olabiliyordu.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="footer-links">
+                    <a href="guides.html" class="btn btn-secondary">Rehberlere Dön</a>
+                    <a href="download.html" class="btn btn-primary">Masaüstü Uygulamasını İndir</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 Lisansı.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

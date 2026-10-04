@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="cs" data-site-root="../../" data-site-language="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/cs/docs/tts.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="cs_CZ">
+    <meta property="og:url" content="https://socialstream.ninja/beta/cs/docs/tts.html">
+    <meta property="og:title" content="Social Stream Ninja - průvodce hlasy TTS">
+    <meta property="og:description" content="Nastavte poskytovatele převodu textu na řeč Social Stream Ninja, hlasy, parametry URL, podporu prohlížečů a zachytávání zvuku v OBS a vyřešte problémy.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Logo Social Stream Ninja">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/cs/docs/tts.html">
+    <meta name="twitter:title" content="Social Stream Ninja - průvodce hlasy TTS">
+    <meta name="twitter:description" content="Nastavte poskytovatele převodu textu na řeč Social Stream Ninja, hlasy, parametry URL, podporu prohlížečů a zachytávání zvuku v OBS a vyřešte problémy.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Logo Social Stream Ninja">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream Ninja - průvodce hlasy TTS</title>
+    <meta name="description" content="Nastavte poskytovatele převodu textu na řeč Social Stream Ninja, hlasy, parametry URL, podporu prohlížečů a zachytávání zvuku v OBS a vyřešte problémy.">
+    <script src="../../docs/js/standalone-theme.js"></script>
+    <script defer src="../../docs/js/copy-markdown.js"></script>
+    <style>
+        :root {
+            --primary-color: #1565C0;
+            --on-primary: #FFFFFF;
+            --secondary-color: #1976D2;
+            --accent-color: #996000;
+            --text-color: #212121;
+            --text-light: #757575;
+            --bg-color: #FFFFFF;
+            --card-bg: #F5F5F5;
+            --border-color: #E0E0E0;
+            --code-bg: #263238;
+            --code-text: #ECEFF1;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #64B5F6;
+            --on-primary: #10283B;
+            --secondary-color: #42A5F5;
+            --accent-color: #FFB74D;
+            --text-color: #E0E0E0;
+            --text-light: #BDBDBD;
+            --bg-color: #121212;
+            --card-bg: #1E1E1E;
+            --border-color: #424242;
+            --code-bg: #000000;
+            --code-text: #ECEFF1;
+        }
+
+        html[data-theme="dark"],
+        body[data-theme="dark"] {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .voice-card,
+        [data-theme="dark"] .tts-test {
+            color: var(--text-color);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: var(--on-primary);
+            padding: 40px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            border: 2px solid currentColor;
+            color: var(--on-primary);
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5em;
+        }
+
+        h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 10px;
+            margin-top: 40px;
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            margin-top: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .warning {
+            background-color: #FFF3E0;
+            border-left: 4px solid var(--accent-color);
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        [data-theme="dark"] .warning {
+            background-color: #5D4037;
+            color: #FFCC80;
+        }
+
+        .info {
+            background-color: #E3F2FD;
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        [data-theme="dark"] .info {
+            background-color: #1565C0;
+            color: #BBDEFB;
+        }
+
+        .info a {
+            color: inherit;
+            text-decoration: underline;
+        }
+
+        .code {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Consolas', monospace;
+            overflow-x: auto;
+            margin: 15px 0;
+            white-space: pre-line;
+        }
+
+        code {
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: var(--on-primary);
+        }
+
+        tr:nth-child(even) {
+            background-color: #F9F9F9;
+        }
+
+        [data-theme="dark"] tr:nth-child(even) {
+            background-color: #2A2A2A;
+        }
+
+        .browser-support {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .browser-card {
+            text-align: center;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+        }
+
+        .supported {
+            color: #267A2B;
+        }
+
+        [data-theme="dark"] .supported {
+            color: #81C784;
+        }
+
+        .partial {
+            color: var(--accent-color);
+        }
+
+        .not-supported {
+            color: #F44336;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin: 10px 0;
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .tts-test {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: var(--on-primary);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .parameter-table td:first-child {
+            font-family: monospace;
+            background-color: #F5F5F5;
+        }
+
+        [data-theme="dark"] .parameter-table td:first-child {
+            background-color: #2A2A2A;
+        }
+
+        @media (max-width: 700px) {
+            table {
+                display: block;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
+
+        nav {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        nav li {
+            margin: 5px 0;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            background-color: var(--card-bg);
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="cs">
+<script id="ssn-site-language" type="application/json">{"language":"cs","page":"docs/tts.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Přepnout na světlý vzhled","Switch to dark theme":"Přepnout na tmavý vzhled","Light mode":"Světlý režim","Dark mode":"Tmavý režim","Open navigation menu":"Otevřít navigační nabídku","Close navigation menu":"Zavřít navigační nabídku","Copy this document as Markdown to the clipboard":"Zkopírovat tento dokument ve formátu Markdown do schránky","Copy Markdown":"Kopírovat Markdown","Copying…":"Kopírování…","Markdown copied":"Markdown zkopírován","Copy failed":"Kopírování se nezdařilo","Copy comprehensive Markdown for an AI assistant":"Kopírovat úplný Markdown pro AI asistenta","Copy this documentation page as Markdown for an AI assistant":"Kopírovat tuto stránku dokumentace jako Markdown pro AI asistenta"},"strings":{"&pitch\u003c":"&pitch\u003c","&pitch=1.2":"&pitch=1.2","&rate\u003c":"&rate\u003c","&rate=1.5":"&rate=1.5","&readevents\u003c":"&readevents\u003c","&simpletts2\u003c":"&simpletts2\u003c","&simpletts\u003c":"&simpletts\u003c","&skipmessages=3":"&skipmessages=3","&speech\u003c":"&speech\u003c","&speech=en-US":"&speech=en-US","&ttscommand\u003c":"&ttscommand\u003c","&ttsprovider\u003c":"&ttsprovider\u003c","&ttsprovider=customtts":"&ttsprovider=customtts","&voice\u003c":"&voice\u003c","&voice=google":"&voice=google","&volume\u003c":"&volume\u003c","&volume=0.8":"&volume=0.8","(default), or":"(výchozí) nebo","(range 0.5 to 3.0; normal is 1.0).":"(rozsah 0.5 až 3.0; běžná hodnota je 1.0).",", click":", klikněte na",", language:":", jazyk:",", mixer mute, and output tracks, or capture the external browser that is speaking":", ztlumení mixéru a výstupní stopy, nebo zachytávejte externí prohlížeč, který mluví",", speed:":", rychlost:",", while openedai-speech/OpenAI-style voices may look like":", zatímco hlasy openedai-speech/ve stylu OpenAI mohou vypadat jako",". It does not test OBS, a separate SSN app window, or providers such as Kokoro. An empty list does not mean SSN’s other TTS providers are unavailable.":". Netestuje OBS, samostatné okno aplikace SSN ani poskytovatele, jako je Kokoro. Prázdný seznam neznamená, že ostatní poskytovatelé TTS v SSN nejsou dostupní.",". Keep this page open and connected; only one copy should speak.":". Nechte tuto stránku otevřenou a připojenou; mluvit by měla pouze jedna instance.",". This defaults to System TTS. For a free OBS provider, also add":". Výchozí je System TTS. Pro bezplatného poskytovatele v OBS přidejte také",". Use a voice name your server supports; Kokoro voices look like":". Použijte název hlasu podporovaný vaším serverem; hlasy Kokoro vypadají jako","; this page covers voice options and advanced settings.":"; tato stránka popisuje možnosti hlasů a pokročilá nastavení.","A missing voice is different from speech playing outside OBS’s audio capture. Audio routing cannot fix missing speech support.":"Chybějící hlas je něco jiného než řeč přehrávaná mimo zachytávání zvuku OBS. Směrování zvuku nedokáže vyřešit chybějící podporu řeči.","API costs apply":"Platí poplatky za API","API costs apply (or free local)":"Platí poplatky za API (nebo zdarma místně)","Add":"Přidejte","Add Voices":"Přidat hlasy","Advanced Parameters":"Pokročilé parametry","Alternatives:":"Alternativy:","Audio Capture in OBS":"Zachytávání zvuku v OBS","Audio Router (legacy)":"Audio Router (starší)","Basic Parameters":"Základní parametry","Best Practices":"Doporučené postupy","Both services offer premium and free TTS options":"Obě služby nabízejí placené i bezplatné možnosti TTS","Browser Limitations:":"Omezení prohlížeče:","Browser Support":"Podpora prohlížečů","Browser compatibility varies significantly":"Kompatibilita prohlížečů se výrazně liší","Browser-based AI, excellent quality, dozens of voices":"AI v prohlížeči, vynikající kvalita, desítky hlasů","Browser-based, fast, CPU-friendly neural TTS":"Rychlé neuronové TTS v prohlížeči s nízkými nároky na CPU","Browser-based, lightweight ONNX model":"Nenáročný model ONNX v prohlížeči","CAPTION.Ninja:":"CAPTION.Ninja:","Check":"Zkontrolujte","Check API key and ensure provider is correctly specified":"Zkontrolujte API klíč a správně nastaveného poskytovatele","Check Available Voices":"Zkontrolovat dostupné hlasy","Check This Browser's System Voices":"Zkontrolovat systémové hlasy tohoto prohlížeče","Check that TTS is enabled, the TTS-producing page is open, and the browser source is not muted. In a normal browser, click the page once.":"Ověřte, že TTS je zapnuté, stránka vytvářející řeč je otevřená a zdroj prohlížeče není ztlumený. V běžném prohlížeči jednou klikněte na stránku.","Check voice availability, then audio capture.":"Nejprve zkontrolujte dostupnost hlasu, potom zachytávání zvuku.","Choose Fish Audio and enter your API key, with an optional voice ID. The default model is":"Vyberte Fish Audio a zadejte API klíč, případně i ID hlasu. Výchozí model je","Choose a voice for the language:":"Vyberte hlas pro daný jazyk:","Chrome":"Chrome","Chrome offers Google-powered TTS options":"Chrome nabízí možnosti TTS od Googlu","Chrome offers Google-powered options, Edge has Microsoft options":"Chrome nabízí možnosti Googlu, Edge má možnosti Microsoftu","Chromium-based; available voices vary by install":"Založený na Chromiu; dostupné hlasy se liší podle instalace","Classic open-source TTS, works on any hardware":"Klasické open-source TTS, funguje na jakémkoli hardwaru","Classic open-source, works on any hardware":"Klasický open-source systém, funguje na jakémkoli hardwaru","Common Issues":"Běžné problémy","Compare providers, hear samples and see the settings.":"Porovnejte poskytovatele, poslechněte ukázky a prohlédněte nastavení.","Complete guide to Text-to-Speech voice options, browser compatibility, and audio capture":"Úplný průvodce hlasy převodu textu na řeč, kompatibilitou prohlížečů a zachytáváním zvuku","Configure Social Stream Ninja text-to-speech providers, voices, URL parameters, browser support, OBS audio capture, and troubleshooting.":"Nastavte poskytovatele převodu textu na řeč Social Stream Ninja, hlasy, parametry URL, podporu prohlížečů a zachytávání zvuku v OBS a vyřešte problémy.","Consider user-generated content risks with TTS":"Zvažte rizika uživatelského obsahu při používání TTS","Control audio via OBS":"Ovládat zvuk přes OBS (Control audio via OBS)","Cost":"Cena","Custom endpoint:":"Vlastní koncový bod:","Custom voice training, natural sounding":"Trénování vlastního hlasu, přirozený zvuk","Custom/local endpoint playback is buffered today; SSN does not progressively play streamed audio chunks yet":"Přehrávání z vlastního/místního koncového bodu se nyní ukládá do vyrovnávací paměti; SSN zatím nepřehrává streamované zvukové bloky průběžně","Description":"Popis","Direct":"Přímo","Do not assume OBS exposes the same voices as Chrome or Edge":"Nepředpokládejte, že OBS nabízí stejné hlasy jako Chrome nebo Edge","Don't read chatnames at all":"Vůbec nečíst jména uživatelů chatu","Don't say \"says\" or \"someone says\"":"Nevyslovovat „říká“ ani „někdo říká“","Edge":"Edge","Edge supports Microsoft TTS and Windows language pack voices":"Edge podporuje TTS Microsoftu a hlasy jazykových balíčků Windows","ElevenLabs":"ElevenLabs","ElevenLabs TTS":"ElevenLabs TTS","Enable TTS with language code":"Zapnout TTS s kódem jazyka","Enable custom TTS command (default: !say)":"Zapnout vlastní příkaz TTS (výchozí: !say)","Enable with":"Zapněte pomocí","Example":"Příklad","Fast, CPU-friendly neural TTS running in browser":"Rychlé neuronové TTS v prohlížeči s nízkými nároky na CPU","Features":"Funkce","Firefox":"Firefox","First confirm that System TTS generates speech. OBS’s embedded browser may not expose a usable system voice. If it generates no speech, changing audio routing will not help. Choose another provider, or generate speech in a supported browser and capture that browser’s audio.":"Nejprve ověřte, že System TTS vytváří řeč. Vestavěný prohlížeč OBS nemusí poskytovat použitelný systémový hlas. Pokud řeč nevytváří, změna směrování zvuku nepomůže. Vyberte jiného poskytovatele nebo vytvářejte řeč v podporovaném prohlížeči a zachytávejte jeho zvuk.","Fish Audio TTS":"Fish Audio TTS","Follow the instructions in":"Postupujte podle pokynů v","For System TTS specifically:":"Konkrétně pro System TTS:","For cloud voices, use a provider voice/language that supports the target language, such as Google Cloud, ElevenLabs, Speechify, Gemini, or an OpenAI-compatible local server.":"U cloudových hlasů použijte hlas/jazyk poskytovatele podporující cílový jazyk, například Google Cloud, ElevenLabs, Speechify, Gemini nebo místní server kompatibilní s OpenAI.","Free":"Zdarma","Free providers such as Kokoro, Piper, Kitten, and eSpeak generate page audio instead. Payment is not required for TTS in OBS.":"Bezplatní poskytovatelé jako Kokoro, Piper, Kitten a eSpeak místo toho vytvářejí zvuk stránky. TTS v OBS nevyžaduje platbu.","Free tier available":"K dispozici je bezplatná úroveň","Gemini TTS":"Gemini TTS","GitHub repository":"repozitáři GitHub","Google Cloud":"Google Cloud","Google Cloud TTS":"Google Cloud TTS","Google generative language API":"API generativního jazyka Google","Google-powered voices + system voices":"Hlasy Googlu + systémové hlasy","Have a toggle to quickly disable TTS if needed":"Mějte k dispozici přepínač pro rychlé vypnutí TTS v případě potřeby","High quality; also supports local servers via custom endpoint":"Vysoká kvalita; podporuje také místní servery přes vlastní koncový bod","High-quality voices, multiple languages":"Kvalitní hlasy, více jazyků","If speech plays outside the scene Browser Source, capture that output separately":"Pokud řeč hraje mimo zdroj prohlížeče ve scéně, zachytávejte tento výstup samostatně","If the local server has CORS or local network problems in Chrome/OBS, run":"Pokud má místní server problémy s CORS nebo místní sítí v Chrome/OBS, spusťte","If there is no speech, check voice/provider availability first. If speech exists, check":"Pokud není žádná řeč, nejprve ověřte dostupnost hlasu/poskytovatele. Pokud řeč existuje, zkontrolujte","Important:":"Důležité:","Include stream events in TTS":"Zahrnout události streamu do TTS","Installing Additional Language Packs":"Instalace dalších jazykových balíčků","Installing Language Packs":"Instalace jazykových balíčků","Kitten TTS":"Kitten TTS","Kitten TTS (Free, Built-in)":"Kitten TTS (zdarma, vestavěné)","Kokoro TTS":"Kokoro TTS","Kokoro TTS (Free, Built-in)":"Kokoro TTS (zdarma, vestavěné)","Language:":"Jazyk:","Lightweight ONNX-based TTS running in browser":"Nenáročné TTS založené na ONNX běžící v prohlížeči","Limited language support based on system installation":"Omezená podpora jazyků podle instalace systému","Limited support across browsers (Firefox may lack some TTS voices)":"Omezená podpora napříč prohlížeči (Firefox nemusí mít některé hlasy TTS)","Local / Free TTS Options (No API Key Required)":"Místní / bezplatné možnosti TTS (bez API klíče)","Local AI TTS Guide":"Průvodce lokálním AI TTS","Local endpoint works in the app test but not OBS:":"Místní koncový bod funguje v testu aplikace, ale ne v OBS:","Local system languages only":"Pouze místní systémové jazyky","Manage Voices":"Spravovat hlasy","Method 1: Default Audio Route with a Virtual Cable":"Metoda 1: výchozí směrování zvuku přes virtuální kabel","Method 2: Windows 10 App Route":"Metoda 2: směrování aplikace ve Windows 10","Method 3: Windows 11 App Route":"Metoda 3: směrování aplikace ve Windows 11","Method 4: Audio Router Software":"Metoda 4: software Audio Router","Method 5: Voicemeeter (Advanced)":"Metoda 5: Voicemeeter (pokročilé)","Microsoft voices + Windows TTS packs":"Hlasy Microsoftu + balíčky Windows TTS","Microsoft's official guide":"oficiálním průvodci Microsoftu","Model:":"Model:","Navigate to":"Přejděte na","No API key needed for local servers":"Místní servery nepotřebují API klíč","No audio playing:":"Nepřehrává se zvuk:","No virtual audio cables needed":"Není potřeba virtuální zvukový kabel","Not all browsers support text-to-speech equally (some Firefox versions have limited voices)":"Ne všechny prohlížeče podporují převod textu na řeč stejně (některé verze Firefoxu mají omezený výběr hlasů)","OBS Capture":"Zachytávání v OBS","OBS is a separate browser. Check the endpoint from the OBS computer, especially if using":"OBS je samostatný prohlížeč. Ověřte koncový bod z počítače s OBS, zejména při použití","OBS not capturing:":"OBS nezachytává zvuk:","Offers closed-captioning, transcription, and translation with TTS":"Nabízí skryté titulky, přepis a překlad s TTS","Only the first letter or first words are read:":"Čte se jen první písmeno nebo první slova:","OpenAI / Local Server TTS":"OpenAI / místní server TTS","OpenAI TTS":"OpenAI TTS","Opera":"Opera","Overview":"Přehled","Page Audio: Free Local and Cloud Providers":"Zvuk stránky: bezplatní místní a cloudoví poskytovatelé","Parameter":"Parametr","Parameters: stability, similarity, style can be adjusted":"Lze upravit parametry stability, similarity a style","Partial voice name match":"Částečná shoda názvu hlasu","Piper TTS":"Piper TTS","Piper TTS (Free, Built-in)":"Piper TTS (zdarma, vestavěné)","Portuguese and Spanish TTS Examples":"Příklady portugalského a španělského TTS","Portuguese example:":"Portugalský příklad:","Portuguese voices:":"Portugalské hlasy:","Portuguese, best free local quality tested in SSN:":"Portugalština, nejlepší bezplatná místní kvalita testovaná v SSN:","Portuguese, fastest fallback tested in SSN:":"Portugalština, nejrychlejší záložní možnost testovaná v SSN:","Premium / Cloud TTS Options (Direct Browser Audio)":"Placené / cloudové možnosti TTS (přímý zvuk prohlížeče)","Premium TTS Options":"Placené možnosti TTS","Premium service not working:":"Placená služba nefunguje:","Professional quality voices":"Hlasy profesionální kvality","Professional quality, multiple languages":"Profesionální kvalita, více jazyků","Provider":"Poskytovatel","Quick Start:":"Rychlý start:","Read every 3rd message only":"Číst pouze každou 3. zprávu","Reads out audience chat messages in multiple areas":"Čte zprávy diváků z chatu v několika částech aplikace","Restart browser after installing language packs":"Po instalaci jazykových balíčků restartujte prohlížeč","Restart browsers to refresh available voices":"Restartujte prohlížeče pro obnovení dostupných hlasů","Routing downloads:":"Ke stažení pro směrování zvuku:","Runs in browser via WebGPU/WASM without a server":"Běží v prohlížeči přes WebGPU/WASM — bez serveru","SSN can read captured chat text from any supported source; the chat platform does not need its own TTS feature.":"SSN může číst zachycený text chatu z jakéhokoli podporovaného zdroje; chatovací platforma nepotřebuje vlastní funkci TTS.","SSN sends":"SSN odesílá","SSN’s browser-based local providers and cloud audio providers play generated audio through the page:":"Místní poskytovatelé SSN běžící v prohlížeči a cloudoví poskytovatelé zvuku přehrávají vygenerovaný zvuk přes stránku:","Safari has limited automatic TTS support":"Safari má omezenou podporu automatického TTS","Safari issues:":"Problémy se Safari:","Safari requires user interaction to start audio":"Safari vyžaduje pro spuštění zvuku interakci uživatele","See the":"Podívejte se na","Select desired languages and click":"Vyberte požadované jazyky a klikněte na","Select provider: kokoro, piper, kitten, espeak, openai, customtts, localtts, elevenlabs, google, speechify, gemini":"Vyberte poskytovatele: kokoro, piper, kitten, espeak, openai, customtts, localtts, elevenlabs, google, speechify, gemini","Setup, model options, and browser access limitations":"Nastavení, možnosti modelu a omezení přístupu z prohlížeče","Several high-quality AI voices are built directly into Social Stream Ninja and run in your browser without an API key, cloud service, or extra installation. See the":"Několik kvalitních AI hlasů je přímo vestavěných v Social Stream Ninja a běží v prohlížeči — bez API klíče, cloudu i další instalace. Viz","Simply enable \"Control audio via OBS\" in browser source":"Ve zdroji prohlížeče stačí zapnout „Control audio via OBS“","Social Stream Ninja - TTS Voice Guide":"Social Stream Ninja - průvodce hlasy TTS","Social Stream Ninja TTS Guide":"Průvodce TTS pro Social Stream Ninja","Social Stream Ninja TTS Guide - For the latest updates, visit the":"Průvodce TTS pro Social Stream Ninja - nejnovější informace najdete na","Social Stream Ninja logo":"Logo Social Stream Ninja","Social Stream Ninja:":"Social Stream Ninja:","Some third-party voices may not appear in browsers due to compatibility issues. Firefox often shows more system voices than Chromium-based browsers.":"Některé hlasy třetích stran se v prohlížečích nemusí zobrazit kvůli problémům s kompatibilitou. Firefox často zobrazuje více systémových hlasů než prohlížeče založené na Chromiu.","Spanish example:":"Španělský příklad:","Spanish voices:":"Španělské hlasy:","Spanish, best free local quality tested in SSN:":"Španělština, nejlepší bezplatná místní kvalita testovaná v SSN:","Spanish, fastest fallback tested in SSN:":"Španělština, nejrychlejší záložní možnost testovaná v SSN:","Speaking rate (0.1 to 10.0)":"Rychlost řeči (0.1 až 10.0)","Speaking speed:":"Rychlost řeči:","Speechify":"Speechify","Speechify TTS":"Speechify TTS","Speechify setup, voices, speed, and volume guide":"Průvodce nastavením Speechify, hlasy, rychlostí a hlasitostí","Speed control:":"Ovládání rychlosti:","Start > Settings > Time & Language > Speech":"Start > Nastavení > Čas a jazyk > Řeč","Style instructions:":"Pokyny ke stylu:","System TTS (Free)":"System TTS (zdarma)","System TTS Capture Methods":"Metody zachytávání System TTS","System TTS is not the same as all free TTS:":"System TTS není totéž co všechny bezplatné možnosti TTS:","System TTS voices in the browser displaying this guide only":"Hlasy System TTS pouze v prohlížeči zobrazujícím tohoto průvodce","System Voice Availability":"Dostupnost systémových hlasů","System voices depend on the browser and operating system. OBS may expose no usable voices, even when Chrome/Edge works.":"Systémové hlasy závisí na prohlížeči a operačním systému. OBS nemusí poskytovat žádné použitelné hlasy, i když Chrome/Edge funguje.","TTS Provider Configuration":"Nastavení poskytovatele TTS","TTS Provider Options":"Možnosti poskytovatelů TTS","TTS Providers":"Poskytovatelé TTS","Table of Contents":"Obsah","Test your setup with simple phrases before going live":"Před živým vysíláním otestujte nastavení jednoduchými větami","Testing Your Setup":"Testování nastavení","These are typical capabilities, not guarantees for every installation. OBS uses its own embedded browser and does not inherit an installed Chrome/Edge voice list. A successful SSN app test does not test a separate OBS Browser Source.":"Jde o typické možnosti, ne záruky pro každou instalaci. OBS používá vlastní vestavěný prohlížeč a nepřebírá seznam hlasů nainstalovaného Chrome/Edge. Úspěšný test v aplikaci SSN netestuje samostatný zdroj prohlížeče OBS.","This lists":"Toto vypisuje","Tip:":"Tip:","Toggle Dark Mode":"Přepnout tmavý režim","Toggle Light Mode":"Přepnout světlý režim","Troubleshooting":"Řešení potíží","Try capturing the speaking browser with OBS application or desktop audio first, where supported. The virtual-cable methods below are optional alternatives; they do not add speech support to OBS.":"Nejprve zkuste zachytit mluvící prohlížeč pomocí zvuku aplikace nebo plochy v OBS, pokud je to podporované. Níže uvedené metody s virtuálním kabelem jsou volitelné alternativy; nepřidávají podporu řeči do OBS.","URL Parameters":"Parametry URL","URL Parameters for TTS Configuration":"Parametry URL pro nastavení TTS","Under":"V části","Use":"Použijte","Use a free built-in provider such as Kokoro, Piper, Kitten, or eSpeak, a cloud provider, or a self-hosted TTS server.":"Použijte bezplatného vestavěného poskytovatele, jako je Kokoro, Piper, Kitten nebo eSpeak, cloudového poskytovatele nebo vlastní server TTS.","Use a provider that generates page audio for a simpler OBS setup; free local providers are available":"Pro jednodušší nastavení OBS použijte poskytovatele vytvářejícího zvuk stránky; k dispozici jsou bezplatní místní poskytovatelé","Uses OpenAI's API by default, or any compatible local server":"Ve výchozím nastavení používá API OpenAI nebo jakýkoli kompatibilní místní server","Uses your operating system's built-in voices":"Používá vestavěné hlasy operačního systému","VB-Audio Virtual Cable":"VB-Audio Virtual Cable","Voice ID:":"ID hlasu:","Voice availability and audio routing depend on the browser and operating system; test in the actual player":"Dostupnost hlasů a směrování zvuku závisí na prohlížeči a operačním systému; testujte ve skutečném přehrávači","Voice pitch (0.1 to 2.0)":"Výška hlasu (0.1 až 2.0)","Voice selection:":"Výběr hlasu:","Voice:":"Hlas:","Voicemeeter":"Voicemeeter","Voices not showing:":"Hlasy se nezobrazují:","Volume level (0.0 to 1.0)":"Hlasitost (0.0 až 1.0)","Want fully local AI TTS?":"Chcete zcela místní AI TTS?","Where is TTS Used?":"Kde se TTS používá?","Windows 10":"Windows 10","Windows 11":"Windows 11","Windows TTS Audio Capture Methods for OBS":"Metody zachytávání zvuku Windows TTS pro OBS","Works directly with OBS browser source":"Funguje přímo se zdrojem prohlížeče OBS","Works with SSN app and OBS browser sources":"Funguje s aplikací SSN a zdroji prohlížeče OBS","Your TTS-enabled dock or overlay speaks the messages it receives, subject to its filters and TTS settings. Start with the":"Dok nebo překryv se zapnutým TTS čte zprávy, které přijímá, podle svých filtrů a nastavení TTS. Začněte s","alone does not change the selected voice. Existing English voice IDs still work.":"sama o sobě nezmění vybraný hlas. Stávající ID anglických hlasů stále fungují.","and":"a","and supports binary audio, JSON audio URLs, and JSON base64 audio":"a podporuje binární zvuk, URL zvuku v JSON a zvuk base64 v JSON","available voices":"dostupné hlasy","eSpeak-NG":"eSpeak-NG","eSpeak-NG (Free, Built-in)":"eSpeak-NG (zdarma, vestavěné)","for Brazilian Portuguese. Changing":"pro brazilskou portugalštinu. Změna","for English.":"pro angličtinu.","for Spanish or":"pro španělštinu nebo","for a self-hosted endpoint":"pro vlastní hostovaný koncový bod","for installing language packs.":"pro instalaci jazykových balíčků.","for self-hosted server setup":"pro nastavení vlastního serveru","for setup instructions and self-hosted server options.":"pro pokyny k nastavení a možnosti vlastního serveru.","for your browser":"pro váš prohlížeč","from the OBS URL if present.":"z URL v OBS, pokud je přítomné.","mean the same computer that is playing the TTS page. If OBS is on a different computer than your TTS server, use the server computer's LAN IP instead.":"znamenají stejný počítač, který přehrává stránku TTS. Pokud OBS běží na jiném počítači než server TTS, použijte místo toho IP adresu serveru v místní síti.","on the OBS computer and point SSN at":"na počítači s OBS a nasměrujte SSN na","or":"nebo","remove":"odeberte","short setup guide":"stručným průvodcem nastavením","⚠ Limited Support":"⚠ Omezená podpora","✓ System voices available on supported installations":"✓ Systémové hlasy dostupné v podporovaných instalacích"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/tts.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/tts.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/tts.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/tts.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/tts.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/tts.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/tts.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/tts.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/tts.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/tts.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/tts.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/tts.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/tts.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/tts.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/tts.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/tts.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/tts.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/tts.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header>
+        <div class="container">
+            <button class="theme-toggle" data-theme-toggle type="button">
+                <span class="theme-icon">🌓</span>
+                <span class="theme-text">Přepnout tmavý režim</span>
+            </button>
+            <h1>Průvodce TTS pro Social Stream Ninja</h1>
+            <p>Úplný průvodce hlasy převodu textu na řeč, kompatibilitou prohlížečů a zachytáváním zvuku</p>
+        <!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Čeština"><span aria-hidden="true">🌐 </span><span lang="cs">Čeština</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/tts.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/tts.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/tts.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/tts.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/tts.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/tts.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/tts.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/tts.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/tts.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/tts.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/tts.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/tts.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/tts.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/tts.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/tts.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="tts.html" lang="cs" hreflang="cs" aria-current="true">Čeština</a><a class="site-language-link" href="../../th/docs/tts.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+    </header>
+    
+    <div class="container">
+        <nav>
+            <h3>Obsah</h3>
+            <ul>
+                <li><a href="#overview">Přehled</a></li>
+                <li><a href="#providers">Poskytovatelé TTS</a></li>
+                <li><a href="#browser-support">Podpora prohlížečů</a></li>
+                <li><a href="#audio-capture">Zachytávání zvuku v OBS</a></li>
+                <li><a href="#language-installation">Instalace jazykových balíčků</a></li>
+                <li><a href="#parameters">Parametry URL</a></li>
+                <li><a href="#premium-options">Placené možnosti TTS</a></li>
+                <li><a href="#troubleshooting">Řešení potíží</a></li>
+            </ul>
+        </nav>
+        
+        <h2 id="overview">Přehled</h2>
+        <div class="card">
+            <p><strong>SSN může číst zachycený text chatu z jakéhokoli podporovaného zdroje; chatovací platforma nepotřebuje vlastní funkci TTS.</strong> Dok nebo překryv se zapnutým TTS čte zprávy, které přijímá, podle svých filtrů a nastavení TTS. Začněte s <a href="tts-setup-guide.html#chat-platforms">stručným průvodcem nastavením</a>; tato stránka popisuje možnosti hlasů a pokročilá nastavení. <a href="tts-setup-guide.html#voice-chooser">Porovnejte poskytovatele, poslechněte ukázky a prohlédněte nastavení.</a></p>
+            
+            <div class="info">
+                <strong>Rychlý start:</strong> Použijte <code>dock.html?session=YOUR_SESSION&amp;speech=en-US</code>. Výchozí je System TTS. Pro bezplatného poskytovatele v OBS přidejte také <code>&amp;ttsprovider=kokoro</code>. Nechte tuto stránku otevřenou a připojenou; mluvit by měla pouze jedna instance.
+            </div>
+            
+            <h3>Kde se TTS používá?</h3>
+            <ul>
+                <li><strong>Social Stream Ninja:</strong> Čte zprávy diváků z chatu v několika částech aplikace</li>
+                <li><strong>CAPTION.Ninja:</strong> Nabízí skryté titulky, přepis a překlad s TTS</li>
+                <li>Obě služby nabízejí placené i bezplatné možnosti TTS</li>
+            </ul>
+            
+            <div class="warning">
+                <strong>System TTS není totéž co všechny bezplatné možnosti TTS:</strong>
+                <ul>
+                    <li>Systémové hlasy závisí na prohlížeči a operačním systému. OBS nemusí poskytovat žádné použitelné hlasy, i když Chrome/Edge funguje.</li>
+                    <li>Chybějící hlas je něco jiného než řeč přehrávaná mimo zachytávání zvuku OBS. Směrování zvuku nedokáže vyřešit chybějící podporu řeči.</li>
+                    <li>Bezplatní poskytovatelé jako Kokoro, Piper, Kitten a eSpeak místo toho vytvářejí zvuk stránky. TTS v OBS nevyžaduje platbu.</li>
+                    <li><a href="tts-setup-guide.html#obs-voices">Nejprve zkontrolujte dostupnost hlasu, potom zachytávání zvuku.</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <h2 id="providers">Možnosti poskytovatelů TTS</h2>
+        <div class="card">
+            <h3>System TTS (zdarma)</h3>
+            <ul>
+                <li>Používá vestavěné hlasy operačního systému</li>
+                <li>Omezená podpora jazyků podle instalace systému</li>
+                <li>Dostupnost hlasů a směrování zvuku závisí na prohlížeči a operačním systému; testujte ve skutečném přehrávači</li>
+                <li>Kompatibilita prohlížečů se výrazně liší</li>
+            </ul>
+            
+            <h3>Místní / bezplatné možnosti TTS (bez API klíče)</h3>
+            <div class="info">
+                <strong>Chcete zcela místní AI TTS?</strong> Několik kvalitních AI hlasů je přímo vestavěných v Social Stream Ninja a běží v prohlížeči — bez API klíče, cloudu i další instalace. Viz <a href="local-tts.html"><strong>Průvodce lokálním AI TTS</strong></a> pro pokyny k nastavení a možnosti vlastního serveru.
+            </div>
+            <table>
+                <tr>
+                    <th>Poskytovatel</th>
+                    <th>Cena</th>
+                    <th>Zachytávání v OBS</th>
+                    <th>Funkce</th>
+                </tr>
+                <tr>
+                    <td>Kokoro TTS</td>
+                    <td>Zdarma</td>
+                    <td>Přímo</td>
+                    <td>AI v prohlížeči, vynikající kvalita, desítky hlasů</td>
+                </tr>
+                <tr>
+                    <td>Piper TTS</td>
+                    <td>Zdarma</td>
+                    <td>Přímo</td>
+                    <td>Rychlé neuronové TTS v prohlížeči s nízkými nároky na CPU</td>
+                </tr>
+                <tr>
+                    <td>Kitten TTS</td>
+                    <td>Zdarma</td>
+                    <td>Přímo</td>
+                    <td>Nenáročný model ONNX v prohlížeči</td>
+                </tr>
+                <tr>
+                    <td>eSpeak-NG</td>
+                    <td>Zdarma</td>
+                    <td>Přímo</td>
+                    <td>Klasický open-source systém, funguje na jakémkoli hardwaru</td>
+                </tr>
+            </table>
+
+            <h3>Placené / cloudové možnosti TTS (přímý zvuk prohlížeče)</h3>
+            <table>
+                <tr>
+                    <th>Poskytovatel</th>
+                    <th>Cena</th>
+                    <th>Zachytávání v OBS</th>
+                    <th>Funkce</th>
+                </tr>
+                <tr>
+                    <td>OpenAI TTS</td>
+                    <td>Platí poplatky za API (nebo zdarma místně)</td>
+                    <td>Přímo</td>
+                    <td>Vysoká kvalita; podporuje také místní servery přes vlastní koncový bod</td>
+                </tr>
+                <tr>
+                    <td>Google Cloud</td>
+                    <td>Platí poplatky za API</td>
+                    <td>Přímo</td>
+                    <td>Profesionální kvalita, více jazyků</td>
+                </tr>
+                <tr>
+                    <td>ElevenLabs</td>
+                    <td>K dispozici je bezplatná úroveň</td>
+                    <td>Přímo</td>
+                    <td>Trénování vlastního hlasu, přirozený zvuk</td>
+                </tr>
+                <tr>
+                    <td>Speechify</td>
+                    <td>Platí poplatky za API</td>
+                    <td>Přímo</td>
+                    <td>Kvalitní hlasy, více jazyků</td>
+                </tr>
+                <tr>
+                    <td>Gemini TTS</td>
+                    <td>Platí poplatky za API</td>
+                    <td>Přímo</td>
+                    <td>API generativního jazyka Google</td>
+                </tr>
+            </table>
+        </div>
+        
+        <h2 id="browser-support">Dostupnost systémových hlasů</h2>
+        <p>Jde o typické možnosti, ne záruky pro každou instalaci. OBS používá vlastní vestavěný prohlížeč a nepřebírá seznam hlasů nainstalovaného Chrome/Edge. Úspěšný test v aplikaci SSN netestuje samostatný zdroj prohlížeče OBS.</p>
+        <div class="browser-support">
+            <div class="browser-card">
+                <h3>Chrome</h3>
+                <p class="supported">✓ Systémové hlasy dostupné v podporovaných instalacích</p>
+                <p>Hlasy Googlu + systémové hlasy</p>
+            </div>
+            <div class="browser-card">
+                <h3>Edge</h3>
+                <p class="supported">✓ Systémové hlasy dostupné v podporovaných instalacích</p>
+                <p>Hlasy Microsoftu + balíčky Windows TTS</p>
+            </div>
+            <div class="browser-card">
+                <h3>Firefox</h3>
+                <p class="partial">⚠ Omezená podpora</p>
+                <p>Pouze místní systémové jazyky</p>
+            </div>
+            <div class="browser-card">
+                <h3>Opera</h3>
+                <p class="partial">⚠ Omezená podpora</p>
+                <p>Založený na Chromiu; dostupné hlasy se liší podle instalace</p>
+            </div>
+        </div>
+        
+        <div class="warning">
+            <strong>Omezení prohlížeče:</strong>
+            <ul>
+                <li>Ne všechny prohlížeče podporují převod textu na řeč stejně (některé verze Firefoxu mají omezený výběr hlasů)</li>
+                <li>Chrome nabízí možnosti TTS od Googlu</li>
+                <li>Edge podporuje TTS Microsoftu a hlasy jazykových balíčků Windows</li>
+                <li>Safari vyžaduje pro spuštění zvuku interakci uživatele</li>
+                <li>Zkontrolujte <a href="https://socialstream.ninja/tts" target="_blank">dostupné hlasy</a> pro váš prohlížeč</li>
+            </ul>
+        </div>
+        
+        <h2 id="audio-capture">Metody zachytávání zvuku Windows TTS pro OBS</h2>
+        <div class="card">
+            <h3>Zvuk stránky: bezplatní místní a cloudoví poskytovatelé</h3>
+            <p>Místní poskytovatelé SSN běžící v prohlížeči a cloudoví poskytovatelé zvuku přehrávají vygenerovaný zvuk přes stránku:</p>
+            <ul>
+                <li>Ve zdroji prohlížeče stačí zapnout „Control audio via OBS“</li>
+                <li>Není potřeba virtuální zvukový kabel</li>
+                <li>Funguje s aplikací SSN a zdroji prohlížeče OBS</li>
+            </ul>
+            
+            <h3>Metody zachytávání System TTS</h3>
+            <div class="warning">
+                <strong>Důležité:</strong> Nejprve ověřte, že System TTS vytváří řeč. Vestavěný prohlížeč OBS nemusí poskytovat použitelný systémový hlas. Pokud řeč nevytváří, změna směrování zvuku nepomůže. Vyberte jiného poskytovatele nebo vytvářejte řeč v podporovaném prohlížeči a zachytávejte jeho zvuk.
+            </div>
+            
+            <p>Konkrétně pro System TTS:</p>
+            <ul>
+                <li>Nepředpokládejte, že OBS nabízí stejné hlasy jako Chrome nebo Edge</li>
+                <li>Omezená podpora napříč prohlížeči (Firefox nemusí mít některé hlasy TTS)</li>
+                <li>Chrome nabízí možnosti Googlu, Edge má možnosti Microsoftu</li>
+                <li>Pokud řeč hraje mimo zdroj prohlížeče ve scéně, zachytávejte tento výstup samostatně</li>
+            </ul>
+            <p><strong>Ke stažení pro směrování zvuku:</strong> <a href="https://vb-audio.com/Cable/" target="_blank">VB-Audio Virtual Cable</a> | <a href="https://vb-audio.com/Voicemeeter/" target="_blank">Voicemeeter</a> | <a href="https://github.com/audiorouterdev/audio-router" target="_blank">Audio Router (starší)</a></p>
+
+            <p>Nejprve zkuste zachytit mluvící prohlížeč pomocí zvuku aplikace nebo plochy v OBS, pokud je to podporované. Níže uvedené metody s virtuálním kabelem jsou volitelné alternativy; nepřidávají podporu řeči do OBS.</p>
+            <h4>Metoda 1: výchozí směrování zvuku přes virtuální kabel</h4>
+            <div class="code">
+1. Set VB-Audio Virtual Cable as Windows default output
+   - Sound Settings > Output > CABLE Input
+2. OBS:
+   - Add Audio Input Capture
+   - Source: CABLE Output
+   - Monitor: Monitor and Output, or Monitor Only if another source handles stream output
+            </div>
+            
+            <h4>Metoda 2: směrování aplikace ve Windows 10</h4>
+            <div class="code">
+1. Sound Settings > App volume and device preferences
+2. Find browser in list
+3. Output: CABLE Input
+4. OBS setup same as Method 1
+            </div>
+            
+            <h4>Metoda 3: směrování aplikace ve Windows 11</h4>
+            <div class="code">
+1. Settings > System > Sound > Volume Mixer
+2. Locate browser
+3. Output: CABLE Input
+4. OBS setup same as Method 1
+            </div>
+            
+            <h4>Metoda 4: software Audio Router</h4>
+            <div class="code">
+1. Install Audio Router
+2. Route browser to CABLE Input
+3. OBS setup same as Method 1
+            </div>
+            
+            <h4>Metoda 5: Voicemeeter (pokročilé)</h4>
+            <div class="code">
+1. Install Voicemeeter
+2. Set as Windows default output
+3. Route:
+   - Hardware out > speakers
+   - Virtual out > OBS
+4. OBS captures Voicemeeter output
+            </div>
+            
+            <h3>Testování nastavení</h3>
+            <div class="code">
+1. Play TTS
+2. Check OBS meter
+3. Verify system audio
+4. Adjust levels if needed
+            </div>
+            
+            <div class="info">
+                <strong>Alternativy:</strong> Použijte bezplatného vestavěného poskytovatele, jako je Kokoro, Piper, Kitten nebo eSpeak, cloudového poskytovatele nebo vlastní server TTS.
+            </div>
+        </div>
+        
+        <h2 id="language-installation">Instalace dalších jazykových balíčků</h2>
+        <div class="card">
+            <h3>Windows 11</h3>
+            <ol>
+                <li>Přejděte na <strong>Start &gt; Nastavení &gt; Čas a jazyk &gt; Řeč</strong></li>
+                <li>V části <strong>Spravovat hlasy</strong>, klikněte na <strong>Přidat hlasy</strong></li>
+                <li>Vyberte požadované jazyky a klikněte na <strong>Přidejte</strong></li>
+                <li>Restartujte prohlížeče pro obnovení dostupných hlasů</li>
+            </ol>
+            
+            <h3>Windows 10</h3>
+            <p>Postupujte podle pokynů v <a href="https://support.microsoft.com/en-US/Windows/Hardware/Input-Devices/manage-the-language-and-keyboard-input-layout-settings-in-windows" target="_blank">oficiálním průvodci Microsoftu</a> pro instalaci jazykových balíčků.</p>
+            
+            <div class="info">
+                <strong>Tip:</strong> Některé hlasy třetích stran se v prohlížečích nemusí zobrazit kvůli problémům s kompatibilitou. Firefox často zobrazuje více systémových hlasů než prohlížeče založené na Chromiu.
+            </div>
+        </div>
+        
+        <h2 id="parameters">Parametry URL pro nastavení TTS</h2>
+        <div class="card">
+            <h3>Základní parametry</h3>
+            <table class="parameter-table">
+                <tr>
+                    <th>Parametr</th>
+                    <th>Popis</th>
+                    <th>Příklad</th>
+                </tr>
+                <tr>
+                    <td>&speech</td>
+                    <td>Zapnout TTS s kódem jazyka</td>
+                    <td>&speech=en-US</td>
+                </tr>
+                <tr>
+                    <td>&pitch</td>
+                    <td>Výška hlasu (0.1 až 2.0)</td>
+                    <td>&pitch=1.2</td>
+                </tr>
+                <tr>
+                    <td>&volume</td>
+                    <td>Hlasitost (0.0 až 1.0)</td>
+                    <td>&volume=0.8</td>
+                </tr>
+                <tr>
+                    <td>&rate</td>
+                    <td>Rychlost řeči (0.1 až 10.0)</td>
+                    <td>&rate=1.5</td>
+                </tr>
+                <tr>
+                    <td>&voice</td>
+                    <td>Částečná shoda názvu hlasu</td>
+                    <td>&voice=google</td>
+                </tr>
+                <tr>
+                    <td>&ttsprovider</td>
+                    <td>Vyberte poskytovatele: kokoro, piper, kitten, espeak, openai, customtts, localtts, elevenlabs, google, speechify, gemini</td>
+                    <td>&ttsprovider=customtts</td>
+                </tr>
+            </table>
+            
+            <h3>Pokročilé parametry</h3>
+            <table class="parameter-table">
+                <tr>
+                    <th>Parametr</th>
+                    <th>Popis</th>
+                </tr>
+                <tr>
+                    <td>&simpletts</td>
+                    <td>Nevyslovovat „říká“ ani „někdo říká“</td>
+                </tr>
+                <tr>
+                    <td>&simpletts2</td>
+                    <td>Vůbec nečíst jména uživatelů chatu</td>
+                </tr>
+                <tr>
+                    <td>&ttscommand</td>
+                    <td>Zapnout vlastní příkaz TTS (výchozí: !say)</td>
+                </tr>
+                <tr>
+                    <td>&readevents</td>
+                    <td>Zahrnout události streamu do TTS</td>
+                </tr>
+                <tr>
+                    <td>&skipmessages=3</td>
+                    <td>Číst pouze každou 3. zprávu</td>
+                </tr>
+            </table>
+        </div>
+        
+        <h2 id="premium-options">Nastavení poskytovatele TTS</h2>
+        <div class="card">
+            <h3>Kokoro TTS (zdarma, vestavěné)</h3>
+            <ul>
+                <li>Zapněte pomocí <code>?ttsprovider=kokoro</code></li>
+                <li>Běží v prohlížeči přes WebGPU/WASM — bez serveru</li>
+                <li>Funguje přímo se zdrojem prohlížeče OBS</li>
+                <li>Výběr hlasu: <code>&voicekokoro=af_bella</code></li>
+                <li>Ovládání rychlosti: <code>&kokorospeed=1.2</code></li>
+                <li>Vyberte hlas pro daný jazyk: <code>&amp;voicekokoro=ef_dora</code> pro španělštinu nebo <code>&amp;voicekokoro=pf_dora</code> pro brazilskou portugalštinu. Změna <code>&amp;speech=</code> sama o sobě nezmění vybraný hlas. Stávající ID anglických hlasů stále fungují.</li>
+
+            </ul>
+
+            <h3>Piper TTS (zdarma, vestavěné)</h3>
+            <ul>
+                <li>Zapněte pomocí <code>?ttsprovider=piper</code></li>
+                <li>Rychlé neuronové TTS v prohlížeči s nízkými nároky na CPU</li>
+                <li>Výběr hlasu: <code>&pipervoice=en_US-hfc_female-medium</code></li>
+                <li>Portugalské hlasy: <code>&pipervoice=pt_BR-faber-medium</code> nebo <code>&pipervoice=pt_BR-edresson-low</code></li>
+                <li>Španělské hlasy: <code>&pipervoice=es_ES-davefx-medium</code> nebo <code>&pipervoice=es_MX-ald-medium</code></li>
+                <li>Ovládání rychlosti: <code>&piperspeed=1.0</code></li>
+            </ul>
+
+            <h3>Kitten TTS (zdarma, vestavěné)</h3>
+            <ul>
+                <li>Zapněte pomocí <code>?ttsprovider=kitten</code></li>
+                <li>Nenáročné TTS založené na ONNX běžící v prohlížeči</li>
+                <li>Výběr hlasu: <code>&kittenvoice=expr-voice-4-f</code></li>
+            </ul>
+
+            <h3>eSpeak-NG (zdarma, vestavěné)</h3>
+            <ul>
+                <li>Zapněte pomocí <code>?ttsprovider=espeak</code></li>
+                <li>Klasické open-source TTS, funguje na jakémkoli hardwaru</li>
+                <li>Výběr hlasu: <code>&espeakvoice=en</code></li>
+                <li>Portugalský příklad: <code>&speech=pt-BR&ttsprovider=espeak&espeakvoice=pt-br</code></li>
+                <li>Španělský příklad: <code>&speech=es-ES&ttsprovider=espeak&espeakvoice=es</code></li>
+                <li>Ovládání rychlosti: <code>&espeakspeed=175</code></li>
+            </ul>
+
+            <h3>Příklady portugalského a španělského TTS</h3>
+            <ul>
+                <li>Portugalština, nejlepší bezplatná místní kvalita testovaná v SSN: <code>?speech=pt-BR&ttsprovider=piper&pipervoice=pt_BR-faber-medium</code></li>
+                <li>Portugalština, nejrychlejší záložní možnost testovaná v SSN: <code>?speech=pt-BR&ttsprovider=espeak&espeakvoice=pt-br</code></li>
+                <li>Španělština, nejlepší bezplatná místní kvalita testovaná v SSN: <code>?speech=es-ES&ttsprovider=piper&pipervoice=es_ES-davefx-medium</code></li>
+                <li>Španělština, nejrychlejší záložní možnost testovaná v SSN: <code>?speech=es-ES&ttsprovider=espeak&espeakvoice=es</code></li>
+                <li>U cloudových hlasů použijte hlas/jazyk poskytovatele podporující cílový jazyk, například Google Cloud, ElevenLabs, Speechify, Gemini nebo místní server kompatibilní s OpenAI.</li>
+            </ul>
+
+            <h3>OpenAI / místní server TTS</h3>
+            <ul>
+                <li>Zapněte pomocí <code>?ttsprovider=openai</code></li>
+                <li>Použijte <code>?ttsprovider=customtts</code> nebo <code>?ttsprovider=localtts</code> pro vlastní hostovaný koncový bod</li>
+                <li>Ve výchozím nastavení používá API OpenAI nebo jakýkoli kompatibilní místní server</li>
+                <li>Vlastní koncový bod: <code>&openaiendpoint=http://localhost:8880/v1/audio/speech</code></li>
+                <li><strong>Důležité:</strong> <code>localhost</code> a <code>127.0.0.1</code> znamenají stejný počítač, který přehrává stránku TTS. Pokud OBS běží na jiném počítači než server TTS, použijte místo toho IP adresu serveru v místní síti.</li>
+                <li>Místní servery nepotřebují API klíč</li>
+                <li>Pokud má místní server problémy s CORS nebo místní sítí v Chrome/OBS, spusťte <code>npm run local-tts-bridge</code> na počítači s OBS a nasměrujte SSN na <code>http://127.0.0.1:8124/v1/audio/speech</code></li>
+                <li>SSN odesílá <code>{ model, input, voice, response_format, speed }</code> a podporuje binární zvuk, URL zvuku v JSON a zvuk base64 v JSON</li>
+                <li>Přehrávání z vlastního/místního koncového bodu se nyní ukládá do vyrovnávací paměti; SSN zatím nepřehrává streamované zvukové bloky průběžně</li>
+                <li>Hlas: <code>&voiceopenai=af_bella</code>, rychlost: <code>&openaispeed=1.0</code>. Použijte název hlasu podporovaný vaším serverem; hlasy Kokoro vypadají jako <code>af_bella</code>, zatímco hlasy openedai-speech/ve stylu OpenAI mohou vypadat jako <code>nova</code> nebo <code>echo</code>.</li>
+                <li>Podívejte se na <a href="local-tts.html">Průvodce lokálním AI TTS</a> pro nastavení vlastního serveru</li>
+            </ul>
+            
+            <h3>Google Cloud TTS</h3>
+            <ul>
+                <li>Zapněte pomocí <code>?ttsprovider=google&ttskey=YOUR_API_KEY</code></li>
+                <li>Hlasy profesionální kvality</li>
+                <li>Výběr hlasu: <code>&voicegoogle=en-GB-Standard-A</code></li>
+                <li>Jazyk: <code>&googlelang=en-US</code></li>
+            </ul>
+
+            <h3>Gemini TTS</h3>
+            <ul>
+                <li>Zapněte pomocí <code>?ttsprovider=gemini&geminikey=YOUR_API_KEY</code></li>
+                <li>Model: <code>&geminimodel=gemini-2.5-flash-preview-tts</code></li>
+                <li>Hlas: <code>&voicegemini=Kore</code>, jazyk: <code>&geminilang=th-TH</code></li>
+                <li>Pokyny ke stylu: <code>&geministyle=Read aloud in a warm tone.</code></li>
+            </ul>
+
+            <h3>ElevenLabs TTS</h3>
+            <ul>
+                <li>Zapněte pomocí <code>?ttsprovider=elevenlabs&elevenlabskey=YOUR_API_KEY</code></li>
+                <li>ID hlasu: <code>&voice11=YOUR_VOICE_ID</code></li>
+                <li>Model: <code>&elevenlabsmodel=eleven_multilingual_v2</code></li>
+                <li>Lze upravit parametry stability, similarity a style</li>
+            </ul>
+            
+            <h3>Fish Audio TTS</h3>
+            <p>Vyberte Fish Audio a zadejte API klíč, případně i ID hlasu. Výchozí model je <code>s2.1-pro-free</code>. <a href="tts-setup-guide.html#settings-fish">Nastavení, možnosti modelu a omezení přístupu z prohlížeče</a>.</p>
+
+            <h3>Speechify TTS</h3>
+            <ul>
+                <li>Zapněte pomocí <code>?ttsprovider=speechify&speechifykey=YOUR_API_KEY</code></li>
+                <li>Hlas: <code>&voicespeechify=henry</code></li>
+                <li>Model: <code>&speechifymodel=simba-3.0</code> (výchozí) nebo <code>&speechifymodel=simba-3.2</code> pro angličtinu.</li>
+                <li>Rychlost řeči: <code>&speechifyspeed=1.2</code> (rozsah 0.5 až 3.0; běžná hodnota je 1.0).</li>
+                <li><a href="speechify-setup-guide.html">Průvodce nastavením Speechify, hlasy, rychlostí a hlasitostí</a></li>
+            </ul>
+        </div>
+        
+        <h2 id="troubleshooting">Řešení potíží</h2>
+        <div class="card">
+            <h3>Běžné problémy</h3>
+            <ul>
+                <li><strong>Nepřehrává se zvuk:</strong> Ověřte, že TTS je zapnuté, stránka vytvářející řeč je otevřená a zdroj prohlížeče není ztlumený. V běžném prohlížeči jednou klikněte na stránku.</li>
+                <li><strong>Hlasy se nezobrazují:</strong> Po instalaci jazykových balíčků restartujte prohlížeč</li>
+                <li><strong>OBS nezachytává zvuk:</strong> Pokud není žádná řeč, nejprve ověřte dostupnost hlasu/poskytovatele. Pokud řeč existuje, zkontrolujte <strong>Ovládat zvuk přes OBS (Control audio via OBS)</strong>, ztlumení mixéru a výstupní stopy, nebo zachytávejte externí prohlížeč, který mluví</li>
+                <li><strong>Místní koncový bod funguje v testu aplikace, ale ne v OBS:</strong> OBS je samostatný prohlížeč. Ověřte koncový bod z počítače s OBS, zejména při použití <code>127.0.0.1</code>.</li>
+                <li><strong>Čte se jen první písmeno nebo první slova:</strong> odeberte <code>ttsquick</code> z URL v OBS, pokud je přítomné.</li>
+                <li><strong>Problémy se Safari:</strong> Safari má omezenou podporu automatického TTS</li>
+                <li><strong>Placená služba nefunguje:</strong> Zkontrolujte API klíč a správně nastaveného poskytovatele</li>
+            </ul>
+            
+            <h3>Doporučené postupy</h3>
+            <ul>
+                <li>Pro jednodušší nastavení OBS použijte poskytovatele vytvářejícího zvuk stránky; k dispozici jsou bezplatní místní poskytovatelé</li>
+                <li>Před živým vysíláním otestujte nastavení jednoduchými větami</li>
+                <li>Zvažte rizika uživatelského obsahu při používání TTS</li>
+                <li>Mějte k dispozici přepínač pro rychlé vypnutí TTS v případě potřeby</li>
+            </ul>
+        </div>
+        
+        <div class="tts-test">
+            <h3>Zkontrolovat systémové hlasy tohoto prohlížeče</h3>
+            <p>Toto vypisuje <strong>Hlasy System TTS pouze v prohlížeči zobrazujícím tohoto průvodce</strong>. Netestuje OBS, samostatné okno aplikace SSN ani poskytovatele, jako je Kokoro. Prázdný seznam neznamená, že ostatní poskytovatelé TTS v SSN nejsou dostupní.</p>
+            <button onclick="window.open(&#x27;https://socialstream.ninja/tts&#x27;, &#x27;_blank&#x27;)">Zkontrolovat dostupné hlasy</button>
+        </div>
+        
+        <footer>
+            <p>Průvodce TTS pro Social Stream Ninja - nejnovější informace najdete na <a href="https://github.com/steveseguin/social_stream" target="_blank">repozitáři GitHub</a></p>
+        </footer>
+    </div>
+    
+</body>
+</html>

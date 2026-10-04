@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-tw" data-site-root="../../" data-site-language="zh-tw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://socialstream.ninja/beta/zh-tw/docs/chat-relay-guide.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="zh_TW">
+    <meta property="og:url" content="https://socialstream.ninja/beta/zh-tw/docs/chat-relay-guide.html">
+    <meta property="og:title" content="在平台之間轉送聊天 - Social Stream Ninja">
+    <meta property="og:description" content="有計畫地設定 Twitch 和 YouTube 聊天轉送，選擇傳送帳號，並排查訊息重複問題。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja 標誌">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/beta/zh-tw/docs/chat-relay-guide.html">
+    <meta name="twitter:title" content="在平台之間轉送聊天 - Social Stream Ninja">
+    <meta name="twitter:description" content="有計畫地設定 Twitch 和 YouTube 聊天轉送，選擇傳送帳號，並排查訊息重複問題。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja 標誌">
+	<script>
+		(function() {
+			var savedTheme = localStorage.getItem("darkMode");
+			var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+			if (savedTheme === "true" || (savedTheme !== "false" && prefersDark)) {
+				document.documentElement.classList.add("dark-mode");
+			}
+		})();
+	</script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>在平台之間轉送聊天 - Social Stream Ninja</title>
+	<link rel="stylesheet" href="../../docs/css/styles.css">
+	<link rel="stylesheet" href="../../docs/css/guides.css">
+	<link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+	<meta name="description" content="有計畫地設定 Twitch 和 YouTube 聊天轉送，選擇傳送帳號，並排查訊息重複問題。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js">
+</script>
+<link rel="stylesheet" href="../../docs/css/workflow-guides.css">
+
+<meta name="ssn-site-translation" content="zh-tw">
+<script id="ssn-site-language" type="application/json">{"language":"zh-tw","page":"docs/chat-relay-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"切換為淺色主題","Switch to dark theme":"切換為深色主題","Light mode":"淺色模式","Dark mode":"深色模式","Open navigation menu":"開啟導覽選單","Close navigation menu":"關閉導覽選單","Copy this document as Markdown to the clipboard":"將此文件以 Markdown 格式複製到剪貼簿","Copy Markdown":"複製 Markdown","Copying…":"正在複製…","Markdown copied":"已複製 Markdown","Copy failed":"複製失敗","Copy comprehensive Markdown for an AI assistant":"複製完整 Markdown 內容供 AI 助手使用","Copy this documentation page as Markdown for an AI assistant":"將此文件頁面複製為 Markdown，供 AI 助手使用"},"strings":{", and keep the message template":"，並將訊息範本保持為",". A blank list means all eligible destinations. That list controls destinations, not which incoming platforms can trigger a relay. Disable the Event Flow relay pair before enabling this alternative.":"。清單留空表示所有符合條件的目的地。此清單控制接收目的地，不限制哪些傳入平台可以觸發轉送。啟用此替代方案前，請先停用 Event Flow 中的雙向轉送。",". Choose Twitch as its source.":"。選擇 Twitch 作為來源。",". Save and enable it. Send a fresh message from each side and confirm each produces one cross-platform copy.":"。儲存並啟用。從兩端各傳送一則新訊息，確認每則訊息都只在另一平台出現一份副本。","1. Confirm both chats can receive replies":"1. 確認兩個聊天室都能接收回覆","2. Create Twitch → YouTube in Event Flow":"2. 在 Event Flow 中建立 Twitch → YouTube 轉送","3. Add the return direction":"3. 新增反向轉送","4. Understand reflections":"4. 瞭解回流訊息","5. Narrow what you relay":"5. 縮小轉送範圍","A reflection is a message SSN sent that gets captured again from the destination chat. Current Relay Chat actions skip recognized reflections automatically. They also exclude the originating tab.":"回流訊息是指 SSN 傳送後，又從目的地聊天室擷取到的訊息。目前的 Relay Chat 動作會自動略過已識別的回流訊息，也會排除原始來源分頁。","AND":"且（AND）","Add a":"新增一個","All guides":"所有指南","Allow All":"全部允許","Allow First":"允許第一則","Block All":"全部封鎖","Bot accounts for replies":"用於回覆的機器人帳號","Browse all guides":"瀏覽所有指南","Build and verify one direction before enabling the return direction.":"先建立並驗證一個方向，再啟用反向轉送。","Commands & API":"指令與 API","Connect your Twitch and YouTube Live chats to the same SSN session. Confirm both appear in the Dock, then send one manual reply to each from a message with a known source tab. Use your own test channels. A read-only capture source cannot send a relay.":"將 Twitch 和 YouTube Live 聊天室連接到同一個 SSN 工作階段。確認兩者都出現在停駐面板中，然後分別選取來源分頁已知的訊息，手動回覆一次。請使用自己的測試頻道。唯讀的擷取來源無法傳送轉送訊息。","Create a second flow named":"建立第二個流程，命名為","Destination: YouTube":"目的地：YouTube","Download":"下載","Event Flow Editor":"Event Flow 編輯器","Event Flow guide":"Event Flow 指南","Features":"功能","For commands, add a":"如需篩選指令，請新增一個","From Source":"來自來源（From Source）","From Source: YouTube → Relay Chat: Twitch":"From Source: YouTube → Relay Chat: Twitch","Global settings and tools → Commands → Pick relay destinations":"全域設定與工具 → 指令 → 選擇轉送目的地","Guides":"指南","Hire":"聘用","Home":"首頁","If you choose the simpler global relay instead, use":"如果改用較簡單的全域轉送，請使用","Inspiration":"靈感","Keep":"保持","Keep only the intended destination chats open for this setup. A platform destination can include multiple eligible source tabs on that platform. If you use a separate Twitch bot account, complete":"此設定中只應開啟預期的目的地聊天室。同一平台的目的地可能包含該平台上多個符合條件的來源分頁。如果使用獨立的 Twitch 機器人帳號，請先完成","Main navigation":"主導覽","Message Starts With":"訊息開頭符合（Message Starts With）","Messages multiply:":"訊息不斷增多：","NOT":"非（NOT）","Nothing sends:":"沒有傳送任何訊息：","On this page":"本頁內容","Only the Dock shows duplicates:":"只有停駐面板顯示重複訊息：","Open navigation menu":"開啟導覽選單","Open the":"開啟","Overlay Gallery":"疊加畫面圖庫","Reflection Filter":"回流篩選器（Reflection Filter）","Relay Chat":"轉送聊天（Relay Chat）","Relay Destination":"轉送目的地","Relay all messages (!NOT RECOMMENDED!)":"轉送所有訊息（不建議！）","Relay chat between platforms":"在平台之間轉送聊天","Relay chat between platforms - Social Stream Ninja":"在平台之間轉送聊天 - Social Stream Ninja","SSApp’s account-role allow/block fields in the same Commands section can restrict which accounts send relays. Use the role assigned to your intended sender; an unmatched role can leave no eligible destination.":"SSApp 在同一「指令」區域提供帳號角色允許／封鎖欄位，可限制哪些帳號傳送轉送訊息。請使用分配給預期傳送帳號的角色；角色不符可能導致沒有符合條件的目的地。","Save Flow":"儲存流程","Select":"選擇","Select that action. Set":"選擇該動作。將以下選項設為","Send a fresh normal message in your own Twitch test chat. Confirm one labelled copy arrives in YouTube.":"在自己的 Twitch 測試聊天室傳送一則新的普通訊息。確認 YouTube 收到一份帶標籤的副本。","Set up a deliberate Twitch and YouTube relay, choose senders, and diagnose repeated messages.":"有計畫地設定 Twitch 和 YouTube 聊天轉送，選擇傳送帳號，並排查訊息重複問題。","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninja 標誌","Social Stream Ninja ·":"Social Stream Ninja ·","Support":"支援","Supported Sites":"支援的網站","Switch theme":"切換主題","Test Flow actions can send real messages. Use controlled destinations; a synthetic test does not prove the real source’s account routing.":"Test Flow 動作可以傳送真實訊息。請使用受控的目的地；模擬測試無法證明實際來源的帳號路由正確。","The current Relay Chat properties do not have a “No Reflections” checkbox. Use the separate Reflection Filter for display control. If an external service rewrites a relayed message, automatic recognition may not catch it.":"目前 Relay Chat 的屬性中沒有「No Reflections」核取方塊。請使用獨立的 Reflection Filter 控制顯示。如果外部服務改寫了轉送訊息，自動識別可能無法捕捉到它。","To hide the captured echo from the Dock and overlays, add a":"如需在停駐面板和疊加畫面中隱藏擷取到的回流訊息，請新增一個","Troubleshooting":"疑難排解","Twitch":"Twitch","Twitch to YouTube":"Twitch 轉 YouTube","User & Source":"使用者與來源","Wrong YouTube destination:":"YouTube 目的地不正確：","YouTube":"YouTube","YouTube Shorts":"YouTube Shorts","YouTube Shorts has its own source type and destination. Choose":"YouTube Shorts 有獨立的來源類型和目的地。請按需選擇","YouTube chat":"YouTube 聊天","YouTube to Twitch":"YouTube 轉 Twitch","[twitch] Name: message":"[twitch] 名字：訊息","action and connect the trigger output to the action input.":"動作，並將觸發器輸出連接到該動作的輸入。","action early in the relevant flow and select":"動作，放在相關流程的前段，並選擇","and connect it through a":"，將其連接到一個","and enable the saved flow. Keep SSN active.":"並啟用已儲存的流程。保持 SSN 執行。","and enter":"並輸入","before Relay Chat. See the":"，放在 Relay Chat 之前。有關連接邏輯閘的說明，請參閱","check YouTube versus YouTube Shorts and close unintended eligible chats.":"檢查 YouTube 與 YouTube Shorts 的選擇，並關閉不需要的、符合轉送條件的聊天室。","disable the relay flows first. Check for duplicate capture sources, global Relay all, and external relay bots before retesting one direction.":"先停用轉送流程。檢查重複的擷取來源、全域「轉送所有訊息」和外部轉送機器人，然後再單向重試。","displays them. This controls display after capture, not where a relay is sent.":"會顯示它們。此設定控制擷取後的顯示，不決定轉送目的地。","first.":"。","for connecting logic gates. Test both a normal line and a command.":"。請分別測試普通訊息和指令。","from SSN’s menu (also linked from the Actions overlay section). Create a flow and give it a clear name such as":"，可從 SSN 選單進入（「Actions 疊加畫面」區域也有連結）。建立一個流程，並賦予清楚的名稱，例如","gate; combine that result with your source condition using":"邏輯閘；再使用以下邏輯閘將結果與來源條件組合：","inspect Reflection Filter display policy and global Message - Visibility echo settings.":"檢查 Reflection Filter 的顯示策略，以及全域「訊息 - 可見性」中的回流顯示設定。","keeps one matching reflection within its configured window;":"會在設定的時間範圍內保留一則符合的回流訊息；","off when using these flows, so a second relay system is not doing the same work. Also check whether another bot or multistream service is already bridging the chats.":"關閉，以免另一個轉送系統重複執行相同動作。也請檢查是否已有其他機器人或多平台直播服務在連接這些聊天室。","retry a manual reply, verify login/posting permission, enable the saved flow, and check destination and account-role restrictions.":"重試手動回覆，驗證登入狀態和發言權限，啟用已儲存的流程，並檢查目的地和帳號角色限制。","to":"為","trigger from":"觸發器，位於","trigger set to":"觸發器，設為","where appropriate; it is not interchangeable with YouTube.":"；它與 YouTube 不能互換。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/beta/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/beta/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/beta/es/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/beta/pt-br/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/beta/ru/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/beta/fr/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/beta/de/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/beta/ja/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/beta/zh-cn/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/beta/zh-tw/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/beta/it/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/beta/pl/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/beta/ko/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/beta/uk/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/beta/ar/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/beta/tr/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/beta/cs/docs/chat-relay-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/beta/th/docs/chat-relay-guide.html">
+<!-- ssn-languages:end --></head>
+<body class="workflow-guide">
+<header class="site-header">
+<div class="site-bar">
+<a class="site-brand" href="../index.html">
+<img src="../../icons/logo.svg" width="32" height="32" alt="">
+<span>Social Stream Ninja</span>
+</a>
+<nav class="site-nav" id="ssn-site-nav" aria-label="主導覽">
+<a href="../index.html">首頁</a>
+<a href="features.html">功能</a>
+<a href="inspiration.html" class="site-priority-inspiration">靈感</a>
+<a href="download.html">下載</a>
+<a href="guides.html">指南</a>
+<a href="commands.html">指令與 API</a>
+<a href="supported-sites.html">支援的網站</a>
+<a href="overlay-gallery.html" class="site-priority-gallery">疊加畫面圖庫</a>
+<a href="services.html" class="site-priority-hire">聘用</a>
+<a href="support.html">支援</a>
+</nav>
+<div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="繁體中文"><span aria-hidden="true">🌐 </span><span lang="zh-tw">繁體中文</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/chat-relay-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/chat-relay-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/chat-relay-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/chat-relay-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/chat-relay-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/chat-relay-guide.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="../../ja/docs/chat-relay-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/docs/chat-relay-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="chat-relay-guide.html" lang="zh-tw" hreflang="zh-tw" aria-current="true">繁體中文</a><a class="site-language-link" href="../../it/docs/chat-relay-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/chat-relay-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/chat-relay-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/chat-relay-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/chat-relay-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/chat-relay-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/chat-relay-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/chat-relay-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end -->
+<button class="site-theme" type="button" aria-label="切換主題">
+<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+<circle cx="12" cy="12" r="9"/>
+<path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+</svg>
+</button>
+<button class="site-menu" type="button" aria-label="開啟導覽選單" aria-expanded="false" aria-controls="ssn-site-nav">
+<span aria-hidden="true">&#9776;</span>
+</button>
+</div>
+</div>
+</header>
+<section class="page-hero">
+<div class="container">
+<h1>在平台之間轉送聊天</h1>
+<p>有計畫地設定 Twitch 和 YouTube 聊天轉送，選擇傳送帳號，並排查訊息重複問題。</p>
+</div>
+</section>
+<main class="guide-section">
+<div class="container">
+<nav class="workflow-toc" aria-label="本頁內容">
+<a href="guides.html">所有指南</a>
+<a href="#prepare">1. 確認兩個聊天室都能接收回覆</a>
+<a href="#one-way">2. 在 Event Flow 中建立 Twitch → YouTube 轉送</a>
+<a href="#return">3. 新增反向轉送</a>
+<a href="#echoes">4. 瞭解回流訊息</a>
+<a href="#advanced">5. 縮小轉送範圍</a>
+<a href="#check">疑難排解</a>
+</nav>
+<section class="guide-card" id="prepare">
+<h2>1. 確認兩個聊天室都能接收回覆</h2>
+<p>將 Twitch 和 YouTube Live 聊天室連接到同一個 SSN 工作階段。確認兩者都出現在停駐面板中，然後分別選取來源分頁已知的訊息，手動回覆一次。請使用自己的測試頻道。唯讀的擷取來源無法傳送轉送訊息。</p>
+<p>此設定中只應開啟預期的目的地聊天室。同一平台的目的地可能包含該平台上多個符合條件的來源分頁。如果使用獨立的 Twitch 機器人帳號，請先完成 <a href="twitch-bot-account-chatbot.html">用於回覆的機器人帳號</a> 。</p>
+</section>
+<section class="guide-card" id="one-way">
+<h2>2. 在 Event Flow 中建立 Twitch → YouTube 轉送</h2>
+<p>開啟 <strong>Event Flow 編輯器</strong> ，可從 SSN 選單進入（「Actions 疊加畫面」區域也有連結）。建立一個流程，並賦予清楚的名稱，例如 <strong>Twitch 轉 YouTube</strong>.</p>
+<ol class="guide-steps">
+<li>新增一個 <strong>來自來源（From Source）</strong> 觸發器，位於 <strong>使用者與來源</strong>。選擇 Twitch 作為來源。</li>
+<li>新增一個 <strong>轉送聊天（Relay Chat）</strong> 動作，並將觸發器輸出連接到該動作的輸入。</li>
+<li>選擇該動作。將以下選項設為 <strong>轉送目的地</strong> 為 <strong>YouTube</strong>，並將訊息範本保持為 <code>[{source}] {username}: {message}</code>.</li>
+<li>選擇 <strong>儲存流程</strong> 並啟用已儲存的流程。保持 SSN 執行。</li>
+<li>在自己的 Twitch 測試聊天室傳送一則新的普通訊息。確認 YouTube 收到一份帶標籤的副本。</li>
+</ol>
+<figure class="guide-figure">
+<ol class="workflow-diagram">
+<li>
+<strong>來自來源（From Source）</strong>
+<span>Twitch</span>
+</li>
+<li>
+<strong>轉送聊天（Relay Chat）</strong>
+<span>目的地：YouTube</span>
+</li>
+<li>
+<strong>YouTube 聊天</strong>
+<span>[twitch] 名字：訊息</span>
+</li>
+</ol>
+<figcaption>先建立並驗證一個方向，再啟用反向轉送。</figcaption>
+</figure>
+<p>YouTube Shorts 有獨立的來源類型和目的地。請按需選擇 <strong>YouTube Shorts</strong> ；它與 YouTube 不能互換。</p>
+</section>
+<section class="guide-card" id="return">
+<h2>3. 新增反向轉送</h2>
+<p>建立第二個流程，命名為 <strong>YouTube 轉 Twitch</strong>: <strong>From Source: YouTube → Relay Chat: Twitch</strong>。儲存並啟用。從兩端各傳送一則新訊息，確認每則訊息都只在另一平台出現一份副本。</p>
+<p>保持 <strong>轉送所有訊息（不建議！）</strong> 關閉，以免另一個轉送系統重複執行相同動作。也請檢查是否已有其他機器人或多平台直播服務在連接這些聊天室。</p>
+</section>
+<section class="guide-card" id="echoes">
+<h2>4. 瞭解回流訊息</h2>
+<p>回流訊息是指 SSN 傳送後，又從目的地聊天室擷取到的訊息。目前的 Relay Chat 動作會自動略過已識別的回流訊息，也會排除原始來源分頁。</p>
+<p>如需在停駐面板和疊加畫面中隱藏擷取到的回流訊息，請新增一個 <strong>回流篩選器（Reflection Filter）</strong> 動作，放在相關流程的前段，並選擇 <strong>全部封鎖</strong>. <strong>允許第一則</strong> 會在設定的時間範圍內保留一則符合的回流訊息； <strong>全部允許</strong> 會顯示它們。此設定控制擷取後的顯示，不決定轉送目的地。</p>
+<div class="guide-note">目前 Relay Chat 的屬性中沒有「No Reflections」核取方塊。請使用獨立的 Reflection Filter 控制顯示。如果外部服務改寫了轉送訊息，自動識別可能無法捕捉到它。</div>
+</section>
+<section class="guide-card" id="advanced">
+<h2>5. 縮小轉送範圍</h2>
+<p>如需篩選指令，請新增一個 <strong>訊息開頭符合（Message Starts With）</strong> 觸發器，設為 <code>!</code> ，將其連接到一個 <strong>非（NOT）</strong> 邏輯閘；再使用以下邏輯閘將結果與來源條件組合： <strong>且（AND）</strong> ，放在 Relay Chat 之前。有關連接邏輯閘的說明，請參閱 <a href="../actions/event-flow-guide.html">Event Flow 指南</a> 。請分別測試普通訊息和指令。</p>
+<p>如果改用較簡單的全域轉送，請使用 <strong>全域設定與工具 → 指令 → 選擇轉送目的地</strong> 並輸入 <code>twitch,youtube</code>。清單留空表示所有符合條件的目的地。此清單控制接收目的地，不限制哪些傳入平台可以觸發轉送。啟用此替代方案前，請先停用 Event Flow 中的雙向轉送。</p>
+<p>SSApp 在同一「指令」區域提供帳號角色允許／封鎖欄位，可限制哪些帳號傳送轉送訊息。請使用分配給預期傳送帳號的角色；角色不符可能導致沒有符合條件的目的地。</p>
+</section>
+<section class="guide-card" id="check">
+<h2>疑難排解</h2>
+<ul class="guide-list">
+<li>
+<strong>沒有傳送任何訊息：</strong> 重試手動回覆，驗證登入狀態和發言權限，啟用已儲存的流程，並檢查目的地和帳號角色限制。</li>
+<li>
+<strong>訊息不斷增多：</strong> 先停用轉送流程。檢查重複的擷取來源、全域「轉送所有訊息」和外部轉送機器人，然後再單向重試。</li>
+<li>
+<strong>只有停駐面板顯示重複訊息：</strong> 檢查 Reflection Filter 的顯示策略，以及全域「訊息 - 可見性」中的回流顯示設定。</li>
+<li>
+<strong>YouTube 目的地不正確：</strong> 檢查 YouTube 與 YouTube Shorts 的選擇，並關閉不需要的、符合轉送條件的聊天室。</li>
+</ul>
+<p>Test Flow 動作可以傳送真實訊息。請使用受控的目的地；模擬測試無法證明實際來源的帳號路由正確。</p>
+</section>
+</div>
+</main>
+<footer>
+<div class="container">
+<div class="footer-bottom">
+<p>Social Stream Ninja · <a href="guides.html">瀏覽所有指南</a>
+</p>
+</div>
+</div>
+</footer>
+<script data-copy-markdown src="../../docs/js/main.js">
+</script>
+</body>
+</html>

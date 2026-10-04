@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="de" data-site-root="../../" data-site-language="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="Verwende Zustandsknoten in Social Stream Ninja Event Flow, um Werte zu verfolgen, Abklingzeiten anzuwenden und Aktionen über eingehende Chatereignisse hinweg zu koordinieren.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/de/actions/state-nodes-guide.html">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="de_DE">
+    <meta property="og:url" content="https://socialstream.ninja/de/actions/state-nodes-guide.html">
+    <meta property="og:title" content="Praxisleitfaden für Zustandsknoten – Social Stream Ninja">
+    <meta property="og:description" content="Verwende Zustandsknoten in Social Stream Ninja Event Flow, um Werte zu verfolgen, Abklingzeiten anzuwenden und Aktionen über eingehende Chatereignisse hinweg zu koordinieren.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja-Logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/de/actions/state-nodes-guide.html">
+    <meta name="twitter:title" content="Praxisleitfaden für Zustandsknoten – Social Stream Ninja">
+    <meta name="twitter:description" content="Verwende Zustandsknoten in Social Stream Ninja Event Flow, um Werte zu verfolgen, Abklingzeiten anzuwenden und Aktionen über eingehende Chatereignisse hinweg zu koordinieren.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja-Logo">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Praxisleitfaden für Zustandsknoten – Social Stream Ninja</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: radial-gradient(circle at top, #4338ca 0%, #0f172a 55%, #020617 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 35px 80px rgba(3, 7, 18, 0.55);
+        }
+        header {
+            background: linear-gradient(135deg, #4c1d95, #312e81, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.7rem;
+            margin-bottom: 12px;
+        }
+        header p {
+            font-size: 1.15rem;
+            max-width: 680px;
+            opacity: 0.92;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 11px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.06em;
+            margin-bottom: 18px;
+        }
+        nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        nav a {
+            color: #f8fafc;
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 999px;
+            padding: 6px 16px;
+            transition: background 0.2s;
+        }
+        nav a:hover {
+            background: rgba(15,23,42,0.25);
+        }
+        .content {
+            padding: 50px 55px 70px;
+        }
+        section {
+            margin-bottom: 70px;
+        }
+        h2 {
+            font-size: 2rem;
+            color: #312e81;
+            margin-bottom: 18px;
+        }
+        h3 {
+            font-size: 1.35rem;
+            color: #4338ca;
+            margin: 20px 0 10px;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 24px;
+            margin: 12px 0;
+        }
+        li {
+            margin: 6px 0;
+        }
+        .panel {
+            border-radius: 16px;
+            padding: 22px;
+            margin: 18px 0;
+        }
+        .panel.info {
+            background: #eef2ff;
+            border: 1px solid rgba(67,56,202,0.2);
+        }
+        .panel.warn {
+            background: #fff7ed;
+            border: 1px solid rgba(234,88,12,0.25);
+        }
+        .panel.success {
+            background: #ecfdf5;
+            border: 1px solid rgba(5,150,105,0.2);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 18px;
+            margin: 20px 0;
+        }
+        .card {
+            border-radius: 18px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+            padding: 20px 22px;
+            background: #fff;
+        }
+        .card h4 {
+            margin-bottom: 10px;
+            color: #4c1d95;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono','Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            border-radius: 14px;
+            padding: 18px;
+            margin: 16px 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .recipe {
+            border-left: 4px solid #312e81;
+            padding-left: 18px;
+            margin: 18px 0;
+        }
+        .recipe h4 {
+            margin-bottom: 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        table th, table td {
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            text-align: left;
+        }
+        table th {
+            background: #f1f5f9;
+            color: #312e81;
+        }
+        code {
+            background: rgba(15,23,42,0.06);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono','Courier New', monospace;
+        }
+        @media (max-width: 720px) {
+            table { display: block; max-width: 100%; overflow-x: auto; }
+            header, .content {
+                padding: 35px 20px;
+            }
+            nav {
+                flex-direction: column;
+            }
+        }
+    </style>
+
+<meta name="ssn-site-translation" content="de">
+<script id="ssn-site-language" type="application/json">{"language":"de","page":"actions/state-nodes-guide.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"Zum hellen Design wechseln","Switch to dark theme":"Zum dunklen Design wechseln","Light mode":"Heller Modus","Dark mode":"Dunkler Modus","Open navigation menu":"Navigationsmenü öffnen","Close navigation menu":"Navigationsmenü schließen","Copy this document as Markdown to the clipboard":"Dieses Dokument als Markdown in die Zwischenablage kopieren","Copy Markdown":"Markdown kopieren","Copying…":"Wird kopiert…","Markdown copied":"Markdown kopiert","Copy failed":"Kopieren fehlgeschlagen","Copy comprehensive Markdown for an AI assistant":"Umfassende Markdown-Dokumentation für einen KI-Assistenten kopieren","Copy this documentation page as Markdown for an AI assistant":"Diese Dokumentationsseite als Markdown für einen KI-Assistenten kopieren"},"strings":{"!hello ──▶ Switch (ON?) ─▶ Send Reply ─▶ Set Gate: OFF ─▶ Delay 15s ─▶ Set Gate: ON":"!hello ──▶ Schalter (AN?) ─▶ Antwort senden ─▶ Gate auf AUS ─▶ 15 s warten ─▶ Gate auf AN","(OFF) referencing “helloCooldown”.":"(AUS) mit Verweis auf „helloCooldown“.","(ON) for “helloCooldown”.":"(AN) für „helloCooldown“.","01 · Quick Orientation":"01 · Kurze Orientierung","02 · On/Off Switch (Gate)":"02 · Ein/Aus-Schalter (Gate)","03 · Counter":"03 · Zähler","04 · Rate Limiter (Throttle)":"04 · Ratenbegrenzer (Throttle)","05 · User Memory":"05 · Nutzerspeicher","06 · Problem Kits":"06 · Lösungspakete","07 · Troubleshooting & FAQ":"07 · Fehlerbehebung und FAQ","08 · Next Steps":"08 · Nächste Schritte",": add or subtract custom amounts.":"— eigene Beträge addieren oder subtrahieren.",": flip ON or OFF.":"— auf AN oder AUS schalten.",": jump to a specific number.":"— zu einer bestimmten Zahl springen.",": revert to default (usually ON).":"— auf den Standard zurücksetzen (meist AN).",": revert to the default start value.":"— auf den Standardstartwert zurücksetzen.","A User Memory operation has no dashed link.":"Eine User-Memory-Operation hat keine gestrichelte Verbindung.","Actions":"Aktionen","Add a":"Füge hinzu","Add a chat message “Cooldown active” on the false output if desired.":"Füge bei Bedarf am false-Ausgang eine Chatnachricht „Abklingzeit aktiv“ hinzu.","Add another":"Füge einen weiteren","Add the State node first, give it a unique name, then select it from each matching operation. Without the base node, state actions have nothing to update.":"Füge zuerst den Zustandsknoten hinzu, gib ihm einen eindeutigen Namen und wähle ihn dann in jeder zugehörigen Operation. Ohne Basisknoten haben Zustandsaktionen nichts zu aktualisieren.","Add the switch node first and confirm the dropdown references it.":"Füge zuerst den Schalterknoten hinzu und prüfe, ob die Dropdown-Liste auf ihn verweist.","After your action, add":"Füge nach deiner Aktion","All overlay triggers pass through the switch.":"Alle Overlay-Auslöser laufen durch den Schalter.","Any Message ─▶ Counter (name: hype5) ─▶ Condition (value % 5 === 0?) ─▶ Play Celebration":"Beliebige Nachricht ─▶ Zähler (Name: hype5) ─▶ Bedingung (value % 5 === 0?) ─▶ Feier abspielen","Auto increment:":"Automatisches Erhöhen:","Best for":"Am besten für","Build Steps":"Aufbauschritte","Can live anywhere in the flow. Just pick the matching node name.":"Kann überall im Flow liegen — wähle einfach den passenden Knotennamen.","Choose the named memory in the operation's properties or drag its purple side connector onto the memory.":"Wähle den benannten Speicher in den Eigenschaften der Operation oder ziehe ihren violetten Seitenanschluss auf den Speicher.","Choose the time window (seconds).":"Wähle das Zeitfenster (Sekunden).","Combine state nodes with the rest of the Event Flow toolkit:":"Kombiniere Zustandsknoten mit den übrigen Event-Flow-Werkzeugen:","Command Cooldown":"Abklingzeit für Befehle","Configuration":"Konfiguration","Connect your trigger → switch → actions.":"Verbinde deinen Auslöser → Schalter → Aktionen.","Cooldowns for chat commands.":"Abklingzeiten für Chatbefehle.","Counter":"Zähler","Counter default 0, target 3.":"Zählerstandard 0, Ziel 3.","Counter never increments.":"Zähler erhöht sich nie.","Counters track numbers across messages. They increment automatically when a message flows through, and you can adjust values manually with actions.":"Zähler verfolgen Zahlen über Nachrichten hinweg. Sie erhöhen sich automatisch, wenn eine Nachricht durchläuft, und du kannst Werte mit Aktionen manuell anpassen.","Decide whether to queue or discard overflow.":"Entscheide, ob überschüssige Ereignisse eingereiht oder verworfen werden.","Delay":"Verzögerung","Drop the switch node, name it “helloCooldown”, default ON.":"Füge den Schalterknoten ein, nenne ihn „helloCooldown“ und setze den Standard auf AN.","Ensure":"Stelle sicher, dass","Event Flow Guide":"Event-Flow-Leitfaden","Event Flow System":"Event-Flow-System","Every Nth chatter triggers a prize.":"Jeder N-te Chatter löst einen Preis aus.","Every time a payload passes through the Counter node it adds 1 (unless you pause it with the “Only count when gate is true” option).":"Jedes Mal, wenn Nutzdaten durch den Counter-Knoten laufen, addiert er 1 (außer du pausierst ihn mit „Only count when gate is true“).","Example Flow Charts":"Beispiel-Flussdiagramme","Example: 15s Cooldown":"Beispiel: 15 s Abklingzeit","Example: Celebrate Every 5 Messages":"Beispiel: Alle 5 Nachrichten feiern","Export working patterns as templates so your team can re-import them later.":"Exportiere funktionierende Muster als Vorlagen, damit dein Team sie später erneut importieren kann.","Fix":"Lösung","Gate, Counter, and Rate Limiter can run in the normal event path.":"Gate, Counter und Rate Limiter können im normalen Ereignispfad laufen.","Gift-based or badge-based eligibility.":"Teilnahmeberechtigung anhand von Geschenken oder Abzeichen.","Great When You Need":"Gut geeignet für","Guide buttons don’t open.":"Anleitungsschaltflächen öffnen sich nicht.","Heads up:":"Hinweis:","Holds the value (ON/OFF, count, timestamps, or users).":"Hält den Wert (AN/AUS, Zählstand, Zeitstempel oder Nutzer).","Increment after each redemption.":"Nach jeder Einlösung erhöhen.","Inside the Condition node, compare":"Vergleiche im Condition-Knoten","Keep experimenting! The new":"Experimentiere weiter! Die neue","Key Actions":"Wichtige Aktionen","Label branches (e.g., “false → cooldown active”) so you can follow the path visually.":"Beschrifte Zweige (z. B. „false → Abklingzeit aktiv“), damit du dem Verlauf visuell folgen kannst.","Likely Cause":"Wahrscheinliche Ursache","Limited Freebies":"Begrenzte Gratisartikel","Lives on the canvas.":"Liegt auf der Arbeitsfläche.","Maintenance windows (pause features during BRB scenes).":"Wartungsfenster (Funktionen während BRB-Szenen pausieren).","Make sure the trigger wire passes through the counter and the gate output is true.":"Prüfe, ob die Auslöserverbindung durch den Zähler läuft und der Gate-Ausgang true ist.","Manual toggles (enable/disable overlays).":"Manuelle Schalter (Overlays aktivieren/deaktivieren).","No matching switch node exists (or the names differ).":"Kein passender Schalterknoten vorhanden (oder die Namen unterscheiden sich).","No target memory is selected.":"Kein Zielspeicher ausgewählt.","On/Off Switch":"Ein/Aus-Schalter","Operations":"Operationen","Overview":"Übersicht","Participation Trigger ──▶ Remember User ······▶ User Memory: Entrants Draw Command ───────────▶ Pick Random User ···▶ User Memory: Entrants Reset Command ──────────▶ Clear All Users ·····▶ User Memory: Entrants":"Teilnahmeauslöser ──▶ Nutzer merken ······▶ Nutzerspeicher: Teilnehmer Ziehungsbefehl ───────────▶ Zufälligen Nutzer wählen ···▶ Nutzerspeicher: Teilnehmer Rücksetzbefehl ──────────▶ Alle Nutzer löschen ·····▶ Nutzerspeicher: Teilnehmer","Pick a scenario and follow the steps.":"Wähle ein Szenario und folge den Schritten.","Placed downstream.":"Wird nachgelagert platziert.","Problem Kits":"Lösungspakete","Rate Limiter":"Ratenbegrenzer","Reads or changes the stored value (set ON, add +1, remember, draw, reset, etc.).":"Liest oder ändert den gespeicherten Wert (auf AN setzen, +1 addieren, merken, ziehen, zurücksetzen usw.).","Redeem Reward ─▶ Counter ticketsSold ├─value \u003c 50 ─▶ Approve Redemption └─value ≥ 50 ─▶ Deny + Refund points":"Belohnung einlösen ─▶ Zähler ticketsSold ├─value \u003c 50 ─▶ Einlösung erlauben └─value ≥ 50 ─▶ Ablehnen + Punkte erstatten","Relax the limit and drop a Reset State Node action before retesting.":"Lockere das Limit und füge vor einem erneuten Test eine Aktion „Reset State Node“ ein.","Remember:":"Merke:","Remembering viewers who liked, entered, or participated.":"Zuschauer merken, die gelikt, sich eingetragen oder teilgenommen haben.","Reset state nodes between tests so you are not reading stale data.":"Setze Zustandsknoten zwischen Tests zurück, damit du keine veralteten Daten liest.","Running inside the extension without web_accessible resources updated.":"Ausführung innerhalb der Erweiterung ohne aktualisierte web_accessible-Ressourcen.","See the dedicated":"Siehe die spezielle","Separate lists for separate campaigns.":"Getrennte Listen für getrennte Aktionen.","Set Gate OFF → Delay → Set Gate ON.":"Gate auf AUS → Verzögerung → Gate auf AN.","Set Gate State":"Gate-Zustand setzen","Set Gate State action won’t save.":"Die Aktion „Set Gate State“ lässt sich nicht speichern.","Set the maximum events allowed.":"Lege die maximal erlaubte Anzahl an Ereignissen fest.","Social Stream Ninja logo":"Social Stream Ninja-Logo","Solid teal wires carry events. Dashed purple links show which shared memory an operation uses. Each User Memory has its own count, persistence mode, and reset policy, so clearing one list does not affect another.":"Durchgezogene türkise Verbindungen transportieren Ereignisse. Gestrichelte violette Verbindungen zeigen, welchen gemeinsamen Speicher eine Operation nutzt. Jeder User Memory hat einen eigenen Zähler, Speichermodus und eine Rücksetzregel; das Leeren einer Liste beeinflusst daher keine andere.","State Action":"Zustandsaktion","State Node":"Zustandsknoten","State Nodes Playbook":"Praxisleitfaden für Zustandsknoten","State Nodes Playbook - Social Stream Ninja":"Praxisleitfaden für Zustandsknoten – Social Stream Ninja","State nodes give Social Stream Ninja memory. Use them to build cooldowns, toggles, counters, throttles, participant lists, and prize draws that keep automations predictable.":"Zustandsknoten geben Social Stream Ninja ein Gedächtnis. Erstelle damit Abklingzeiten, Schalter, Zähler, Ratenbegrenzungen, Teilnehmerlisten und Verlosungen, die Automatisierungen vorhersehbar halten.","State tools have an object that owns the value and operations that read or change it:":"Zustandswerkzeuge haben ein Objekt, das den Wert verwaltet, und Operationen, die ihn lesen oder ändern:","Store points redeemed via commands.":"Per Befehl eingelöste Punkte speichern.","Store state-driven metadata under":"Speichere zustandsgesteuerte Metadaten unter","Switch named “overlayToggle”.":"Schalter namens „overlayToggle“.","Switch node named “commandCooldown”.":"Schalterknoten namens „commandCooldown“.","Symptom":"Symptom","Temporarily shorten cooldowns (2 seconds) or lower counter targets while verifying.":"Verkürze beim Prüfen vorübergehend Abklingzeiten (2 Sekunden) oder senke Zählerziele.","Testing Checklist":"Test-Checkliste","The flow bypasses the counter node or the gate is false.":"Der Flow umgeht den Zählerknoten oder das Gate ist false.","The switch is a boolean guard. When ON, messages pass through; when OFF, the flow halts at this node.":"Der Schalter ist eine boolesche Sperre. Bei AN passieren Nachrichten; bei AUS hält der Flow an diesem Knoten an.","The throttle remembers timestamps and refuses new events until the rate you specify is respected.":"Der Ratenbegrenzer merkt sich Zeitstempel und verweigert neue Ereignisse, bis die angegebene Rate eingehalten wird.","Throttle blocks everything forever.":"Ratenbegrenzer blockiert dauerhaft alles.","Throttles do not auto-reset when you edit the flow. Use":"Ratenbegrenzer setzen sich beim Bearbeiten des Flows nicht automatisch zurück. Verwende","Track progress to a community goal.":"Fortschritt zu einem Community-Ziel verfolgen.","Trigger → switch → reply.":"Auslöser → Schalter → Antwort.","Trigger ─▶ Switch (overlayToggle) ─▶ If ON → Show Overlay └─false─▶ Notify moderator “Overlay disabled”":"Auslöser ─▶ Schalter (overlayToggle) ─▶ Falls AN → Overlay anzeigen └─false─▶ Moderator benachrichtigen „Overlay deaktiviert“","Troubleshooting":"Fehlerbehebung","Unique-entry prize draws.":"Verlosungen mit einmaliger Teilnahme.","Use Cases":"Anwendungsfälle","Use Reset action at the end of stream.":"Verwende am Stream-Ende eine Reset-Aktion.","Use logic gates (AND/OR/NOT) before a switch to decide who can toggle it.":"Verwende Logikgatter (AND/OR/NOT) vor einem Schalter, um festzulegen, wer ihn umschalten darf.","Use state nodes in Social Stream Ninja Event Flow to track values, apply cooldowns and coordinate actions across incoming chat events.":"Verwende Zustandsknoten in Social Stream Ninja Event Flow, um Werte zu verfolgen, Abklingzeiten anzuwenden und Aktionen über eingehende Chatereignisse hinweg zu koordinieren.","Use the Event Flow “Send Test Event” tool to simulate commands.":"Verwende „Send Test Event“ in Event Flow, um Befehle zu simulieren.","User Memory":"Nutzerspeicher","User Memory guide":"User-Memory-Anleitung","User Memory is a shared hub referenced by other nodes.":"User Memory ist ein gemeinsamer Speicher, auf den andere Knoten verweisen.","User Memory owns one named list of unique people. Remember users when they participate, check that list on later messages, remove a person, choose a random winner, or clear only that list.":"User Memory verwaltet eine benannte Liste eindeutiger Personen. Merke Nutzer bei ihrer Teilnahme, prüfe die Liste bei späteren Nachrichten, entferne eine Person, wähle einen zufälligen Gewinner oder leere nur diese Liste.","Viewer Toggle":"Zuschauerschalter","When value ≥ 3, branch to “Sorry, all gone”.":"Bei value ≥ 3 zum Zweig „Leider alles weg“ wechseln.","Window too strict or leftover state from testing.":"Zu strenges Zeitfenster oder übrig gebliebener Testzustand.","and":"und","command → Set Gate OFF.":"Befehl → Gate auf AUS.","command → Set Gate ON.":"Befehl → Gate auf AN.","for reviewed screenshots, a downloadable draw flow, TikTok eligibility, participation examples, and reset details.":"für geprüfte Screenshots, einen herunterladbaren Verlosungsflow, TikTok-Teilnahmeberechtigung, Teilnahmebeispiele und Details zum Zurücksetzen.","if you need a clean slate during testing.":"wenn du für Tests einen leeren Ausgangszustand brauchst.","node (15 seconds).":"Knoten hinzu (15 Sekunden).","or":"oder","or simply use the built-in “Trigger when value matches Target” option from the Counter node’s properties.":"oder verwende einfach die integrierte Option „Trigger when value matches Target“ in den Eigenschaften des Counter-Knotens.","pairs with this playbook so you can master both logic and state layers.":"ergänzt diesen Leitfaden, damit du sowohl Logik als auch Zustand beherrschst.","ships via manifest and reload the extension.":"über das Manifest bereitgestellt wird, und lade die Erweiterung neu.","so overlays know why a branch fired.":"damit Overlays wissen, warum ein Zweig ausgelöst wurde.","“Drop alerts if the overlay is already busy.”":"„Benachrichtigungen verwerfen, wenn das Overlay bereits beschäftigt ist.“","“One API call per 10 seconds.”":"„Ein API-Aufruf pro 10 Sekunden.“","“Only five raffle entries per minute.”":"„Nur fünf Verlosungsteilnahmen pro Minute.“"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/actions/state-nodes-guide.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/actions/state-nodes-guide.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <div class="shell">
+        <header>
+            <div class="badge">Event-Flow-System<!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="Deutsch"><span aria-hidden="true">🌐 </span><span lang="de">Deutsch</span></summary><div class="site-language-options"><a class="site-language-link" href="../../actions/state-nodes-guide.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/actions/state-nodes-guide.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/actions/state-nodes-guide.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/actions/state-nodes-guide.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/actions/state-nodes-guide.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="state-nodes-guide.html" lang="de" hreflang="de" aria-current="true">Deutsch</a><a class="site-language-link" href="../../ja/actions/state-nodes-guide.html" lang="ja" hreflang="ja">日本語</a><a class="site-language-link" href="../../zh-cn/actions/state-nodes-guide.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/actions/state-nodes-guide.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/actions/state-nodes-guide.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/actions/state-nodes-guide.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/actions/state-nodes-guide.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/actions/state-nodes-guide.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/actions/state-nodes-guide.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/actions/state-nodes-guide.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/actions/state-nodes-guide.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/actions/state-nodes-guide.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --></div>
+            <h1>Praxisleitfaden für Zustandsknoten</h1>
+            <p>Zustandsknoten geben Social Stream Ninja ein Gedächtnis. Erstelle damit Abklingzeiten, Schalter, Zähler, Ratenbegrenzungen, Teilnehmerlisten und Verlosungen, die Automatisierungen vorhersehbar halten.</p>
+            <nav>
+                <a href="#overview">Übersicht</a>
+                <a href="#switch">Ein/Aus-Schalter</a>
+                <a href="#counter">Zähler</a>
+                <a href="#throttle">Ratenbegrenzer</a>
+                <a href="#user-memory">Nutzerspeicher</a>
+                <a href="#recipes">Lösungspakete</a>
+                <a href="#troubleshooting">Fehlerbehebung</a>
+            </nav>
+        </header>
+        <div class="content">
+            <section id="overview">
+                <h2>01 · Kurze Orientierung</h2>
+                <p>Zustandswerkzeuge haben ein Objekt, das den Wert verwaltet, und Operationen, die ihn lesen oder ändern:</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Zustandsknoten</h4>
+                        <ul>
+                            <li>Liegt auf der Arbeitsfläche.</li>
+                            <li>Hält den Wert (AN/AUS, Zählstand, Zeitstempel oder Nutzer).</li>
+                            <li>Gate, Counter und Rate Limiter können im normalen Ereignispfad laufen.</li>
+                            <li>User Memory ist ein gemeinsamer Speicher, auf den andere Knoten verweisen.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Zustandsaktion</h4>
+                        <ul>
+                            <li>Wird nachgelagert platziert.</li>
+                            <li>Liest oder ändert den gespeicherten Wert (auf AN setzen, +1 addieren, merken, ziehen, zurücksetzen usw.).</li>
+                            <li>Kann überall im Flow liegen — wähle einfach den passenden Knotennamen.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel info">
+                    <strong>Merke:</strong> Füge zuerst den Zustandsknoten hinzu, gib ihm einen eindeutigen Namen und wähle ihn dann in jeder zugehörigen Operation. Ohne Basisknoten haben Zustandsaktionen nichts zu aktualisieren.
+                </div>
+            </section>
+
+            <section id="switch">
+                <h2>02 · Ein/Aus-Schalter (Gate)</h2>
+                <p>Der Schalter ist eine boolesche Sperre. Bei AN passieren Nachrichten; bei AUS hält der Flow an diesem Knoten an.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Am besten für</h4>
+                        <ul>
+                            <li>Abklingzeiten für Chatbefehle.</li>
+                            <li>Manuelle Schalter (Overlays aktivieren/deaktivieren).</li>
+                            <li>Wartungsfenster (Funktionen während BRB-Szenen pausieren).</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Wichtige Aktionen</h4>
+                        <ul>
+                            <li><code>Set Gate State</code>— auf AN oder AUS schalten.</li>
+                            <li><code>Reset State Node</code>— auf den Standard zurücksetzen (meist AN).</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>Beispiel: 15 s Abklingzeit</h3>
+                <div class="diagram">
+!hello ──▶ Schalter (AN?) ─▶ Antwort senden ─▶ Gate auf AUS ─▶ 15 s warten ─▶ Gate auf AN
+                </div>
+                <div class="recipe">
+                    <h4>Aufbauschritte</h4>
+                    <ol>
+                        <li>Füge den Schalterknoten ein, nenne ihn „helloCooldown“ und setze den Standard auf AN.</li>
+                        <li>Verbinde deinen Auslöser → Schalter → Aktionen.</li>
+                        <li>Füge nach deiner Aktion <em>Gate-Zustand setzen</em> (AUS) mit Verweis auf „helloCooldown“.</li>
+                        <li>Füge hinzu <em>Verzögerung</em> Knoten hinzu (15 Sekunden).</li>
+                        <li>Füge einen weiteren <em>Gate-Zustand setzen</em> (AN) für „helloCooldown“.</li>
+                    </ol>
+                </div>
+            </section>
+
+            <section id="counter">
+                <h2>03 · Zähler</h2>
+                <p>Zähler verfolgen Zahlen über Nachrichten hinweg. Sie erhöhen sich automatisch, wenn eine Nachricht durchläuft, und du kannst Werte mit Aktionen manuell anpassen.</p>
+                <div class="panel success">
+                    <strong>Automatisches Erhöhen:</strong> Jedes Mal, wenn Nutzdaten durch den Counter-Knoten laufen, addiert er 1 (außer du pausierst ihn mit „Only count when gate is true“).
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Anwendungsfälle</h4>
+                        <ul>
+                            <li>Jeder N-te Chatter löst einen Preis aus.</li>
+                            <li>Fortschritt zu einem Community-Ziel verfolgen.</li>
+                            <li>Per Befehl eingelöste Punkte speichern.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Aktionen</h4>
+                        <ul>
+                            <li><code>Increment Counter</code>— eigene Beträge addieren oder subtrahieren.</li>
+                            <li><code>Set Counter Value</code>— zu einer bestimmten Zahl springen.</li>
+                            <li><code>Reset State Node</code>— auf den Standardstartwert zurücksetzen.</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>Beispiel: Alle 5 Nachrichten feiern</h3>
+                <div class="diagram">
+Beliebige Nachricht ─▶ Zähler (Name: hype5) ─▶ Bedingung (value % 5 === 0?) ─▶ Feier abspielen
+                </div>
+                <p>Vergleiche im Condition-Knoten <code>state.hype5.value</code> oder verwende einfach die integrierte Option „Trigger when value matches Target“ in den Eigenschaften des Counter-Knotens.</p>
+            </section>
+
+            <section id="throttle">
+                <h2>04 · Ratenbegrenzer (Throttle)</h2>
+                <p>Der Ratenbegrenzer merkt sich Zeitstempel und verweigert neue Ereignisse, bis die angegebene Rate eingehalten wird.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Gut geeignet für</h4>
+                        <ul>
+                            <li>„Nur fünf Verlosungsteilnahmen pro Minute.“</li>
+                            <li>„Ein API-Aufruf pro 10 Sekunden.“</li>
+                            <li>„Benachrichtigungen verwerfen, wenn das Overlay bereits beschäftigt ist.“</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Konfiguration</h4>
+                        <ul>
+                            <li>Lege die maximal erlaubte Anzahl an Ereignissen fest.</li>
+                            <li>Wähle das Zeitfenster (Sekunden).</li>
+                            <li>Entscheide, ob überschüssige Ereignisse eingereiht oder verworfen werden.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel warn">
+                    <strong>Hinweis:</strong> Ratenbegrenzer setzen sich beim Bearbeiten des Flows nicht automatisch zurück. Verwende <code>Reset State Node</code> wenn du für Tests einen leeren Ausgangszustand brauchst.
+                </div>
+            </section>
+
+            <section id="user-memory">
+                <h2>05 · Nutzerspeicher</h2>
+                <p>User Memory verwaltet eine benannte Liste eindeutiger Personen. Merke Nutzer bei ihrer Teilnahme, prüfe die Liste bei späteren Nachrichten, entferne eine Person, wähle einen zufälligen Gewinner oder leere nur diese Liste.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Am besten für</h4>
+                        <ul>
+                            <li>Teilnahmeberechtigung anhand von Geschenken oder Abzeichen.</li>
+                            <li>Zuschauer merken, die gelikt, sich eingetragen oder teilgenommen haben.</li>
+                            <li>Verlosungen mit einmaliger Teilnahme.</li>
+                            <li>Getrennte Listen für getrennte Aktionen.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Operationen</h4>
+                        <ul>
+                            <li><code>Remember User</code> und <code>Forget User</code>.</li>
+                            <li><code>User Is Remembered</code>.</li>
+                            <li><code>Pick Random User</code>.</li>
+                            <li><code>Clear All Users</code> oder <code>Reset State Node</code>.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="diagram">
+Teilnahmeauslöser ──▶ Nutzer merken ······▶ Nutzerspeicher: Teilnehmer Ziehungsbefehl ───────────▶ Zufälligen Nutzer wählen ···▶ Nutzerspeicher: Teilnehmer Rücksetzbefehl ──────────▶ Alle Nutzer löschen ·····▶ Nutzerspeicher: Teilnehmer
+                </div>
+                <p>Durchgezogene türkise Verbindungen transportieren Ereignisse. Gestrichelte violette Verbindungen zeigen, welchen gemeinsamen Speicher eine Operation nutzt. Jeder User Memory hat einen eigenen Zähler, Speichermodus und eine Rücksetzregel; das Leeren einer Liste beeinflusst daher keine andere.</p>
+                <div class="panel success">
+                    Siehe die spezielle <a href="user-memory-guide.html">User-Memory-Anleitung</a> für geprüfte Screenshots, einen herunterladbaren Verlosungsflow, TikTok-Teilnahmeberechtigung, Teilnahmebeispiele und Details zum Zurücksetzen.
+                </div>
+            </section>
+
+            <section id="recipes">
+                <h2>06 · Lösungspakete</h2>
+                <p>Wähle ein Szenario und folge den Schritten.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Abklingzeit für Befehle</h4>
+                        <ol>
+                            <li>Schalterknoten namens „commandCooldown“.</li>
+                            <li>Auslöser → Schalter → Antwort.</li>
+                            <li>Gate auf AUS → Verzögerung → Gate auf AN.</li>
+                            <li>Füge bei Bedarf am false-Ausgang eine Chatnachricht „Abklingzeit aktiv“ hinzu.</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>Begrenzte Gratisartikel</h4>
+                        <ol>
+                            <li>Zählerstandard 0, Ziel 3.</li>
+                            <li>Nach jeder Einlösung erhöhen.</li>
+                            <li>Bei value ≥ 3 zum Zweig „Leider alles weg“ wechseln.</li>
+                            <li>Verwende am Stream-Ende eine Reset-Aktion.</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>Zuschauerschalter</h4>
+                        <ol>
+                            <li>Schalter namens „overlayToggle“.</li>
+                            <li><code>!overlay on</code> Befehl → Gate auf AN.</li>
+                            <li><code>!overlay off</code> Befehl → Gate auf AUS.</li>
+                            <li>Alle Overlay-Auslöser laufen durch den Schalter.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <h3>Beispiel-Flussdiagramme</h3>
+                <div class="diagram">
+Auslöser ─▶ Schalter (overlayToggle) ─▶ Falls AN → Overlay anzeigen └─false─▶ Moderator benachrichtigen „Overlay deaktiviert“
+                </div>
+                <div class="diagram">
+Belohnung einlösen ─▶ Zähler ticketsSold ├─value &lt; 50 ─▶ Einlösung erlauben └─value ≥ 50 ─▶ Ablehnen + Punkte erstatten
+                </div>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>07 · Fehlerbehebung und FAQ</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Symptom</th>
+                            <th>Wahrscheinliche Ursache</th>
+                            <th>Lösung</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Die Aktion „Set Gate State“ lässt sich nicht speichern.</td>
+                            <td>Kein passender Schalterknoten vorhanden (oder die Namen unterscheiden sich).</td>
+                            <td>Füge zuerst den Schalterknoten hinzu und prüfe, ob die Dropdown-Liste auf ihn verweist.</td>
+                        </tr>
+                        <tr>
+                            <td>Zähler erhöht sich nie.</td>
+                            <td>Der Flow umgeht den Zählerknoten oder das Gate ist false.</td>
+                            <td>Prüfe, ob die Auslöserverbindung durch den Zähler läuft und der Gate-Ausgang true ist.</td>
+                        </tr>
+                        <tr>
+                            <td>Ratenbegrenzer blockiert dauerhaft alles.</td>
+                            <td>Zu strenges Zeitfenster oder übrig gebliebener Testzustand.</td>
+                            <td>Lockere das Limit und füge vor einem erneuten Test eine Aktion „Reset State Node“ ein.</td>
+                        </tr>
+                        <tr>
+                            <td>Eine User-Memory-Operation hat keine gestrichelte Verbindung.</td>
+                            <td>Kein Zielspeicher ausgewählt.</td>
+                            <td>Wähle den benannten Speicher in den Eigenschaften der Operation oder ziehe ihren violetten Seitenanschluss auf den Speicher.</td>
+                        </tr>
+                        <tr>
+                            <td>Anleitungsschaltflächen öffnen sich nicht.</td>
+                            <td>Ausführung innerhalb der Erweiterung ohne aktualisierte web_accessible-Ressourcen.</td>
+                            <td>Stelle sicher, dass <code>actions/state-nodes-guide.html</code> über das Manifest bereitgestellt wird, und lade die Erweiterung neu.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h3>Test-Checkliste</h3>
+                <ul>
+                    <li>Verwende „Send Test Event“ in Event Flow, um Befehle zu simulieren.</li>
+                    <li>Verkürze beim Prüfen vorübergehend Abklingzeiten (2 Sekunden) oder senke Zählerziele.</li>
+                    <li>Setze Zustandsknoten zwischen Tests zurück, damit du keine veralteten Daten liest.</li>
+                    <li>Beschrifte Zweige (z. B. „false → Abklingzeit aktiv“), damit du dem Verlauf visuell folgen kannst.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>08 · Nächste Schritte</h2>
+                <p>Kombiniere Zustandsknoten mit den übrigen Event-Flow-Werkzeugen:</p>
+                <ul>
+                    <li>Verwende Logikgatter (AND/OR/NOT) vor einem Schalter, um festzulegen, wer ihn umschalten darf.</li>
+                    <li>Speichere zustandsgesteuerte Metadaten unter <code>meta</code> damit Overlays wissen, warum ein Zweig ausgelöst wurde.</li>
+                    <li>Exportiere funktionierende Muster als Vorlagen, damit dein Team sie später erneut importieren kann.</li>
+                </ul>
+                <div class="panel info">
+                    Experimentiere weiter! Die neue <a href="event-flow-guide.html">Event-Flow-Leitfaden</a> ergänzt diesen Leitfaden, damit du sowohl Logik als auch Zustand beherrschst.
+                </div>
+            </section>
+        </div>
+    </div>
+</body>
+</html>

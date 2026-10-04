@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ja" data-site-root="../../" data-site-language="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://socialstream.ninja/ja/docs/twitch-eventsub-setup.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="ja_JP">
+    <meta property="og:url" content="https://socialstream.ninja/ja/docs/twitch-eventsub-setup.html">
+    <meta property="og:title" content="Twitchの設定とEventSub - Social Stream Ninja">
+    <meta property="og:description" content="通常のページ取得または情報量の多いEventSub WebSocketソースを使い、TwitchチャットをSocial Stream Ninjaに接続します。OAuth、スコープ、イベント、問題解決も説明します。">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninjaのロゴ">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/ja/docs/twitch-eventsub-setup.html">
+    <meta name="twitter:title" content="Twitchの設定とEventSub - Social Stream Ninja">
+    <meta name="twitter:description" content="通常のページ取得または情報量の多いEventSub WebSocketソースを使い、TwitchチャットをSocial Stream Ninjaに接続します。OAuth、スコープ、イベント、問題解決も説明します。">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninjaのロゴ">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twitchの設定とEventSub - Social Stream Ninja</title>
+    <link rel="stylesheet" href="../../docs/css/styles.css">
+    <link rel="stylesheet" href="../../docs/css/guides.css">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="通常のページ取得または情報量の多いEventSub WebSocketソースを使い、TwitchチャットをSocial Stream Ninjaに接続します。OAuth、スコープ、イベント、問題解決も説明します。">
+<link rel="stylesheet" href="../../docs/css/site-shell.css">
+<script src="../../docs/js/site-shell.js"></script>
+
+<meta name="ssn-site-translation" content="ja">
+<script id="ssn-site-language" type="application/json">{"language":"ja","page":"docs/twitch-eventsub-setup.html","pages":["index.html","privacy.html","TOS.html","beta.html","fonts.html","docs/ai-cohost-guide.html","docs/ai-modes-guide.html","docs/ai-overlay-builder-guide.html","docs/alert-effects.html","docs/alerts-customization-guide.html","docs/chat-customization-guide.html","docs/chat-games.html","docs/chat-history-guide.html","docs/chat-relay-guide.html","docs/chatbot-basics-guide.html","docs/commands.html","docs/commerce-boards.html","docs/commerce-customization-guide.html","docs/community-customization-guide.html","docs/creator-store-setup.html","docs/credits-customization-guide.html","docs/credits-roll-guide.html","docs/custom-fonts.html","docs/desktop-app-wont-open.html","docs/dock-live-guide.html","docs/download.html","docs/effects-customization-guide.html","docs/event-flow-recipes.html","docs/event-reference.html","docs/events-alerts-compatibility.html","docs/export-settings-for-support.html","docs/external-overlay-sources.html","docs/featured-customization-guide.html","docs/features.html","docs/first-time-chatters.html","docs/games-gallery.html","docs/getting-started.html","docs/giveaway-customization-guide.html","docs/giveaway-guide.html","docs/giveaway-points-guide.html","docs/goals-customization-guide.html","docs/guides.html","docs/headless-server-guide.html","docs/hype-train-top-bar.html","docs/index.html","docs/inspiration.html","docs/kick-setup-authentication.html","docs/knowledge-base.html","docs/llm-control-guide.html","docs/local-services-guide.html","docs/local-tts.html","docs/local-websocket-server-guide.html","docs/loyalty-points-guide.html","docs/making-games.html","docs/media-customization-guide.html","docs/media-hosting-event-flow.html","docs/moderation-filtering-guide.html","docs/monetization.html","docs/multiple-overlays-guide.html","docs/name-colors.html","docs/obs-control-dock-guide.html","docs/obs-quick-start.html","docs/obs-troubleshooting.html","docs/on-screen-chat-overlay.html","docs/overlay-customization-guide.html","docs/overlay-gallery.html","docs/overlay-template-quick-start.html","docs/platform-setup-picker.html","docs/poll-customization-guide.html","docs/polls-giveaways-waitlists-guide.html","docs/product-controls.html","docs/safe-updates-backups.html","docs/services.html","docs/sessions-passwords-relay-modes.html","docs/settings.html","docs/shopify-setup.html","docs/source-types-guide.html","docs/speechify-setup-guide.html","docs/ssapp.html","docs/standalone-app-modes.html","docs/stats-customization-guide.html","docs/sticker-gallery.html","docs/streamdeck-event-flow.html","docs/streamelements-chat-guide.html","docs/support.html","docs/supported-sites.html","docs/templates.html","docs/test-message-guide.html","docs/thermal-printer-guide.html","docs/ticker-customization-guide.html","docs/tikfinity-setup.html","docs/tiktok-app-modes-guide.html","docs/tiktok-guide.html","docs/tiktok-quick-start.html","docs/tiktok-signing.html","docs/timer-customization-guide.html","docs/tip-jar-goal-meter.html","docs/transparent-dock-non-obs.html","docs/tts-setup-guide.html","docs/tts.html","docs/twitch-bot-account-chatbot.html","docs/twitch-eventsub-setup.html","docs/vdo-native-social-stream-guide.html","docs/video-stats-bitrate.html","docs/waitlist-customization-guide.html","docs/windows-administrator-mode.html","docs/youtube-project-setup.html","docs/youtube-setup-guide.html","actions/event-flow-guide.html","actions/obs-control-guide.html","actions/state-nodes-guide.html","actions/user-memory-guide.html","lite/guide.html","streamdeck/index.html","games/templates/coin-rocket.html","games/templates/support-goal.html","games/templates/event-garden.html"],"ui":{"Switch to light theme":"ライトテーマに切り替え","Switch to dark theme":"ダークテーマに切り替え","Light mode":"ライトモード","Dark mode":"ダークモード","Open navigation menu":"ナビゲーションメニューを開く","Close navigation menu":"ナビゲーションメニューを閉じる","Copy this document as Markdown to the clipboard":"このドキュメントをMarkdown形式でクリップボードにコピー","Copy Markdown":"Markdownをコピー","Copying…":"コピー中…","Markdown copied":"Markdownをコピーしました","Copy failed":"コピーできませんでした","Copy comprehensive Markdown for an AI assistant":"AIアシスタント用に詳細なMarkdownをコピー","Copy this documentation page as Markdown for an AI assistant":"このドキュメントページをAIアシスタント用のMarkdownとしてコピー"},"strings":{"## Verified maintainer context Current Twitch OAuth scopes requested by `sources/websocket/twitch.js`: `chat:read`, `chat:edit`, `user:write:chat`, `bits:read`, `moderator:read:followers`, `moderator:read:chatters`, `channel:read:subscriptions`, `channel:read:hype_train`, `channel:moderate`, `moderator:manage:banned_users`, `moderator:manage:chat_messages`, `channel:manage:broadcast`, `channel:read:ads`, `channel:manage:ads`, `channel:read:redemptions`. Current EventSub subscription attempts, gated by role/scope/channel eligibility: `channel.follow` v2; `channel.subscribe`; `channel.subscription.gift`; `channel.subscription.message`; `channel.cheer`; `channel.ban`; `channel.channel_points_custom_reward_redemption.add`; `channel.raid`; `stream.online`; `stream.offline`; `channel.ad_break.begin`; and `channel.hype_train.begin`, `.progress`, `.end` v2. The current transport endpoint is Twitch EventSub WebSocket. Twitch requires a user access token when creating WebSocket subscriptions. The Twitch chat-client subscription-gift normalization regression test passed during this documentation review.":"## 確認済みのメンテナー向け情報\n\n現在、`sources/websocket/twitch.js`が要求するTwitch OAuthスコープ：\n\n`chat:read`、`chat:edit`、`user:write:chat`、`bits:read`、`moderator:read:followers`、`moderator:read:chatters`、`channel:read:subscriptions`、`channel:read:hype_train`、`channel:moderate`、`moderator:manage:banned_users`、`moderator:manage:chat_messages`、`channel:manage:broadcast`、`channel:read:ads`、`channel:manage:ads`、`channel:read:redemptions`。\n\n現在試行されるEventSub購読は、役割、スコープ、チャネルの資格によって制限されます：\n\n`channel.follow` v2、`channel.subscribe`、`channel.subscription.gift`、`channel.subscription.message`、`channel.cheer`、`channel.ban`、`channel.channel_points_custom_reward_redemption.add`、`channel.raid`、`stream.online`、`stream.offline`、`channel.ad_break.begin`、および`channel.hype_train.begin`、`.progress`、`.end` v2。\n\n現在の通信エンドポイントはTwitch EventSub WebSocketです。Twitchでは、WebSocket購読の作成時にユーザーアクセストークンが必要です。このドキュメント確認時に、Twitchチャットクライアントのギフトサブスク正規化の回帰テストは合格しました。",", and":"、および",", enter":"の場合は、次を入力します：",", then":"、次に","Activate source":"ソースを有効化（Activate source）","Add source → Twitch":"ソースを追加 → Twitch（Add source → Twitch）","Authorize the requested permissions and keep the Twitch source window open.":"要求された権限を承認し、Twitchソースウィンドウを開いたままにします。","Basic public chat capture from a Twitch chat or popout page.":"Twitchのチャットページまたはポップアウトページから、基本的な公開チャットを取得します。","Best For":"適した用途","Bits, rewards, and Hype Trains":"Bits、報酬、Hype Train","Bits:":"Bits：","Browser Extension EventSub Setup":"ブラウザ拡張機能でのEventSub設定","Channel":"チャンネル（Channel）","Channel Points:":"チャンネルポイント：","Channel management":"チャネル管理","Chat":"チャット（Chat）","Check that the dock and alert overlay use the same Social Stream session ID.":"ドックとアラートオーバーレイが同じSocial StreamセッションIDを使っていることを確認してください。","Cheers, custom Channel Points redemptions, and Hype Train status.":"Cheer、カスタムチャンネルポイント報酬の交換、Hype Trainの状態。","Choose A Twitch Source Mode":"Twitchソースのモードを選ぶ","Commands & API":"コマンドとAPI","Confirm the source page says the correct":"ソースページに正しい次の値が表示されていることを確認します：","Connect Twitch chat to Social Stream Ninja using normal page capture or the richer EventSub WebSocket source, with OAuth, scope, event, and troubleshooting notes.":"通常のページ取得または情報量の多いEventSub WebSocketソースを使い、TwitchチャットをSocial Stream Ninjaに接続します。OAuth、スコープ、イベント、問題解決も説明します。","Desktop App Setup":"デスクトップアプリの設定","Download":"ダウンロード","Enter the Twitch channel login used in its URL. For":"URLで使われるTwitchチャネルのログイン名を入力します。次のURLでは、","Event Reference":"イベントリファレンス","EventSub can deliver a notification more than once.":"EventSubは同じ通知を複数回配信することがあります。","EventSub overview":"EventSubの概要","EventSub subscription types":"EventSubの購読タイプ","Events The Current Source Handles":"現在のソースが処理するイベント","Events and Alerts Compatibility guide":"イベントとアラートの互換性ガイド","Features":"機能","First Checks When An Event Is Missing":"イベントが届かない場合の最初の確認","Follow events, subscriber events, gifted subscriptions, and resub messages.":"フォローイベント、サブスクイベント、ギフトサブスク、再サブスクメッセージ。","Followers and subscribers":"フォロワーとサブスクライバー","Follows, subscriptions, bits, rewards, raids, stream status, Hype Trains, moderation sync, sending chat, and channel details.":"フォロー、サブスク、Bits、報酬、レイド、配信状態、Hype Train、モデレーション同期、チャット送信、チャネル情報。","Follows:":"フォロー：","For basic Standard capture instead, open the normal Twitch chat or popout chat page and keep chat visible.":"基本のStandard取得を使う場合は、通常のTwitchチャットまたはポップアウトチャットページを開き、チャットを表示したままにします。","For downstream alert names and payload fields, use the":"受信後のアラート名とペイロードフィールドには、次を参照してください：","Guides":"ガイド","Hire":"仕事を依頼する","Home":"ホーム","Hype Train:":"Hype Train：","If chat works but follows/subs/rewards do not, sign out and authorize again so the current scopes are granted.":"チャットは動くのにフォロー/サブスク/報酬が届かない場合は、ログアウトして再認証し、現在のスコープを付与してください。","Important Difference":"重要な違い","Inspiration":"活用アイデア","Install and enable the current Social Stream Ninja extension.":"最新版のSocial Stream Ninja拡張機能をインストールして有効にします。","Keep that page open. Confirm that its User and Channel fields are correct before testing alerts.":"そのページを開いたままにし、アラートをテストする前にUserとChannelの値が正しいことを確認してください。","Keep the source page/window open and confirm its chat connection is active.":"ソースページ/ウィンドウを開いたままにし、チャット接続が有効であることを確認してください。","Leave":"次はそのままにします：","Main navigation":"メインナビゲーション","Message deletion, bans/timeouts, and block synchronization when the account may moderate the channel.":"アカウントにチャネルのモデレーション権限がある場合、メッセージ削除、BAN/タイムアウト、ブロックの同期。","Mode":"モード","Moderation":"モデレーション","Moderation:":"モデレーション：","Open navigation menu":"ナビゲーションメニューを開く","Open the":"開く項目：","Overlay Gallery":"オーバーレイギャラリー","Permission Group":"権限グループ","Raids:":"レイド：","Read chat, send chat, and list chatters.":"チャットの読み取り、送信、参加者一覧の取得。","Read/update title and category, read/manage ads, and display channel metrics.":"タイトルとカテゴリの読み取り/更新、広告の読み取り/管理、チャネル指標の表示。","Reads what the page exposes. It is simple, but does not provide the full EventSub event set.":"ページに公開された内容を読み取ります。簡単ですが、EventSubの全イベントは取得できません。","Replace":"置き換える値：","Requires Twitch OAuth. Events are enabled only when the signed-in account, channel role, channel eligibility, and granted scope allow them.":"Twitch OAuthが必要です。ログイン済みアカウント、チャネル内の役割、チャネルの資格、付与されたスコープが許可するイベントのみが有効になります。","See Twitch's official":"Twitch公式の次をご覧ください：","Select":"選択する項目：","Sign in to Twitch":"Twitchにログイン","Social Stream Ninja":"Social Stream Ninja","Social Stream Ninja logo":"Social Stream Ninjaのロゴ","Social Stream Ninja. GPLv3.0 License.":"Social Stream Ninja。GPLv3.0ライセンス。","Social Stream asks for a user token with permissions needed by the controls and subscriptions it supports. Granting a scope does not make an account a broadcaster or moderator; Twitch still checks the account's role for the selected channel.":"Social Streamは、対応する操作と購読に必要な権限を持つユーザートークンを要求します。スコープを付与しても、アカウントが配信者やモデレーターになるわけではありません。Twitchは選択したチャネルでのアカウントの役割を引き続き確認します。","Standard":"標準（Standard）","Stream and ad status:":"配信と広告の状態：","Subscriptions:":"サブスク：","Support":"サポート","Supported Sites":"対応サイト","Switch theme":"テーマを切り替え","The desktop source offers an external-browser OAuth flow and a local-app flow. External browser is usually the easiest when Twitch already works in your normal browser.":"デスクトップソースには、外部ブラウザのOAuth方式とアプリ内方式があります。通常のブラウザですでにTwitchが使えている場合は、外部ブラウザ方式が一般的に最も簡単です。","Twitch EventSub source page":"Twitch EventSubソースページ","Twitch Setup and EventSub":"Twitchの設定とEventSub","Twitch Setup and EventSub - Social Stream Ninja":"Twitchの設定とEventSub - Social Stream Ninja","Twitch documents at-least-once delivery. Social Stream includes duplicate protection, but custom API consumers should still deduplicate by event/message identity where possible. See the official":"Twitchは少なくとも1回の配信を保証すると説明しています。Social Streamには重複防止がありますが、独自のAPI利用側でも、可能ならイベント/メッセージの識別情報で重複を除外してください。公式の次を参照してください：","Twitch source sign-in screen with External browser and Local app sign-in methods":"External browserとLocal appのログイン方法を表示したTwitchソースのログイン画面","Twitch subscriber events require an eligible Affiliate/Partner channel and broadcaster access. Follow and moderation subscriptions require the signed-in user to be the broadcaster or an authorized moderator, depending on the event.":"Twitchのサブスクイベントには、資格のあるアフィリエイト/パートナーチャネルと配信者権限が必要です。フォローやモデレーションの購読では、イベントに応じて、ログイン済みユーザーが配信者または権限を持つモデレーターである必要があります。","Use normal page capture for simple chat, or EventSub/WebSocket mode for follows, subs, bits, rewards, raids, Hype Trains, and channel controls.":"単純なチャットには通常のページ取得を使います。フォロー、サブスク、Bits、報酬、レイド、Hype Train、チャネル操作にはEventSub/WebSocketモードを使います。","Use the popup's fake test message or Multi Alerts preview to separate capture problems from overlay problems.":"ポップアップの架空テストメッセージまたはMulti Alertsプレビューを使い、取得側とオーバーレイ側の問題を切り分けてください。","Used For":"用途","User":"ユーザー（User）","Verify that the signed-in account is the broadcaster or a permitted moderator for that channel.":"ログイン済みアカウントが、そのチャネルの配信者または許可されたモデレーターであることを確認してください。","WebSocket":"WebSocket","WebSocket / EventSub":"WebSocket / EventSub","What Twitch Requests":"Twitchが要求するもの","and":"および","and approve the requested access.":"を選び、要求されたアクセスを承認します。","ban and message-deletion updates when permitted.":"許可されている場合に、BANとメッセージ削除の更新。","begin, progress, and end updates.":"開始、進行、終了の更新。","in the URL with the channel login you want to monitor.":"をURL内で、監視したいチャネルのログイン名に置き換えてください。","scope reference":"スコープリファレンス","selected for the richer EventSub source. Twitch currently defaults to this mode in the app.":"を選択すると、より多くの情報を取得できるEventSubソースを使います。現在、アプリのTwitchはこのモードが標準です。","with a donation value.":"に寄付額が付いたもの。"}}</script>
+<script src="../../docs/js/site-language.js"></script>
+<!-- ssn-languages:start -->
+<link rel="stylesheet" href="../../docs/css/site-language.css">
+<script src="../../docs/js/site-language-links.js" defer></script>
+<link rel="alternate" hreflang="en" href="https://socialstream.ninja/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="x-default" href="https://socialstream.ninja/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="es" href="https://socialstream.ninja/es/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="pt-br" href="https://socialstream.ninja/pt-br/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ru" href="https://socialstream.ninja/ru/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="fr" href="https://socialstream.ninja/fr/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="de" href="https://socialstream.ninja/de/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ja" href="https://socialstream.ninja/ja/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="zh-cn" href="https://socialstream.ninja/zh-cn/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="zh-tw" href="https://socialstream.ninja/zh-tw/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="it" href="https://socialstream.ninja/it/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="pl" href="https://socialstream.ninja/pl/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ko" href="https://socialstream.ninja/ko/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="uk" href="https://socialstream.ninja/uk/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="ar" href="https://socialstream.ninja/ar/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="tr" href="https://socialstream.ninja/tr/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="cs" href="https://socialstream.ninja/cs/docs/twitch-eventsub-setup.html">
+<link rel="alternate" hreflang="th" href="https://socialstream.ninja/th/docs/twitch-eventsub-setup.html">
+<!-- ssn-languages:end --></head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="メインナビゲーション"><a href="../index.html">ホーム</a><a href="features.html">機能</a><a href="inspiration.html" class="site-priority-inspiration">活用アイデア</a><a href="download.html">ダウンロード</a><a href="guides.html">ガイド</a><a href="commands.html">コマンドとAPI</a><a href="supported-sites.html">対応サイト</a><a href="overlay-gallery.html" class="site-priority-gallery">オーバーレイギャラリー</a><a href="services.html" class="site-priority-hire">仕事を依頼する</a><a href="support.html">サポート</a></nav><div class="site-actions"><!-- ssn-languages:start --><details class="site-language-picker" data-site-language-picker data-copy-markdown-ignore><summary title="日本語"><span aria-hidden="true">🌐 </span><span lang="ja">日本語</span></summary><div class="site-language-options"><a class="site-language-link" href="../../docs/twitch-eventsub-setup.html" lang="en" hreflang="en">English</a><a class="site-language-link" href="../../es/docs/twitch-eventsub-setup.html" lang="es" hreflang="es">Español</a><a class="site-language-link" href="../../pt-br/docs/twitch-eventsub-setup.html" lang="pt-br" hreflang="pt-br">Português (Brasil)</a><a class="site-language-link" href="../../ru/docs/twitch-eventsub-setup.html" lang="ru" hreflang="ru">Русский</a><a class="site-language-link" href="../../fr/docs/twitch-eventsub-setup.html" lang="fr" hreflang="fr">Français</a><a class="site-language-link" href="../../de/docs/twitch-eventsub-setup.html" lang="de" hreflang="de">Deutsch</a><a class="site-language-link" href="twitch-eventsub-setup.html" lang="ja" hreflang="ja" aria-current="true">日本語</a><a class="site-language-link" href="../../zh-cn/docs/twitch-eventsub-setup.html" lang="zh-cn" hreflang="zh-cn">简体中文</a><a class="site-language-link" href="../../zh-tw/docs/twitch-eventsub-setup.html" lang="zh-tw" hreflang="zh-tw">繁體中文</a><a class="site-language-link" href="../../it/docs/twitch-eventsub-setup.html" lang="it" hreflang="it">Italiano</a><a class="site-language-link" href="../../pl/docs/twitch-eventsub-setup.html" lang="pl" hreflang="pl">Polski</a><a class="site-language-link" href="../../ko/docs/twitch-eventsub-setup.html" lang="ko" hreflang="ko">한국어</a><a class="site-language-link" href="../../uk/docs/twitch-eventsub-setup.html" lang="uk" hreflang="uk">Українська</a><a class="site-language-link" href="../../ar/docs/twitch-eventsub-setup.html" lang="ar" hreflang="ar">العربية</a><a class="site-language-link" href="../../tr/docs/twitch-eventsub-setup.html" lang="tr" hreflang="tr">Türkçe</a><a class="site-language-link" href="../../cs/docs/twitch-eventsub-setup.html" lang="cs" hreflang="cs">Čeština</a><a class="site-language-link" href="../../th/docs/twitch-eventsub-setup.html" lang="th" hreflang="th">ไทย</a></div></details><!-- ssn-languages:end --><button class="site-theme" type="button" aria-label="テーマを切り替え"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="ナビゲーションメニューを開く" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Twitchの設定とEventSub</h1>
+            <p>単純なチャットには通常のページ取得を使います。フォロー、サブスク、Bits、報酬、レイド、Hype Train、チャネル操作にはEventSub/WebSocketモードを使います。</p>
+        </div>
+    </section>
+
+    <main class="guide-section">
+        <div class="container">
+            <div class="guide-card">
+                <h2>Twitchソースのモードを選ぶ</h2>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>モード</th><th>適した用途</th><th>重要な違い</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td data-label="Mode">標準（Standard）</td>
+                            <td data-label="Best For">Twitchのチャットページまたはポップアウトページから、基本的な公開チャットを取得します。</td>
+                            <td data-label="Important Difference">ページに公開された内容を読み取ります。簡単ですが、EventSubの全イベントは取得できません。</td>
+                        </tr>
+                        <tr>
+                            <td data-label="Mode">WebSocket / EventSub</td>
+                            <td data-label="Best For">フォロー、サブスク、Bits、報酬、レイド、配信状態、Hype Train、モデレーション同期、チャット送信、チャネル情報。</td>
+                            <td data-label="Important Difference">Twitch OAuthが必要です。ログイン済みアカウント、チャネル内の役割、チャネルの資格、付与されたスコープが許可するイベントのみが有効になります。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="guide-card">
+                <h2>デスクトップアプリの設定</h2>
+                <ol class="guide-steps">
+                    <li>選択する項目： <strong>ソースを追加 → Twitch（Add source → Twitch）</strong>.</li>
+                    <li>URLで使われるTwitchチャネルのログイン名を入力します。次のURLでは、 <code>twitch.tv/examplechannel</code>の場合は、次を入力します： <code>examplechannel</code>.</li>
+                    <li>次はそのままにします： <strong>WebSocket</strong> を選択すると、より多くの情報を取得できるEventSubソースを使います。現在、アプリのTwitchはこのモードが標準です。</li>
+                    <li>選択する項目： <strong>ソースを有効化（Activate source）</strong>、次に <strong>Twitchにログイン</strong>.</li>
+                    <li>要求された権限を承認し、Twitchソースウィンドウを開いたままにします。</li>
+                </ol>
+                <figure class="guide-figure">
+                    <img src="../../docs/images/guides/twitch-eventsub-sign-in.png" alt="External browserとLocal appのログイン方法を表示したTwitchソースのログイン画面" class="guide-image guide-image-narrow">
+                    <figcaption>デスクトップソースには、外部ブラウザのOAuth方式とアプリ内方式があります。通常のブラウザですでにTwitchが使えている場合は、外部ブラウザ方式が一般的に最も簡単です。</figcaption>
+                </figure>
+            </div>
+
+            <div class="guide-card">
+                <h2>ブラウザ拡張機能でのEventSub設定</h2>
+                <ol class="guide-steps">
+                    <li>最新版のSocial Stream Ninja拡張機能をインストールして有効にします。</li>
+                    <li>開く項目： <a href="https://socialstream.ninja/sources/websocket/twitch.html?channel=examplechannel" target="_blank" rel="noopener">Twitch EventSubソースページ</a>.</li>
+                    <li>置き換える値： <code>examplechannel</code> をURL内で、監視したいチャネルのログイン名に置き換えてください。</li>
+                    <li>選択する項目： <strong>Twitchにログイン</strong> を選び、要求されたアクセスを承認します。</li>
+                    <li>そのページを開いたままにし、アラートをテストする前にUserとChannelの値が正しいことを確認してください。</li>
+                </ol>
+                <pre><code>https://socialstream.ninja/sources/websocket/twitch.html?channel=CHANNEL_LOGIN</code></pre>
+                <p>基本のStandard取得を使う場合は、通常のTwitchチャットまたはポップアウトチャットページを開き、チャットを表示したままにします。</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>Twitchが要求するもの</h2>
+                <p>Social Streamは、対応する操作と購読に必要な権限を持つユーザートークンを要求します。スコープを付与しても、アカウントが配信者やモデレーターになるわけではありません。Twitchは選択したチャネルでのアカウントの役割を引き続き確認します。</p>
+                <table class="guide-table guide-table-stack">
+                    <thead>
+                        <tr><th>権限グループ</th><th>用途</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td data-label="Permission Group">チャット（Chat）</td><td data-label="Used For">チャットの読み取り、送信、参加者一覧の取得。</td></tr>
+                        <tr><td data-label="Permission Group">フォロワーとサブスクライバー</td><td data-label="Used For">フォローイベント、サブスクイベント、ギフトサブスク、再サブスクメッセージ。</td></tr>
+                        <tr><td data-label="Permission Group">Bits、報酬、Hype Train</td><td data-label="Used For">Cheer、カスタムチャンネルポイント報酬の交換、Hype Trainの状態。</td></tr>
+                        <tr><td data-label="Permission Group">モデレーション</td><td data-label="Used For">アカウントにチャネルのモデレーション権限がある場合、メッセージ削除、BAN/タイムアウト、ブロックの同期。</td></tr>
+                        <tr><td data-label="Permission Group">チャネル管理</td><td data-label="Used For">タイトルとカテゴリの読み取り/更新、広告の読み取り/管理、チャネル指標の表示。</td></tr>
+                    </tbody>
+                </table>
+                <p>Twitch公式の次をご覧ください： <a href="https://dev.twitch.tv/docs/authentication/scopes/" target="_blank" rel="noopener">スコープリファレンス</a> および <a href="https://dev.twitch.tv/docs/eventsub/eventsub-subscription-types/" target="_blank" rel="noopener">EventSubの購読タイプ</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>現在のソースが処理するイベント</h2>
+                <ul class="guide-list">
+                    <li><strong>フォロー：</strong> <code>new_follower</code>.</li>
+                    <li><strong>サブスク：</strong> <code>new_subscriber</code>, <code>resub</code>、および <code>subscription_gift</code>.</li>
+                    <li><strong>Bits：</strong> <code>cheer</code> に寄付額が付いたもの。</li>
+                    <li><strong>チャンネルポイント：</strong> <code>reward</code>.</li>
+                    <li><strong>レイド：</strong> <code>raid</code>.</li>
+                    <li><strong>配信と広告の状態：</strong> <code>stream_online</code>, <code>stream_offline</code>、および <code>ad_break</code>.</li>
+                    <li><strong>Hype Train：</strong> <code>hype_train</code> 開始、進行、終了の更新。</li>
+                    <li><strong>モデレーション：</strong> 許可されている場合に、BANとメッセージ削除の更新。</li>
+                </ul>
+                <p>Twitchのサブスクイベントには、資格のあるアフィリエイト/パートナーチャネルと配信者権限が必要です。フォローやモデレーションの購読では、イベントに応じて、ログイン済みユーザーが配信者または権限を持つモデレーターである必要があります。</p>
+                <p>受信後のアラート名とペイロードフィールドには、次を参照してください： <a href="events-alerts-compatibility.html">イベントとアラートの互換性ガイド</a> および <a href="event-reference.html">イベントリファレンス</a>.</p>
+            </div>
+
+            <div class="guide-card">
+                <h2>イベントが届かない場合の最初の確認</h2>
+                <ol class="guide-steps">
+                    <li>ソースページに正しい次の値が表示されていることを確認します： <strong>ユーザー（User）</strong> および <strong>チャンネル（Channel）</strong>.</li>
+                    <li>ソースページ/ウィンドウを開いたままにし、チャット接続が有効であることを確認してください。</li>
+                    <li>チャットは動くのにフォロー/サブスク/報酬が届かない場合は、ログアウトして再認証し、現在のスコープを付与してください。</li>
+                    <li>ログイン済みアカウントが、そのチャネルの配信者または許可されたモデレーターであることを確認してください。</li>
+                    <li>ドックとアラートオーバーレイが同じSocial StreamセッションIDを使っていることを確認してください。</li>
+                    <li>ポップアップの架空テストメッセージまたはMulti Alertsプレビューを使い、取得側とオーバーレイ側の問題を切り分けてください。</li>
+                </ol>
+                <div class="guide-note">
+                    <p><strong>EventSubは同じ通知を複数回配信することがあります。</strong> Twitchは少なくとも1回の配信を保証すると説明しています。Social Streamには重複防止がありますが、独自のAPI利用側でも、可能ならイベント/メッセージの識別情報で重複を除外してください。公式の次を参照してください： <a href="https://dev.twitch.tv/docs/eventsub/" target="_blank" rel="noopener">EventSubの概要</a>.</p>
+                </div>
+            </div>
+
+            <template data-copy-markdown-extra>
+## 確認済みのメンテナー向け情報
+
+現在、`sources/websocket/twitch.js`が要求するTwitch OAuthスコープ：
+
+`chat:read`、`chat:edit`、`user:write:chat`、`bits:read`、`moderator:read:followers`、`moderator:read:chatters`、`channel:read:subscriptions`、`channel:read:hype_train`、`channel:moderate`、`moderator:manage:banned_users`、`moderator:manage:chat_messages`、`channel:manage:broadcast`、`channel:read:ads`、`channel:manage:ads`、`channel:read:redemptions`。
+
+現在試行されるEventSub購読は、役割、スコープ、チャネルの資格によって制限されます：
+
+`channel.follow` v2、`channel.subscribe`、`channel.subscription.gift`、`channel.subscription.message`、`channel.cheer`、`channel.ban`、`channel.channel_points_custom_reward_redemption.add`、`channel.raid`、`stream.online`、`stream.offline`、`channel.ad_break.begin`、および`channel.hype_train.begin`、`.progress`、`.end` v2。
+
+現在の通信エンドポイントはTwitch EventSub WebSocketです。Twitchでは、WebSocket購読の作成時にユーザーアクセストークンが必要です。このドキュメント確認時に、Twitchチャットクライアントのギフトサブスク正規化の回帰テストは合格しました。
+            </template>
+        </div>
+    </main>
+
+    <footer><div class="container"><div class="footer-bottom"><p>&copy; <span id="current-year">2026</span> Social Stream Ninja。GPLv3.0ライセンス。</p></div></div></footer>
+    <script data-copy-markdown src="../../docs/js/main.js"></script>
+    <script>document.getElementById('current-year').textContent = new Date().getFullYear();</script>
+</body>
+</html>
