@@ -13,7 +13,7 @@
 			link = root.querySelector("[data-nc-link]");
 		var feedback = root.querySelector("[data-nc-feedback]"), publicUrl = root.querySelector("[data-nc-public-url]");
 		var current = {};
-		var electron = location.protocol !== "chrome-extension:";
+		var electron = location.protocol !== "chrome-extension:" && location.protocol !== "moz-extension:";
 		var dirty = false,
 			busy = false;
 		var labels = { disconnected: "Not connected", connecting: "Connecting…", connected: "Connected", paused: "Paused", reconnecting: "Reconnecting…", unavailable: "Room unavailable; check room settings", authorization_required: "Connection revoked; pair again", awaiting_approval: "Approve this code in the NinjaChatter dashboard", pairing_expired: "Pairing expired; start again", storage_error: "Private storage unavailable", effect_error: "Cheer outcome unknown", publication_unknown: "Chat delivery unknown; message not retried", protocol_error: "Connection protocol error" };

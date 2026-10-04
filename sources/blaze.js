@@ -385,11 +385,55 @@
 	var lastURL =  "";
 	var observer = null;
 	var observerTarget = null;
+	var autoScrollTimer = null;
+
+	function keepBlazeChatAtBottom(target) {
+		if (!window.ninjafy || !isExtensionOn || !target || !target.isConnected) {
+			return;
+		}
+		var scroller = target.closest(".simplebar-content-wrapper");
+		if (!scroller || !scroller.clientHeight) {
+			return;
+		}
+		if (!scroller.ssnBlazeAutoScroll) {
+			var state = { paused: false };
+			scroller.ssnBlazeAutoScroll = state;
+			scroller.addEventListener("wheel", function(event) {
+				if (event.deltaY < 0) { state.paused = true; }
+			}, { passive: true });
+			scroller.addEventListener("touchmove", function() {
+				state.paused = true;
+			}, { passive: true });
+			scroller.addEventListener("keydown", function(event) {
+				if (event.key === "ArrowUp" || event.key === "PageUp" || event.key === "Home") {
+					state.paused = true;
+				}
+			});
+			var scrollArea = scroller.closest("[data-simplebar]") || scroller;
+			scrollArea.addEventListener("pointerdown", function(event) {
+				if (event.target === scroller || (event.target.closest && event.target.closest(".simplebar-track"))) {
+					state.paused = true;
+				}
+			});
+			scroller.addEventListener("scroll", function() {
+				if (scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 1) {
+					state.paused = false;
+				}
+			});
+		}
+		// Hidden SSApp windows can leave Blaze's smooth scrolling short of the
+		// bottom, which pauses its virtual chat list. Follow unless the user
+		// deliberately scrolled back; reaching the bottom resumes following.
+		if (!scroller.ssnBlazeAutoScroll.paused && scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight > 1) {
+			scroller.scrollTop = scroller.scrollHeight;
+		}
+	}
 
 	function scheduleInitialChatSync(target) {
 		if (initialChatSyncComplete || !target || !target.isConnected) {
 			return;
 		}
+		keepBlazeChatAtBottom(target);
 		if (initialChatSyncTimer) {
 			clearTimeout(initialChatSyncTimer);
 		}
@@ -519,6 +563,11 @@
 		observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
 		observerTarget = target;
+		if (window.ninjafy && !autoScrollTimer) {
+			autoScrollTimer = setInterval(function() {
+				keepBlazeChatAtBottom(observerTarget);
+			}, 250);
+		}
 		scheduleInitialChatSync(target);
 	}
 	

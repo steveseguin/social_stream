@@ -1,7 +1,7 @@
 (function () {
 	"use strict";
 	var storageKey = "ncAudiencePrivate";
-	var electron = location.protocol !== "chrome-extension:";
+	var electron = location.protocol !== "chrome-extension:" && location.protocol !== "moz-extension:";
 	function load() {
 		if (electron) return ipcRenderer.invoke("ninjachatter:audience-room", { op: "load" });
 		return new Promise(function (resolve, reject) {

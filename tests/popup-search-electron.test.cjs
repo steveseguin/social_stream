@@ -220,8 +220,9 @@ async function run() {
  }
  audienceToggle.checked=false;
 
- check(audience.querySelector('[data-nc-status]').textContent.includes('Chrome extension'),'Electron explains the audience pilot limitation');
- check([...audience.querySelectorAll('[data-nc-op]')].every(button=>button.disabled),'Unqualified pairing controls stay disabled');
+ const audienceState=await w.ipcRenderer.invoke('ninjachatter:audience-room',{op:'command',command:{op:'status'}});
+ check(audienceState.state==='disconnected' && !audienceState.paired && !audienceState.code,'Fresh desktop profile has no audience pairing');
+ check(audience.querySelector('[data-nc-status]').textContent==='Not connected' && !audience.querySelector('[data-nc-op="pair"]').disabled,'Desktop audience controls reflect the disconnected state');
  check(!!audience.querySelector('[data-setting="ssc"]'),'Existing desktop relay remains available');
  const output={passed:checks.length,checks,links:{dock:dock.href,featured:featured.href}};
 
@@ -308,7 +309,7 @@ async function run() {
     d.getElementById('wrapper-audience-room-options').checked=true;
     const field=panel.querySelector('[data-nc-sources]'),label=panel.querySelector('label[for="nc-publish-sources"]');
     const fr=field.getBoundingClientRect(),lr=label.getBoundingClientRect();
-    if(lr.bottom>fr.top || fr.width<100 || fr.right>w.innerWidth) throw Error('Audience field layout failed');
+    if(lr.bottom>fr.top || fr.width<100 || fr.right>w.innerWidth) throw Error('Audience field layout failed: '+JSON.stringify({field:fr.toJSON(),label:lr.toJSON(),width:w.innerWidth,body:d.body.className}));
     const style=w.getComputedStyle(field);
     function luminance(color) {
      const channels=color.match(/[0-9.]+/g).slice(0,3).map(v=>{v=Number(v)/255;return v<=0.04045?v/12.92:Math.pow((v+0.055)/1.055,2.4);});
