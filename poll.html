@@ -517,6 +517,8 @@ settings.pollTimer = normalizeNumber(settings.pollTimer, 60) || 60;
 settings.pollOptions = normalizeOptionsList(settings.pollOptions);
 
 let results = {};
+// Numeric freeform votes refer to the last rendered, ranked options.
+let displayedFreeformOptions = [];
 let totalVotes = 0;
 let alreadyVoted = {};
 let donationTotals = {}; // Track donation amounts per option
@@ -555,6 +557,7 @@ function initializePoll() {
 }
 
 function updatePollOptions() {
+    displayedFreeformOptions = [];
     pollOptionsContainer.innerHTML = '';
 
     if (settings.pollType === 'yesno') {
@@ -638,6 +641,10 @@ function updatePollResults() {
     } else if (settings.pollType === 'freeform') {
         displayOptions = Object.entries(results).sort((a, b) => b[1] - a[1]).slice(0, 10);
     }
+
+    displayedFreeformOptions = settings.pollType === 'freeform'
+        ? displayOptions.map(([option]) => option)
+        : [];
 
     const maxVotes = Math.max(...displayOptions.map(([_, votes]) => votes), 0);
 
@@ -976,7 +983,7 @@ function processVoteCandidate(vote, voterKey, voteContext, voteWeight, donationA
             }
         } else if (/^\d+$/.test(vote)) {
             const numericVote = Number(vote);
-            const resultsKeys = Object.keys(results);
+            const resultsKeys = displayedFreeformOptions;
             if (!Number.isNaN(numericVote) && numericVote > 0 && numericVote <= resultsKeys.length) {
                 const selectedOption = resultsKeys[numericVote - 1];
                 recordVote(selectedOption, voterKey, { ...voteContext, matchedBy: 'freeform-numeric' }, voteWeight, donationAmount);
