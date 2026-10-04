@@ -4042,6 +4042,8 @@ function enableBackgroundKeepAlive() {
 	}
 
 	function processQueuedMessageData(messageData) {
+		pendingYouTubeMessages.delete(messageData);
+		if (cancelledYouTubeMessages.has(messageData)) return;
 		processMessage(messageData);
 
 		// If page isn't visible, queue for later DOM rendering
@@ -4196,14 +4198,22 @@ function enableBackgroundKeepAlive() {
 	}
 
 	const deletedYouTubeMessageIds = new Set();
+	const pendingYouTubeMessages = new Set();
+	const cancelledYouTubeMessages = new WeakSet();
 	function forwardYouTubeDelete(data) {
 		if (data.meta && data.meta.messageId) {
 			deletedYouTubeMessageIds.add(String(data.meta.messageId));
 			if (deletedYouTubeMessageIds.size > 2000) deletedYouTubeMessageIds.delete(deletedYouTubeMessageIds.values().next().value);
 		}
-		messageQueue = messageQueue.filter(message => data.meta && data.meta.messageId
-			? String(message.messageId) !== String(data.meta.messageId)
-			: data.userid ? message.authorChannelId !== data.userid : message.authorName !== data.chatname);
+		function matchesMessage(message) {
+			return data.meta && data.meta.messageId
+				? String(message.messageId) === String(data.meta.messageId)
+				: data.userid ? message.authorChannelId === data.userid : message.authorName === data.chatname;
+		}
+		pendingYouTubeMessages.forEach(function(message) {
+			if (matchesMessage(message)) cancelledYouTubeMessages.add(message);
+		});
+		messageQueue = messageQueue.filter(message => !matchesMessage(message));
 		window.dispatchEvent(new CustomEvent('youtubeDelete', { detail: data, bubbles: true }));
 	}
 
@@ -5703,6 +5713,7 @@ function enableBackgroundKeepAlive() {
 	  updateLiveChatStreamIndicator('connect');
 	}
 		function queueMessage(messageData) {
+			pendingYouTubeMessages.add(messageData);
 			if (messageDataNeedsRichChannelEmojiResolution(messageData)) {
 				queueMessageAfterRichEmojiRetry(messageData);
 				return;
@@ -6233,6 +6244,7 @@ function enableBackgroundKeepAlive() {
 		clearSourceIdentity();
 		messageQueue = [];
 		pendingRelayMessages = [];
+		pendingYouTubeMessages.clear();
 		quickPollCount = 0;
 		consecutiveMaxMessages = 0; // Reset consecutive max message counter
 		consecutiveEmptyPolls = 0;

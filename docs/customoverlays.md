@@ -1,5 +1,7 @@
 # Building Custom Overlays for Social Stream Ninja
 
+For downloading existing overlays, session IDs, opening files directly in OBS, and a design guide for each overlay family, start with [Design your own Social Stream overlays](overlay-customization-guide.html).
+
 Already have a StreamElements or Streamlabs custom chat skin? Follow the [chat widget import guide](streamelements-chat-guide.html) to preview it and download an OBS HTML file.
 
 Building a game or reward from gifts and chat? See [Build games and rewards](making-games.html) for platform amounts, gift streaks, and three editable starters.
@@ -64,7 +66,7 @@ This is the most common and straightforward method for overlay pages. Your custo
     // &view=roomID ensures it only receives data. &label=dock receives normal live chat/events.
     // Custom labels only receive targeted messages.
     // &noaudio &novideo &cleanoutput are typical for data-only VDO.Ninja clients.
-    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&view=${encodeURIComponent(roomID)}&label=${encodeURIComponent(label)}&noaudio&novideo&cleanoutput&room=${encodeURIComponent(roomID)}`;
 
     // Listen for messages from the iframe
     window.addEventListener('message', function(event) {
@@ -209,9 +211,15 @@ A typical message object might look like this (fields vary based on source and e
 }
 ```
 
-Refer to `about.md` for more details on these fields.
+Refer to [docs/event-reference.html](event-reference.html) for the canonical fields; source-specific additions belong in `meta`.
 
 > **Note:** Reserve the `event` field for true system notifications (follows, raids, /me actions, etc.). Regular chat messages should leave `event` unset/false so they are never mistaken for events.
+
+### Safe display inputs
+
+Treat incoming fields as untrusted. For the examples below, save your page at the extracted repository root and load `libs/objects.js`, then `shared/utils/chatHtml.js`, before the renderer. Render names and other plain fields with `textContent`. Only HTML-mode `chatmessage` goes through `SocialStreamChatHTML.sanitize`; `textonly` messages remain literal text. Never evaluate a message as code. See the [AI prompt and input checks](overlay-customization-guide.html#safe-input).
+
+The image helper below accepts HTTP(S) images and raster base64 data images; it rejects script-scheme URLs and embedded documents. Use the existing media helper/policy when modifying an established overlay instead of replacing its supported media handling with this smaller example.
 
 ### Client-Side Filtering and Logic
 
@@ -289,43 +297,74 @@ function processIncomingSSNMessage(data) {
 }
 
 function displayGenericMessage(data) {
-    const messageList = document.getElementById('message-list'); // Assuming you have this element
+    const messageList = document.getElementById('message-list');
     if (!messageList) return;
 
-    const messageElement = document.createElement('div');
-    messageElement.className = `message-item message-type-${data.type || 'unknown'}`;
+    const messageElement = document.createElement('li');
+    messageElement.className = 'message-item';
+    // Use a restricted token for class names, never an HTML attribute string.
+    const sourceClass = String(data.type || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '-');
+    messageElement.classList.add('message-type-' + sourceClass);
     if (data.event) {
-        messageElement.classList.add(`event-${data.event}`);
+        messageElement.classList.add('event-' + String(data.event).replace(/[^a-zA-Z0-9_-]/g, '-'));
     }
 
-    let content = '';
-    if (data.chatimg) {
-        content += `<img src="${data.chatimg}" alt="${data.chatname || 'User'}" class="avatar"> `;
-    }
-    content += `<strong style="color:${data.nameColor || '#FFF'};">${data.chatname || 'Anonymous'}</strong>: `;
-    content += `<span>${data.chatmessage || ''}</span>`;
+    appendSafeImage(messageElement, data.chatimg, 'avatar', data.chatname || 'User');
 
-    if (data.hasDonation) {
-        content += `<span class="donation-info"> ❤️ ${data.hasDonation}</span>`;
+    const name = document.createElement('strong');
+    name.textContent = String(data.chatname || 'Anonymous');
+    if (data.nameColor && CSS.supports('color', String(data.nameColor))) {
+        name.style.color = String(data.nameColor);
     }
-    if (data.membership) {
-        content += `<span class="membership-info"> ⭐ ${data.membership}</span>`;
-    }
-    if (data.contentimg) {
-        content += `<div><img src="${data.contentimg}" class="content-image"></div>`;
-    }
+    messageElement.appendChild(name);
+    messageElement.appendChild(document.createTextNode(': '));
 
-    messageElement.innerHTML = content;
+    const body = document.createElement('span');
+    const message = String(data.chatmessage == null ? '' : data.chatmessage);
+    if (data.textonly) {
+        body.textContent = message;
+    } else {
+        body.innerHTML = SocialStreamChatHTML.sanitize(message);
+    }
+    messageElement.appendChild(body);
+
+    if (data.hasDonation) appendPlainLabel(messageElement, 'donation-info', ' Donation: ' + data.hasDonation);
+    if (data.membership) appendPlainLabel(messageElement, 'membership-info', ' Member: ' + data.membership);
+    // Image-only chat is valid; do not require a nonempty chatmessage.
+    appendSafeImage(messageElement, data.contentimg, 'content-image', 'Chat attachment');
+
     messageList.appendChild(messageElement);
-
-    // Optional: Auto-scroll
     messageList.scrollTop = messageList.scrollHeight;
-
-    // Optional: Limit number of messages displayed
-    const maxMessages = parseInt(urlParams.get('limit')) || 50;
+    const params = new URLSearchParams(window.location.search);
+    const maxMessages = Math.max(1, parseInt(params.get('limit'), 10) || 50);
     while (messageList.children.length > maxMessages) {
         messageList.removeChild(messageList.firstChild);
     }
+}
+
+function appendPlainLabel(parent, className, text) {
+    const label = document.createElement('span');
+    label.className = className;
+    label.textContent = String(text);
+    parent.appendChild(label);
+}
+
+function appendSafeImage(parent, value, className, alt) {
+    if (typeof value !== 'string' || !value) return;
+    let safeUrl;
+    try {
+        const url = new URL(value, window.location.href);
+        // This example accepts web images and raster base64 data images.
+        const rasterData = /^data:image\/(?:png|jpeg|gif|webp|avif|bmp);base64,/i.test(value);
+        if (url.protocol !== 'https:' && url.protocol !== 'http:' && !rasterData) return;
+        safeUrl = url.href;
+    } catch (error) { return; }
+
+    const image = document.createElement('img');
+    image.src = safeUrl;
+    image.alt = String(alt);
+    image.className = className;
+    parent.appendChild(image);
 }
 ```
 
@@ -340,6 +379,8 @@ How you display messages is entirely up to your HTML and CSS design.
 <html>
 <head>
     <title>My Custom SSN Overlay</title>
+    <script src="./libs/objects.js"></script>
+    <script src="./shared/utils/chatHtml.js"></script>
     <style>
         body { background-color: transparent; color: white; font-family: sans-serif; }
         .message-list { list-style: none; padding: 10px; }
@@ -364,7 +405,7 @@ How you display messages is entirely up to your HTML and CSS design.
         const label = urlParams.get("label") || "dock"; // Use dock for the normal live feed
 
         const iframe = document.getElementById('ssn_bridge');
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&view=${encodeURIComponent(roomID)}&label=${encodeURIComponent(label)}&noaudio&novideo&cleanoutput&room=${encodeURIComponent(roomID)}`;
 
         window.addEventListener('message', function(event) {
             if (event.source !== iframe.contentWindow) { return; }
@@ -384,64 +425,76 @@ How you display messages is entirely up to your HTML and CSS design.
             displayGenericMessage(data); // Use the display function from above
         }
 
-        // Definition of displayGenericMessage from previous section
         function displayGenericMessage(data) {
             const messageList = document.getElementById('message-list');
             if (!messageList) return;
 
-            const messageElement = document.createElement('li'); // Changed to <li> for <ul>
-            messageElement.className = `message-item message-type-${data.type || 'unknown'}`;
+            const messageElement = document.createElement('li');
+            messageElement.className = 'message-item';
+            // Use a restricted token for class names, never an HTML attribute string.
+            const sourceClass = String(data.type || 'unknown').replace(/[^a-zA-Z0-9_-]/g, '-');
+            messageElement.classList.add('message-type-' + sourceClass);
             if (data.event) {
-                messageElement.classList.add(`event-${data.event}`);
+                messageElement.classList.add('event-' + String(data.event).replace(/[^a-zA-Z0-9_-]/g, '-'));
             }
 
-            let content = '';
-            if (data.chatimg) {
-                content += `<img src="${data.chatimg}" alt="${data.chatname || 'User'}" class="avatar"> `;
+            appendSafeImage(messageElement, data.chatimg, 'avatar', data.chatname || 'User');
+
+            const name = document.createElement('strong');
+            name.textContent = String(data.chatname || 'Anonymous');
+            if (data.nameColor && CSS.supports('color', String(data.nameColor))) {
+                name.style.color = String(data.nameColor);
             }
-            content += `<strong style="color:${data.nameColor || '#FFF'};">${data.chatname || 'Anonymous'}</strong>: `;
-            
-            // Sanitize chatmessage before inserting as HTML if it's not pre-sanitized
-            // For simplicity, assuming data.chatmessage is safe or using textContent assignment later
-            let chatMessageContent = data.chatmessage || '';
+            messageElement.appendChild(name);
+            messageElement.appendChild(document.createTextNode(': '));
 
-            // Basic XSS prevention if inserting as HTML (better to use a library or careful construction)
-            // const tempDiv = document.createElement('div');
-            // tempDiv.textContent = data.chatmessage || '';
-            // chatMessageContent = tempDiv.innerHTML;
-            
-            content += `<span>${chatMessageContent}</span>`;
-
-
-            if (data.hasDonation) {
-                content += `<span class="donation-info"> ❤️ ${data.hasDonation}</span>`;
+            const body = document.createElement('span');
+            const message = String(data.chatmessage == null ? '' : data.chatmessage);
+            if (data.textonly) {
+                body.textContent = message;
+            } else {
+                body.innerHTML = SocialStreamChatHTML.sanitize(message);
             }
-            if (data.membership) {
-                content += `<span class="membership-info"> ⭐ ${data.membership}</span>`;
-            }
-             if (data.contentimg) {
-                content += `<div><img src="${data.contentimg}" class="content-image" alt="User content"></div>`;
-            }
+            messageElement.appendChild(body);
 
-
-            messageElement.innerHTML = content;
-            
-            // If you want to process URLs in the message content:
-            // processURLs(messageElement.querySelector('span'), { makeClickable: true, shortenURLs: true });
-
+            if (data.hasDonation) appendPlainLabel(messageElement, 'donation-info', ' Donation: ' + data.hasDonation);
+            if (data.membership) appendPlainLabel(messageElement, 'membership-info', ' Member: ' + data.membership);
+            // Image-only chat is valid; do not require a nonempty chatmessage.
+            appendSafeImage(messageElement, data.contentimg, 'content-image', 'Chat attachment');
 
             messageList.appendChild(messageElement);
             messageList.scrollTop = messageList.scrollHeight;
-
-            const maxMessages = parseInt(urlParams.get('limit')) || 50;
+            const params = new URLSearchParams(window.location.search);
+            const maxMessages = Math.max(1, parseInt(params.get('limit'), 10) || 50);
             while (messageList.children.length > maxMessages) {
                 messageList.removeChild(messageList.firstChild);
             }
         }
-         // Placeholder for processURLs and isValidTLD if you use them
-        function isValidTLD(tld) { /* ... implementation ... */ return true; }
-        function processURLs(element, options) { /* ... implementation ... */ }
 
+        function appendPlainLabel(parent, className, text) {
+            const label = document.createElement('span');
+            label.className = className;
+            label.textContent = String(text);
+            parent.appendChild(label);
+        }
+
+        function appendSafeImage(parent, value, className, alt) {
+            if (typeof value !== 'string' || !value) return;
+            let safeUrl;
+            try {
+                const url = new URL(value, window.location.href);
+                // This example accepts web images and raster base64 data images.
+                const rasterData = /^data:image\/(?:png|jpeg|gif|webp|avif|bmp);base64,/i.test(value);
+                if (url.protocol !== 'https:' && url.protocol !== 'http:' && !rasterData) return;
+                safeUrl = url.href;
+            } catch (error) { return; }
+
+            const image = document.createElement('img');
+            image.src = safeUrl;
+            image.alt = String(alt);
+            image.className = className;
+            parent.appendChild(image);
+        }
 
     </script>
 </body>
@@ -562,7 +615,7 @@ This example shows an overlay that only displays new follower and subscriber eve
         const label = urlParams.get("label") || "dock";
 
         const iframe = document.getElementById('ssn_bridge');
-        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&view=${encodeURIComponent(roomID)}&label=${encodeURIComponent(label)}&noaudio&novideo&cleanoutput&room=${encodeURIComponent(roomID)}`;
 
         const notificationContainer = document.getElementById('event-notification-container');
 

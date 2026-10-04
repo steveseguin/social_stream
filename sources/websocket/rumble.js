@@ -23,6 +23,8 @@
     const RUMBLE_CHAT_API_BASE = 'https://web7.rumble.com/chat/api';
     const SSE_BATCH_TIMEOUT_MS = 25000;
     const SSE_BATCH_MAX_EVENTS = 25;
+    const EMOTE_CATALOG_RETRY_MS = 30000;
+    const EMOTE_CATALOG_TIMEOUT_MS = 10000;
 
     const els = {};
     const state = {
@@ -53,6 +55,7 @@
         sseEmoteCatalogStreamId: '',
         sseEmoteCatalogPromise: null,
         sseEmoteCatalogFailedStreamId: '',
+        sseEmoteCatalogRetryAfter: 0,
         sseFailedStreamId: '',
         sseLoggedConnected: false,
         consecutiveErrors: 0
@@ -598,7 +601,7 @@
         };
     }
 
-    async function fetchRumbleHtml(url) {
+    async function fetchRumbleHtml(url, signal) {
         if (window.ninjafy && typeof window.ninjafy.fetchRumbleHtml === 'function') {
             const result = await window.ninjafy.fetchRumbleHtml(url);
             if (!result || !result.ok) {
@@ -631,6 +634,7 @@
             method: 'GET',
             cache: 'no-store',
             credentials: 'omit',
+            signal: signal,
             headers: {
                 Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8'
             }
@@ -653,30 +657,57 @@
         if (state.sseEmoteCatalogPromise) {
             return state.sseEmoteCatalogPromise;
         }
-        if (state.sseEmoteCatalogFailedStreamId === normalized) {
+        if (state.sseEmoteCatalogFailedStreamId === normalized && Date.now() < state.sseEmoteCatalogRetryAfter) {
             return Promise.resolve(false);
         }
 
-        state.sseEmoteCatalogPromise = fetchRumbleHtml(popupUrl).then(function (html) {
-            const parsed = parseRumbleEmoteCatalog(html);
-            if (state.sseStreamId && state.sseStreamId !== normalized) {
+        const token = state.sseToken;
+        const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        let timeoutId;
+        // Bound both the download and bridge response so a stalled request can retry.
+        const request = Promise.race([
+            fetchRumbleHtml(popupUrl, controller ? controller.signal : undefined),
+            new Promise(function (resolve, reject) {
+                timeoutId = setTimeout(function () {
+                    reject(new Error('Rumble emote catalog request timed out'));
+                    if (controller) {
+                        controller.abort();
+                    }
+                }, EMOTE_CATALOG_TIMEOUT_MS);
+            })
+        ]);
+        state.sseEmoteCatalogPromise = request.then(function (html) {
+            if (token !== state.sseToken || (state.sseStreamId && state.sseStreamId !== normalized)) {
                 return false;
+            }
+            const parsed = parseRumbleEmoteCatalog(html);
+            if (!Object.keys(parsed).length) {
+                throw new Error('No Rumble emotes found in the chat page');
             }
             state.sseEmotes = parsed;
             state.sseEmoteCatalogStreamId = normalized;
             state.sseEmoteCatalogFailedStreamId = '';
+            state.sseEmoteCatalogRetryAfter = 0;
             if (Object.keys(parsed).length) {
                 log('Loaded ' + Object.keys(parsed).length + ' Rumble emotes for chat rendering.', 'success');
             }
             return true;
         }).catch(function (error) {
+            if (token !== state.sseToken) {
+                return false;
+            }
             state.sseEmotes = {};
             state.sseEmoteCatalogStreamId = '';
             state.sseEmoteCatalogFailedStreamId = normalized;
-            log('Rumble emote catalog unavailable; chat will use text shortcodes. ' + ((error && error.message) || error), 'warn');
+            // Existing chat polling/SSE batches retry after this cooldown.
+            state.sseEmoteCatalogRetryAfter = Date.now() + EMOTE_CATALOG_RETRY_MS;
+            log('Rumble emote catalog unavailable; chat will use text shortcodes. Retrying in 30 seconds. ' + ((error && error.message) || error), 'warn');
             return false;
         }).then(function (result) {
-            state.sseEmoteCatalogPromise = null;
+            clearTimeout(timeoutId);
+            if (token === state.sseToken) {
+                state.sseEmoteCatalogPromise = null;
+            }
             return result;
         });
 
@@ -1534,6 +1565,7 @@
         state.sseEmoteCatalogStreamId = '';
         state.sseEmoteCatalogPromise = null;
         state.sseEmoteCatalogFailedStreamId = '';
+        state.sseEmoteCatalogRetryAfter = 0;
         state.sseLoggedConnected = false;
         if (state.sseTimer) {
             clearTimeout(state.sseTimer);
@@ -1556,6 +1588,9 @@
             return;
         }
         fetchSseBatch(streamId, includeInit).then(function (events) {
+            if (!state.active || !state.sseActive || token !== state.sseToken || state.sseStreamId !== streamId) {
+                return;
+            }
             return ensureRumbleEmoteCatalog(streamId).then(function () {
                 return events;
             });

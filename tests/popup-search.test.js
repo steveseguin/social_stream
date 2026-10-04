@@ -140,6 +140,7 @@ const verifyModeSearch = Function("assert", `
     const results = [];
     const clearTimeout = timer => cancelled.push(timer);
     const markBeginnerAdvancedSections = () => {};
+    const applyPopupPanelVisibility = () => {};
     const popupImportantChangesReady = false;
     const document = {
         body: { classList: {

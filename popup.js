@@ -4674,6 +4674,9 @@ function update(response, sync = true) {
     
     if (response !== undefined) {
 		if (response.cohostCapability) cohostAccessCapability = response.cohostCapability;
+        if (response.settings) {
+            popupPanelVisibility = (response.settings.popupPanelVisibility || {}).object || {};
+        }
         applyPopupBeginnerMode(getPopupBeginnerMode(response));
 
         // Load profiles if they weren't loaded during init (e.g., due to startup timing)
@@ -5208,6 +5211,135 @@ function getPopupBeginnerMode(response) {
 	return !!(response.settings && response.settings.beginnerMode && response.settings.beginnerMode.setting === true);
 }
 
+var popupPanelVisibility = {};
+var popupPanelSections = null;
+var popupPanelPreview = '';
+
+function getPopupPanelSections() {
+	if (popupPanelSections) return popupPanelSections;
+	popupPanelSections = [];
+	document.querySelectorAll('.container > [data-panel-section]').forEach(function(element) {
+		var id = element.dataset.panelSection;
+		var section = popupPanelSections.find(function(item) { return item.id === id; });
+		if (!section) {
+			section = { id: id, elements: [], heading: null };
+			popupPanelSections.push(section);
+		}
+		section.elements.push(element);
+		var heading = element.querySelector(':scope > h2');
+		if (heading) section.heading = heading;
+	});
+	return popupPanelSections;
+}
+
+function getPopupPanelSection(element) {
+	var part = element && element.closest('[data-panel-section]');
+	return part ? getPopupPanelSections().find(function(section) { return section.id === part.dataset.panelSection; }) : null;
+}
+
+function getPopupPanelSectionLabel(section) {
+	var label = (section.heading.querySelector('.title-group') || section.heading).cloneNode(true);
+	label.querySelectorAll('a, button, label').forEach(function(action) { action.remove(); });
+	label.querySelectorAll('.emoji').forEach(function(emoji) { emoji.appendChild(document.createTextNode(' ')); });
+	return label.textContent.replace(/\s+/g, ' ').trim();
+}
+
+function isPopupPanelBeginnerHidden(section) {
+	return document.body.classList.contains('beginner-mode') && section.heading.parentElement.classList.contains('beginner-advanced');
+}
+
+function isPopupPanelSectionShown(section) {
+	if (typeof popupPanelVisibility[section.id] === 'boolean') return popupPanelVisibility[section.id];
+	return !isPopupPanelBeginnerHidden(section);
+}
+
+function applyPopupPanelVisibility() {
+	var changed = false;
+	getPopupPanelSections().forEach(function(section) {
+		var preview = popupPanelPreview === section.id;
+		var hidden = popupPanelVisibility[section.id] === false && !preview;
+		// Override the beginner preset for entire features it normally omits.
+		var selected = (popupPanelVisibility[section.id] === true || preview) && isPopupPanelBeginnerHidden(section);
+		section.elements.forEach(function(element) {
+			if (element.classList.contains('popup-panel-hidden') !== hidden || element.classList.contains('popup-panel-selected') !== selected) changed = true;
+			element.classList.toggle('popup-panel-hidden', hidden);
+			element.classList.toggle('popup-panel-selected', selected);
+			element.querySelectorAll('.beginner-advanced').forEach(function(child) {
+				child.classList.toggle('popup-panel-selected', selected);
+			});
+		});
+	});
+	var notice = document.getElementById('panelPreviewNotice');
+	notice.hidden = !popupPanelPreview;
+	if (popupPanelPreview) {
+		var section = getPopupPanelSections().find(function(item) { return item.id === popupPanelPreview; });
+		document.getElementById('panelPreviewText').textContent = getTranslation('viewing-hidden-section', 'Viewing a hidden section:') + ' ' + getPopupPanelSectionLabel(section);
+	}
+	if (changed) document.dispatchEvent(new Event('popup-panel-visibility-changed'));
+}
+
+function setupPopupPanelEditor() {
+	var dialog = document.getElementById('panelEditor');
+	var list = document.getElementById('panelSectionList');
+	var save = document.getElementById('savePanelSections');
+	var showAll = document.getElementById('showAllPanelSections');
+	var cancel = document.getElementById('cancelPanelEditor');
+	var error = document.getElementById('panelEditorError');
+	document.getElementById('customizePanel').addEventListener('click', function() {
+		list.textContent = '';
+		error.textContent = '';
+		getPopupPanelSections().forEach(function(section) {
+			var row = document.createElement('div');
+			row.className = 'popup-toggle-row';
+			var toggle = document.createElement('label');
+			toggle.className = 'switch';
+			var input = document.createElement('input');
+			input.type = 'checkbox';
+			input.id = 'panel-section-' + section.id;
+			input.dataset.panelChoice = section.id;
+			input.checked = isPopupPanelSectionShown(section);
+			var slider = document.createElement('span');
+			slider.className = 'slider round';
+			toggle.appendChild(input);
+			toggle.appendChild(slider);
+			var label = document.createElement('label');
+			label.htmlFor = input.id;
+			label.textContent = getPopupPanelSectionLabel(section);
+			row.appendChild(toggle);
+			row.appendChild(label);
+			list.appendChild(row);
+		});
+		dialog.showModal();
+	});
+	showAll.addEventListener('click', function() {
+		list.querySelectorAll('input').forEach(function(input) { input.checked = true; });
+	});
+	cancel.addEventListener('click', function() { dialog.close(); });
+	dialog.addEventListener('cancel', function(event) { if (save.disabled) event.preventDefault(); });
+	save.addEventListener('click', function() {
+		var selection = Object.assign({}, popupPanelVisibility);
+		list.querySelectorAll('input').forEach(function(input) { selection[input.dataset.panelChoice] = input.checked; });
+		save.disabled = showAll.disabled = cancel.disabled = dialog.querySelector('fieldset').disabled = true;
+		error.textContent = '';
+		chrome.runtime.sendMessage({ cmd: 'saveSetting', type: 'json', setting: 'popupPanelVisibility', value: JSON.stringify(selection) }, function(response) {
+			save.disabled = showAll.disabled = cancel.disabled = dialog.querySelector('fieldset').disabled = false;
+			if (chrome.runtime.lastError || !response || response.saved === false || response.error) {
+				error.textContent = getTranslation('panel-save-failed', 'Could not save the panel. Please try again.');
+				return;
+			}
+			popupPanelVisibility = selection;
+			popupPanelPreview = '';
+			applyPopupPanelVisibility();
+			dialog.close();
+		});
+	});
+	document.getElementById('hidePanelPreview').addEventListener('click', function() {
+		popupPanelPreview = '';
+		applyPopupPanelVisibility();
+		document.getElementById('customizePanel').focus();
+	});
+}
+
 var BEGINNER_ADVANCED_OPTION_SELECTORS = {
 	"wrapper-additional-chat-services-options": [
 		'[data-setting="xcapture"]',
@@ -5576,6 +5708,7 @@ function applyPopupBeginnerMode(enabled) {
 	var modeChanged = document.body.classList.contains("beginner-mode") !== !!enabled;
 	markBeginnerAdvancedSections();
 	document.body.classList.toggle("beginner-mode", !!enabled);
+	applyPopupPanelVisibility();
 	if (typeof checkImportantChanges === "function" && popupImportantChangesReady === true) {
 		checkImportantChanges();
 	}
@@ -11476,6 +11609,7 @@ async function testThermalPrinterAlignment() {
 }
 
 document.addEventListener("DOMContentLoaded", async function(event) {
+    setupPopupPanelEditor();
     reorderGlobalSettingsSections();
     loadSourcesListFromRuntimeManifest();
 	setupDynamicCustomUrlControls();
@@ -12424,6 +12558,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		closePopupSearch();
 		// Search covers all settings; leave the enabled-only view before revealing one.
 		setPopupEnabledFilter(false);
+		var panelSection = getPopupPanelSection(target);
+		popupPanelPreview = panelSection && !isPopupPanelSectionShown(panelSection) ? panelSection.id : '';
+		applyPopupPanelVisibility();
 		if (wrapper) {
 			openPopupSearchSection(wrapper);
 		}
@@ -12474,6 +12611,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			button.setAttribute('data-search-targets', getPopupSearchTargetKeys(record.element));
 			button.textContent = getPopupSearchResultLabel(record.element);
 			var sectionText = getPopupSearchResultSection(record.wrapper);
+			var panelSection = getPopupPanelSection(record.element);
+			if (panelSection && !isPopupPanelSectionShown(panelSection)) {
+				sectionText += (sectionText ? ' · ' : '') + getTranslation('hidden-section', 'Hidden section');
+			}
 			if (sectionText) {
 				var section = document.createElement('span');
 				section.className = 'popup-search-result-section';
@@ -12495,6 +12636,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			element.id === 'popupSearchToolbar' ||
 			element.id === 'popupSearchNoResults' ||
 			element.id === 'popupSearchResults' ||
+			element.id === 'panelEditor' ||
 			element.id === 'activeIcon' ||
 			element.id === 'languageIcon' ||
 			element.id === 'language-selector-container';
@@ -12525,8 +12667,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				(node.style && node.style.display === 'none')) {
 				return true;
 			}
+			if (node.classList && node.classList.contains('popup-panel-hidden')) return true;
 			if (beginnerMode && node.classList &&
-				(node.classList.contains('beginner-advanced') ||
+				((node.classList.contains('beginner-advanced') && !node.classList.contains('popup-panel-selected')) ||
 					node.classList.contains('beginner-advanced-option') ||
 					node.classList.contains('beginner-static-advanced-option'))) {
 				return true;
@@ -12898,6 +13041,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	}
 	document.addEventListener('popup-beginner-mode-changed', refreshPopupSearchIndex);
+	document.addEventListener('popup-panel-visibility-changed', refreshPopupSearchIndex);
 
 	if (popupSearchInput) {
 		popupSearchInput.addEventListener('input', function() {
@@ -12932,6 +13076,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 
 	document.addEventListener('keydown', function(e) {
+		if (document.getElementById('panelEditor').open) return;
 		if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && (e.key === 'f' || e.key === 'F')) {
 			e.preventDefault();
 			openPopupSearch();

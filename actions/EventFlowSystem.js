@@ -1947,7 +1947,9 @@ class EventFlowSystem {
         const execution = this.flowExecutions.get(flow.id);
         const canContinue = () => !execution.cancelled
             && (this.flows.find(candidate => candidate.id === flow.id) || flow).active !== false;
-        const nodeActivationStates = {}; 
+        const nodeActivationStates = {};
+        const nodeMessages = new Map();
+        let stateMessageModified = false;
         if (resumeNodeId) {
             const downstream = new Set([resumeNodeId]);
             const pending = [resumeNodeId];
@@ -1964,6 +1966,7 @@ class EventFlowSystem {
                 if (!downstream.has(node.id) || node.type === 'trigger') nodeActivationStates[node.id] = false;
             }
             nodeActivationStates[resumeNodeId] = true;
+            nodeMessages.set(resumeNodeId, { ...(message || {}) });
         }
 
         // --- Pass 1: Evaluate all base triggers ---
@@ -1972,6 +1975,7 @@ class EventFlowSystem {
             if (node.type === 'trigger' && !resumeNodeId) {
               //console.log(`[EvaluateFlow "${flow.name}"] Evaluating Trigger Node ID: ${node.id}, Type: ${node.triggerType}`);
                 nodeActivationStates[node.id] = await this.evaluateTrigger(node, message, flow);
+                nodeMessages.set(node.id, { ...(message || {}) });
               //console.log(`[EvaluateFlow "${flow.name}"] Trigger Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
             }
         }
@@ -1999,6 +2003,7 @@ class EventFlowSystem {
                       //console.log(`[EvaluateFlow "${flow.name}"] Evaluating Logic Node ID: ${node.id} (${node.logicType}) with inputs: ${JSON.stringify(inputValues)} from nodes: ${JSON.stringify(inputNodeIds)}`);
                         const result = await this.evaluateSpecificLogicNode(node.logicType, inputValues, node.config, message);
                         nodeActivationStates[node.id] = result;
+                        nodeMessages.set(node.id, { ...(message || {}) });
                         
                       //console.log(`[EvaluateFlow "${flow.name}"] Logic Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
                         madeChangeInLoop = true;
@@ -2019,10 +2024,12 @@ class EventFlowSystem {
                         
                         // If the state node modifies or passes the message, update it
                         if (result.passMessage && result.modifiedMessage) {
-                            // Update the message for downstream nodes
+                            // Update the message for downstream nodes and later flows.
+                            stateMessageModified = stateMessageModified || message !== result.modifiedMessage;
                             message = result.modifiedMessage;
                         }
                         
+                        nodeMessages.set(node.id, { ...(message || {}) });
                       //console.log(`[EvaluateFlow "${flow.name}"] State Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
                         madeChangeInLoop = true;
                     }
@@ -2033,178 +2040,160 @@ class EventFlowSystem {
             console.warn(`[EvaluateFlow "${flow.name}"] Flow evaluation exceeded max iterations for logic nodes.`);
         }
 
+        // Control actions may target a state node that depends on that action's
+        // output. Initialize the resource without activating it, so first-event
+        // Set Gate/Set Counter operations do not silently target missing state.
+        for (const node of flow.nodes) {
+            if (node.type === 'state' && !Object.prototype.hasOwnProperty.call(nodeActivationStates, node.id)) {
+                await this.evaluateStateNode(node, message, false, flow);
+            }
+        }
+
         // --- Pass 3: Execute actions ---
       //console.log(`[EvaluateFlow "${flow.name}"] Pass 3: Executing Actions. Current node states:`, JSON.stringify(nodeActivationStates));
         // Ensure we always have a mutable message object even when running on scheduler ticks (message can be null)
         const baseMessage = message ? { ...message } : {};
-        let overallResult = { modified: false, message: baseMessage, blocked: false }; 
+        let overallResult = { modified: stateMessageModified, message: baseMessage, blocked: false };
         const nodeMap = new Map(flow.nodes.map(node => [node.id, node]));
         const executedActions = new Set(); // Track which actions have been executed
         const pointRedemptions = new Map(); // Charges belonging to this event's direct AI rewards.
 
-        // Process actions in topological order (following connections)
-        const executeActionChain = async (actionId) => {
-            if (!canContinue()) return;
-            if (executedActions.has(actionId)) {
-                return; // Already executed this action
-            }
-            
-            const node = nodeMap.get(actionId);
-            if (!node || node.type !== 'action') {
-                return;
-            }
-            
-            if (overallResult.blocked) {
-              //console.log(`[EvaluateFlow "${flow.name}"] Message already blocked. Skipping action node ${node.id} (${node.actionType}).`);
-                return; 
-            }
-            
-            // Execute this action
-            executedActions.add(actionId);
-            const actionResult = await this.executeAction(node, overallResult.message, flow, execution, pointRedemptions);
-            if (!canContinue()) return;
-            
-            if (actionResult) {
-                // Handle returnNow - mark message for immediate return
-                if (actionResult.returnNow) {
-                    overallResult.returnNow = true;
-                  //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} RETURN NOW - message will be returned immediately.`);
-                }
-
-                if (actionResult.blocked) {
-                    overallResult.blocked = true;
-                  //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} BLOCKED the message.`);
-                }
-
-                if (actionResult.modified && actionResult.message) {
-                    overallResult.message = { ...actionResult.message };
-                    overallResult.modified = true;
-                  //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} MODIFIED the message.`);
-                }
-
-                // Handle async continuation - schedule downstream and return immediately
-                if (actionResult.continueAsync) {
-                    let downstreamConnections = flow.connections.filter(conn => conn.from === actionId);
-                    if (downstreamConnections.length > 0) {
-                        // Capture current state for async execution
-                        let asyncMessage = { ...overallResult.message };
-
-                        // Schedule downstream actions to run asynchronously
-                        setTimeout(async () => {
-                            // Create a separate execution context for async chain
-                            const asyncExecutedActions = new Set(executedActions);
-                            let asyncBlocked = false;
-
-                            const executeAsyncChain = async (asyncActionId) => {
-                                if (!canContinue()) return;
-                                if (asyncExecutedActions.has(asyncActionId)) return;
-                                if (asyncBlocked) return; // Stop if blocked
-
-                                const asyncNode = nodeMap.get(asyncActionId);
-                                if (!asyncNode || asyncNode.type !== 'action') return;
-
-                                asyncExecutedActions.add(asyncActionId);
-                                const asyncResult = await this.executeAction(asyncNode, asyncMessage, flow, execution, pointRedemptions);
-                                if (!canContinue()) return;
-
-                                // Handle action results - mirror synchronous behavior
-                                if (asyncResult) {
-                                    if (asyncResult.blocked) {
-                                        asyncBlocked = true;
-                                        return; // Stop processing this branch
-                                    }
-                                    if (asyncResult.modified && asyncResult.message) {
-                                        asyncMessage = { ...asyncResult.message };
-                                    }
-                                    if (asyncResult.stopChain) return;
-                                    // If this action also wants to continue async, it will spawn its own setTimeout
-                                    if (asyncResult.continueAsync) {
-                                        // Already running async, so just continue normally
-                                        // but could implement nested async here if needed
-                                    }
-                                }
-
-                                // Continue to downstream actions
-                                const asyncDownstream = flow.connections.filter(conn => conn.from === asyncActionId);
-                                for (const conn of asyncDownstream) {
-                                    if (asyncBlocked) return;
-                                    const downNode = nodeMap.get(conn.to);
-                                    if (downNode && downNode.type === 'action') {
-                                        await executeAsyncChain(conn.to);
-                                    }
-                                }
-                            };
-
-                            for (const conn of downstreamConnections) {
-                                if (asyncBlocked) break;
-                                const downstreamNode = nodeMap.get(conn.to);
-                                if (downstreamNode && downstreamNode.type === 'action') {
-                                    await executeAsyncChain(conn.to);
-                                }
-                            }
-                        }, 0);
-                    }
-                    return; // Return immediately, downstream runs async
-                }
-            }
-
-            if (actionResult && actionResult.stopChain) return;
-
-            // Find and execute downstream actions (synchronous path)
-            let downstreamConnections = flow.connections.filter(conn => conn.from === actionId);
-            // Prioritize lightweight/control actions before heavy ones (e.g., delay)
-            const priorityOf = (node) => {
-                if (!node || node.type !== 'action') return 50;
-                switch (node.actionType) {
-                    case 'setGateState':
-                    case 'resetStateNode':
-                    case 'setCounter':
-                    case 'incrementCounter':
-                    case 'checkCounter':
-                    case 'rememberUser':
-                    case 'forgetUser':
-                    case 'clearUserMemory':
-                    case 'pickRandomUser':
-                        return 0; // control/state updates first
-                    case 'delay':
-                        return 100; // run after immediate controls
-                    default:
-                        return 50; // normal actions
-                }
-            };
-            downstreamConnections.sort((a, b) => {
-                const an = nodeMap.get(a.to);
-                const bn = nodeMap.get(b.to);
-                return priorityOf(an) - priorityOf(bn);
-            });
-            for (const conn of downstreamConnections) {
-                const downstreamNode = nodeMap.get(conn.to);
-                if (downstreamNode && downstreamNode.type === 'action') {
-                    await executeActionChain(conn.to);
-                }
+        // Actions can feed logic/state nodes too. Resolve each output once, after
+        // its prerequisites settle; an async fork publishes its output only when
+        // its deferred continuation runs. Shared guards prevent joined branches
+        // from executing an action or incrementing a state node more than once.
+        const resolvingNodes = new Set();
+        const hasOutput = id => Object.prototype.hasOwnProperty.call(nodeActivationStates, id);
+        const inputIds = id => flow.connections.filter(conn => conn.to === id).map(conn => conn.from);
+        const priorityOf = node => {
+            if (!node || node.type !== 'action') return 50;
+            switch (node.actionType) {
+                case 'setGateState':
+                case 'resetStateNode':
+                case 'setCounter':
+                case 'incrementCounter':
+                case 'checkCounter':
+                case 'rememberUser':
+                case 'forgetUser':
+                case 'clearUserMemory':
+                case 'pickRandomUser':
+                    return 0;
+                case 'delay':
+                    return 100;
+                default:
+                    return 50;
             }
         };
+        const continueFrom = async (nodeId, context) => {
+            const connections = flow.connections.filter(conn => conn.from === nodeId);
+            connections.sort((a, b) => priorityOf(nodeMap.get(a.to)) - priorityOf(nodeMap.get(b.to)));
+            for (const connection of connections) {
+                if (!canContinue() || context.blocked) return;
+                await executeNodeChain(connection.to, context);
+            }
+        };
+        const executeNodeChain = async (nodeId, context) => {
+            if (!canContinue() || context.blocked || hasOutput(nodeId) || resolvingNodes.has(nodeId)) return;
+            const node = nodeMap.get(nodeId);
+            if (!node || !['action', 'logic', 'state'].includes(node.type)) return;
+            if (node.type === 'action' && executedActions.has(nodeId)) return;
 
-        // Start execution from actions connected to activated triggers/logic/state
-        for (const node of flow.nodes) {
-            if (node.type === 'action' && !executedActions.has(node.id)) {
-                const inputConnections = flow.connections.filter(conn => conn.to === node.id);
-                const inputNodeIds = inputConnections.map(conn => conn.from);
-                
-                const shouldExecute = inputNodeIds.some(inputId => {
-                    const inputNode = nodeMap.get(inputId);
-                    // Allow actions to be driven by triggers, logic, or state nodes
-                    return (
-                        inputNode &&
-                        (inputNode.type === 'trigger' || inputNode.type === 'logic' || inputNode.type === 'state') &&
-                        nodeActivationStates[inputId] === true
-                    );
-                });
+            const inputs = inputIds(nodeId);
+            const allInputsEvaluated = inputs.every(hasOutput);
+            const inputActive = inputs.some(id => nodeActivationStates[id] === true);
+            // Action inputs are OR joins. Logic/state nodes need the complete
+            // input vector, including false outputs from inactive actions.
+            if (node.type === 'action' ? (!inputActive && !allInputsEvaluated) : !allInputsEvaluated) return;
 
-                if (shouldExecute) {
-                    await executeActionChain(node.id);
+            resolvingNodes.add(nodeId);
+            if (node.type !== 'action') {
+                // Joined signals retain the first active input's emitted payload
+                // (or the first input for false signals), independent of completion order.
+                const parentContext = context;
+                const payloadInput = inputs.find(id => nodeActivationStates[id] === true) || inputs[0];
+                if (inputs.length > 1 && nodeMessages.has(payloadInput)) {
+                    // Carry the selected payload locally. An inactive join must
+                    // not undo edits made on an unrelated active branch.
+                    context = { ...context, message: { ...nodeMessages.get(payloadInput) }, modified: false };
+                }
+                try {
+                    if (node.type === 'logic') {
+                        nodeActivationStates[nodeId] = await this.evaluateSpecificLogicNode(
+                            node.logicType, inputs.map(id => nodeActivationStates[id]), node.config, context.message);
+                    } else {
+                        const stateResult = await this.evaluateStateNode(node, context.message, inputActive, flow);
+                        nodeActivationStates[nodeId] = stateResult.active;
+                        if (stateResult.passMessage && stateResult.modifiedMessage) {
+                            context.modified = context.modified || context.message !== stateResult.modifiedMessage;
+                            context.message = stateResult.modifiedMessage;
+                        }
+                    }
+                } finally {
+                    resolvingNodes.delete(nodeId);
+                }
+                nodeMessages.set(nodeId, { ...context.message });
+                if (canContinue()) await continueFrom(nodeId, context);
+                if (context !== parentContext) {
+                    if (context.modified) {
+                        parentContext.message = context.message;
+                        parentContext.modified = true;
+                    }
+                    if (context.blocked) parentContext.blocked = true;
+                    if (context.returnNow) parentContext.returnNow = true;
+                }
+                return;
+            }
+
+            executedActions.add(nodeId);
+            if (!inputActive) {
+                nodeActivationStates[nodeId] = false;
+                nodeMessages.set(nodeId, { ...context.message });
+                resolvingNodes.delete(nodeId);
+                await continueFrom(nodeId, context);
+                return;
+            }
+
+            let actionResult;
+            try {
+                actionResult = await this.executeAction(node, context.message, flow, execution, pointRedemptions);
+            } finally {
+                resolvingNodes.delete(nodeId);
+            }
+            if (!canContinue()) return;
+            if (actionResult) {
+                if (actionResult.returnNow) context.returnNow = true;
+                if (actionResult.blocked) context.blocked = true;
+                if (actionResult.modified && actionResult.message) {
+                    context.message = { ...actionResult.message };
+                    context.modified = true;
+                }
+                // A stopped branch publishes no output; a NOT gate must not
+                // turn a failed/aborted action into a successful continuation.
+                if (actionResult.stopChain) return;
+                if (actionResult.continueAsync && !context.background) {
+                    const asyncContext = { message: { ...context.message }, modified: false, blocked: false, background: true };
+                    setTimeout(() => {
+                        if (!canContinue()) return;
+                        nodeActivationStates[nodeId] = true;
+                        nodeMessages.set(nodeId, { ...asyncContext.message });
+                        continueFrom(nodeId, asyncContext).catch(error => {
+                            console.warn('[Event Flow] Async continuation failed:', error);
+                        });
+                    }, 0);
+                    return;
                 }
             }
+            if (context.blocked) return;
+            nodeActivationStates[nodeId] = true;
+            nodeMessages.set(nodeId, { ...context.message });
+            await continueFrom(nodeId, context);
+        };
+
+        // Initial trigger/logic/state outputs are available from the first two
+        // passes. Starting all actions also resolves inactive branches to false,
+        // so joins do not wait forever for actions whose triggers did not match.
+        for (const node of flow.nodes) {
+            if (node.type === 'action') await executeNodeChain(node.id, overallResult);
         }
       //console.log(`[EvaluateFlow "${flow.name}"] Finished. Overall Result:`, JSON.stringify(overallResult));
         return overallResult;
@@ -3490,6 +3479,8 @@ class EventFlowSystem {
 
     async executeAction(actionNode, message, flow = null, execution = null, pointRedemptions = null) {
         const { actionType, config } = actionNode;
+        const originalChatmessage = message && message.chatmessage;
+        const originalTextonly = message && message.textonly;
         //console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
         let result = { modified: false, message, blocked: false };
         
@@ -5040,6 +5031,12 @@ class EventFlowSystem {
                 break;
         }
         
+        // Text caches belong to the exact message/format they were derived from.
+        // Capture the originals before running custom code, which may mutate in place.
+        if (result.message && (result.message.chatmessage !== originalChatmessage ||
+            result.message.textonly !== originalTextonly)) {
+            delete result.message.textContent;
+        }
         return result;
     }
 }
