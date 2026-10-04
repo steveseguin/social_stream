@@ -6974,6 +6974,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				sendResponse({
 					ok: false,
 					status: error && typeof error.status !== "undefined" ? error.status : undefined,
+					retryAfter: error && error.retryAfter,
 					error: error && error.message ? error.message : "Rumble fetch failed"
 				});
 			}
@@ -12009,6 +12010,12 @@ async function fetchRumbleJsonResponse(url) {
 			Accept: "application/json,text/plain;q=0.9,*/*;q=0.8"
 		}
 	});
+	if (rumbleResponse.status === 429) {
+		const rateLimitError = new Error("Rate limited by Rumble (HTTP 429). Backing off.");
+		rateLimitError.status = rumbleResponse.status;
+		rateLimitError.retryAfter = rumbleResponse.headers.get("Retry-After");
+		throw rateLimitError;
+	}
 	const responseText = await rumbleResponse.text();
 	let responseJson = {};
 	try {

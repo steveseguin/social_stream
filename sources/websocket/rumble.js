@@ -1191,11 +1191,27 @@
         );
     }
 
+    function createFetchError(result, fallbackMessage) {
+        const error = new Error((result && result.error) || fallbackMessage);
+        if (result && typeof result.status !== 'undefined') {
+            error.status = result.status;
+        }
+        if (Number(error.status) === 429) {
+            const retryAfter = String(result.retryAfter || '').trim();
+            const seconds = /^\d+$/.test(retryAfter)
+                ? Number(retryAfter)
+                : Math.ceil((Date.parse(retryAfter) - Date.now()) / 1000);
+            error.rateLimited = true;
+            error.retryAfterSec = isFinite(seconds) && seconds > 0 ? seconds : null;
+        }
+        return error;
+    }
+
     async function fetchJson(url) {
         if (window.ninjafy && typeof window.ninjafy.fetchRumbleJson === 'function') {
             const result = await window.ninjafy.fetchRumbleJson(url);
             if (!result || !result.ok) {
-                throw new Error((result && result.error) || 'Rumble Electron fetch failed');
+                throw createFetchError(result, 'Rumble Electron fetch failed');
             }
             return result.data;
         }
@@ -1209,7 +1225,7 @@
                             return;
                         }
                         if (!response || !response.ok) {
-                            reject(new Error((response && response.error) || 'Rumble background fetch failed'));
+                            reject(createFetchError(response, 'Rumble background fetch failed'));
                             return;
                         }
                         resolve(response.data);
@@ -1229,11 +1245,8 @@
             }
         });
         if (response.status === 429) {
-            var retryAfter = parseInt(response.headers.get('Retry-After'), 10);
-            var err = new Error('Rate limited by Rumble (HTTP 429). Backing off.');
-            err.rateLimited = true;
-            err.retryAfterSec = isFinite(retryAfter) ? retryAfter : null;
-            throw err;
+            throw createFetchError({ status: response.status, retryAfter: response.headers.get('Retry-After') },
+                'Rate limited by Rumble (HTTP 429). Backing off.');
         }
         const text = await response.text();
         let data = null;
