@@ -1151,6 +1151,7 @@ function processData(data, source) {
         if (settingsChanged) {
             const shouldReinitializePoll = coreChanges.some((change) => pollCoreResetKeys.has(change.key));
             if (shouldReinitializePoll) {
+                messageQueue.length = 0;
                 results = {};
                 totalVotes = 0;
                 alreadyVoted = {};
@@ -1204,6 +1205,7 @@ function closePoll() {
 }
 
 function startPoll() {
+    messageQueue.length = 0;
     settings.pollEnabled = true;
     settings.pollClosed = false;
     alreadyVoted = {};
@@ -1220,6 +1222,7 @@ function startPoll() {
 }
 
 function resetPoll() {
+    messageQueue.length = 0;
     settings.pollClosed = false;
     results = {};
     totalVotes = 0;
