@@ -13,8 +13,9 @@ function extract(name) {
     return match[0];
 }
 const source = ['processInput', 'blockUser', 'timeoutUser', 'deleteMessages', 'markDeletedMessage',
-    'selectedMessage', 'nextInQueue', 'checkAutoShow', 'removeQueue', 'updateQueueButton', 'syncQueueP2P']
-    .map(extract).join('\n');
+    'selectedMessage', 'nextInQueue', 'checkAutoShow', 'removeQueue', 'updateQueueButton', 'syncQueueP2P',
+    'cancelPendingFeaturedMessage']
+    .filter(name => dock.includes('function ' + name + '(')).map(extract).join('\n');
 
 function fixture(showDeleted = false) {
     const rows = [], sent = [], errors = [], syncs = [], extension = [], timers = new Map();
@@ -49,7 +50,7 @@ function fixture(showDeleted = false) {
     }
     const c = vm.createContext({
         selectedQueue: [], autoShowQueue: [], historyMissedLiveBuffer: [], queue: [], messageBuffer: [],
-        showDeleted, deletedDockMessages: new WeakSet(), deleteOnlyLast: false,
+        showDeleted, deletedDockMessages: new WeakSet(), deleteOnlyLast: false, pendingFeaturedMessage: null,
         localBlockUserList: false, timedOutUsers: {}, autoshowqueued: false, syncDocks: true,
         blockMessageSelecting: false, blockMessageSelecting2: false, blockMessageSelecting3: false,
         autoTimeoutEnabled: false, pressedClass: 'pressed', lastMessageClass: 'last-message',
