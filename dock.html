@@ -3953,6 +3953,7 @@
 			}
 			var showDeleted = urlParams.has("showdeleted");
 			var deletedDockMessages = new WeakSet();
+			var pendingFeaturedMessage = null;
 			
 
 			var thisLabel = false;
@@ -7240,6 +7241,9 @@
 
 				// Include queued rows already detached from the visible chat.
 				const nodes = new Set(Array.from(document.querySelectorAll(selector)));
+				if (pendingFeaturedMessage && pendingFeaturedMessage.node.matches(selector)) {
+					nodes.add(pendingFeaturedMessage.node);
+				}
 				selectedQueue.concat(autoShowQueue).forEach(node => {
 					if (node.matches(selector)) nodes.add(node);
 				});
@@ -7264,6 +7268,7 @@
 						String(item.id) === String(newest.id) && item.type === newest.type));
 				}
 				const deletedNodes = new Set(matches.filter(item => item.node).map(item => item.node));
+				if (pendingFeaturedMessage && deletedNodes.has(pendingFeaturedMessage.node)) cancelPendingFeaturedMessage();
 				const deletedPending = new Set(matches.filter(item => item.message).map(item => item.message));
 				if (showDeleted) {
 					deletedPending.forEach(message => deletedDockMessages.add(message));
@@ -8130,6 +8135,7 @@
 					return; // does not match, so we assume this isn't for us.
 				}
 				if ("mid" in data) {
+					if (syncDocks || force) cancelPendingFeaturedMessage();
 					if (data.mid && (syncDocks || force)) {
 						if (autoTimeoutEnabled) {
 							lastPushed = Date.now();
@@ -8583,6 +8589,7 @@
 				} else if ("timeoutUser" in data) {
 					try {
 						if (data.timeoutUser.username && data.timeoutUser.type && data.timeoutUser.duration) {
+							cancelPendingFeaturedMessage(data.timeoutUser.username, data.timeoutUser.type === "youtube" ? ["youtube", "youtubeshorts"] : [data.timeoutUser.type]);
 							// Optional: Add visual feedback for timed out users
 
 							timedOutUsers[data.timeoutUser.username+":"+data.timeoutUser.type] = Date.now() + data.timeoutUser.duration*1000;
@@ -8616,6 +8623,7 @@
 					try {
 						const blockName = data.blockUser.chatname || data.blockUser.username;
 						if (blockName && data.blockUser.type) {
+							cancelPendingFeaturedMessage(blockName, data.blockUser.type === "youtube" ? ["youtube", "youtubeshorts"] : [data.blockUser.type]);
 							if (!localBlockUserList) {
 								localBlockUserList = {};
 							}
@@ -8640,6 +8648,7 @@
 							}
 
 						} else if (data.blockUser.username) {
+							cancelPendingFeaturedMessage(data.blockUser.username);
 							if (!localBlockUserList) {
 								localBlockUserList = {};
 							}
@@ -10011,6 +10020,7 @@
 			}
 
 			function deleteMessage(element) {
+				if (pendingFeaturedMessage && pendingFeaturedMessage.node === element) cancelPendingFeaturedMessage();
 				syncDataAny({ deleteMessage: element.dataset.mid }, false, true);
 				try {
 					const payload = buildSourceControlPayload(element);
@@ -10106,6 +10116,7 @@
 						localBlockUserList = {};
 					}
 					if (chatName && type) {
+						cancelPendingFeaturedMessage(chatName, [type]);
 						if (localBlockUserList[chatName]) {
 							if (!(type in localBlockUserList[chatName])) {
 								localBlockUserList[chatName].push(type);
@@ -10170,6 +10181,7 @@
 				
 					try {
 						if (userId && userType && duration) {
+							cancelPendingFeaturedMessage(userId, userType === "youtube" ? ["youtube", "youtubeshorts"] : [userType]);
 							// Optional: Add visual feedback for timed out users
 
 							timedOutUsers[userId+":"+userType] = Date.now() + duration*1000;
@@ -10438,6 +10450,14 @@
 				updateQueueButton(true);
 			}
 
+			function cancelPendingFeaturedMessage(chatname, types) {
+				if (!pendingFeaturedMessage) return;
+				var node = pendingFeaturedMessage.node;
+				if (chatname !== undefined && node.dataset.chatname !== String(chatname)) return;
+				if (types && types.indexOf(node.dataset.sourceType) === -1) return;
+				pendingFeaturedMessage = null;
+			}
+
 			function selectedMessage(event = false, element = false, lastpushreset = false) { 
 				if (blockMessageSelecting || blockMessageSelecting2) {
 					return;
@@ -10484,6 +10504,8 @@
 				if (blockMessageSelecting3) {
 					return;
 				}
+
+				cancelPendingFeaturedMessage();
 
 				if (event && element.classList.contains(lastMessageClass)) {
 					// Message is already featured!
@@ -10537,8 +10559,11 @@
 					thirdPartyAPI(data); // not going to send base64 to the third party API, since that would kill my server, but third parties won't expect a blob.
 				} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
 					// youtube's images are a bit tricky; larger images don't always exist.
+					var featureRequest = { node: element };
+					pendingFeaturedMessage = featureRequest;
 					try {
 						toDataURL(data.chatimg, (base64Image) => {
+							if (pendingFeaturedMessage !== featureRequest) return;
 							// we upscale
 							data.chatimg = data.chatimg.replace("=s32-", "=s256-"); // Increases the resolution of the image
 							data.chatimg = data.chatimg.replace("=s64-", "=s256-");
@@ -10548,6 +10573,7 @@
 							sendDataP2P(data);
 						});
 					} catch (e) {
+						if (pendingFeaturedMessage !== featureRequest) return;
 						data.chatimg = data.chatimg.replace("=s32-", "=s256-"); // Increases the resolution of the image
 						data.chatimg = data.chatimg.replace("=s64-", "=s256-");
 						sendDataP2P(data);
@@ -13307,6 +13333,8 @@
 				if (blockMessageSelecting || blockMessageSelecting2 || blockMessageSelecting3) {
 					return;
 				}
+
+				if (!data || !data.action) cancelPendingFeaturedMessage();
 
 				if (singlefeaturedwriter) {
 					data.timestamp = new Date().getTime();

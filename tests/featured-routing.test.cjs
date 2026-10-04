@@ -32,7 +32,7 @@ const popupFunctions = extract(popup, ['getQueryParamTokenFromUrl', 'getServerPa
     'isBothParamChecked', 'normalizeGeneratedPath', 'getFeaturedServerParamSupport', 'getServerParamSupportForTarget', 'targetSupportsServerParam',
     'syncSupportedServerParamsForTarget', 'updateURL', 'removeQueryParamWithValue', 'cleanURL',
     'enableServerFallbackForDockLinks', 'getServerFallbackInputState', 'setServerFallbackInputState', 'undoServerFallbackForDockLinks']);
-const sender = extract(dock, ['sendDataP2P']);
+const sender = extract(dock, ['sendDataP2P', 'cancelPendingFeaturedMessage']);
 const dockTransport = dock.slice(dock.indexOf('var conCon = 1;'), dock.indexOf('var conConExtension = 1;'));
 const transport = featured.slice(featured.indexOf('var conCon = 1;'), featured.indexOf('var onlyshowdonos = false;'));
 
@@ -80,7 +80,7 @@ function receiver(url) {
 function dockSender(url, receive) {
     const params = new URL(url).searchParams, sockets = [], commands = [], timers = [];
     const c = vm.createContext({ blockMessageSelecting: false, blockMessageSelecting2: false, blockMessageSelecting3: false,
-        singlefeaturedwriter: false, syncDocks: false, iframes: [], console: { log() {}, error() {} }, lastMessageClass: 'selected',
+        pendingFeaturedMessage: null, singlefeaturedwriter: false, syncDocks: false, iframes: [], console: { log() {}, error() {} }, lastMessageClass: 'selected',
         urlParams: params, roomID: 'fixture', featuredMode: params.has('featuredmode'), thisLabel: '', URLSearchParams,
         setTimeout(callback) { timers.push(callback); return timers.length; }, clearTimeout() {},
         processInput(data) { commands.push(data); return true; },

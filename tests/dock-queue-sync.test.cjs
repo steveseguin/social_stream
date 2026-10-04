@@ -17,7 +17,7 @@ function extractFunction(name) {
     return dock.slice(start, end + '\n\t\t\t}'.length);
 }
 const source = ['processInput', 'updateQueueButton', 'removeQueue', 'selectedMessage',
-    'checkAutoShow', 'nextInQueue', 'syncQueueP2P'].map(extractFunction).join('\n');
+    'checkAutoShow', 'nextInQueue', 'syncQueueP2P', 'cancelPendingFeaturedMessage'].map(extractFunction).join('\n');
 
 function fixture(ids = [1, 2, 3]) {
     const rows = new Map();
@@ -43,7 +43,7 @@ function fixture(ids = [1, 2, 3]) {
     const lengths = [], syncs = [], timers = new Map();
     let timerId = 0;
     const c = vm.createContext({
-        selectedQueue: [], syncDocks: true, autoshowqueued: false,
+        selectedQueue: [], syncDocks: true, autoshowqueued: false, pendingFeaturedMessage: null,
         blockMessageSelecting: false, blockMessageSelecting2: false,
         shouldDeferRawDonationWebhook: () => false, isRawDonationWebhook: () => false,
         cancelPendingRawWebhookFallback() {}, isDuplicateWebhookDelivery: () => false, applyHiddenState() {},
