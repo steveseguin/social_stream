@@ -7211,7 +7211,7 @@
 				}
 			}
 
-			function deleteMessages(data, deleteOnlyLast=false) {
+			function deleteMessages(data, deleteOnlyLast=false, forceRemove=false) {
 				let selector = "";
 				let matchField = "";
 				const nativeId = data.delete.meta && data.delete.meta.messageId;
@@ -7265,7 +7265,7 @@
 				}
 				const deletedNodes = new Set(matches.filter(item => item.node).map(item => item.node));
 				const deletedPending = new Set(matches.filter(item => item.message).map(item => item.message));
-				if (showDeleted) {
+				if (showDeleted && !forceRemove) {
 					deletedPending.forEach(message => deletedDockMessages.add(message));
 				} else {
 					historyMissedLiveBuffer = historyMissedLiveBuffer.filter(message => !deletedPending.has(message));
@@ -7275,7 +7275,7 @@
 				const previousQueueLength = selectedQueue.length;
 				selectedQueue = selectedQueue.filter(node => !deletedNodes.has(node));
 				autoShowQueue = autoShowQueue.filter(node => !deletedNodes.has(node));
-				deletedNodes.forEach(node => showDeleted ? markDeletedMessage(node) : node.remove());
+				deletedNodes.forEach(node => showDeleted && !forceRemove ? markDeletedMessage(node) : node.remove());
 				if (selectedQueue.length !== previousQueueLength) updateQueueButton(true);
 			}
 			
@@ -8587,14 +8587,10 @@
 
 							timedOutUsers[data.timeoutUser.username+":"+data.timeoutUser.type] = Date.now() + data.timeoutUser.duration*1000;
 
-							document.querySelectorAll(dataAttributeSelector("data-chatname", data.timeoutUser.username) + dataAttributeSelector("data-source-type", data.timeoutUser.type)).forEach(ele => {
-								ele.remove();
-							});
+							deleteMessages({ delete: { chatname: data.timeoutUser.username, type: data.timeoutUser.type } }, false, true);
 
 							if (data.timeoutUser.type=="youtube"){
-								document.querySelectorAll(dataAttributeSelector("data-chatname", data.timeoutUser.username) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
-									ele.remove();
-								});
+								deleteMessages({ delete: { chatname: data.timeoutUser.username, type: "youtubeshorts" } }, false, true);
 							}
 						}
 						return true;
@@ -8626,17 +8622,13 @@
 							} else {
 								localBlockUserList[blockName] = [data.blockUser.type];
 							}
-							document.querySelectorAll(dataAttributeSelector("data-chatname", blockName) + dataAttributeSelector("data-source-type", data.blockUser.type)).forEach(ele => {
-								ele.remove();
-							});
+							deleteMessages({ delete: { chatname: blockName, type: data.blockUser.type } }, false, true);
 
 							if (data.blockUser.type == "youtube") {
 								if (!localBlockUserList[blockName].includes("youtubeshorts")) {
 									localBlockUserList[blockName].push("youtubeshorts");
 								}
-								document.querySelectorAll(dataAttributeSelector("data-chatname", blockName) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
-									ele.remove();
-								});
+								deleteMessages({ delete: { chatname: blockName, type: "youtubeshorts" } }, false, true);
 							}
 
 						} else if (data.blockUser.username) {
@@ -8650,9 +8642,7 @@
 							} else {
 								localBlockUserList[data.blockUser.username] = ["*"];
 							}
-							document.querySelectorAll(dataAttributeSelector("data-chatname", data.blockUser.username)).forEach(ele => {
-								ele.remove();
-							});
+							deleteMessages({ delete: { chatname: data.blockUser.username } }, false, true);
 						}
 						return true;
 					} catch (e) {
@@ -10113,9 +10103,7 @@
 						} else {
 							localBlockUserList[chatName] = [type];
 						}
-						document.querySelectorAll(dataAttributeSelector("data-chatname", chatName) + dataAttributeSelector("data-source-type", type)).forEach(ele => {
-							ele.remove();
-						});
+						deleteMessages({ delete: { chatname: chatName, type: type } }, false, true);
 
 						let sendBlob = {};
 						sendBlob.chatname = chatName;
@@ -10174,14 +10162,10 @@
 
 							timedOutUsers[userId+":"+userType] = Date.now() + duration*1000;
 
-							document.querySelectorAll(dataAttributeSelector("data-chatname", userId) + dataAttributeSelector("data-source-type", userType)).forEach(ele => {
-								ele.remove();
-							});
+							deleteMessages({ delete: { chatname: userId, type: userType } }, false, true);
 
 							if (userType=="youtube"){
-								document.querySelectorAll(dataAttributeSelector("data-chatname", userId) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
-									ele.remove();
-								});
+								deleteMessages({ delete: { chatname: userId, type: "youtubeshorts" } }, false, true);
 							}
 						}
 					} catch (e) {
@@ -10419,8 +10403,10 @@
 						}
 					}
 				}
-				if (socketserver) {
-					socketserver.send(JSON.stringify({ queueLength: selectedQueue.length }));
+				if (socketserver && socketserver.readyState === 1) {
+					try {
+						socketserver.send(JSON.stringify({ queueLength: selectedQueue.length }));
+					} catch (e) {} // Queue status must not interrupt moderation while reconnecting.
 				}
 				if (autoshowqueued){
 					checkAutoShow();

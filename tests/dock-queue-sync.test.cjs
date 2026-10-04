@@ -49,7 +49,7 @@ function fixture(ids = [1, 2, 3]) {
         cancelPendingRawWebhookFallback() {}, isDuplicateWebhookDelivery: () => false, applyHiddenState() {},
         dataAttributeSelector: (attribute, id) => String(id),
         document: { querySelector: id => rows.get(id) || null },
-        getById: id => controls[id], socketserver: { send: raw => lengths.push(JSON.parse(raw).queueLength) },
+        getById: id => controls[id], socketserver: { readyState: 1, send: raw => lengths.push(JSON.parse(raw).queueLength) },
         syncDataAny: data => syncs.push(JSON.parse(JSON.stringify(data))),
         processData: ({ contents }) => rows.get(String(contents.id)) || makeRow(contents.id),
         pauseState: false, smoothMessageBuffer: false,
