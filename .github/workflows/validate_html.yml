@@ -1,4 +1,4 @@
-name: Validate HTML and CSS
+name: Validate HTML and documentation
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
         node-version: '20'
 
     - name: Install dependencies
-      run: npm install htmlhint stylelint stylelint-config-standard
+      run: npm install htmlhint
 
     - name: Validate HTML files
       run: npx htmlhint "**/*.html" --config .htmlhintrc

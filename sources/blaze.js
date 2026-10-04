@@ -98,6 +98,8 @@
 	var initialChatSyncComplete = false;
 	var initialChatSyncTimer = null;
 	var INITIAL_CHAT_SETTLE_MS = 400;
+	var MAX_INITIAL_CHAT_SETTLE_MS = 2000;
+	var initialChatSyncStartedAt = null;
 	var initialChatRowsPresentAtAttach = false;
 	var initialChatLoneRowMayBeLive = false;
 	var hasObservedChatContainer = false;
@@ -391,6 +393,16 @@
 		if (initialChatSyncTimer) {
 			clearTimeout(initialChatSyncTimer);
 		}
+		// Keep the history debounce, but do not let continuous row/layout updates
+		// postpone capture forever. Start the limit only once chat content exists.
+		var now = Date.now();
+		if (initialChatSyncStartedAt === null && getMessageBodyElement(target) && getMessageName(target)) {
+			initialChatSyncStartedAt = now;
+		}
+		var settleDelay = INITIAL_CHAT_SETTLE_MS;
+		if (initialChatSyncStartedAt !== null) {
+			settleDelay = Math.min(settleDelay, Math.max(0, MAX_INITIAL_CHAT_SETTLE_MS - (now - initialChatSyncStartedAt)));
+		}
 		initialChatSyncTimer = setTimeout(function() {
 			initialChatSyncTimer = null;
 			if (initialChatSyncComplete || observerTarget !== target || !target.isConnected) {
@@ -402,6 +414,7 @@
 				return !!getMessageName(row) && !!getMessageBodyElement(row);
 			});
 			if (!messageRows.length) {
+				initialChatSyncStartedAt = null;
 				return;
 			}
 
@@ -422,7 +435,7 @@
 				}
 				processMessage(row, isInitialBacklog);
 			});
-		}, INITIAL_CHAT_SETTLE_MS);
+		}, settleDelay);
 	}
 	
 	
@@ -498,6 +511,7 @@
 			initialChatSyncTimer = null;
 		}
 		initialChatSyncComplete = false;
+		initialChatSyncStartedAt = null;
 		initialChatRowsPresentAtAttach = !!target.querySelector("[data-item-index],[data-index]");
 		initialChatLoneRowMayBeLive = !!allowLoneExistingRow;
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;

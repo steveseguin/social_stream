@@ -342,9 +342,30 @@ async function testAdvancedHistoryIndex(browser) {
   await page.close();
 }
 
+async function testStartupWithContinuousUpdates(browser) {
+  const { page, pageErrors } = await createHarnessPage(browser, true);
+  await page.evaluate(() => {
+    var row = window.__addBlazeMessage(0, "History", "Existing message", false);
+    window.__blazeLayoutTimer = setInterval(function() {
+      row.dataset.knownSize = row.dataset.knownSize === "42" ? "43" : "42";
+    }, 100);
+  });
+  await loadSource(page);
+  await waitForChatConnection(page);
+  await waitForSeededRows(page, [0]);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 0, "startup history should remain suppressed during continuous updates");
+  await page.evaluate(() => window.__addBlazeMessage(1, "Live", "Capture while layout keeps changing", false));
+  await waitForMessageCount(page, 1);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages[0].chatmessage), "Capture while layout keeps changing");
+  await page.evaluate(() => clearInterval(window.__blazeLayoutTimer));
+  await assertNoPageErrors(pageErrors, "continuous startup updates");
+  await page.close();
+}
+
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, args: ["--renderer-process-limit=4"] });
   try {
+    await testStartupWithContinuousUpdates(browser);
     await testBacklogAndSteadyState(browser);
     await testSingleExistingHistoryRow(browser);
     await testReplacementContainerHistory(browser);

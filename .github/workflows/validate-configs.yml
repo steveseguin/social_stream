@@ -3,8 +3,17 @@ name: Validate settings configs
 on:
   push:
     branches:
-      - '**'
+      - main
+      - beta
+    paths:
+      - 'settings/config*.json'
+      - 'scripts/validate-configs.sh'
+      - '.github/workflows/validate-configs.yml'
   pull_request:
+    paths:
+      - 'settings/config*.json'
+      - 'scripts/validate-configs.sh'
+      - '.github/workflows/validate-configs.yml'
   workflow_dispatch:
 
 jobs:
