@@ -108,12 +108,15 @@ test('YouTube DOM cancels deletion during its placeholder-avatar wait', async ()
     settings: { textonlymode: true, excludeReplyingTo: true }, youtubeShorts: false,
     messageHistory: new Set(), avatarHistory: new Map(), channelName: '', channelThumbnail: '', videoId: '',
     EMOTELIST: false, BTTV: false, SEVENTV: false, FFZ: false, chrome: runtime(packets),
+    window: {}, setTimeout, clearTimeout, pendingMessageReplies: new Map(),
+    messageReplyPrefix: 'fixture:', messageReplyCounter: 0,
     delay() { lookupStarted = true; return avatar.promise; }, escapeHtml: value => value,
     getAllContentNodes: node => node ? node.textContent : '', getYouTubeDonationAmount: () => '',
     document: { querySelector: () => null }, isHTMLElement: () => false, isObject: () => false,
     console: fixtureConsole(errors)
   });
-  install(c, source, ['processMessage', 'deleteThis', 'isYouTubePaidChatNode']);
+  install(c, source, ['processMessage', 'deleteThis', 'isYouTubePaidChatNode',
+    'sendYouTubeMessage', 'receiveMessageReply']);
   const target = row('deleted'), pending = c.processMessage(target);
   assert.equal(lookupStarted, true);
   target.removed = true;
@@ -122,7 +125,12 @@ test('YouTube DOM cancels deletion during its placeholder-avatar wait', async ()
   await pending;
   assert.equal(packets.filter(p => p.delete).length, 1);
   assert.equal(packets.filter(p => p.message).length, 0);
-  await c.processMessage(row('later'));
+  const later = row('later');
+  await c.processMessage(later);
+  assert.equal(later.dataset.mid, 123, 'Chrome callback still supplies the MID');
+  assert.equal(c.pendingMessageReplies.size, 0);
+  assert.equal(packets.find(p => p.message).youtubeMessageRequestId, undefined,
+    'Chrome does not request the SSApp compatibility reply');
   assert.equal(packets.filter(p => p.message).length, 1);
   assert.equal(packets.find(p => p.message).message.chatmessage, 'Original message');
   assert.deepEqual(errors, []);

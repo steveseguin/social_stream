@@ -6437,6 +6437,18 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			} else {
 				var letsGo = await processIncomingMessage(request.message, sender);
 			}
+			// Legacy SSApp versions cannot return the background's MID through the
+			// original callback. Opt-in YouTube captures use the existing tab channel.
+			// Reply after processing so a held deletion cannot overtake the message.
+			if ((request.message.type === "youtube" || request.message.type === "youtubeshorts") &&
+				typeof request.youtubeMessageRequestId === "string" && request.youtubeMessageRequestId.length <= 100 &&
+				sender && sender.tab && sender.tab.id !== undefined && Number.isSafeInteger(request.message.id)) {
+				Promise.resolve(chrome.tabs.sendMessage(sender.tab.id, {
+					youtubeMessageResponse: { requestId: request.youtubeMessageRequestId, id: request.message.id }
+				}, function () { chrome.runtime.lastError; })).catch(function (error) {
+					console.warn("[YouTube] Could not return captured message MID", error);
+				});
+			}
 		} else if ("messages" in request) {
 			// Handle batch messages from YouTube and TikTok
 			sendResponse({ state: isExtensionOn });
