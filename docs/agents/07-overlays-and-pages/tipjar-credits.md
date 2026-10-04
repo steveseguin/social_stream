@@ -16,7 +16,7 @@ Use this page when a user asks about donation goals, hype goals, tip jars, suppo
 
 ## Tip Jar Role
 
-`tipjar.html` is a donation/goal display overlay. It can show a jar, meter, bar, compact bar, vertical bar, minimal goal, or text-style progress display. It is normally opened as an OBS Browser Source.
+`tipjar.html` is a donation/goal display overlay. It can show a jar, meter, bar, compact bar, vertical bar, minimal goal, or text-style progress display, four panel layouts (card, ring, lower third, segmented), and eight physical containers that fill as the goal rises (glass jar, 3D rotating jar, beer mug, coffee mug, potion flask, piggy bank, treasure chest, thermometer), and eight goal bars (battery, XP bar, health bar, pixel bar, neon tube, terminal, milestone track, dial). It is normally opened as an OBS Browser Source.
 
 Typical URL:
 
@@ -51,7 +51,10 @@ Core display:
 
 | Parameter | Behavior |
 | --- | --- |
-| `style` | `jar`, `meter`, `bar`, `compact`, `vertical`, `minimal`, or `text`. |
+| `style` | `jar`, `meter`, `bar`, `compact`, `vertical`, `minimal`, `text`, the panels `card`/`ring`/`lowerthird`/`segmented`, the physical containers `glassjar`/`jar3d`/`beermug`/`coffeemug`/`potion`/`piggybank`/`chest`/`thermometer`, or the goal bars `battery`/`xpbar`/`healthbar`/`pixelbar`/`neonbar`/`terminal`/`milestones`/`gauge`. |
+| `dropitem` | `hearts` (default on `jar`), `coins`, `gems`, `stars`, `bills`. Sets the falling sprite in the physics jar and the item dropped into the physical containers. |
+| `jarlabel` | Sticker text on `style=glassjar`, up to 12 characters (default `TIPS`). |
+| `hidetitle` / `nospin` | Hides the title above the physical containers / stops `style=jar3d` rotating. |
 | `theme` | `default`, `neon`, or `gold`. |
 | `goal` | Target goal amount. Default is `250`, or `100` in hype mode. |
 | `title` | Visible title; defaults to `Stream Goal` or `Hype Goal`. |

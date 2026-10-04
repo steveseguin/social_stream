@@ -6,6 +6,22 @@
         ['lowerthird', 'Lower Third', 'A low, wide panel for the bottom of your scene.', '880 × 180'],
         ['segmented', 'Segmented Bar', 'Twenty segments for easy-to-read progress.', '600 × 300'],
         ['jar', 'Classic Jar', 'The original cup with falling donation items.', '400 × 600'],
+        ['glassjar', 'Glass Tip Jar', 'A lidded jar that fills as tips drop through the slot.', '400 × 620'],
+        ['jar3d', '3D Rotating Jar', 'A turning glass cylinder with a real 3D liquid level.', '380 × 540'],
+        ['beermug', 'Beer Mug', 'A frosted mug with a foam head and rising bubbles.', '380 × 560'],
+        ['coffeemug', 'Coffee Mug', 'A glass mug with crema and drifting steam.', '400 × 540'],
+        ['potion', 'Potion Flask', 'A glowing corked flask that bubbles as it fills.', '380 × 580'],
+        ['piggybank', 'Piggy Bank', 'A see-through pig that fills with coins and wobbles.', '540 × 440'],
+        ['chest', 'Treasure Chest', 'A chest of gold whose lid opens wider as the goal fills.', '560 × 440'],
+        ['thermometer', 'Thermometer', 'A glass thermometer with a scale and a rising column.', '320 × 560'],
+        ['battery', 'Battery', 'A charging battery with cells and a pulsing bolt.', '620 × 230'],
+        ['xpbar', 'XP Bar', 'A game XP bar with a level chip and a glowing edge.', '700 × 190'],
+        ['healthbar', 'Health Bar', 'A chunky RPG bar with a white lead on each gain.', '640 × 190'],
+        ['pixelbar', 'Pixel Bar', 'A retro block meter that moves in whole blocks.', '640 × 200'],
+        ['neonbar', 'Neon Tube', 'A glowing tube that flickers like neon.', '640 × 190'],
+        ['terminal', 'Terminal', 'A monospace loading bar with a blinking caret.', '760 × 160'],
+        ['milestones', 'Milestone Track', 'Five checkpoints that light up as you pass them.', '780 × 250'],
+        ['gauge', 'Dial', 'A sweeping needle dial with a percentage.', '420 × 400'],
         ['meter', 'Goal Meter', 'A progress meter with recent supporters.', '800 × 400'],
         ['bar', 'Fluid Goal Bar', 'A wide animated bar with the total inside.', '900 × 200'],
         ['compact', 'Compact Bar', 'A small bar suited to a corner.', '460 × 120'],
@@ -26,9 +42,15 @@
         params.set('style', style);
         params.set('theme', el('theme').value);
         if (el('refresh').checked) params.set('refresh', '');
-        if (['card', 'ring', 'lowerthird', 'segmented'].indexOf(style) !== -1) {
+        var isPanel = ['card', 'ring', 'lowerthird', 'segmented'].indexOf(style) !== -1;
+        var isVessel = ['glassjar', 'jar3d', 'beermug', 'coffeemug', 'potion', 'piggybank', 'chest', 'thermometer',
+            'battery', 'xpbar', 'healthbar', 'pixelbar', 'neonbar', 'terminal', 'milestones', 'gauge'].indexOf(style) !== -1;
+        if (isPanel) {
             if (el('panelopacity').value !== '') params.set('panelopacity', String(Math.max(0, Math.min(1, Number(el('panelopacity').value)))));
             if (el('amountsize').value !== '') params.set('amountsize', String(Math.max(12, Math.min(96, Number(el('amountsize').value)))));
+        }
+        // The physical jars take the accent as their liquid colour, and hide the percentage too.
+        if (isPanel || isVessel) {
             if (el('customaccent').checked) params.set('accent', el('accent').value);
             if (el('hidepercent').checked) params.set('hidepercent', '');
         }

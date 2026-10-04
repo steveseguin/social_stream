@@ -729,6 +729,640 @@
         body.tipjar-refresh .style-container *, body.tipjar-refresh .style-container *::before, body.tipjar-refresh .style-container *::after, #summary-style *, #summary-style *::before, #summary-style *::after { animation: none !important; transition: none !important; }
     }
     </style>
+    <style>
+    /* =====================================================================
+       Physical tip jars: glass jar, beer mug, coffee mug, potion flask,
+       piggy bank, treasure chest, plus a CSS 3D rotating jar. They all
+       share one renderer, so a new vessel only needs geometry and artwork.
+       Kept in its own style block so the legacy styles above are untouched.
+       ===================================================================== */
+    #vessel-style {
+        width: 100%;
+        height: 100%;
+        padding: 12px;
+        min-width: 0;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .vessel-stage {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        color: #fff;
+        text-align: center;
+    }
+
+    .vessel-title {
+        flex: 0 0 auto;
+        max-width: 100%;
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.3;
+        overflow-wrap: anywhere;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+    }
+
+    .vessel-art {
+        position: relative;
+        flex: 1 1 auto;
+        width: 100%;
+        min-height: 0;
+        margin: 8px 0;
+    }
+
+    .vessel-art > svg {
+        display: block;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+    }
+
+    .vessel-readout {
+        flex: 0 0 auto;
+        max-width: 100%;
+        font-size: 26px;
+        font-weight: 800;
+        line-height: 1.25;
+        overflow-wrap: anywhere;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+    }
+
+    .vessel-percent {
+        display: block;
+        margin-top: 2px;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--goal-accent);
+    }
+
+    #vessel-style.hide-percentage .vessel-percent { display: none; }
+    #vessel-style.hide-title .vessel-title { display: none; }
+
+    /* The liquid group holds a tall rect whose top edge is the surface, so
+       progress only has to slide the group down by the unfilled height. */
+    .vessel-liquid { transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1); }
+    .vessel-lid { transition: transform 1.1s cubic-bezier(0.22, 1, 0.36, 1); }
+
+    .vessel-wave { animation: vesselWave 5s linear infinite; }
+    .vessel-wave-back { animation: vesselWave 8.5s linear infinite reverse; }
+
+    /* One wave period is 120 user units wide, so a 120 unit shift loops. */
+    @keyframes vesselWave {
+        from { transform: translateX(0); }
+        to { transform: translateX(-120px); }
+    }
+
+    .vessel-bubble {
+        animation-name: vesselBubble;
+        animation-timing-function: ease-in;
+        animation-iteration-count: infinite;
+        transform-box: fill-box;
+        transform-origin: center;
+    }
+
+    @keyframes vesselBubble {
+        0% { transform: translateY(0) scale(0.65); opacity: 0; }
+        25% { opacity: 0.6; }
+        85% { opacity: 0.35; }
+        100% { transform: translateY(-190px) scale(1.2); opacity: 0; }
+    }
+
+    .vessel-steam {
+        animation: vesselSteam 4.2s ease-out infinite;
+        transform-box: fill-box;
+        transform-origin: 50% 100%;
+    }
+
+    @keyframes vesselSteam {
+        0% { opacity: 0; transform: translateY(18px) scaleX(0.7); }
+        35% { opacity: 0.5; }
+        100% { opacity: 0; transform: translateY(-56px) scaleX(1.4); }
+    }
+
+    .vessel-sparkle {
+        animation: vesselSparkle 2.6s ease-in-out infinite;
+        transform-box: fill-box;
+        transform-origin: center;
+    }
+
+    @keyframes vesselSparkle {
+        0%, 100% { opacity: 0.12; transform: scale(0.55); }
+        50% { opacity: 0.95; transform: scale(1.2); }
+    }
+
+    .vessel-ripple {
+        opacity: 0;
+        transform-box: fill-box;
+        transform-origin: center;
+    }
+
+    .vessel-stage.is-splash .vessel-ripple { animation: vesselRipple 900ms ease-out 380ms; }
+
+    @keyframes vesselRipple {
+        0% { opacity: 0.8; transform: scale(0.2, 0.35); }
+        100% { opacity: 0; transform: scale(1.3, 1.9); }
+    }
+
+    .vessel-drop {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: vesselDrop 900ms cubic-bezier(0.45, 0, 0.85, 0.5) forwards;
+    }
+
+    /* The coin starts above the artwork and lands in the vessel's mouth. */
+    @keyframes vesselDrop {
+        0% { opacity: 0; transform: translateY(-110px) rotate(-40deg); }
+        10% { opacity: 1; }
+        92% { opacity: 1; }
+        100% { opacity: 0; transform: translateY(0) rotate(140deg); }
+    }
+
+    .vessel-stage.is-shake .vessel-art { animation: vesselShake 640ms ease-in-out; }
+
+    @keyframes vesselShake {
+        0%, 100% { transform: rotate(0deg); }
+        22% { transform: rotate(-2.4deg); }
+        58% { transform: rotate(1.9deg); }
+        82% { transform: rotate(-0.8deg); }
+    }
+
+    /* An empty vessel shows no foam, floating coins, glow or liquid disc. */
+    .vessel-stage.is-empty .vessel-foam,
+    .vessel-stage.is-empty .vessel-floats,
+    .vessel-stage.is-empty .jar3d-surface { display: none; }
+
+    .vessel-glint { opacity: 0; }
+    .vessel-stage.is-full .vessel-glint { animation: vesselGlint 2.2s ease-in-out infinite; }
+    .vessel-stage.is-full .vessel-sparkle { animation-duration: 1.4s; }
+
+    @keyframes vesselGlint {
+        0%, 100% { opacity: 0; }
+        50% { opacity: 0.55; }
+    }
+
+    body.neon .vessel-rim { stroke: var(--goal-accent); stroke-opacity: 0.75; }
+    body.neon .vessel-liquid-body { filter: drop-shadow(0 0 14px var(--goal-accent)); }
+
+    /* 3D rotating jar: a cylinder built from slats on a preserve-3d stage. */
+    .jar3d {
+        --jar3d-height: 310px;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 220px;
+        height: var(--jar3d-height);
+        margin: -164px 0 0 -110px;
+        perspective: 1100px;
+    }
+
+    .jar3d-tilt,
+    .jar3d-spin {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        transform-style: preserve-3d;
+    }
+
+    .jar3d-tilt { transform: rotateX(-13deg); }
+    .jar3d-spin { animation: jar3dSpin 22s linear infinite; }
+    body.jar3d-static .jar3d-spin { animation: none; }
+
+    @keyframes jar3dSpin {
+        from { transform: rotateY(0deg); }
+        to { transform: rotateY(360deg); }
+    }
+
+    .jar3d-slat {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        height: 100%;
+    }
+
+    .jar3d-liquid {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 0;
+        transform-style: preserve-3d;
+        transition: height 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .jar3d-disc {
+        position: absolute;
+        left: 50%;
+        border-radius: 50%;
+    }
+
+    .jar3d-surface { top: 0; }
+    .jar3d-base { bottom: 0; }
+
+    .jar3d-shadow {
+        position: absolute;
+        left: 50%;
+        bottom: -26px;
+        width: 210px;
+        height: 42px;
+        margin-left: -105px;
+        border-radius: 50%;
+        background: radial-gradient(closest-side, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0));
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #vessel-style *, #vessel-style *::before, #vessel-style *::after {
+            animation: none !important;
+            transition: none !important;
+        }
+    }
+
+    /* ===================================================================
+       Goal bar kit: battery, XP bar, health bar, pixel bar, neon tube,
+       terminal readout, milestone track and dial. One stage drives them
+       all; a preset only supplies markup plus the parts that move.
+       =================================================================== */
+    #meterkit-style {
+        width: 100%;
+        height: auto;
+        max-width: 920px;
+        padding: 16px;
+        min-width: 0;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .kit-stage { width: 100%; color: #fff; }
+
+    .kit-title {
+        font-size: 22px;
+        font-weight: 800;
+        line-height: 1.3;
+        margin-bottom: 10px;
+        text-align: center;
+        overflow-wrap: anywhere;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+    }
+
+    .kit-art { position: relative; width: 100%; }
+
+    .kit-readout {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-top: 10px;
+        font-size: 18px;
+        font-weight: 700;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+    }
+
+    .kit-amount { min-width: 0; overflow-wrap: anywhere; }
+    .kit-percent { flex: 0 0 auto; margin-left: 14px; color: var(--goal-accent); }
+    #meterkit-style.hide-percentage .kit-percent,
+    #meterkit-style.hide-percentage .kit-inline,
+    #meterkit-style.hide-percentage .kit-gauge-value,
+    #meterkit-style.hide-percentage #kit-term-pct,
+    #meterkit-style.has-inline .kit-percent { display: none; }
+    #meterkit-style.hide-title .kit-title { display: none; }
+
+    /* Shared moving parts. */
+    .kit-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 0;
+        transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1), background-color 1.1s ease;
+    }
+
+    /* Parked at the end of the track so it never sits on the moving edge. */
+    .kit-inline {
+        position: absolute;
+        top: 50%;
+        right: 16px;
+        transform: translateY(-50%);
+        font-size: 20px;
+        font-weight: 800;
+        white-space: nowrap;
+        text-shadow: 0 2px 5px rgba(0, 0, 0, 0.9);
+        pointer-events: none;
+    }
+
+    /* Battery ------------------------------------------------------- */
+    .kit-battery { display: flex; align-items: center; }
+
+    .kit-battery-body {
+        position: relative;
+        flex: 1 1 auto;
+        height: 92px;
+        padding: 9px;
+        border: 5px solid rgba(233, 241, 250, 0.9);
+        border-radius: 16px;
+        background: rgba(8, 13, 22, 0.72);
+        box-shadow: inset 0 3px 14px rgba(0, 0, 0, 0.6);
+    }
+
+    .kit-battery-inner { position: relative; width: 100%; height: 100%; border-radius: 7px; overflow: hidden; }
+
+    .kit-battery .kit-fill { border-radius: 7px; }
+
+    .kit-battery-cells {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: repeating-linear-gradient(90deg, rgba(8, 13, 22, 0) 0, rgba(8, 13, 22, 0) 9.4%, rgba(8, 13, 22, 0.85) 9.4%, rgba(8, 13, 22, 0.85) 10%);
+        pointer-events: none;
+    }
+
+    .kit-battery-cap {
+        flex: 0 0 auto;
+        width: 16px;
+        height: 42px;
+        margin-left: -2px;
+        border-radius: 0 7px 7px 0;
+        background: rgba(233, 241, 250, 0.9);
+    }
+
+    .kit-bolt { position: absolute; top: 50%; left: 18px; margin-top: -17px; opacity: 0.85; }
+    .kit-stage.is-pulse .kit-bolt { animation: kitBolt 820ms ease-out; }
+
+    @keyframes kitBolt {
+        0% { transform: scale(0.7); opacity: 0.4; }
+        35% { transform: scale(1.25); opacity: 1; }
+        100% { transform: scale(1); opacity: 0.85; }
+    }
+
+    /* XP bar -------------------------------------------------------- */
+    .kit-xp { display: flex; align-items: center; }
+
+    .kit-chip {
+        flex: 0 0 auto;
+        min-width: 74px;
+        margin-right: 14px;
+        padding: 9px 12px;
+        border: 2px solid var(--goal-accent);
+        border-radius: 10px;
+        background: rgba(10, 15, 25, 0.82);
+        font-size: 17px;
+        font-weight: 800;
+        text-align: center;
+        letter-spacing: 0.5px;
+    }
+
+    .kit-xp-track {
+        position: relative;
+        flex: 1 1 auto;
+        height: 42px;
+        border: 2px solid rgba(255, 255, 255, 0.22);
+        border-radius: 8px;
+        background: rgba(10, 15, 25, 0.78);
+        overflow: hidden;
+    }
+
+    .kit-xp-track .kit-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 10px;
+        background: rgba(255, 255, 255, 0.85);
+        box-shadow: 0 0 16px rgba(255, 255, 255, 0.75);
+    }
+
+    .kit-stripes {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: repeating-linear-gradient(-56deg, rgba(255, 255, 255, 0.14) 0, rgba(255, 255, 255, 0.14) 9px, rgba(255, 255, 255, 0) 9px, rgba(255, 255, 255, 0) 22px);
+        pointer-events: none;
+    }
+
+    /* Health bar ---------------------------------------------------- */
+    .kit-health-frame {
+        position: relative;
+        height: 56px;
+        padding: 6px;
+        border: 4px solid rgba(12, 17, 26, 0.9);
+        border-radius: 6px;
+        background: rgba(40, 48, 62, 0.85);
+        box-shadow: 0 0 0 3px rgba(226, 234, 246, 0.55);
+    }
+
+    .kit-health-inner { position: relative; width: 100%; height: 100%; overflow: hidden; background: rgba(10, 14, 22, 0.85); }
+
+    .kit-ghost {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 0;
+        background: rgba(255, 255, 255, 0.75);
+    }
+
+    /* The white lead jumps to the new total, the colour catches up. */
+    .kit-health .kit-fill { transition: width 1.4s cubic-bezier(0.33, 1, 0.68, 1) 0.18s, background-color 1.4s ease; }
+
+    .kit-health-ticks {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: repeating-linear-gradient(90deg, rgba(0, 0, 0, 0) 0, rgba(0, 0, 0, 0) 24px, rgba(0, 0, 0, 0.45) 24px, rgba(0, 0, 0, 0.45) 26px);
+        pointer-events: none;
+    }
+
+    /* Pixel bar ----------------------------------------------------- */
+    .kit-pixel {
+        position: relative;
+        height: 64px;
+        padding: 8px;
+        background: rgba(8, 12, 20, 0.85);
+        box-shadow: 0 0 0 4px #e8eef7, 0 0 0 8px #10151f;
+    }
+
+    /* Mask the full track so filled and empty blocks share the same grid. */
+    .kit-pixel-inner {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        -webkit-mask-image: repeating-linear-gradient(90deg, #000 0, #000 calc(5% - 5px), transparent calc(5% - 5px), transparent 5%);
+        mask-image: repeating-linear-gradient(90deg, #000 0, #000 calc(5% - 5px), transparent calc(5% - 5px), transparent 5%);
+    }
+
+    .kit-pixel .kit-fill {
+        transition: width 0.45s steps(10, end), background-color 0.6s ease;
+    }
+
+    .kit-pixel-track {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.07);
+    }
+
+    #meterkit-style.kitstyle-pixelbar .kit-readout, .kit-pixel .kit-inline { font-family: 'Courier New', monospace; }
+
+    /* Neon tube ----------------------------------------------------- */
+    .kit-neon {
+        position: relative;
+        height: 54px;
+        border-radius: 27px;
+        background: rgba(10, 14, 24, 0.82);
+        box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(255, 255, 255, 0.12);
+        overflow: hidden;
+    }
+
+    .kit-neon .kit-fill { border-radius: 27px; }
+
+    .kit-neon-core {
+        position: absolute;
+        top: 36%;
+        left: 3%;
+        right: 3%;
+        height: 5px;
+        border-radius: 3px;
+        background: rgba(255, 255, 255, 0.5);
+        pointer-events: none;
+    }
+
+    .kit-neon .kit-fill { animation: kitFlicker 5.5s linear infinite; }
+
+    @keyframes kitFlicker {
+        0%, 100% { opacity: 1; }
+        47% { opacity: 1; }
+        48% { opacity: 0.72; }
+        49% { opacity: 1; }
+        82% { opacity: 0.84; }
+        83% { opacity: 1; }
+    }
+
+    /* Terminal ------------------------------------------------------ */
+    .kit-terminal {
+        font-family: 'Courier New', monospace;
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1.5;
+        letter-spacing: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-shadow: 0 0 10px rgba(0, 0, 0, 0.9);
+    }
+
+    .kit-caret { animation: kitCaret 1.1s steps(1, end) infinite; }
+
+    @keyframes kitCaret {
+        0%, 49% { opacity: 1; }
+        50%, 100% { opacity: 0; }
+    }
+
+    /* Milestone track ----------------------------------------------- */
+    .kit-miles { padding: 10px 30px 46px; }
+    .kit-miles-rail { position: relative; }
+
+    .kit-miles-track {
+        position: relative;
+        height: 14px;
+        border-radius: 7px;
+        background: var(--goal-track);
+        overflow: hidden;
+    }
+
+    .kit-miles .kit-fill { border-radius: 7px; }
+
+    .kit-pin {
+        position: absolute;
+        top: -9px;
+        width: 32px;
+        height: 32px;
+        margin-left: -16px;
+        border: 3px solid rgba(255, 255, 255, 0.35);
+        border-radius: 50%;
+        background: rgba(12, 17, 27, 0.92);
+        text-align: center;
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 26px;
+        transition: border-color 0.5s ease, background-color 0.5s ease, transform 0.5s ease;
+    }
+
+    .kit-pin.on {
+        border-color: var(--goal-accent);
+        background: var(--goal-accent);
+        color: #0d1420;
+        transform: scale(1.1);
+    }
+
+    .kit-pin-label {
+        position: absolute;
+        top: 36px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 13px;
+        font-weight: 700;
+        white-space: nowrap;
+        color: var(--goal-muted);
+        text-shadow: 0 2px 5px rgba(0, 0, 0, 0.9);
+    }
+
+    /* Dial ---------------------------------------------------------- */
+    .kit-gauge { position: relative; width: 100%; max-width: 420px; margin: 0 auto; }
+    .kit-gauge svg { display: block; width: 100%; height: auto; overflow: visible; }
+    .kit-gauge-track { fill: none; stroke: var(--goal-track); stroke-width: 20; stroke-linecap: round; }
+
+    .kit-gauge-fill {
+        fill: none;
+        stroke-width: 20;
+        stroke-linecap: round;
+        stroke-dasharray: 100 100;
+        stroke-dashoffset: 100;
+        transition: stroke-dashoffset 1.1s cubic-bezier(0.22, 1, 0.36, 1), stroke 1.1s ease;
+    }
+
+    .kit-needle { transition: transform 1.1s cubic-bezier(0.34, 1.3, 0.64, 1); }
+
+    .kit-gauge-value {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 2%;
+        text-align: center;
+        font-size: 34px;
+        font-weight: 800;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.85);
+    }
+
+    #meterkit-style.kitstyle-gauge .kit-readout { justify-content: center; }
+    #meterkit-style.kitstyle-gauge .kit-percent { display: none; }
+
+    /* Every bar flashes briefly when a donation lands. */
+    .kit-stage.is-pulse .kit-fill,
+    .kit-stage.is-pulse .kit-gauge-fill { animation: kitPulse 760ms ease-out; }
+
+    @keyframes kitPulse {
+        0% { filter: brightness(2); }
+        100% { filter: brightness(1); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        #meterkit-style *, #meterkit-style *::before, #meterkit-style *::after {
+            animation: none !important;
+            transition: none !important;
+        }
+    }
+    </style>
 </head>
 <body>
     <!-- Original Jar Style -->
@@ -835,6 +1469,24 @@
         </div>
     </div>
 
+    <!-- Physical jars: glass jar, beer mug, coffee mug, potion flask, piggy bank, chest, 3D jar -->
+    <div id="vessel-style" class="style-container">
+        <div class="vessel-stage" id="vessel-stage" role="progressbar" aria-label="Goal progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="vessel-title" id="vessel-title">Stream Goal</div>
+            <div class="vessel-art" id="vessel-art"></div>
+            <div class="vessel-readout"><span id="vessel-amount">$0 / $250</span><span class="vessel-percent" id="vessel-percent">0%</span></div>
+        </div>
+    </div>
+
+    <!-- Goal bars: battery, XP, health, pixel, neon tube, terminal, milestones, dial -->
+    <div id="meterkit-style" class="style-container">
+        <div class="kit-stage" id="kit-stage" role="progressbar" aria-label="Goal progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="kit-title" id="kit-title">Stream Goal</div>
+            <div class="kit-art" id="kit-art"></div>
+            <div class="kit-readout"><span class="kit-amount" id="kit-amount">$0 / $250</span><span class="kit-percent" id="kit-percent">0%</span></div>
+        </div>
+    </div>
+
     <!-- Shared Elements -->
     <div id="notification"></div>
     <div class="celebration-container" id="celebration"></div>
@@ -907,8 +1559,12 @@
         const previewMode = urlParams.has('preview');
         const refreshedAppearance = urlParams.has('refresh');
         const summaryStyles = ['card', 'ring', 'lowerthird', 'segmented'];
+        // Physical jars share one container and one renderer; see VESSEL_PRESETS.
+        const vesselStyles = ['glassjar', 'beermug', 'coffeemug', 'potion', 'piggybank', 'chest', 'thermometer', 'jar3d'];
+        // Goal bars share a second container and renderer; see METER_PRESETS.
+        const meterStyles = ['battery', 'xpbar', 'healthbar', 'pixelbar', 'neonbar', 'terminal', 'milestones', 'gauge'];
         const requestedStyle = urlParams.get('style') || 'jar';
-        const style = ['jar', 'meter', 'minimal', 'bar', 'compact', 'vertical', 'text'].concat(summaryStyles).indexOf(requestedStyle) !== -1 ? requestedStyle : 'jar';
+        const style = ['jar', 'meter', 'minimal', 'bar', 'compact', 'vertical', 'text'].concat(summaryStyles).concat(vesselStyles).concat(meterStyles).indexOf(requestedStyle) !== -1 ? requestedStyle : 'jar';
         const theme = urlParams.get('theme') || 'default'; // default, neon, gold
         const hideCurrency = urlParams.has('hidecurrency');
         const requestedHypeMode = urlParams.has('hype') || urlParams.get('mode') === 'hype';
@@ -1000,10 +1656,14 @@
             container.classList.remove('active');
         });
         const isSummaryStyle = summaryStyles.indexOf(style) !== -1;
-        const activeStyle = document.getElementById(isSummaryStyle ? 'summary-style' : `${style}-style`);
+        const isVesselStyle = vesselStyles.indexOf(style) !== -1;
+        const isMeterStyle = meterStyles.indexOf(style) !== -1;
+        const activeStyle = document.getElementById(isSummaryStyle ? 'summary-style' : (isVesselStyle ? 'vessel-style' : (isMeterStyle ? 'meterkit-style' : `${style}-style`)));
         activeStyle.classList.add('active');
         if (refreshedAppearance) document.body.classList.add('tipjar-refresh');
         if (isSummaryStyle) activeStyle.classList.add('layout-' + style);
+        if (isVesselStyle) activeStyle.classList.add('vessel-' + style);
+        if (isMeterStyle) activeStyle.classList.add('kitstyle-' + style);
         if (barTrackColor) document.documentElement.style.setProperty('--goal-track', barTrackColor);
         if (hasCustomFill) document.documentElement.style.setProperty('--goal-accent', fillStartColor);
         if (isSummaryStyle) {
@@ -1144,6 +1804,849 @@
             World.add(world, cupContainer);
         }
 
+        // ===============================================================
+        // Physical tip jars: glass jar, beer mug, coffee mug, potion
+        // flask, piggy bank, treasure chest, and a CSS 3D rotating jar.
+        // They all share one renderer: progress slides a clipped liquid
+        // group down by the unfilled height, so the rect's top edge is
+        // always the liquid surface. A new vessel only needs geometry
+        // plus artwork, never a new render path.
+        // ===============================================================
+        function normalizeDropItem(value) {
+            const name = normalizeFilterValue(value).replace(/s$/, '');
+            if (name === 'coin' || name === 'gold' || name === 'token') return 'coin';
+            if (name === 'gem' || name === 'diamond' || name === 'jewel') return 'gem';
+            if (name === 'star') return 'star';
+            if (name === 'bill' || name === 'cash' || name === 'money' || name === 'dollar') return 'bill';
+            if (name === 'heart') return 'heart';
+            return '';
+        }
+
+        const dropItem = normalizeDropItem(urlParams.get('dropitem'));
+        const jarLabel = urlParams.has('jarlabel') ? String(urlParams.get('jarlabel')).slice(0, 12) : 'TIPS';
+        const hidePercent = urlParams.has('hidepercent');
+        const hideTitle = urlParams.has('hidetitle');
+
+        function svgEscape(value) {
+            return String(value === undefined || value === null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function shadeColor(color, amount) {
+            const rgb = parseColorToRgb(color, [33, 150, 243]);
+            const target = amount < 0 ? [0, 0, 0] : [255, 255, 255];
+            return lerpColor(rgb, target, Math.min(1, Math.abs(amount)));
+        }
+
+        // Explicit fill/accent colors win; otherwise each vessel keeps its
+        // own character (amber beer, dark coffee, gold coins, and so on).
+        function vesselLiquidColors(def) {
+            // Serialize only parsed RGB channels; URL values must never become markup.
+            if (hasCustomFill) return [lerpColor(fillStartRgb, fillStartRgb, 0), lerpColor(fillEndRgb, fillEndRgb, 0)];
+            const accent = urlParams.get('accent');
+            if (accent && /^#[0-9a-f]{6}$/i.test(accent)) return [accent, shadeColor(accent, -0.45)];
+            return def.liquid;
+        }
+
+        // One wave period is 120 user units, matching the CSS loop shift.
+        function vesselWavePath(def, amplitude, baseY, depth) {
+            const period = 120;
+            let d = 'M' + (-period) + ' ' + baseY;
+            for (let x = -period; x < def.w + period * 2; x += period) {
+                d += ' q ' + (period / 4) + ' ' + (-amplitude) + ' ' + (period / 2) + ' 0';
+                d += ' q ' + (period / 4) + ' ' + amplitude + ' ' + (period / 2) + ' 0';
+            }
+            d += ' L' + (def.w + period * 2) + ' ' + (baseY + depth);
+            d += ' L' + (-period) + ' ' + (baseY + depth) + ' Z';
+            return d;
+        }
+
+        function vesselBubbleMarkup(def) {
+            const height = def.bottom - def.top;
+            let out = '';
+            for (let i = 0; i < (def.bubbles || 0); i++) {
+                const cx = def.cx + (Math.random() * 2 - 1) * def.rx * 0.78;
+                // Weighted toward the surface so bubbles stay visible at any level.
+                const cy = def.top + 24 + Math.pow(Math.random(), 1.7) * height;
+                out += '<circle class="vessel-bubble" cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) +
+                    '" r="' + (2.2 + Math.random() * 4.4).toFixed(1) + '" fill="#ffffff" fill-opacity="0.5" style="animation-duration:' +
+                    (3.2 + Math.random() * 3.6).toFixed(2) + 's;animation-delay:-' + (Math.random() * 5).toFixed(2) + 's"/>';
+            }
+            return out;
+        }
+
+        function vesselFoamMarkup(def) {
+            if (!def.foam) return '';
+            const lumps = def.foamLumps || 7;
+            let out = '<g class="vessel-foam"><rect x="' + (-def.w) + '" y="' + (def.top - 3) + '" width="' + def.w * 3 +
+                '" height="26" fill="url(#vsl-cream)" fill-opacity="0.95"/>';
+            for (let i = 0; i < lumps; i++) {
+                const cx = def.cx - def.rx + ((i + 0.5) * def.rx * 2) / lumps;
+                out += '<circle cx="' + cx.toFixed(1) + '" cy="' + (def.top - 5) + '" r="' + (8 + (i % 3) * 4) +
+                    '" fill="#fff9ec" fill-opacity="0.96"/>';
+            }
+            return out + '</g>';
+        }
+
+        // Coins bobbing on the surface sell the "pile of money" look.
+        function vesselFloatMarkup(def) {
+            if (!def.floats) return '';
+            let out = '<g class="vessel-floats">';
+            for (let i = 0; i < def.floats; i++) {
+                const cx = def.cx - def.rx * 0.72 + ((i + 0.5) * def.rx * 1.44) / def.floats;
+                const cy = def.top + 6 + (i % 3) * 7;
+                out += '<ellipse cx="' + cx.toFixed(1) + '" cy="' + cy + '" rx="13" ry="5.5" fill="url(#vsl-coin)"/>' +
+                    '<ellipse cx="' + cx.toFixed(1) + '" cy="' + (cy - 1.5) + '" rx="7" ry="2.6" fill="#fff6cf" fill-opacity="0.65"/>';
+            }
+            return out + '</g>';
+        }
+
+        function vesselSparkleMarkup(points) {
+            let out = '';
+            for (let i = 0; i < points.length; i++) {
+                const x = points[i][0];
+                const y = points[i][1];
+                const r = points[i][2];
+                const t = r * 0.32;
+                out += '<path class="vessel-sparkle" d="M' + x + ' ' + (y - r) + 'L' + (x + t) + ' ' + (y - t) +
+                    'L' + (x + r) + ' ' + y + 'L' + (x + t) + ' ' + (y + t) +
+                    'L' + x + ' ' + (y + r) + 'L' + (x - t) + ' ' + (y + t) +
+                    'L' + (x - r) + ' ' + y + 'L' + (x - t) + ' ' + (y - t) +
+                    'Z" fill="#fff6cf" style="animation-delay:-' + (i * 0.55).toFixed(2) + 's"/>';
+            }
+            return out;
+        }
+
+        function thermometerTicks() {
+            let out = '';
+            for (let i = 0; i <= 10; i++) {
+                const y = 96 + i * 23;
+                const long = i % 5 === 0;
+                out += '<path d="M' + (long ? 128 : 134) + ' ' + y + 'H146" stroke="#ffffff" stroke-opacity="' +
+                    (long ? '0.55' : '0.3') + '" stroke-width="' + (long ? 4 : 2.5) + '" stroke-linecap="round"/>';
+            }
+            return out;
+        }
+
+        function vesselDropArt(kind) {
+            if (kind === 'gem') {
+                return '<path d="M0 -19L16 -6L0 20L-16 -6Z" fill="#8ce9ff"/>' +
+                    '<path d="M0 -19L16 -6L0 -2L-16 -6Z" fill="#d7f7ff" fill-opacity="0.9"/>' +
+                    '<path d="M0 -2L16 -6L0 20Z" fill="#3fb8e6" fill-opacity="0.85"/>' +
+                    '<path d="M0 -19L16 -6L0 20L-16 -6Z" fill="none" stroke="#0b5f85" stroke-opacity="0.55" stroke-width="1.6"/>';
+            }
+            if (kind === 'star') {
+                return '<path d="M0 -19L5.6 -6.2L19 -5.2L8.8 3.4L12 17L0 9.8L-12 17L-8.8 3.4L-19 -5.2L-5.6 -6.2Z" fill="url(#vsl-coin)" stroke="#a9700a" stroke-opacity="0.5" stroke-width="1.4"/>';
+            }
+            if (kind === 'bill') {
+                return '<rect x="-21" y="-12" width="42" height="24" rx="3" fill="#4f9f6b"/>' +
+                    '<rect x="-21" y="-12" width="42" height="24" rx="3" fill="none" stroke="#235c3c" stroke-opacity="0.7" stroke-width="1.6"/>' +
+                    '<circle cx="0" cy="0" r="7.5" fill="#d8f0df" fill-opacity="0.85"/>' +
+                    '<text x="0" y="4" text-anchor="middle" font-size="11" font-weight="bold" fill="#235c3c">$</text>';
+            }
+            if (kind === 'heart') {
+                return '<path d="M0 17C-16 6 -20 -4 -13 -11C-6 -17 0 -10 0 -6C0 -10 6 -17 13 -11C20 -4 16 6 0 17Z" fill="#ff5f8a" stroke="#b22b53" stroke-opacity="0.5" stroke-width="1.5"/>';
+            }
+            return '<circle r="17" fill="url(#vsl-coin)"/>' +
+                '<circle r="17" fill="none" stroke="#8f5c05" stroke-opacity="0.7" stroke-width="2"/>' +
+                '<circle r="11" fill="none" stroke="#fff6cf" stroke-opacity="0.55" stroke-width="1.6"/>' +
+                '<text x="0" y="6" text-anchor="middle" font-size="17" font-weight="bold" fill="#8a5a0a">$</text>';
+        }
+
+        function vesselDefsMarkup(colors) {
+            return '<linearGradient id="vsl-liquid" x1="0" y1="0" x2="0" y2="1">' +
+                    '<stop offset="0" stop-color="' + colors[0] + '"/><stop offset="1" stop-color="' + colors[1] + '"/>' +
+                '</linearGradient>' +
+                '<linearGradient id="vsl-glass" x1="0" y1="0" x2="1" y2="0">' +
+                    '<stop offset="0" stop-color="#ffffff" stop-opacity="0.34"/>' +
+                    '<stop offset="0.16" stop-color="#ffffff" stop-opacity="0.07"/>' +
+                    '<stop offset="0.5" stop-color="#dff1ff" stop-opacity="0.04"/>' +
+                    '<stop offset="0.84" stop-color="#ffffff" stop-opacity="0.1"/>' +
+                    '<stop offset="1" stop-color="#ffffff" stop-opacity="0.38"/>' +
+                '</linearGradient>' +
+                '<linearGradient id="vsl-metal" x1="0" y1="0" x2="1" y2="0">' +
+                    '<stop offset="0" stop-color="#6d7788"/><stop offset="0.22" stop-color="#dfe7f1"/>' +
+                    '<stop offset="0.5" stop-color="#9aa6b6"/><stop offset="0.78" stop-color="#e7eef7"/>' +
+                    '<stop offset="1" stop-color="#707a8b"/>' +
+                '</linearGradient>' +
+                '<linearGradient id="vsl-wood" x1="0" y1="0" x2="0.2" y2="1">' +
+                    '<stop offset="0" stop-color="#ab7430"/><stop offset="0.5" stop-color="#7e501d"/><stop offset="1" stop-color="#593412"/>' +
+                '</linearGradient>' +
+                '<linearGradient id="vsl-iron" x1="0" y1="0" x2="1" y2="0">' +
+                    '<stop offset="0" stop-color="#434b58"/><stop offset="0.5" stop-color="#8d98a9"/><stop offset="1" stop-color="#3c4350"/>' +
+                '</linearGradient>' +
+                '<linearGradient id="vsl-pig" x1="0" y1="0" x2="0.4" y2="1">' +
+                    '<stop offset="0" stop-color="#ffd6e2"/><stop offset="1" stop-color="#ef87a6"/>' +
+                '</linearGradient>' +
+                '<linearGradient id="vsl-cream" x1="0" y1="0" x2="0" y2="1">' +
+                    '<stop offset="0" stop-color="#fffdf7"/><stop offset="1" stop-color="#efdcc1"/>' +
+                '</linearGradient>' +
+                '<radialGradient id="vsl-coin" cx="0.34" cy="0.3" r="0.82">' +
+                    '<stop offset="0" stop-color="#fff6cf"/><stop offset="0.55" stop-color="#f2c349"/><stop offset="1" stop-color="#ab7108"/>' +
+                '</radialGradient>' +
+                '<radialGradient id="vsl-shade" cx="0.5" cy="0.5" r="0.5">' +
+                    '<stop offset="0" stop-color="#000000" stop-opacity="0.55"/>' +
+                    '<stop offset="0.6" stop-color="#000000" stop-opacity="0.26"/>' +
+                    '<stop offset="1" stop-color="#000000" stop-opacity="0"/>' +
+                '</radialGradient>' +
+                '<radialGradient id="vsl-glow" cx="0.5" cy="0.5" r="0.5">' +
+                    '<stop offset="0" stop-color="' + colors[0] + '" stop-opacity="0.5"/>' +
+                    '<stop offset="1" stop-color="' + colors[0] + '" stop-opacity="0"/>' +
+                '</radialGradient>';
+        }
+
+        function buildVesselSvg(def, colors) {
+            const height = def.bottom - def.top;
+            const depth = height * 2 + 80;
+            const label = def.labelled && jarLabel
+                ? '<rect x="' + (def.cx - 52) + '" y="252" width="104" height="58" rx="9" fill="#fdfaf2" fill-opacity="0.9"/>' +
+                  '<rect x="' + (def.cx - 52) + '" y="252" width="104" height="58" rx="9" fill="none" stroke="#17233a" stroke-opacity="0.22" stroke-width="2"/>' +
+                  '<text x="' + def.cx + '" y="290" text-anchor="middle" font-size="26" font-weight="bold" fill="#17233a">' + svgEscape(jarLabel) + '</text>'
+                : '';
+            return '<svg viewBox="' + (def.view || ('0 0 ' + def.w + ' ' + def.h)) + '" preserveAspectRatio="xMidYMid meet" aria-hidden="true">' +
+                '<defs>' + vesselDefsMarkup(colors) +
+                    '<clipPath id="vsl-interior">' + def.interior + '</clipPath>' +
+                    '<clipPath id="vsl-band"><rect x="' + (-def.w) + '" y="' + def.top + '" width="' + (def.w * 3) + '" height="' + depth + '"/></clipPath>' +
+                '</defs>' +
+                '<g>' + def.back + '</g>' +
+                '<g clip-path="url(#vsl-interior)">' +
+                    '<g class="vessel-liquid" id="vessel-liquid">' +
+                        '<rect class="vessel-liquid-body" x="' + (-def.w) + '" y="' + def.top + '" width="' + def.w * 3 + '" height="' + depth + '" fill="url(#vsl-liquid)"/>' +
+                        (def.wave ? '<path class="vessel-wave-back" d="' + vesselWavePath(def, def.wave + 4, def.top + 5, depth) + '" fill="#ffffff" fill-opacity="0.22"/>' +
+                        '<path class="vessel-wave" d="' + vesselWavePath(def, def.wave, def.top, depth) + '" fill="url(#vsl-liquid)"/>' : '') +
+                        '<ellipse class="vessel-surface" cx="' + def.cx + '" cy="' + def.top + '" rx="' + def.rx + '" ry="' + def.ry + '" fill="#ffffff" fill-opacity="0.16"/>' +
+                        '<ellipse class="vessel-ripple" cx="' + def.cx + '" cy="' + def.top + '" rx="' + def.rx + '" ry="' + def.ry + '" fill="none" stroke="#ffffff" stroke-opacity="0.85" stroke-width="3"/>' +
+                        vesselFloatMarkup(def) +
+                        vesselFoamMarkup(def) +
+                        '<g clip-path="url(#vsl-band)">' + vesselBubbleMarkup(def) + '</g>' +
+                    '</g>' +
+                '</g>' +
+                '<g>' + def.front + label + '</g>' +
+                '<g transform="translate(' + def.cx + ',' + def.mouth + ')" id="vessel-drops"></g>' +
+                '<g id="vessel-drop-template" display="none">' + vesselDropArt(dropItem || def.drop || 'coin') + '</g>' +
+                '</svg>';
+        }
+
+        // A cylinder of slats on a preserve-3d stage: real perspective
+        // rather than a painted gradient, with the liquid as its own
+        // cylinder so the surface disc reads as a tilted ellipse.
+        function buildJar3dMarkup() {
+            const slats = 44;
+            const radius = 92;
+            const step = 360 / slats;
+            // Translucent glass slats barely overlap so the seams do not double up.
+            const slatWidth = (2 * Math.PI * radius) / slats + 0.4;
+            const liquidWidth = (2 * Math.PI * radius) / slats + 2.2;
+            const discSize = 'width:' + radius * 2 + 'px;height:' + radius * 2 + 'px;margin-left:' + -radius + 'px;';
+            const litAt = function(angle) {
+                return Math.max(0, Math.cos(((angle - 28) * Math.PI) / 180));
+            };
+            let glass = '';
+            let liquid = '';
+            for (let i = 0; i < slats; i++) {
+                const angle = i * step;
+                // Shading each slat edge to edge hides the facet seams.
+                const left = litAt(angle - step / 2);
+                const right = litAt(angle + step / 2);
+                const spin = 'px;transform:rotateY(' + angle.toFixed(2) + 'deg) translateZ(' + radius + 'px);';
+                const box = 'width:' + slatWidth.toFixed(2) + 'px;margin-left:' + (-slatWidth / 2).toFixed(2) + spin;
+                const liquidBox = 'width:' + liquidWidth.toFixed(2) + 'px;margin-left:' + (-liquidWidth / 2).toFixed(2) + spin;
+                glass += '<div class="jar3d-slat" style="' + box + 'background:linear-gradient(90deg, rgba(222,239,252,' +
+                    (0.05 + 0.17 * left).toFixed(3) + '), rgba(222,239,252,' + (0.05 + 0.17 * right).toFixed(3) +
+                    '));border-top:3px solid rgba(255,255,255,' + (0.12 + 0.45 * ((left + right) / 2)).toFixed(3) + ');"></div>';
+                liquid += '<div class="jar3d-slat" style="' + liquidBox + 'background:linear-gradient(90deg, rgba(0,0,0,' +
+                    (0.55 * (1 - left)).toFixed(3) + '), rgba(0,0,0,' + (0.55 * (1 - right)).toFixed(3) +
+                    ')), linear-gradient(to top, var(--vessel-fill-start), var(--vessel-fill-end));' +
+                    'background-size:100% 100%,100% var(--jar3d-height);background-position:bottom;background-repeat:no-repeat;"></div>';
+            }
+            return '<div class="jar3d"><div class="jar3d-shadow"></div>' +
+                '<div class="jar3d-tilt"><div class="jar3d-spin">' +
+                    '<div class="jar3d-disc jar3d-base" style="' + discSize + 'transform:translateY(50%) rotateX(90deg);background:radial-gradient(closest-side, rgba(255,255,255,0.18), rgba(10,18,32,0.55));"></div>' +
+                    glass +
+                    '<div class="jar3d-liquid" id="jar3d-liquid">' + liquid +
+                        '<div class="jar3d-disc jar3d-surface" style="' + discSize + 'transform:translateY(-50%) rotateX(90deg);background:radial-gradient(closest-side, var(--vessel-surface-light), var(--vessel-surface));"></div>' +
+                    '</div>' +
+                    '<div class="jar3d-disc" style="' + discSize + 'top:0;transform:translateY(-50%) rotateX(90deg);border:5px solid rgba(255,255,255,0.4);background:rgba(255,255,255,0.05);"></div>' +
+                '</div></div></div>';
+        }
+
+        // Canvas-drawn sprites keep the physics jar's dropitem options
+        // asset-free: coins, gems, stars and bills are all generated here.
+        const dropTextures = {};
+        function dropItemTexture(kind) {
+            if (dropTextures[kind]) return dropTextures[kind];
+            const size = 64;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            const c = size / 2;
+            ctx.lineJoin = 'round';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            if (kind === 'gem') {
+                const gem = ctx.createLinearGradient(0, 0, size, size);
+                gem.addColorStop(0, '#d7f7ff');
+                gem.addColorStop(0.5, '#59c9f0');
+                gem.addColorStop(1, '#1272a8');
+                ctx.fillStyle = gem;
+                ctx.beginPath();
+                ctx.moveTo(c, 3);
+                ctx.lineTo(size - 4, c - 7);
+                ctx.lineTo(c, size - 3);
+                ctx.lineTo(4, c - 7);
+                ctx.closePath();
+                ctx.fill();
+                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = 'rgba(8,70,104,0.6)';
+                ctx.stroke();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'rgba(255,255,255,0.7)';
+                ctx.beginPath();
+                ctx.moveTo(4, c - 7);
+                ctx.lineTo(size - 4, c - 7);
+                ctx.moveTo(c, 3);
+                ctx.lineTo(c, size - 3);
+                ctx.stroke();
+            } else if (kind === 'star') {
+                const star = ctx.createLinearGradient(0, 0, 0, size);
+                star.addColorStop(0, '#fff6cf');
+                star.addColorStop(1, '#e0a310');
+                ctx.fillStyle = star;
+                ctx.beginPath();
+                for (let i = 0; i < 10; i++) {
+                    const radius = i % 2 === 0 ? c - 3 : (c - 3) * 0.45;
+                    const angle = (Math.PI / 5) * i - Math.PI / 2;
+                    const x = c + Math.cos(angle) * radius;
+                    const y = c + Math.sin(angle) * radius;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.closePath();
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'rgba(150,100,8,0.65)';
+                ctx.stroke();
+            } else if (kind === 'bill') {
+                ctx.fillStyle = '#4f9f6b';
+                ctx.fillRect(3, c - 13, size - 6, 26);
+                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = 'rgba(28,76,50,0.8)';
+                ctx.strokeRect(3, c - 13, size - 6, 26);
+                ctx.fillStyle = 'rgba(216,240,223,0.9)';
+                ctx.beginPath();
+                ctx.arc(c, c, 9, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#235c3c';
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText('$', c, c + 1);
+            } else {
+                const coin = ctx.createRadialGradient(c * 0.72, c * 0.66, 2, c, c, c);
+                coin.addColorStop(0, '#fff6cf');
+                coin.addColorStop(0.55, '#f2c349');
+                coin.addColorStop(1, '#a86f08');
+                ctx.fillStyle = coin;
+                ctx.beginPath();
+                ctx.arc(c, c, c - 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = 'rgba(122,82,6,0.8)';
+                ctx.stroke();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'rgba(255,246,207,0.6)';
+                ctx.beginPath();
+                ctx.arc(c, c, c - 11, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.fillStyle = '#7a5206';
+                ctx.font = 'bold 28px Arial';
+                ctx.fillText('$', c, c + 1);
+            }
+            dropTextures[kind] = canvas.toDataURL();
+            return dropTextures[kind];
+        }
+
+        // Geometry plus artwork for each physical jar. top/bottom are the
+        // liquid surface at 100% and 0%; mouth is where a dropped coin
+        // lands; interior is the clip that keeps the liquid inside.
+        const VESSEL_PRESETS = {
+            glassjar: {
+                w: 300, h: 440, view: '46 -16 208 440', cx: 150, top: 118, bottom: 390, rx: 72, ry: 10, mouth: 76,
+                bubbles: 8, wave: 8, labelled: true, drop: 'coin',
+                liquid: ['#6fe0ff', '#1a6fc9'],
+                interior: '<path d="M74 146 Q74 122 104 116 L196 116 Q226 122 226 146 L226 346 Q226 380 194 380 L106 380 Q74 380 74 346 Z"/>',
+                back: '<ellipse cx="150" cy="408" rx="104" ry="18" fill="url(#vsl-shade)"/>' +
+                    '<path d="M62 142 Q62 112 96 104 L204 104 Q238 112 238 142 L238 350 Q238 392 198 392 L102 392 Q62 392 62 350 Z" fill="#0d1726" fill-opacity="0.34"/>',
+                front: '<path d="M62 142 Q62 112 96 104 L204 104 Q238 112 238 142 L238 350 Q238 392 198 392 L102 392 Q62 392 62 350 Z" fill="url(#vsl-glass)" stroke="#ffffff" stroke-opacity="0.35" stroke-width="2.5" class="vessel-rim"/>' +
+                    '<path d="M92 162 Q82 262 96 348" stroke="#ffffff" stroke-opacity="0.3" stroke-width="10" stroke-linecap="round" fill="none"/>' +
+                    '<path d="M214 178 Q220 256 212 328" stroke="#ffffff" stroke-opacity="0.16" stroke-width="5" stroke-linecap="round" fill="none"/>' +
+                    '<ellipse cx="150" cy="118" rx="76" ry="10" fill="none" stroke="#ffffff" stroke-opacity="0.3" stroke-width="2"/>' +
+                    '<path d="M68 162 Q150 150 232 162" fill="none" stroke="#ffffff" stroke-opacity="0.16" stroke-width="6"/>' +
+                    '<path d="M68 180 Q150 168 232 180" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="5"/>' +
+                    '<path d="M72 362 Q150 374 228 362" fill="none" stroke="#ffffff" stroke-opacity="0.12" stroke-width="5"/>' +
+                    '<rect x="96" y="92" width="108" height="20" rx="6" fill="url(#vsl-metal)"/>' +
+                    '<rect x="84" y="56" width="132" height="42" rx="11" fill="url(#vsl-metal)"/>' +
+                    '<path d="M84 70 H216 M84 84 H216" stroke="#2b323d" stroke-opacity="0.22" stroke-width="2"/>' +
+                    '<rect x="122" y="70" width="56" height="12" rx="6" fill="#141b29" fill-opacity="0.85"/>' +
+                    '<rect x="122" y="70" width="56" height="4" rx="2" fill="#000000" fill-opacity="0.35"/>' +
+                    '<path class="vessel-glint" d="M78 150 Q150 128 222 150" stroke="#ffffff" stroke-opacity="0.5" stroke-width="4" fill="none"/>'
+            },
+            beermug: {
+                w: 320, h: 440, view: '46 32 262 394', cx: 150, top: 120, bottom: 390, rx: 64, ry: 11, mouth: 104,
+                bubbles: 15, wave: 6, foam: 'beer', foamLumps: 7, drop: 'coin',
+                liquid: ['#ffc53d', '#d2770a'],
+                interior: '<path d="M82 118 L82 352 Q82 378 112 378 L188 378 Q218 378 218 352 L218 118 Z"/>',
+                back: '<ellipse cx="150" cy="404" rx="106" ry="18" fill="url(#vsl-shade)"/>' +
+                    '<path d="M232 180 C300 180 300 290 232 290" fill="none" stroke="#cfe6f5" stroke-opacity="0.42" stroke-width="30" stroke-linecap="round"/>' +
+                    '<path d="M232 180 C300 180 300 290 232 290" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3" stroke-linecap="round"/>' +
+                    '<path d="M68 112 L68 356 Q68 392 110 392 L190 392 Q232 392 232 356 L232 112 Z" fill="#0d1726" fill-opacity="0.32"/>',
+                front: '<path d="M68 112 L68 356 Q68 392 110 392 L190 392 Q232 392 232 356 L232 112 Z" fill="url(#vsl-glass)" stroke="#ffffff" stroke-opacity="0.38" stroke-width="2.5" class="vessel-rim"/>' +
+                    '<path d="M98 126 L98 376 M134 126 L134 380 M170 126 L170 380 M206 126 L206 376" stroke="#ffffff" stroke-opacity="0.1" stroke-width="7"/>' +
+                    '<path d="M86 136 Q78 258 92 356" stroke="#ffffff" stroke-opacity="0.32" stroke-width="9" stroke-linecap="round" fill="none"/>' +
+                    '<ellipse cx="150" cy="112" rx="82" ry="13" fill="#ffffff" fill-opacity="0.07"/>' +
+                    '<ellipse cx="150" cy="112" rx="82" ry="13" fill="none" stroke="#ffffff" stroke-opacity="0.4" stroke-width="3"/>'
+            },
+            coffeemug: {
+                w: 320, h: 420, view: '38 30 278 386', cx: 160, top: 152, bottom: 362, rx: 58, ry: 10, mouth: 132,
+                bubbles: 4, wave: 3, foam: 'cream', foamLumps: 5, drop: 'coin',
+                liquid: ['#c2823c', '#45200d'],
+                interior: '<path d="M98 150 L109 331 Q111 350 136 350 L184 350 Q209 350 211 331 L222 150 Z"/>',
+                back: '<ellipse cx="160" cy="392" rx="126" ry="20" fill="url(#vsl-shade)"/>' +
+                    '<ellipse cx="160" cy="378" rx="114" ry="20" fill="#dde5f0"/>' +
+                    '<ellipse cx="160" cy="371" rx="114" ry="20" fill="#fafcff"/>' +
+                    '<ellipse cx="160" cy="369" rx="68" ry="11" fill="#d3dce8"/>' +
+                    '<path d="M240 190 C296 190 296 274 240 274" fill="none" stroke="#dcecf8" stroke-opacity="0.38" stroke-width="26" stroke-linecap="round"/>' +
+                    '<path d="M240 190 C296 190 296 274 240 274" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="3" stroke-linecap="round"/>' +
+                    '<path d="M84 140 L96 334 Q98 362 134 362 L186 362 Q222 362 224 334 L236 140 Z" fill="#0d1726" fill-opacity="0.3"/>',
+                front: '<path d="M84 140 L96 334 Q98 362 134 362 L186 362 Q222 362 224 334 L236 140 Z" fill="url(#vsl-glass)" stroke="#ffffff" stroke-opacity="0.36" stroke-width="2.5" class="vessel-rim"/>' +
+                    '<path d="M106 160 Q106 262 118 338" stroke="#ffffff" stroke-opacity="0.3" stroke-width="9" stroke-linecap="round" fill="none"/>' +
+                    '<ellipse cx="160" cy="140" rx="76" ry="14" fill="#ffffff" fill-opacity="0.06"/>' +
+                    '<ellipse cx="160" cy="140" rx="76" ry="14" fill="none" stroke="#ffffff" stroke-opacity="0.45" stroke-width="3"/>' +
+                    '<g class="vessel-steam"><path d="M132 118 q-14 -22 2 -40 q16 -18 2 -38" stroke="#ffffff" stroke-opacity="0.45" stroke-width="7" fill="none" stroke-linecap="round"/></g>' +
+                    '<g class="vessel-steam" style="animation-delay:-1.4s"><path d="M162 112 q-14 -22 2 -40 q16 -18 2 -38" stroke="#ffffff" stroke-opacity="0.45" stroke-width="8" fill="none" stroke-linecap="round"/></g>' +
+                    '<g class="vessel-steam" style="animation-delay:-2.8s"><path d="M192 118 q-14 -22 2 -40 q16 -18 2 -38" stroke="#ffffff" stroke-opacity="0.45" stroke-width="7" fill="none" stroke-linecap="round"/></g>'
+            },
+            potion: {
+                w: 300, h: 440, view: '28 -38 244 460', cx: 150, top: 192, bottom: 390, rx: 86, ry: 10, mouth: 54,
+                bubbles: 18, wave: 7, drop: 'gem',
+                liquid: ['#bd78ff', '#391b8e'],
+                interior: '<circle cx="150" cy="286" r="94"/><rect x="134" y="88" width="32" height="200"/>',
+                back: '<ellipse cx="150" cy="400" rx="96" ry="18" fill="url(#vsl-shade)"/>' +
+                    '<ellipse id="vessel-glow" cx="150" cy="286" rx="120" ry="120" fill="url(#vsl-glow)" fill-opacity="0.25"/>' +
+                    '<rect x="126" y="80" width="48" height="120" fill="#0d1726" fill-opacity="0.3"/>' +
+                    '<circle cx="150" cy="286" r="104" fill="#0d1726" fill-opacity="0.3"/>',
+                front: '<circle cx="150" cy="286" r="104" fill="url(#vsl-glass)" stroke="#ffffff" stroke-opacity="0.35" stroke-width="2.5" class="vessel-rim"/>' +
+                    '<rect x="126" y="80" width="48" height="118" fill="url(#vsl-glass)"/>' +
+                    '<path d="M126 198 L126 82 M174 198 L174 82" stroke="#ffffff" stroke-opacity="0.3" stroke-width="2.5"/>' +
+                    '<rect x="116" y="68" width="68" height="16" rx="8" fill="#cfe6f5" fill-opacity="0.3" stroke="#ffffff" stroke-opacity="0.35" stroke-width="2"/>' +
+                    '<rect x="124" y="34" width="52" height="38" rx="9" fill="#b17a46"/>' +
+                    '<rect x="124" y="34" width="52" height="38" rx="9" fill="none" stroke="#6f4522" stroke-opacity="0.5" stroke-width="2"/>' +
+                    '<ellipse cx="150" cy="37" rx="26" ry="8" fill="#cb8e57"/>' +
+                    '<ellipse cx="112" cy="238" rx="20" ry="34" fill="#ffffff" fill-opacity="0.22" transform="rotate(-18 112 238)"/>' +
+                    '<path d="M92 324 Q74 272 92 224" stroke="#ffffff" stroke-opacity="0.22" stroke-width="7" fill="none" stroke-linecap="round"/>' +
+                    vesselSparkleMarkup([[54, 212, 7], [248, 244, 6], [78, 150, 5], [226, 158, 8], [148, 44, 6]])
+            },
+            piggybank: {
+                w: 360, h: 320, view: '42 10 328 314', cx: 180, top: 100, bottom: 278, rx: 96, ry: 13, mouth: 78,
+                bubbles: 7, wave: 5, floats: 4, shake: true, drop: 'coin',
+                liquid: ['#ffdf7a', '#c68a10'],
+                interior: '<ellipse cx="180" cy="180" rx="110" ry="85"/>',
+                back: '<ellipse cx="190" cy="296" rx="140" ry="20" fill="url(#vsl-shade)"/>' +
+                    '<rect x="100" y="218" width="38" height="66" rx="17" fill="#d97695"/>' +
+                    '<rect x="154" y="224" width="38" height="60" rx="17" fill="#cf6b8c"/>' +
+                    '<rect x="212" y="224" width="38" height="60" rx="17" fill="#e07f9d"/>' +
+                    '<rect x="256" y="218" width="38" height="66" rx="17" fill="#eb8dab"/>' +
+                    '<path d="M62 168 c-22 -6 -26 -26 -8 -32 c16 -5 20 12 8 18 c-10 5 -18 -2 -14 -10" fill="none" stroke="#f09cb8" stroke-width="8" stroke-linecap="round"/>' +
+                    '<ellipse cx="180" cy="180" rx="118" ry="92" fill="url(#vsl-pig)" fill-opacity="0.62"/>' +
+                    '<ellipse cx="180" cy="180" rx="118" ry="92" fill="#1a0f14" fill-opacity="0.1"/>',
+                front: '<ellipse cx="180" cy="180" rx="118" ry="92" fill="url(#vsl-pig)" fill-opacity="0.2"/>' +
+                    '<ellipse cx="180" cy="180" rx="118" ry="92" fill="none" stroke="#ffd7e3" stroke-opacity="0.6" stroke-width="3" class="vessel-rim"/>' +
+                    '<ellipse cx="132" cy="138" rx="34" ry="20" fill="#ffffff" fill-opacity="0.26" transform="rotate(-20 132 138)"/>' +
+                    '<rect x="150" y="86" width="62" height="14" rx="7" fill="#d4738d"/>' +
+                    '<rect x="154" y="89" width="54" height="7" rx="3" fill="#2a1420" fill-opacity="0.8"/>' +
+                    '<path d="M268 118 L306 98 L300 142 Z" fill="#f08aa8"/>' +
+                    '<ellipse cx="292" cy="172" rx="56" ry="50" fill="url(#vsl-pig)"/>' +
+                    '<ellipse cx="334" cy="184" rx="22" ry="17" fill="#ff9fb8"/>' +
+                    '<ellipse cx="328" cy="184" rx="3.4" ry="5" fill="#b85f78"/>' +
+                    '<ellipse cx="340" cy="184" rx="3.4" ry="5" fill="#b85f78"/>' +
+                    '<circle cx="300" cy="154" r="6" fill="#4a2432"/>' +
+                    '<circle cx="302" cy="152" r="2" fill="#ffffff"/>' +
+                    '<path class="vessel-glint" d="M90 150 Q180 118 270 150" stroke="#ffffff" stroke-opacity="0.45" stroke-width="4" fill="none"/>'
+            },
+            chest: {
+                w: 380, h: 320, view: '44 -24 296 346', cx: 190, top: 150, bottom: 278, rx: 102, ry: 11, mouth: 126,
+                bubbles: 0, wave: 3, floats: 5, lid: true, drop: 'coin',
+                liquid: ['#ffe684', '#bf7c06'],
+                interior: '<rect x="82" y="148" width="216" height="118"/>',
+                back: '<ellipse cx="190" cy="296" rx="156" ry="20" fill="url(#vsl-shade)"/>' +
+                    '<g class="vessel-lid" id="vessel-lid" style="transform-origin:62px 148px">' +
+                        '<path d="M62 148 Q62 70 190 70 Q318 70 318 148 Z" fill="url(#vsl-wood)" stroke="#3f2409" stroke-width="3"/>' +
+                        '<path d="M64 124 Q190 96 316 124" fill="none" stroke="#3f2409" stroke-opacity="0.4" stroke-width="3"/>' +
+                        '<path d="M176 74 Q176 71 190 71 Q204 71 204 74 L204 148 L176 148 Z" fill="url(#vsl-iron)"/>' +
+                        '<path d="M66 142 Q66 76 190 76" fill="none" stroke="#ffffff" stroke-opacity="0.14" stroke-width="6"/>' +
+                    '</g>' +
+                    '<rect x="82" y="146" width="216" height="122" fill="#241506"/>' +
+                    '<rect x="82" y="146" width="216" height="10" fill="#000000" fill-opacity="0.4"/>',
+                front: '<rect x="62" y="140" width="24" height="146" rx="5" fill="url(#vsl-wood)" stroke="#3f2409" stroke-width="2.5"/>' +
+                    '<rect x="294" y="140" width="24" height="146" rx="5" fill="url(#vsl-wood)" stroke="#3f2409" stroke-width="2.5"/>' +
+                    '<rect x="62" y="258" width="256" height="30" rx="6" fill="url(#vsl-wood)" stroke="#3f2409" stroke-width="2.5"/>' +
+                    '<rect x="56" y="156" width="36" height="16" rx="3" fill="url(#vsl-iron)"/>' +
+                    '<rect x="288" y="156" width="36" height="16" rx="3" fill="url(#vsl-iron)"/>' +
+                    '<rect x="56" y="246" width="36" height="16" rx="3" fill="url(#vsl-iron)"/>' +
+                    '<rect x="288" y="246" width="36" height="16" rx="3" fill="url(#vsl-iron)"/>' +
+                    '<rect x="172" y="250" width="36" height="34" rx="5" fill="url(#vsl-iron)"/>' +
+                    '<circle cx="190" cy="268" r="5" fill="#242933"/>' +
+                    vesselSparkleMarkup([[110, 112, 7], [268, 104, 6], [190, 56, 8], [60, 128, 5], [320, 130, 6]])
+            },
+            thermometer: {
+                w: 220, h: 440, view: '26 20 168 410', cx: 110, top: 76, bottom: 352, rx: 12, ry: 4, mouth: 36,
+                bubbles: 0, wave: 0, drop: 'coin',
+                liquid: ['#ff7a68', '#c0241c'],
+                interior: '<path d="M98 70h24v286H98z"/><circle cx="110" cy="356" r="34"/>',
+                back: '<ellipse cx="110" cy="402" rx="60" ry="12" fill="url(#vsl-shade)"/>' +
+                    '<path d="M92 78a18 18 0 0 1 36 0L128 318.1A42 42 0 1 1 92 318.1Z" fill="#0d1726" fill-opacity="0.34"/>',
+                front: '<path d="M92 78a18 18 0 0 1 36 0L128 318.1A42 42 0 1 1 92 318.1Z" fill="url(#vsl-glass)" stroke="#ffffff" stroke-opacity="0.35" stroke-width="2.5" class="vessel-rim"/>' +
+                    '<path d="M100 92v228" stroke="#ffffff" stroke-opacity="0.26" stroke-width="5" stroke-linecap="round"/>' +
+                    '<circle cx="96" cy="342" r="11" fill="#ffffff" fill-opacity="0.2"/>' +
+                    thermometerTicks()
+            },
+            jar3d: {
+                w: 300, h: 420, cx: 150, top: 100, bottom: 360, rx: 90, ry: 14, mouth: 100,
+                bubbles: 0, wave: 0, shake: true, drop: 'coin',
+                liquid: ['#6fe0ff', '#1452a8'],
+                interior: '<rect x="0" y="0" width="300" height="420"/>',
+                back: '', front: ''
+            }
+        };
+
+        let activeVessel = null;
+        let vesselStageEl = null;
+        let vesselLiquidEl = null;
+        let vesselLidEl = null;
+        let vesselDropsEl = null;
+        let vesselGlowEl = null;
+        let vesselDropTemplate = null;
+        let jar3dLiquidEl = null;
+        let vesselColors = null;
+        let vesselColorRgb = null;
+
+        function buildVessel() {
+            activeVessel = VESSEL_PRESETS[style];
+            if (!activeVessel) return;
+            vesselStageEl = document.getElementById('vessel-stage');
+            const art = document.getElementById('vessel-art');
+            const colors = vesselLiquidColors(activeVessel);
+            vesselColors = colors;
+            vesselColorRgb = colors.map(function(color) { return parseColorToRgb(color, [33, 150, 243]); });
+            if (hidePercent) activeStyle.classList.add('hide-percentage');
+            if (hideTitle) activeStyle.classList.add('hide-title');
+            if (style === 'jar3d') {
+                if (urlParams.has('nospin')) document.body.classList.add('jar3d-static');
+                art.innerHTML = buildJar3dMarkup();
+                jar3dLiquidEl = document.getElementById('jar3d-liquid');
+                return;
+            }
+            art.innerHTML = buildVesselSvg(activeVessel, colors);
+            vesselLiquidEl = document.getElementById('vessel-liquid');
+            vesselLidEl = document.getElementById('vessel-lid');
+            vesselDropsEl = document.getElementById('vessel-drops');
+            vesselDropTemplate = document.getElementById('vessel-drop-template');
+            vesselGlowEl = document.getElementById('vessel-glow');
+        }
+
+        function renderVessel(state) {
+            const def = activeVessel;
+            if (!def) return;
+            const percentage = Math.max(0, Math.min(100, state.percentage));
+            const surfaceColor = fillMode === 'solid' ? vesselColors[0] : lerpColor(vesselColorRgb[0], vesselColorRgb[1], percentage / 100);
+            const lowColor = fillMode === 'gradient' ? vesselColors[0] : surfaceColor;
+            const highColor = fillMode === 'gradient' ? vesselColors[1] : surfaceColor;
+            vesselStageEl.style.setProperty('--vessel-fill-start', lowColor);
+            vesselStageEl.style.setProperty('--vessel-fill-end', highColor);
+            vesselStageEl.style.setProperty('--vessel-surface', surfaceColor);
+            vesselStageEl.style.setProperty('--vessel-surface-light', shadeColor(surfaceColor, 0.45));
+            setElText('vessel-title', state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle);
+            setElText('vessel-amount', formatProgressPair(state));
+            setElText('vessel-percent', `${Math.round(percentage)}%`);
+            if (vesselLiquidEl) {
+                const unfilled = (1 - percentage / 100) * (def.bottom - def.top);
+                vesselLiquidEl.style.transform = `translateY(${unfilled.toFixed(2)}px)`;
+                // Anchor the gradient to the vessel, not the moving liquid group.
+                const gradient = document.getElementById('vsl-liquid');
+                gradient.setAttribute('gradientUnits', 'userSpaceOnUse');
+                gradient.setAttribute('y1', String(def.bottom - unfilled));
+                gradient.setAttribute('y2', String(def.top - unfilled));
+                gradient.children[0].setAttribute('stop-color', lowColor);
+                gradient.children[1].setAttribute('stop-color', highColor);
+            }
+            // The chest lid swings further open as the goal fills.
+            if (vesselLidEl) {
+                const lidAngle = -(4 + percentage * 0.36);
+                vesselLidEl.style.transform = `rotate(${lidAngle.toFixed(2)}deg)`;
+            }
+            if (jar3dLiquidEl) jar3dLiquidEl.style.height = percentage + '%';
+            if (vesselGlowEl) vesselGlowEl.setAttribute('fill-opacity', (0.2 + 0.8 * (percentage / 100)).toFixed(2));
+            if (vesselStageEl) {
+                vesselStageEl.classList.toggle('is-full', percentage >= 100);
+                vesselStageEl.classList.toggle('is-empty', percentage < 1.5);
+                vesselStageEl.setAttribute('aria-label', state.isLevel ? `${customTitle} level ${state.level}` : customTitle);
+                vesselStageEl.setAttribute('aria-valuenow', String(Math.round(percentage)));
+                vesselStageEl.setAttribute('aria-valuetext', formatProgressPair(state));
+            }
+        }
+
+        // Donation feedback: a coin drops in, the surface ripples, and the
+        // piggy bank or 3D jar takes a knock.
+        function splashVessel() {
+            if (!vesselStageEl) return;
+            vesselStageEl.classList.remove('is-splash');
+            vesselStageEl.classList.remove('is-shake');
+            void vesselStageEl.offsetWidth; // restart the animations
+            vesselStageEl.classList.add('is-splash');
+            if (activeVessel && activeVessel.shake) vesselStageEl.classList.add('is-shake');
+            if (!vesselDropsEl || !vesselDropTemplate) return;
+            const drop = vesselDropTemplate.cloneNode(true);
+            drop.removeAttribute('id');
+            drop.removeAttribute('display');
+            drop.setAttribute('class', 'vessel-drop');
+            vesselDropsEl.appendChild(drop);
+            setTimeout(function() {
+                if (drop.parentNode) drop.parentNode.removeChild(drop);
+            }, 1000);
+        }
+
+        if (isVesselStyle) buildVessel();
+
+        // ===============================================================
+        // Goal bar kit: battery, XP bar, health bar, pixel bar, neon
+        // tube, terminal readout, milestone track and dial. One stage
+        // renders them all: a preset supplies markup plus whichever of
+        // the shared parts (#kit-fill, #kit-ghost, #kit-inline) it uses,
+        // and an optional update for anything else that moves.
+        // ===============================================================
+        function kitBarString(percentage, cells) {
+            const filled = Math.max(0, Math.min(cells, Math.round((percentage / 100) * cells)));
+            return new Array(filled + 1).join('█') + new Array(cells - filled + 1).join('░');
+        }
+
+        const METER_PRESETS = {
+            battery: {
+                liquid: ['#ff5f52', '#53d86a'], mid: '#ffc24a',
+                inline: 'percent',
+                build: function() {
+                    return '<div class="kit-battery">' +
+                        '<div class="kit-battery-body"><div class="kit-battery-inner">' +
+                            '<div class="kit-fill" id="kit-fill"></div>' +
+                            '<div class="kit-battery-cells"></div>' +
+                        '</div>' +
+                        '<svg class="kit-bolt" width="26" height="34" viewBox="0 0 26 34" aria-hidden="true">' +
+                            '<path d="M15 1L3 19h7l-2 14 15-20h-8z" fill="#fff6c8" stroke="rgba(0,0,0,0.45)" stroke-width="1.5"/>' +
+                        '</svg>' +
+                        '<div class="kit-inline" id="kit-inline"></div></div>' +
+                        '<div class="kit-battery-cap"></div>' +
+                    '</div>';
+                }
+            },
+            xpbar: {
+                liquid: ['#6ad2ff', '#b388ff'],
+                inline: 'percent',
+                build: function() {
+                    return '<div class="kit-xp">' +
+                        '<div class="kit-chip" id="kit-chip">LVL 1</div>' +
+                        '<div class="kit-xp-track">' +
+                            '<div class="kit-stripes"></div>' +
+                            '<div class="kit-fill" id="kit-fill"></div>' +
+                            '<div class="kit-inline" id="kit-inline"></div>' +
+                        '</div>' +
+                    '</div>';
+                },
+                update: function(percentage, state) {
+                    setElText('kit-chip', state.isLevel ? 'LVL ' + state.level : (state.isRolling ? 'x' + (state.completed + 1) : '★'));
+                }
+            },
+            healthbar: {
+                liquid: ['#ff4d4d', '#49e06b'], mid: '#ffc24a',
+                inline: 'percent',
+                build: function() {
+                    return '<div class="kit-health"><div class="kit-health-frame"><div class="kit-health-inner">' +
+                        '<div class="kit-ghost" id="kit-ghost"></div>' +
+                        '<div class="kit-fill" id="kit-fill"></div>' +
+                        '<div class="kit-health-ticks"></div>' +
+                        '<div class="kit-inline" id="kit-inline"></div>' +
+                    '</div></div></div>';
+                }
+            },
+            pixelbar: {
+                liquid: ['#8bf06a', '#f7e04b'],
+                build: function() {
+                    return '<div class="kit-pixel"><div class="kit-pixel-inner">' +
+                        '<div class="kit-pixel-track"></div>' +
+                        '<div class="kit-fill" id="kit-fill"></div>' +
+                    '</div></div>';
+                },
+                update: function(percentage) {
+                    // Whole blocks only, so the bar reads like an 8-bit meter.
+                    if (kitFillEl) kitFillEl.style.width = Math.round(percentage / 5) * 5 + '%';
+                }
+            },
+            neonbar: {
+                liquid: ['#45e7ff', '#ff5fd0'], mid: '#9b6bff',
+                inline: 'percent',
+                build: function() {
+                    return '<div class="kit-neon">' +
+                        '<div class="kit-fill" id="kit-fill"></div>' +
+                        '<div class="kit-neon-core"></div>' +
+                        '<div class="kit-inline" id="kit-inline"></div>' +
+                    '</div>';
+                },
+                update: function(percentage) {
+                    if (kitFillEl) kitFillEl.style.boxShadow = '0 0 ' + Math.round(16 + 26 * (percentage / 100)) + 'px ' + kitFillColor(percentage / 100);
+                }
+            },
+            terminal: {
+                liquid: ['#7cff9b', '#7cff9b'], ownPercent: true,
+                build: function() {
+                    return '<div class="kit-terminal"><span id="kit-bar"></span> <span id="kit-term-pct"></span><span class="kit-caret">▌</span></div>';
+                },
+                update: function(percentage) {
+                    setElText('kit-bar', '[' + kitBarString(percentage, 24) + ']');
+                    setElText('kit-term-pct', Math.round(percentage) + '% ');
+                    const terminal = document.querySelector('.kit-terminal');
+                    if (terminal) terminal.style.color = kitFillColor(percentage / 100);
+                }
+            },
+            milestones: {
+                liquid: ['#66d9b2', '#85baff'],
+                build: function() {
+                    let pins = '';
+                    for (let i = 0; i <= 4; i++) {
+                        pins += '<div class="kit-pin" id="kit-pin-' + i + '" style="left:' + i * 25 + '%">' +
+                            (i === 4 ? '★' : '') + '<span class="kit-pin-label" id="kit-pin-label-' + i + '"></span></div>';
+                    }
+                    return '<div class="kit-miles"><div class="kit-miles-rail"><div class="kit-miles-track"><div class="kit-fill" id="kit-fill"></div></div>' + pins + '</div></div>';
+                },
+                update: function(percentage, state) {
+                    for (let i = 0; i <= 4; i++) {
+                        const pin = document.getElementById('kit-pin-' + i);
+                        if (pin) pin.classList.toggle('on', percentage >= i * 25);
+                        // Count goals repeat the unit in the readout, so the pins stay numeric.
+                        const milestone = (state.goal * i) / 4;
+                        setElText('kit-pin-label-' + i, countMode ? formatNumber(Math.ceil(milestone)) : formatGoalValue(milestone));
+                    }
+                }
+            },
+            gauge: {
+                liquid: ['#53d86a', '#ffb347'],
+                build: function() {
+                    let ticks = '';
+                    for (let i = 0; i <= 10; i++) {
+                        const angle = (-90 + i * 18) * (Math.PI / 180);
+                        const long = i % 5 === 0;
+                        const inner = long ? 56 : 62;
+                        ticks += '<line x1="' + (100 + Math.sin(angle) * inner).toFixed(1) + '" y1="' + (100 - Math.cos(angle) * inner).toFixed(1) +
+                            '" x2="' + (100 + Math.sin(angle) * 68).toFixed(1) + '" y2="' + (100 - Math.cos(angle) * 68).toFixed(1) +
+                            '" stroke="#ffffff" stroke-opacity="' + (long ? '0.55' : '0.28') + '" stroke-width="' + (long ? 4 : 2.5) + '" stroke-linecap="round"/>';
+                    }
+                    return '<div class="kit-gauge"><svg viewBox="0 0 200 148" aria-hidden="true">' +
+                        '<path class="kit-gauge-track" d="M20 100A80 80 0 0 1 180 100"/>' +
+                        '<path class="kit-gauge-fill" id="kit-gauge-fill" d="M20 100A80 80 0 0 1 180 100" pathLength="100"/>' +
+                        ticks +
+                        '<g class="kit-needle" id="kit-needle" style="transform-origin:100px 100px">' +
+                            '<path d="M100 100L100 36" stroke="#ffffff" stroke-width="5" stroke-linecap="round"/>' +
+                            '<circle cx="100" cy="100" r="10" fill="#ffffff"/>' +
+                            '<circle cx="100" cy="100" r="4.5" fill="#1b2434"/>' +
+                        '</g>' +
+                    '</svg><div class="kit-gauge-value" id="kit-gauge-value">0%</div></div>';
+                },
+                update: function(percentage) {
+                    const arc = document.getElementById('kit-gauge-fill');
+                    if (arc) {
+                        arc.style.strokeDashoffset = 100 - percentage;
+                        arc.style.stroke = kitFillColor(percentage / 100);
+                        arc.style.strokeOpacity = percentage < 0.5 ? 0 : 1;
+                    }
+                    const needle = document.getElementById('kit-needle');
+                    if (needle) needle.style.transform = 'rotate(' + (-90 + percentage * 1.8).toFixed(2) + 'deg)';
+                    setElText('kit-gauge-value', Math.round(percentage) + '%');
+                }
+            }
+        };
+
+        let activeMeter = null;
+        let kitStageEl = null;
+        let kitFillEl = null;
+        let kitGhostEl = null;
+        let kitColors = null;
+        let kitColorRgb = null;
+        let kitMidRgb = null;
+
+        function kitFillColor(t) {
+            if (!kitColorRgb) return fillStartColor;
+            if (fillMode === 'solid') return kitColors[0];
+            const level = Math.max(0, Math.min(1, t));
+            if (kitMidRgb) {
+                return level < 0.5
+                    ? lerpColor(kitColorRgb[0], kitMidRgb, level * 2)
+                    : lerpColor(kitMidRgb, kitColorRgb[1], (level - 0.5) * 2);
+            }
+            return lerpColor(kitColorRgb[0], kitColorRgb[1], level);
+        }
+
+        function buildMeterKit() {
+            activeMeter = METER_PRESETS[style];
+            if (!activeMeter) return;
+            kitStageEl = document.getElementById('kit-stage');
+            kitColors = vesselLiquidColors(activeMeter);
+            kitColorRgb = [parseColorToRgb(kitColors[0], [33, 150, 243]), parseColorToRgb(kitColors[1], [244, 67, 54])];
+            // The midpoint only applies to a preset's own palette, not to custom colours.
+            kitMidRgb = activeMeter.mid && kitColors === activeMeter.liquid ? parseColorToRgb(activeMeter.mid, null) : null;
+            if (hidePercent) activeStyle.classList.add('hide-percentage');
+            if (hideTitle) activeStyle.classList.add('hide-title');
+            if (activeMeter.inline || activeMeter.ownPercent) activeStyle.classList.add('has-inline');
+            document.getElementById('kit-art').innerHTML = activeMeter.build();
+            kitFillEl = document.getElementById('kit-fill');
+            kitGhostEl = document.getElementById('kit-ghost');
+        }
+
+        function renderMeterKit(state) {
+            const def = activeMeter;
+            if (!def) return;
+            const percentage = Math.max(0, Math.min(100, state.percentage));
+            setElText('kit-title', state.isLevel ? `${customTitle} (Lvl ${state.level})` : customTitle);
+            setElText('kit-amount', formatProgressPair(state));
+            setElText('kit-percent', `${Math.round(percentage)}%`);
+            if (kitFillEl) {
+                kitFillEl.style.width = percentage + '%';
+                if (fillMode === 'gradient') {
+                    kitFillEl.style.backgroundImage = `linear-gradient(90deg, ${kitColors[0]}, ${kitColors[1]})`;
+                    kitFillEl.style.backgroundSize = (kitFillEl.parentElement ? kitFillEl.parentElement.clientWidth : 0) + 'px 100%';
+                }
+                kitFillEl.style.backgroundColor = kitFillColor(percentage / 100);
+            }
+            if (kitGhostEl) kitGhostEl.style.width = percentage + '%';
+            const percentEl = document.getElementById('kit-percent');
+            if (percentEl) percentEl.style.color = kitFillColor(percentage / 100);
+            if (def.inline) setElText('kit-inline', def.inline === 'percent' ? `${Math.round(percentage)}%` : formatProgressPair(state));
+            if (def.update) def.update(percentage, state);
+            if (kitStageEl) {
+                kitStageEl.classList.toggle('is-full', percentage >= 100);
+                kitStageEl.setAttribute('aria-label', state.isLevel ? `${customTitle} level ${state.level}` : customTitle);
+                kitStageEl.setAttribute('aria-valuenow', String(Math.round(percentage)));
+                kitStageEl.setAttribute('aria-valuetext', formatProgressPair(state));
+            }
+        }
+
+        function pulseMeterKit() {
+            if (!kitStageEl) return;
+            kitStageEl.classList.remove('is-pulse');
+            void kitStageEl.offsetWidth; // restart the animation
+            kitStageEl.classList.add('is-pulse');
+        }
+
+        if (isMeterStyle) buildMeterKit();
+
         // Celebration functions
         function createConfetti() {
             const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
@@ -1194,6 +2697,11 @@
             const heartSize = Math.min(20 + (amount / 10), 50);
             const xPosition = 110 + Math.random() * 180;
             
+            // dropitem swaps the golden heart for a generated coin, gem, star or bill.
+            const useSprite = dropItem && dropItem !== 'heart';
+            const spriteTexture = useSprite ? dropItemTexture(dropItem) : "./media/goldenheart.png";
+            const spriteSize = useSprite ? 64 : 50;
+
             const heart = Matter.Bodies.circle(xPosition, 50, heartSize / 2, {
                 restitution: 0.4,
                 friction: 0.9,
@@ -1202,9 +2710,9 @@
                 torque: (Math.random() - 0.5) * 0.002,
                 render: {
                     sprite: {
-                        texture: "./media/goldenheart.png",
-                        xScale: heartSize / 50,
-                        yScale: heartSize / 50
+                        texture: spriteTexture,
+                        xScale: heartSize / spriteSize,
+                        yScale: heartSize / spriteSize
                     }
                 }
             });
@@ -1373,6 +2881,10 @@
             // Update different styles
             if (isSummaryStyle) {
                 renderSummary(state);
+            } else if (isVesselStyle) {
+                renderVessel(state);
+            } else if (isMeterStyle) {
+                renderMeterKit(state);
             } else if (style === 'jar') {
                 document.getElementById('tip-text').textContent = formatProgressText();
             } else if (style === 'meter') {
@@ -2369,7 +3881,14 @@
             addRecentTip(contribution.donator, contribution.label);
             playDonationSound();
 
-            if (celebration === 'hearts' && style === 'jar') {
+            if (isVesselStyle || isMeterStyle) {
+                if (celebration !== 'none') {
+                    if (isMeterStyle) pulseMeterKit();
+                    else splashVessel();
+                }
+                if (celebration === 'confetti') createConfetti();
+                else if (celebration === 'fireworks') triggerFireworks();
+            } else if (celebration === 'hearts' && style === 'jar') {
                 const heartCount = Math.min(Math.ceil(contribution.points / 2.5), 10);
                 for (let i = 0; i < heartCount; i++) {
                     setTimeout(() => {
@@ -2454,7 +3973,14 @@
             addRecentTip(donator, recentLabel);
             playDonationSound();
 
-            if (celebration === 'hearts' && style === 'jar') {
+            if (isVesselStyle || isMeterStyle) {
+                if (celebration !== 'none') {
+                    if (isMeterStyle) pulseMeterKit();
+                    else splashVessel();
+                }
+                if (celebration === 'confetti') createConfetti();
+                else if (celebration === 'fireworks') triggerFireworks();
+            } else if (celebration === 'hearts' && style === 'jar') {
                 const heartCount = Math.min(Math.ceil(goalValue / (hypeMode ? 2.5 : 5)), 10);
                 for (let i = 0; i < heartCount; i++) {
                     setTimeout(() => {
