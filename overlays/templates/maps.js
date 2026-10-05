@@ -140,11 +140,23 @@
 				if (c.grid) { svg += '<path d="' + path(d3.geoGraticule10()) + '" fill="none" stroke="' + theme.grid + '" stroke-width="1"/>'; }
 				if (c.look === "dots") {
 					if (!dotCache) {
+						// Rasterise land once to a 720x360 lat/lon canvas; geoContains per dot is far too slow.
 						dotCache = [];
+						var mask = document.createElement("canvas");
+						mask.width = 720;
+						mask.height = 360;
+						var mctx = mask.getContext("2d");
+						var flat = d3.geoEquirectangular().scale(720 / (2 * Math.PI)).translate([360, 180]);
+						mctx.fillStyle = "#000";
+						mctx.beginPath();
+						d3.geoPath(flat, mctx)(land);
+						mctx.fill();
+						var px = mctx.getImageData(0, 0, 720, 360).data;
 						for (var lat = -84; lat <= 84; lat += 2.4) {
 							var step = 2.4 / Math.max(0.25, Math.cos(lat * Math.PI / 180));
 							for (var lon = -180; lon < 180; lon += step) {
-								if (d3.geoContains(land, [lon, lat])) { dotCache.push([lon, lat]); }
+								var mx = Math.min(719, Math.floor((lon + 180) * 2)), my = Math.min(359, Math.floor((90 - lat) * 2));
+								if (px[(my * 720 + mx) * 4 + 3] > 127) { dotCache.push([lon, lat]); }
 							}
 						}
 					}

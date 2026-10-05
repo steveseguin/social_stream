@@ -190,7 +190,7 @@
 			var dir = c.dir === "down" ? 1 : -1;
 			SSO.addStyle("@keyframes " + name + "{0%{transform:translate(0,0) rotate(0);opacity:0}10%{opacity:1}25%{transform:translate(var(--sw),calc(" + (dir * 0.25) + " * var(--h))) rotate(8deg)}50%{transform:translate(calc(var(--sw) * -1),calc(" + (dir * 0.5) + " * var(--h))) rotate(-8deg)}75%{transform:translate(var(--sw),calc(" + (dir * 0.75) + " * var(--h))) rotate(6deg)}90%{opacity:1}100%{transform:translate(0,calc(" + dir + " * var(--h))) rotate(0);opacity:0}}");
 			setInterval(function () {
-				if (document.hidden) { return; }
+				if (root.childElementCount > 200) { return; }
 				var el = document.createElement("div");
 				el.className = "fz" + (c.dir === "down" ? " down" : "");
 				el.textContent = list[Math.floor(Math.random() * list.length)];

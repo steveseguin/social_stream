@@ -147,6 +147,7 @@
 		category: "time",
 		description: "Several time zones side by side, with a sun or moon for day and night.",
 		size: [900, 140],
+		sizeFor: function (c) { var n = Math.max(1, SSO.lines(c.zones).length); return c.layout === "column" ? [460, Math.round(60 + n * c.fontsize * 1.9)] : [Math.max(500, Math.round(n * c.fontsize * 6.2)), Math.round(c.fontsize * 3.6)]; },
 		fields: [
 			{ key: "zones", label: "Zones (Label|Time/Zone, one per line)", type: "textarea", group: "Content", default: "Vancouver|America/Vancouver\nToronto|America/Toronto\nLondon|Europe/London\nTokyo|Asia/Tokyo", help: "Zone names like America/Chicago, Europe/Berlin, Australia/Sydney." },
 			{ key: "h12", label: "12-hour clock", type: "bool", group: "Content", default: true },

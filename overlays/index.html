@@ -98,7 +98,7 @@
 			var frame = item.el.querySelector("iframe");
 			if (!frame) { return; }
 			var box = item.el.querySelector(".thumb");
-			var dims = item.def.thumb || item.def.size;
+			var dims = item.def.sizeFor ? item.def.sizeFor(SSO.readConfig(item.def, item.query), true) : (item.def.thumb || item.def.size);
 			var s = Math.min(box.clientWidth / dims[0], box.clientHeight / dims[1], 1) * 0.94;
 			frame.style.width = dims[0] + "px";
 			frame.style.height = dims[1] + "px";

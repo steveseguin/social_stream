@@ -66,10 +66,9 @@
 		category: "socials",
 		description: "A bar of rotating or scrolling messages with your socials. Great under a webcam.",
 		size: [640, 60],
-		thumb: [480, 110],
-		sizeFor: function (c) { return [640, c.height + (c.mascot ? 48 : 8)]; },
+		sizeFor: function (c, thumb) { var h = c.height + (c.mascot ? 48 : 0); return thumb ? [480, Math.max(110, h)] : [640, h]; },
 		fields: [
-			{ key: "messages", label: "Messages (one per line)", type: "textarea", group: "Content", default: "Thanks for hanging out! Drop a follow if you're enjoying the stream\nHit like and say hi in chat 👋" , help: "Put {youtube}, {twitch}, {discord}… in a message to show that icon." },
+			{ key: "messages", label: "Messages (one per line)", type: "textarea", group: "Content", default: "Thanks for hanging out! Drop a follow 💜\nLike the stream and say hi in chat 👋", help: "Put {youtube}, {twitch}, {discord}… in a message to show that icon." },
 			SSO.f.socials(),
 			{ key: "socialsin", label: "Show socials", type: "select", group: "Socials", default: "rotate", options: [["rotate", "Mixed in with the messages"], ["end", "Pinned on the right"], ["off", "Don't show"]] },
 			SSO.f.iconStyle("brand"),
@@ -171,9 +170,26 @@
 				marquee(view, track, msgs.join(sep) + sep, c.speed, "bn");
 			} else if (c.mode === "static") {
 				view.innerHTML = '<div class="bn-static">' + msgs.join(sep) + "</div>";
+				fitText(view.querySelectorAll(".bn-static"));
 			} else {
 				view.innerHTML = '<div class="bn-rot">' + msgs.join("") + "</div>";
+				fitText(view.querySelectorAll(".bn-item"));
 				rotate(view.firstChild, c.hold);
+			}
+
+			// Long lines shrink (down to 55%) instead of being cut off.
+			function fitText(nodes) {
+				function fit() {
+					for (var i = 0; i < nodes.length; i++) {
+						var n = nodes[i];
+						n.style.fontSize = "";
+						var room = n.clientWidth, need = n.scrollWidth;
+						if (need > room && room > 0) { n.style.fontSize = Math.max(0.55, room / need * 0.98) + "em"; }
+					}
+				}
+				fit();
+				SSO.fontsReady(fit);
+				onResize(fit);
 			}
 		}
 	});
@@ -185,7 +201,7 @@
 		category: "socials",
 		description: "A thin line with your handles placed along it. Subtle and clean along an edge of the screen.",
 		size: [1280, 110],
-		thumb: [1000, 150],
+		sizeFor: function (c, thumb) { return c.orient === "v" ? [380, 520] : thumb ? [1000, 150] : [1280, 110]; },
 		fields: [
 			SSO.f.socials("twitch:yourname,youtube:@yourname,instagram:@yourname,x:@yourname,discord:discord.gg/yourname"),
 			SSO.f.iconStyle("mono"),
@@ -326,6 +342,7 @@
 		category: "socials",
 		description: "A tidy card listing where to find you, with an optional QR code.",
 		size: [420, 420],
+		sizeFor: function (c) { return c.layout === "row" ? [960, 110] : c.layout === "grid" || c.qr ? [720, 420] : [420, 420]; },
 		libs: ["thirdparty/qrcode.min.js"],
 		fields: [
 			{ key: "title", label: "Title", type: "text", group: "Content", default: "Find me online" },
@@ -366,6 +383,7 @@
 			".sc-list{display:flex;flex-direction:column;}",
 			".sc.grid .sc-list{flex-direction:row;flex-wrap:wrap;margin:0 -.25em;}",
 			".sc.grid .sc-row{width:calc(50% - .5em);margin:.25em;}",
+			".sc.grid .sc-main{width:23em;}",
 			".sc.row .sc-list{flex-direction:row;} .sc.row .sc-row{margin:0 .3em;} .sc.row .sc-title{margin:0 .7em 0 .2em;white-space:nowrap;}",
 			".sc.row{flex-direction:row;padding:.5em .7em;} .sc.row .sc-main{display:flex;align-items:center;}",
 			".sc-row{display:flex;align-items:center;padding:.45em .7em;border-radius:.6em;margin:.22em 0;box-sizing:border-box;white-space:nowrap;}",
@@ -531,8 +549,10 @@
 			"@keyframes cta-ring{0%,100%{transform:rotate(0)}20%{transform:rotate(18deg)}40%{transform:rotate(-16deg)}60%{transform:rotate(10deg)}80%{transform:rotate(-6deg)}}",
 			".cta-cursor{position:absolute;width:1.4em;height:1.4em;left:0;top:100%;transition:left .55s ease-in-out,top .55s ease-in-out;filter:drop-shadow(0 2px 3px rgba(0,0,0,.6));pointer-events:none;}"
 		].join("\n"),
-		render: function (root, c) {
+		render: function (root, c, ctx) {
 			SSO.loadFont(c.font);
+			// Gallery/editor previews replay quickly so the animation is visible.
+			var every = ctx && ctx.preview && c.every > 0 ? Math.min(c.every, 12) : c.every;
 			var kinds = String(c.buttons).split(",");
 			var wrap = document.createElement("div");
 			wrap.className = "cta-wrap";
@@ -580,7 +600,7 @@
 					})(btns[i]);
 					t += 1100;
 				}
-				if (c.every > 0) {
+				if (every > 0) {
 					at(t + 3500, function () {
 						box.className = "cta";
 						if (cursor) { cursor.style.top = "130%"; }
@@ -589,7 +609,7 @@
 			}
 			reset();
 			setTimeout(play, 400);
-			if (c.every > 0) { setInterval(play, Math.max(c.every * 1000, 10000)); }
+			if (every > 0) { setInterval(play, Math.max(every * 1000, 10000)); }
 		}
 	});
 })();

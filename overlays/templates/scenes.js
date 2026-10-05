@@ -8,7 +8,7 @@
 
 	function backdrop(root, kind, c1, c2, c3) {
 		var bg = document.createElement("div");
-		bg.className = "scn-bg scn-" + kind;
+		bg.className = "scn-bg scn-k-" + kind;
 		var a = SSO.color(c1), b = SSO.color(c2), d = SSO.color(c3);
 		if (kind === "solid") {
 			bg.style.background = a;
@@ -109,15 +109,15 @@
 			".scn{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;}",
 			".scn-bg{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;}",
 			".scn-bg canvas{width:100%;height:100%;display:block;}",
-			".scn-aurora i{position:absolute;width:80%;height:80%;opacity:.55;filter:blur(40px);animation:scn-float 22s ease-in-out infinite alternate;}",
-			".scn-aurora i:nth-child(1){left:-10%;top:-20%;} .scn-aurora i:nth-child(2){right:-15%;bottom:-25%;animation-duration:28s;} .scn-aurora i:nth-child(3){left:30%;top:40%;width:50%;height:50%;animation-duration:34s;opacity:.35;}",
+			".scn-k-aurora i{position:absolute;width:80%;height:80%;opacity:.55;filter:blur(40px);animation:scn-float 22s ease-in-out infinite alternate;}",
+			".scn-k-aurora i:nth-child(1){left:-10%;top:-20%;} .scn-k-aurora i:nth-child(2){right:-15%;bottom:-25%;animation-duration:28s;} .scn-k-aurora i:nth-child(3){left:30%;top:40%;width:50%;height:50%;animation-duration:34s;opacity:.35;}",
 			"@keyframes scn-float{from{transform:translate(0,0) scale(1)}to{transform:translate(8%,6%) scale(1.15)}}",
-			".scn-waves svg{position:absolute;left:0;width:200%;height:28%;animation:scn-wave linear infinite;}",
+			".scn-k-waves svg{position:absolute;left:0;width:200%;height:28%;animation:scn-wave linear infinite;}",
 			"@keyframes scn-wave{from{transform:translateX(0)}to{transform:translateX(-50%)}}",
 			".scn-sun{position:absolute;left:50%;top:18%;width:34vmin;height:34vmin;margin-left:-17vmin;border-radius:50%;-webkit-mask:repeating-linear-gradient(180deg,#000 0 10px,transparent 10px 14px);mask:repeating-linear-gradient(180deg,#000 0 10px,transparent 10px 14px);}",
 			".scn-grid{position:absolute;left:-50%;right:-50%;top:58%;bottom:-40%;background-size:80px 80px;transform:perspective(300px) rotateX(60deg);transform-origin:50% 0;animation:scn-grid 1.6s linear infinite;opacity:.8;}",
 			"@keyframes scn-grid{from{background-position:0 0}to{background-position:0 80px}}",
-			".scn-bokeh i{position:absolute;border-radius:50%;opacity:.18;filter:blur(6px);animation:scn-bob ease-in-out infinite alternate;}",
+			".scn-k-bokeh i{position:absolute;border-radius:50%;opacity:.18;filter:blur(6px);animation:scn-bob ease-in-out infinite alternate;}",
 			"@keyframes scn-bob{from{transform:translate(0,0)}to{transform:translate(40px,-60px)}}",
 			".scn-body{position:absolute;top:0;bottom:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4vh 5vw;box-sizing:border-box;}",
 			".scn.cam-left .scn-body{left:46%;} .scn.cam-right .scn-body{right:46%;}",
@@ -293,7 +293,7 @@
 			{ name: "Neon", values: { style: "neon", color: "22d3ee", width: 4, tag: "@yourname", tagbg: "22d3ee", tagfg: "001018", font: "Orbitron", fontsize: 16 } },
 			{ name: "Gradient", values: { style: "gradient", color: "f472b6", color2: "8b5cf6", width: 8, radius: 22 } },
 			{ name: "Corner brackets", values: { style: "corners", color: "facc15", width: 6, radius: 0, tag: "LIVE", tagpos: "top-left", tagbg: "ef4444", tagfg: "ffffff", font: "Oswald" } },
-			{ name: "Photo print + cat", values: { style: "polaroid", radius: 4, tag: "you, live", tagbg: "ffffff", tagfg: "333333", font: "Caveat", fontsize: 30, cat: "orange", inset: 40 } }
+			{ name: "Photo print + cat", values: { style: "polaroid", radius: 4, tag: "you, live", tagbg: "ffffff", tagfg: "333333", font: "Caveat", fontsize: 30, cat: "orange", inset: 56 } }
 		],
 		css: [
 			".fr{position:absolute;box-sizing:border-box;}",
@@ -339,6 +339,8 @@
 				tag.textContent = c.tag;
 				tag.style.background = SSO.color(c.tagbg);
 				tag.style.color = SSO.color(c.tagfg);
+				tag.style.fontFamily = SSO.fontStack(c.font);
+				tag.style.fontSize = c.fontsize + "px";
 				var p = c.tagpos.split("-");
 				var off = c.inset + "px";
 				if (c.style === "polaroid" && p[0] === "bottom") {
@@ -354,7 +356,7 @@
 				var cat = document.createElement("div");
 				cat.className = "fr-cat";
 				cat.innerHTML = SSO.catSVG("peek", c.cat);
-				cat.style.top = "calc(" + c.inset + "px - 52px)";
+				cat.style.top = Math.max(0, c.inset - 50) + "px";
 				cat.style.bottom = "auto";
 				root.appendChild(cat);
 			}

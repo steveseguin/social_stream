@@ -90,7 +90,13 @@
 			b.className = "chip";
 			b.textContent = p.name;
 			b.addEventListener("click", function () {
+				// Presets restyle; the viewer's own text, messages and socials carry over.
+				var keep = {};
+				def.fields.forEach(function (f) {
+					if ((f.type === "text" || f.type === "textarea" || f.type === "socials") && !(f.key in p.values)) { keep[f.key] = cfg[f.key]; }
+				});
 				cfg = SSO.readConfig(def, "");
+				Object.keys(keep).forEach(function (k) { cfg[k] = keep[k]; });
 				Object.keys(p.values).forEach(function (k) { cfg[k] = p.values[k]; });
 				buildForm();
 				if (!sizeTouched) { size = [0, 0]; }
