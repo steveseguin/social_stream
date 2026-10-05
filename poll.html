@@ -19,11 +19,15 @@
         body {
             margin: 0;
             padding: 0;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
-            align-items: center;
             background-color: transparent;
+        }
+
+        /* Auto margins centre the poll but let a tall poll start at the top instead of clipping both ends */
+        body > .poll-container {
+            margin: auto;
         }
 
         .poll-container {
@@ -355,6 +359,11 @@
             color: #f0f;
         }
 
+        /* The winning option of a closed poll gets a trophy */
+        .poll-option.poll-winner .option-text::before {
+            content: '\1F3C6\00A0';
+        }
+
         /* Leading option text stays readable once its bar fills the row */
         .poll-option.option-high {
             color: #fff;
@@ -470,8 +479,8 @@
         }
 
         /* Compact bar: question and options in one row, sized to sit under a webcam */
-        body.poll-bar-layout {
-            align-items: flex-end;
+        body.poll-bar-layout > .poll-container {
+            margin: auto 0 0;
         }
 
         .poll-container.style-bar {
@@ -481,6 +490,7 @@
             display: flex;
             align-items: center;
             flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 8px 14px;
             padding: 8px 14px;
             border-radius: 6px;
@@ -494,13 +504,20 @@
             font-weight: 700;
             text-align: left;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 32%;
+            flex-shrink: 0;
         }
 
+        /* One row: options shrink and truncate rather than wrapping out of a short under-cam source */
         .style-bar #poll-options {
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             gap: 6px;
             flex: 1;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .style-bar .poll-option {
@@ -510,7 +527,10 @@
             font-size: 15px;
             font-weight: 600;
             background-color: rgba(255, 255, 255, 0.1);
-            flex: 0 1 auto;
+            flex: 1 1 0;
+            max-width: max-content;
+            min-width: 0;
+            white-space: nowrap;
         }
 
         .style-bar .option-number {
@@ -520,6 +540,20 @@
 
         .style-bar .option-text {
             flex-grow: 0;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .style-bar .option-number,
+        .style-bar .option-percentage,
+        .style-bar .option-tally {
+            flex-shrink: 0;
+        }
+
+        .style-bar .poll-option.poll-winner {
+            flex-grow: 3;
+            background-color: var(--poll-accent, rgba(255, 255, 255, 0.22));
         }
 
         .style-bar .option-percentage,
@@ -923,6 +957,7 @@ function updatePollResults() {
         if (votes === maxVotes && maxVotes > 0 && settings.pollClosed) {
             optionElement.style.fontWeight = 'bold';
             optionElement.style.fontSize = '1.1em';
+            optionElement.classList.add('poll-winner');
         }
 
         let html = '';

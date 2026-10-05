@@ -61,12 +61,22 @@
 			el.innerHTML = icon + '<span class="tb-t">' + esc(c.text) + '</span><span class="tb-m">' + methods.map(function (s) { return "<span>" + SSO.iconHTML(s.net, "brand") + esc(s.handle) + "</span>"; }).join("") + "</span>";
 			w.appendChild(el);
 			root.appendChild(w);
+			// Shrink the text rather than letting a long line spill past the source edges.
+			var fit = function () {
+				el.style.fontSize = c.fontsize + "px";
+				var room = (root.clientWidth || 620) - 12;
+				if (el.scrollWidth > room) { el.style.fontSize = Math.max(9, c.fontsize * room / el.scrollWidth) + "px"; }
+			};
 			if (c.mode === "rotate" && methods.length > 1) {
 				var spans = el.querySelectorAll(".tb-m span"), i = 0;
-				var show = function () { for (var k = 0; k < spans.length; k++) { spans[k].style.display = k === i ? "" : "none"; } i = (i + 1) % spans.length; };
+				var show = function () { for (var k = 0; k < spans.length; k++) { spans[k].style.display = k === i ? "" : "none"; } i = (i + 1) % spans.length; fit(); };
 				show();
 				setInterval(show, 7000);
 			}
+			SSO.fontsReady(fit);
+			if (document.fonts && document.fonts.addEventListener) { document.fonts.addEventListener("loadingdone", fit); }
+			setTimeout(fit, 1500);
+			window.addEventListener("resize", fit);
 		}
 	});
 
