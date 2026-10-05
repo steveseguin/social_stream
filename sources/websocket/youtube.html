@@ -586,6 +586,7 @@ try {
 	const VIEWER_COUNT_FALLBACK_ZERO_INTERVAL_MS = 10 * 60 * 1000;
 	const VIEWER_COUNT_FALLBACK_FAILURE_COOLDOWN_MS = 15 * 60 * 1000;
     var lastMessageTime = null;
+	const lastMessageTimeIds = new Set();
     var liveChatId = null;
     var nextPageToken = null;
     var userDetails = {};
@@ -4315,7 +4316,10 @@ function enableBackgroundKeepAlive() {
 				const publishedAt = new Date(item.snippet.publishedAt);
 				const messageTime = publishedAt.getTime();
 				if (!Number.isFinite(messageTime)) return;
-				if (!lastMessageTime || publishedAt > lastMessageTime) {
+				if (!lastMessageTime || publishedAt > lastMessageTime ||
+					(publishedAt.getTime() === lastMessageTime.getTime() && item.id && !lastMessageTimeIds.has(item.id))) {
+					if (!lastMessageTime || publishedAt > lastMessageTime) lastMessageTimeIds.clear();
+					if (item.id) lastMessageTimeIds.add(item.id);
 					const isBacklogMessage = initialBacklogProcessing && (messageTime <= initialBacklogTimestamp);
 					const giftMetadata = extractYouTubeGiftMetadata(item.snippet);
 					const isGiftEvent = item.snippet.type === 'giftEvent' || !!giftMetadata;
@@ -6236,6 +6240,7 @@ function enableBackgroundKeepAlive() {
 		nextPageToken = null;
 		liveChatPollingFallbackActive = false;
 		lastMessageTime = null;
+		lastMessageTimeIds.clear();
 		currentStream = null;
 		channelEmojiFetchToken++;
 		channelEmojiAssetsReady = true;

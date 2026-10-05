@@ -194,7 +194,7 @@ function youtubeFixture(retry) {
     pendingYouTubeMessages: new Set(), cancelledYouTubeMessages: new WeakSet(),
     isPageVisible: false, currentStream: null, videoId: null, currentSourceName: '', currentSourceImage: '',
     youtubeRecommendedInterval: 5000, lastSuccessfulPollTime: 0, initialBacklogProcessing: false,
-    lastMessageTime: null, nextPageToken: null, LIVE_CHAT_MAX_RESULTS: 500,
+    lastMessageTime: null, lastMessageTimeIds: new Set(), nextPageToken: null, LIVE_CHAT_MAX_RESULTS: 500,
     consecutiveMaxMessages: 0, consecutiveEmptyPolls: 0, slowerPollingMode: false, quickPollCount: 0,
     document: { getElementById: () => ({ setAttribute() {} }) }, extractYouTubeGiftMetadata: () => null,
     getRichMessageForMessageData: () => null,
@@ -261,3 +261,33 @@ for (const retry of ['badge', 'emoji']) {
     });
   }
 }
+
+test('YouTube API keeps distinct equal-timestamp messages and ignores replay', async () => {
+  const f = youtubeFixture('badge');
+  f.ready();
+  await f.add('first');
+  await f.add('second');
+  await f.add('first');
+  await f.add('second');
+  assert.deepEqual(f.chatIds(), ['first', 'second']);
+  await f.add('newer', 'Viewer', '01');
+  await f.add('older', 'Viewer', '00');
+  assert.deepEqual(f.chatIds(), ['first', 'second', 'newer']);
+  assert.deepEqual(f.errors, []);
+});
+
+test('Pending capture cancellation preserves platform and exact-ID boundaries', () => {
+  const pending = [
+    { message: { type: 'kick', id: 'native-1', chatname: 'Viewer' } },
+    { message: { type: 'kick', id: 'native-1', chatname: 'Viewer' } },
+    { message: { type: 'kick', id: 'native-2', chatname: 'Viewer' } },
+    { message: { type: 'twitch', id: 'native-1', chatname: 'Viewer' } },
+    { message: { type: 'discord', id: 'native-1', chatname: 'Viewer' } }
+  ];
+  const c = vm.createContext({ pendingModeratedCaptures: new Set(pending) });
+  install(c, read('background.js'), ['cancelPendingModeratedCaptures']);
+  c.cancelPendingModeratedCaptures({ type: 'kick', id: 'native-1', onlyLast: true });
+  assert.deepEqual(pending.map(p => !!p.cancelled), [true, true, false, false, false]);
+  c.cancelPendingModeratedCaptures({ type: 'discord', id: 'native-1' });
+  assert.equal(pending[4].cancelled, undefined, 'Unrelated platforms retain their existing path');
+});

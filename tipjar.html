@@ -1567,8 +1567,10 @@
         const style = ['jar', 'meter', 'minimal', 'bar', 'compact', 'vertical', 'text'].concat(summaryStyles).concat(vesselStyles).concat(meterStyles).indexOf(requestedStyle) !== -1 ? requestedStyle : 'jar';
         const theme = urlParams.get('theme') || 'default'; // default, neon, gold
         const hideCurrency = urlParams.has('hidecurrency');
-        const requestedHypeMode = urlParams.has('hype') || urlParams.get('mode') === 'hype';
-        const goalMetric = normalizeGoalMetric(urlParams.get('goalmetric') || (urlParams.has('countdonations') ? 'count' : 'value'));
+        // Follower goal preset: hype-mode points where each follow/subscribe is worth 1 and paid events are off unless asked for.
+        const followerGoalPreset = urlParams.has('followergoal') || String(urlParams.get('goalmetric') || '').toLowerCase() === 'followers';
+        const requestedHypeMode = urlParams.has('hype') || urlParams.get('mode') === 'hype' || followerGoalPreset;
+        const goalMetric = followerGoalPreset ? 'value' : normalizeGoalMetric(urlParams.get('goalmetric') || (urlParams.has('countdonations') ? 'count' : 'value'));
         const countMode = goalMetric === 'count';
         const hypeMode = requestedHypeMode && !countMode;
         const eventTypeFilter = normalizeEventFilterList(urlParams.get('tipjarevent') || urlParams.get('tipjarevents') || '');
@@ -1581,20 +1583,21 @@
         const persistent = !previewMode && urlParams.has('persistent'); // Keep amount between sessions
         const sound = !previewMode && urlParams.has('sound'); // Play sound on donation
         const hasCustomTitle = urlParams.has('title');
-        const customTitle = urlParams.get('title') || (hypeMode ? 'Hype Goal' : (countMode ? getDefaultCountTitle(eventTypeFilter) : 'Stream Goal'));
+        const customTitle = urlParams.get('title') || (followerGoalPreset ? 'Follower Goal' : hypeMode ? 'Hype Goal' : (countMode ? getDefaultCountTitle(eventTypeFilter) : 'Stream Goal'));
         const showControls = urlParams.has('controls'); // Show control panel
         const customJarUrl = urlParams.get('jarimage'); // Custom jar image URL
         const alignRight = urlParams.has('alignright');
-        const unitLabel = urlParams.get('unit') || 'pts';
-        const subPoints = readNumberParam('subpoints', 2.5, 0);
+        const unitLabel = urlParams.get('unit') || (followerGoalPreset ? 'followers' : 'pts');
+        const subPoints = readNumberParam('subpoints', followerGoalPreset ? 0 : 2.5, 0);
         const giftPoints = readNumberParam('giftpoints', subPoints, 0);
         const donationPointRate = readNumberParam('donationpoints', 1, 0);
-        const countTips = !urlParams.has('notips');
+        const followPoints = readNumberParam('followpoints', followerGoalPreset ? 1 : 0, 0);
+        const countTips = followerGoalPreset ? urlParams.has('donationpoints') : !urlParams.has('notips');
         const countSubs = !urlParams.has('nosubs');
         const countGifts = !urlParams.has('nogifts');
         const countResubs = !urlParams.has('noresubs');
         const countGiftRedemptions = urlParams.has('countgiftredemptions');
-        const resetOnComplete = hypeMode ? !urlParams.has('noresetoncomplete') : urlParams.has('resetoncomplete');
+        const resetOnComplete = hypeMode && !followerGoalPreset ? !urlParams.has('noresetoncomplete') : urlParams.has('resetoncomplete');
         const carryOverGoal = urlParams.has('carryover');
         const showCompletions = hypeMode && !urlParams.has('hidecompletions');
         const completionDelayMs = readNumberParam('completiondelay', 3000, 0);
@@ -3809,6 +3812,21 @@
                 };
             }
 
+            if (eventName === 'new_follower' || eventName === 'follow' || eventName === 'followed') {
+                if (!followPoints) return null;
+                return {
+                    kind: 'follow',
+                    donator: name,
+                    recipient: '',
+                    source,
+                    event: eventName,
+                    count: 1,
+                    points: followPoints,
+                    label: `+${formatGoalValue(followPoints)} follow`,
+                    raw: data.chatmessage || ''
+                };
+            }
+
             const donationRaw = getDonationRaw(data);
             if (countTips && donationRaw) {
                 return {
@@ -3914,6 +3932,8 @@
                 processTip(contribution.rawDonation, contribution.donator, contribution.source, contribution);
                 return;
             }
+
+            if (followerGoalPreset && !contribution.points) return;
 
             recordHypeContribution(contribution);
         }
