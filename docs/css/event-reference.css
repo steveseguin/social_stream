@@ -53,17 +53,27 @@ html.dark-mode body {
     background-color: var(--events-page-bg);
 }
 
+html,
+body {
+    overflow-x: visible;
+}
+
+html {
+    scroll-behavior: auto;
+}
+
 .events-container {
     max-width: 1280px;
     margin: 0 auto;
-    padding: 13rem 2.4rem 7rem;
+    padding: 11.2rem 2.4rem 7rem;
     color: var(--events-text);
+    overflow-wrap: break-word;
 }
 
 .events-container > section,
 .events-container > [role="navigation"],
 .platform-card {
-    scroll-margin-top: 12rem;
+    scroll-margin-top: 16rem;
 }
 
 .events-container h1,
@@ -114,6 +124,18 @@ html.dark-mode body {
     outline-offset: 3px;
 }
 
+.events-container summary:focus,
+.events-container input:focus,
+.events-container button:focus,
+.table-scroll:focus {
+    outline: 2px solid var(--events-link);
+    outline-offset: 3px;
+}
+
+.events-container [hidden] {
+    display: none !important;
+}
+
 .section-intro > p {
     max-width: 82ch;
     margin: 0 0 2.4rem;
@@ -127,7 +149,7 @@ html.dark-mode body {
 .meta-guidance,
 .deprecated-events,
 .usage-notes {
-    margin-top: 5.6rem;
+    margin-top: 3.6rem;
     padding: 3rem;
     background: var(--events-surface);
     border: 1px solid var(--events-border);
@@ -146,33 +168,132 @@ html.dark-mode body {
 }
 
 .platforms {
-    margin-top: 5.6rem;
+    margin-top: 3.6rem;
     text-align: start;
 }
 
-.reference-index {
-    margin-top: 3.2rem;
-    padding: 2.6rem;
+.reference-tools {
+    position: sticky;
+    top: 8.8rem;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.2rem;
+    margin: 2.4rem 0 1.6rem;
+    padding: 0.8rem 1.2rem;
     background: var(--events-surface);
     border: 1px solid var(--events-border);
-    border-radius: 16px;
+    border-radius: 12px;
     box-shadow: var(--events-shadow);
 }
 
-.reference-index h2 {
-    margin-bottom: 0.8rem;
-    font-size: 2.4rem;
+.reference-index summary,
+.reference-notes summary {
+    padding: 1rem;
+    color: var(--events-heading);
+    font-size: 1.6rem;
+    font-weight: 600;
+    cursor: pointer;
 }
 
-.reference-index > p {
-    margin: 0 0 2rem;
+.reference-index summary:hover,
+.reference-notes summary:hover {
+    color: var(--events-link);
+}
+
+.reference-index-panel {
+    position: absolute;
+    top: calc(100% + 0.8rem);
+    left: 0;
+    right: 0;
+    max-height: calc(100vh - 17rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 2.4rem;
+    background: var(--events-surface);
+    border: 1px solid var(--events-border);
+    border-radius: 12px;
+    box-shadow: var(--events-shadow);
+}
+
+.reference-search label {
+    display: block;
+    margin-bottom: 0.6rem;
+    font-weight: 600;
+}
+
+.reference-search-input {
+    display: flex;
+    gap: 0.8rem;
+}
+
+.reference-search input,
+.reference-search button {
+    min-height: 44px;
+    padding: 0.8rem 1.2rem;
+    color: var(--events-text);
+    background: var(--events-surface-muted);
+    border: 1px solid var(--events-border);
+    border-radius: 8px;
+    font: inherit;
+}
+
+.reference-search input {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+}
+
+.reference-search input::placeholder {
     color: var(--events-muted);
-    line-height: 1.6;
+    opacity: 1;
+}
+
+.reference-search button {
+    cursor: pointer;
+}
+
+.reference-search button:hover {
+    border-color: var(--events-link);
+}
+
+.reference-search p {
+    margin: 0.8rem 0 1.8rem;
+    color: var(--events-muted);
+    font-size: 1.4rem;
+}
+
+.reference-actions {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+}
+
+.reference-actions a {
+    padding: 1rem 0;
+    font-size: 1.4rem;
+    white-space: nowrap;
+}
+
+.reference-actions .ssn-copy-markdown-button {
+    width: 44px;
+    height: 44px;
+}
+
+.reference-notes {
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--events-border);
+    border-radius: 10px;
+}
+
+.reference-notes .alert-note {
+    margin: 1rem 0;
 }
 
 .reference-index-groups {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
     grid-gap: 2.4rem;
 }
 
@@ -204,7 +325,7 @@ html.dark-mode body {
 
 .reference-index a {
     display: block;
-    padding: 0.7rem 1rem;
+    padding: 1rem;
     color: var(--events-heading);
     background: var(--events-surface-muted);
     border: 1px solid var(--events-border);
@@ -263,7 +384,7 @@ html.dark-mode body {
 .event-table {
     width: 100%;
     max-width: 100%;
-    margin: 1.8rem 0 2.8rem;
+    margin: 0;
     color: var(--events-text);
     background: var(--events-surface);
     border: 1px solid var(--events-border);
@@ -271,13 +392,56 @@ html.dark-mode body {
     border-spacing: 0;
     border-radius: 10px;
     table-layout: fixed;
-    font-size: 1.45rem;
+    font-size: 1.5rem;
     line-height: 1.55;
     overflow: hidden;
 }
 
 .summary-table {
+    font-size: 1.5rem;
+}
+
+.table-scroll {
+    max-width: 100%;
+    margin: 1.8rem 0 2.8rem;
+    overflow-x: auto;
+    border-radius: 10px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll-hint {
+    margin: 1.2rem 0 -1rem;
+    color: var(--events-muted);
     font-size: 1.4rem;
+}
+
+.field-overview th:first-child {
+    width: 20%;
+}
+
+.field-overview th:nth-child(2) {
+    width: 18%;
+}
+
+.event-table th:nth-child(2) {
+    width: 27%;
+}
+
+#quick-availability th:first-child {
+    width: 19%;
+}
+
+#quick-availability th:last-child {
+    width: 28%;
+}
+
+#repository-audit th:first-child {
+    width: 21%;
+}
+
+.events-container pre {
+    max-width: 100%;
+    overflow-x: auto;
 }
 
 .field-table thead,
@@ -428,7 +592,7 @@ html.dark-mode body {
 
 @media (max-width: 900px) {
     .events-container {
-        padding: 10.5rem 1.6rem 5rem;
+        padding: 10.8rem 1.6rem 5rem;
     }
 
     .reference-index-groups {
@@ -445,7 +609,12 @@ html.dark-mode body {
 
     .field-table,
     .event-table {
-        font-size: 1.4rem;
+        min-width: 72rem;
+    }
+
+    #quick-availability table,
+    #cross-platform table {
+        min-width: 88rem;
     }
 
     .field-table th,
@@ -468,7 +637,7 @@ html.dark-mode body {
 
 @media (max-width: 640px) {
     .events-container {
-        padding: 12rem 1.2rem 4rem;
+        padding: 10.4rem 1.2rem 4rem;
     }
 
     .events-container h1 {
@@ -488,7 +657,6 @@ html.dark-mode body {
         font-size: 1.6rem;
     }
 
-    .reference-index,
     .section-summary,
     .field-overview,
     .meta-guidance,
@@ -505,38 +673,55 @@ html.dark-mode body {
     .deprecated-events,
     .usage-notes,
     .platforms {
-        margin-top: 4rem;
+        margin-top: 2.8rem;
     }
 
-    .reference-index a {
+    .reference-tools {
+        gap: 0.4rem;
+        padding: 0.6rem;
+    }
+
+    .reference-index summary {
+        padding: 1rem 0.6rem;
         font-size: 1.4rem;
+    }
+
+    .reference-index-panel {
+        padding: 1.6rem;
+    }
+
+    .reference-actions {
+        gap: 0.4rem;
+    }
+
+    .reference-actions a {
+        font-size: 1.3rem;
     }
 
     .alert-note {
         padding: 1.3rem 1.4rem;
-        font-size: 1.45rem;
+        font-size: 1.5rem;
+    }
+}
+
+@media print {
+    .site-header,
+    .reference-tools,
+    .skip-link,
+    .table-scroll-hint {
+        display: none;
     }
 
-    .event-table,
-    .field-table {
-        display: block;
-        width: 100%;
-        font-size: 1.4rem;
-        table-layout: auto;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+    .events-container {
+        padding: 0;
     }
 
-    .event-table th,
-    .event-table td,
-    .field-table th,
-    .field-table td {
-        min-width: 14rem;
+    .table-scroll {
+        overflow: visible;
     }
 
-    .event-table th:first-child,
-    .event-table td:first-child {
-        width: auto;
-        min-width: 15rem;
+    .field-table,
+    .event-table {
+        min-width: 0;
     }
 }

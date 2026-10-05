@@ -108,7 +108,7 @@
 		sizeFor: function (c, thumb) { return thumb ? [960, 540] : [1920, 1080]; },
 		fields: [
 			{ key: "text", label: "Text or emoji", type: "text", group: "Content", default: "BRB" },
-			{ key: "image", label: "…or an image link (PNG with transparency works best)", type: "text", group: "Content", default: "" },
+			{ key: "image", label: "…or an image link (PNG with transparency works best)", type: "text", image: true, group: "Content", default: "" },
 			{ key: "speed", label: "Speed", type: "range", group: "Content", default: 140, min: 20, max: 800, step: 5 },
 			{ key: "recolor", label: "Change colour on every bounce", type: "bool", group: "Content", default: true },
 			{ key: "corner", label: "Celebrate corner hits", type: "bool", group: "Content", default: true },
@@ -174,7 +174,7 @@
 		description: "Cycle through images: sponsors, art, memes, pet photos. Paste image links, one per line.",
 		size: [640, 360],
 		fields: [
-			{ key: "images", label: "Image links (one per line)", type: "textarea", group: "Content", default: "https://socialstream.ninja/media/user1.jpg\nhttps://socialstream.ninja/media/user2.jpg\nhttps://socialstream.ninja/media/user3.jpg" },
+			{ key: "images", label: "Image links (one per line)", type: "textarea", image: true, group: "Content", default: "https://socialstream.ninja/media/user1.jpg\nhttps://socialstream.ninja/media/user2.jpg\nhttps://socialstream.ninja/media/user3.jpg" },
 			{ key: "captions", label: "Captions (one per line, optional)", type: "textarea", group: "Content", default: "" },
 			{ key: "hold", label: "Seconds per image", type: "number", group: "Content", default: 6, min: 1, max: 600, step: 0.5 },
 			{ key: "fit", label: "Fit", type: "select", group: "Style", default: "contain", options: [["contain", "Show the whole image"], ["cover", "Fill and crop"]] },

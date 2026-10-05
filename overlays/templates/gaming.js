@@ -251,7 +251,7 @@
 			{ key: "name", label: "Player name", type: "text", group: "Content", default: "YourName" },
 			{ key: "cls", label: "Class / title", type: "text", group: "Content", default: "Lvl 99 Chat Wizard" },
 			{ key: "level", label: "Level", type: "number", group: "Content", default: 42, min: 0, max: 9999, step: 1 },
-			{ key: "avatar", label: "Avatar (emoji or image link)", type: "text", group: "Content", default: "🧙" },
+			{ key: "avatar", label: "Avatar (emoji or image link)", type: "text", image: true, group: "Content", default: "🧙" },
 			{ key: "hp", label: "HP %", type: "range", group: "Content", default: 82, min: 0, max: 100, step: 1 },
 			{ key: "mp", label: "MP %", type: "range", group: "Content", default: 55, min: 0, max: 100, step: 1 },
 			{ key: "xp", label: "XP %", type: "range", group: "Content", default: 64, min: 0, max: 100, step: 1 },

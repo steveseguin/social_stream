@@ -42,78 +42,111 @@
 <script src="../docs/js/site-shell.js"></script>
 </head>
 <body>
+    <a class="skip-link" href="#quick-availability">Skip to event reference</a>
     <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 
     <main id="event-reference">
         <div class="events-container">
             <section class="section-intro">
                 <h1>Live Event Reference</h1>
-                <p>This page documents the canonical event payloads that Social Stream Ninja emits for major platforms. Use it as a shared source of truth when wiring new sources, troubleshooting integrations, or aligning UI labels. For a shorter consumer-focused matrix, see <a href="events-alerts-compatibility.html">Events and Alerts Compatibility</a>.</p>
-                <div class="reference-index" role="navigation" aria-labelledby="reference-index-title">
-                    <h2 id="reference-index-title">On This Page</h2>
-                    <p>Jump to the shared field rules, a platform implementation, or the compatibility notes near the end.</p>
-                    <div class="reference-index-groups">
-                        <div class="reference-index-group">
-                            <h3>Reference</h3>
-                            <ul>
-                                <li><a href="#quick-availability">Quick availability</a></li>
-                                <li><a href="#field-overview">Field overview</a></li>
-                                <li><a href="#meta-conventions">Meta conventions</a></li>
-                                <li><a href="#platform-coverage">Platform coverage</a></li>
-                                <li><a href="#cross-platform">Cross-platform alignment</a></li>
-                                <li><a href="#repository-audit">Coverage limits</a></li>
-                                <li><a href="#deprecated-events">Aliases and legacy names</a></li>
-                                <li><a href="#using-reference">Using this reference</a></li>
-                                <li><a href="#monetization-events">Monetization</a></li>
-                                <li><a href="#throne-events">Throne gifts</a></li>
-                                <li><a href="#host-voice-preview">Host voice commands</a></li>
-                            </ul>
+                <p>Find event names, payload fields, and capture requirements for your source. For a quick overview of supported alerts, see <a href="events-alerts-compatibility.html">Events and Alerts Compatibility</a>.</p>
+            </section>
+
+            <nav class="reference-tools" aria-label="Event reference" data-copy-markdown-ignore>
+                <details class="reference-index" id="reference-index">
+                    <summary>Browse reference</summary>
+                    <div class="reference-index-panel">
+                        <div class="reference-search" hidden>
+                            <label for="reference-search">Find a platform, event or field</label>
+                            <div class="reference-search-input">
+                                <input id="reference-search" type="search" placeholder="Try Twitch, superchat or donoValue" aria-controls="reference-index-groups" autocomplete="off" spellcheck="false">
+                                <button id="reference-search-clear" type="button">Clear</button>
+                            </div>
+                            <p id="reference-search-status" role="status" aria-live="polite"></p>
                         </div>
-                        <div class="reference-index-group">
-                            <h3>Platforms and Sources</h3>
-                            <ul>
-                                <li><a href="#youtube-dom">YouTube DOM</a></li>
-                                <li><a href="#youtube-ws">YouTube API</a></li>
-                                <li><a href="#twitch-dom">Twitch DOM</a></li>
-                                <li><a href="#twitch-ws">Twitch EventSub</a></li>
-                                <li><a href="#obs-flow-actions">OBS</a></li>
-                                <li><a href="#streamlabs-alertbox">Streamlabs</a></li>
-                                <li><a href="#tiktok">TikTok</a></li>
-                                <li><a href="#whatnot">Whatnot</a></li>
-                                <li><a href="#ebay">eBay Live</a></li>
-                                <li><a href="#kick-dom">Kick DOM</a></li>
-                                <li><a href="#kick-ws">Kick WebSocket</a></li>
-                                <li><a href="#vpzone-ws">VPZone</a></li>
-                                <li><a href="#joystick-ws">Joystick</a></li>
-                                <li><a href="#xpsync">XP Sync</a></li>
-                                <li><a href="#facebook">Facebook</a></li>
-                                <li><a href="#instagram">Instagram</a></li>
-                                <li><a href="#onlinechurch">Online Church</a></li>
-                                <li><a href="#shareplay">SharePlay</a></li>
-                                <li><a href="#gosh">Gosh</a></li>
-                                <li><a href="#livacha">Livacha</a></li>
-                                <li><a href="#streamplace">Streamplace</a></li>
-                                <li><a href="#worldswave">WorldsWave</a></li>
-                                <li><a href="#flextv">FLEX TV</a></li>
-                                <li><a href="#sealteamsloth">Seal Team Sloth</a></li>
-                                <li><a href="#meetme-dom">MeetMe</a></li>
-                                <li><a href="#velora">Velora</a></li>
-                                <li><a href="#parti">Parti</a></li>
-                                <li><a href="#chzzk">CHZZK</a></li>
-                                <li><a href="#rumble-dom">Rumble DOM</a></li>
-                                <li><a href="#rumble-ws">Rumble API</a></li>
-                                <li><a href="#younow">YouNow</a></li>
-                                <li><a href="#favorited">Favorited Studio</a></li>
-                                <li><a href="#beamstream">BEAM</a></li>
-								<li><a href="#castyr">Castyr</a></li>
-                                <li><a href="#starvios">Starvios</a></li>
-                                <li><a href="#vaughn">Vaughn Live</a></li>
-                                <li><a href="#streamspace">Stream.space</a></li>
-                                <li><a href="#wtv-prime">w.tv and Prime</a></li>
-                            </ul>
+                        <div class="reference-index-groups" id="reference-index-groups">
+                            <div class="reference-index-group">
+                                <h3>Reference</h3>
+                                <ul>
+                                    <li><a href="#quick-availability">Quick availability</a></li>
+                                    <li><a href="#field-overview">Field overview</a></li>
+                                    <li><a href="#meta-conventions">Meta conventions</a></li>
+                                    <li><a href="#platform-coverage">Platform coverage</a></li>
+                                    <li><a href="#cross-platform">Cross-platform alignment</a></li>
+                                    <li><a href="#repository-audit">Coverage limits</a></li>
+                                    <li><a href="#deprecated-events">Aliases and legacy names</a></li>
+                                    <li><a href="#using-reference">Using this reference</a></li>
+                                </ul>
+                            </div>
+                            <div class="reference-index-group">
+                                <h3>Platforms and sources</h3>
+                                <ul>
+                                    <li><a href="#youtube-dom">YouTube DOM</a></li>
+                                    <li><a href="#youtube-ws">YouTube API</a></li>
+                                    <li><a href="#twitch-dom">Twitch DOM</a></li>
+                                    <li><a href="#twitch-ws">Twitch EventSub</a></li>
+                                    <li><a href="#obs-flow-actions">OBS</a></li>
+                                    <li><a href="#streamlabs-alertbox">Streamlabs</a></li>
+                                    <li><a href="#tiktok">TikTok</a></li>
+                                    <li><a href="#whatnot">Whatnot</a></li>
+                                    <li><a href="#ebay">eBay Live</a></li>
+                                    <li><a href="#kick-dom">Kick DOM</a></li>
+                                    <li><a href="#kick-ws">Kick WebSocket</a></li>
+                                    <li><a href="#vpzone-ws">VPZone</a></li>
+                                    <li><a href="#joystick-ws">Joystick</a></li>
+                                    <li><a href="#xpsync">XP Sync</a></li>
+                                    <li><a href="#facebook">Facebook</a></li>
+                                    <li><a href="#instagram">Instagram</a></li>
+                                    <li><a href="#onlinechurch">Online Church</a></li>
+                                    <li><a href="#shareplay">SharePlay</a></li>
+                                    <li><a href="#gosh">Gosh</a></li>
+                                    <li><a href="#livacha">Livacha</a></li>
+                                    <li><a href="#streamplace">Streamplace</a></li>
+                                    <li><a href="#worldswave">WorldsWave</a></li>
+                                    <li><a href="#flextv">FLEX TV</a></li>
+                                    <li><a href="#sealteamsloth">Seal Team Sloth</a></li>
+                                    <li><a href="#meetme-dom">MeetMe</a></li>
+                                    <li><a href="#velora">Velora</a></li>
+                                    <li><a href="#parti">Parti</a></li>
+                                    <li><a href="#chzzk">CHZZK</a></li>
+                                    <li><a href="#rumble-dom">Rumble DOM</a></li>
+                                    <li><a href="#rumble-ws">Rumble API</a></li>
+                                    <li><a href="#younow">YouNow</a></li>
+                                    <li><a href="#favorited">Favorited Studio</a></li>
+                                    <li><a href="#beamstream">BEAM</a></li>
+                                    <li><a href="#castyr">Castyr</a></li>
+                                    <li><a href="#starvios">Starvios</a></li>
+                                    <li><a href="#vaughn">Vaughn Live</a></li>
+                                    <li><a href="#streamspace">Stream.space</a></li>
+                                    <li><a href="#wtv-prime">w.tv and Prime</a></li>
+                                    <li><a href="#sooplive">SOOP</a></li>
+                                </ul>
+                            </div>
+                            <div class="reference-index-group">
+                                <h3>Commerce and integrations</h3>
+                                <ul>
+                                    <li><a href="#monetization-events">Monetization</a></li>
+                                    <li><a href="#shopify-purchases">Shopify orders</a></li>
+                                    <li><a href="#commerce-events">Gifts and commerce</a></li>
+                                    <li><a href="#creator-commerce-webhooks">Creator commerce webhooks</a></li>
+                                    <li><a href="#throne-events">Throne gifts</a></li>
+                                    <li><a href="#commerce-live-controls">Product display controls</a></li>
+                                    <li><a href="#commerce-boards">Commerce boards and sales</a></li>
+                                    <li><a href="#host-voice-preview">Host voice commands</a></li>
+                                    <li><a href="#workflow-trigger">Stream Deck / API workflows</a></li>
+                                    <li><a href="#ninjachatter-audience-pilot">NinjaChatter audience</a></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
+                </details>
+                <div class="reference-actions" data-copy-markdown-actions>
+                    <a href="#event-reference">Back to top <span aria-hidden="true">↑</span></a>
                 </div>
+            </nav>
+
+            <details class="reference-notes">
+                <summary>Capture settings, filters and payload conventions</summary>
                 <div class="alert-note">
                     <strong>Important:</strong> Event availability depends on the source, permissions, and capture settings. To hide event-marked rows in dock or featured overlays, add <code>&amp;hideevents</code> or <code>&amp;hideallevents</code>. To hide selected events, use <code>&amp;filterevents=subscription_gift,new_follower,gifted</code>. These filters can also hide paid rows that carry an <code>event</code>; ordinary donation rows without an event marker are not matched by event filters. Other message filters still apply.
                 </div>
@@ -126,20 +159,21 @@
                 <div class="alert-note alert-info">
                     <strong>Payload shape:</strong> Donation-style chat rows should use <code>hasDonation</code> and optional <code>donoValue</code>. Do not set <code>event: "donation"</code> just because a normal chat/tip row has value; use specific event names only for real platform actions or paid item types, such as <code>superchat</code>, <code>supersticker</code>, <code>gift</code>, or <code>jeweldonation</code>. Use <code>meta</code> only for additional structured data that consumers actually need and that existing fields do not already cover.
                 </div>
-            </section>
+            </details>
 
             <section class="section-summary" id="quick-availability">
                 <h2>Quick Feature Availability</h2>
                 <p>Use this table to see which alert types each capture method currently delivers. Detailed payload notes follow below.</p>
                 <p class="field-highlights">The dedicated Multi-Stream Alert Box groups live events into six core alert categories: <code>Follow</code>, <code>Subscription/Member</code>, <code>Donation</code>, <code>Bits/Cheers</code>, <code>Raid/Host</code>, and <code>Purchase</code>, plus two opt-in categories (<code>Auction</code> and <code>Hype Train</code>) enabled via URL parameters. It derives those categories from the existing <code>event</code>, <code>membership</code>, <code>subtitle</code>, <code>hasDonation</code>, and <code>meta</code> fields documented here; no separate payload format is required.</p>
-                <table class="field-table summary-table">
+                <div class="table-scroll" role="region" tabindex="0" aria-label="Quick Feature Availability table">
+<table class="field-table summary-table">
                     <thead>
                         <tr>
-                            <th>Source</th>
-                            <th>New Subs / Members</th>
-                            <th>New Followers</th>
-                            <th>Donations</th>
-                            <th>Counts &amp; Extras</th>
+                            <th scope="col">Source</th>
+                            <th scope="col">New Subs / Members</th>
+                            <th scope="col">New Followers</th>
+                            <th scope="col">Donations</th>
+                            <th scope="col">Counts &amp; Extras</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -306,18 +340,20 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
                 <p class="field-highlights">*YouTube subscriber alerts are polled and may be delayed or incomplete. The API reference does not promise a fixed four-hour delivery window. See the <a href="https://developers.google.com/youtube/v3/docs/subscriptions/list">official subscription API limits</a>.</p>
             </section>
 
             <section class="field-overview" id="field-overview">
                 <h2>Field Overview</h2>
                 <p><code>data</code> here means the message object, not an extra wrapper to add. Chat rows and metadata-only events have different shapes: counters and status snapshots may omit <code>chatname</code>/<code>chatmessage</code>. In platform tables, <em>message</em> describes an ordinary chat row, not a literal <code>event: "message"</code>.</p>
-                <table class="field-table">
+                <div class="table-scroll" role="region" tabindex="0" aria-label="Field Overview table">
+<table class="field-table">
                     <thead>
                         <tr>
-                            <th>Field</th>
-                            <th>Shape</th>
-                            <th>Usage</th>
+                            <th scope="col">Field</th>
+                            <th scope="col">Shape</th>
+                            <th scope="col">Usage</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -397,12 +433,13 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
             </section>
 
             <section class="meta-guidance" id="meta-conventions">
+                <h2>Meta Conventions</h2>
                 <p>Overlay control transport is separate from captured chat/events. Updated receivers use an <code>ssnControl</code> envelope containing a delivery <code>id</code>, feature <code>target</code>, optional reply channel and snapshot client ID. Existing feature bodies remain intact. Public feature controls use channel 7; Actions retains channel 6. Poll and Map state includes a host <code>epoch</code>, <code>revision</code> and <code>reset</code> marker; Timer, Ticker and Spotify use <code>ssnState</code> with an epoch and revision. These markers describe host state, not restored vote/chat history. Sources must not add control-envelope fields to captured messages. A receipt acknowledgement does not establish action completion or OBS visibility. See the <a href="transport-migration-status.md">migration status</a> for supported features, reply negotiation and reconnect limits.</p>
                 <p>Phrase Guess uses the native <code>{response: text}</code> request for server2 chat replies and <code>{action: "phraseGuessResponse", value: {type: "bot", chatname: name, chatmessage: text}}</code> for dock-only announcements. The host must enable incoming server3 messages; disabling host control still blocks these requests. Dock announcements are forwarded as ordinary bot chat rows with <code>textonly: true</code>, without sending them to capture-source chat inputs. Legacy API mode retains its existing command format.</p>
-                <h2>Meta Conventions</h2>
                 <p>To keep dashboards and automations aligned, follow these conventions when extending <code>data.meta</code>:</p>
                 <ul>
                     <li><code>viewer_update</code>, <code>follower_update</code>, <code>subscriber_update</code>, and <code>likes_update</code> use a plain integer <code>meta</code> value. <code>likes_update</code> is an authoritative platform total: consumers must set the displayed value rather than adding it. The background script aggregates viewer counts into <code>viewer_updates</code> with an object keyed by <code>data.type</code>.</li>
@@ -443,12 +480,13 @@
                         <li>Opening the Viewer Count &amp; Chat Activity overlay with viewers displayed automatically requests viewer counts. The <em>Show viewer count</em> and <em>Track active chatters</em> settings also enable collection.</li>
                         <li><strong>For follower alerts and additional events</strong>, enable WebSocket mode in extension settings.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="YouTube – Standard DOM Capture table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -509,6 +547,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                     <p class="field-highlights">Membership blocks also set <code>membership</code> for moderator/member chat, while <code>subtitle</code> carries either month counts or tier names. <code>sourceName</code>/<code>sourceImg</code> populate once <code>getChannelInfo</code> succeeds. Standard DOM chat now includes <code>meta.messageId</code> when YouTube exposes a native live-chat message ID, which the dock uses for delete sync.</p>
                 </article>
 
@@ -523,12 +562,13 @@
                         <li>New subscriber alerts use the <code>myRecentSubscribers</code> API (polled every 5 minutes). Note: Results may be delayed or incomplete; only publicly visible subscriptions can be identified.</li>
                         <li>YouTube redirect banners are not exposed by the Data API, so <code>redirect</code> remains available only from Standard DOM capture.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="YouTube – Websocket/Data API Capture table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -609,6 +649,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                     <p class="field-highlights">Chat relays from the API use <code>meta.plainText</code> for the plain-text message alongside rich <code>chatmessage</code> content. It is text, not HTML, and can still contain Unicode emoji. Membership badges fall back to emoji (<code>⭐</code>, <code>💝</code>, <code>🏅</code>, etc.) to remain consistent with DOM capture. Regular chat payloads also include <code>meta.messageId</code> so dock-side delete actions can round-trip back to the YouTube moderation API.</p>
 
                     <div class="alert-note">
@@ -634,12 +675,13 @@
                     </div>
 
                     <h4>YouTube Websocket: Event &amp; Membership Quick Reference</h4>
-                    <table class="field-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="YouTube – Websocket/Data API Capture table">
+<table class="field-table">
                         <thead>
                             <tr>
-                                <th><code>data.event</code></th>
-                                <th><code>data.membership</code></th>
-                                <th>Scenario</th>
+                                <th scope="col"><code>data.event</code></th>
+                                <th scope="col"><code>data.membership</code></th>
+                                <th scope="col">Scenario</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -656,6 +698,7 @@
                             <tr><td><code>new_follower</code></td><td>-</td><td>New subscriber (polled; may be delayed)</td></tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="twitch-dom">
@@ -668,12 +711,13 @@
 						<li>Viewer-shared Watch Streak notices are disabled by default and require the <strong>Show Twitch Watch Streaks</strong> setting.</li>
 						<li>The opt-in <strong>PluralMind</strong> setting may replace <code>chatname</code>, <code>nameColor</code>, and the proxy-wrapped portion of <code>chatmessage</code>, and may add a pronoun text badge. <code>username</code> remains the Twitch login; related deletes carry <code>delete.meta.pluralmind</code> so the dock uses that stable login.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Twitch – Standard DOM Capture table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -719,6 +763,7 @@
 							</tr>
                         </tbody>
                     </table>
+                </div>
                     <p class="field-highlights">Bits/Cheers populate <code>hasDonation</code> (for example “500 bits”) even though <code>data.event</code> remains empty; rely on that field when rendering donation widgets. Subscriber streak information appears in <code>subtitle</code> when badges expose months.</p>
                 </article>
 
@@ -733,12 +778,13 @@
 						<li>Viewer-shared Watch Streak notices are disabled by default and require the <strong>Show Twitch Watch Streaks</strong> setting.</li>
 						<li>The opt-in <strong>PluralMind</strong> setting may replace <code>chatname</code>, <code>nameColor</code>, and the proxy-wrapped portion of <code>chatmessage</code>, and may add a pronoun text badge. <code>username</code> and <code>userid</code> retain the Twitch identity; related deletes carry <code>delete.meta.pluralmind</code> so the dock uses those stable fields.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Twitch – EventSub/Websocket table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -824,16 +870,18 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                     <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Twitch GIF messages put the Giphy asset in <code>contentimg</code>, leave <code>chatmessage</code> empty, and preserve Twitch's fallback label in <code>meta.gifLabel</code>. Dedupe and deletion logic uses message IDs; messages sent through SSN use the native <code>message_id</code> from Twitch's IRC echo in <code>data.id</code>.</p>
 
                     <h4>Twitch Hype Train Metadata</h4>
                     <p class="field-highlights"><code>hype_train</code> is metadata-only and does not include <code>chatname</code> or <code>chatmessage</code>. Dashboards should update an existing train display by <code>meta.id</code> instead of appending each progress update as chat. The Meta Data Bar (<code>meta.html</code>) renders these events as a top progress bar.</p>
-                    <table class="field-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Twitch – EventSub/Websocket table">
+<table class="field-table">
                         <thead>
                             <tr>
-                                <th>Field</th>
-                                <th>Type</th>
-                                <th>Notes</th>
+                                <th scope="col">Field</th>
+                                <th scope="col">Type</th>
+                                <th scope="col">Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -864,13 +912,15 @@
                             <tr><td><code>meta.eventSubType</code></td><td>string</td><td>Original EventSub type: <code>channel.hype_train.begin</code>, <code>channel.hype_train.progress</code>, <code>channel.hype_train.end</code>, or <code>dom.community_highlight</code>.</td></tr>
                         </tbody>
                     </table>
+                </div>
 
                     <h4>Twitch EventSub: Event Quick Reference</h4>
-                    <table class="field-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Twitch – EventSub/Websocket table">
+<table class="field-table">
                         <thead>
                             <tr>
-                                <th><code>data.event</code></th>
-                                <th>Scenario</th>
+                                <th scope="col"><code>data.event</code></th>
+                                <th scope="col">Scenario</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -892,6 +942,7 @@
                             <tr><td><code>user_banned</code></td><td>User was banned or timed out</td></tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="obs-flow-actions">
@@ -902,12 +953,13 @@
                         <li>Configure OBS WebSocket v5 on OBS 28+; the default URL is <code>ws://127.0.0.1:4455</code>.</li>
                         <li>These are Event Flow system events. They do not include <code>chatname</code> or <code>chatmessage</code>, and extra OBS details stay inside <code>meta</code>.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="OBS Flow Actions table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -948,6 +1000,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="streamlabs-alertbox">
@@ -959,12 +1012,13 @@
                         <li>Event types inferred: <code>follow</code>, <code>subscription</code>, <code>gift</code>, <code>cheer</code>, <code>donation</code>, <code>superchat</code>, <code>raid</code>, <code>redeem</code>, <code>merch</code>, <code>sponsor</code>.</li>
                         <li>For the socket bridge, paste your Streamlabs Socket API token and connect; alerts relay without the alert-box page.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Streamlabs Alert Box table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1020,6 +1074,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="tiktok">
@@ -1032,12 +1087,13 @@
                         <li>No additional API authentication required.</li>
                         <li><strong>SSApp native mode</strong> still adds events beyond the page/widget capture paths: <code>question_new</code>, <code>emote</code>, <code>viewer_update</code>, and the opt-in aggregate <code>likes_update</code>.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="TikTok Live &ndash; DOM Capture and TikFinity Feed table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1088,6 +1144,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                     <p class="field-highlights"><code>membership</code> mirrors badge tooltips (subscriber tiers). Avatar caching keeps <code>chatimg</code> valid between events; if the DOM suppresses color for moderators the script clears <code>nameColor</code>. TikFinity Activity Feed capture supports legacy docks and the new <code>widgets.tikfinity.com</code> browser-source URLs. New <code>stream_event</code> messages are translated into the same chat, gift, follow, share, subscription, join, and envelope payloads described here. TikFinity gift rows also set <code>contentimg</code> to the gift icon when available. For explicitly streakable gifts with a <code>repeatEnd</code> flag, TikFinity sends only the completed streak and its final quantity; intermediate count updates are not forwarded. Non-streak gifts and older payloads without that flag continue through immediately. Native DOM gift streak updates and TikFinity gift rows include <code>meta.tiktokGiftStreakId</code>, <code>meta.tiktokGiftCount</code>, and <code>meta.tiktokGiftQuietMs</code> so overlays can coalesce repeated updates; legacy streak IDs are unique to the page instance. Gift metadata may also include <code>tiktokGiftMessageId</code> (the original TikTok message ID), <code>tiktokGiftSenderId</code>, <code>groupId</code>, <code>giftId</code>, <code>giftName</code>, <code>streakable</code>, and <code>repeatEnd</code>. Native IDs identify the same gift across capture windows; a nonzero group ID with sender and gift IDs identifies cumulative streak updates. SSApp WebSocket capture supplies the same fields after settling a streak, with <code>count</code> retained for compatibility. Its donation toggle is checked when forwarding each gift: disabling TikTok donations removes <code>hasDonation</code> and <code>donoValue</code> while retaining the gift event and metadata. TTS uses these identities to coalesce updates and suppress completed duplicates for up to ten minutes (bounded cache), and reads TikTok gifts as sender, quantity, and gift name. Older payloads fall back to their existing streak IDs and message text; no identity is inferred from gift text alone. TikTok gift speech uses the selected TTS/voice language, independently of the UI language. Announcement verbs are localized for English, Spanish, Portuguese, French, German, Italian, and Dutch; other languages use sender, quantity, and gift name without an English verb. Simplified TTS retains that neutral format. Gift names remain as supplied by the platform; this does not automatically translate gift catalogs or chat messages, or infer a stream’s language.</p>
                     <p class="field-highlights">For these streak updates, the count and donation label are cumulative: 1, 2, 3 means three gifts, not six. Totals consumers should add only the increase over the largest amount already seen for that streak ID. Standard capture supports legacy gift classes and current image/count rows; both retain <code>event: "gift"</code> and <code>hasDonation</code>. Unknown prices retain gift counts/names for display and use a USD estimate of one coin per gift. Source-supplied <code>donoValue</code> takes priority; rendered gift metadata may provide <code>coinsPerGift</code> or <code>diamondsPerGift</code> before the gift table or default is needed. Standard/TikFinity coin estimates and SSApp native diamond estimates use their existing distinct conversions; neither represents a guaranteed cash payout.</p>
                 </article>
@@ -1099,12 +1156,13 @@
                         <li>Open the live Whatnot show page with chat visible; the existing websocket capture supplies chat, auction/sale notifications, payment failures, raids, donations, and fast viewer updates. Product/giveaway snapshots still rely on DOM sections rendered in the show view.</li>
                         <li><em>Capture Stream Events</em> controls Whatnot system events plus auction/catalog metadata updates; joined rows also require <em>Capture "joined" stream events</em>; viewer counts still follow the viewer/hype toggles.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Whatnot table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1155,6 +1213,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                     <p class="field-highlights">Auction/commerce display updates remain DOM-backed snapshots. To match an individual websocket event in Event Flow, use <em>Event Type (Advanced)</em>, select <em>Custom Event</em>, and enter its exact name. Labels can use <code>**{username}**\n{subtitle}</code> with selected text weight; conditions can compare <code>meta.paymentStatus</code> with <code>failed</code>. An <a href="thermal-printer-guide.html#whatnot-item-labels">importable Whatnot label example</a> is available. Existing stream-event capture settings still apply.</p>
                     <p class="field-highlights">Additional optional fields are <code>meta.catalogProductId</code> (the packet's <code>product.productId</code>), <code>meta.parentProductId</code> (<code>product.parentId</code>), <code>meta.transactionType</code> (Whatnot's sale type, unchanged), and <code>meta.placeOrderErrorReason</code> (Whatnot's supplied order/payment error code). These product references describe the catalog or parent listing; they do not replace an order ID. Stock quantity is not treated as purchased quantity.</p>
                     <p class="field-highlights">For payment-success automation, set an <em>Event Type (Advanced)</em> trigger to <em>Custom Event</em>: <code>payment_succeeded</code>, and filter the source to Whatnot. Existing conditions and templates can use that event's <code>userid</code>, <code>chatname</code>, <code>subtitle</code> and <code>meta.orderId</code> directly. No remembered purchase is needed when the notification contains the required details.</p>
@@ -1170,12 +1229,13 @@
                         <li>The public WebSocket feed supplies auctions, bids, winners, timing extensions and stock changes; a read-only GraphQL query supplies listing details. DOM capture remains a fallback when network data is unavailable.</li>
                         <li><em>Capture Stream Events</em> controls metadata snapshots (<code>auction_update</code>, <code>commerce_update</code>); viewer counters still honor viewer/hype toggles.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="eBay Live table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1206,6 +1266,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                     <p class="field-highlights">eBay metadata events intentionally omit <code>chatname</code>/<code>chatmessage</code>; downstream overlays should render from <code>data.event</code> + <code>data.meta</code> only.</p>
                 </article>
 
@@ -1216,12 +1277,13 @@
                         <li>Needs an authenticated session to resolve profile images and subscriber badges.</li>
                         <li>Limited event detection via chat text matching and badges; viewer counts still work when the toggle is enabled.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Kick – Standard DOM Capture table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1247,6 +1309,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="kick-ws">
@@ -1256,12 +1319,13 @@
                         <li>OAuth via the Social Stream Kick bridge. Current scopes are <code>user:read</code>, <code>channel:read</code>, <code>channel:write</code>, <code>channel:rewards:read</code>, <code>chat:write</code>, <code>events:subscribe</code>, <code>moderation:ban</code>, <code>moderation:chat_message:manage</code>, and <code>kicks:read</code>. Tokens are refreshed automatically.</li>
                         <li>Kick webhook provisioning may take several minutes; the UI lists active subscriptions per channel.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Kick – Websocket/Bridge table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1332,14 +1396,16 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                     <p class="field-highlights">Profile lookups leverage <code>profileCache</code>; <code>mapBadges</code> merges Kick's badge assets with cached SVG when available. When Kick reports donations in KICKs, the bridge converts them into <code>hasDonation</code> plus <code>meta.amount</code> with <code>currency</code> fallback to "KICKs". Chat payloads include <code>meta.messageId</code> when the bridge exposes a native Kick message ID so delete sync can target the correct message. Reply payloads include <code>meta.reply</code> with the parent <code>messageId</code>, <code>author</code>, and <code>text</code> when known. Supplied reply details remain available even when the original message is not cached; an ID-only reply without cached context can still lack a visible quote.</p>
 
                     <h4>Kick Websocket: Event Quick Reference</h4>
-                    <table class="field-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Kick – Websocket/Bridge table">
+<table class="field-table">
                         <thead>
                             <tr>
-                                <th><code>data.event</code></th>
-                                <th>Scenario</th>
+                                <th scope="col"><code>data.event</code></th>
+                                <th scope="col">Scenario</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1357,6 +1423,7 @@
                             <tr><td><code>user_banned</code></td><td>User was banned or timed out</td></tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="vpzone-ws">
@@ -1368,12 +1435,13 @@
                         <li>Platform-side <code>delete_message</code> / <code>clear_chat</code> frames remove the matching rows from the dock; optional toggles sync dock deletes and blocks back to VPZone (channel owner only).</li>
                         <li>Channel owners get a page-local Stream Info panel to update the live stream's title and category (same pattern as the Twitch source page).</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="VPZone - WebSocket table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1439,6 +1507,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="joystick-ws">
@@ -1454,12 +1523,13 @@
                         <li>Optional OAuth token exchange is used for helper endpoints like <code>https://api.joystick.tv/api/users/stream-settings</code>.</li>
                         <li>The separate bot-credential source does not emit <code>viewer_update</code>. The signed-in website source does emit viewer counts when its page socket supplies them, as described below.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Joystick table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1510,6 +1580,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="xpsync">
@@ -1533,12 +1604,13 @@
                         <li>Required API headers (all static/derivable): <code>X-IG-App-ID: 936619743392459</code>, <code>X-CSRFToken</code> (from cookie), <code>X-ASBD-ID: 359341</code>, <code>X-Requested-With: XMLHttpRequest</code>, <code>Content-Type: application/x-www-form-urlencoded</code>.</li>
                         <li>All activity-feed events use <code>type: "instagram"</code>; live chat stays <code>type: "instagramlive"</code>. Like events use the normal background path: the background sends one copy to the dedicated Reactions Overlay, then includes them in the main chat/events feed only when <code>capturelikeevent</code> is enabled, matching TikTok and MeetMe. <code>hideevents</code> and the custom event filter block them everywhere. Because inbox events belong to the signed-in account, they are suppressed while watching someone else's live (both <code>/&lt;user&gt;/live/</code> pages and lives in the stories viewer; ownership is resolved per profile and retried after lookup failures) and emitted on your own live and all non-live pages. One active Instagram tab polls the account inbox at a time, and polling only runs when logged in.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Instagram &ndash; Live REST Capture and News Inbox table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1584,6 +1656,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="facebook">
@@ -1597,12 +1670,13 @@
                         <li>Stars are captured from the rendered Live Chat DOM when Facebook shows the visible <code>N sent</code> marker; they populate <code>hasDonation</code> and <code>donoValue</code> at 100 Stars = $1 USD without setting <code>data.event</code>.</li>
                         <li>For testing, add <code>ssnreplay=1</code> to the Facebook Live URL to process chat rows already visible after refresh.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Facebook Live table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1623,6 +1697,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="onlinechurch">
@@ -1632,12 +1707,13 @@
                         <li>Relies on DOM scraping of the public chat and media header.</li>
                         <li>Viewer counts only refresh when <strong>Show viewer count</strong> or hype mode is enabled.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Online Church table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1653,6 +1729,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="shareplay">
@@ -1665,12 +1742,13 @@
                         <li>The desktop API source receives new EventSub events; disconnected messages are not replayed. Chat carries SharePlay's message ID in <code>id</code> and sender ID in <code>userid</code>, but no avatars or badges. Emotes respect <code>textonly</code>; replies populate the existing reply fields when the parent is in the 200-message session cache.</li>
                         <li>The desktop API maps completed <code>channel.blitz</code> events to <code>raid</code>, chat shoutouts to <code>shoutout</code>, and <code>stream.viewers</code> to <code>viewer_update</code> when viewer counts or hype mode are enabled. API shoutouts contain the provided chat text without the DOM card's banner or button metadata. Synthetic chat/Blitz events preserve <code>meta.is_synthetic: true</code>; viewer updates retain integer <code>meta</code>.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="SharePlay.tv table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1696,6 +1774,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="streamplace">
@@ -1705,12 +1784,13 @@
                         <li>Reads Streamplace's React-rendered live page and skips the visible chat backlog when attaching.</li>
                         <li>Relay-style messages such as <code>Name (Discord): message</code> are normalized to the relayed sender name.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Streamplace table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1726,6 +1806,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="worldswave">
@@ -1737,12 +1818,13 @@
                         <li>Existing chat history is skipped when capture attaches; test with a new message.</li>
                         <li>Viewer counts require <strong>Show viewer count</strong> or hype mode. Dedicated gift/tip events and send-back are not implemented. A rendered row may still provide a donation label through <code>data-ww-donation</code>.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="WorldsWave table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1758,6 +1840,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="flextv">
@@ -1768,12 +1851,13 @@
                         <li>The chat panel must be visible. Existing chat history is skipped when the source attaches, so test with a new chat row.</li>
                         <li>No viewer count, donation, or send-back path is documented for this source yet.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="FLEX TV table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1784,6 +1868,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="sealteamsloth">
@@ -1793,12 +1878,13 @@
                         <li>Reads the rendered pop-out chat on <code>https://sealteamsloth.com/popout-chat/*</code> pages.</li>
                         <li>Viewer counts require <strong>Show viewer count</strong> or hype mode.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Seal Team Sloth table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1814,6 +1900,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="meetme-dom">
@@ -1825,12 +1912,13 @@
                         <li><code>hideevents</code> suppresses non-donation events; MeetMe gifts and diamond donations still populate donation fields. <code>capturejoinedevent</code> enables join/rejoin notices. Actor-specific <code>liked</code> events use the shared background routing controlled by <code>capturelikeevent</code>; aggregate <code>reaction</code> effects remain explicitly targeted to the Reactions Overlay.</li>
                         <li>Viewer counts prefer the visible MeetMe header count, falling back to websocket totals only when the DOM count is unavailable. Counts emit on change and repeat the latest count about every 30 seconds while <code>showviewercount</code>/<code>hypemode</code> is enabled; follower totals are changed-only and rate-limited to roughly 60 seconds.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="MeetMe - DOM and WebSocket Capture table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1881,6 +1969,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="velora">
@@ -1891,12 +1980,13 @@
                         <li>Supported Standard mode URLs include <code>https://velora.tv/*</code>, <code>https://velora.tv/dashboard/stream/popout?panels=chat%2Cactivity&amp;channel=CHANNEL&amp;layout=vertical</code>, and <code>https://velora.tv/dashboard/stream/popout/CHANNEL/obs-chat</code>.</li>
                         <li>Volts and channel point style cards are emitted as event payloads when exposed by the DOM or Events API.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Velora table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1927,6 +2017,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="parti">
@@ -1936,12 +2027,13 @@
                         <li>Supports profile URLs like <code>https://parti.com/USERNAME</code> and popout URLs like <code>https://parti.com/popout-chat?id=USER_ID</code>.</li>
                         <li>Viewer counts use Parti's livestream heartbeat endpoint when viewer-count capture or hype mode is enabled.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Parti - Profile / Popout Chat Capture table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1962,6 +2054,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="chzzk">
@@ -1971,12 +2064,13 @@
                         <li>Supports <code>https://chzzk.naver.com/live/*/chat</code> and <code>https://chzzk.naver.com/iframe/live/*/chat</code>.</li>
                         <li>Viewer counts use CHZZK's live-status polling endpoint when viewer-count capture or hype mode is enabled.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="CHZZK - Popout Chat Capture table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1997,6 +2091,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="rumble-dom">
@@ -2006,12 +2101,13 @@
                         <li>Requires authenticated session cookies so the <code>service.php</code> viewer API responds.</li>
                         <li>Rendered Rant rows provide <code>hasDonation</code>; incoming raid cards provide <code>event: "raid"</code>. This DOM source does not emit the API bridge's subscriber/follower event feed.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Rumble - Standard DOM Capture table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2029,6 +2125,7 @@
                             <tr><td class="status-event"><code>raid</code></td><td>An incoming raid card appears in chat.</td><td>Uses the visible raid message and optional card image in <code>contentimg</code>.</td></tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
 
                 <article class="platform-card" id="rumble-ws">
@@ -2040,12 +2137,13 @@
                         <li><code>livestreams[].chat</code> only populates while the selected stream is live. Use <code>?streamId=...</code> to pin a specific stream when the API exposes more than one; invalid IDs now fail instead of silently falling back to another stream.</li>
                         <li>The page also resolves <code>https://rumble.com/chat/popup/&lt;livestreams[].id&gt;</code> so you can open the normal injected popup chat directly without first loading the broadcaster's <code>/live</code> page.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Rumble - Websocket/API URL table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2096,6 +2194,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                     <p class="field-highlights">This transport is intended for channels you own or manage. Because the API URL contains a live stream key, do not expose it in overlays, logs, screenshots, or shared browser profiles. Chat avatars come from Rumble's SSE chat stream once the official API resolves the stream ID; this transport does not scrape Rumble pages for avatars.</p>
                 </article>
                 <article class="platform-card" id="younow">
@@ -2105,12 +2204,13 @@
                         <li>Reads the rendered live chat DOM and emits standard chat payloads with <code>type: "younow"</code>.</li>
                         <li>Audience activity lines such as <code>is watching</code>, <code>I became a fan!</code>, and <code>invited N fans to this broadcast.</code> are flagged with <code>event: true</code> so event filters can route them.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="YouNow - DOM Capture table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2126,6 +2226,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
                 <article class="platform-card" id="favorited">
                     <h3>Favorited Studio - DOM Capture</h3>
@@ -2133,12 +2234,13 @@
                     <ul class="requirements">
                         <li>Reads the rendered live chat DOM and emits standard chat payloads with <code>type: "favorited"</code>.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="Favorited Studio - DOM Capture table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2154,6 +2256,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
                 <article class="platform-card" id="beamstream">
                     <h3>BEAM - DOM Capture</h3>
@@ -2161,12 +2264,13 @@
                     <ul class="requirements">
                         <li>Reads the rendered live chat DOM and emits standard chat payloads with <code>type: "beamstream"</code>.</li>
                     </ul>
-                    <table class="event-table">
+                    <div class="table-scroll" role="region" tabindex="0" aria-label="BEAM - DOM Capture table">
+<table class="event-table">
                         <thead>
                             <tr>
-                                <th>Event</th>
-                                <th>When it Fires</th>
-                                <th>Payload Notes</th>
+                                <th scope="col">Event</th>
+                                <th scope="col">When it Fires</th>
+                                <th scope="col">Payload Notes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -2182,6 +2286,7 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
                 </article>
                 <article class="platform-card" id="starvios">
                     <h3>Starvios</h3>
@@ -2200,12 +2305,13 @@
 						<li>Reads new rendered chat rows from <code>https://castyr.live/homebeta/popout-chat/*</code> and emits standard chat payloads with <code>type: "castyr"</code>.</li>
 						<li>Existing chat history is skipped when the source attaches.</li>
 					</ul>
-					<table class="event-table">
+					<div class="table-scroll" role="region" tabindex="0" aria-label="Castyr - DOM Capture table">
+<table class="event-table">
 						<thead>
 							<tr>
-								<th>Event</th>
-								<th>When it Fires</th>
-								<th>Payload Notes</th>
+								<th scope="col">Event</th>
+								<th scope="col">When it Fires</th>
+								<th scope="col">Payload Notes</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -2221,6 +2327,7 @@
 							</tr>
 						</tbody>
 					</table>
+                </div>
 				</article>
             </section>
 
@@ -2271,13 +2378,14 @@
             <section class="section-summary" id="cross-platform">
                 <h2>Cross-Platform Event Alignment</h2>
                 <p>Use this table to understand how similar concepts map across platforms. Where possible, new sources should align to the common event names in the first column.</p>
-                <table class="field-table summary-table">
+                <div class="table-scroll" role="region" tabindex="0" aria-label="Cross-Platform Event Alignment table">
+<table class="field-table summary-table">
                     <thead>
                         <tr>
-                            <th>Concept</th>
-                            <th>YouTube WS</th>
-                            <th>Twitch WS</th>
-                            <th>Kick WS</th>
+                            <th scope="col">Concept</th>
+                            <th scope="col">YouTube WS</th>
+                            <th scope="col">Twitch WS</th>
+                            <th scope="col">Kick WS</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -2361,6 +2469,7 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
 
                 <h3>Alignment Notes</h3>
                 <ul>
@@ -2378,12 +2487,13 @@
                 <p>This reference describes implemented payloads, not a guarantee that every platform delivers every event. Empty <code>hasDonation</code> assignments in a source do not demonstrate donation support. DOM visibility, account permissions, capture toggles, and API availability still determine what is received. Delete forwarding is source-specific; do not assume universal moderation sync.</p>
 
                 <h3>Tracked Mismatches and Voids</h3>
-                <table class="field-table summary-table">
+                <div class="table-scroll" role="region" tabindex="0" aria-label="Tracked Mismatches and Voids table">
+<table class="field-table summary-table">
                     <thead>
                         <tr>
-                            <th>Pair/Area</th>
-                            <th>Observed Mismatch / Void</th>
-                            <th>Impact</th>
+                            <th scope="col">Pair/Area</th>
+                            <th scope="col">Observed Mismatch / Void</th>
+                            <th scope="col">Impact</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -2409,17 +2519,19 @@
                         </tr>
                     </tbody>
                 </table>
+                </div>
             </section>
 
             <section class="deprecated-events" id="deprecated-events">
                 <h2>Source-Specific Aliases and Legacy Names</h2>
                 <p>These mappings are specific to the source/context listed, not global replacements. Consumer support for aliases varies by page. Current TikTok DOM and TikFinity sources still emit <code>followed</code>; Velora uses <code>subscription</code> and <code>channel_points</code>, and Streamlabs uses <code>subscription</code>. Accept the current source contract and its relevant legacy aliases rather than renaming every matching event.</p>
-                <table class="field-table">
+                <div class="table-scroll" role="region" tabindex="0" aria-label="Source-Specific Aliases and Legacy Names table">
+<table class="field-table">
                     <thead>
                         <tr>
-                            <th>Alias / Legacy Name</th>
-                            <th>Canonical Replacement</th>
-                            <th>Context</th>
+                            <th scope="col">Alias / Legacy Name</th>
+                            <th scope="col">Canonical Replacement</th>
+                            <th scope="col">Context</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -2445,6 +2557,7 @@
                         <tr><td><code>followed</code></td><td><code>new_follower</code></td><td>Current TikTok DOM/TikFinity output; accept both names when combining TikTok capture modes.</td></tr>
                     </tbody>
                 </table>
+                </div>
             </section>
 
             <section class="usage-notes" id="using-reference">
@@ -2475,11 +2588,13 @@
 <p><code>meta.monetization.commerce</code> in <code>monetization_update</code> contains enabled, qr, position, display (first/cycle), seconds, and a public items array. Each item has name, url, image, optional amount (null when unknown), currency, and purpose (shop/gift/support/membership). These are host-entered promotional details, not payment evidence. Adding or editing items emits no donation or purchase event. The generic overlay uses <code>mode=commerce</code>; <code>view=both|showcase|card|alerts</code> separates promotion from activity. Optional style, scale, cardevery, cardfor and onlytype URL parameters control presentation. Existing provider modes also accept view and scheduling controls. See the <a href="monetization.html#products-support-links">setup guide</a>.</p></section>
 <section class="section-summary" id="throne-events"><h2>Throne gift events</h2>
 <p>The opt-in Monetization integration forwards signed Throne events with <code>platform</code> and <code>type</code> set to <code>throne</code>. All three use a stable delivery <code>id</code>, plain-text <code>chatname</code>, <code>chatmessage</code> with <code>textonly: true</code>, item name in <code>subtitle</code>, and optional HTTPS thumbnail in <code>contentimg</code>.</p>
-<table class="event-table"><thead><tr><th>event</th><th>Meaning</th><th>Donation amount / rank</th></tr></thead><tbody><tr><td><code>gift</code></td><td>A purchased gift</td><td><code>hasDonation</code> and USD <code>donoValue</code>; +1 gift rank</td></tr><tr><td><code>giftcontribution</code></td><td>A contribution towards a gift</td><td>Contribution amount only; no rank increase</td></tr><tr><td><code>giftfunded</code></td><td>A crowdfunded gift completed</td><td>No <code>hasDonation</code> or <code>donoValue</code>, avoiding double-counting previous contributions; +1 gift rank</td></tr></tbody></table>
+<div class="table-scroll" role="region" tabindex="0" aria-label="Throne gift events table">
+<table class="event-table"><thead><tr><th scope="col">event</th><th scope="col">Meaning</th><th scope="col">Donation amount / rank</th></tr></thead><tbody><tr><td><code>gift</code></td><td>A purchased gift</td><td><code>hasDonation</code> and USD <code>donoValue</code>; +1 gift rank</td></tr><tr><td><code>giftcontribution</code></td><td>A contribution towards a gift</td><td>Contribution amount only; no rank increase</td></tr><tr><td><code>giftfunded</code></td><td>A crowdfunded gift completed</td><td>No <code>hasDonation</code> or <code>donoValue</code>, avoiding double-counting previous contributions; +1 gift rank</td></tr></tbody></table>
+                </div>
 <p><code>meta.throne</code> contains <code>itemName</code>, <code>creator</code> (public username), <code>completed</code>, <code>currency</code> and major-unit <code>amount</code>. For <code>giftfunded</code>, amount describes the goal, not new income. Anonymous gifters remain <code>Anonymous</code>; completed community gifts use <code>Community</code>. Private payment and shipping fields are never forwarded.</p>
 <p><code>monetization_update</code> snapshots additionally contain <code>meta.monetization.throne</code>: <code>enabled</code>, <code>username</code>, <code>url</code>, <code>qr</code>, <code>position</code>, <code>rank</code>, and <code>gifts</code>. These snapshots contain no webhook URL or listening credential.</p></section>
 <section class="usage-notes" id="host-voice-preview"><h2>Host voice commands (desktop preview)</h2><p>The Event Flow <strong>When I say...</strong> trigger receives trusted local microphone commands from SSApp. Its internal action context uses <code>chatname: "Host"</code>, <code>type: "hostvoice"</code>, the recognized phrase in <code>chatmessage</code>, and <code>textonly: true</code>. This is not an incoming platform event or a new chat transport. Sending these fields through chat cannot activate a voice trigger.</p><p>Requires an updated desktop build, explicit microphone start, and enabling actions after Test mode. See the <a href="voice-control-plan.md">preview setup and validation status</a>.</p></section>
-<section class="guide-card" id="commerce-live-controls"><h2>Product display controls</h2><p>Existing <code>monetization_update</code> snapshots may include <code>meta.monetization.commerce.live</code>: null for the saved schedule, or <code>{mode: "show" | "hide", url?: "https://...", until: 0 | epochMilliseconds}</code>. Show matches the exact saved product URL; a missing product shows no card. A positive until expires back to the saved schedule; zero lasts until changed or SSN restarts. Hide suppresses promotions, not paid activity alerts.</p><p><code>commerce.viewerURL</code> is the published read-only shop URL, or an empty string. When present, promotional QR codes link there. It never contains the SSN session or publishing key. Products remain in <code>commerce.items</code>. No donation/purchase event is emitted by display controls, imports or publishing. See <a href="product-controls.html">Product controls</a> for Event Flow and remote API usage.</p><p>The Event Flow <code>commerceControl</code> action waits for the direct/Chrome reply (up to eight seconds). On ordinary event payloads it preserves the event and adds <code>meta.commerceControlResult</code>: <code>{success: true, commerce: controlState}</code> or <code>{success: false, error: "..."}</code>. For an existing numeric, array or other non-object <code>meta</code>, metadata stays unchanged and the diagnostic is returned as <code>commerceControlResult</code> on the action result instead. Failed controls stop later actions in that chain without suppressing the original payment event. A timeout does not prove the control was unapplied; inspect state before retrying a relative command such as Next. Success confirms local selection/hidden/scheduled state, never OBS visibility or public-page synchronization.</p></section>
+<section class="section-summary" id="commerce-live-controls"><h2>Product display controls</h2><p>Existing <code>monetization_update</code> snapshots may include <code>meta.monetization.commerce.live</code>: null for the saved schedule, or <code>{mode: "show" | "hide", url?: "https://...", until: 0 | epochMilliseconds}</code>. Show matches the exact saved product URL; a missing product shows no card. A positive until expires back to the saved schedule; zero lasts until changed or SSN restarts. Hide suppresses promotions, not paid activity alerts.</p><p><code>commerce.viewerURL</code> is the published read-only shop URL, or an empty string. When present, promotional QR codes link there. It never contains the SSN session or publishing key. Products remain in <code>commerce.items</code>. No donation/purchase event is emitted by display controls, imports or publishing. See <a href="product-controls.html">Product controls</a> for Event Flow and remote API usage.</p><p>The Event Flow <code>commerceControl</code> action waits for the direct/Chrome reply (up to eight seconds). On ordinary event payloads it preserves the event and adds <code>meta.commerceControlResult</code>: <code>{success: true, commerce: controlState}</code> or <code>{success: false, error: "..."}</code>. For an existing numeric, array or other non-object <code>meta</code>, metadata stays unchanged and the diagnostic is returned as <code>commerceControlResult</code> on the action result instead. Failed controls stop later actions in that chain without suppressing the original payment event. A timeout does not prove the control was unapplied; inspect state before retrying a relative command such as Next. Success confirms local selection/hidden/scheduled state, never OBS visibility or public-page synchronization.</p></section>
 <section class="usage-notes" id="workflow-trigger"><h2>Named Stream Deck / API workflows</h2><p>The <a href="streamdeck-event-flow.html">named workflow trigger</a> creates an internal Event Flow message with <code>type: "api"</code>, <code>event: "workflow_trigger"</code>, <code>chatname: "Stream Deck / API"</code>, empty <code>chatmessage</code>, and <code>textonly: true</code>. Its <code>meta.workflow</code> object contains the trigger name and a caller-supplied JSON <code>data</code> object. Read values through templates such as <code>{meta.workflow.data.minutes}</code>. Only saved, enabled flows explicitly matching that trigger are evaluated. This is not an incoming viewer/chat event and is not broadcast as chat; copying these fields into chat does not activate the named trigger.</p></section>
 <section class="usage-notes" id="ninjachatter-audience-pilot"><h2>NinjaChatter audience pilot</h2><p>The experimental paired extension connector sends display-only rows with <code>type: socialstreamchat</code>, <code>platform: ninjachatter</code>, and <code>textonly: true</code>. <code>meta.ninjachatter</code> carries <code>origin: audience</code>, the descriptive <code>provider</code>, and public <code>room</code> ID. These rows bypass platform replies, bots, Event Flow triggers and points. A displayed provider is not authorization. Legacy NinjaChatter source captures include <code>meta.ninjachatter.room</code> for room-specific duplicate suppression.</p><p>Cheer uses a separate authenticated claim and result path, never a special chat command. The fixed preset emits the existing Actions overlay <code>show_text</code> message for three seconds. Its receipt means transport acceptance, not verified OBS display. No audience payload can select arbitrary actions. The pilot is disabled by default on NinjaChatter; Electron retains its existing relay until the new private pairing boundary is qualified.</p></section>
 <section class="section-summary" id="commerce-boards"><h2>Commerce spot boards and recent sales</h2>
@@ -2532,6 +2647,7 @@
         </div>
     </footer>
 
+    <script src="js/event-reference.js"></script>
     <script data-copy-markdown src="js/main.js"></script>
     <script>
         document.getElementById('current-year').textContent = new Date().getFullYear();
