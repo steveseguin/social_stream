@@ -909,20 +909,19 @@ if (typeof chrome.runtime == "undefined") {
 			const sender = args[1] || { tab: { id: null } };
 			const captureReply = args[2];
 			if (captureReply && args[0] && args[0].message) {
-				sender.ssappCaptureReply = true;
-				let response;
-				// Complete capture before releasing its callback: a source can delete
-				// the row immediately on receiving its MID.
+				let replied = false;
+				// Like Chrome, acknowledge the assigned MID before slow processing.
+				// Pending moderation prevents a deleted message from being relayed later.
 				handleRuntimeMessage(args[0], sender, function (value) {
-					response = value;
-					ipcRenderer.send("fromBackgroundResponse", value);
-				}).then(function () {
-					if (response && response.id === undefined && args[0].message.id !== undefined) {
-						response.id = args[0].message.id;
+					if (value && value.id === undefined && args[0].message.id !== undefined) {
+						value.id = args[0].message.id;
 					}
-					ipcRenderer.send("fromBackgroundResponse", response, captureReply);
+					replied = true;
+					ipcRenderer.send("fromBackgroundResponse", value);
+					ipcRenderer.send("fromBackgroundResponse", value, captureReply);
 				}).catch(function (error) {
-					ipcRenderer.send("fromBackgroundResponse", { error: error.message }, captureReply);
+					if (!replied) ipcRenderer.send("fromBackgroundResponse", { error: error.message }, captureReply);
+					else console.warn("[SSApp] Capture processing failed", error);
 				});
 				return;
 			}

@@ -3919,7 +3919,7 @@
                 triggerFireworks();
             }
 
-            showNotification(`${contribution.donator} added ${formatGoalValue(contribution.points)}!`);
+            showNotification(contribution.kind === 'follow' ? `${contribution.donator} just followed!` : `${contribution.donator} added ${formatGoalValue(contribution.points)}!`);
         }
 
         function processHypeContribution(data) {
