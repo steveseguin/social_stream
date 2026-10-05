@@ -106,6 +106,7 @@
                                 <li><a href="#favorited">Favorited Studio</a></li>
                                 <li><a href="#beamstream">BEAM</a></li>
 								<li><a href="#castyr">Castyr</a></li>
+                                <li><a href="#starvios">Starvios</a></li>
                                 <li><a href="#vaughn">Vaughn Live</a></li>
                                 <li><a href="#streamspace">Stream.space</a></li>
                                 <li><a href="#wtv-prime">w.tv and Prime</a></li>
@@ -2181,6 +2182,16 @@
                             </tr>
                         </tbody>
                     </table>
+                </article>
+                <article class="platform-card" id="starvios">
+                    <h3>Starvios</h3>
+                    <p class="source-note">Implementation: <code>sources/starvios.js</code></p>
+                    <ul>
+                        <li>Captures new rendered chat rows on <code>https://starvios.com/popout/chat/USERNAME</code> with <code>type: "starvios"</code>, plain sender names, name colors, and text or inline emotes according to <code>textonly</code>.</li>
+                        <li>Paid chat rows retain the displayed amount in <code>hasDonation</code> (for example, <code>100 Starvies</code>). No USD conversion or donation event is supplied.</li>
+                        <li>Existing rows and rows rendered during the initial 1.5-second history settling period are skipped. Separate pinned cards, reply previews, and subscription/raid notices are excluded. The popout supplies no verified viewer count.</li>
+                        <li>Uses the standard <code>focusChat</code> reply hook when a visible, editable input is present. Authenticated sending remains unverified.</li>
+                    </ul>
                 </article>
 				<article class="platform-card" id="castyr">
 					<h3>Castyr - DOM Capture</h3>

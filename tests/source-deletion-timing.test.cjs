@@ -108,12 +108,15 @@ test('YouTube DOM cancels deletion during its placeholder-avatar wait', async ()
     settings: { textonlymode: true, excludeReplyingTo: true }, youtubeShorts: false,
     messageHistory: new Set(), avatarHistory: new Map(), channelName: '', channelThumbnail: '', videoId: '',
     EMOTELIST: false, BTTV: false, SEVENTV: false, FFZ: false, chrome: runtime(packets),
+    window: {}, setTimeout, clearTimeout, pendingMessageReplies: new Map(),
+    messageReplyPrefix: 'fixture:', messageReplyCounter: 0,
     delay() { lookupStarted = true; return avatar.promise; }, escapeHtml: value => value,
     getAllContentNodes: node => node ? node.textContent : '', getYouTubeDonationAmount: () => '',
     document: { querySelector: () => null }, isHTMLElement: () => false, isObject: () => false,
     console: fixtureConsole(errors)
   });
-  install(c, source, ['processMessage', 'deleteThis', 'isYouTubePaidChatNode']);
+  install(c, source, ['processMessage', 'deleteThis', 'isYouTubePaidChatNode',
+    'sendYouTubeMessage', 'receiveMessageReply']);
   const target = row('deleted'), pending = c.processMessage(target);
   assert.equal(lookupStarted, true);
   target.removed = true;
@@ -122,7 +125,12 @@ test('YouTube DOM cancels deletion during its placeholder-avatar wait', async ()
   await pending;
   assert.equal(packets.filter(p => p.delete).length, 1);
   assert.equal(packets.filter(p => p.message).length, 0);
-  await c.processMessage(row('later'));
+  const later = row('later');
+  await c.processMessage(later);
+  assert.equal(later.dataset.mid, 123, 'Chrome callback still supplies the MID');
+  assert.equal(c.pendingMessageReplies.size, 0);
+  assert.equal(packets.find(p => p.message).youtubeMessageRequestId, undefined,
+    'Chrome does not request the SSApp compatibility reply');
   assert.equal(packets.filter(p => p.message).length, 1);
   assert.equal(packets.find(p => p.message).message.chatmessage, 'Original message');
   assert.deepEqual(errors, []);
@@ -186,7 +194,7 @@ function youtubeFixture(retry) {
     pendingYouTubeMessages: new Set(), cancelledYouTubeMessages: new WeakSet(),
     isPageVisible: false, currentStream: null, videoId: null, currentSourceName: '', currentSourceImage: '',
     youtubeRecommendedInterval: 5000, lastSuccessfulPollTime: 0, initialBacklogProcessing: false,
-    lastMessageTime: null, nextPageToken: null, LIVE_CHAT_MAX_RESULTS: 500,
+    lastMessageTime: null, lastMessageTimeIds: new Set(), nextPageToken: null, LIVE_CHAT_MAX_RESULTS: 500,
     consecutiveMaxMessages: 0, consecutiveEmptyPolls: 0, slowerPollingMode: false, quickPollCount: 0,
     document: { getElementById: () => ({ setAttribute() {} }) }, extractYouTubeGiftMetadata: () => null,
     getRichMessageForMessageData: () => null,
@@ -253,3 +261,33 @@ for (const retry of ['badge', 'emoji']) {
     });
   }
 }
+
+test('YouTube API keeps distinct equal-timestamp messages and ignores replay', async () => {
+  const f = youtubeFixture('badge');
+  f.ready();
+  await f.add('first');
+  await f.add('second');
+  await f.add('first');
+  await f.add('second');
+  assert.deepEqual(f.chatIds(), ['first', 'second']);
+  await f.add('newer', 'Viewer', '01');
+  await f.add('older', 'Viewer', '00');
+  assert.deepEqual(f.chatIds(), ['first', 'second', 'newer']);
+  assert.deepEqual(f.errors, []);
+});
+
+test('Pending capture cancellation preserves platform and exact-ID boundaries', () => {
+  const pending = [
+    { message: { type: 'kick', id: 'native-1', chatname: 'Viewer' } },
+    { message: { type: 'kick', id: 'native-1', chatname: 'Viewer' } },
+    { message: { type: 'kick', id: 'native-2', chatname: 'Viewer' } },
+    { message: { type: 'twitch', id: 'native-1', chatname: 'Viewer' } },
+    { message: { type: 'discord', id: 'native-1', chatname: 'Viewer' } }
+  ];
+  const c = vm.createContext({ pendingModeratedCaptures: new Set(pending) });
+  install(c, read('background.js'), ['cancelPendingModeratedCaptures']);
+  c.cancelPendingModeratedCaptures({ type: 'kick', id: 'native-1', onlyLast: true });
+  assert.deepEqual(pending.map(p => !!p.cancelled), [true, true, false, false, false]);
+  c.cancelPendingModeratedCaptures({ type: 'discord', id: 'native-1' });
+  assert.equal(pending[4].cancelled, undefined, 'Unrelated platforms retain their existing path');
+});

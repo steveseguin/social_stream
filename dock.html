@@ -3953,6 +3953,7 @@
 			}
 			var showDeleted = urlParams.has("showdeleted");
 			var deletedDockMessages = new WeakSet();
+			var pendingFeaturedMessage = null;
 			
 
 			var thisLabel = false;
@@ -4217,6 +4218,7 @@
 			}
 
 			var pressedClass = "pressed";
+			var featuredMessage = null;
 			var lastMessageClass = "last-message";
 
 			if (urlParams.has("unhighlight")) {
@@ -7211,7 +7213,7 @@
 				}
 			}
 
-			function deleteMessages(data, deleteOnlyLast=false) {
+			function deleteMessages(data, deleteOnlyLast=false, forceRemove=false) {
 				let selector = "";
 				let matchField = "";
 				const nativeId = data.delete.meta && data.delete.meta.messageId;
@@ -7239,7 +7241,12 @@
 				}
 
 				// Include queued rows already detached from the visible chat.
-				const nodes = new Set(Array.from(document.querySelectorAll(selector)));
+				const nodes = new Set();
+				// A pruned pending row is older than the visible rows, including for string IDs.
+				if (pendingFeaturedMessage && !pendingFeaturedMessage.node.isConnected && pendingFeaturedMessage.node.matches(selector)) {
+					nodes.add(pendingFeaturedMessage.node);
+				}
+				document.querySelectorAll(selector).forEach(node => nodes.add(node));
 				selectedQueue.concat(autoShowQueue).forEach(node => {
 					if (node.matches(selector)) nodes.add(node);
 				});
@@ -7247,6 +7254,7 @@
 					String(getNativeSourceControlMessageId(node.rawContents || {})) === String(nativeId)
 				).map(node => ({ node, id: node.dataset.mid, type: node.dataset.sourceType }));
 				const pending = historyMissedLiveBuffer.concat(queue.map(item => item.contents), messageBuffer.map(item => item.contents));
+				if (featuredMessage) pending.push(featuredMessage);
 				pending.forEach(message => {
 					if (data.delete.type && String(message.type) !== String(data.delete.type)) return;
 					if (nativeId) {
@@ -7255,7 +7263,10 @@
 						const value = matchField === "id" ? (message.mid || message.id) : message[matchField];
 						if (String(value) !== String(data.delete[matchField])) return;
 					}
-					matches.push({ message, id: message.mid || message.id, type: message.type });
+					const match = { message, id: message.mid || message.id, type: message.type };
+					// A selection copy must not make an older native-ID row the newest candidate.
+					if (message === featuredMessage) matches.unshift(match);
+					else matches.push(match);
 				});
 				// Native-message deletions already identify their target; onlyLast applies to the other selectors.
 				if (!nativeId && (deleteOnlyLast || data.delete.onlyLast) && matches.length) {
@@ -7264,8 +7275,10 @@
 						String(item.id) === String(newest.id) && item.type === newest.type));
 				}
 				const deletedNodes = new Set(matches.filter(item => item.node).map(item => item.node));
+				if (pendingFeaturedMessage && deletedNodes.has(pendingFeaturedMessage.node)) cancelPendingFeaturedMessage();
 				const deletedPending = new Set(matches.filter(item => item.message).map(item => item.message));
-				if (showDeleted) {
+				if (featuredMessage && deletedPending.has(featuredMessage)) sendDataP2P(false);
+				if (showDeleted && !forceRemove) {
 					deletedPending.forEach(message => deletedDockMessages.add(message));
 				} else {
 					historyMissedLiveBuffer = historyMissedLiveBuffer.filter(message => !deletedPending.has(message));
@@ -7275,7 +7288,7 @@
 				const previousQueueLength = selectedQueue.length;
 				selectedQueue = selectedQueue.filter(node => !deletedNodes.has(node));
 				autoShowQueue = autoShowQueue.filter(node => !deletedNodes.has(node));
-				deletedNodes.forEach(node => showDeleted ? markDeletedMessage(node) : node.remove());
+				deletedNodes.forEach(node => showDeleted && !forceRemove ? markDeletedMessage(node) : node.remove());
 				if (selectedQueue.length !== previousQueueLength) updateQueueButton(true);
 			}
 			
@@ -8130,6 +8143,7 @@
 					return; // does not match, so we assume this isn't for us.
 				}
 				if ("mid" in data) {
+					if (syncDocks || force) cancelPendingFeaturedMessage();
 					if (data.mid && (syncDocks || force)) {
 						if (autoTimeoutEnabled) {
 							lastPushed = Date.now();
@@ -8587,14 +8601,10 @@
 
 							timedOutUsers[data.timeoutUser.username+":"+data.timeoutUser.type] = Date.now() + data.timeoutUser.duration*1000;
 
-							document.querySelectorAll(dataAttributeSelector("data-chatname", data.timeoutUser.username) + dataAttributeSelector("data-source-type", data.timeoutUser.type)).forEach(ele => {
-								ele.remove();
-							});
+							deleteMessages({ delete: { chatname: data.timeoutUser.username, type: data.timeoutUser.type } }, false, true);
 
 							if (data.timeoutUser.type=="youtube"){
-								document.querySelectorAll(dataAttributeSelector("data-chatname", data.timeoutUser.username) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
-									ele.remove();
-								});
+								deleteMessages({ delete: { chatname: data.timeoutUser.username, type: "youtubeshorts" } }, false, true);
 							}
 						}
 						return true;
@@ -8626,17 +8636,13 @@
 							} else {
 								localBlockUserList[blockName] = [data.blockUser.type];
 							}
-							document.querySelectorAll(dataAttributeSelector("data-chatname", blockName) + dataAttributeSelector("data-source-type", data.blockUser.type)).forEach(ele => {
-								ele.remove();
-							});
+							deleteMessages({ delete: { chatname: blockName, type: data.blockUser.type } }, false, true);
 
 							if (data.blockUser.type == "youtube") {
 								if (!localBlockUserList[blockName].includes("youtubeshorts")) {
 									localBlockUserList[blockName].push("youtubeshorts");
 								}
-								document.querySelectorAll(dataAttributeSelector("data-chatname", blockName) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
-									ele.remove();
-								});
+								deleteMessages({ delete: { chatname: blockName, type: "youtubeshorts" } }, false, true);
 							}
 
 						} else if (data.blockUser.username) {
@@ -8650,9 +8656,7 @@
 							} else {
 								localBlockUserList[data.blockUser.username] = ["*"];
 							}
-							document.querySelectorAll(dataAttributeSelector("data-chatname", data.blockUser.username)).forEach(ele => {
-								ele.remove();
-							});
+							deleteMessages({ delete: { chatname: data.blockUser.username } }, false, true);
 						}
 						return true;
 					} catch (e) {
@@ -10011,6 +10015,7 @@
 			}
 
 			function deleteMessage(element) {
+				if (pendingFeaturedMessage && pendingFeaturedMessage.node === element) cancelPendingFeaturedMessage();
 				syncDataAny({ deleteMessage: element.dataset.mid }, false, true);
 				try {
 					const payload = buildSourceControlPayload(element);
@@ -10113,9 +10118,7 @@
 						} else {
 							localBlockUserList[chatName] = [type];
 						}
-						document.querySelectorAll(dataAttributeSelector("data-chatname", chatName) + dataAttributeSelector("data-source-type", type)).forEach(ele => {
-							ele.remove();
-						});
+						deleteMessages({ delete: { chatname: chatName, type: type } }, false, true);
 
 						let sendBlob = {};
 						sendBlob.chatname = chatName;
@@ -10174,14 +10177,10 @@
 
 							timedOutUsers[userId+":"+userType] = Date.now() + duration*1000;
 
-							document.querySelectorAll(dataAttributeSelector("data-chatname", userId) + dataAttributeSelector("data-source-type", userType)).forEach(ele => {
-								ele.remove();
-							});
+							deleteMessages({ delete: { chatname: userId, type: userType } }, false, true);
 
 							if (userType=="youtube"){
-								document.querySelectorAll(dataAttributeSelector("data-chatname", userId) + dataAttributeSelector("data-source-type", "youtubeshorts")).forEach(ele => {
-									ele.remove();
-								});
+								deleteMessages({ delete: { chatname: userId, type: "youtubeshorts" } }, false, true);
 							}
 						}
 					} catch (e) {
@@ -10419,8 +10418,10 @@
 						}
 					}
 				}
-				if (socketserver) {
-					socketserver.send(JSON.stringify({ queueLength: selectedQueue.length }));
+				if (socketserver && socketserver.readyState === 1) {
+					try {
+						socketserver.send(JSON.stringify({ queueLength: selectedQueue.length }));
+					} catch (e) {} // Queue status must not interrupt moderation while reconnecting.
 				}
 				if (autoshowqueued){
 					checkAutoShow();
@@ -10436,6 +10437,10 @@
 					selectedQueue.splice(index, 1); // 2nd parameter means remove one item only
 				}
 				updateQueueButton(true);
+			}
+
+			function cancelPendingFeaturedMessage() {
+				pendingFeaturedMessage = null;
 			}
 
 			function selectedMessage(event = false, element = false, lastpushreset = false) { 
@@ -10485,6 +10490,7 @@
 					return;
 				}
 
+				cancelPendingFeaturedMessage();
 				if (event && element.classList.contains(lastMessageClass)) {
 					// Message is already featured!
 					element.classList.remove(lastMessageClass); // remove classes
@@ -10537,8 +10543,11 @@
 					thirdPartyAPI(data); // not going to send base64 to the third party API, since that would kill my server, but third parties won't expect a blob.
 				} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
 					// youtube's images are a bit tricky; larger images don't always exist.
+					var featureRequest = { node: element };
+					pendingFeaturedMessage = featureRequest;
 					try {
 						toDataURL(data.chatimg, (base64Image) => {
+							if (pendingFeaturedMessage !== featureRequest) return;
 							// we upscale
 							data.chatimg = data.chatimg.replace("=s32-", "=s256-"); // Increases the resolution of the image
 							data.chatimg = data.chatimg.replace("=s64-", "=s256-");
@@ -10548,6 +10557,7 @@
 							sendDataP2P(data);
 						});
 					} catch (e) {
+						if (pendingFeaturedMessage !== featureRequest) return;
 						data.chatimg = data.chatimg.replace("=s32-", "=s256-"); // Increases the resolution of the image
 						data.chatimg = data.chatimg.replace("=s64-", "=s256-");
 						sendDataP2P(data);
@@ -13306,6 +13316,11 @@
 			function sendDataP2P(data, force=false) {
 				if (blockMessageSelecting || blockMessageSelecting2 || blockMessageSelecting3) {
 					return;
+				}
+
+				if (!data || !data.action) {
+					cancelPendingFeaturedMessage();
+					featuredMessage = data && typeof data === "object" ? data : null;
 				}
 
 				if (singlefeaturedwriter) {
