@@ -248,14 +248,14 @@
 			var key = "countdown:" + (c.target || c.minutes) + ":" + c.label;
 			if (target) {
 				end = target.getTime();
-				var savedStart = c.remember ? parseInt(SSO.store.get(key + ":start"), 10) : NaN;
+				var savedStart = c.remember && !(ctx && ctx.preview) ? parseInt(SSO.store.get(key + ":start"), 10) : NaN;
 				start = savedStart && savedStart < end ? savedStart : now;
 			} else {
 				var saved = c.remember && !(ctx && ctx.preview) ? parseInt(SSO.store.get(key + ":end"), 10) : NaN;
 				end = saved && saved > now ? saved : now + c.minutes * 60000;
 				if (saved && saved > now) { start = end - c.minutes * 60000; }
 			}
-			if (c.remember) { SSO.store.set(key + ":end", String(end)); SSO.store.set(key + ":start", String(start)); }
+			if (c.remember && !(ctx && ctx.preview)) { SSO.store.set(key + ":end", String(end)); SSO.store.set(key + ":start", String(start)); }
 			var total = Math.max(1, end - start);
 			var accent = SSO.color(c.accent);
 			var html = c.label ? '<div class="tm-label">' + esc(c.label) + "</div>" : "";
