@@ -19,12 +19,29 @@
 </head>
 <body>
 	<div id="sso-root"></div>
-	<script src="core.js"></script>
-	<script src="templates/socials.js"></script>
-	<script src="templates/time.js"></script>
-	<script src="templates/scenes.js"></script>
-	<script src="templates/maps.js"></script>
-	<script src="templates/fun.js"></script>
+	<script src="core.js?v=11"></script>
+	<script src="templates/countries.js?v=10"></script>
+	<script src="templates/engines.js?v=11"></script>
+	<script src="templates/socials.js?v=11"></script>
+	<script src="templates/time.js?v=11"></script>
+	<script src="templates/scenes.js?v=11"></script>
+	<script src="templates/maps.js?v=11"></script>
+	<script src="templates/fun.js?v=10"></script>
+	<script src="templates/text.js?v=10"></script>
+	<script src="templates/gaming.js?v=10"></script>
+	<script src="templates/obs.js?v=11"></script>
+	<script src="templates/pets.js?v=10"></script>
+	<script src="templates/extra.js?v=11"></script>
+	<script src="templates/themes.js?v=10"></script>
+	<script src="templates/music.js?v=11"></script>
+	<script src="templates/promo.js?v=10"></script>
+	<script src="templates/live.js?v=10"></script>
+	<script src="templates/games.js?v=11"></script>
+	<script src="templates/reef.js?v=11"></script>
+	<script src="templates/kaiju.js?v=10"></script>
+	<script src="templates/party.js?v=11"></script>
+	<script src="templates/cozy.js?v=11"></script>
+	<script src="templates/themebar.js?v=11"></script>
 	<script>
 	(function () {
 		var params = new URLSearchParams(location.search);
@@ -67,9 +84,52 @@
 		document.body.className = "sso-t-" + def.id;
 		if (def.css) { SSO.addStyle(def.css, "sso-css-" + def.id); }
 
-		SSO.loadScripts(def.libs || [], function () {
-			def.render(root, cfg, { params: params, preview: params.has("preview") });
+		var ctx = { params: params, preview: params.has("preview") };
+		// Track template timers so a replay doesn't leave old loops running.
+		var timers = [];
+		var nativeInterval = window.setInterval;
+		window.setInterval = function (fn, ms) { var id = nativeInterval(fn, ms); timers.push(id); return id; };
+		function draw() {
+			timers.forEach(function (id) { clearInterval(id); });
+			timers = [];
+			SSO.cleanup(root);
+			root.innerHTML = "";
+			def.render(root, cfg, ctx);
+		}
+
+		if (cfg.huecycle > 0) {
+			SSO.addStyle("@keyframes sso-hue{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(360deg)}}");
+			root.style.animation = "sso-hue " + (cfg.huecycle * 60) + "s linear infinite";
+		}
+		if (cfg.fadein > 0) {
+			root.style.opacity = "0";
+			root.style.transition = "opacity " + cfg.fadein + "s ease";
+			setTimeout(function () { root.style.opacity = "1"; }, 50);
+		}
+		if (cfg.cycleshow > 0) {
+			// Periodically fade the whole overlay out and back in (handy for socials that shouldn't sit there all stream).
+			root.style.transition = "opacity 1.2s ease";
+			var visibleNow = true;
+			(function cycle() {
+				setTimeout(function () {
+					visibleNow = !visibleNow;
+					root.style.opacity = visibleNow ? "1" : "0";
+					cycle();
+				}, (visibleNow ? cfg.cycleshow : cfg.cyclehide) * 1000);
+			})();
+		}
+		var onlyScenes = String(cfg.scenes || "").split(",").map(function (s) { return s.trim().toLowerCase(); }).filter(Boolean);
+		function sceneVisible(name) {
+			if (!onlyScenes.length || !name) { return; }
+			root.style.visibility = onlyScenes.indexOf(String(name).toLowerCase()) === -1 ? "hidden" : "";
+		}
+		if (onlyScenes.length) { SSO.obs.scene(function (sc) { if (sc) { sceneVisible(sc.name); } }); }
+		SSO.obs.on("obsSceneChanged", function (d) {
+			sceneVisible(d.name);
+			if (cfg.replay) { draw(); }
 		});
+
+		SSO.loadScripts(def.libs || [], draw);
 	})();
 	</script>
 </body>

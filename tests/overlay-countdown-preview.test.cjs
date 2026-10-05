@@ -20,7 +20,7 @@ function fixture() {
         constructor(...args) { super(...(args.length ? args : [now])); }
         static now() { return now; }
     }
-    const window = { location: { search: '' }, localStorage: {
+    const window = { addEventListener() {}, removeEventListener() {}, location: { search: '' }, localStorage: {
         getItem(key) { return data.get(key) ?? null; },
         setItem(key, value) { data.set(key, String(value)); },
         removeItem(key) { data.delete(key); }
@@ -74,3 +74,4 @@ test('Non-remembered viewers and previews do not write storage', () => {
     const f = fixture(); f.render('remember=0'); f.render('remember=0', true);
     assert.equal(f.data.size, 0);
 });
+
