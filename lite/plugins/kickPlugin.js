@@ -136,6 +136,7 @@ export class KickPlugin extends BasePlugin {
     this.channelNumericId = null;
     this.channelUserId = null;
     this.seenIds = new Set();
+    this.pendingMessages = new Set();
 
     this.bridgeFrame = null;
     this.bridgeReady = false;
@@ -946,18 +947,23 @@ export class KickPlugin extends BasePlugin {
   }
 
   async emitMessage(payload) {
+    let pendingMessage = null;
     if (!payload) {
       return;
     }
 
     try {
-      const id = payload.id || payload.uuid || payload.message_id;
+      const rawId = payload.id || payload.uuid || payload.message_id;
+      const id = rawId ? String(rawId) : null;
       if (id && this.seenIds.has(id)) {
         return;
       }
       if (id) {
         this.seenIds.add(id);
       }
+
+      pendingMessage = { id, cancelled: false, published: false };
+      this.pendingMessages.add(pendingMessage);
 
       const sender = payload.sender || payload.user || {};
       let displayName = sender.username || sender.slug || sender.display_name || sender.name || 'Kick viewer';
@@ -969,6 +975,7 @@ export class KickPlugin extends BasePlugin {
       baseBadges = mergeBadges(baseBadges, mapBadges(sender.badges_v2));
 
       const enrichment = await this.resolveSenderDetails(sender);
+      if (pendingMessage.cancelled) return;
       const avatar = normalizeImage(enrichment?.avatar || baseAvatar);
       const nameColor = enrichment?.nameColor || baseNameColor;
       const badges = mergeBadges(baseBadges, enrichment?.badges || []);
@@ -1050,7 +1057,7 @@ export class KickPlugin extends BasePlugin {
         message.previewText = htmlToText(message.chatmessage);
       }
 
-      await this.publishWithEmotes(message);
+      await this.publishWithEmotes(message, { pendingMessage });
 
       if (this.seenIds.size > HISTORY_LIMIT) {
         const extras = this.seenIds.size - HISTORY_LIMIT;
@@ -1063,6 +1070,8 @@ export class KickPlugin extends BasePlugin {
       }
     } catch (err) {
       this.log(`Failed to emit Kick message: ${err?.message || err}`);
+    } finally {
+      if (pendingMessage) this.pendingMessages.delete(pendingMessage);
     }
   }
 
@@ -1287,7 +1296,8 @@ export class KickPlugin extends BasePlugin {
     if (!message) {
       return;
     }
-    const { silent = false, note = null } = options;
+    const { silent = false, note = null, pendingMessage = null } = options;
+    if (pendingMessage && pendingMessage.cancelled) return;
 
     if (typeof message.previewText !== 'string' || !message.previewText.length) {
       // textonly=true carries literal chatmessage text: do not HTML-parse/encode it or add emotes. HTML mode uses the provider/adapter safety boundary; Lite bypasses background.js.
@@ -1306,6 +1316,10 @@ export class KickPlugin extends BasePlugin {
     const publishOptions = { silent };
     if (note) {
       publishOptions.note = note;
+    }
+    if (pendingMessage) {
+      if (pendingMessage.cancelled) return;
+      pendingMessage.published = true;
     }
     this.publish(message, publishOptions);
   }
@@ -1727,7 +1741,11 @@ export class KickPlugin extends BasePlugin {
     }
 
     if (eventName === 'App\\Events\\ChatMessageDeletedEvent' || eventName === 'App\\Events\\MessageDeletedEvent') {
-      const targetId = data?.message_id || data?.id;
+      const rawId = data?.message_id || data?.id;
+      const targetId = rawId ? String(rawId) : null;
+      this.pendingMessages.forEach(pending => {
+        if (targetId && pending.id === targetId) pending.cancelled = true;
+      });
       if (targetId && this.seenIds.has(targetId)) {
         this.messenger.sendDelete({
           type: 'kick',
@@ -1744,6 +1762,7 @@ export class KickPlugin extends BasePlugin {
   }
 
   handleWsClose(event) {
+    this.cancelPendingMessages();
     this.log(`Kick websocket closed (${event?.code || 'unknown code'})`);
     if (this.pingTimer) {
       window.clearInterval(this.pingTimer);
@@ -1794,7 +1813,17 @@ export class KickPlugin extends BasePlugin {
     }, intervalMs);
   }
 
+  cancelPendingMessages() {
+    this.pendingMessages.forEach(pending => {
+      // A reconnect can replay unfinished messages, but not moderated or published rows.
+      if (!pending.cancelled && !pending.published && pending.id) this.seenIds.delete(pending.id);
+      pending.cancelled = true;
+    });
+    this.pendingMessages.clear();
+  }
+
   disconnectWebsocket() {
+    this.cancelPendingMessages();
     if (this.pingTimer) {
       window.clearInterval(this.pingTimer);
       this.pingTimer = null;

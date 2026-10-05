@@ -342,9 +342,76 @@ async function testAdvancedHistoryIndex(browser) {
   await page.close();
 }
 
+async function testStartupWithContinuousUpdates(browser) {
+  const { page, pageErrors } = await createHarnessPage(browser, true);
+  await page.evaluate(() => {
+    var row = window.__addBlazeMessage(0, "History", "Existing message", false);
+    window.__blazeLayoutTimer = setInterval(function() {
+      row.dataset.knownSize = row.dataset.knownSize === "42" ? "43" : "42";
+    }, 100);
+  });
+  await loadSource(page);
+  await waitForChatConnection(page);
+  await waitForSeededRows(page, [0]);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 0, "startup history should remain suppressed during continuous updates");
+  await page.evaluate(() => window.__addBlazeMessage(1, "Live", "Capture while layout keeps changing", false));
+  await waitForMessageCount(page, 1);
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages[0].chatmessage), "Capture while layout keeps changing");
+  await page.evaluate(() => clearInterval(window.__blazeLayoutTimer));
+  await assertNoPageErrors(pageErrors, "continuous startup updates");
+  await page.close();
+}
+
+async function testInitialScrollPosition(browser, desktop) {
+  const { page, pageErrors } = await createHarnessPage(browser, true);
+  await page.evaluate((desktop) => {
+    if (desktop) window.ninjafy = {};
+    var chat = document.getElementById("chat");
+    var scroller = document.createElement("div");
+    scroller.className = "simplebar-content-wrapper";
+    scroller.style.cssText = "height:100px;overflow:auto";
+    chat.replaceWith(scroller);
+    scroller.appendChild(chat);
+    for (var index = 0; index < 12; index++) {
+      var row = window.__addBlazeMessage(index, "History", "Earlier message " + index, false);
+      row.style.height = "50px";
+    }
+    scroller.scrollTop = 100;
+  }, desktop);
+  await loadSource(page);
+  await waitForSeededRows(page, [11]);
+  const scroll = await page.evaluate(() => {
+    var scroller = document.querySelector(".simplebar-content-wrapper");
+    return { top: scroller.scrollTop, bottom: scroller.scrollHeight - scroller.clientHeight };
+  });
+  assert.strictEqual(scroll.top, desktop ? scroll.bottom : 100, "only SSApp should start at the latest messages");
+  assert.strictEqual(await page.evaluate(() => window.__blazeMessages.length), 0, "moving to the live edge must not emit startup history");
+  if (desktop) {
+    await page.evaluate(() => document.querySelector('[data-item-index="11"]').style.height = "150px");
+    await page.waitForFunction(() => {
+      var scroller = document.querySelector(".simplebar-content-wrapper");
+      return scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 1;
+    });
+  }
+  await page.evaluate(() => {
+    var scroller = document.querySelector(".simplebar-content-wrapper");
+    scroller.dispatchEvent(new WheelEvent("wheel", { deltaY: -100 }));
+    scroller.scrollTop = 100;
+    window.__addBlazeMessage(12, "Live", "New message after startup", false);
+  });
+  await waitForMessageCount(page, 1);
+  await page.waitForTimeout(600);
+  assert.strictEqual(await page.evaluate(() => document.querySelector(".simplebar-content-wrapper").scrollTop), 100, "manual scrolling after startup must be left alone");
+  await assertNoPageErrors(pageErrors, "initial scroll position");
+  await page.close();
+}
+
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, args: ["--renderer-process-limit=4"] });
   try {
+    await testStartupWithContinuousUpdates(browser);
+    await testInitialScrollPosition(browser, true);
+    await testInitialScrollPosition(browser, false);
     await testBacklogAndSteadyState(browser);
     await testSingleExistingHistoryRow(browser);
     await testReplacementContainerHistory(browser);

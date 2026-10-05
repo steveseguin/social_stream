@@ -225,6 +225,48 @@ async function testGoalLayouts(baseUrl, browser) {
 	}
 }
 
+async function testJarPrefillReset(baseUrl, browser) {
+	const context = await makeContext(browser);
+	try {
+		const { page, errors } = await openTipJar(context, baseUrl + '/tipjar.html?preview&style=jar&startamount=100&goal=100');
+		await page.waitForFunction(() => jarHearts.length > 0);
+		await page.evaluate(() => processData({ cmd: 'resettipjar' }));
+		await page.waitForTimeout(3600);
+		assert.strictEqual(await page.evaluate(() => currentAmount), 0);
+		assert.strictEqual(await page.evaluate(() => jarHearts.length), 0, 'Reset must cancel pending prefill hearts');
+		await page.evaluate(() => seedJarHearts());
+		await page.waitForTimeout(200);
+		assert.strictEqual(await page.evaluate(() => jarHearts.length), 0, 'An empty total must not prefill');
+		assert.deepStrictEqual(errors, []);
+	} finally {
+		await context.close();
+	}
+}
+
+async function testFollowerTipExclusion(baseUrl, browser) {
+	const context = await makeContext(browser);
+	try {
+		for (const [params, expectedTips, expectedFollow] of [
+			['followergoal', 0, 1],
+			['followergoal&donationpoints=2', 10, 1],
+			['followergoal&donationpoints=2&notips', 0, 1],
+			['goalmetric=followers&donationpoints=2&notips', 0, 1],
+			['hype&donationpoints=2', 10, 0],
+			['hype&donationpoints=2&notips', 0, 0]
+		]) {
+			const { page, errors } = await openTipJar(context, baseUrl + '/tipjar.html?preview&style=bar&goal=100&' + params);
+			await page.evaluate(() => processData({ id: 'tip', type: 'youtube', chatname: 'Supporter', hasDonation: '$5', donoValue: 5 }));
+			assert.strictEqual(await page.evaluate(() => currentAmount), expectedTips, params + ': tip contribution');
+			await page.evaluate(() => processData({ id: 'follow', type: 'twitch', chatname: 'Follower', event: 'new_follower' }));
+			assert.strictEqual(await page.evaluate(() => currentAmount), expectedTips + expectedFollow, params + ': follower contribution');
+			assert.deepStrictEqual(errors, []);
+			await page.close();
+		}
+	} finally {
+		await context.close();
+	}
+}
+
 function testPopupContract() {
 	const popupHtml = fs.readFileSync(path.join(repoRoot, "popup.html"), "utf8");
 	const popupSource = fs.readFileSync(path.join(repoRoot, "popup.js"), "utf8");
@@ -252,6 +294,10 @@ async function main() {
 		console.log("PASS Tip Jar can count combined Super Chat and Super Sticker goals");
 		await testGiftPurchaseExclusion(baseUrl, browser);
 		console.log("PASS Tip Jar gifted-membership exclusion works in Hype mode");
+		await testFollowerTipExclusion(baseUrl, browser);
+		console.log("PASS Follower and Hype goals honor tip exclusion while preserving follower contributions");
+		await testJarPrefillReset(baseUrl, browser);
+		console.log("PASS Reset keeps the jar empty while its starting hearts are still loading");
 		await testGoalLayouts(baseUrl, browser);
 		console.log("PASS Goal layouts render donations, count/Hype/recurring goals, and narrow widths");
 	} finally {

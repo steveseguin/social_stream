@@ -1,8 +1,7 @@
 name: Enhance Commit Messages
 
 on:
-  push:
-    branches: [beta]
+  workflow_dispatch:
 
 concurrency:
   group: enhance-commits-${{ github.ref }}
@@ -10,7 +9,7 @@ concurrency:
 
 jobs:
   enhance-commits:
-    if: "!contains(github.event.head_commit.message, '[auto-enhanced]') && !contains(github.event.head_commit.message, '[skip pages]') && github.actor != 'github-pages[bot]'"
+    if: github.ref == 'refs/heads/beta'
     runs-on: ubuntu-latest
     permissions:
       contents: write

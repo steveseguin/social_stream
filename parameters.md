@@ -426,7 +426,7 @@ Set **Custom title** under **Viewer Count & Chat Activity Overlay → Enable and
 
 | Parameter | Values | Description |
 |-----------|--------|-------------|
-| `style` | `jar`, `meter`, `bar`, `compact`, `vertical`, `minimal`, `text` | Selects the tip jar display style. `bar` is the fluid goal bar; `compact`/`vertical` are simple square-edged bars for corners; `text` is a one-line readout |
+| `style` | `jar`, `meter`, `bar`, `compact`, `vertical`, `minimal`, `text`, `card`, `ring`, `lowerthird`, `segmented`, `glassjar`, `jar3d`, `beermug`, `coffeemug`, `potion`, `piggybank`, `chest`, `thermometer`, `battery`, `xpbar`, `healthbar`, `pixelbar`, `neonbar`, `terminal`, `milestones`, `gauge` | Selects the tip jar display style. `bar` is the fluid goal bar; `compact`/`vertical` are simple square-edged bars for corners; `text` is a one-line readout; `card`/`ring`/`lowerthird`/`segmented` are panel layouts; `glassjar`, `jar3d`, `beermug`, `coffeemug`, `potion`, `piggybank`, `chest` and `thermometer` are physical containers that fill as the goal rises; `battery`, `xpbar`, `healthbar`, `pixelbar`, `neonbar`, `terminal`, `milestones` and `gauge` are goal bars |
 | `goal` | number | Sets the target amount for the bar or jar |
 | `title` | string | Sets the visible goal title (e.g. `Star Goal`, `SuperChat Goal`) |
 | `goalmetric` | `value`, `count` | Uses donation value by default. `count` adds one per qualifying donation event regardless of its monetary value and takes priority over Hype scoring |
@@ -450,13 +450,19 @@ Set **Custom title** under **Viewer Count & Chat Activity Overlay → Enable and
 | `goalstep` or `goalincrement` | number | Optional step size for `rollinggoal`; defaults to `goal` |
 | `fillstart` or `barcolorstart` | CSS color | Fill color when empty/low (default `#2196F3` blue). Applies to `bar`/`compact`/`vertical`, and recolors the `meter` fill |
 | `fillend` or `barcolorend` | CSS color | Fill color when full (default `#f44336` red). Applies to `bar`/`compact`/`vertical`, and recolors the `meter` fill |
-| `fillmode` | `progress`, `gradient`, `solid` | `bar` fill behavior. `progress` (default) shifts the whole bar from start→end color as it fills; `gradient` reveals a fixed start→end gradient; `solid` uses only the start color |
+| `fillmode` | `progress`, `gradient`, `solid` | Fill behavior for `bar`, the goal bar styles, and the physical containers. `progress` (default) shifts the whole fill from start→end color as it fills; `gradient` reveals a fixed start→end gradient; `solid` uses only the start color |
 | `barheight` | number | Track height (px) for `bar`/`compact`/`vertical` styles |
 | `bartextsize` or `barfontsize` | number | Text size in px for the centered `bar` style amount text |
 | `barradius` | number or CSS length | Corner radius for bar tracks. Use `0` for square corner-overlay edges |
 | `noliquid` | boolean | Disables the flowing-liquid animation on the `bar` style |
 | `theme` | `default`, `neon`, `gold` | Visual theme for the meter/bar |
 | `celebration` | `hearts`, `confetti`, `fireworks`, `none` | Effect played on milestones/level-ups |
+| `dropitem` | `hearts`, `coins`, `gems`, `stars`, `bills` | Item that falls into the `jar` physics cup and drops into the physical jar styles. Defaults to the golden heart on `jar` and a coin elsewhere |
+| `jarlabel` | string | Sticker text on the `glassjar` style, up to 12 characters (default `TIPS`) |
+| `hidetitle` | boolean | Hides the goal title above the physical jar styles |
+| `hidepercent` | boolean | Hides the percentage on the physical jars and on the `card`/`ring`/`lowerthird`/`segmented` panels |
+| `nospin` | boolean | Stops the `jar3d` cylinder from rotating |
+| `accent` | six-digit hex color | Panel accent color, and the liquid color for the physical jars when no `fillstart`/`fillend` is set |
 
 ## Credits Roll Parameters (`credits.html`)
 

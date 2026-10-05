@@ -337,8 +337,53 @@
 	  return deletionObserver;
 	}
 	
+	// SSApp's legacy sendMessage callback returns before the background assigns an MID.
+	// Match its later tab reply to this row; this request reference is not a message ID.
+	const pendingMessageReplies = new Map();
+	const messageReplyPrefix = Date.now().toString(36) + ":";
+	let messageReplyCounter = 0;
+
+	function receiveMessageReply(requestId, response) {
+		const pending = pendingMessageReplies.get(requestId);
+		if (!pending || !response || !Number.isSafeInteger(response.id) || response.id <= 0) return;
+		pendingMessageReplies.delete(requestId);
+		clearTimeout(pending.timer);
+		pending.ele.dataset.mid = response.id;
+		pending.ele.ssnMidPending = false;
+		if (pending.ele.ssnDeletePending || pending.ele.hasAttribute("is-deleted")) {
+			pending.ele.ssnDeletePending = false;
+			deleteThis(pending.ele);
+		}
+	}
+
+	function sendYouTubeMessage(data, ele) {
+		const requestId = messageReplyPrefix + (++messageReplyCounter);
+		const request = { message: data };
+		if (window.ninjafy) request.youtubeMessageRequestId = requestId;
+		ele.ssnMidPending = true;
+		const timer = setTimeout(function () {
+			pendingMessageReplies.delete(requestId);
+			ele.ssnMidPending = false;
+			console.warn("[YouTube] No MID received for captured message");
+		}, 30000);
+		pendingMessageReplies.set(requestId, { ele: ele, timer: timer });
+		try {
+			chrome.runtime.sendMessage(chrome.runtime.id, request, function (response) {
+				receiveMessageReply(requestId, response);
+			});
+		} catch (error) {
+			pendingMessageReplies.delete(requestId);
+			clearTimeout(timer);
+			ele.ssnMidPending = false;
+		}
+	}
+
 	function deleteThis(ele) {
 	  if (ele.deleted) return;
+	  if (ele.ssnMidPending && !ele.dataset.mid) {
+		  ele.ssnDeletePending = true;
+		  return;
+	  }
 	  try {
 		const chatname = ele.querySelector("#author-name");
 		const id = parseInt(ele.dataset.mid, 10);
@@ -1092,13 +1137,7 @@
 							data.sourceImg = channelThumbnail;
 						}
 
-						chrome.runtime.sendMessage(
-							chrome.runtime.id,
-							{ message: data },
-							(e) => {
-								e.id ? (ele.dataset.mid = e.id) : "";
-							}
-						);
+						sendYouTubeMessage(data, ele);
 					}
 				}
 			} catch (e) {
@@ -1678,18 +1717,7 @@
 			//console.log(data);
 		//}
 
-		try {
-			chrome.runtime.sendMessage(
-				chrome.runtime.id,
-				{
-					message: data
-				},
-				(e)=> {
-					//console.log(e);
-					e.id ? (ele.dataset.mid = e.id) : "";
-				}
-			);
-		} catch (e) {}
+		sendYouTubeMessage(data, ele);
 	}
 	var settings = {};
 	var youtubeSettingsLoaded = false;
@@ -1741,6 +1769,11 @@
 				return;
 			}
 			if (typeof request === "object") {
+				if (request.youtubeMessageResponse) {
+					receiveMessageReply(request.youtubeMessageResponse.requestId, request.youtubeMessageResponse);
+					sendResponse(true);
+					return;
+				}
 				
 				if ("state" in request) {
 					isExtensionOn = request.state;
@@ -2886,16 +2919,7 @@
 			data.chatname = getAllContentNodes(ele.querySelector(".text-owner-light, .text-owner-dark"));
 			data.chatmessage = getAllContentNodes(ele.querySelector("span.cursor-auto.align-middle"));
 			data.type = "youtube";
-			chrome.runtime.sendMessage(
-				chrome.runtime.id,
-				{
-					message: data
-				},
-				(e)=> {
-					//console.log(e);
-					e.id ? (ele.dataset.mid = e.id) : "";
-				}
-			);
+			sendYouTubeMessage(data, ele);
 		} catch (e) {}
 	}
 	

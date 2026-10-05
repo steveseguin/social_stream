@@ -17,7 +17,7 @@ function extractFunction(name) {
     return dock.slice(start, end + '\n\t\t\t}'.length);
 }
 const source = ['processInput', 'updateQueueButton', 'removeQueue', 'selectedMessage',
-    'checkAutoShow', 'nextInQueue', 'syncQueueP2P'].map(extractFunction).join('\n');
+    'checkAutoShow', 'nextInQueue', 'syncQueueP2P', 'cancelPendingFeaturedMessage'].map(extractFunction).join('\n');
 
 function fixture(ids = [1, 2, 3]) {
     const rows = new Map();
@@ -43,13 +43,13 @@ function fixture(ids = [1, 2, 3]) {
     const lengths = [], syncs = [], timers = new Map();
     let timerId = 0;
     const c = vm.createContext({
-        selectedQueue: [], syncDocks: true, autoshowqueued: false,
+        selectedQueue: [], pendingFeaturedMessage: null, syncDocks: true, autoshowqueued: false,
         blockMessageSelecting: false, blockMessageSelecting2: false,
         shouldDeferRawDonationWebhook: () => false, isRawDonationWebhook: () => false,
         cancelPendingRawWebhookFallback() {}, isDuplicateWebhookDelivery: () => false, applyHiddenState() {},
         dataAttributeSelector: (attribute, id) => String(id),
         document: { querySelector: id => rows.get(id) || null },
-        getById: id => controls[id], socketserver: { send: raw => lengths.push(JSON.parse(raw).queueLength) },
+        getById: id => controls[id], socketserver: { readyState: 1, send: raw => lengths.push(JSON.parse(raw).queueLength) },
         syncDataAny: data => syncs.push(JSON.parse(JSON.stringify(data))),
         processData: ({ contents }) => rows.get(String(contents.id)) || makeRow(contents.id),
         pauseState: false, smoothMessageBuffer: false,

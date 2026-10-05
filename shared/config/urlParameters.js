@@ -2756,8 +2756,8 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "aliases": [
               "style"
             ],
-            "values": "jar, meter, bar, compact, vertical, minimal, text",
-            "description": "Selects the tip jar display style. bar is the fluid goal bar; compact/vertical are simple square-edged bars for corners; text is a one-line readout"
+            "values": "jar, meter, bar, compact, vertical, minimal, text, card, ring, lowerthird, segmented, glassjar, jar3d, beermug, coffeemug, potion, piggybank, chest, thermometer, battery, xpbar, healthbar, pixelbar, neonbar, terminal, milestones, gauge",
+            "description": "Selects the tip jar display style. bar is the fluid goal bar; compact/vertical are simple square-edged bars for corners; text is a one-line readout; card/ring/lowerthird/segmented are panel layouts; glassjar, jar3d, beermug, coffeemug, potion, piggybank, chest and thermometer are physical containers that fill as the goal rises; battery, xpbar, healthbar, pixelbar, neonbar, terminal, milestones and gauge are goal bars"
           },
           {
             "key": "goal",
@@ -2983,7 +2983,7 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
               "fillmode"
             ],
             "values": "progress, gradient, solid",
-            "description": "bar fill behavior. progress (default) shifts the whole bar from start→end color as it fills; gradient reveals a fixed start→end gradient; solid uses only the start color"
+            "description": "Fill behavior for bar, the goal bar styles, and the physical containers. progress (default) shifts the whole fill from start→end color as it fills; gradient reveals a fixed start→end gradient; solid uses only the start color"
           },
           {
             "key": "barheight",
@@ -3039,6 +3039,60 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "hearts, confetti, fireworks, none",
             "description": "Effect played on milestones/level-ups"
+          },
+          {
+            "key": "dropitem",
+            "displayName": "dropitem",
+            "aliases": [
+              "dropitem"
+            ],
+            "values": "hearts, coins, gems, stars, bills",
+            "description": "Item that falls into the jar physics cup and drops into the physical jar styles. Defaults to the golden heart on jar and a coin elsewhere"
+          },
+          {
+            "key": "jarlabel",
+            "displayName": "jarlabel",
+            "aliases": [
+              "jarlabel"
+            ],
+            "values": "string",
+            "description": "Sticker text on the glassjar style, up to 12 characters (default TIPS)"
+          },
+          {
+            "key": "hidetitle",
+            "displayName": "hidetitle",
+            "aliases": [
+              "hidetitle"
+            ],
+            "values": "boolean",
+            "description": "Hides the goal title above the physical jar styles"
+          },
+          {
+            "key": "hidepercent",
+            "displayName": "hidepercent",
+            "aliases": [
+              "hidepercent"
+            ],
+            "values": "boolean",
+            "description": "Hides the percentage on the physical jars and on the card/ring/lowerthird/segmented panels"
+          },
+          {
+            "key": "nospin",
+            "displayName": "nospin",
+            "aliases": [
+              "nospin"
+            ],
+            "values": "boolean",
+            "description": "Stops the jar3d cylinder from rotating"
+          },
+          {
+            "key": "accent",
+            "displayName": "accent",
+            "aliases": [
+              "accent"
+            ],
+            "values": "six-digit hex color",
+            "description": "Panel accent color, and the liquid color for the physical jars when no fillstart/fillend is set"
           }
         ]
       }

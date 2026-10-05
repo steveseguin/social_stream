@@ -438,6 +438,11 @@
 			return;
 		}
 		ele.dataset.mid = id;
+		ele.ssnMidPending = false;
+		if (ele.ssnDeletePending) {
+			ele.ssnDeletePending = false;
+			deleteThis(ele);
+		}
 		const key = getTrackedMessageKey(ele, fallbackChatname, fallbackMessage);
 		if (!key) {
 			return;
@@ -1513,6 +1518,7 @@
 			data.title = getTranslation("cheers", "CHEERS");
 		}
 
+		ele.ssnMidPending = true;
 		try {
 			chrome.runtime.sendMessage(
 				chrome.runtime.id,
@@ -1520,6 +1526,7 @@
 					message: data
 				},
 				function (e) {
+					ele.ssnMidPending = false;
 					if (e?.id){
 						rememberTrackedMessageId(ele, e.id, data.chatname, data.chatmessage);
 					}
@@ -1817,6 +1824,10 @@
 			}
 			messageEle.dataset.ignore = true;
 			if (messageEle.deleted) {
+				return;
+			}
+			if (messageEle.ssnMidPending && getTrackedMessageId(messageEle) === null) {
+				messageEle.ssnDeletePending = true;
 				return;
 			}
 			messageEle.deleted = true;

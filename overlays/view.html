@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Static Overlay - Social Stream Ninja</title>
+	<meta name="description" content="A static stream overlay from the Social Stream Ninja overlay studio. All settings are in the URL.">
+	<link rel="icon" href="../favicon.ico">
+	<style>
+		html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
+		body { -webkit-font-smoothing: antialiased; }
+		#sso-root { position: relative; width: 100%; height: 100%; }
+		.sso-icon { display: inline-block; width: 1em; height: 1em; vertical-align: -0.14em; flex-shrink: 0; }
+		img.sso-icon { object-fit: contain; }
+		.sso-missing { font: 16px/1.5 system-ui, sans-serif; color: #fff; background: rgba(0,0,0,.75); padding: 16px 20px; margin: 20px; border-radius: 8px; display: inline-block; }
+		.sso-missing a { color: #8ab4f8; }
+		body.sso-preview-checker { background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Crect width='10' height='10' fill='%23e5e5e5'/%3E%3Crect x='10' y='10' width='10' height='10' fill='%23e5e5e5'/%3E%3C/svg%3E"); }
+	</style>
+</head>
+<body>
+	<div id="sso-root"></div>
+	<script src="core.js?v=12"></script>
+	<script src="templates/countries.js?v=12"></script>
+	<script src="templates/engines.js?v=12"></script>
+	<script src="templates/socials.js?v=12"></script>
+	<script src="templates/time.js?v=12"></script>
+	<script src="templates/scenes.js?v=12"></script>
+	<script src="templates/maps.js?v=12"></script>
+	<script src="templates/fun.js?v=12"></script>
+	<script src="templates/text.js?v=12"></script>
+	<script src="templates/gaming.js?v=12"></script>
+	<script src="templates/obs.js?v=12"></script>
+	<script src="templates/pets.js?v=12"></script>
+	<script src="templates/extra.js?v=12"></script>
+	<script src="templates/themes.js?v=12"></script>
+	<script src="templates/music.js?v=12"></script>
+	<script src="templates/promo.js?v=12"></script>
+	<script src="templates/live.js?v=12"></script>
+	<script src="templates/games.js?v=12"></script>
+	<script src="templates/reef.js?v=12"></script>
+	<script src="templates/kaiju.js?v=12"></script>
+	<script src="templates/party.js?v=12"></script>
+	<script src="templates/cozy.js?v=12"></script>
+	<script src="templates/themebar.js?v=12"></script>
+	<script>
+	(function () {
+		var params = new URLSearchParams(location.search);
+		var root = document.getElementById("sso-root");
+		var def = SSO.get(params.get("t") || "");
+
+		if (params.has("scale")) {
+			var scale = parseFloat(params.get("scale"));
+			if (scale > 0) {
+				root.style.transformOrigin = "0 0";
+				root.style.transform = "scale(" + scale + ")";
+				root.style.width = (100 / scale) + "%";
+				root.style.height = (100 / scale) + "%";
+			}
+		}
+
+		var css = params.get("css");
+		if (css) {
+			if (/^https?:\/\//i.test(css)) {
+				var link = document.createElement("link");
+				link.rel = "stylesheet";
+				link.href = css;
+				document.head.appendChild(link);
+			} else {
+				SSO.addStyle(css);
+			}
+		}
+		var b64 = params.get("b64css") || params.get("cssb64");
+		if (b64) {
+			try { SSO.addStyle(decodeURIComponent(escape(atob(b64)))); } catch (e) { console.warn("Bad b64css", e); }
+		}
+
+		if (!def) {
+			root.innerHTML = '<div class="sso-missing">Pick an overlay in the <a href="index.html">overlay gallery</a> to get a link.</div>';
+			return;
+		}
+
+		var cfg = SSO.readConfig(def);
+		if (cfg.font) { SSO.loadFont(cfg.font); }
+		document.body.className = "sso-t-" + def.id;
+		if (def.css) { SSO.addStyle(def.css, "sso-css-" + def.id); }
+
+		var ctx = { params: params, preview: params.has("preview") };
+		// Track template timers so a replay doesn't leave old loops running.
+		var timers = [];
+		var nativeInterval = window.setInterval;
+		window.setInterval = function (fn, ms) { var id = nativeInterval(fn, ms); timers.push(id); return id; };
+		function draw() {
+			timers.forEach(function (id) { clearInterval(id); });
+			timers = [];
+			SSO.cleanup(root);
+			root.innerHTML = "";
+			def.render(root, cfg, ctx);
+		}
+
+		if (cfg.huecycle > 0) {
+			SSO.addStyle("@keyframes sso-hue{from{filter:hue-rotate(0deg)}to{filter:hue-rotate(360deg)}}");
+			root.style.animation = "sso-hue " + (cfg.huecycle * 60) + "s linear infinite";
+		}
+		if (cfg.fadein > 0) {
+			root.style.opacity = "0";
+			root.style.transition = "opacity " + cfg.fadein + "s ease";
+			setTimeout(function () { root.style.opacity = "1"; }, 50);
+		}
+		if (cfg.cycleshow > 0) {
+			// Periodically fade the whole overlay out and back in (handy for socials that shouldn't sit there all stream).
+			root.style.transition = "opacity 1.2s ease";
+			var visibleNow = true;
+			(function cycle() {
+				setTimeout(function () {
+					visibleNow = !visibleNow;
+					root.style.opacity = visibleNow ? "1" : "0";
+					cycle();
+				}, (visibleNow ? cfg.cycleshow : cfg.cyclehide) * 1000);
+			})();
+		}
+		var onlyScenes = String(cfg.scenes || "").split(",").map(function (s) { return s.trim().toLowerCase(); }).filter(Boolean);
+		function sceneVisible(name) {
+			if (!onlyScenes.length || !name) { return; }
+			root.style.visibility = onlyScenes.indexOf(String(name).toLowerCase()) === -1 ? "hidden" : "";
+		}
+		if (onlyScenes.length) { SSO.obs.scene(function (sc) { if (sc) { sceneVisible(sc.name); } }); }
+		SSO.obs.on("obsSceneChanged", function (d) {
+			sceneVisible(d.name);
+			if (cfg.replay) { draw(); }
+		});
+
+		SSO.loadScripts(def.libs || [], draw);
+	})();
+	</script>
+</body>
+</html>

@@ -1215,6 +1215,14 @@ document.addEventListener('DOMContentLoaded', function() {
 			notes: 'Captures new chat messages, emotes, avatars, name colors, user/message IDs, and optional viewer-count updates.'
 		},
 		{
+			name: 'Starvios',
+			icon: 'starvios.png',
+			description: 'Live streaming platform with pop-out chat.',
+			type: 'popout',
+			instructions: `<ul><li>Open https://starvios.com/popout/chat/USERNAME</li><li>In the desktop app, use Add other source and paste that popout URL.</li><li>Sign in to Starvios to use the chat input for replies.</li></ul>`,
+			notes: 'Captures new chat text, emotes, name colors, and displayed Starvies amounts. Existing history and separate pinned cards are skipped. Reply focusing is supported; authenticated sending has not yet been verified.'
+		},
+		{
 			name: 'w.tv',
 			icon: 'wtv.png',
 			description: 'Live streaming platform with pop-out chat.',

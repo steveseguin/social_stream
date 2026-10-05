@@ -98,6 +98,8 @@
 	var initialChatSyncComplete = false;
 	var initialChatSyncTimer = null;
 	var INITIAL_CHAT_SETTLE_MS = 400;
+	var MAX_INITIAL_CHAT_SETTLE_MS = 2000;
+	var initialChatSyncStartedAt = null;
 	var initialChatRowsPresentAtAttach = false;
 	var initialChatLoneRowMayBeLive = false;
 	var hasObservedChatContainer = false;
@@ -383,13 +385,67 @@
 	var lastURL =  "";
 	var observer = null;
 	var observerTarget = null;
+	var autoScrollTimer = null;
+
+	function keepBlazeChatAtBottom(target) {
+		if (!window.ninjafy || !isExtensionOn || !target || !target.isConnected) {
+			return;
+		}
+		var scroller = target.closest(".simplebar-content-wrapper");
+		if (!scroller || !scroller.clientHeight) {
+			return;
+		}
+		if (!scroller.ssnBlazeAutoScroll) {
+			var state = { paused: false };
+			scroller.ssnBlazeAutoScroll = state;
+			scroller.addEventListener("wheel", function(event) {
+				if (event.deltaY < 0) { state.paused = true; }
+			}, { passive: true });
+			scroller.addEventListener("touchmove", function() {
+				state.paused = true;
+			}, { passive: true });
+			scroller.addEventListener("keydown", function(event) {
+				if (event.key === "ArrowUp" || event.key === "PageUp" || event.key === "Home") {
+					state.paused = true;
+				}
+			});
+			var scrollArea = scroller.closest("[data-simplebar]") || scroller;
+			scrollArea.addEventListener("pointerdown", function(event) {
+				if (event.target === scroller || (event.target.closest && event.target.closest(".simplebar-track"))) {
+					state.paused = true;
+				}
+			});
+			scroller.addEventListener("scroll", function() {
+				if (scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight <= 1) {
+					state.paused = false;
+				}
+			});
+		}
+		// Hidden SSApp windows can leave Blaze's smooth scrolling short of the
+		// bottom, which pauses its virtual chat list. Follow unless the user
+		// deliberately scrolled back; reaching the bottom resumes following.
+		if (!scroller.ssnBlazeAutoScroll.paused && scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight > 1) {
+			scroller.scrollTop = scroller.scrollHeight;
+		}
+	}
 
 	function scheduleInitialChatSync(target) {
 		if (initialChatSyncComplete || !target || !target.isConnected) {
 			return;
 		}
+		keepBlazeChatAtBottom(target);
 		if (initialChatSyncTimer) {
 			clearTimeout(initialChatSyncTimer);
+		}
+		// Keep the history debounce, but do not let continuous row/layout updates
+		// postpone capture forever. Start the limit only once chat content exists.
+		var now = Date.now();
+		if (initialChatSyncStartedAt === null && getMessageBodyElement(target) && getMessageName(target)) {
+			initialChatSyncStartedAt = now;
+		}
+		var settleDelay = INITIAL_CHAT_SETTLE_MS;
+		if (initialChatSyncStartedAt !== null) {
+			settleDelay = Math.min(settleDelay, Math.max(0, MAX_INITIAL_CHAT_SETTLE_MS - (now - initialChatSyncStartedAt)));
 		}
 		initialChatSyncTimer = setTimeout(function() {
 			initialChatSyncTimer = null;
@@ -402,6 +458,7 @@
 				return !!getMessageName(row) && !!getMessageBodyElement(row);
 			});
 			if (!messageRows.length) {
+				initialChatSyncStartedAt = null;
 				return;
 			}
 
@@ -422,7 +479,7 @@
 				}
 				processMessage(row, isInitialBacklog);
 			});
-		}, INITIAL_CHAT_SETTLE_MS);
+		}, settleDelay);
 	}
 	
 	
@@ -498,6 +555,7 @@
 			initialChatSyncTimer = null;
 		}
 		initialChatSyncComplete = false;
+		initialChatSyncStartedAt = null;
 		initialChatRowsPresentAtAttach = !!target.querySelector("[data-item-index],[data-index]");
 		initialChatLoneRowMayBeLive = !!allowLoneExistingRow;
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -505,6 +563,11 @@
 		observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
 		observerTarget = target;
+		if (window.ninjafy && !autoScrollTimer) {
+			autoScrollTimer = setInterval(function() {
+				keepBlazeChatAtBottom(observerTarget);
+			}, 250);
+		}
 		scheduleInitialChatSync(target);
 	}
 	

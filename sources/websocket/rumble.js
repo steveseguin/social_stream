@@ -33,6 +33,7 @@
         isExtensionOn: true,
         active: false,
         loading: false,
+        pollGeneration: 0,
         pollTimer: null,
         seenIds: new Set(),
         seenOrder: [],
@@ -1191,11 +1192,27 @@
         );
     }
 
+    function createFetchError(result, fallbackMessage) {
+        const error = new Error((result && result.error) || fallbackMessage);
+        if (result && typeof result.status !== 'undefined') {
+            error.status = result.status;
+        }
+        if (Number(error.status) === 429) {
+            const retryAfter = String(result.retryAfter || '').trim();
+            const seconds = /^\d+$/.test(retryAfter)
+                ? Number(retryAfter)
+                : Math.ceil((Date.parse(retryAfter) - Date.now()) / 1000);
+            error.rateLimited = true;
+            error.retryAfterSec = isFinite(seconds) && seconds > 0 ? seconds : null;
+        }
+        return error;
+    }
+
     async function fetchJson(url) {
         if (window.ninjafy && typeof window.ninjafy.fetchRumbleJson === 'function') {
             const result = await window.ninjafy.fetchRumbleJson(url);
             if (!result || !result.ok) {
-                throw new Error((result && result.error) || 'Rumble Electron fetch failed');
+                throw createFetchError(result, 'Rumble Electron fetch failed');
             }
             return result.data;
         }
@@ -1209,7 +1226,7 @@
                             return;
                         }
                         if (!response || !response.ok) {
-                            reject(new Error((response && response.error) || 'Rumble background fetch failed'));
+                            reject(createFetchError(response, 'Rumble background fetch failed'));
                             return;
                         }
                         resolve(response.data);
@@ -1229,11 +1246,8 @@
             }
         });
         if (response.status === 429) {
-            var retryAfter = parseInt(response.headers.get('Retry-After'), 10);
-            var err = new Error('Rate limited by Rumble (HTTP 429). Backing off.');
-            err.rateLimited = true;
-            err.retryAfterSec = isFinite(retryAfter) ? retryAfter : null;
-            throw err;
+            throw createFetchError({ status: response.status, retryAfter: response.headers.get('Retry-After') },
+                'Rate limited by Rumble (HTTP 429). Backing off.');
         }
         const text = await response.text();
         let data = null;
@@ -1776,7 +1790,12 @@
         }
     }
 
+    function isCurrentPoll(generation) {
+        return state.active && generation === state.pollGeneration;
+    }
+
     async function pollOnce(initialLoad) {
+        const generation = state.pollGeneration;
         let data;
         if (!state.active || state.loading) {
             return false;
@@ -1784,11 +1803,15 @@
         state.loading = true;
         try {
             data = await fetchJson(state.cfg.apiUrl);
+            if (!isCurrentPoll(generation)) return false;
             validateSnapshot(data);
             processSnapshot(data, !!initialLoad);
             return true;
+        } catch (error) {
+            if (!isCurrentPoll(generation)) return false;
+            throw error;
         } finally {
-            state.loading = false;
+            if (generation === state.pollGeneration) state.loading = false;
         }
     }
 
@@ -1801,14 +1824,21 @@
     }
 
     function startTimers() {
+        const generation = state.pollGeneration;
         clearTimers();
-        state.pollTimer = setInterval(function () {
-            pollOnce(false).then(function () {
+        function poll() {
+            if (!isCurrentPoll(generation)) return;
+            pollOnce(false).then(function (processed) {
+                if (!processed || !isCurrentPoll(generation)) return;
                 if (state.consecutiveErrors > 0) {
                     state.consecutiveErrors = 0;
+                    setSocketState('connected', 'Connected to the Rumble API. Polling every ' + state.cfg.pollMs + 'ms.', {
+                        streamId: state.cfg.streamId || ''
+                    });
                     log('Poll recovered. Resuming normal interval.', 'success');
                 }
             }).catch(function (error) {
+                if (!isCurrentPoll(generation)) return;
                 state.consecutiveErrors += 1;
                 var message = (error && error.message) || String(error || 'Unknown error');
                 if (error && error.rateLimited) {
@@ -1819,15 +1849,17 @@
                     log('HTTP 429 rate limit. Backing off ' + Math.round(backoff / 1000) + 's.', 'warn');
                     clearTimers();
                     state.pollTimer = setTimeout(function () {
-                        startTimers();
-                        pollOnce(false).catch(function () {});
+                        if (!isCurrentPoll(generation)) return;
+                        state.pollTimer = setInterval(poll, state.cfg.pollMs);
+                        poll();
                     }, backoff);
                     return;
                 }
                 setSocketState('error', 'Poll failed: ' + message);
                 log('Rumble poll failed: ' + message, 'error');
             });
-        }, state.cfg.pollMs);
+        }
+        state.pollTimer = setInterval(poll, state.cfg.pollMs);
     }
 
     function syncButtons() {
@@ -1956,6 +1988,10 @@
         if (/\/account\/livestream-api/i.test(state.cfg.apiUrl)) {
             throw new Error('It looks like you pasted the settings page URL. Copy the generated API URL from that page instead.');
         }
+        const generation = ++state.pollGeneration;
+        clearTimers();
+        state.loading = false;
+        state.consecutiveErrors = 0;
         state.active = true;
         state.seenIds.clear();
         state.seenOrder = [];
@@ -1973,12 +2009,14 @@
         log('Connecting to the Rumble Live Stream API.', 'info');
         try {
             await pollOnce(true);
+            if (!isCurrentPoll(generation)) return;
             startTimers();
             websocketProxy.readyState = READY_STATE.OPEN;
             setSocketState('connected', 'Connected to the Rumble API. Polling every ' + state.cfg.pollMs + 'ms.', {
                 streamId: state.cfg.streamId || ''
             });
         } catch (error) {
+            if (!isCurrentPoll(generation)) return;
             state.active = false;
             websocketProxy.readyState = READY_STATE.CLOSED;
             syncButtons();
@@ -1987,6 +2025,8 @@
     }
 
     function disconnect(manual) {
+        state.pollGeneration += 1;
+        state.loading = false;
         clearTimers();
         stopSseLoop();
         state.active = false;

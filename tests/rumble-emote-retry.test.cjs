@@ -11,7 +11,8 @@ const bootstrap = original.lastIndexOf("    if (document.readyState === 'loading
 assert.ok(bootstrap > 0, 'Rumble bootstrap must exist');
 // Keep the source functions intact; expose them without starting UI/network timers.
 const source = original.slice(0, bootstrap) + `
-    window.testRumble = { state, ensureRumbleEmoteCatalog, buildRumbleChatMessage, stopSseLoop };
+    window.testRumble = { state, ensureRumbleEmoteCatalog, buildRumbleChatMessage, stopSseLoop,
+        pollOnce, startTimers, disconnect };
 })();`;
 const catalog = '{name:"r+leotoast",is_subs_only:false,position:0,file:"https://example.com/toast.gif"}';
 const message = ':r+leotoast::r+leotoast: \uD83D\uDC4B';
@@ -140,4 +141,52 @@ test('A failed stream does not delay another stream or an explicit reconnect', a
     await reconnect.ensureRumbleEmoteCatalog('123');
     reconnect.stopSseLoop();
     assert.equal(await reconnect.ensureRumbleEmoteCatalog('123'), true);
+});
+
+function pollFixture() {
+    const window = {}, requests = [], timers = new Map();
+    let nextTimer = 0;
+    window.ninjafy = { fetchRumbleJson: () => new Promise(resolve => requests.push(resolve)), sendMessage() {} };
+    vm.runInNewContext(source, { window, document: {}, URL, URLSearchParams,
+        setInterval(callback, delay) { timers.set(++nextTimer, { callback, delay, type: 'interval' }); return nextTimer; },
+        setTimeout(callback, delay) { timers.set(++nextTimer, { callback, delay, type: 'timeout' }); return nextTimer; },
+        clearInterval(id) { timers.delete(id); }, clearTimeout(id) { timers.delete(id); }
+    });
+    const f = window.testRumble;
+    f.state.active = true;
+    f.state.cfg.apiUrl = 'https://rumble.com/live-api/fixture';
+    return { ...f, requests, timers,
+        fire() {
+            const [id, timer] = timers.entries().next().value;
+            if (timer.type === 'timeout') timers.delete(id);
+            timer.callback();
+        }
+    };
+}
+
+test('Every consecutive Rumble rate limit honors Retry-After, then resumes ordinary polling', async () => {
+    const f = pollFixture(); f.startTimers();
+    for (let i = 0; i < 3; i++) {
+        f.fire();
+        f.requests.shift()({ ok: false, status: 429, retryAfter: '90', error: 'Rate limited' });
+        await flushPromises();
+        assert.deepEqual([...f.timers.values()].map(t => [t.type, t.delay]), [['timeout', 90000]]);
+    }
+    f.fire();
+    f.requests.shift()({ ok: true, data: { livestreams: [] } });
+    await flushPromises();
+    assert.equal(f.state.consecutiveErrors, 0);
+    assert.equal(f.state.lastSocketState, 'connected');
+    assert.deepEqual([...f.timers.values()].map(t => [t.type, t.delay]), [['interval', 3000]]);
+    f.disconnect(true); assert.equal(f.timers.size, 0);
+});
+
+test('Disconnect invalidates a pending Rumble response without processing its snapshot', async () => {
+    const f = pollFixture(); const pending = f.pollOnce(false);
+    f.disconnect(true);
+    f.requests.shift()({ ok: true, data: { followers: { num_followers: 999 }, livestreams: [] } });
+    assert.equal(await pending, false);
+    assert.equal(f.state.lastFollowerCount, null);
+    assert.equal(f.state.lastSocketState, 'disconnected');
+    assert.equal(f.state.loading, false);
 });
