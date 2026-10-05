@@ -1832,6 +1832,9 @@
                 if (!processed || !isCurrentPoll(generation)) return;
                 if (state.consecutiveErrors > 0) {
                     state.consecutiveErrors = 0;
+                    setSocketState('connected', 'Connected to the Rumble API. Polling every ' + state.cfg.pollMs + 'ms.', {
+                        streamId: state.cfg.streamId || ''
+                    });
                     log('Poll recovered. Resuming normal interval.', 'success');
                 }
             }).catch(function (error) {
