@@ -16,10 +16,12 @@ function fixture(accept = () => true) {
             elements.push(element); return element;
         }
     };
-    const window = { location: { search: '' } };
+    const window = { addEventListener() {}, removeEventListener() {}, location: { search: '' } };
     const context = vm.createContext({ window, document, URLSearchParams });
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../overlays/core.js'), 'utf8'), context);
     context.SSO = window.SSO;
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../overlays/templates/countries.js'), 'utf8'), context);
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../overlays/templates/engines.js'), 'utf8'), context);
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../overlays/templates/socials.js'), 'utf8'), context);
     return { SSO: window.SSO, elements };
 }
@@ -63,3 +65,4 @@ test('Existing hex shorthand, opacity and empty fallback semantics remain', () =
     assert.equal(SSO.rgba('abc', 0.5), 'rgba(170,187,204,0.5)');
     assert.equal(SSO.color('', '#123456'), '#123456');
 });
+

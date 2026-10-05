@@ -60,11 +60,11 @@
 			{ key: "label", label: "Label (e.g. MY TIME)", type: "text", group: "Content", default: "" }
 		].concat(lookFields()),
 		presets: [
-			{ name: "Simple digital", values: {} },
-			{ name: "Big date clock", values: { date: "long", bgopacity: 0, font: "Bebas Neue", fontsize: 96 } },
-			{ name: "Analog", values: { style: "analog", bgopacity: 0, fontsize: 160 } },
-			{ name: "Flip cards", values: { style: "flip", bgopacity: 0, font: "Oswald", fontsize: 72, seconds: true } },
-			{ name: "Neon local time", values: { label: "Local time", glow: true, accent: "ff3ec8", fg: "ffe6fb", font: "Orbitron", bgopacity: 0, fontsize: 56 } }
+			{ name: "Simple digital", tags: ["simple"], values: {} },
+			{ name: "Big date clock", tags: ["simple"], values: { date: "long", bgopacity: 0, font: "Bebas Neue", fontsize: 96 } },
+			{ name: "Analog", tags: ["elegant", "simple"], values: { style: "analog", bgopacity: 0, fontsize: 160 } },
+			{ name: "Flip cards", tags: ["retro"], values: { style: "flip", bgopacity: 0, font: "Oswald", fontsize: 72, seconds: true } },
+			{ name: "Neon local time", tags: ["cyber"], values: { label: "Local time", glow: true, accent: "ff3ec8", fg: "ffe6fb", font: "Orbitron", bgopacity: 0, fontsize: 56 } }
 		],
 		css: [
 			".an{position:relative;}",
@@ -147,6 +147,7 @@
 		category: "time",
 		description: "Several time zones side by side, with a sun or moon for day and night.",
 		size: [900, 140],
+		sizeFor: function (c) { var n = Math.max(1, SSO.lines(c.zones).length); return c.layout === "column" ? [460, Math.round(60 + n * c.fontsize * 1.9)] : [Math.max(500, Math.round(n * c.fontsize * 6.2)), Math.round(c.fontsize * 3.6)]; },
 		fields: [
 			{ key: "zones", label: "Zones (Label|Time/Zone, one per line)", type: "textarea", group: "Content", default: "Vancouver|America/Vancouver\nToronto|America/Toronto\nLondon|Europe/London\nTokyo|Asia/Tokyo", help: "Zone names like America/Chicago, Europe/Berlin, Australia/Sydney." },
 			{ key: "h12", label: "12-hour clock", type: "bool", group: "Content", default: true },
@@ -156,9 +157,9 @@
 			{ key: "cards", label: "Separate cards", type: "bool", group: "Layout", default: true }
 		].concat(lookFields({ fontsize: 36, bgopacity: 0.65 })),
 		presets: [
-			{ name: "Cards row", values: {} },
-			{ name: "Plain column", values: { layout: "column", cards: false, bgopacity: 0.5, fontsize: 28, align: "flex-start" } },
-			{ name: "Office wall", values: { bg: "ffffff", bgopacity: 1, fg: "1a1a1a", shadow: false, font: "Inter", fontsize: 30, radius: 8 } }
+			{ name: "Cards row", tags: ["simple"], values: {} },
+			{ name: "Plain column", tags: ["simple"], values: { layout: "column", cards: false, bgopacity: 0.5, fontsize: 28, align: "flex-start" } },
+			{ name: "Office wall", tags: ["pro"], values: { bg: "ffffff", bgopacity: 1, fg: "1a1a1a", shadow: false, font: "Inter", fontsize: 30, radius: 8 } }
 		],
 		css: [
 			".wc{display:flex;font-variant-numeric:tabular-nums;}",
@@ -220,10 +221,10 @@
 			{ key: "hideend", label: "Hide when finished", type: "bool", group: "Content", default: false }
 		].concat(lookFields({ fontsize: 72, bgopacity: 0 })),
 		presets: [
-			{ name: "Starting in 5", values: {} },
-			{ name: "Unit boxes", values: { style: "units", minutes: 90, bgopacity: 0.7, font: "Oswald", fontsize: 56, label: "Event starts in" } },
-			{ name: "Progress ring", values: { style: "ring", minutes: 10, accent: "4ade80", fontsize: 44, label: "Back in" , endtext: "Back now"} },
-			{ name: "Progress bar", values: { style: "bar", minutes: 3, accent: "60a5fa", fontsize: 40, label: "Break" } }
+			{ name: "Starting in 5", tags: ["simple"], values: {} },
+			{ name: "Unit boxes", tags: ["pro"], values: { style: "units", minutes: 90, bgopacity: 0.7, font: "Oswald", fontsize: 56, label: "Event starts in" } },
+			{ name: "Progress ring", tags: ["simple"], values: { style: "ring", minutes: 10, accent: "4ade80", fontsize: 44, label: "Back in" , endtext: "Back now"} },
+			{ name: "Progress bar", tags: ["simple"], values: { style: "bar", minutes: 3, accent: "60a5fa", fontsize: 40, label: "Break" } }
 		],
 		css: [
 			".cd-units{display:flex;}",
@@ -248,14 +249,14 @@
 			var key = "countdown:" + (c.target || c.minutes) + ":" + c.label;
 			if (target) {
 				end = target.getTime();
-				var savedStart = c.remember ? parseInt(SSO.store.get(key + ":start"), 10) : NaN;
+				var savedStart = c.remember && !(ctx && ctx.preview) ? parseInt(SSO.store.get(key + ":start"), 10) : NaN;
 				start = savedStart && savedStart < end ? savedStart : now;
 			} else {
 				var saved = c.remember && !(ctx && ctx.preview) ? parseInt(SSO.store.get(key + ":end"), 10) : NaN;
 				end = saved && saved > now ? saved : now + c.minutes * 60000;
 				if (saved && saved > now) { start = end - c.minutes * 60000; }
 			}
-			if (c.remember) { SSO.store.set(key + ":end", String(end)); SSO.store.set(key + ":start", String(start)); }
+			if (c.remember && !(ctx && ctx.preview)) { SSO.store.set(key + ":end", String(end)); SSO.store.set(key + ":start", String(start)); }
 			var total = Math.max(1, end - start);
 			var accent = SSO.color(c.accent);
 			var html = c.label ? '<div class="tm-label">' + esc(c.label) + "</div>" : "";
@@ -319,9 +320,9 @@
 			{ key: "inline", label: "Label beside the time", type: "bool", group: "Layout", default: true }
 		].concat(lookFields({ fontsize: 40, bgopacity: 0.6 })),
 		presets: [
-			{ name: "Stream uptime", values: {} },
-			{ name: "Speedrun timer", values: { label: "", tenths: true, remember: false, font: "Roboto Mono", fontsize: 64, bgopacity: 0, glow: true, accent: "22c55e", fg: "eafff1" } },
-			{ name: "Since 9 AM", values: { since: "09:00", label: "Live since 9", inline: false, font: "Oswald", fontsize: 56, bgopacity: 0 } }
+			{ name: "Stream uptime", tags: ["simple"], values: {} },
+			{ name: "Speedrun timer", tags: ["gaming", "retro"], values: { label: "", tenths: true, remember: false, font: "Roboto Mono", fontsize: 64, bgopacity: 0, glow: true, accent: "22c55e", fg: "eafff1" } },
+			{ name: "Since 9 AM", tags: ["simple"], values: { since: "09:00", label: "Live since 9", inline: false, font: "Oswald", fontsize: 56, bgopacity: 0 } }
 		],
 		css: [
 			".sw.inline{flex-direction:row;align-items:baseline;}",

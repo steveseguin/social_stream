@@ -4,10 +4,16 @@ const path = require('node:path');
 const { chromium } = require('playwright');
 const root = path.resolve(__dirname, '..');
 const source = fs.readFileSync(path.join(root, 'sources/starvios.js'), 'utf8');
+const identitySource = fs.readFileSync(path.join(root, 'sources/inject/starvios.js'), 'utf8');
 require('acorn').parse(source, { ecmaVersion: 2020 });
+require('acorn').parse(identitySource, { ecmaVersion: 2020 });
 const manifest = JSON.parse(fs.readFileSync(path.join(root, 'manifest.json'), 'utf8'));
 assert.deepEqual(manifest.content_scripts.find(e => e.js.includes('./sources/starvios.js')).matches,
   ['https://starvios.com/popout/chat/*', 'https://www.starvios.com/popout/chat/*']);
+const identityEntry = manifest.content_scripts.find(e => e.js.includes('./sources/inject/starvios.js'));
+assert.deepEqual(identityEntry.matches, manifest.content_scripts.find(e => e.js.includes('./sources/starvios.js')).matches);
+assert.equal(identityEntry.world, 'MAIN');
+assert.equal(identityEntry.run_at, 'document_start');
 assert.equal(fs.readFileSync(path.join(root, 'sources/images/starvios.png')).toString('hex', 0, 8), '89504e470d0a1a0a');
 
 async function fixture(browser, url = 'https://starvios.com/popout/chat/fixture', ipc = false) {
@@ -19,8 +25,10 @@ async function fixture(browser, url = 'https://starvios.com/popout/chat/fixture'
     document.body.innerHTML = '<main><aside id="pinned"></aside><div class="overscroll-contain overflow-y-auto"></div><form><input aria-autocomplete="list"><button type="submit">Send</button></form></main>';
     window.list = document.querySelector('.overscroll-contain');
     window.messages = [];
-    window.addRow = (html = 'Hello', paid = false) => {
+    window.nextMessageId = 0;
+    window.addRow = (html = 'Hello', paid = false, id = 'message-' + ++window.nextMessageId) => {
       const row = document.createElement('div');
+      row.__reactFiber$fixture = { key: id };
       row.className = paid ? 'group border-chat-starvie/70' : 'group relative flex';
       row.innerHTML = (paid ? '<div><p class="tabular-nums">viewer · 1.000 Starvies</p></div>' : '') +
         '<div><p class="text-muted-foreground">Respondiendo a @other: quoted text</p><p class="break-words leading-relaxed">' +
@@ -44,6 +52,7 @@ async function fixture(browser, url = 'https://starvios.com/popout/chat/fixture'
       } };
     }
   }, ipc);
+  await page.addScriptTag({ content: identitySource });
   await page.addScriptTag({ content: source });
   return page;
 }
@@ -73,7 +82,7 @@ const command = (page, request) => page.evaluate(request => new Promise(resolve 
       window.list.insertAdjacentHTML('beforeend', '<div><p>Someone is raiding!</p></div>');
     });
     await flush(page);
-    assert.equal((await messages(page)).length, 1, 'Rerenders, pinned cards and notices are not messages');
+    assert.equal((await messages(page)).length, 1, 'Edits to an existing row, pinned cards and notices are not new messages');
     await command(page, { settings: { textonlymode: true } });
     await page.evaluate(() => window.addRow('&lt;b&gt; &amp; <img src="https://starvios.com/emote.png" alt=":wave:">'));
     await flush(page);
@@ -115,6 +124,32 @@ const command = (page, request) => page.evaluate(request => new Promise(resolve 
     assert.equal(await command(page, 'focusChat'), false);
     assert.equal((await messages(page)).length, 6);
     await page.close();
+
+    const replacement = await fixture(browser);
+    await replacement.waitForTimeout(1650);
+    await replacement.evaluate(() => window.addRow('Sent once', false, 'tmp-send-1'));
+    await flush(replacement);
+    assert.equal((await messages(replacement)).length, 0, 'Temporary send is not captured');
+    await replacement.waitForTimeout(1100);
+    assert.equal((await messages(replacement)).length, 0, 'Polling does not capture unconfirmed sends');
+    await replacement.evaluate(() => {
+      window.list.lastElementChild.remove();
+      window.addRow('Sent once', false, 'confirmed-1');
+    });
+    await flush(replacement);
+    assert.equal((await messages(replacement)).length, 1, 'Confirmed replacement is captured once');
+    await replacement.evaluate(() => {
+      window.list.lastElementChild.remove();
+      window.addRow('Sent once', false, 'confirmed-1');
+      window.addRow('Sent once', false, 'confirmed-2');
+      window.addRow('Failed send', false, 'tmp-failed');
+    });
+    await flush(replacement);
+    assert.equal((await messages(replacement)).length, 2, 'Same ID is ignored; separate identical message is captured');
+    await replacement.evaluate(() => window.list.lastElementChild.remove());
+    await flush(replacement);
+    assert.equal((await messages(replacement)).length, 2, 'Failed send is never captured');
+    await replacement.close();
 
     const ipc = await fixture(browser, undefined, true);
     await ipc.waitForTimeout(1650);
