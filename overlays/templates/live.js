@@ -63,7 +63,7 @@
 			{ key: "source", label: "Source", type: "select", group: "News", default: "wiki", options: [["wiki", "Wikipedia — In the news"], ["onthisday", "Wikipedia — On this day"], ["hn", "Hacker News — top stories"]] },
 			{ key: "label", label: "Label (blank = automatic)", type: "text", group: "News", default: "" },
 			{ key: "count", label: "Number of items", type: "range", group: "News", default: 10, min: 3, max: 30, step: 1 },
-			{ key: "speed", label: "Scroll speed (px/sec)", type: "range", group: "News", default: 60, min: 20, max: 200, step: 5 },
+			{ key: "speed", label: "Scroll speed (px/sec)", type: "range", group: "News", default: 38, min: 10, max: 200, step: 5 },
 			{ key: "sep", label: "Separator", type: "text", group: "News", default: "•" }
 		].concat(lookFields({})),
 		presets: [
@@ -114,7 +114,7 @@
 			{ key: "coins", label: "Coins (CoinGecko ids, comma separated)", type: "text", group: "Prices", default: "bitcoin,ethereum,solana,dogecoin,cardano" },
 			{ key: "currency", label: "Currency", type: "select", group: "Prices", default: "usd", options: [["usd", "USD"], ["cad", "CAD"], ["eur", "EUR"], ["gbp", "GBP"], ["aud", "AUD"], ["jpy", "JPY"], ["brl", "BRL"], ["inr", "INR"]] },
 			{ key: "layout", label: "Layout", type: "select", group: "Prices", default: "ticker", options: [["ticker", "Scrolling ticker"], ["cards", "Row of cards"]] },
-			{ key: "speed", label: "Scroll speed", type: "range", group: "Prices", default: 50, min: 15, max: 200, step: 5, show: { layout: "ticker" } },
+			{ key: "speed", label: "Scroll speed", type: "range", group: "Prices", default: 32, min: 10, max: 200, step: 5, show: { layout: "ticker" } },
 			{ key: "label", label: "Label", type: "text", group: "Prices", default: "CRYPTO" }
 		].concat(lookFields({ accent: "f7931a", font: "Roboto Mono", fontsize: 20 })),
 		presets: [
@@ -399,7 +399,7 @@
 			{ key: "display", label: "Display", type: "select", group: "Data", default: "card", options: [["card", "Card"], ["ticker", "Scrolling ticker (lines)"], ["rotate", "One line at a time"], ["plain", "Plain text"]] },
 			{ key: "label", label: "Label", type: "text", group: "Data", default: "" },
 			{ key: "refresh", label: "Refresh every (seconds)", type: "number", group: "Data", default: 60, min: 10, max: 86400, step: 5 },
-			{ key: "speed", label: "Ticker speed", type: "range", group: "Data", default: 60, min: 15, max: 200, step: 5, show: { display: "ticker" } },
+			{ key: "speed", label: "Ticker speed", type: "range", group: "Data", default: 38, min: 10, max: 200, step: 5, show: { display: "ticker" } },
 			{ key: "sep", label: "Ticker separator", type: "text", group: "Data", default: "•", show: { display: "ticker" } }
 		].concat(lookFields({ accent: "2b6cff", font: "Poppins" })),
 		presets: [
