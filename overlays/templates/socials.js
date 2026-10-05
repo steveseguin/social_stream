@@ -38,7 +38,7 @@
 	}
 
 	// Seamless marquee: repeats one group until it covers the viewport, then slides by one group width.
-	function marquee(wrap, track, groupHTML, speed, name) {
+	function marquee(wrap, track, groupHTML, speed, name, after) {
 		function build() {
 			track.style.animation = "none";
 			track.innerHTML = '<span class="sso-mq-group">' + groupHTML + "</span>";
@@ -48,6 +48,7 @@
 			var html = "";
 			for (var i = 0; i < copies; i++) { html += '<span class="sso-mq-group">' + groupHTML + "</span>"; }
 			track.innerHTML = html;
+			if (after) { after(); }
 			var kf = "sso-mq-" + name;
 			SSO.addStyle("@keyframes " + kf + "{from{transform:translateX(0)}to{transform:translateX(-" + gw + "px)}}");
 			void track.offsetWidth;
@@ -57,7 +58,113 @@
 		onResize(build);
 	}
 
-	SSO.SEPARATORS = [["•", "• dot"], ["★", "★ star"], ["|", "| bar"], ["◆", "◆ diamond"], ["/", "/ slash"], ["✦", "✦ sparkle"], ["♥", "♥ heart"], ["", "None"]];
+	// Extra room the banner needs above/below the bar for mascots and decorations.
+	function bannerExtra(c) {
+		var top = c.mascot ? 48 : 0;
+		if (c.deco === "flames") { top = Math.max(top, Math.round(c.height * 0.7)); }
+		if (c.deco === "hearts" || c.deco === "bats" || c.deco === "confetti") { top = Math.max(top, 50); }
+		if (c.deco === "xmaslights" || c.deco === "snowcap" || c.deco === "stars") { top = Math.max(top, 22); }
+		if (c.deco === "cobweb") { top = Math.max(top, 12); }
+		if (c.deco === "tape" || c.deco === "pins") { top = Math.max(top, 16); }
+		if (c.tilt) { top += Math.round(Math.abs(c.tilt) * 6); }
+		return { top: top, bottom: (c.deco === "drips" ? 30 : 0) + (c.tilt ? Math.round(Math.abs(c.tilt) * 6) : 0) };
+	}
+
+	// 16x16 pixel-art tiles as SVG data URIs (dirt / grass) for the blocky style.
+	function pixelPattern(kind) {
+		var rnd = SSO.seeded(kind);
+		var colors = kind === "grass" ? ["#5fa83a", "#6fbf44", "#4e8f2f", "#7fd34e"] : ["#79553a", "#8b6545", "#5f4129", "#96714f", "#6b4a31"];
+		var rects = "";
+		for (var y = 0; y < 16; y++) {
+			for (var x = 0; x < 16; x++) {
+				rects += '<rect x="' + x + '" y="' + y + '" width="1" height="1" fill="' + colors[Math.floor(rnd() * colors.length)] + '"/>';
+			}
+		}
+		var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" shape-rendering="crispEdges">' + rects + "</svg>";
+		return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '") 0 0/32px 32px repeat';
+	}
+
+	function bannerPattern(c) {
+		var bg = SSO.rgba(c.bg, c.bgopacity), bg2 = SSO.rgba(c.bg2, c.bgopacity);
+		switch (c.bgstyle) {
+			case "gradient": return "background:linear-gradient(90deg," + bg + "," + bg2 + ");";
+			case "stripes": return "background:repeating-linear-gradient(-45deg," + bg + " 0 16px," + bg2 + " 16px 32px);";
+			case "glossy": return "background-image:linear-gradient(180deg,rgba(255,255,255,.38),rgba(255,255,255,.08) 50%,rgba(0,0,0,.18));";
+			case "scanlines": return "background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.28) 0 2px,transparent 2px 4px);";
+			case "grunge": return "background-image:url(\"data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency=".8" numOctaves="3"/><feColorMatrix values="0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .5  0 0 0 .55 0"/></filter><rect width="160" height="160" filter="url(#n)"/></svg>') + "\");";
+			case "blocks": return "background:" + pixelPattern("dirt") + ";";
+			case "paper":
+				var rnd = SSO.seeded("paper" + c.height);
+				var pts = [];
+				for (var x = 0; x <= 100; x += 2.5) { pts.push(x + "% " + (rnd() * 9).toFixed(1) + "%"); }
+				for (var x2 = 100; x2 >= 0; x2 -= 2.5) { pts.push(x2 + "% " + (100 - rnd() * 9).toFixed(1) + "%"); }
+				return "clip-path:polygon(" + pts.join(",") + ");border-radius:0;";
+			default: return "";
+		}
+	}
+
+	function decorate(bar, c) {
+		if (!c.deco) { return; }
+		var d = document.createElement("div");
+		var rnd = SSO.seeded("deco" + c.deco);
+		var html = "";
+		var i;
+		d.className = "bn-deco bn-" + c.deco;
+		if (c.deco === "flames") {
+			for (i = 0; i < 26; i++) {
+				var h = 40 + rnd() * 60;
+				html += '<i style="left:' + (i * 4 - 1 + rnd() * 2).toFixed(1) + "%;height:" + h.toFixed(0) + "%;animation-delay:-" + (rnd()).toFixed(2) + "s;animation-duration:" + (0.6 + rnd() * 0.6).toFixed(2) + 's"></i>';
+			}
+			for (i = 0; i < 10; i++) {
+				html += '<b style="left:' + (rnd() * 100).toFixed(1) + "%;animation-delay:-" + (rnd() * 2.6).toFixed(2) + 's"></b>';
+			}
+		} else if (c.deco === "sparkles") {
+			for (i = 0; i < 12; i++) {
+				html += '<i style="left:' + (rnd() * 98).toFixed(1) + "%;top:" + (rnd() * 70).toFixed(0) + "%;font-size:" + (8 + rnd() * 10).toFixed(0) + "px;animation-delay:-" + (rnd() * 2.4).toFixed(2) + 's">✦</i>';
+			}
+		} else if (c.deco === "hearts") {
+			var hs = ["💗", "💖", "✨", "💕"];
+			for (i = 0; i < 8; i++) {
+				html += '<i style="left:' + (5 + rnd() * 90).toFixed(1) + "%;font-size:" + (12 + rnd() * 10).toFixed(0) + "px;animation-delay:-" + (rnd() * 3.5).toFixed(2) + 's">' + hs[i % hs.length] + "</i>";
+			}
+		} else if (c.deco === "tape") {
+			var tc = SSO.rgba(c.accent, 0.8);
+			html = '<div class="bn-tape" style="left:-14px;transform:rotate(-24deg);background:' + tc + '"></div><div class="bn-tape" style="right:-14px;transform:rotate(22deg);background:' + tc + '"></div>';
+		} else if (c.deco === "pins") {
+			html = '<span class="bn-pin" style="left:10px;transform:rotate(-30deg)">🧷</span><span class="bn-pin" style="right:12px;transform:rotate(40deg)">🧷</span>';
+		} else if (c.deco === "studs") {
+			var row = "";
+			for (i = 0; i < 24; i++) { row += "<span></span>"; }
+			html = "<div>" + row + "</div><div>" + row + "</div>";
+		} else if (c.deco === "stars") {
+			html = '<div class="bn-stars" style="color:' + SSO.color(c.accent) + '">★ ★ ★</div>';
+		} else if (c.deco === "xmaslights") {
+			var cols = ["#ff3b3b", "#ffd166", "#06d6a0", "#4cc9f0", "#f78c6b"];
+			html = '<svg class="bn-wire" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0 2 Q5 9 10 2 T20 2 T30 2 T40 2 T50 2 T60 2 T70 2 T80 2 T90 2 T100 2" stroke="#1d3b26" stroke-width="1" fill="none" vector-effect="non-scaling-stroke"/></svg>';
+			for (i = 0; i < 20; i++) { html += '<i class="bn-bulb" style="left:' + (2.5 + i * 5) + "%;background:" + cols[i % cols.length] + ";color:" + cols[i % cols.length] + ";animation-delay:-" + (rnd() * 2).toFixed(2) + 's"></i>'; }
+		} else if (c.deco === "snowcap") {
+			var pts = [];
+			for (i = 0; i <= 40; i++) { pts.push((i * 2.5) + "% " + (i % 2 ? 100 : 30 + rnd() * 40).toFixed(0) + "%"); }
+			html = '<div class="bn-snow" style="clip-path:polygon(0 100%,0 30%,' + pts.join(",") + ',100% 100%)"></div>';
+		} else if (c.deco === "cobweb") {
+			var web = '<svg viewBox="0 0 60 60" class="bn-web"><g stroke="rgba(255,255,255,.75)" stroke-width=".8" fill="none"><path d="M0 0 L60 0 M0 0 L0 60 M0 0 L52 30 M0 0 L30 52 M0 0 L45 45"/><path d="M12 0 Q10 6 0 12 M24 0 Q20 12 0 24 M38 0 Q31 19 0 38 M52 0 Q42 26 0 52"/></g></svg>';
+			html = '<div style="position:absolute;left:0;top:0">' + web + '</div><div style="position:absolute;right:0;top:0;transform:scaleX(-1)">' + web + "</div>" +
+				'<div class="bn-spider"><span></span>🕷️</div>';
+		} else if (c.deco === "bats") {
+			for (i = 0; i < 6; i++) { html += '<i class="bn-bat" style="left:' + (rnd() * 90).toFixed(1) + "%;animation-delay:-" + (rnd() * 6).toFixed(2) + "s;font-size:" + (14 + rnd() * 10).toFixed(0) + 'px">🦇</i>'; }
+		} else if (c.deco === "confetti") {
+			var cc = ["#ffd166", "#ef476f", "#06d6a0", "#4cc9f0", "#ffffff", "#c77dff"];
+			for (i = 0; i < 30; i++) { html += '<i class="bn-conf" style="left:' + (rnd() * 100).toFixed(1) + "%;background:" + cc[i % cc.length] + ";animation-delay:-" + (rnd() * 4).toFixed(2) + "s;animation-duration:" + (2.5 + rnd() * 2).toFixed(2) + 's"></i>'; }
+		} else if (c.deco === "drips") {
+			for (i = 0; i < 14; i++) {
+				html += '<i style="left:' + (3 + rnd() * 94).toFixed(1) + "%;height:" + (8 + rnd() * 22).toFixed(0) + "px;background:" + SSO.rgba(c.bg, c.bgopacity) + ";animation-delay:-" + (rnd() * 5).toFixed(2) + 's"></i>';
+			}
+		}
+		d.innerHTML = html;
+		bar.appendChild(d);
+	}
+
+	SSO.SEPARATORS = [["•", "• dot"], ["★", "★ star"], ["|", "| bar"], ["◆", "◆ diamond"], ["/", "/ slash"], ["//", "// double slash"], ["✦", "✦ sparkle"], ["♥", "♥ heart"], ["♡", "♡ open heart"], ["🔥", "🔥 fire"], ["✖", "✖ cross"], ["✠", "✠ iron cross"], ["☠", "☠ skull"], ["△", "△ triangle"], ["●", "● circle"], ["☕", "☕ coffee"], [">", "> prompt"], ["", "None"]];
 
 	// ---------------------------------------------------------------- banner
 	SSO.register({
@@ -66,7 +173,7 @@
 		category: "socials",
 		description: "A bar of rotating or scrolling messages with your socials. Great under a webcam.",
 		size: [640, 60],
-		sizeFor: function (c, thumb) { var h = c.height + (c.mascot ? 48 : 0); return thumb ? [480, Math.max(110, h)] : [640, h]; },
+		sizeFor: function (c, thumb) { var h = c.height + bannerExtra(c).top + bannerExtra(c).bottom; return thumb ? [380, Math.max(100, h + 10)] : [640, h]; },
 		fields: [
 			{ key: "messages", label: "Messages (one per line)", type: "textarea", group: "Content", default: "Thanks for hanging out! Drop a follow 💜\nLike the stream and say hi in chat 👋", help: "Put {youtube}, {twitch}, {discord}… in a message to show that icon." },
 			SSO.f.socials(),
@@ -87,6 +194,14 @@
 			{ key: "height", label: "Bar height", type: "range", group: "Style", default: 52, min: 24, max: 200, step: 1 },
 			{ key: "blur", label: "Frosted glass blur", type: "range", group: "Style", default: 0, min: 0, max: 30, step: 1 },
 			{ key: "shadow", label: "Drop shadow", type: "bool", group: "Style", default: true },
+			{ key: "bgstyle", label: "Background pattern", type: "select", group: "Style", default: "solid", options: [["solid", "Solid"], ["gradient", "Gradient"], ["stripes", "Hazard stripes"], ["paper", "Torn paper"], ["grunge", "Xerox grunge"], ["blocks", "Blocky dirt & grass"], ["glossy", "Glossy"], ["scanlines", "CRT scanlines"], ["flag", "Country flag"]] },
+			SSO.f.country("country", "us", "Flag", "Style", { bgstyle: "flag" }),
+			{ key: "flagmono", label: "Black & white flag", type: "bool", group: "Style", default: false, show: { bgstyle: "flag" } },
+			{ key: "flagdark", label: "Darken the flag", type: "range", group: "Style", default: 0.55, min: 0, max: 0.95, step: 0.05, show: { bgstyle: "flag" } },
+			{ key: "flagwave", label: "Waving flag", type: "bool", group: "Style", default: true, show: { bgstyle: "flag" } },
+			{ key: "bg2", label: "Second background colour", type: "color", group: "Style", default: "333333", show: { bgstyle: ["gradient", "stripes"] } },
+			{ key: "deco", label: "Decoration", type: "select", group: "Style", default: "", options: [["", "None"], ["flames", "Flames"], ["sparkles", "Sparkles"], ["hearts", "Floating hearts"], ["tape", "Tape on the corners"], ["pins", "Safety pins"], ["studs", "Metal studs"], ["drips", "Paint drips"], ["stars", "Three stars"], ["xmaslights", "Christmas lights"], ["snowcap", "Snow on top"], ["cobweb", "Cobwebs & spider"], ["bats", "Bats"], ["confetti", "Confetti"]] },
+			{ key: "tilt", label: "Tilt", type: "range", group: "Style", default: 0, min: -6, max: 6, step: 0.5 },
 			{ key: "glow", label: "Glowing text", type: "bool", group: "Style", default: false },
 			{ key: "mascot", label: "Mascot on top", type: "select", group: "Style", default: "", options: [["", "None"], ["cat-orange", "Orange cat"], ["cat-black", "Black cat"], ["cat-grey", "Grey cat"], ["cat-white", "White cat"], ["cat-calico", "Calico cat"]] },
 			SSO.f.font("Montserrat"),
@@ -94,16 +209,32 @@
 			{ key: "weight", label: "Weight", type: "select", group: "Text", default: "700", options: [["400", "Regular"], ["600", "Semi-bold"], ["700", "Bold"], ["800", "Extra bold"]] },
 			{ key: "upper", label: "UPPERCASE", type: "bool", group: "Text", default: false },
 			{ key: "sep", label: "Separator", type: "select", group: "Text", default: "•", options: SSO.SEPARATORS }
-		],
+		].concat(SSO.fxFields("Text")),
 		presets: [
-			{ name: "Under-cam black", values: { } },
-			{ name: "Under-cam white", values: { bg: "ffffff", fg: "111111", accent: "111111", bgopacity: 1 } },
-			{ name: "Breaking news", values: { mode: "scroll", label: "LIVE", upper: true, font: "Oswald", radius: 0, accent: "e11d48", bg: "101010", fontsize: 22, weight: "600", sep: "◆" } },
-			{ name: "Neon", values: { bg: "0a0a1f", bgopacity: 0.85, fg: "e6fbff", accent: "00e5ff", font: "Orbitron", glow: true, radius: 10, fontsize: 18, mode: "scroll", sep: "✦" } },
-			{ name: "Frosted glass", values: { bg: "ffffff", bgopacity: 0.14, blur: 14, radius: 30, font: "Poppins", weight: "600", shadow: false, transition: "fade" } },
-			{ name: "Cat café", values: { bg: "3b2f4a", bgopacity: 0.95, fg: "fff4e6", accent: "ffb4a2", font: "Fredoka", radius: 16, mascot: "cat-orange", sep: "♥", height: 52 } },
-			{ name: "Retro pixel", values: { bg: "1d1d1d", bgopacity: 1, fg: "f5f5f5", accent: "ffcc00", font: "Press Start 2P", fontsize: 13, sep: "★", radius: 0, mode: "scroll", speed: 70 } },
-			{ name: "Bold label", values: { label: "FOLLOW", bg: "ffcc00", bgopacity: 1, fg: "111111", accent: "111111", font: "Bebas Neue", fontsize: 28, weight: "400", radius: 4 } }
+			{ name: "Under-cam black", tags: ["simple"], values: { } },
+			{ name: "Under-cam white", tags: ["simple"], values: { bg: "ffffff", fg: "111111", accent: "111111", bgopacity: 1 } },
+			{ name: "Breaking news", tags: ["pro"], values: { mode: "scroll", label: "LIVE", upper: true, font: "Oswald", radius: 0, accent: "e11d48", bg: "101010", fontsize: 22, weight: "600", sep: "◆" } },
+			{ name: "Neon", tags: ["cyber"], values: { bg: "0a0a1f", bgopacity: 0.85, fg: "e6fbff", accent: "00e5ff", font: "Orbitron", glow: true, radius: 10, fontsize: 18, mode: "scroll", sep: "✦" } },
+			{ name: "Frosted glass", tags: ["simple", "elegant"], values: { bg: "ffffff", bgopacity: 0.14, blur: 14, radius: 30, font: "Poppins", weight: "600", shadow: false, transition: "fade" } },
+			{ name: "Cat café", tags: ["cute", "cozy"], values: { bg: "3b2f4a", bgopacity: 0.95, fg: "fff4e6", accent: "ffb4a2", font: "Fredoka", radius: 16, mascot: "cat-orange", sep: "♥", height: 52 } },
+			{ name: "Retro pixel", tags: ["retro", "gaming"], values: { bg: "1d1d1d", bgopacity: 1, fg: "f5f5f5", accent: "ffcc00", font: "Press Start 2P", fontsize: 13, sep: "★", radius: 0, mode: "scroll", speed: 70 } },
+			{ name: "Bold label", tags: ["simple"], values: { label: "FOLLOW", bg: "ffcc00", bgopacity: 1, fg: "111111", accent: "111111", font: "Bebas Neue", fontsize: 28, weight: "400", radius: 4 } },
+			{ name: "Spicy flames", tags: ["spicy"], values: { bg: "1a0500", bg2: "5c1300", bgstyle: "gradient", bgopacity: 1, deco: "flames", fx: "fire", font: "Bangers", fontsize: 26, weight: "400", accent: "ffb000", sep: "🔥", radius: 8 } },
+			{ name: "Punk xerox", tags: ["punk"], values: { bgstyle: "paper", bg: "f1eee4", bgopacity: 1, fg: "111111", accent: "d7261e", font: "Special Elite", fontsize: 21, deco: "pins", tilt: -1.5, shadow: true, radius: 0, sep: "✖" } },
+			{ name: "Ransom note", tags: ["punk"], values: { bgstyle: "grunge", bg: "161616", bgopacity: 1, fx: "ransom", fontsize: 22, deco: "tape", tilt: 1, radius: 0, sep: "" , height: 60, accent: "f2e600" } },
+			{ name: "Metal studs", tags: ["punk", "spooky"], values: { bg: "101010", bgopacity: 1, fg: "e8e8e8", accent: "b30000", font: "Metal Mania", fontsize: 24, weight: "400", deco: "studs", radius: 4, sep: "✠", height: 58 } },
+			{ name: "Blocky dirt", tags: ["minecraft", "gaming"], values: { bgstyle: "blocks", bg: "79553a", bgopacity: 1, fg: "ffffff", fx: "pixel", fx2: "ffffff", fx3: "3f3f3f", font: "Silkscreen", fontsize: 18, weight: "400", radius: 0, sep: "◆", accent: "7fd34e", height: 56, shadow: false } },
+			{ name: "Console blue", tags: ["console", "gaming"], values: { bgstyle: "gradient", bg: "00439c", bg2: "0072ce", bgopacity: 1, fg: "ffffff", accent: "ffffff", font: "Russo One", weight: "400", radius: 6, sep: "△", label: "LIVE" } },
+			{ name: "Console green", tags: ["console", "gaming"], values: { bgstyle: "glossy", bg: "107c10", bgopacity: 1, fg: "ffffff", accent: "0e0e0e", font: "Rajdhani", fontsize: 22, radius: 999, sep: "●" } },
+			{ name: "Handheld red", tags: ["console", "cute"], values: { bg: "e60012", bgopacity: 1, fg: "ffffff", accent: "ffffff", font: "Fredoka", radius: 999, sep: "★", glow: false } },
+			{ name: "Kawaii pastel", tags: ["cute"], values: { bgstyle: "gradient", bg: "ffd6e8", bg2: "d9e4ff", bgopacity: 1, fg: "6b3a5b", accent: "ff7eb6", font: "Fredoka", deco: "sparkles", radius: 999, sep: "♡", shadow: false } },
+			{ name: "Cozy cocoa", tags: ["cozy"], values: { bg: "3e2c23", bgopacity: 0.95, fg: "f5e6d3", accent: "e8a87c", font: "Kalam", fontsize: 22, deco: "hearts", radius: 14, sep: "☕" } },
+			{ name: "Vaporwave", tags: ["retro", "cyber"], values: { bgstyle: "gradient", bg: "ff71ce", bg2: "01cdfe", bgopacity: 1, fg: "ffffff", accent: "fffb96", font: "Audiowide", fontsize: 20, glow: true, radius: 0, sep: "✦", mode: "scroll" } },
+			{ name: "Hacker terminal", tags: ["cyber", "retro"], values: { bgstyle: "scanlines", bg: "020a04", bgopacity: 0.95, fg: "33ff77", accent: "33ff77", font: "Share Tech Mono", fontsize: 20, weight: "400", glow: true, radius: 2, border: "1f6b35", sep: ">", mode: "scroll" } },
+			{ name: "Spooky drips", tags: ["spooky"], values: { bg: "160006", bgopacity: 1, fg: "ff3b3b", accent: "ff3b3b", font: "Creepster", fontsize: 26, weight: "400", deco: "drips", radius: 0, sep: "☠" } },
+			{ name: "Gold luxe", tags: ["elegant"], values: { bg: "0c0c0c", bgopacity: 0.92, fg: "f1d38a", fx: "gold", accent: "c99a2e", border: "c99a2e", font: "Cinzel", fontsize: 20, weight: "700", radius: 2, sep: "◆", transition: "fade" } },
+			{ name: "Cyber glitch", tags: ["cyber", "gaming"], values: { bg: "0a0014", bgopacity: 0.9, fg: "ffffff", fx: "glitch", fx1: "ff00e6", fx2: "00fff0", accent: "ff00e6", font: "Rajdhani", fontsize: 24, radius: 0, sep: "//", bgstyle: "scanlines" } },
+			{ name: "Comic pow", tags: ["cute", "gaming"], values: { bg: "1e6bff", bgopacity: 1, fx: "comic", fx2: "ffe600", fx3: "e11d48", font: "Bangers", fontsize: 28, weight: "400", radius: 6, tilt: -1, sep: "★", accent: "ffe600" } }
 		],
 		css: [
 			".bn-wrap{position:absolute;left:0;right:0;bottom:0;top:0;display:flex;align-items:flex-end;justify-content:center;}",
@@ -126,12 +257,47 @@
 			".bn-end{position:relative;display:flex;align-items:center;padding:0 .8em;white-space:nowrap;font-size:.85em;}",
 			".bn-end > span{margin-left:.9em;display:inline-flex;align-items:center;} .bn-end > span:first-child{margin-left:0;}",
 			".bn-end .sso-icon{margin-right:.3em;}",
-			".bn-mascot{position:absolute;bottom:100%;left:18px;width:64px;height:auto;margin-bottom:-6px;pointer-events:none;}"
+			".bn-mascot{position:absolute;bottom:100%;left:18px;width:64px;height:auto;margin-bottom:-6px;pointer-events:none;}",
+			".bn-deco{position:absolute;left:0;right:0;pointer-events:none;}",
+			".bn-flames{bottom:100%;height:70%;margin-bottom:-6px;overflow:visible;}",
+			".bn-flames i{position:absolute;bottom:0;width:22px;border-radius:50% 50% 35% 35%/70% 70% 30% 30%;background:radial-gradient(ellipse at 50% 85%,#fff3b0 0%,#ffcc00 25%,#ff6a00 55%,rgba(255,40,0,0) 75%);transform-origin:50% 100%;animation:bn-flick 1s ease-in-out infinite alternate;filter:blur(.6px);}",
+			"@keyframes bn-flick{0%{transform:scale(1,.75) skewX(-4deg);opacity:.85}50%{transform:scale(.9,1.1) skewX(5deg);opacity:1}100%{transform:scale(1.05,.9) skewX(-2deg);opacity:.9}}",
+			".bn-flames b{position:absolute;bottom:20%;width:4px;height:4px;border-radius:50%;background:#ffb000;box-shadow:0 0 6px #ff6a00;animation:bn-ember 2.6s linear infinite;opacity:0;}",
+			"@keyframes bn-ember{0%{transform:translate(0,0);opacity:0}10%{opacity:1}100%{transform:translate(12px,-70px);opacity:0}}",
+			".bn-sparkles{top:0;bottom:0;} .bn-sparkles i{position:absolute;font-style:normal;color:#fff;text-shadow:0 0 6px #fff;animation:bn-twinkle 2.4s ease-in-out infinite;opacity:0;}",
+			"@keyframes bn-twinkle{0%,100%{opacity:0;transform:scale(.4) rotate(0)}50%{opacity:1;transform:scale(1) rotate(30deg)}}",
+			".bn-hearts{bottom:100%;height:60px;} .bn-hearts i{position:absolute;bottom:0;font-style:normal;animation:bn-heart 3.5s ease-in infinite;opacity:0;}",
+			"@keyframes bn-heart{0%{transform:translateY(10px) scale(.6);opacity:0}15%{opacity:1}100%{transform:translateY(-50px) scale(1.1);opacity:0}}",
+			".bn-tape{position:absolute;top:-10px;width:70px;height:22px;opacity:.85;box-shadow:0 1px 2px rgba(0,0,0,.2);}",
+			".bn-pin{position:absolute;top:-14px;font-size:24px;}",
+			".bn-studs{top:5px;bottom:5px;display:flex;flex-direction:column;justify-content:space-between;padding:0 10px;}",
+			".bn-studs div{display:flex;justify-content:space-between;}",
+			".bn-studs span{width:7px;height:7px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#9a9a9a 45%,#3a3a3a);box-shadow:0 1px 1px rgba(0,0,0,.6);}",
+			".bn-drips{top:100%;height:30px;} .bn-drips i{position:absolute;top:-2px;width:10px;border-radius:0 0 6px 6px;animation:bn-drip 5s ease-in-out infinite;transform-origin:50% 0;}",
+			"@keyframes bn-drip{0%,100%{transform:scaleY(.7)}50%{transform:scaleY(1.15)}}",
+			".bn-stars{position:absolute;left:0;right:0;bottom:100%;margin-bottom:-2px;text-align:center;font-size:20px;letter-spacing:.35em;text-shadow:0 2px 6px rgba(0,0,0,.6);}",
+			".bn-xmaslights{top:-12px;height:24px;} .bn-wire{position:absolute;left:0;top:0;width:100%;height:14px;}",
+			".bn-bulb{position:absolute;top:6px;width:7px;height:11px;margin-left:-3.5px;border-radius:50% 50% 45% 45%;box-shadow:0 0 8px currentColor,0 0 16px currentColor;animation:bn-bulb 1.6s ease-in-out infinite alternate;}",
+			"@keyframes bn-bulb{from{opacity:1}to{opacity:.35;box-shadow:none}}",
+			".bn-snowcap{top:-14px;height:20px;} .bn-snow{position:absolute;left:-4px;right:-4px;top:0;bottom:0;background:linear-gradient(180deg,#ffffff,#dfe9ff);filter:drop-shadow(0 2px 2px rgba(0,0,0,.25));}",
+			".bn-cobweb{top:0;bottom:0;} .bn-web{width:46px;height:46px;opacity:.85;}",
+			".bn-spider{position:absolute;right:16%;top:100%;font-size:18px;display:flex;flex-direction:column;align-items:center;animation:bn-spider 5s ease-in-out infinite;transform-origin:50% 0;}",
+			".bn-spider span{width:1px;height:22px;background:rgba(255,255,255,.6);}",
+			"@keyframes bn-spider{0%,100%{transform:translateY(-8px)}50%{transform:translateY(10px)}}",
+			".bn-bats{bottom:100%;height:60px;} .bn-bat{position:absolute;bottom:0;font-style:normal;animation:bn-bat 6s ease-in-out infinite;opacity:0;}",
+			"@keyframes bn-bat{0%{transform:translate(0,10px) scale(.6);opacity:0}15%{opacity:1}100%{transform:translate(60px,-60px) scale(1);opacity:0}}",
+			".bn-confetti{bottom:100%;height:70px;overflow:visible;} .bn-conf{position:absolute;bottom:0;width:6px;height:10px;animation:bn-conf 3s ease-out infinite;opacity:0;}",
+			"@keyframes bn-conf{0%{transform:translateY(0) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(-70px) rotate(540deg);opacity:0}}",
+			".bn-flag{position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;border-radius:inherit;}",
+			".bn-grass{position:absolute;left:0;right:0;top:0;height:28%;border-radius:inherit;border-bottom-left-radius:0;border-bottom-right-radius:0;}",
+			".bn-t{display:inline-block;}"
 		].join("\n"),
 		render: function (root, c) {
 			SSO.loadFont(c.font);
 			var socials = SSO.parseSocials(c.socials);
-			var msgs = SSO.lines(c.messages).map(function (m) { return '<span class="bn-item">' + tokenIcons(m, c.icons) + "</span>"; });
+			var msgs = SSO.lines(c.messages).map(function (m) {
+				return '<span class="bn-item"><span class="bn-t">' + (c.fx === "ransom" ? SSO.fxHTML(m, "ransom") : tokenIcons(m, c.icons)) + "</span></span>";
+			});
 			if (c.socialsin === "rotate") {
 				socials.forEach(function (s) { msgs.push(socialHTML(s, c.icons, "bn-item")); });
 			}
@@ -140,9 +306,12 @@
 			wrap.className = "bn-wrap tr-" + c.transition + " align-" + c.align;
 			var bar = document.createElement("div");
 			bar.className = "bn";
-			bar.style.cssText = "height:" + c.height + "px;border-radius:" + c.radius + "px;color:" + fg + ";font-family:" + SSO.fontStack(c.font) + ";font-size:" + c.fontsize + "px;font-weight:" + c.weight + ";" + (c.upper ? "text-transform:uppercase;letter-spacing:.03em;" : "") + (c.glow ? "text-shadow:0 0 6px " + SSO.color(c.accent) + ",0 0 14px " + SSO.rgba(c.accent, 0.6) + ";" : "");
+			var extra = bannerExtra(c);
+			wrap.style.paddingBottom = extra.bottom + "px";
+			bar.style.cssText = (c.tilt ? "transform:rotate(" + c.tilt + "deg);" : "") + "height:" + c.height + "px;border-radius:" + c.radius + "px;color:" + fg + ";font-family:" + SSO.fontStack(c.font) + ";font-size:" + c.fontsize + "px;font-weight:" + c.weight + ";" + (c.upper ? "text-transform:uppercase;letter-spacing:.03em;" : "") + (c.glow ? "text-shadow:0 0 6px " + SSO.color(c.accent) + ",0 0 14px " + SSO.rgba(c.accent, 0.6) + ";" : "");
 			var bgStyle = "background:" + SSO.rgba(c.bg, c.bgopacity) + ";" + (c.border ? "box-shadow:inset 0 0 0 1px " + SSO.color(c.border) + (c.shadow ? ",0 4px 14px rgba(0,0,0,.35)" : "") + ";" : (c.shadow ? "box-shadow:0 4px 14px rgba(0,0,0,.35);" : "")) + (c.blur ? "-webkit-backdrop-filter:blur(" + c.blur + "px);backdrop-filter:blur(" + c.blur + "px);" : "");
-			var html = '<div class="bn-bg" style="' + bgStyle + '"></div>';
+			bgStyle += bannerPattern(c);
+			var html = '<div class="bn-bg" style="' + bgStyle + '">' + (c.bgstyle === "blocks" ? '<div class="bn-grass" style="background:' + pixelPattern("grass") + '"></div>' : "") + (c.bgstyle === "flag" ? '<div class="bn-flag"></div>' : "") + "</div>";
 			if (c.label) {
 				html += '<div class="bn-label" style="background:' + SSO.color(c.accent) + ";color:" + SSO.color(c.bg) + '">' + esc(c.label) + "</div>";
 			}
@@ -157,17 +326,24 @@
 				cat.innerHTML = SSO.catSVG ? SSO.catSVG("peek", c.mascot.replace("cat-", "")) : "";
 				bar.appendChild(cat);
 			}
+			decorate(bar, c);
+			var flagHost = bar.querySelector(".bn-flag");
+			if (flagHost && SSO.wavingFlag) { SSO.wavingFlag(flagHost, c.country, { mono: c.flagmono, still: !c.flagwave, amp: 6, speed: 4, darken: c.flagdark, grain: c.flagmono }); }
 			wrap.appendChild(bar);
 			root.appendChild(wrap);
 			var view = bar.querySelector(".bn-view");
 			var sep = c.sep ? '<span class="bn-sep" style="color:' + SSO.color(c.accent) + '">' + esc(c.sep) + "</span>" : '<span class="bn-sep"></span>';
 
 			if (!msgs.length) { return; }
+			var fxOn = c.fx && c.fx !== "ransom";
 			if (c.mode === "scroll") {
 				var track = document.createElement("div");
 				track.className = "bn-track";
 				view.appendChild(track);
-				marquee(view, track, msgs.join(sep) + sep, c.speed, "bn");
+				marquee(view, track, msgs.join(sep) + sep, c.speed, "bn", fxOn ? function () {
+					var ts = track.querySelectorAll(".bn-t, .sso-handle");
+					for (var i = 0; i < ts.length; i++) { SSO.applyFX(ts[i], c.fx, c.fx1, c.fx2, c.fx3); }
+				} : null);
 			} else if (c.mode === "static") {
 				view.innerHTML = '<div class="bn-static">' + msgs.join(sep) + "</div>";
 				fitText(view.querySelectorAll(".bn-static"));
@@ -175,6 +351,10 @@
 				view.innerHTML = '<div class="bn-rot">' + msgs.join("") + "</div>";
 				fitText(view.querySelectorAll(".bn-item"));
 				rotate(view.firstChild, c.hold);
+			}
+			if (fxOn && c.mode !== "scroll") {
+				var ts = view.querySelectorAll(".bn-t, .sso-handle");
+				for (var i = 0; i < ts.length; i++) { SSO.applyFX(ts[i], c.fx, c.fx1, c.fx2, c.fx3); }
 			}
 
 			// Long lines shrink (down to 55%) instead of being cut off.
@@ -226,11 +406,11 @@
 			{ key: "netlabel", label: "Show network name", type: "bool", group: "Text", default: false }
 		],
 		presets: [
-			{ name: "Clean white line", values: {} },
-			{ name: "Gold travelling light", values: { linecolor: "f5c451", lineopacity: 0.8, travel: true, node: "diamond", nodebg: "1a1405", fg: "f5e6c4", font: "Playfair Display", weight: "400", layout: "alternate" } },
-			{ name: "Chips on a dashed line", values: { layout: "inline", line: "dashed", nodebg: "ffffff", fg: "111111", icons: "brand", font: "Poppins", fontsize: 16, shadow: false, spread: "even" } },
-			{ name: "Neon fade", values: { line: "fade", linecolor: "00e5ff", lineopacity: 1, node: "ring", fg: "e6fbff", font: "Orbitron", fontsize: 14, upper: true, travel: true } },
-			{ name: "Vertical sidebar", values: { orient: "v", spread: "start", node: "square", icons: "brand", netlabel: true, fontsize: 16 } }
+			{ name: "Clean white line", tags: ["simple"], values: {} },
+			{ name: "Gold travelling light", tags: ["elegant"], values: { linecolor: "f5c451", lineopacity: 0.8, travel: true, node: "diamond", nodebg: "1a1405", fg: "f5e6c4", font: "Playfair Display", weight: "400", layout: "alternate" } },
+			{ name: "Chips on a dashed line", tags: ["simple", "cute"], values: { layout: "inline", line: "dashed", nodebg: "ffffff", fg: "111111", icons: "brand", font: "Poppins", fontsize: 16, shadow: false, spread: "even" } },
+			{ name: "Neon fade", tags: ["cyber"], values: { line: "fade", linecolor: "00e5ff", lineopacity: 1, node: "ring", fg: "e6fbff", font: "Orbitron", fontsize: 14, upper: true, travel: true } },
+			{ name: "Vertical sidebar", tags: ["simple"], values: { orient: "v", spread: "start", node: "square", icons: "brand", netlabel: true, fontsize: 16 } }
 		],
 		css: [
 			".sl{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;padding:0 24px;box-sizing:border-box;}",
@@ -363,16 +543,18 @@
 			{ key: "border", label: "Border colour (blank = none)", type: "color", group: "Style", default: "ffffff22" },
 			{ key: "radius", label: "Corner radius", type: "range", group: "Style", default: 16, min: 0, max: 40, step: 1 },
 			{ key: "blur", label: "Frosted glass blur", type: "range", group: "Style", default: 0, min: 0, max: 30, step: 1 },
+			{ key: "flagbg", label: "Flag behind the card", type: "select", group: "Style", default: "", options: [["", "None"]].concat(SSO.COUNTRIES.map(function (k) { return [k[0], k[1]]; })) },
+			{ key: "flagmono", label: "Black & white flag", type: "bool", group: "Style", default: false, show: { flagbg: "!" } },
 			SSO.f.font("Poppins"),
 			{ key: "fontsize", label: "Text size", type: "range", group: "Text", default: 18, min: 10, max: 48, step: 1 },
 			{ key: "width", label: "Card width (0 = auto)", type: "number", group: "Layout", default: 0, min: 0, max: 1920, step: 10 }
 		],
 		presets: [
-			{ name: "Dark card", values: {} },
-			{ name: "Light card", values: { bg: "ffffff", bgopacity: 1, fg: "1a1a1a", accent: "1a1a1a", rowbg: "000000", rowopacity: 0.05, border: "00000014" } },
-			{ name: "Brand rows", values: { tint: true, icons: "mono", rowopacity: 0.9, netlabel: false, title: "Follow along" } },
-			{ name: "Glass + QR", values: { bg: "ffffff", bgopacity: 0.12, blur: 16, qr: "https://socialstream.ninja", layout: "grid", netlabel: false } },
-			{ name: "Row strip", values: { layout: "row", title: "", netlabel: false, radius: 999, fontsize: 16 } }
+			{ name: "Dark card", tags: ["simple"], values: {} },
+			{ name: "Light card", tags: ["simple"], values: { bg: "ffffff", bgopacity: 1, fg: "1a1a1a", accent: "1a1a1a", rowbg: "000000", rowopacity: 0.05, border: "00000014" } },
+			{ name: "Brand rows", tags: ["simple"], values: { tint: true, icons: "mono", rowopacity: 0.9, netlabel: false, title: "Follow along" } },
+			{ name: "Glass + QR", tags: ["elegant", "simple"], values: { bg: "ffffff", bgopacity: 0.12, blur: 16, qr: "https://socialstream.ninja", layout: "grid", netlabel: false } },
+			{ name: "Row strip", tags: ["simple"], values: { layout: "row", title: "", netlabel: false, radius: 999, fontsize: 16 } }
 		],
 		css: [
 			".sc-wrap{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;}",
@@ -386,7 +568,9 @@
 			".sc.grid .sc-main{width:23em;}",
 			".sc.row .sc-list{flex-direction:row;} .sc.row .sc-row{margin:0 .3em;} .sc.row .sc-title{margin:0 .7em 0 .2em;white-space:nowrap;}",
 			".sc.row{flex-direction:row;padding:.5em .7em;} .sc.row .sc-main{display:flex;align-items:center;}",
-			".sc-row{display:flex;align-items:center;padding:.45em .7em;border-radius:.6em;margin:.22em 0;box-sizing:border-box;white-space:nowrap;}",
+			".sc-row{display:flex;align-items:center;padding:.45em .7em;border-radius:.6em;margin:.22em 0;box-sizing:border-box;white-space:nowrap;animation:sc-in .6s cubic-bezier(.2,.9,.3,1.2) both;}",
+			"@keyframes sc-in{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}",
+			".sc-title{animation:sc-in .5s ease both;}",
 			".sc-row .sso-icon{width:1.5em;height:1.5em;margin-right:.6em;}",
 			".sc-net{display:block;font-size:.65em;opacity:.65;text-transform:uppercase;letter-spacing:.08em;line-height:1.1;}",
 			".sc-handle{display:block;font-weight:600;line-height:1.2;overflow:hidden;text-overflow:ellipsis;}",
@@ -405,7 +589,7 @@
 			var rows = socials.map(function (s) {
 				var bg = c.tint ? SSO.rgba(s.info.color.replace("#", ""), c.rowopacity) : (c.rowbg ? SSO.rgba(c.rowbg, c.rowopacity) : "transparent");
 				var text = c.tint && /^#e7e9ea$/i.test(s.info.color) ? "color:#111;" : "";
-				return '<div class="sc-row" style="background:' + bg + ";" + text + '">' + SSO.iconHTML(s.net, c.icons) +
+				return '<div class="sc-row" style="background:' + bg + ";" + text + "animation-delay:" + (0.15 + socials.indexOf(s) * 0.08).toFixed(2) + 's">' + SSO.iconHTML(s.net, c.icons) +
 					'<span style="min-width:0">' + (c.netlabel && c.layout !== "row" ? '<span class="sc-net">' + esc(s.info.label) + "</span>" : "") + '<span class="sc-handle">' + esc(s.handle) + "</span></span></div>";
 			}).join("");
 			var html = '<div class="sc-main">' + (c.title ? '<div class="sc-title" style="color:' + SSO.color(c.accent) + '">' + esc(c.title) + "</div>" : "") +
@@ -414,6 +598,16 @@
 				html += '<div class="sc-qr"><div class="sc-qr-box"></div>' + (c.qrcaption ? '<div class="sc-qr-cap">' + esc(c.qrcaption) + "</div>" : "") + "</div>";
 			}
 			card.innerHTML = html;
+			if (c.flagbg && SSO.wavingFlag) {
+				var fl = document.createElement("div");
+				fl.style.cssText = "position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;border-radius:inherit;z-index:-1;";
+				card.style.position = "relative";
+				card.style.zIndex = "0";
+				card.style.overflow = "hidden";
+				card.insertBefore(fl, card.firstChild);
+				SSO.wavingFlag(fl, c.flagbg, { mono: c.flagmono, amp: 3, darken: 1 - c.bgopacity * 0.6, grain: c.flagmono, vignette: true });
+				card.style.background = "transparent";
+			}
 			var wrap = document.createElement("div");
 			wrap.className = "sc-wrap";
 			wrap.appendChild(card);
@@ -451,10 +645,10 @@
 			{ key: "weight", label: "Weight", type: "select", group: "Text", default: "700", options: [["400", "Regular"], ["600", "Semi-bold"], ["700", "Bold"], ["800", "Extra bold"]] }
 		],
 		presets: [
-			{ name: "Dark pill", values: {} },
-			{ name: "Brand colours", values: { brandbg: true, icons: "mono", netlabel: false, radius: 12 } },
-			{ name: "Minimal text", values: { bgopacity: 0, icons: "mono", netlabel: false, prefix: "Follow", transition: "slide", font: "Bebas Neue", fontsize: 34, weight: "400" } },
-			{ name: "Light tag", values: { bg: "ffffff", bgopacity: 1, fg: "111111", radius: 8, transition: "fade" } }
+			{ name: "Dark pill", tags: ["simple"], values: {} },
+			{ name: "Brand colours", tags: ["simple"], values: { brandbg: true, icons: "mono", netlabel: false, radius: 12 } },
+			{ name: "Minimal text", tags: ["simple"], values: { bgopacity: 0, icons: "mono", netlabel: false, prefix: "Follow", transition: "slide", font: "Bebas Neue", fontsize: 34, weight: "400" } },
+			{ name: "Light tag", tags: ["simple"], values: { bg: "ffffff", bgopacity: 1, fg: "111111", radius: 8, transition: "fade" } }
 		],
 		css: [
 			".cy-wrap{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;padding:0 10px;}",
@@ -465,7 +659,10 @@
 			".cy-h{display:block;line-height:1.15;}",
 			".tr-flip .cy-item{transform:rotateX(-90deg);transform-origin:50% 50% -20px;} .tr-flip .cy-item.off{transform:rotateX(90deg);}",
 			".tr-slide .cy-item{transform:translateY(60%);} .tr-slide .cy-item.off{transform:translateY(-60%);}",
-			".cy-item.on{opacity:1;transform:none;}"
+			".cy-item.on{opacity:1;transform:none;}",
+			".cy-bar{position:absolute;left:12%;right:12%;bottom:-6px;height:3px;border-radius:3px;overflow:hidden;opacity:.7;}",
+			".cy-bar i{display:block;height:100%;width:100%;transform-origin:0 50%;animation:cy-bar linear infinite;}",
+			"@keyframes cy-bar{from{transform:scaleX(0)}to{transform:scaleX(1)}}"
 		].join("\n"),
 		render: function (root, c) {
 			SSO.loadFont(c.font);
@@ -500,6 +697,22 @@
 			size();
 			SSO.fontsReady(size);
 			rotate(stage, c.hold);
+			if (socials.length > 1) {
+				var barEl = document.createElement("div");
+				barEl.className = "cy-bar";
+				barEl.innerHTML = '<i style="background:' + SSO.color(c.fg) + ";animation-duration:" + c.hold + 's"></i>';
+				// Lives beside the stage (not in it) so the rotation doesn't treat it as a slide.
+				wrap.appendChild(barEl);
+				var placeBar = function () {
+					barEl.style.left = (stage.offsetLeft + stage.offsetWidth * 0.12) + "px";
+					barEl.style.right = "auto";
+					barEl.style.width = (stage.offsetWidth * 0.76) + "px";
+					barEl.style.top = (stage.offsetTop + stage.offsetHeight + 4) + "px";
+					barEl.style.bottom = "auto";
+				};
+				placeBar();
+				SSO.fontsReady(placeBar);
+			}
 		}
 	});
 
@@ -532,10 +745,10 @@
 			{ key: "fontsize", label: "Text size", type: "range", group: "Text", default: 22, min: 10, max: 60, step: 1 }
 		],
 		presets: [
-			{ name: "YouTube style", values: { font: "" } },
-			{ name: "Twitch follow", values: { buttons: "follow,subscribe", accent: "9146ff", bg: "1f1f23", done: "2f2f35", radius: 8, font: "Inter" } },
-			{ name: "Light", values: { bg: "f2f2f2", fg: "0f0f0f", done: "d9d9d9", font: "Inter" } },
-			{ name: "Kick green", values: { buttons: "follow", accent: "53fc18", fg: "ffffff", bg: "191b1f", radius: 6, font: "Inter" } }
+			{ name: "YouTube style", tags: ["simple"], values: { font: "" } },
+			{ name: "Twitch follow", tags: ["gaming"], values: { buttons: "follow,subscribe", accent: "9146ff", bg: "1f1f23", done: "2f2f35", radius: 8, font: "Inter" } },
+			{ name: "Light", tags: ["simple"], values: { bg: "f2f2f2", fg: "0f0f0f", done: "d9d9d9", font: "Inter" } },
+			{ name: "Kick green", tags: ["gaming"], values: { buttons: "follow", accent: "53fc18", fg: "ffffff", bg: "191b1f", radius: 6, font: "Inter" } }
 		],
 		css: [
 			".cta-wrap{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;}",

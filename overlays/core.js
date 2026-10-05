@@ -9,20 +9,44 @@
 
 	SSO.CATEGORIES = [
 		{ id: "socials", label: "Banners & socials" },
+		{ id: "text", label: "Text & info" },
+		{ id: "gaming", label: "Gaming" },
 		{ id: "time", label: "Clocks & timers" },
 		{ id: "scenes", label: "Scenes & frames" },
 		{ id: "maps", label: "Maps" },
+		{ id: "pets", label: "Pets" },
+		{ id: "obs", label: "Reacts to OBS" },
+		{ id: "holidays", label: "Countries & holidays" },
 		{ id: "fun", label: "Cute & fun" }
+	];
+
+	// Extras every overlay understands (handled in view.html).
+	SSO.GLOBAL_FIELDS = [
+		{ key: "huecycle", label: "Slowly shift colours (minutes per full cycle, 0 = off)", type: "number", group: "Extras for any overlay", default: 0, min: 0, max: 1440, step: 1, global: true },
+		{ key: "scenes", label: "Only show in these OBS scenes (comma separated)", type: "text", group: "Extras for any overlay", default: "", global: true, help: "Leave blank to always show. Uses the OBS browser source scene events." },
+		{ key: "replay", label: "Replay the intro when the OBS scene changes", type: "bool", group: "Extras for any overlay", default: false, global: true },
+		{ key: "fadein", label: "Fade in on load (seconds)", type: "number", group: "Extras for any overlay", default: 0, min: 0, max: 30, step: 0.5, global: true },
+		{ key: "cycleshow", label: "Show for (seconds) then hide — 0 = always visible", type: "number", group: "Extras for any overlay", default: 0, min: 0, max: 3600, step: 1, global: true },
+		{ key: "cyclehide", label: "…hide for (seconds)", type: "number", group: "Extras for any overlay", default: 30, min: 1, max: 3600, step: 1, global: true, show: { cycleshow: "!0" } }
 	];
 
 	SSO.register = function (def) {
 		def.fields = def.fields || [];
 		def.presets = def.presets || [];
 		def.size = def.size || [800, 200];
+		def.fields = def.fields.concat(SSO.GLOBAL_FIELDS);
 		templates.push(def);
 		templateMap[def.id] = def;
 	};
 	SSO.list = function () { return templates.slice(); };
+
+	// Vibe tags shown as gallery filters; presets list theirs in `tags`.
+	SSO.VIBES = [
+		["simple", "Simple"], ["gaming", "Gaming"], ["minecraft", "Blocky / Minecraft"], ["console", "Console"],
+		["spicy", "Spicy"], ["punk", "Punk"], ["cute", "Cute"], ["cozy", "Cozy"], ["retro", "Retro"],
+		["cyber", "Cyber / neon"], ["spooky", "Spooky"], ["elegant", "Elegant"], ["pro", "Pro / broadcast"],
+		["country", "Country pride"], ["halloween", "Halloween"], ["christmas", "Christmas"], ["newyear", "New Year"]
+	];
 	SSO.get = function (id) { return templateMap[id] || null; };
 
 	// ---------- small utils ----------
@@ -146,7 +170,31 @@
 		["Permanent Marker", "Permanent Marker"],
 		["Pacifico", "Pacifico"],
 		["Caveat", "Caveat"],
-		["Playfair Display", "Playfair Display"]
+		["Playfair Display", "Playfair Display"],
+		["Bangers", "Bangers (comic)"],
+		["Black Ops One", "Black Ops One"],
+		["Russo One", "Russo One"],
+		["Audiowide", "Audiowide"],
+		["Bungee", "Bungee"],
+		["Silkscreen", "Silkscreen (pixel)"],
+		["Special Elite", "Special Elite (typewriter)"],
+		["Rock Salt", "Rock Salt (marker)"],
+		["Sedgwick Ave Display", "Sedgwick Ave (graffiti)"],
+		["Metal Mania", "Metal Mania"],
+		["Creepster", "Creepster (horror)"],
+		["Nosifer", "Nosifer (drippy)"],
+		["Monoton", "Monoton (retro neon)"],
+		["Righteous", "Righteous"],
+		["Lobster", "Lobster"],
+		["Gochi Hand", "Gochi Hand"],
+		["Kalam", "Kalam"],
+		["Cinzel", "Cinzel (elegant)"],
+		["Share Tech Mono", "Share Tech Mono"],
+		["Teko", "Teko (sporty condensed)"],
+		["Saira Stencil One", "Saira Stencil (military)"],
+		["Mountains of Christmas", "Mountains of Christmas"],
+		["Butcherman", "Butcherman (Halloween)"],
+		["Great Vibes", "Great Vibes (script)"]
 	];
 	var loadedFonts = {};
 	SSO.loadFont = function (name) {
@@ -193,11 +241,29 @@
 		github: { label: "GitHub", color: "#e7e9ea", url: "https://github.com/", mono: { vb: "0 0 98 96", d: "M48.854 0C21.839 0 0 22 0 49.217c0 21.756 13.993 40.172 33.405 46.69 2.427.49 3.316-1.059 3.316-2.362 0-1.141-.08-5.052-.08-9.127-13.59 2.934-16.42-5.867-16.42-5.867-2.184-5.704-5.42-7.17-5.42-7.17-4.448-3.015.324-3.015.324-3.015 4.934.326 7.523 5.052 7.523 5.052 4.367 7.496 11.404 5.378 14.235 4.074.404-3.178 1.699-5.378 3.074-6.6-10.839-1.141-22.243-5.378-22.243-24.283 0-5.378 1.94-9.778 5.014-13.2-.485-1.222-2.184-6.275.486-13.038 0 0 4.125-1.304 13.426 5.052a46.97 46.97 0 0 1 12.214-1.63c4.125 0 8.33.571 12.213 1.63 9.302-6.356 13.427-5.052 13.427-5.052 2.67 6.763.97 11.816.485 13.038 3.155 3.422 5.015 7.822 5.015 13.2 0 18.905-11.404 23.06-22.324 24.283 1.78 1.548 3.316 4.481 3.316 9.126 0 6.6-.08 11.897-.08 13.526 0 1.304.89 2.853 3.316 2.364 19.412-6.52 33.405-24.935 33.405-46.691C97.707 22 75.788 0 48.854 0z" } },
 		rumble: { label: "Rumble", color: "#85c742", png: "rumble.png", url: "https://rumble.com/", mono: { d: "M7 4.5c0-1.6 1.7-2.5 3-1.7l9 5.7c1.3.8 1.3 2.7 0 3.5l-9 5.7c-1.3.8-3-.1-3-1.7z" } },
 		steam: { label: "Steam", color: "#c7d5e0", png: "steam.png", url: "https://steamcommunity.com/id/", mono: { d: "M12 1a11 11 0 0 0-11 10.1l5.9 2.4a3.1 3.1 0 0 1 1.9-.5l2.6-3.8v-.1a4.2 4.2 0 1 1 4.2 4.2h-.1l-3.7 2.7v.2a3.1 3.1 0 0 1-6.2.4L1.4 15A11 11 0 1 0 12 1zM8 18.2a2.3 2.3 0 0 1-1.3-1.2l1.4.6a1.7 1.7 0 0 0 1.3-3.1l-1.4-.6a2.3 2.3 0 1 1 0 4.3zm7.6-6.3a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6z" } },
+		snapchat: { label: "Snapchat", color: "#fffc00", url: "https://snapchat.com/add/", mono: { d: "M12 2c3.3 0 5.5 2.4 5.5 5.6v2.2c.6.3 1.3.1 1.8-.1.5.6-.2 1.3-1.4 1.8.3.9 1.6 2.6 3.6 3.1-.2.9-1.6 1.1-2.6 1.3-.2.6-.2 1.2-.9 1.2-.9 0-1.6-.3-2.6.3-1 .7-2 1.6-3.4 1.6s-2.4-.9-3.4-1.6c-1-.6-1.7-.3-2.6-.3-.7 0-.7-.6-.9-1.2-1-.2-2.4-.4-2.6-1.3 2-.5 3.3-2.2 3.6-3.1-1.2-.5-1.9-1.2-1.4-1.8.5.2 1.2.4 1.8.1V7.6C6.5 4.4 8.7 2 12 2z" } },
+		reddit: { label: "Reddit", color: "#ff4500", url: "https://reddit.com/u/", mono: { d: "M12 8c4.4 0 8 2.5 8 5.6s-3.6 5.6-8 5.6-8-2.5-8-5.6S7.6 8 12 8zM8.8 12.2a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6zM15.2 12.2a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6zM17.8 2.8a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM3.8 9.2a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6zM20.2 9.2a1.8 1.8 0 1 1 0 3.6 1.8 1.8 0 0 1 0-3.6z" } },
+		pinterest: { label: "Pinterest", color: "#e60023", url: "https://pinterest.com/", mono: { stroke: true, d: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM10 21l2.2-8.5M10.6 13c2.6 1 6-.6 6-4.2 0-2.8-2.3-4.6-5-4.6-3 0-5.2 2-5.2 4.6 0 1.4.8 2.6 1.4 3" } },
+		mastodon: { label: "Mastodon", color: "#6364ff", url: "", mono: { d: "M21 8c0-4-2.6-5.2-2.6-5.2C17 2.2 14.7 2 12 2h-.1c-2.6 0-5 .2-6.3.8 0 0-2.6 1.2-2.6 5.2 0 5.5-.3 12 9.4 12 1.3 0 2.7-.2 3.9-.6l-.1-1.8s-1.2.4-2.6.4c-1.4 0-2.9-.2-3.1-1.9v-.5c4.1 1 7.6.4 8.6.3 2.8-.3 5.2-2 5.5-3.6.5-2.4.4-5.9.4-5.9z" } },
+		soundcloud: { label: "SoundCloud", color: "#ff5500", url: "https://soundcloud.com/", mono: { d: "M2 14h1v4H2zM4.5 12h1v6h-1zM7 11h1v7H7zM9.5 9h1v9h-1zM12 7c3 0 5.3 2.2 5.6 5 .4-.2.9-.3 1.4-.3 2 0 3.5 1.6 3.5 3.5S21 18.7 19 18.7h-7z" } },
+		bandcamp: { label: "Bandcamp", color: "#1da0c3", url: "", mono: { d: "M2 18L8 6h14l-6 12z" } },
+		tumblr: { label: "Tumblr", color: "#36465d", url: "https://tumblr.com/", mono: { d: "M14.6 21c-3 0-4.6-1.6-4.6-4.4V10H7.6V7.2C10 6.4 11 4.4 11.2 2.4h2.6v4.2H17V10h-3.2v6.2c0 1.4.7 1.8 1.8 1.8h1.6V21z" } },
+		whatsapp: { label: "WhatsApp", color: "#25d366", png: "whatsapp.png", url: "", mono: { stroke: true, d: "M3.5 20.5l1.3-4.2A8.5 8.5 0 1 1 8 19.4zM9 8.5c0 3.6 2.9 6.5 6.5 6.5l1-1.7-2.2-1-1 1c-1.2-.5-2.1-1.4-2.6-2.6l1-1-1-2.2z" } },
+		telegram: { label: "Telegram", color: "#26a5e4", png: "telegram.png", url: "https://t.me/", mono: { d: "M2 11.5L22 3l-3.5 18-6-4.5-3 3v-5l9-8-11 6.5z" } },
+		linktree: { label: "Linktree", color: "#43e660", url: "https://linktr.ee/", mono: { d: "M11 2h2v6.2l4.4-4.4 1.4 1.4-4.4 4.4H21v2h-6.6l4.4 4.4-1.4 1.4L13 13v9h-2v-9l-4.4 4.4-1.4-1.4 4.4-4.4H3v-2h6.6L5.2 5.2l1.4-1.4L11 8.2z" } },
+		paypal: { label: "PayPal", color: "#0070ba", url: "https://paypal.me/", mono: { d: "M7 21l2.6-17h6.2c3.2 0 5 1.8 4.4 4.8-.6 3.4-3.1 5.2-6.4 5.2h-2.5L10.2 21zM11.6 11h1.6c1.6 0 2.7-.9 3-2.4.2-1.3-.6-2-2-2h-1.8z" } },
+		cashapp: { label: "Cash App", color: "#00d632", url: "https://cash.app/", mono: { stroke: true, d: "M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM15 8.5c-.8-.9-2-1.4-3.2-1.4-1.7 0-3 .8-3 2.1 0 3 6.4 1.6 6.4 4.8 0 1.4-1.4 2.3-3.2 2.3-1.4 0-2.7-.6-3.5-1.6M12 5.5v13" } },
+		venmo: { label: "Venmo", color: "#3d95ce", url: "https://venmo.com/", mono: { d: "M19 3c.7 1.2 1 2.4 1 4 0 5-4.3 11.5-7.8 16H5.8L3 4.5l5.8-.6 1.5 11.8C11.6 13.5 13.3 10 13.3 7.6c0-1.3-.2-2.2-.6-3z" } },
+		throne: { label: "Throne wishlist", color: "#a259ff", png: "throne.png", url: "https://throne.com/", mono: { d: "M3 18h18v2H3zM3 7l4.5 4L12 4l4.5 7L21 7l-2 9H5z" } },
+		amazon: { label: "Amazon wishlist", color: "#ff9900", png: "amazon.png", url: "", mono: { stroke: true, d: "M3 15c5 4 13 4 18 0M17 14l4 1-1 4M7 10a5 3 0 0 1 10 0" } },
+		buymeacoffee: { label: "Buy Me a Coffee", color: "#ffdd00", url: "https://buymeacoffee.com/", mono: { d: "M3 5h15v1.5h1.5a3.5 3.5 0 0 1 0 7H18c-.4 3.4-3.3 6-6.8 6H9.8C6 19.5 3 16.5 3 12.7V5zm15 3.5v3h1.5a1.5 1.5 0 0 0 0-3H18z" } },
+		streamlabs: { label: "Streamlabs tip", color: "#80f5d2", png: "streamlabs.png", url: "https://streamlabs.com/", mono: { d: "M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2zM8 9v6h2V9zM12 9v6h4V9z" } },
+		fourthwall: { label: "Merch store", color: "#ffffff", png: "fourthwall.png", url: "", mono: { d: "M8 3l4 2 4-2 5 3-2 4-2-1v12H7V9L5 10 3 6z" } },
 		website: { label: "Website", color: "#8ab4f8", url: "", mono: { stroke: true, d: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2c2.8 2.7 4 6.2 4 10s-1.2 7.3-4 10c-2.8-2.7-4-6.2-4-10s1.2-7.3 4-10z" } },
 		email: { label: "Email", color: "#8ab4f8", url: "mailto:", mono: { stroke: true, d: "M3 5h18v14H3zM3 6l9 7 9-7" } },
 		custom: { label: "Link", color: "#8ab4f8", url: "", mono: { stroke: true, d: "M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" } }
 	};
-	SSO.NETWORK_ALIASES = { yt: "youtube", ttv: "twitch", tt: "tiktok", ig: "instagram", insta: "instagram", twitter: "x", fb: "facebook", bsky: "bluesky", "ko-fi": "kofi", web: "website", site: "website", mail: "email", link: "custom" };
+	SSO.NETWORK_ALIASES = { yt: "youtube", ttv: "twitch", tt: "tiktok", ig: "instagram", insta: "instagram", twitter: "x", fb: "facebook", bsky: "bluesky", "ko-fi": "kofi", web: "website", site: "website", mail: "email", link: "custom", snap: "snapchat", wa: "whatsapp", tg: "telegram", linktr: "linktree", bmc: "buymeacoffee", merch: "fourthwall", wishlist: "throne" };
 
 	// "discord:nitro,instagram:@nitro" -> [{net, handle}]
 	SSO.parseSocials = function (value) {
@@ -345,6 +411,134 @@
 		var parsed = new Date(v.replace(" ", "T"));
 		return isNaN(parsed.getTime()) ? null : parsed;
 	};
+
+	// Seeded random so effects like ransom letters look the same on every reload.
+	SSO.seeded = function (seedText) {
+		var h = 2166136261;
+		String(seedText).split("").forEach(function (ch) { h = Math.imul(h ^ ch.charCodeAt(0), 16777619); });
+		return function () {
+			h += 0x6D2B79F5;
+			var t = h;
+			t = Math.imul(t ^ (t >>> 15), t | 1);
+			t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+			return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+		};
+	};
+
+	// ---------- text effects (shared by banner, title, lower third…) ----------
+	SSO.TEXT_FX = [
+		["", "None"], ["fire", "Fire"], ["ice", "Ice"], ["neon", "Neon sign"], ["glitch", "Glitch"], ["chrome", "80s chrome"],
+		["gold", "Gold"], ["outline", "Outline"], ["retro", "Retro 3D shadow"], ["bubble", "Bubble"], ["pixel", "Pixel outline"],
+		["comic", "Comic"], ["vapor", "Vaporwave"], ["spray", "Spray paint"], ["drip", "Horror"], ["ransom", "Ransom note (punk)"], ["rainbow", "Rainbow"]
+	];
+	var FX_CSS = [
+		".fx{--fx1:#ff8a00;--fx2:#ffd200;--fx3:#ff2a00;}",
+		".fx-fire{background:linear-gradient(0deg,var(--fx3),var(--fx1) 45%,var(--fx2) 75%,#fff6c8);background-size:100% 200%;-webkit-background-clip:text;background-clip:text;color:transparent !important;animation:fx-fire 1.6s ease-in-out infinite alternate;}",
+		"@keyframes fx-fire{0%{background-position:0 0;filter:drop-shadow(0 0 5px var(--fx1)) drop-shadow(0 0 14px var(--fx3))}50%{filter:drop-shadow(0 0 9px var(--fx1)) drop-shadow(0 0 24px var(--fx3)) brightness(1.15)}100%{background-position:0 100%;filter:drop-shadow(0 0 6px var(--fx1)) drop-shadow(0 0 18px var(--fx3))}}",
+		".fx-ice{background:linear-gradient(180deg,#ffffff,var(--fx2) 45%,var(--fx1));-webkit-background-clip:text;background-clip:text;color:transparent !important;filter:drop-shadow(0 0 6px var(--fx2)) drop-shadow(0 2px 0 rgba(0,40,90,.6));}",
+		".fx-neon{color:#fff !important;text-shadow:0 0 4px #fff,0 0 10px var(--fx1),0 0 22px var(--fx1),0 0 40px var(--fx1),0 0 70px var(--fx3);animation:fx-neon 6s infinite;}",
+		"@keyframes fx-neon{0%,18%,22%,25%,53%,57%,100%{opacity:1}20%,24%,55%{opacity:.55}}",
+		".fx-glitch{position:relative;display:inline-block;text-shadow:2px 0 var(--fx1),-2px 0 var(--fx2);animation:fx-gl 2.5s infinite steps(1);}",
+		".fx-glitch:before,.fx-glitch:after{content:attr(data-text);position:absolute;left:0;top:0;width:100%;overflow:hidden;}",
+		".fx-glitch:before{color:var(--fx1);transform:translate(-3px,0);clip-path:inset(0 0 60% 0);animation:fx-gl1 2.2s infinite steps(1);}",
+		".fx-glitch:after{color:var(--fx2);transform:translate(3px,0);clip-path:inset(55% 0 0 0);animation:fx-gl2 1.9s infinite steps(1);}",
+		"@keyframes fx-gl{0%,90%,100%{transform:none}92%{transform:translate(2px,-1px) skewX(6deg)}95%{transform:translate(-2px,1px)}}",
+		"@keyframes fx-gl1{0%{clip-path:inset(0 0 70% 0)}20%{clip-path:inset(30% 0 40% 0)}40%{clip-path:inset(10% 0 80% 0)}60%{clip-path:inset(60% 0 10% 0)}80%{clip-path:inset(45% 0 30% 0)}}",
+		"@keyframes fx-gl2{0%{clip-path:inset(65% 0 0 0)}25%{clip-path:inset(20% 0 55% 0)}50%{clip-path:inset(80% 0 5% 0)}75%{clip-path:inset(35% 0 40% 0)}}",
+		".fx-chrome{background:linear-gradient(180deg,#e9f6ff 0%,#9fc6e6 46%,#1d2b4a 49%,#6d4a8a 51%,#f2a6ff 70%,#ffffff 100%);-webkit-background-clip:text;background-clip:text;color:transparent !important;-webkit-text-stroke:1px rgba(255,255,255,.7);filter:drop-shadow(0 3px 0 var(--fx3)) drop-shadow(0 0 12px var(--fx1));font-style:italic;}",
+		".fx-gold{background:linear-gradient(100deg,#7a5418 0%,#f6d77a 22%,#fff5c4 30%,#c99a2e 45%,#f1cf6e 62%,#8a6420 80%,#f6e2a0 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent !important;filter:drop-shadow(0 2px 2px rgba(0,0,0,.55));animation:fx-slide 6s linear infinite;}",
+		"@keyframes fx-slide{from{background-position:0 0}to{background-position:-200% 0}}",
+		".fx-outline{color:transparent !important;-webkit-text-stroke:2px var(--fx1);text-shadow:none !important;}",
+		".fx-retro{color:var(--fx2) !important;text-shadow:1px 1px 0 var(--fx1),2px 2px 0 var(--fx1),3px 3px 0 var(--fx1),4px 4px 0 var(--fx1),5px 5px 0 var(--fx3),6px 6px 0 var(--fx3),7px 7px 10px rgba(0,0,0,.4) !important;}",
+		".fx-bubble{color:var(--fx1) !important;-webkit-text-stroke:.12em #fff;paint-order:stroke fill;text-shadow:0 .08em 0 var(--fx3),0 .14em .2em rgba(0,0,0,.35) !important;}",
+		".fx-pixel{color:var(--fx2) !important;text-shadow:-3px 0 0 #000,3px 0 0 #000,0 -3px 0 #000,0 3px 0 #000,5px 5px 0 var(--fx3) !important;}",
+		".fx-comic{color:var(--fx2) !important;-webkit-text-stroke:.06em #111;text-shadow:.07em .07em 0 #111,.1em .1em 0 var(--fx3) !important;letter-spacing:.03em;transform:skewX(-6deg);display:inline-block;}",
+		".fx-vapor{background:linear-gradient(180deg,var(--fx2),var(--fx1));-webkit-background-clip:text;background-clip:text;color:transparent !important;filter:drop-shadow(4px 4px 0 var(--fx3));font-style:italic;}",
+		".fx-spray{color:var(--fx1) !important;text-shadow:0 0 2px var(--fx1),0 0 8px var(--fx1),0 0 18px var(--fx3) !important;filter:url(#sso-rough);}",
+		".fx-drip{color:var(--fx1) !important;animation:fx-drip 4s ease-in-out infinite;}",
+		"@keyframes fx-drip{0%,100%{text-shadow:0 2px 0 var(--fx3),0 6px 6px rgba(0,0,0,.6),0 0 18px var(--fx3)}50%{text-shadow:0 2px 0 var(--fx3),0 14px 8px rgba(120,0,0,.7),0 0 28px var(--fx3)}}",
+		".fx-rainbow{background:linear-gradient(90deg,#ff3b3b,#ffb03b,#ffee3b,#3bff6b,#3bd4ff,#8a3bff,#ff3bd4,#ff3b3b);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent !important;animation:fx-slide 4s linear infinite;filter:drop-shadow(0 2px 2px rgba(0,0,0,.4));}",
+		".fx-ransom{display:inline-block;line-height:1.25;text-shadow:none !important;}",
+		".fx-ransom .rl{display:inline-block;padding:.03em .12em;margin:0 .03em;box-shadow:1px 2px 3px rgba(0,0,0,.35);line-height:1.05;vertical-align:middle;}",
+		".fx-ransom .rs{display:inline-block;width:.45em;}"
+	].join("\n");
+	var RANSOM = [
+		["#ffffff", "#111111", "Anton"], ["#111111", "#ffffff", "Special Elite"], ["#f2e600", "#111111", "Bangers"],
+		["#e8e2d0", "#222222", "Playfair Display"], ["#d7261e", "#ffffff", "Oswald"], ["#ffffff", "#d7261e", "Black Ops One"],
+		["#f7d6e0", "#111111", "Rock Salt"], ["#cfe8ff", "#0b2a6b", "Roboto Mono"], ["#111111", "#f2e600", "Metal Mania"]
+	];
+	// Inner HTML for text with an effect; ransom builds seeded per-letter cutouts.
+	SSO.fxHTML = function (text, fx) {
+		if (fx !== "ransom") { return SSO.esc(text); }
+		SSO.addStyle(FX_CSS, "sso-fx-css");
+		RANSOM.forEach(function (r) { SSO.loadFont(r[2]); });
+		var rnd = SSO.seeded(text);
+		// Array.from keeps emoji (surrogate pairs) in one piece.
+		return '<span class="fx-ransom">' + Array.from(String(text)).map(function (ch) {
+			if (/\s/.test(ch)) { return '<span class="rs"></span>'; }
+			if (ch.length > 1) { return '<span class="rl" style="box-shadow:none;background:none">' + ch + "</span>"; }
+			var r = RANSOM[Math.floor(rnd() * RANSOM.length)];
+			return '<span class="rl" style="background:' + r[0] + ";color:" + r[1] + ";font-family:'" + r[2] + "',sans-serif;transform:rotate(" + ((rnd() - 0.5) * 12).toFixed(1) +
+				"deg) translateY(" + ((rnd() - 0.5) * 0.12).toFixed(2) + "em);font-size:" + (0.85 + rnd() * 0.35).toFixed(2) + 'em">' + SSO.esc(ch) + "</span>";
+		}).join("") + "</span>";
+	};
+	// Adds effect classes/colours to el. Call after el has its text.
+	SSO.applyFX = function (el, fx, c1, c2, c3) {
+		SSO.addStyle(FX_CSS, "sso-fx-css");
+		if (fx === "spray" && !document.getElementById("sso-rough-svg")) {
+			var holder = document.createElement("div");
+			holder.id = "sso-rough-svg";
+			holder.style.cssText = "position:absolute;width:0;height:0;overflow:hidden";
+			holder.innerHTML = '<svg width="0" height="0"><filter id="sso-rough"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="3"/></filter></svg>';
+			document.body.appendChild(holder);
+		}
+		el.className += " fx" + (fx ? " fx-" + fx : "");
+		if (c1) { el.style.setProperty("--fx1", SSO.color(c1)); }
+		if (c2) { el.style.setProperty("--fx2", SSO.color(c2)); }
+		if (c3) { el.style.setProperty("--fx3", SSO.color(c3)); }
+		if (fx === "glitch") { el.setAttribute("data-text", el.textContent); }
+	};
+	// Shared fields for templates that offer text effects.
+	SSO.fxFields = function (group, def) {
+		def = def || {};
+		return [
+			{ key: "fx", label: "Text effect", type: "select", group: group || "Text", default: def.fx || "", options: SSO.TEXT_FX },
+			{ key: "fx1", label: "Effect colour 1", type: "color", group: group || "Text", default: def.fx1 || "ff8a00", show: { fx: "!" } },
+			{ key: "fx2", label: "Effect colour 2", type: "color", group: group || "Text", default: def.fx2 || "ffd200", show: { fx: "!" } },
+			{ key: "fx3", label: "Effect colour 3", type: "color", group: group || "Text", default: def.fx3 || "ff2a00", show: { fx: "!" } }
+		];
+	};
+
+
+	// ---------- OBS browser source events ----------
+	// OBS fires obsSceneChanged, obsStreamingStarted/Stopped, obsRecordingStarted/Stopped, obsReplaybufferSaved,
+	// obsSourceVisibleChanged… on window. The editor simulates them with postMessage({ssoObsEvent}).
+	SSO.obs = {
+		available: function () { return !!global.obsstudio; },
+		on: function (name, fn) {
+			global.addEventListener(name, function (e) { fn(e && e.detail ? e.detail : {}); });
+		},
+		status: function (cb) {
+			try {
+				if (global.obsstudio && global.obsstudio.getStatus) { global.obsstudio.getStatus(function (st) { cb(st || null); }); return; }
+			} catch (e) {}
+			cb(null);
+		},
+		scene: function (cb) {
+			try {
+				if (global.obsstudio && global.obsstudio.getCurrentScene) { global.obsstudio.getCurrentScene(function (sc) { cb(sc || null); }); return; }
+			} catch (e) {}
+			cb(null);
+		}
+	};
+	global.addEventListener("message", function (e) {
+		var d = e.data;
+		if (d && d.ssoObsEvent) {
+			var ev;
+			try { ev = new CustomEvent(d.ssoObsEvent, { detail: d.detail || {} }); } catch (err) { ev = document.createEvent("CustomEvent"); ev.initCustomEvent(d.ssoObsEvent, false, false, d.detail || {}); }
+			global.dispatchEvent(ev);
+		}
+	});
 
 	// ---------- storage (OBS keeps per-source localStorage; wrap for private windows) ----------
 	SSO.store = {

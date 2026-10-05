@@ -6,7 +6,7 @@
 	<title>Overlay Editor - Social Stream Ninja</title>
 	<meta name="description" content="Customize a static stream overlay and copy its OBS browser source link.">
 	<link rel="icon" href="../favicon.ico">
-	<link rel="stylesheet" href="studio.css">
+	<link rel="stylesheet" href="studio.css?v=4">
 </head>
 <body>
 	<header class="top">
@@ -34,6 +34,14 @@
 					</select>
 				</div>
 				<button class="btn small" id="replay" type="button">Replay</button>
+				<div class="grp obs-test" title="Pretend OBS sent an event, to see how the overlay reacts">
+					<label>Test OBS:</label>
+					<button class="btn small" type="button" data-obs="obsSceneChanged">Scene change</button>
+					<button class="btn small" type="button" data-obs="obsStreamingStarted">Go live</button>
+					<button class="btn small" type="button" data-obs="obsStreamingStopped">End stream</button>
+					<button class="btn small" type="button" data-obs="obsRecordingStarted">Record</button>
+					<button class="btn small" type="button" data-obs="obsReplaybufferSaved">Save replay</button>
+				</div>
 			</div>
 			<div class="stage" id="stage"><div class="frame-box" id="box"><iframe id="preview" title="Overlay preview"></iframe></div></div>
 			<div class="out">
@@ -48,12 +56,20 @@
 	</div>
 	<div class="toast" id="toast"></div>
 
-	<script src="core.js"></script>
-	<script src="templates/socials.js"></script>
-	<script src="templates/time.js"></script>
-	<script src="templates/scenes.js"></script>
-	<script src="templates/maps.js"></script>
-	<script src="templates/fun.js"></script>
+	<script src="core.js?v=4"></script>
+	<script src="templates/countries.js?v=4"></script>
+	<script src="templates/engines.js?v=4"></script>
+	<script src="templates/socials.js?v=4"></script>
+	<script src="templates/time.js?v=4"></script>
+	<script src="templates/scenes.js?v=4"></script>
+	<script src="templates/maps.js?v=4"></script>
+	<script src="templates/fun.js?v=4"></script>
+	<script src="templates/text.js?v=4"></script>
+	<script src="templates/gaming.js?v=4"></script>
+	<script src="templates/obs.js?v=4"></script>
+	<script src="templates/pets.js?v=4"></script>
+	<script src="templates/extra.js?v=4"></script>
+	<script src="templates/themes.js?v=4"></script>
 	<script>
 	(function () {
 		var $ = function (id) { return document.getElementById(id); };
@@ -111,6 +127,7 @@
 			return Object.keys(field.show).every(function (k) {
 				var want = field.show[k];
 				var have = cfg[k];
+				if (Object.prototype.toString.call(want) === "[object Array]") { return want.map(String).indexOf(String(have)) !== -1; }
 				if (typeof want === "string" && want.charAt(0) === "!") { return String(have) !== want.slice(1); }
 				return String(have) === String(want);
 			});
@@ -367,6 +384,16 @@
 			timer = setTimeout(function () { $("preview").src = "view.html?" + query + "&preview"; }, now ? 0 : 300);
 		}
 		$("replay").addEventListener("click", function () { update(true); });
+		var demoScenes = ["Gameplay", "Just Chatting", "Be Right Back", "Starting Soon"];
+		var obsBtns = document.querySelectorAll("[data-obs]");
+		for (var ob = 0; ob < obsBtns.length; ob++) {
+			obsBtns[ob].addEventListener("click", function () {
+				var name = this.getAttribute("data-obs");
+				var detail = name === "obsSceneChanged" ? { name: demoScenes[Math.floor(Math.random() * demoScenes.length)] } : {};
+				try { $("preview").contentWindow.postMessage({ ssoObsEvent: name, detail: detail }, "*"); } catch (e) {}
+				toast(name === "obsSceneChanged" ? "Sent: scene changed to " + detail.name : "Sent: " + this.textContent);
+			});
+		}
 		$("copy").addEventListener("click", function () {
 			var input = $("url");
 			var done = function () { toast("Link copied. Paste it into an OBS Browser Source."); };

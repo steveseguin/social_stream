@@ -10,6 +10,7 @@
 	var container = null;
 	var observer = null;
 	var seen = new WeakSet();
+	var seenMessageIds = new Set();
 	var currentPath = location.pathname;
 	var readyAt = 0;
 	// The scrolling timeline excludes the separate pinned-message panel and dialogs.
@@ -50,8 +51,29 @@
 		return text;
 	}
 
+	function messageId(row) {
+		try {
+			if (typeof window.__ssnReadStarviosMessageId === "function") { return window.__ssnReadStarviosMessageId(row); }
+			// SSApp can load this source alone in the page's world.
+			var keys = Object.keys(row);
+			for (var i = 0; i < keys.length; i++) {
+				if (keys[i].indexOf("__reactFiber$") !== 0) { continue; }
+				var fiber = row[keys[i]];
+				if (fiber && typeof fiber.key === "string") { return fiber.key; }
+			}
+			row.removeAttribute("data-ssn-starvios-id");
+			row.dispatchEvent(new CustomEvent("ssn-read-starvios-id", { bubbles: true }));
+			var id = row.getAttribute("data-ssn-starvios-id") || "";
+			row.removeAttribute("data-ssn-starvios-id");
+			return id;
+		} catch (e) { return ""; }
+	}
+
 	function processRow(row, backlog) {
 		if (row.nodeType !== 1 || seen.has(row)) { return; }
+		var id = messageId(row);
+		// A local send is replaced by a new row after confirmation. Capture only that copy.
+		if (id.indexOf("tmp-") === 0) { return; }
 		// Both ordinary and Starvies chat rows use the same author/body paragraph.
 		// Reply previews and subscription/raid notices do not have these elements.
 		var name = row.querySelector("p.break-words button.font-semibold");
@@ -61,6 +83,11 @@
 		var message = messageContent(body).trim();
 		if (!chatname || !message) { return; }
 		seen.add(row);
+		if (id) {
+			if (seenMessageIds.has(id)) { return; }
+			seenMessageIds.add(id);
+			if (seenMessageIds.size > 1000) { seenMessageIds.delete(seenMessageIds.values().next().value); }
+		}
 		if (backlog || !isExtensionOn) { return; }
 		var donation = "";
 		if (row.classList.contains("border-chat-starvie/70")) {
@@ -97,6 +124,7 @@
 			container = next;
 			currentPath = location.pathname;
 			seen = new WeakSet();
+			seenMessageIds = new Set();
 			if (container) {
 				// Allow the initial asynchronous history render to settle without replaying it.
 				readyAt = Date.now() + 1500;

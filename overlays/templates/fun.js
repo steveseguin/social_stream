@@ -102,11 +102,11 @@
 			{ key: "fontsize", label: "Bubble text size", type: "range", group: "Bubble", default: 20, min: 10, max: 60, step: 1 }
 		],
 		presets: [
-			{ name: "Peeking orange", values: {} },
-			{ name: "Black cat says hi", values: { fur: "black", messages: "hi chat!\ndon't forget to follow\nmrrp?" } },
-			{ name: "Sitting grey", values: { pose: "sit", fur: "grey", size: 160 } },
-			{ name: "Napping calico", values: { pose: "sleep", fur: "calico", size: 240 } },
-			{ name: "Peekaboo white", values: { fur: "white", peekaboo: true, every: 20 } }
+			{ name: "Peeking orange", tags: ["cute"], values: {} },
+			{ name: "Black cat says hi", tags: ["cute", "spooky"], values: { fur: "black", messages: "hi chat!\ndon't forget to follow\nmrrp?" } },
+			{ name: "Sitting grey", tags: ["cute", "cozy"], values: { pose: "sit", fur: "grey", size: 160 } },
+			{ name: "Napping calico", tags: ["cute", "cozy"], values: { pose: "sleep", fur: "calico", size: 240 } },
+			{ name: "Peekaboo white", tags: ["cute"], values: { fur: "white", peekaboo: true, every: 20 } }
 		],
 		css: [
 			".cat-wrap{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:flex-end;padding:0 16px;}",
@@ -173,10 +173,10 @@
 			{ key: "dir", label: "Direction", type: "select", group: "Content", default: "up", options: [["up", "Float up"], ["down", "Fall down (snow)"]] }
 		],
 		presets: [
-			{ name: "Hearts", values: {} },
-			{ name: "Snowfall", values: { emoji: "❄️ ❅ ❆", dir: "down", rate: 4, size: 22, speed: 12 } },
-			{ name: "Party", values: { emoji: "🎉 🎈 ⭐ 🎊", rate: 3, size: 44 } },
-			{ name: "Cat paws", values: { emoji: "🐾 🐱", rate: 1, size: 40, speed: 9 } }
+			{ name: "Hearts", tags: ["cute"], values: {} },
+			{ name: "Snowfall", tags: ["cozy"], values: { emoji: "❄️ ❅ ❆", dir: "down", rate: 4, size: 22, speed: 12 } },
+			{ name: "Party", tags: ["cute"], values: { emoji: "🎉 🎈 ⭐ 🎊", rate: 3, size: 44 } },
+			{ name: "Cat paws", tags: ["cute"], values: { emoji: "🐾 🐱", rate: 1, size: 40, speed: 9 } }
 		],
 		css: [
 			".fz{position:absolute;bottom:-1.2em;line-height:1;will-change:transform,opacity;pointer-events:none;}",

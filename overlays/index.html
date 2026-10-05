@@ -4,12 +4,12 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Overlay Studio - Social Stream Ninja</title>
-	<meta name="description" content="Free static stream overlays: banners, socials, clocks, timers, day/night maps, webcam frames and cute cats. Customize, copy the link, paste into OBS. No login or session needed.">
+	<meta name="description" content="Free stream overlays: banners, socials, timers, a live-for clock, pets that react to OBS scene changes, gaming and Minecraft styles, punk, spicy, cozy and more. Customize, copy the link, paste into OBS.">
 	<link rel="canonical" href="https://socialstream.ninja/overlays/">
 	<meta property="og:title" content="Overlay Studio - Social Stream Ninja">
-	<meta property="og:description" content="Free static stream overlays you can customize and drop into OBS as a browser source.">
+	<meta property="og:description" content="Free stream overlays you can customize and drop into OBS as a browser source.">
 	<link rel="icon" href="../favicon.ico">
-	<link rel="stylesheet" href="studio.css">
+	<link rel="stylesheet" href="studio.css?v=4">
 </head>
 <body>
 	<header class="top">
@@ -22,19 +22,40 @@
 
 	<section class="hero">
 		<h1>Overlay Studio</h1>
-		<p>Free overlays that don't need chat or a session: banners, socials, clocks, timers, maps, cam frames and cats. Pick one, change the text and colours, then paste the link into an OBS <b>Browser Source</b>.</p>
+		<p>Free overlays that don't need chat or a session: banners, socials, timers, pets, gaming HUDs and more. Pick one, change the text and colours, then paste the link into an OBS <b>Browser Source</b>. Overlays marked <span class="obs-chip">OBS</span> also react to scene changes and going live.</p>
 	</section>
 
-	<div class="filters" id="filters">
-		<input class="search" id="search" type="search" placeholder="Search overlays…" aria-label="Search overlays">
-		<select class="bgpick btn small" id="bgpick" aria-label="Preview background">
-			<option value="game">Game background</option>
-			<option value="dark">Dark background</option>
-			<option value="light">Light background</option>
-			<option value="checker">Checkerboard</option>
-		</select>
+	<div class="filters">
+		<div class="chips" id="cats" role="group" aria-label="Category"></div>
+		<div class="chips vibes" id="vibes" role="group" aria-label="Vibe"></div>
+		<div class="toolbar">
+			<input class="search" id="search" type="search" placeholder="Search overlays…" aria-label="Search overlays">
+			<label class="tool">Sort
+				<select id="sort">
+					<option value="cat">By type</option>
+					<option value="name">A–Z</option>
+					<option value="shuffle">Surprise me</option>
+				</select>
+			</label>
+			<label class="tool">Preview on
+				<select id="bgpick">
+					<option value="game">Game</option>
+					<option value="dark">Dark</option>
+					<option value="light">Light</option>
+					<option value="checker">Checkerboard</option>
+				</select>
+			</label>
+			<div class="seg" role="group" aria-label="Columns">
+				<button type="button" data-cols="2" title="2 per row (large previews)">2</button>
+				<button type="button" data-cols="3" title="3 per row">3</button>
+				<button type="button" data-cols="4" title="4 per row">4</button>
+			</div>
+			<span class="count" id="count"></span>
+		</div>
 	</div>
+	<nav class="pager" id="pagerTop" aria-label="Pages"></nav>
 	<div class="grid" id="grid"></div>
+	<nav class="pager" id="pagerBottom" aria-label="Pages"></nav>
 
 	<h2 class="section-title">Live overlays that react to chat</h2>
 	<div class="live-list">
@@ -44,115 +65,212 @@
 		<a href="../docs/overlay-gallery.html"><b>Chat overlays & alerts</b><span>The full SSN overlay gallery.</span></a>
 	</div>
 
-	<script src="core.js"></script>
-	<script src="templates/socials.js"></script>
-	<script src="templates/time.js"></script>
-	<script src="templates/scenes.js"></script>
-	<script src="templates/maps.js"></script>
-	<script src="templates/fun.js"></script>
+	<script src="core.js?v=4"></script>
+	<script src="templates/countries.js?v=4"></script>
+	<script src="templates/engines.js?v=4"></script>
+	<script src="templates/socials.js?v=4"></script>
+	<script src="templates/text.js?v=4"></script>
+	<script src="templates/gaming.js?v=4"></script>
+	<script src="templates/time.js?v=4"></script>
+	<script src="templates/scenes.js?v=4"></script>
+	<script src="templates/maps.js?v=4"></script>
+	<script src="templates/fun.js?v=4"></script>
+	<script src="templates/obs.js?v=4"></script>
+	<script src="templates/pets.js?v=4"></script>
+	<script src="templates/extra.js?v=4"></script>
+	<script src="templates/themes.js?v=4"></script>
 	<script>
 	(function () {
-		var grid = document.getElementById("grid");
-		var filters = document.getElementById("filters");
-		var search = document.getElementById("search");
-		var bgpick = document.getElementById("bgpick");
-		var category = "all";
-		var cards = [];
-
+		var $ = function (id) { return document.getElementById(id); };
+		var OBS_TEMPLATES = ["pets", "status", "scenename", "livetimer", "growth"];
+		var MAX_LOADING = 4;
+		var state = { cat: "all", vibe: "", q: "", sort: "cat", page: 1 };
+		var cols = parseInt(SSO.store.get("gallery-cols"), 10) || (window.innerWidth < 900 ? 2 : 3);
 		var bg = SSO.store.get("gallery-bg") || "game";
-		bgpick.value = bg;
+		$("bgpick").value = bg;
 
-		var chips = [["all", "All"]].concat(SSO.CATEGORIES.map(function (c) { return [c.id, c.label]; }));
-		chips.reverse().forEach(function (c) {
+		// restore filters from the address bar so a filtered view can be shared
+		(location.hash.slice(1) || "").split("&").forEach(function (kv) {
+			var p = kv.split("=");
+			if (p[0] in state && p[1]) { state[p[0]] = p[0] === "page" ? parseInt(p[1], 10) || 1 : decodeURIComponent(p[1]); }
+		});
+		$("search").value = state.q;
+		$("sort").value = state.sort;
+
+		// ---- all cards (built once, rendered per page) ----
+		var catOrder = SSO.CATEGORIES.map(function (c) { return c.id; });
+		var cards = [];
+		SSO.list().forEach(function (def, ti) {
+			(def.presets.length ? def.presets : [{ name: def.name, values: {} }]).forEach(function (preset, idx) {
+				cards.push({
+					def: def,
+					preset: preset,
+					query: SSO.presetQuery(def, preset),
+					tags: preset.tags || [],
+					text: (def.name + " " + preset.name + " " + def.description + " " + def.category + " " + (preset.tags || []).join(" ")).toLowerCase(),
+					order: catOrder.indexOf(def.category) * 100000 + ti * 100 + idx,
+					rnd: Math.random()
+				});
+			});
+		});
+
+		function chip(container, value, label, key) {
 			var b = document.createElement("button");
-			b.className = "chip" + (c[0] === "all" ? " on" : "");
-			b.textContent = c[1];
-			b.setAttribute("data-cat", c[0]);
+			b.type = "button";
+			b.className = "chip";
+			b.textContent = label;
+			b.setAttribute("data-v", value);
 			b.addEventListener("click", function () {
-				category = c[0];
-				var all = filters.querySelectorAll(".chip");
-				for (var i = 0; i < all.length; i++) { all[i].className = "chip" + (all[i] === b ? " on" : ""); }
-				apply();
+				state[key] = key === "vibe" && state.vibe === value ? "" : value;
+				state.page = 1;
+				render();
 			});
-			filters.insertBefore(b, filters.firstChild);
-		});
+			container.appendChild(b);
+		}
+		chip($("cats"), "all", "All", "cat");
+		SSO.CATEGORIES.forEach(function (c) { chip($("cats"), c.id, c.label, "cat"); });
+		SSO.VIBES.forEach(function (v) { chip($("vibes"), v[0], v[1], "vibe"); });
 
-		SSO.list().forEach(function (def) {
-			var presets = def.presets.length ? def.presets : [{ name: def.name, values: {} }];
-			presets.forEach(function (preset, idx) {
-				var query = SSO.presetQuery(def, preset);
-				var card = document.createElement("a");
-				card.className = "card";
-				card.href = "editor.html?" + query;
-				card.innerHTML = '<div class="thumb bg-' + bg + '"></div><div class="meta"><div><div class="name"></div><div class="sub"></div></div><span class="btn small">Customize</span></div>';
-				card.querySelector(".name").textContent = preset.name;
-				card.querySelector(".sub").textContent = def.name;
-				card.setAttribute("data-cat", def.category);
-				card.setAttribute("data-text", (def.name + " " + preset.name + " " + def.description + " " + def.category).toLowerCase());
-				grid.appendChild(card);
-				cards.push({ el: card, def: def, query: query, loaded: false, idx: idx });
+		function filtered() {
+			var q = state.q.trim().toLowerCase();
+			var list = cards.filter(function (c) {
+				return (state.cat === "all" || c.def.category === state.cat) &&
+					(!state.vibe || c.tags.indexOf(state.vibe) !== -1) &&
+					(!q || c.text.indexOf(q) !== -1);
 			});
-		});
+			list.sort(function (a, b) {
+				if (state.sort === "name") { return a.preset.name.localeCompare(b.preset.name); }
+				if (state.sort === "shuffle") { return a.rnd - b.rnd; }
+				return a.order - b.order;
+			});
+			return list;
+		}
 
-		function size(item) {
-			var frame = item.el.querySelector("iframe");
-			if (!frame) { return; }
-			var box = item.el.querySelector(".thumb");
-			var dims = item.def.sizeFor ? item.def.sizeFor(SSO.readConfig(item.def, item.query), true) : (item.def.thumb || item.def.size);
-			var s = Math.min(box.clientWidth / dims[0], box.clientHeight / dims[1], 1) * 0.94;
+		// ---- preview loading queue ----
+		var queue = [], loading = 0;
+		function pump() {
+			while (loading < MAX_LOADING && queue.length) {
+				var item = queue.shift();
+				if (!item.box.isConnected) { continue; }
+				loading++;
+				(function (item) {
+					var frame = document.createElement("iframe");
+					frame.setAttribute("tabindex", "-1");
+					frame.setAttribute("aria-hidden", "true");
+					var done = false;
+					var finish = function () { if (!done) { done = true; loading--; pump(); } };
+					frame.onload = function () { setTimeout(finish, 250); };
+					setTimeout(finish, 4000);
+					frame.src = "view.html?" + item.card.query + "&preview";
+					frame._card = item.card;
+					item.box.appendChild(frame);
+					size(item.box, frame, item.card);
+				})(item);
+			}
+		}
+		function size(box, frame, card) {
+			var dims = card.def.sizeFor ? card.def.sizeFor(SSO.readConfig(card.def, card.query), true) : card.def.size;
+			var s = Math.min(box.clientWidth / dims[0], box.clientHeight / dims[1]) * 0.94;
 			frame.style.width = dims[0] + "px";
 			frame.style.height = dims[1] + "px";
 			frame.style.left = ((box.clientWidth - dims[0] * s) / 2) + "px";
 			frame.style.top = ((box.clientHeight - dims[1] * s) / 2) + "px";
 			frame.style.transform = "scale(" + s + ")";
 		}
-		function load(item) {
-			if (item.loaded) { return; }
-			item.loaded = true;
-			var frame = document.createElement("iframe");
-			frame.setAttribute("tabindex", "-1");
-			frame.setAttribute("aria-hidden", "true");
-			frame.setAttribute("loading", "lazy");
-			frame.src = "view.html?" + item.query + "&preview";
-			item.el.querySelector(".thumb").appendChild(frame);
-			size(item);
-		}
 
-		var io = "IntersectionObserver" in window ? new IntersectionObserver(function (entries) {
-			entries.forEach(function (e) {
-				if (!e.isIntersecting) { return; }
-				for (var i = 0; i < cards.length; i++) { if (cards[i].el === e.target) { load(cards[i]); io.unobserve(e.target); } }
-			});
-		}, { rootMargin: "200px" }) : null;
-		cards.forEach(function (item) { if (io) { io.observe(item.el); } else { load(item); } });
-
-		function apply() {
-			var q = search.value.trim().toLowerCase();
-			var shown = 0;
-			cards.forEach(function (item) {
-				var ok = (category === "all" || item.el.getAttribute("data-cat") === category) && (!q || item.el.getAttribute("data-text").indexOf(q) !== -1);
-				item.el.style.display = ok ? "" : "none";
-				if (ok) { shown++; size(item); }
-			});
-			var empty = document.getElementById("empty");
-			if (!shown && !empty) {
-				empty = document.createElement("div");
-				empty.id = "empty";
-				empty.className = "empty";
-				empty.textContent = "No overlays match that search.";
-				grid.appendChild(empty);
-			} else if (shown && empty) {
-				empty.parentNode.removeChild(empty);
+		function pager(el, pages) {
+			el.innerHTML = "";
+			if (pages < 2) { return; }
+			function btn(label, page, disabled, current) {
+				var b = document.createElement("button");
+				b.type = "button";
+				b.className = "pg" + (current ? " on" : "");
+				b.textContent = label;
+				b.disabled = disabled;
+				if (current) { b.setAttribute("aria-current", "page"); }
+				b.addEventListener("click", function () { state.page = page; render(); window.scrollTo(0, $("cats").getBoundingClientRect().top + window.pageYOffset - 70); });
+				el.appendChild(b);
 			}
+			btn("‹ Prev", state.page - 1, state.page <= 1);
+			for (var p = 1; p <= pages; p++) {
+				if (pages > 9 && p > 2 && p < pages - 1 && Math.abs(p - state.page) > 1) {
+					if (el.lastChild && el.lastChild.className !== "pg-gap") { var gap = document.createElement("span"); gap.className = "pg-gap"; gap.textContent = "…"; el.appendChild(gap); }
+					continue;
+				}
+				btn(String(p), p, false, p === state.page);
+			}
+			btn("Next ›", state.page + 1, state.page >= pages);
 		}
-		search.addEventListener("input", apply);
-		bgpick.addEventListener("change", function () {
-			bg = bgpick.value;
+
+		function render() {
+			var marks = document.querySelectorAll("#cats .chip, #vibes .chip");
+			for (var i = 0; i < marks.length; i++) {
+				var key = marks[i].parentNode.id === "cats" ? "cat" : "vibe";
+				marks[i].className = "chip" + (state[key] === marks[i].getAttribute("data-v") ? " on" : "");
+			}
+			var segs = document.querySelectorAll(".seg button");
+			for (var j = 0; j < segs.length; j++) { segs[j].className = String(cols) === segs[j].getAttribute("data-cols") ? "on" : ""; }
+			document.body.style.setProperty("--cols", cols);
+			document.body.setAttribute("data-cols", cols);
+
+			var list = filtered();
+			var per = cols * 4;
+			var pages = Math.max(1, Math.ceil(list.length / per));
+			state.page = SSO.clamp(state.page, 1, pages);
+			var slice = list.slice((state.page - 1) * per, state.page * per);
+			$("count").textContent = list.length + " overlay" + (list.length === 1 ? "" : "s");
+			pager($("pagerTop"), pages);
+			pager($("pagerBottom"), pages);
+
+			queue = [];
+			var grid = $("grid");
+			grid.innerHTML = "";
+			if (!slice.length) {
+				grid.innerHTML = '<div class="empty">No overlays match. Try another vibe or clear the search.</div>';
+			}
+			slice.forEach(function (card) {
+				var a = document.createElement("a");
+				a.className = "card";
+				a.href = "editor.html?" + card.query;
+				a.innerHTML = '<div class="thumb bg-' + bg + '"></div><div class="meta"><div><div class="name"></div><div class="sub"></div></div><span class="btn small">Customize</span></div>';
+				a.querySelector(".name").textContent = card.preset.name;
+				var sub = a.querySelector(".sub");
+				sub.textContent = card.def.name;
+				if (OBS_TEMPLATES.indexOf(card.def.id) !== -1) { sub.insertAdjacentHTML("beforeend", ' <span class="obs-chip" title="Reacts to OBS scene changes / going live">OBS</span>'); }
+				grid.appendChild(a);
+				queue.push({ box: a.querySelector(".thumb"), card: card });
+			});
+			pump();
+			try { history.replaceState(null, "", "#" + Object.keys(state).filter(function (k) { return state[k] && !(k === "cat" && state[k] === "all") && !(k === "page" && state[k] === 1) && !(k === "sort" && state[k] === "cat"); }).map(function (k) { return k + "=" + encodeURIComponent(state[k]); }).join("&")); } catch (e) {}
+		}
+
+		var st;
+		$("search").addEventListener("input", function () { clearTimeout(st); st = setTimeout(function () { state.q = $("search").value; state.page = 1; render(); }, 200); });
+		$("sort").addEventListener("change", function () { state.sort = $("sort").value; state.page = 1; if (state.sort === "shuffle") { cards.forEach(function (c) { c.rnd = Math.random(); }); } render(); });
+		$("bgpick").addEventListener("change", function () {
+			bg = $("bgpick").value;
 			SSO.store.set("gallery-bg", bg);
-			cards.forEach(function (item) { item.el.querySelector(".thumb").className = "thumb bg-" + bg; });
+			var thumbs = document.querySelectorAll(".thumb");
+			for (var i = 0; i < thumbs.length; i++) { thumbs[i].className = "thumb bg-" + bg; }
 		});
-		var t;
-		window.addEventListener("resize", function () { clearTimeout(t); t = setTimeout(function () { cards.forEach(size); }, 120); });
+		var segs = document.querySelectorAll(".seg button");
+		for (var k = 0; k < segs.length; k++) {
+			segs[k].addEventListener("click", function () {
+				cols = parseInt(this.getAttribute("data-cols"), 10);
+				SSO.store.set("gallery-cols", String(cols));
+				state.page = 1;
+				render();
+			});
+		}
+		var rt;
+		window.addEventListener("resize", function () {
+			clearTimeout(rt);
+			rt = setTimeout(function () {
+				var frames = document.querySelectorAll(".thumb iframe");
+				for (var i = 0; i < frames.length; i++) { size(frames[i].parentNode, frames[i], frames[i]._card); }
+			}, 150);
+		});
+		render();
 	})();
 	</script>
 </body>

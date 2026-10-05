@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OBS Studio Beginner Guide - Social Stream Ninja</title>
+    <meta name="description" content="Set up OBS Studio, build a scene, choose a hardware encoder and platform bitrate, mix and monitor audio, and add browser sources.">
+    <link rel="canonical" href="https://socialstream.ninja/docs/obs-studio-guide.html">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:title" content="OBS Studio Beginner Guide">
+    <meta property="og:description" content="A practical introduction to scenes, streaming settings, hardware encoders, audio, and browser sources.">
+    <meta property="og:url" content="https://socialstream.ninja/docs/obs-studio-guide.html">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="stylesheet" href="css/site-shell.css">
+    <script src="js/site-shell.js"></script>
+    <style>
+        .obs-guide { max-width: 100rem; }
+        .obs-guide section[id] { scroll-margin-top: 10rem; }
+        .obs-guide .obs-contents { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem 2rem; padding-left: 2rem; }
+        .obs-guide .obs-contents li { padding-left: .3rem; }
+        .obs-guide .obs-table-wrap { overflow-x: auto; margin: 1.6rem 0; }
+        .obs-guide table { width: 100%; border-collapse: collapse; font-size: 1.5rem; line-height: 1.6; }
+        .obs-guide caption { text-align: left; font-weight: 600; margin-bottom: .8rem; }
+        .obs-guide th, .obs-guide td { padding: 1.1rem; text-align: left; vertical-align: top; border: 1px solid var(--border-color); }
+        .obs-guide thead { background: var(--background-card); }
+        .obs-guide .obs-platform-table { min-width: 60rem; }
+        .obs-guide .obs-table-hint { display: none; }
+        .obs-guide a { color: var(--site-accent); text-decoration: underline; text-decoration-color: currentColor; }
+        .obs-guide details { margin-top: 1.6rem; padding: 1.2rem 1.4rem; border: 1px solid var(--border-color); border-radius: var(--radius-sm); }
+        .obs-guide summary { cursor: pointer; font-weight: 600; }
+        .obs-guide details[open] summary { margin-bottom: 1rem; }
+        .obs-guide .obs-small-image { max-width: 30rem; margin: 0 auto; }
+        .obs-guide .obs-credit { color: var(--text-secondary); font-size: 1.4rem; }
+        .obs-guide code { overflow-wrap: anywhere; }
+        .obs-guide a:focus, .obs-guide summary:focus, .obs-guide [tabindex]:focus { outline: 2px solid var(--primary-color); outline-offset: 3px; }
+        .obs-skip { position: absolute; left: 1rem; top: -8rem; z-index: 3000; padding: 1rem; background: var(--background-light); color: var(--text-primary); }
+        .obs-skip:focus { top: 1rem; }
+        @media (max-width: 600px) {
+            .obs-guide .obs-contents { grid-template-columns: 1fr; }
+            .obs-guide .obs-table-hint { display: block; font-size: 1.4rem; color: var(--text-secondary); }
+            .obs-guide .guide-card { padding: 1.8rem; }
+            .obs-guide th, .obs-guide td { padding: .8rem; }
+        }
+    </style>
+</head>
+<body>
+    <a class="obs-skip" href="#obs-guide">Skip to guide</a>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="features.html">Features</a><a href="download.html">Download</a><a href="guides.html">Guides</a><a href="support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>OBS Studio: the basics</h1>
+            <p>Build your first scene, get clear audio, and make a recording before you go live.</p>
+        </div>
+    </section>
+
+    <main id="obs-guide" class="guide-section" tabindex="-1">
+        <div class="container obs-guide">
+            <div class="guide-card" role="navigation" aria-label="In this guide">
+                <p><a href="guides.html#guide-directory">Guides</a> / OBS Studio basics</p>
+                <p>OBS Studio combines your camera, screen, sound, and overlays into a video that you can record or stream. Start with one scene and a microphone; add extras after your first recording works.</p>
+                <ol class="obs-contents">
+                    <li><a href="#install">Install and run the wizard</a></li>
+                    <li><a href="#scenes">Scenes, sources, and controls</a></li>
+                    <li><a href="#video">Resolution and frame rate</a></li>
+                    <li><a href="#encoders">Hardware encoders and CPU use</a></li>
+                    <li><a href="#platforms">Connect a platform and set bitrate</a></li>
+                    <li><a href="#mixing">Capture and mix audio</a></li>
+                    <li><a href="#monitoring">Hear audio without creating an echo</a></li>
+                    <li><a href="#browser-sources">Browser sources and SSN overlays</a></li>
+                    <li><a href="#recording">Record, test, and go live</a></li>
+                    <li><a href="#troubleshooting">Fix common problems</a></li>
+                </ol>
+                <p>Already know OBS and just want chat on screen? Use the <a href="obs-quick-start.html">SSN overlay quick start</a>.</p>
+            </div>
+
+            <section class="guide-card" id="install">
+                <h2>1. Install and run the wizard</h2>
+                <ol class="guide-steps">
+                    <li>Download <a href="https://obsproject.com/download">OBS Studio from obsproject.com</a> for Windows, macOS, or Linux, install it, and open it.</li>
+                    <li>Run <strong>Tools → Auto-Configuration Wizard</strong>. Choose streaming if you intend to go live, or recording if you only want video files.</li>
+                    <li>Follow the prompts and apply the suggested settings. For a modest computer, 1280 × 720 at 30 frames per second is a useful first target.</li>
+                    <li>Allow microphone, camera, and screen capture access when your operating system asks for it. On macOS, check these permissions in System Settings if a source is blank.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <a href="images/guides/obs-studio-auto-config.png"><img src="images/guides/obs-studio-auto-config.png" width="1028" height="914" alt="OBS Auto-Configuration Wizard offering streaming, recording, or virtual camera setup" class="guide-image guide-image-medium"></a>
+                    <figcaption>Run the wizard again from Tools when your computer or connection changes. Screenshot: <a href="https://obsproject.com/kb/quick-start-guide">OBS quick start guide</a>. Select any screenshot in this guide to enlarge it.</figcaption>
+                </figure>
+            </section>
+
+            <section class="guide-card" id="scenes">
+                <h2>2. Build a scene and learn the controls</h2>
+                <p>A <strong>scene</strong> is a layout, such as “Camera,” “Gameplay,” or “Be right back.” A <strong>source</strong> is one item inside it: a camera, game, image, microphone, or web page.</p>
+                <ol class="guide-steps">
+                    <li>In <strong>Scenes</strong>, press <strong>+</strong> and name your first scene.</li>
+                    <li>In <strong>Sources</strong>, press <strong>+</strong>, select a source type, give it a name, and select its device or window.</li>
+                    <li>Drag its corners in the preview to resize it. Right-click it and use <strong>Transform → Fit to Screen</strong> for a full-frame source.</li>
+                    <li>Drag items up or down in the Sources list: items at the top cover items below. Put chat and your camera above a full-screen game. Use the eye to hide an item and the lock to prevent accidental movement.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <a href="images/guides/obs-studio-sources.png"><img src="images/guides/obs-studio-sources.png" width="265" height="580" loading="lazy" alt="OBS Sources add menu with Browser, Game Capture, Video Capture Device, and Window Capture" class="guide-image obs-small-image"></a>
+                    <figcaption>The Windows source menu. Available sources differ by operating system. Screenshot: <a href="https://obsproject.com/kb/quick-start-guide">OBS Project</a>.</figcaption>
+                </figure>
+                <div class="obs-table-wrap" role="region" aria-label="Which OBS source to add" tabindex="0">
+                    <table>
+                        <caption>Choose a source for what you want to show</caption>
+                        <thead><tr><th scope="col">Content</th><th scope="col">Source</th></tr></thead>
+                        <tbody>
+                            <tr><th scope="row">PC game</th><td><strong>Game Capture</strong> on Windows. For other systems or games it cannot capture, try a window or screen capture.</td></tr>
+                            <tr><th scope="row">One application</th><td><strong>Window Capture</strong>, or <strong>macOS Screen Capture</strong> with a window selected.</td></tr>
+                            <tr><th scope="row">Whole monitor</th><td><strong>Display Capture</strong>, or <strong>macOS Screen Capture</strong>. Anything visible there, including notifications, can appear on stream.</td></tr>
+                            <tr><th scope="row">Webcam or HDMI capture card</th><td><strong>Video Capture Device</strong>. A console normally needs a capture card to bring its HDMI picture into the computer.</td></tr>
+                            <tr><th scope="row">Logo or video file</th><td><strong>Image</strong> for artwork; <strong>Media Source</strong> for a video or audio file.</td></tr>
+                            <tr><th scope="row">Chat, alerts, or a web overlay</th><td><strong>Browser</strong>. Paste the overlay URL in its properties.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p><strong>Controls:</strong> Start Recording saves locally; Start Streaming sends to your platform. In normal mode, selecting a scene changes the output immediately. <strong>Studio Mode</strong> gives you a Preview and a Program view; press <strong>Transition</strong> to send the prepared scene to Program. Shared source properties and audio changes can still affect the live output.</p>
+                <p>For a second scene, choose <strong>Add Existing</strong> when reusing a camera or overlay. Changes to that shared source affect every scene using it. More: <a href="https://obsproject.com/kb/obs-studio-overview">OBS interface overview</a>.</p>
+            </section>
+
+            <section class="guide-card" id="video">
+                <h2>3. Choose resolution and frame rate</h2>
+                <p>Open <strong>Settings → Video</strong>. <strong>Base (Canvas) Resolution</strong> is the space you arrange sources in. <strong>Output (Scaled) Resolution</strong> is the video size you send or record.</p>
+                <ul class="guide-list">
+                    <li><strong>Simple landscape setup:</strong> use a 1920 × 1080 canvas. Output at 1280 × 720 for a lighter stream, or 1920 × 1080 for more detail.</li>
+                    <li><strong>30 FPS:</strong> a good starting point for talking, lessons, and ordinary screen sharing. <strong>60 FPS:</strong> smoother fast motion, with more processing and bitrate needed.</li>
+                    <li><strong>Portrait:</strong> a 1080 × 1920 canvas is vertical. Rearrange your scene to fit it; changing the numbers alone does not create a useful vertical composition.</li>
+                </ul>
+                <p>Use Output (Scaled) Resolution to reduce a stream’s size without rearranging the canvas. Leave additional output rescaling off unless you deliberately need a separate size. Keep standard SDR color settings for a first stream.</p>
+            </section>
+
+            <section class="guide-card" id="encoders">
+                <h2>4. Use a hardware encoder to reduce CPU load</h2>
+                <p>An encoder compresses your finished scene into video. In <strong>Settings → Output</strong>, choose a hardware <strong>H.264</strong> encoder when available. It moves much of the encoding work from the CPU to dedicated hardware; OBS still needs resources to draw the scene.</p>
+                <div class="obs-table-wrap" role="region" aria-label="Hardware encoder choices" tabindex="0">
+                    <table>
+                        <caption>Encoder names to look for</caption>
+                        <thead><tr><th scope="col">Hardware</th><th scope="col">OBS encoder</th><th scope="col">Starting advice</th></tr></thead>
+                        <tbody>
+                            <tr><th scope="row">NVIDIA GPU</th><td>NVIDIA NVENC H.264</td><td>Use the H.264 option for broad streaming compatibility.</td></tr>
+                            <tr><th scope="row">AMD GPU</th><td>AMD HW H.264 / AVC</td><td>The name varies with the operating system and driver.</td></tr>
+                            <tr><th scope="row">Intel graphics / Arc</th><td>QuickSync / QSV H.264</td><td>Requires supported graphics hardware and its driver.</td></tr>
+                            <tr><th scope="row">Apple Silicon Mac</th><td>Apple VT H264 Hardware Encoder</td><td>Use CBR for services that require it. If unavailable in your setup, use x264.</td></tr>
+                            <tr><th scope="row">No supported hardware encoder</th><td>x264</td><td>Uses the CPU. Start at <strong>veryfast</strong>, 720p30; slower presets require more CPU.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>Use the encoder on your main graphics device where practical. If it is missing, check hardware support and update the graphics driver. On Intel Macs, streaming may require x264 because hardware CBR is unavailable. See <a href="https://obsproject.com/kb/hardware-encoding">OBS hardware encoding guidance</a>.</p>
+                <figure class="guide-figure">
+                    <a href="images/guides/obs-studio-output.png"><img src="images/guides/obs-studio-output.png" width="977" height="759" loading="lazy" alt="OBS Simple Output settings with hardware NVENC H.264 selected and separate Streaming and Recording sections" class="guide-image"></a>
+                    <figcaption>Find Video Encoder and Video Bitrate in Output. Use the platform settings below instead of copying this screenshot’s example bitrate. Screenshot: <a href="https://obsproject.com/kb/standard-recording-output-guide">OBS recording output guide</a>.</figcaption>
+                </figure>
+                <details>
+                    <summary>Optional: presets, AV1, and HEVC</summary>
+                    <p>Start with the wizard’s preset. On NVENC, P5 is a reasonable quality starting point; a lower-numbered preset reduces work if encoding falls behind. Other encoders use different names, so do not copy NVENC options into an AMD or Intel setup.</p>
+                    <p>H.264, HEVC (H.265), and AV1 are video formats; NVENC, QSV, and Apple VT are encoder implementations. AV1 and HEVC can give better quality at a given bitrate, but your hardware and destination must support them. YouTube accepts both; Kick’s standard ingest uses H.264. For local recording, also check that your editor can read the chosen format. See <a href="https://obsproject.com/kb/audio-video-formats-guide">OBS video format guidance</a>.</p>
+                </details>
+            </section>
+
+            <section class="guide-card" id="platforms">
+                <h2>5. Connect your platform and set the bitrate</h2>
+                <p>Open <strong>Settings → Stream</strong>, choose the service, and connect your account where offered. Otherwise, copy the server URL and stream key from your platform’s creator dashboard into OBS. Keep the key private; reset it in that dashboard if it is exposed.</p>
+                <p><strong>Bitrate</strong> is the amount of data sent each second. OBS uses kbps: 6,000 kbps is about 6 Mbps of video, plus audio and network overhead. Measure your <strong>upload</strong> speed and leave room for other traffic. As a practical starting margin, keep the total stream below roughly 70% of a stable measured upload speed.</p>
+                <p>For manual settings, choose <strong>Settings → Output → Output Mode: Advanced → Streaming</strong>. Use <strong>CBR</strong> (constant bitrate), a <strong>2-second keyframe interval</strong>, and <strong>AAC stereo</strong> audio for the setups below. Set resolution and FPS in the Video tab.</p>
+                <p class="obs-table-hint">Swipe sideways in the table to see all settings.</p>
+                <div class="obs-table-wrap" role="region" aria-label="Platform streaming settings; scroll horizontally on small screens" tabindex="0">
+                    <table class="obs-platform-table">
+                        <caption>Standard SDR streaming settings — video bitrate in kbps</caption>
+                        <thead><tr><th scope="col">Destination</th><th scope="col">Resolution / FPS</th><th scope="col">Video bitrate</th><th scope="col">Audio / notes</th></tr></thead>
+                        <tbody>
+                            <tr><th scope="rowgroup" rowspan="3"><a href="https://help.twitch.tv/s/article/broadcasting-guidelines?language=en_US">Twitch</a><br>Standard H.264</th><td>720p30</td><td>3,000</td><td rowspan="3">AAC, up to 160 kbps. Use the lower resolution if motion looks blocky or upload is limited.</td></tr>
+                            <tr><td>720p60 or 1080p30</td><td>4,500</td></tr>
+                            <tr><td>1080p60</td><td>6,000</td></tr>
+                        </tbody>
+                        <tbody>
+                            <tr><th scope="rowgroup" rowspan="3"><a href="https://support.google.com/youtube/answer/2853702?hl=en">YouTube</a><br>H.264 recommendations</th><td>720p30 / 60</td><td>8,000</td><td rowspan="3">AAC stereo, 128 kbps; YouTube lists 44.1 kHz for stereo. These are its published recommended targets, not minimums.</td></tr>
+                            <tr><td>1080p30</td><td>14,000</td></tr>
+                            <tr><td>1080p60</td><td>17,000</td></tr>
+                        </tbody>
+                        <tbody>
+                            <tr><th scope="rowgroup" rowspan="3">YouTube<br>AV1 / HEVC recommendations</th><td>720p30 / 60</td><td>6,000</td><td rowspan="3">Use a compatible encoder and YouTube ingest configuration. These formats have different bitrate guidance from H.264.</td></tr>
+                            <tr><td>1080p30</td><td>10,000</td></tr>
+                            <tr><td>1080p60</td><td>12,000</td></tr>
+                        </tbody>
+                        <tbody>
+                            <tr><th scope="rowgroup" rowspan="2"><a href="https://help.kick.com/en/articles/7066931-how-to-stream-on-kick-com">Kick</a><br>H.264 only</th><td>Try 720p30 first</td><td>Try 3,000–4,000 first</td><td rowspan="2">AAC stereo; 160 kbps is a practical starting point. Kick specifies at most 48 kHz. CBR is required; the lower starting range here is a suggested test setting.</td></tr>
+                            <tr><td>Up to 1080p60</td><td>Maximum 8,000</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="obs-credit">Platform guidance: October 2026. Follow the linked service guidance and your account’s ingest settings when they differ.</p>
+                <p><strong>Twitch Enhanced Broadcasting:</strong> its automatic multiple-quality setup has different upload and hardware needs. If you enable it, use <a href="https://help.twitch.tv/s/article/enhanced-broadcasting?language=en_US">Twitch’s Enhanced Broadcasting guide</a> instead of treating the standard table as its total bandwidth.</p>
+                <p><strong>Other platforms:</strong> use the encoder settings provided in their live dashboard. For Facebook or TikTok, first confirm that your account offers an external encoder connection. A chat connection in SSN does not grant permission to broadcast video to that service.</p>
+                <details>
+                    <summary>Optional: streaming to several platforms</summary>
+                    <p>A relay service can take one upload and distribute it, while a multi-output setup can upload separately to each destination. Separate uploads add together: two 6 Mbps video streams need more than 12 Mbps once audio and overhead are included. Each destination still needs a compatible format and bitrate; use transcoding or separate encodes when requirements differ.</p>
+                </details>
+            </section>
+
+            <section class="guide-card" id="mixing">
+                <h2>6. Capture and mix your audio</h2>
+                <p>Start with headphones and one microphone. In <strong>Settings → Audio</strong>, select the actual microphone under Mic/Auxiliary Audio. Alternatively, add it as an <strong>Audio Input Capture</strong> source and disable the global copy so you capture it only once.</p>
+                <p>Choose a computer-audio approach:</p>
+                <ul class="guide-list">
+                    <li><strong>Whole-device audio:</strong> Desktop Audio captures what plays through the selected device, including notifications. Choose the output device you really use.</li>
+                    <li><strong>Separate apps on Windows:</strong> use Application Audio Capture, or the audio option in supported Game/Window Capture sources. Disable overlapping Desktop Audio capture to prevent duplicates. See the <a href="https://obsproject.com/kb/application-audio-capture-guide">OBS application audio guide</a>.</li>
+                    <li><strong>macOS:</strong> on macOS 13 or later, current OBS versions offer macOS audio/screen capture for system or application sound. Older setups need a different route; follow the <a href="https://obsproject.com/kb/macos-desktop-audio-capture-guide">macOS desktop audio guide</a>.</li>
+                </ul>
+                <figure class="guide-figure">
+                    <a href="images/guides/obs-studio-mixer.png"><img src="images/guides/obs-studio-mixer.png" width="265" height="378" loading="lazy" alt="OBS Audio Mixer with separate Desktop Audio, Mic/Aux, Video, and Video Capture Device meters, volume sliders, and mute buttons" class="guide-image obs-small-image"></a>
+                    <figcaption>Speak and play a sound to identify each moving meter. The slider controls that source’s level in your mix. Screenshot: <a href="https://obsproject.com/kb/quick-start-guide">OBS Project</a>.</figcaption>
+                </figure>
+                <p>As a starting point, aim for normal speech peaks around <strong>−12 to −6 dBFS</strong> on the meter, with room for louder speech. Avoid hitting <strong>0 dBFS</strong>, which clips. A slider reading of 0 dB means no volume adjustment; it does not mean the signal is clipping.</p>
+                <p>Lower game, music, and alert levels until speech is easy to understand. Listen to a short recording on ordinary headphones; meters alone do not tell you whether the voice is clear. Start with the microphone’s input gain if it is already distorted. More: <a href="https://obsproject.com/kb/audio-mixer-guide">OBS audio mixer guide</a>.</p>
+                <details>
+                    <summary>Optional: clean up the microphone</summary>
+                    <p>Open the microphone’s <strong>Filters</strong> from its mixer menu. Add a little noise suppression for steady fan noise, an expander to reduce quiet background sound, a compressor to tame loud speech, and a limiter last to catch peaks. Add one at a time and listen. Heavy suppression can distort speech, and a tight gate can cut off words.</p>
+                    <p>If a mono microphone plays only on one side, use <strong>Mono</strong> in Advanced Audio Properties. For lip sync, record a clap and adjust <strong>Sync Offset</strong> only after identifying which signal arrives first. See the <a href="https://obsproject.com/kb/filters-guide">OBS filter guides</a>.</p>
+                </details>
+            </section>
+
+            <section class="guide-card" id="monitoring">
+                <h2>7. Hear audio without creating an echo</h2>
+                <p><strong>Output</strong> sends sound to your stream or recording. <strong>Monitoring</strong> lets you hear a source through a selected listening device. A moving meter does not prove that either destination is receiving it.</p>
+                <ol class="guide-steps">
+                    <li>In <strong>Settings → Audio → Advanced → Monitoring Device</strong>, choose your headphones explicitly.</li>
+                    <li>Open <strong>Advanced Audio Properties</strong> from the Audio Mixer menu or the Edit menu.</li>
+                    <li>Set each source’s Audio Monitoring mode using the table below.</li>
+                </ol>
+                <div class="obs-table-wrap" role="region" aria-label="Audio monitoring modes" tabindex="0">
+                    <table>
+                        <caption>How each source is routed</caption>
+                        <thead><tr><th scope="col">Mode</th><th scope="col">OBS sends to headphones</th><th scope="col">OBS sends directly to output</th></tr></thead>
+                        <tbody>
+                            <tr><th scope="row">Monitor Off</th><td>No</td><td>Yes</td></tr>
+                            <tr><th scope="row">Monitor Only (mute output)</th><td>Yes</td><td>No</td></tr>
+                            <tr><th scope="row">Monitor and Output</th><td>Yes</td><td>Yes</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p>The table assumes the source is unmuted and assigned to the output’s audio track. <strong>Monitor Off does not mute the stream.</strong> It is usually right for your microphone and games you already hear. Use <strong>Monitor and Output</strong> for an alert or browser source that both you and the audience should hear.</p>
+                <div class="guide-note"><p><strong>Avoid capturing the monitor return.</strong> If Desktop Audio captures the same device used for monitoring, it can record the sound again, causing doubling or a feedback loop. Use separate application capture, or monitor through a device that OBS is not capturing. Monitor Only can still reach viewers indirectly through that second capture.</p></div>
+                <p>Keep the platform’s live player muted on your streaming computer. Headphones prevent speaker sound from returning through the microphone, but they do not fix duplicate software capture. For your own voice, a microphone or audio interface’s direct monitoring can avoid OBS monitoring delay.</p>
+            </section>
+
+            <section class="guide-card" id="browser-sources">
+                <h2>8. Add browser sources and SSN overlays</h2>
+                <p>A Browser Source draws a web page inside your scene. It can show chat, alerts, timers, or other overlays without capturing an ordinary browser window.</p>
+                <ol class="guide-steps">
+                    <li>Copy your overlay URL from Social Stream Ninja. Keep its <code>session</code>, password, and other options intact. Use the same session as your chat source.</li>
+                    <li>In OBS, choose <strong>Sources → + → Browser</strong>, name it, leave <strong>Local file</strong> off, and paste the full URL.</li>
+                    <li>Set Width and Height to the overlay’s intended size. For a full-frame landscape overlay, start with <strong>1920 × 1080</strong>. This sets the web page’s layout area; dragging the source in OBS scales the result.</li>
+                    <li>For TTS or alerts with sound, enable <strong>Control audio via OBS</strong>. Adjust its mixer level and monitoring mode.</li>
+                    <li>Place the source above your camera/game in the Sources list. Send a test chat message or alert, then make a short recording.</li>
+                </ol>
+                <figure class="guide-figure">
+                    <a href="images/guides/obs-browser-source-properties.png"><img src="images/guides/obs-browser-source-properties.png" width="1468" height="1232" loading="lazy" alt="OBS Browser Source properties showing URL, Width, Height, Control audio via OBS, and Custom CSS" class="guide-image guide-image-medium"></a>
+                    <figcaption>Replace the default OBS URL with your overlay link. The 800 × 600 size and unchecked audio option shown here are defaults; set them for your overlay.</figcaption>
+                </figure>
+                <p>Use <strong>Interact</strong> from the source’s right-click menu when you need to click inside a page. A <strong>Custom Browser Dock</strong> is an operator panel in the OBS interface; adding a dock alone does not put it on the video.</p>
+                <details>
+                    <summary>Browser source refresh, transparency, and shared audio</summary>
+                    <p>For persistent chat or timers, leave <strong>Shutdown source when not visible</strong> and <strong>Refresh browser when scene becomes active</strong> off initially. Shutdown unloads the page; refresh can reset its state. Use <strong>Refresh cache of current page</strong> manually when troubleshooting a stale page.</p>
+                    <p>OBS’s default browser CSS allows transparency, but the overlay must also support a transparent background. Use the overlay’s own appearance options first. Keep page permissions at their default unless the overlay specifically needs OBS control.</p>
+                    <p>Use <strong>Add Existing</strong> to share one browser source across scenes. Keep only one copy responsible for TTS or alert audio. See the <a href="tts-setup-guide.html">SSN TTS guide</a>, <a href="obs-quick-start.html">chat overlay quick start</a>, and <a href="https://obsproject.com/kb/browser-source">OBS Browser Source reference</a>.</p>
+                </details>
+            </section>
+
+            <section class="guide-card" id="recording">
+                <h2>9. Make a recording, then go live</h2>
+                <p>For a first local test, open <strong>Settings → Output → Recording</strong>, select a folder with free space, and choose <strong>High Quality, Medium File Size</strong> in Simple mode. Use a hardware encoder if available.</p>
+                <p><strong>MKV</strong> is a resilient recording format if recording stops unexpectedly. Use <strong>File → Remux Recordings</strong> to make an MP4 for an editor without re-encoding. Current OBS also offers resilient <strong>Hybrid MP4/MOV</strong>; this differs from regular MP4/MOV. See <a href="https://obsproject.com/kb/audio-video-formats-guide">OBS recording formats</a>.</p>
+                <ol class="guide-steps">
+                    <li>Press <strong>Start Recording</strong>. Talk, play game/media sound, trigger an alert, and change scenes.</li>
+                    <li>Stop and play the file. Check framing, readable text, microphone clarity, lip sync, and whether alerts are too loud.</li>
+                    <li>Set your stream title, category, and visibility in the platform dashboard. Use a private or unlisted test if the service offers it; a normal Start Streaming action can make you publicly live.</li>
+                    <li>Press <strong>Start Streaming</strong> and check the platform preview and stream health. Some platforms also require a dashboard <strong>Go Live</strong> action. A good local recording does not test upload reliability.</li>
+                    <li>Finish with <strong>Stop Streaming</strong>, then confirm the event is ended in the platform dashboard. Stop a separate recording too if it is still running.</li>
+                </ol>
+                <details>
+                    <summary>Optional: separate recording tracks and saved setups</summary>
+                    <p>In Advanced Output, choose the streaming audio track and recording tracks. A useful arrangement is track 1 for the full mix, track 2 for just the microphone, and track 3 for game audio. Assign sources in Advanced Audio Properties, then enable those tracks under Recording. Most ordinary players play one track at a time; separate tracks are for editing, so keep a full mix on track 1.</p>
+                    <p><strong>Profiles</strong> hold output and service settings. <strong>Scene Collections</strong> hold scenes and sources. Save a profile for a different platform and a scene collection for a different show; use their menus to export backups. More: <a href="https://obsproject.com/kb/standard-recording-output-guide">OBS recording guide</a>.</p>
+                </details>
+            </section>
+
+            <section class="guide-card" id="troubleshooting">
+                <h2>10. Fix the specific problem</h2>
+                <p>Open <strong>View → Stats</strong> while testing. Network drops, rendering lag, and encoding lag have different causes.</p>
+                <ul class="guide-list">
+                    <li><strong>Dropped frames (network):</strong> lower bitrate, stop competing uploads, and try wired Ethernet. Check the ingest server and platform status.</li>
+                    <li><strong>Frames missed due to rendering lag:</strong> leave room on the GPU. Cap the game’s frame rate, lower its graphics settings, and simplify animated scenes.</li>
+                    <li><strong>Skipped frames due to encoding lag:</strong> use a hardware encoder, a faster preset, or lower output resolution/FPS. A separate high-quality recording adds work too.</li>
+                    <li><strong>Black camera/game:</strong> check the selected device/window, OS permissions, the source’s eye icon, and whether another source covers it. Test a different capture method.</li>
+                    <li><strong>Silent stream with moving meters:</strong> check mute, Monitor Only, and the streaming track assignment. Headphone monitoring alone does not confirm output.</li>
+                    <li><strong>Double sound or echo:</strong> look for duplicate device capture, a monitored source returning through Desktop Audio, or an unmuted live player.</li>
+                    <li><strong>Blank SSN overlay:</strong> confirm chat reaches the SSN dock, compare session/password options, then refresh the Browser Source. A featured-message overlay may stay blank until you select a message.</li>
+                </ul>
+                <p>Next steps: <a href="https://obsproject.com/kb/encoding-performance-troubleshooting">OBS performance troubleshooting</a>, <a href="https://obsproject.com/help">OBS help</a>, or <a href="obs-troubleshooting.html">SSN overlay troubleshooting</a>.</p>
+                <p><a href="guides.html#guide-directory">Back to the guide directory</a></p>
+            </section>
+        </div>
+    </main>
+    <footer><div class="container"><div class="footer-bottom"><p>Social Stream Ninja · <a href="guides.html">Guides</a> · <a href="support.html">Support</a></p></div></div></footer>
+    <script data-copy-markdown src="js/main.js"></script>
+</body>
+</html>
