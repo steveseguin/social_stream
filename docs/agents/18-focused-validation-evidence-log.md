@@ -25,6 +25,19 @@ Keep `17-runtime-validation-evidence-log.md` for browser, app, OBS, API, source-
 
 ## Evidence Entries
 
+
+### Piper Numeric-Zero Playback Volume
+
+Validation date: 2026-10-05
+
+Evidence label: `focused-node-test`; not runtime-tested
+
+Commands: `node --test tests/piper-volume-control.test.cjs`, `node tests/piper-local-assets.test.js`, and `node --check thirdparty/piper/piper-tts-proper.js`.
+
+Result: all eight volume regression cases and the existing asset-wiring test pass; source syntax passes. The unpatched wrapper fails both numeric-zero cases, leaving the fake Audio volume at its default of 1; six nonzero/missing-setting controls pass on both versions.
+
+The volume test evaluates the complete wrapper in a Node VM and calls its real `speak` and `processQueue` methods. Synthesis, Audio, and object URLs are stand-ins. This verifies volume assignment and completion cleanup only. Real model loading, browser autoplay, audible output, extension/Electron behavior and OBS capture were not tested.
+
 ### Settings Config JSON Focused Validation
 
 Validation date: 2026-06-24

@@ -422,7 +422,7 @@
           audio.src = URL.createObjectURL(wav);
           
           // Set volume if available from TTS settings
-          if (window.TTS && window.TTS.volume) {
+          if (window.TTS && (window.TTS.volume || window.TTS.volume === 0)) {
             audio.volume = window.TTS.volume;
           }
           

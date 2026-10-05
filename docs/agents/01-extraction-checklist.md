@@ -70,6 +70,7 @@ Add one entry per extraction pass.
 
 | Date | Agent | Scope | Level | Output files | Status | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-10-05 | Codex | Piper numeric-zero playback volume regression | Quick | `12-development/test-asset-matrix.md`, `18-focused-validation-evidence-log.md` | quick-complete | Eight actual-wrapper VM cases pass with fake Audio and synthesis; numeric-zero baseline cases fail. No browser, audible output or OBS validation. |
 | 2026-06-23 | Codex | Initial repo/support inventory | Quick | `00-inventory-and-plan.md`, `01-extraction-checklist.md`, `02-resource-manifest.md` | quick-complete | Created tracker and manifest. No detailed extraction yet. |
 | 2026-06-23 | Codex | Documentation framework and starter pages | Quick | Topic files under `01-*` through `12-*`, `_templates/`, `99-agent-index.md` | quick-complete | Created starter files and section scaffolds. Detailed extraction still not started. |
 | 2026-06-24 | Codex | Backbone architecture, flow, storage, and triage notes | Heavy | `03-extension-architecture.md`, `04-standalone-app-architecture.md`, `05-message-flow-and-event-contracts.md`, `06-settings-sessions-and-storage.md`, `10-troubleshooting/quick-triage.md`, `AGENT.md`, `99-agent-index.md` | heavy-complete | First source-backed pass using manifest, service worker, background, app preload/state/main notes, and support history. Needs field-level/intense passes later. |
