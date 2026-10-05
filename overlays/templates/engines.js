@@ -5,6 +5,32 @@
 (function () {
 	"use strict";
 
+	var running = [];
+	var cleanups = new WeakMap();
+	function onStop(host, fn) {
+		var list = cleanups.get(host);
+		if (!list) { list = []; cleanups.set(host, list); }
+		list.push(fn);
+	}
+	function dispose(host) {
+		var list = cleanups.get(host) || [];
+		cleanups.delete(host);
+		list.forEach(function (fn) { fn(); });
+	}
+	function releaseGL(host, gl) {
+		onStop(host, function () {
+			var ext = gl.getExtension("WEBGL_lose_context");
+			if (ext) { ext.loseContext(); }
+		});
+	}
+
+	// Replay must dispose engines before removing their hosts from the overlay.
+	SSO.stopEngines = function (root) {
+		running.slice().forEach(function (entry) {
+			if (entry.host === root || root.contains(entry.host)) { entry.stop(); }
+		});
+	};
+
 	SSO.ENGINES = {};
 	SSO.ENGINE_LIST = [];
 	function engine(def) { SSO.ENGINES[def.id] = def; SSO.ENGINE_LIST.push([def.id, def.label]); }
@@ -29,11 +55,12 @@
 		}
 		fit();
 		window.addEventListener("resize", fit);
+		onStop(host, function () { window.removeEventListener("resize", fit); });
 		return cv;
 	}
 
 	function loop(fn) {
-		var alive = true, last = null, t = 0;
+		var alive = true, last = null, t = 0, frameId;
 		function frame(now) {
 			if (!alive) { return; }
 			if (last === null) { last = now; }
@@ -41,10 +68,10 @@
 			last = now;
 			t += dt;
 			fn(t, dt);
-			requestAnimationFrame(frame);
+			frameId = requestAnimationFrame(frame);
 		}
-		requestAnimationFrame(frame);
-		return { stop: function () { alive = false; } };
+		frameId = requestAnimationFrame(frame);
+		return { stop: function () { alive = false; cancelAnimationFrame(frameId); } };
 	}
 
 	// ---------------------------------------------------------------- WebGL shader helper
@@ -61,6 +88,7 @@
 			host.style.background = "radial-gradient(ellipse at 50% 60%," + SSO.color(o.c2) + "," + SSO.color(o.c1) + ")";
 			return { stop: function () {} };
 		}
+		releaseGL(host, gl);
 		function compile(type, src) {
 			var s = gl.createShader(type);
 			gl.shaderSource(s, src);
@@ -220,6 +248,7 @@
 			host.style.background = "radial-gradient(ellipse 30% 22% at 50% 50%," + SSO.rgba(o.c2.replace("#", ""), 0.35) + ",transparent),radial-gradient(ellipse at 50% 50%," + SSO.rgba(o.c1.replace("#", ""), 1) + ",#000)";
 			var gl = cv.getContext("webgl", { alpha: true, premultipliedAlpha: false });
 			if (!gl) { return { stop: function () {} }; }
+			releaseGL(host, gl);
 			var N = 22000;
 			var data = new Float32Array(N * 4);
 			for (var i = 0; i < N; i++) {
@@ -1093,6 +1122,22 @@
 		o.c1 = SSO.color(o.c1 || e.colors[0]);
 		o.c2 = SSO.color(o.c2 || e.colors[1]);
 		o.c3 = SSO.color(o.c3 || e.colors[2]);
-		try { return e.start(host, o); } catch (err) { console.warn("engine failed", id, err); host.style.background = o.c1; return null; }
+		SSO.stopEngines(host);
+		var instance;
+		try { instance = e.start(host, o); }
+		catch (err) { dispose(host); console.warn("engine failed", id, err); host.style.background = o.c1; return null; }
+		var stopped = false;
+		var entry = {
+			host: host,
+			stop: function () {
+				if (stopped) { return; }
+				stopped = true;
+				if (instance && instance.stop) { instance.stop(); }
+				dispose(host);
+				running.splice(running.indexOf(entry), 1);
+			}
+		};
+		running.push(entry);
+		return entry;
 	};
 })();
