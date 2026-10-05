@@ -172,7 +172,7 @@ html {
     text-align: start;
 }
 
-.reference-tools {
+.events-container .reference-tools {
     position: sticky;
     top: 8.8rem;
     z-index: 100;
@@ -180,6 +180,11 @@ html {
     align-items: center;
     justify-content: space-between;
     gap: 1.2rem;
+    width: auto;
+    height: auto;
+    right: auto;
+    transform: none;
+    transition: none;
     margin: 2.4rem 0 1.6rem;
     padding: 0.8rem 1.2rem;
     background: var(--events-surface);
@@ -207,7 +212,7 @@ html {
     top: calc(100% + 0.8rem);
     left: 0;
     right: 0;
-    max-height: calc(100vh - 17rem);
+    max-height: calc(100vh - var(--reference-panel-top, 17rem) - 1.6rem);
     overflow-y: auto;
     overscroll-behavior: contain;
     padding: 2.4rem;
@@ -314,6 +319,7 @@ html {
     display: flex;
     flex-flow: row wrap;
     justify-content: flex-start;
+    gap: 0;
     margin: -0.4rem;
     padding: 0;
     list-style: none;
@@ -617,6 +623,14 @@ html {
         min-width: 88rem;
     }
 
+    .field-overview th:first-child {
+        width: 19rem;
+    }
+
+    .field-overview th:nth-child(2) {
+        width: 13rem;
+    }
+
     .field-table th,
     .field-table td,
     .event-table th,
@@ -676,7 +690,7 @@ html {
         margin-top: 2.8rem;
     }
 
-    .reference-tools {
+    .events-container .reference-tools {
         gap: 0.4rem;
         padding: 0.6rem;
     }

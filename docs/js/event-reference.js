@@ -47,6 +47,15 @@
     });
     filterIndex();
 
+    function fitIndexPanel() {
+        if (!index.open) return;
+        var panel = index.querySelector(".reference-index-panel");
+        panel.style.setProperty("--reference-panel-top", panel.getBoundingClientRect().top + "px");
+    }
+    index.addEventListener("toggle", fitIndexPanel);
+    window.addEventListener("resize", fitIndexPanel);
+    window.addEventListener("scroll", fitIndexPanel, { passive: true });
+
     index.addEventListener("keydown", function (event) {
         if (event.key === "Escape") {
             index.open = false;

@@ -55,7 +55,7 @@
 
 	function makeFish(kind, W, H, depth) {
 		var sp = SPECIES[kind];
-		var size = H * (0.07 + Math.random() * 0.03) * sp.len * (1 - depth * 0.55);
+		var size = H * (0.12 + Math.random() * 0.05) * sp.len * (1 - depth * 0.55);
 		var x = Math.random() * W, y = H * (0.15 + Math.random() * 0.6);
 		var n = 12, pts = [];
 		for (var i = 0; i < n; i++) { pts.push([x - i * size / n, y]); }
@@ -267,15 +267,6 @@
 	]);
 	var ft = SSO.get("fishtank");
 	if (ft) {
-		ft.fields.splice(1, 0, { key: "realistic", label: "Realistic fish (WebGL water)", type: "bool", group: "Tank", default: false });
-		var render0 = ft.render;
-		ft.render = function (root, c, ctx) {
-			if (!c.realistic) { return render0(root, c, ctx); }
-			// Same tank shapes, realistic engine inside.
-			render0(root, Object.assign({}, c, { count: 0 }), ctx);
-			var inner = root.querySelector(".ft-in");
-			if (inner) { inner.innerHTML = ""; SSO.startEngine("reef", inner, { c1: c.water2, c2: c.water, c3: c.sand, count: Math.max(3, c.count), transparent: c.shape === "strip", speed: c.speed }); }
-		};
 		ft.presets = ft.presets.concat([
 			{ name: "Realistic bowl", tags: ["cozy", "elegant"], values: { realistic: true, count: 5 } },
 			{ name: "Realistic tank", tags: ["cozy", "elegant"], values: { realistic: true, shape: "tank", count: 9, water: "4fb6d9", water2: "0a2f4a" } }

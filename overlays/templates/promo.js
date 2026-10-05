@@ -24,7 +24,7 @@
 		category: "socials",
 		description: "A simple list of your socials with icons. Lots of personalities: clean, pills, brand blocks, terminal, handwritten, neon, glass, pixel, elegant…",
 		size: [460, 360],
-		sizeFor: function (c) { return c.layout === "row" ? [1100, 110] : c.layout === "grid" ? [620, 300] : [460, 360]; },
+		sizeFor: function (c) { return c.layout === "row" ? [1100, 110] : c.layout === "grid" ? [620, 300] : [460, 430]; },
 		fields: [
 			SSO.f.socials("twitch:yourname,youtube:@yourname,tiktok:@yourname,instagram:@yourname,discord:discord.gg/yourname"),
 			{ key: "style", label: "Style", type: "select", group: "Look", default: "clean", options: LIST_STYLES },
@@ -219,7 +219,10 @@
 			}
 			el.innerHTML = '<div class="sn2-t">' + esc(text) + "</div>" + (c.sub ? '<div class="sn2-s">' + esc(c.sub) + "</div>" : "");
 			if (c.style === "marquee") {
-				SSO.fontsReady(function () {
+				// Bulbs are placed after the font settles (and re-placed a moment later in case it swapped late).
+				var placeBulbs = function () {
+					var old = el.querySelectorAll(".sn2-bulb");
+					for (var o = 0; o < old.length; o++) { old[o].parentNode.removeChild(old[o]); }
 					var r = el.getBoundingClientRect(), fs = c.fontsize, step = fs * 0.32, html = "";
 					var w = r.width, h = r.height;
 					var put = function (x, y, i) { html += '<i class="sn2-bulb" style="left:' + x + "px;top:" + y + "px;animation-delay:-" + ((i % 2) * 1.6) + 's"></i>'; };
@@ -227,7 +230,9 @@
 					for (x = fs * 0.12; x < w - fs * 0.06; x += step) { put(x, fs * 0.12, i++); put(x, h - fs * 0.12, i++); }
 					for (y = fs * 0.12 + step; y < h - fs * 0.12; y += step) { put(fs * 0.12, y, i++); put(w - fs * 0.12, y, i++); }
 					el.insertAdjacentHTML("beforeend", html);
-				});
+				};
+				SSO.fontsReady(placeBulbs);
+				setTimeout(placeBulbs, 2500);
 			}
 		}
 	});

@@ -310,6 +310,7 @@
 		fields: [
 			{ key: "shape", label: "Shape", type: "select", group: "Tank", default: "bowl", options: [["bowl", "Round fish bowl"], ["tank", "Rectangular tank"], ["strip", "Water strip along the bottom"]] },
 			{ key: "count", label: "Fish", type: "range", group: "Tank", default: 5, min: 1, max: 30, step: 1 },
+			{ key: "realistic", label: "Realistic fish (WebGL water)", type: "bool", group: "Tank", default: false },
 			{ key: "water", label: "Water colour", type: "color", group: "Tank", default: "3fa9d6" },
 			{ key: "water2", label: "Deep water colour", type: "color", group: "Tank", default: "0a4f73" },
 			{ key: "sand", label: "Sand colour", type: "color", group: "Tank", default: "e8d7a9" },
@@ -348,7 +349,11 @@
 			root.appendChild(wrap);
 			if (c.shape !== "strip") { tank.insertAdjacentHTML("beforeend", '<div class="ft-glare"></div>'); }
 			if (c.label) { tank.insertAdjacentHTML("beforeend", '<div class="ft-sign">' + esc(c.label) + "</div>"); }
-			SSO.startEngine("aquarium", inner, { transparent: true, count: c.count, speed: c.speed, c3: c.sand, fishSize: c.shape === "strip" ? 1.3 : 1.9 });
+			if (c.realistic && SSO.ENGINES.reef) {
+				SSO.startEngine("reef", inner, { c1: c.water2, c2: c.water, c3: c.sand, count: Math.max(3, c.count), transparent: c.shape === "strip", speed: c.speed });
+			} else {
+				SSO.startEngine("aquarium", inner, { transparent: true, count: c.count, speed: c.speed, c3: c.sand, fishSize: c.shape === "strip" ? 1.3 : 1.9 });
+			}
 		}
 	});
 })();

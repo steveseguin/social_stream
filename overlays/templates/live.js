@@ -87,8 +87,12 @@
 						return (j.events || []).slice(0, c.count).map(function (e) { return "<i>" + esc(e.year) + "</i>" + esc(e.text); });
 					});
 				} else {
-					p = getJSON("https://api.wikimedia.org/feed/v1/wikipedia/en/featured/" + y + "/" + m + "/" + day).then(function (j) {
-						return (j.news || []).slice(0, c.count).map(function (n) { return esc(strip(n.story)); });
+					// Today's feed can be empty early in the (UTC) day, so fall back to yesterday's.
+					var feed = function (dt) {
+						return getJSON("https://api.wikimedia.org/feed/v1/wikipedia/en/featured/" + dt.getFullYear() + "/" + SSO.pad(dt.getMonth() + 1) + "/" + SSO.pad(dt.getDate())).then(function (j) { return j.news || []; });
+					};
+					p = feed(d).then(function (news) { return news.length ? news : feed(new Date(d.getTime() - 86400000)); }).then(function (news) {
+						return news.slice(0, c.count).map(function (n) { return esc(strip(n.story)); });
 					});
 				}
 				p.then(update).catch(function () { update([]); });
@@ -155,7 +159,7 @@
 		category: "live",
 		description: "Today's top songs (iTunes store chart for your country) with album art — one at a time like a countdown, or as a top-10 list. Refreshes hourly.",
 		size: [620, 180],
-		sizeFor: function (c) { return c.layout === "list" ? [520, 640] : [620, 180]; },
+		sizeFor: function (c) { return c.layout === "list" ? [520, 760] : [620, 180]; },
 		fields: [
 			{ key: "country", label: "Country chart", type: "select", group: "Chart", default: "us", options: [["us", "United States"], ["ca", "Canada"], ["gb", "United Kingdom"], ["au", "Australia"], ["de", "Germany"], ["fr", "France"], ["br", "Brazil"], ["mx", "Mexico"], ["jp", "Japan"], ["kr", "South Korea"], ["in", "India"], ["ph", "Philippines"], ["es", "Spain"], ["it", "Italy"], ["nl", "Netherlands"], ["se", "Sweden"]] },
 			{ key: "count", label: "Top", type: "range", group: "Chart", default: 10, min: 3, max: 25, step: 1 },
@@ -265,13 +269,39 @@
 			el.innerHTML = '<div class="tv-top"><span class="tv-cat">Trivia</span><span class="tv-diff"></span></div><div class="tv-q">Loading questions…</div><div class="tv-as"></div><div class="tv-bar"><i></i></div>';
 			var qEl = el.querySelector(".tv-q"), aEl = el.querySelector(".tv-as"), bar = el.querySelector(".tv-bar i"), cat = el.querySelector(".tv-cat"), diff = el.querySelector(".tv-diff");
 			var queue = [];
+			// Built-in questions keep things going if the trivia service is busy or offline.
+			var BANK = [
+				["Which planet is known as the Red Planet?", "Mars", ["Venus", "Jupiter", "Mercury"]],
+				["How many strings does a standard guitar have?", "6", ["4", "5", "7"]],
+				["What is the largest ocean on Earth?", "Pacific", ["Atlantic", "Indian", "Arctic"]],
+				["Which video game features a plumber named Mario?", "Super Mario Bros.", ["Sonic", "Zelda", "Metroid"]],
+				["What gas do plants absorb from the air?", "Carbon dioxide", ["Oxygen", "Nitrogen", "Helium"]],
+				["How many sides does a hexagon have?", "6", ["5", "7", "8"]],
+				["What is the capital of Canada?", "Ottawa", ["Toronto", "Vancouver", "Montreal"]],
+				["Which instrument has 88 keys?", "Piano", ["Organ", "Accordion", "Harpsichord"]],
+				["What is the fastest land animal?", "Cheetah", ["Lion", "Pronghorn", "Greyhound"]],
+				["In Minecraft, what do you need to make a Nether portal?", "Obsidian", ["Cobblestone", "Netherrack", "Bedrock"]],
+				["Which element has the symbol O?", "Oxygen", ["Gold", "Osmium", "Oganesson"]],
+				["How many minutes are in a day?", "1440", ["1240", "1600", "1080"]],
+				["Which country gave us the sport of hockey as we know it?", "Canada", ["Sweden", "Russia", "USA"]],
+				["What colour do you get mixing blue and yellow?", "Green", ["Purple", "Orange", "Brown"]],
+				["Which console maker created the Game Boy?", "Nintendo", ["Sega", "Sony", "Atari"]]
+			].map(function (q) { return { category: "General", difficulty: "easy", question: q[0], correct_answer: q[1], incorrect_answers: q[2], local: true }; });
+			var failures = 0;
 			function fill() {
 				var url = "https://opentdb.com/api.php?amount=20&type=multiple&encode=url3986" + (c.category ? "&category=" + c.category : "") + (c.difficulty ? "&difficulty=" + c.difficulty : "");
-				return getJSON(url).then(function (j) { queue = queue.concat(j.results || []); });
+				return getJSON(url).then(function (j) {
+					if (!j.results || !j.results.length) { throw new Error("empty"); }
+					failures = 0;
+					queue = queue.concat(j.results);
+				}).catch(function () {
+					failures++;
+					queue = queue.concat(BANK.slice().sort(function () { return Math.random() - 0.5; }).slice(0, 5));
+				});
 			}
 			function dec(s) { try { return decodeURIComponent(s); } catch (e) { return s; } }
 			function ask() {
-				if (!queue.length) { fill().then(ask).catch(function () { qEl.textContent = "Trivia is taking a break — back soon."; setTimeout(ask, 60000); }); return; }
+				if (!queue.length) { fill().then(ask); return; }
 				var q = queue.shift();
 				var right = dec(q.correct_answer);
 				var answers = q.incorrect_answers.map(dec).concat([right]).sort(function () { return Math.random() - 0.5; });
@@ -288,7 +318,8 @@
 					setTimeout(ask, (c.reveal + c.pause) * 1000);
 				}, c.think * 1000);
 			}
-			fill().then(ask).catch(function () { qEl.textContent = "Couldn't reach the trivia service."; setTimeout(function () { fill().then(ask); }, 60000); });
+			// small random delay so several trivia sources don't hit the API at the same moment
+			setTimeout(function () { fill().then(ask); }, Math.random() * 2500);
 		}
 	});
 

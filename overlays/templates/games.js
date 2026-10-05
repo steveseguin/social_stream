@@ -106,7 +106,6 @@
 				}
 				b.vx = Math.max(-0.9, Math.min(0.9, b.vx)); if (Math.abs(b.vx) > 0.85) { b.vx *= 0.7; }
 				b.vy = Math.max(-0.6, Math.min(0.6, b.vy));
-				g.fillStyle = "rgba(0,0,0,.35)"; g.fillRect(0, 0, W, H);
 				g.clearRect(0, 0, W, H);
 				g.fillStyle = o.c2; g.globalAlpha = 0.3;
 				for (var y = 0; y < H; y += H / 24) { g.fillRect(W / 2 - 2, y, 4, H / 48); }
