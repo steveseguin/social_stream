@@ -108,7 +108,7 @@
 		sizeFor: function (c, thumb) { return thumb ? [960, 540] : [1920, 1080]; },
 		fields: [
 			{ key: "text", label: "Text or emoji", type: "text", group: "Content", default: "BRB" },
-			{ key: "image", label: "…or an image link (PNG with transparency works best)", type: "text", group: "Content", default: "" },
+			{ key: "image", label: "…or an image link (PNG with transparency works best)", type: "text", image: true, group: "Content", default: "" },
 			{ key: "speed", label: "Speed", type: "range", group: "Content", default: 140, min: 20, max: 800, step: 5 },
 			{ key: "recolor", label: "Change colour on every bounce", type: "bool", group: "Content", default: true },
 			{ key: "corner", label: "Celebrate corner hits", type: "bool", group: "Content", default: true },
@@ -174,7 +174,7 @@
 		description: "Cycle through images: sponsors, art, memes, pet photos. Paste image links, one per line.",
 		size: [640, 360],
 		fields: [
-			{ key: "images", label: "Image links (one per line)", type: "textarea", group: "Content", default: "https://socialstream.ninja/media/user1.jpg\nhttps://socialstream.ninja/media/user2.jpg\nhttps://socialstream.ninja/media/user3.jpg" },
+			{ key: "images", label: "Image links (one per line)", type: "textarea", image: true, group: "Content", default: "https://socialstream.ninja/media/user1.jpg\nhttps://socialstream.ninja/media/user2.jpg\nhttps://socialstream.ninja/media/user3.jpg" },
 			{ key: "captions", label: "Captions (one per line, optional)", type: "textarea", group: "Content", default: "" },
 			{ key: "hold", label: "Seconds per image", type: "number", group: "Content", default: 6, min: 1, max: 600, step: 0.5 },
 			{ key: "fit", label: "Fit", type: "select", group: "Style", default: "contain", options: [["contain", "Show the whole image"], ["cover", "Fill and crop"]] },
@@ -310,6 +310,7 @@
 		fields: [
 			{ key: "shape", label: "Shape", type: "select", group: "Tank", default: "bowl", options: [["bowl", "Round fish bowl"], ["tank", "Rectangular tank"], ["strip", "Water strip along the bottom"]] },
 			{ key: "count", label: "Fish", type: "range", group: "Tank", default: 5, min: 1, max: 30, step: 1 },
+			{ key: "realistic", label: "Realistic fish (WebGL water)", type: "bool", group: "Tank", default: false },
 			{ key: "water", label: "Water colour", type: "color", group: "Tank", default: "3fa9d6" },
 			{ key: "water2", label: "Deep water colour", type: "color", group: "Tank", default: "0a4f73" },
 			{ key: "sand", label: "Sand colour", type: "color", group: "Tank", default: "e8d7a9" },
@@ -348,7 +349,11 @@
 			root.appendChild(wrap);
 			if (c.shape !== "strip") { tank.insertAdjacentHTML("beforeend", '<div class="ft-glare"></div>'); }
 			if (c.label) { tank.insertAdjacentHTML("beforeend", '<div class="ft-sign">' + esc(c.label) + "</div>"); }
-			SSO.startEngine("aquarium", inner, { transparent: true, count: c.count, speed: c.speed, c3: c.sand, fishSize: c.shape === "strip" ? 1.3 : 1.9 });
+			if (c.realistic && SSO.ENGINES.reef) {
+				SSO.startEngine("reef", inner, { c1: c.water2, c2: c.water, c3: c.sand, count: Math.max(3, c.count), transparent: c.shape === "strip", speed: c.speed });
+			} else {
+				SSO.startEngine("aquarium", inner, { transparent: true, count: c.count, speed: c.speed, c3: c.sand, fishSize: c.shape === "strip" ? 1.3 : 1.9 });
+			}
 		}
 	});
 })();

@@ -87,7 +87,11 @@
 		.install h2, .steps h2, .screenshots h2, .capabilities h2 { margin: 6px 0 8px; font-size: 19px; }
 		.install p, .step p, .screenshots p, .capabilities p { color: var(--muted); line-height: 1.5; }
 		.install .button { width: 100%; margin-top: 9px; }
-		.steps, .screenshots, .capabilities { margin-top: 16px; }
+		.steps, .screenshots, .capabilities, .overview { margin-top: 16px; }
+		.overview h2 { margin: 6px 0 8px; font-size: 19px; }
+		.overview p { margin: 0; color: var(--muted); line-height: 1.5; }
+		.video-frame { position: relative; height: 0; padding-top: 56.25%; margin-top: 16px; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #000; }
+		.video-frame video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 		.step-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
 		.step { min-height: 132px; padding: 17px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); }
 		.step-number { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; background: rgba(59,130,246,.16); color: var(--accent-soft); font-weight: 800; }
@@ -169,6 +173,18 @@
 				<p data-page-translate="streamdeck-install-file">Download the .streamDeckPlugin file from the latest release and open it to install in the Stream Deck app.</p>
 				<a class="button secondary" href="https://github.com/steveseguin/ssn-streamdeck/releases/latest" target="_blank" rel="noopener" data-page-translate="download-plugin">Download plugin</a>
 				<p><a href="guide.html" data-page-translate="streamdeck-controls-guide">Controls and troubleshooting</a></p>
+			</div>
+		</section>
+
+		<section class="card card-body overview" aria-labelledby="overview-title">
+			<div class="eyebrow" data-page-translate="streamdeck-overview-eyebrow">New here?</div>
+			<h2 id="overview-title" data-page-translate="streamdeck-overview-title">Watch the 2-minute overview</h2>
+			<p data-page-translate="streamdeck-overview-description">What the plugin can do, and how to set it up step by step.</p>
+			<div class="video-frame">
+				<video controls preload="none" playsinline crossorigin="anonymous" poster="https://cdn.jsdelivr.net/gh/steveseguin/ssn-streamdeck@media/ssn-streamdeck-thumbnail.jpg" aria-labelledby="overview-title">
+					<source src="https://cdn.jsdelivr.net/gh/steveseguin/ssn-streamdeck@media/ssn-streamdeck.mp4" type="video/mp4">
+					<track kind="captions" src="https://cdn.jsdelivr.net/gh/steveseguin/ssn-streamdeck@media/ssn-streamdeck.vtt" srclang="en" label="English">
+				</video>
 			</div>
 		</section>
 

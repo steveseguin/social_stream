@@ -7,14 +7,17 @@
 
 	var running = [];
 	var cleanups = new WeakMap();
+	var cleanupHosts = [];
 	function onStop(host, fn) {
 		var list = cleanups.get(host);
-		if (!list) { list = []; cleanups.set(host, list); }
+		if (!list) { list = []; cleanups.set(host, list); cleanupHosts.push(host); }
 		list.push(fn);
 	}
 	function dispose(host) {
 		var list = cleanups.get(host) || [];
 		cleanups.delete(host);
+		var index = cleanupHosts.indexOf(host);
+		if (index !== -1) { cleanupHosts.splice(index, 1); }
 		list.forEach(function (fn) { fn(); });
 	}
 	function releaseGL(host, gl) {
@@ -28,6 +31,15 @@
 	SSO.stopEngines = function (root) {
 		running.slice().forEach(function (entry) {
 			if (entry.host === root || root.contains(entry.host)) { entry.stop(); }
+		});
+	};
+
+	// Templates can own animation resources without starting a backdrop engine.
+	SSO.onCleanup = onStop;
+	SSO.cleanup = function (root) {
+		SSO.stopEngines(root);
+		cleanupHosts.slice().forEach(function (host) {
+			if (host === root || root.contains(host)) { dispose(host); }
 		});
 	};
 

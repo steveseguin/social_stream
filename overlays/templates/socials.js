@@ -389,7 +389,9 @@
 			{ key: "layout", label: "Labels", type: "select", group: "Layout", default: "below", options: [["below", "Below the line"], ["above", "Above the line"], ["alternate", "Alternate"], ["inline", "On the line (chips)"]] },
 			{ key: "spread", label: "Spacing", type: "select", group: "Layout", default: "even", options: [["even", "Spread out"], ["center", "Grouped in the middle"], ["start", "Grouped at the start"]] },
 			{ key: "extend", label: "Line runs edge to edge", type: "bool", group: "Layout", default: true },
-			{ key: "line", label: "Line style", type: "select", group: "Line", default: "solid", options: [["solid", "Solid"], ["dashed", "Dashed"], ["dotted", "Dotted"], ["double", "Double"], ["fade", "Fade at the ends"]] },
+			{ key: "line", label: "Line style", type: "select", group: "Line", default: "solid", options: [["solid", "Solid"], ["dashed", "Dashed"], ["dotted", "Dotted"], ["double", "Double"], ["fade", "Fade at the ends"], ["fairy", "Fairy lights (warm glow)"]] },
+			{ key: "bulb", label: "Bulb colour", type: "color", group: "Line", default: "ffc46b", show: { line: "fairy" } },
+			{ key: "sag", label: "How much the string sags", type: "range", group: "Line", default: 14, min: 0, max: 60, step: 1, show: { line: "fairy" } },
 			{ key: "linecolor", label: "Line colour", type: "color", group: "Line", default: "ffffff" },
 			{ key: "lineopacity", label: "Line opacity", type: "range", group: "Line", default: 0.6, min: 0.05, max: 1, step: 0.05 },
 			{ key: "linewidth", label: "Line thickness", type: "range", group: "Line", default: 2, min: 1, max: 10, step: 1 },
@@ -410,6 +412,8 @@
 			{ name: "Gold travelling light", tags: ["elegant"], values: { linecolor: "f5c451", lineopacity: 0.8, travel: true, node: "diamond", nodebg: "1a1405", fg: "f5e6c4", font: "Playfair Display", weight: "400", layout: "alternate" } },
 			{ name: "Chips on a dashed line", tags: ["simple", "cute"], values: { layout: "inline", line: "dashed", nodebg: "ffffff", fg: "111111", icons: "brand", font: "Poppins", fontsize: 16, shadow: false, spread: "even" } },
 			{ name: "Neon fade", tags: ["cyber"], values: { line: "fade", linecolor: "00e5ff", lineopacity: 1, node: "ring", fg: "e6fbff", font: "Orbitron", fontsize: 14, upper: true, travel: true } },
+			{ name: "Fairy lights", tags: ["cozy", "cute"], values: { line: "fairy", linecolor: "3a2f22", lineopacity: 0.9, linewidth: 2, node: "circle", nodebg: "2a2118", fg: "fff3dc", font: "Kalam", fontsize: 20, weight: "400", icons: "tint", spread: "even" } },
+			{ name: "Fairy lights (rose)", tags: ["cozy", "cute"], values: { line: "fairy", bulb: "ffb3c7", linecolor: "2b2b2b", node: "ring", nodebg: "1a1015", fg: "ffe6ee", font: "Fredoka", fontsize: 18, icons: "mono", sag: 22 } },
 			{ name: "Vertical sidebar", tags: ["simple"], values: { orient: "v", spread: "start", node: "square", icons: "brand", netlabel: true, fontsize: 16 } }
 		],
 		css: [
@@ -417,6 +421,9 @@
 			".sl.v{flex-direction:column;align-items:flex-start;padding:24px;}",
 			".sl.sp-even{justify-content:space-around;} .sl.sp-center{justify-content:center;} .sl.sp-start{justify-content:flex-start;}",
 			".sl-line{position:absolute;pointer-events:none;}",
+			".sl-fairy{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}",
+			".slf-b{animation:slf-tw ease-in-out infinite;}",
+			"@keyframes slf-tw{0%,100%{opacity:1}50%{opacity:.55}}",
 			".sl-node{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;margin:0 14px;}",
 			".sl.v .sl-node{flex-direction:row;margin:10px 0;}",
 			".sl-bub{display:flex;align-items:center;justify-content:center;flex-shrink:0;box-sizing:border-box;}",
@@ -488,6 +495,41 @@
 			});
 			root.appendChild(el);
 
+			var fairy = null;
+			if (c.line === "fairy" && !vertical) {
+				line.style.display = "none";
+				fairy = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+				fairy.setAttribute("class", "sl-fairy");
+				el.insertBefore(fairy, el.firstChild);
+			}
+			// String of warm fairy lights: sags between the icons, bulbs twinkle slowly (live-stream friendly).
+			function drawFairy(er, nodes) {
+				var W = er.width, pts = [];
+				var centers = [];
+				for (var n = 0; n < nodes.length; n++) { var r = nodes[n].getBoundingClientRect(); centers.push([r.left - er.left + r.width / 2, r.top - er.top + r.height / 2]); }
+				var y0 = centers[0][1];
+				var xs = (c.extend ? [0] : []).concat(centers.map(function (p) { return p[0]; })).concat(c.extend ? [W] : []);
+				var d = "M" + xs[0] + " " + y0;
+				for (var k = 1; k < xs.length; k++) {
+					var mid = (xs[k - 1] + xs[k]) / 2;
+					d += " Q" + mid + " " + (y0 + c.sag * 2) + " " + xs[k] + " " + y0;
+				}
+				var bulbCol = SSO.color(c.bulb);
+				var svg = '<defs><radialGradient id="slf-g"><stop offset="0" stop-color="' + bulbCol + '" stop-opacity=".9"/><stop offset=".35" stop-color="' + bulbCol + '" stop-opacity=".35"/><stop offset="1" stop-color="' + bulbCol + '" stop-opacity="0"/></radialGradient></defs>' +
+					'<path class="slf-wire" d="' + d + '" fill="none" stroke="' + SSO.rgba(c.linecolor, Math.max(0.35, c.lineopacity)) + '" stroke-width="' + Math.max(1, lw * 0.6) + '"/>';
+				fairy.setAttribute("width", W);
+				fairy.setAttribute("height", er.height);
+				fairy.innerHTML = svg;
+				var wire = fairy.querySelector(".slf-wire"), len = wire.getTotalLength(), step = Math.max(26, c.nodesize * 0.7), bulbs = "";
+				for (var at = step / 2, b = 0; at < len; at += step, b++) {
+					var p = wire.getPointAtLength(at);
+					var dur = (3.5 + (b * 1.7) % 3).toFixed(2), delay = ((b * 0.83) % 4).toFixed(2);
+					bulbs += '<g class="slf-b" style="animation-duration:' + dur + "s;animation-delay:-" + delay + 's"><circle cx="' + p.x.toFixed(1) + '" cy="' + (p.y + 5).toFixed(1) + '" r="' + (step * 0.55).toFixed(1) + '" fill="url(#slf-g)"/>' +
+						'<line x1="' + p.x.toFixed(1) + '" y1="' + p.y.toFixed(1) + '" x2="' + p.x.toFixed(1) + '" y2="' + (p.y + 3).toFixed(1) + '" stroke="' + SSO.color(c.linecolor) + '" stroke-width="2"/>' +
+						'<ellipse cx="' + p.x.toFixed(1) + '" cy="' + (p.y + 6).toFixed(1) + '" rx="2.6" ry="3.6" fill="#fff6e0"/></g>';
+				}
+				fairy.insertAdjacentHTML("beforeend", bulbs);
+			}
 			function place() {
 				var anchor = el.querySelector(".sl-bub, .sl-chip");
 				if (!anchor) { return; }
@@ -508,6 +550,7 @@
 					line.style.right = c.extend ? "0" : (er.right - last.right + last.width / 2) + "px";
 					if (travel) { travel.style.top = (y + lw / 2) + "px"; }
 				}
+				if (fairy) { drawFairy(er, nodes); }
 			}
 			SSO.fontsReady(place);
 			place();
