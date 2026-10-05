@@ -750,4 +750,3 @@
 	SSO.CATEGORIES.splice(SSO.CATEGORIES.length - 1, 0, { id: "music", label: "Music & DJ" });
 	SSO.VIBES.push(["music", "DJ / music"]);
 })();
-

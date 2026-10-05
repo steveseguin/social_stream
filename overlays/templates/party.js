@@ -124,7 +124,31 @@
 		{ n: "Rock Star", hat: "mohawk", hc: ["#ec4899", "#22c55e"], shirt: ["#111"], pants: "#111", prop: ["guitar"] },
 		{ n: "Tourist", hat: "sunhat", hc: ["#fde68a"], face: ["sunglasses"], shirt: ["#06b6d4"], floral: true, pants: "#fef3c7", prop: ["camera"] },
 		{ n: "Office Worker", hat: "", hair: 1, shirt: ["#ffffff"], tie: true, pants: "#1f2937", prop: ["coffee", "briefcase"] },
-		{ n: "Beekeeper", hat: "veil", hc: ["#f5f5f4"], shirt: ["#f5f5f4"], pants: "#f5f5f4", prop: ["honey"] }
+		{ n: "Beekeeper", hat: "veil", hc: ["#f5f5f4"], shirt: ["#f5f5f4"], pants: "#f5f5f4", prop: ["honey"] },
+		{ n: "Arcade Ghost", body: "ghost", gc: ["#ff3b3b", "#ffb8ff", "#00e5ff", "#ffb852"], prop: [""] },
+		{ n: "Magician", hat: "tophat", hc: ["#111"], shirt: ["#111"], tie: true, cape: ["#7f1d1d"], prop: ["wand"] },
+		{ n: "Leprechaun", hat: "tophat", hc: ["#15803d"], face: ["beard"], hairc: "#d24b2b", shirt: ["#15803d"], belt: true, pants: "#166534", small: true, prop: [""] },
+		{ n: "Construction Worker", hat: "hardhat", hc: ["#facc15"], shirt: ["#f97316"], pants: "#1e3a8a", prop: ["shovel", "coffee"] },
+		{ n: "Samurai", hat: "topknot", hc: ["#111"], shirt: ["#7f1d1d", "#1e3a8a"], robe: true, prop: ["sword"] },
+		{ n: "Archer", hat: "feather", hc: ["#15803d"], shirt: ["#15803d"], pants: "#4b3621", prop: ["bow"] },
+		{ n: "Referee", hat: "", hair: 1, stripes: true, shirt: ["#111"], pants: "#111", prop: ["whistle"] },
+		{ n: "Caveman", hat: "messy", hc: ["#3b2a1a"], face: ["beard"], shirt: ["#a16207"], torn: true, pants: "#a16207", prop: ["club"] },
+		{ n: "Pharaoh", hat: "nemes", hc: ["#facc15"], shirt: ["#f5f5f4"], robe: true, prop: ["staff"] },
+		{ n: "Cupid", hat: "", hair: 1, hairc: "#e8c26a", shirt: ["#fbcfe8"], small: true, prop: ["bow"] },
+		{ n: "Scuba Diver", hat: "goggles", hc: ["#0ea5e9"], shirt: ["#111"], pants: "#111", prop: ["flippers"] },
+		{ n: "Ghost Hunter", hat: "", hair: 1, shirt: ["#a3a380"], pants: "#a3a380", over: "#8a8a6a", prop: ["raygun"] },
+		{ n: "Mail Carrier", hat: "cap", hc: ["#1e3a8a"], shirt: ["#93c5fd"], pants: "#1e3a8a", prop: ["letter"] },
+		{ n: "Baker", hat: "chef", hc: ["#fff"], shirt: ["#fde68a"], pants: "#fff", prop: ["bread"] },
+		{ n: "Ballerina", hat: "bun", hc: ["#5b3a1e"], shirt: ["#f9a8d4"], robe: true, small: true, prop: [""] },
+		{ n: "Superhero Kid", hat: "", hair: 1, face: ["mask"], shirt: ["#ef4444", "#3b82f6"], cape: ["#facc15", "#ef4444"], small: true, prop: [""] },
+		{ n: "Easter Bunny", hat: "bunny", hc: ["#ffffff"], shirt: ["#fde68a"], pants: "#a7f3d0", prop: ["egg"] },
+		{ n: "Frankenstein-ish", hat: "flat", hc: ["#111"], skin: ["#86b07a"], shirt: ["#1f2937"], prop: [""] },
+		{ n: "Werewolf", hat: "ears", hc: ["#5b4636"], skin: ["#8b6f55"], face: ["beard"], hairc: "#5b4636", shirt: ["#7c5a3a"], torn: true, prop: [""] },
+		{ n: "Space Captain", hat: "", hair: 1, shirt: ["#facc15", "#3b82f6", "#ef4444"], emblem: true, pants: "#111", prop: ["raygun"] },
+		{ n: "Racer", hat: "racehelm", hc: ["#ef4444", "#3b82f6", "#22c55e"], shirt: ["#ef4444", "#3b82f6", "#22c55e"], pants: "#111", prop: ["trophy"] },
+		{ n: "Cheer Squad", hat: "bun", hc: ["#e8c26a"], shirt: ["#dc2626", "#2563eb"], robe: true, prop: ["pompom"] },
+		{ n: "Gardener", hat: "sunhat", hc: ["#fde68a"], shirt: ["#16a34a"], over: "#2563eb", prop: ["flower"] },
+		{ n: "DJ", hat: "headset", hc: ["#111"], face: ["sunglasses"], shirt: ["#111", "#7c3aed"], prop: ["vinyl"] }
 	];
 	var ADJ = ["Sleepy", "Confused", "Very Lost", "Fancy", "Grumpy", "Cheerful", "Tiny", "Suspicious", "Retired", "Undercover", "Clumsy", "Heroic", "Shy", "Overcaffeinated", "Lucky", "Dramatic", "Polite", "Legendary", "Part-time", "Off-duty", "Wandering", "Hungry", "Brave-ish", "Sparkly", "Mysterious", "Jolly", "Spooky", "Chill", "Speedy", "Noble"];
 	var ACTIONS = ["wave", "jump", "spin", "dance", "trip", "nap", "moonwalk", "juggle", "selfie", "lookaround", "shout", "dab", "stretch", "sneeze"];
@@ -150,8 +174,8 @@
 			case "axe": case "pickaxe": return at('<rect x="-1" y="-20" width="2.5" height="22" fill="#7c4a1e"/>' + (p === "axe" ? '<path d="M1 -20 l8 2 -2 8 -6 -2z" fill="#9ca3af"/>' : '<path d="M-9 -20 Q0 -26 9 -20" stroke="#67e8f9" stroke-width="3" fill="none"/>'));
 			case "magnifier": return at('<circle cx="0" cy="-8" r="5" fill="rgba(147,197,253,.5)" stroke="#78350f" stroke-width="2"/><rect x="2" y="-4" width="2" height="8" fill="#78350f" transform="rotate(-30)"/>');
 			case "flask": return at('<path d="M-2 -14 h4 v5 l5 9 h-14 l5 -9z" fill="#4ade80" stroke="#e5e7eb"/>');
-			case "present": case "sack": case "honey": case "carrot": case "discoball": case "trumpet": case "parrot": case "wrench": case "raygun": case "scepter": case "lasso": case "pan": case "hose": case "shovel": case "map": case "cane": case "pipe": case "briefcase": case "bell":
-				var em = { present: "🎁", sack: "🎒", honey: "🍯", carrot: "🥕", discoball: "🪩", trumpet: "🎺", parrot: "🦜", wrench: "🔧", raygun: "🔫", scepter: "🪄", lasso: "➰", pan: "🍳", hose: "🧯", shovel: "⛏️", map: "🗺️", cane: "🦯", pipe: "🪈", briefcase: "💼", bell: "🔔" }[p];
+			case "present": case "sack": case "honey": case "carrot": case "discoball": case "trumpet": case "parrot": case "wrench": case "raygun": case "scepter": case "lasso": case "pan": case "hose": case "shovel": case "map": case "cane": case "pipe": case "briefcase": case "bell": case "bow": case "whistle": case "club": case "flippers": case "letter": case "bread": case "egg": case "trophy": case "pompom": case "flower": case "vinyl":
+				var em = { present: "🎁", sack: "🎒", honey: "🍯", carrot: "🥕", discoball: "🪩", trumpet: "🎺", parrot: "🦜", wrench: "🔧", raygun: "🔫", scepter: "🪄", lasso: "➰", pan: "🍳", hose: "🧯", shovel: "⛏️", map: "🗺️", cane: "🦯", pipe: "🪈", briefcase: "💼", bell: "🔔", bow: "🏹", whistle: "📯", club: "🦴", flippers: "🤿", letter: "✉️", bread: "🥖", egg: "🥚", trophy: "🏆", pompom: "🎀", flower: "🌻", vinyl: "💿" }[p];
 				return '<text x="' + (x - 7) + '" y="' + (y + 2) + '" font-size="14">' + em + "</text>";
 			default: return "";
 		}
@@ -168,6 +192,7 @@
 			'<g class="pc-leg pc-l2"><rect x="31" y="66" width="8" height="28" rx="3" fill="' + pants + '"/><rect x="29" y="91" width="12" height="6" rx="3" fill="#1f2937"/></g>';
 		var arm = function (cls, x) { return '<g class="pc-arm ' + cls + '"><rect x="' + x + '" y="42" width="6" height="22" rx="3" fill="' + shirt + '"/><circle cx="' + (x + 3) + '" cy="64" r="3.5" fill="' + skin + '"/></g>'; };
 		if (body === "ghost") {
+			if (t.gc) { var gcol = pick(t.gc); return '<path d="M12 96 C12 40 18 16 30 16 C42 16 48 40 48 96 L43 90 L38 96 L33 90 L28 96 L23 90 L18 96 Z" fill="' + gcol + '"/><ellipse cx="24" cy="38" rx="5" ry="6" fill="#fff"/><ellipse cx="37" cy="38" rx="5" ry="6" fill="#fff"/><circle cx="26" cy="39" r="2.6" fill="#1d4ed8"/><circle cx="39" cy="39" r="2.6" fill="#1d4ed8"/>'; }
 			return '<path d="M12 96 C12 40 18 16 30 16 C42 16 48 40 48 96 L43 90 L38 96 L33 90 L28 96 L23 90 L18 96 Z" fill="rgba(255,255,255,.92)" stroke="rgba(0,0,0,.15)"/><ellipse cx="25" cy="38" rx="3" ry="4.5" fill="#111"/><ellipse cx="36" cy="38" rx="3" ry="4.5" fill="#111"/><ellipse cx="30.5" cy="49" rx="3" ry="4" fill="#111"/>';
 		}
 		if (body === "snowman") {
@@ -263,6 +288,17 @@
 			afro: '<circle cx="30" cy="14" r="17" fill="' + hc + '" opacity=".95"/>',
 			mohawk: '<path d="M26 14 L28 -4 L30 12 L32 -4 L34 14z" fill="' + hc + '"/>',
 			sunhat: '<ellipse cx="30" cy="16" rx="22" ry="5" fill="' + hc + '"/><path d="M20 16 C20 6 40 6 40 16z" fill="' + hc + '"/><rect x="20" y="13" width="20" height="3" fill="#f472b6"/>',
+			tophat: '<rect x="17" y="13" width="26" height="4" rx="1" fill="' + hc + '"/><rect x="21" y="-6" width="18" height="20" fill="' + hc + '"/><rect x="21" y="9" width="18" height="3" fill="#dc2626"/>',
+			hardhat: '<path d="M15 21 C15 7 45 7 45 21z" fill="' + hc + '"/><rect x="12" y="19" width="36" height="4" rx="2" fill="' + hc + '"/><rect x="28" y="8" width="4" height="12" fill="rgba(0,0,0,.15)"/>',
+			topknot: '<path d="M16 22 C16 8 44 8 44 22z" fill="' + hc + '"/><ellipse cx="30" cy="6" rx="4" ry="6" fill="' + hc + '"/>',
+			feather: '<path d="M16 20 L30 6 L46 20z" fill="' + hc + '"/><path d="M40 14 q10 -14 14 -12 q-4 6 -14 12z" fill="#dc2626"/>',
+			messy: '<path d="M15 24 l2 -10 4 3 2 -8 5 5 3 -8 3 7 5 -5 1 8 4 -2 -1 10z" fill="' + hc + '"/>',
+			nemes: '<path d="M15 26 C15 6 45 6 45 26 L50 44 L42 40 L42 24 L18 24 L18 40 L10 44z" fill="' + hc + '"/><path d="M15 16 h30 M13 30 h6 M41 30 h6 M12 36 h7 M41 36 h7" stroke="#1e3a8a" stroke-width="2"/>',
+			goggles: '<rect x="18" y="20" width="24" height="9" rx="4" fill="rgba(186,230,253,.6)" stroke="' + hc + '" stroke-width="2.5"/><path d="M44 22 q6 -2 6 8" stroke="#facc15" stroke-width="3" fill="none"/>',
+			bun: '<path d="M16 24 C16 10 44 10 44 24 C44 18 16 18 16 24z" fill="' + hc + '"/><circle cx="30" cy="9" r="6" fill="' + hc + '"/>',
+			flat: '<rect x="16" y="10" width="28" height="9" fill="' + hc + '"/><rect x="13" y="30" width="4" height="4" fill="#9ca3af"/><rect x="43" y="30" width="4" height="4" fill="#9ca3af"/><path d="M22 19 l2 3 l2 -3 l2 3 l2 -3" stroke="#111" fill="none"/>',
+			ears: '<path d="M18 18 L16 2 L26 13z M42 18 L44 2 L34 13z" fill="' + hc + '"/><path d="M17 20 C17 10 43 10 43 20z" fill="' + hc + '"/>',
+			racehelm: '<circle cx="30" cy="25" r="16" fill="' + hc + '"/><rect x="18" y="20" width="26" height="9" rx="4" fill="#111"/><path d="M14 18 h32" stroke="#fff" stroke-width="2"/>',
 			veil: '<ellipse cx="30" cy="14" rx="18" ry="4" fill="' + hc + '"/><path d="M14 14 h32 v20 h-32z" fill="rgba(255,255,255,.35)"/>'
 		};
 		if (t.hat === "afro") { s = s.replace('<circle cx="30" cy="26" r="13"', H.afro + '<circle cx="30" cy="26" r="13"'); }
@@ -270,6 +306,7 @@
 		s += prop(p, 50, 62);
 		return s;
 	}
+	SSO.parade = { types: TYPES, character: character };
 
 	SSO.register({
 		id: "parade",
@@ -335,7 +372,7 @@
 			".pc-bub.on{transform:scale(1);}",
 			".pc-fx{position:absolute;left:50%;bottom:105%;transform:translateX(-50%);font-size:1.4em;}"
 		].join("\n"),
-		render: function (root, c) {
+		render: function (root, c, ctx) {
 			SSO.loadFont(c.font);
 			var stage = document.createElement("div");
 			stage.className = "pd";
@@ -349,10 +386,10 @@
 				stage.appendChild(gr);
 			}
 			var themes = {
-				spooky: ["Ghost", "Witch", "Vampire", "Zombie", "Mummy", "Skeleton", "Pumpkin Head", "Masked Slasher", "Wizard"],
-				holiday: ["Santa", "Elf", "Snowman", "Reindeer", "Gnome", "Bunny Suit", "Pumpkin Head"],
-				heroes: ["Caped Hero", "Masked Vigilante", "Knight", "Ninja", "Pirate", "Wizard", "Viking", "Astronaut", "Space Marine", "Firefighter"],
-				gamers: ["Plumber", "Pixel Hero", "Block Builder", "Gamer", "Space Marine", "Robot", "Knight", "Skater"]
+				spooky: ["Ghost", "Arcade Ghost", "Frankenstein-ish", "Werewolf", "Ghost Hunter", "Witch", "Vampire", "Zombie", "Mummy", "Skeleton", "Pumpkin Head", "Masked Slasher", "Wizard"],
+				holiday: ["Santa", "Elf", "Snowman", "Reindeer", "Gnome", "Bunny Suit", "Pumpkin Head", "Easter Bunny", "Leprechaun", "Cupid"],
+				heroes: ["Caped Hero", "Superhero Kid", "Samurai", "Archer", "Space Captain", "Masked Vigilante", "Knight", "Ninja", "Pirate", "Wizard", "Viking", "Astronaut", "Space Marine", "Firefighter"],
+				gamers: ["Plumber", "Arcade Ghost", "Racer", "Pixel Hero", "Block Builder", "Gamer", "Space Marine", "Robot", "Knight", "Skater"]
 			};
 			var pool = c.theme && themes[c.theme] ? TYPES.filter(function (t) { return themes[c.theme].indexOf(t.n) !== -1; }) : TYPES;
 			// Remember who already walked by (for ~6 hours) so repeats are rare.
@@ -369,9 +406,10 @@
 				var t2 = rand(pool);
 				return { t: t2, seed: Math.random() * 1e9, adj: rand(ADJ), act: rand(ACTIONS) };
 			}
-			var walkers = 0;
-			function spawn() {
-				if (walkers >= c.count) { return; }
+			var walkers = 0, alive = true;
+			SSO.onCleanup(root, function () { alive = false; });
+			function spawn(startAt) {
+				if (!alive || walkers >= c.count) { return; }
 				walkers++;
 				var pick = freshKey(), W = stage.clientWidth || 1280, fromLeft = Math.random() < 0.5;
 				var size = c.size * (pick.t.small ? 0.75 : 1);
@@ -382,10 +420,11 @@
 					(c.names ? '<div class="pc-name">' + esc(pick.adj + " " + pick.t.n) + "</div>" : "") + '<div class="pc-bub"></div>';
 				stage.appendChild(el);
 				var inner = el.querySelector(".pc-in"), bub = el.querySelector(".pc-bub");
-				var x = fromLeft ? -size : W + size, dir = fromLeft ? 1 : -1, speed = size * 0.55 * c.speed;
-				var actAt = W * (0.25 + Math.random() * 0.5), acted = false, pause = 0, last = performance.now();
+				var x = startAt != null ? W * startAt : fromLeft ? -size : W + size, dir = fromLeft ? 1 : -1, speed = size * 0.55 * c.speed;
+				var actAt = W * (0.25 + Math.random() * 0.5), acted = startAt != null && Math.random() < 0.5, pause = 0, last = performance.now();
 				var flip = function (d) { inner.style.transform = d > 0 ? "" : "scaleX(-1)"; };
 				(function step(now) {
+					if (!alive) { return; }
 					var dt = Math.min(0.05, (now - last) / 1000); last = now;
 					if (pause > 0) { pause -= dt; }
 					else {
@@ -400,13 +439,14 @@
 						if (act === "nap") { el.insertAdjacentHTML("beforeend", '<div class="pc-fx">💤</div>'); }
 						if (act === "juggle") { el.insertAdjacentHTML("beforeend", '<div class="pc-fx">🔴🟡🔵</div>'); }
 						if (act === "selfie") { el.insertAdjacentHTML("beforeend", '<div class="pc-fx">📸</div>'); }
-						if (act === "lookaround") { flip(-dir); setTimeout(function () { flip(dir); }, 1400); }
+						if (act === "lookaround") { flip(-dir); setTimeout(function () { if (alive) { flip(dir); } }, 1400); }
 						if (act === "sneeze") { el.insertAdjacentHTML("beforeend", '<div class="pc-fx">💨</div>'); }
 						if (c.talk && (act === "shout" || act === "wave" || Math.random() < 0.4)) {
 							bub.textContent = rand(SAY); bub.className = "pc-bub on";
-							setTimeout(function () { bub.className = "pc-bub"; }, 2600);
+							setTimeout(function () { if (alive) { bub.className = "pc-bub"; } }, 2600);
 						}
 						setTimeout(function () {
+							if (!alive) { return; }
 							var fx = el.querySelector(".pc-fx"); if (fx) { fx.parentNode.removeChild(fx); }
 							el.className = "pc walk" + (c.names ? " named" : "");
 						}, dur * 1000);
@@ -416,7 +456,7 @@
 					requestAnimationFrame(step);
 				})(last);
 			}
-			spawn();
+			if (ctx && ctx.preview) { for (var p0 = 0; p0 < c.count; p0++) { spawn((p0 + 0.5) / c.count); } } else { spawn(); }
 			setInterval(spawn, Math.max(2, c.gap) * 1000);
 		}
 	});
@@ -447,7 +487,7 @@
 			var cv = document.createElement("canvas");
 			cv.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;";
 			root.appendChild(cv);
-			var g = cv.getContext("2d"), parts = [], sparks = [];
+			var g = cv.getContext("2d"), sparks = [];
 			var pal = { warm: [[255, 240, 180], [255, 150, 30], [220, 40, 10]], blue: [[220, 240, 255], [80, 160, 255], [30, 60, 200]], green: [[230, 255, 200], [90, 255, 90], [20, 140, 40]], purple: [[255, 220, 255], [200, 100, 255], [90, 20, 180]] }[c.color];
 			function fit() { var d = Math.min(window.devicePixelRatio || 1, 2); cv.width = (root.clientWidth || 420) * d; cv.height = (root.clientHeight || 320) * d; }
 			fit(); window.addEventListener("resize", fit);
@@ -456,8 +496,10 @@
 				if (c.style === "fireplace") { return [{ x: W * 0.42, y: H * 0.78, s: 0.8 }, { x: W * 0.58, y: H * 0.78, s: 0.8 }]; }
 				return [{ x: W * 0.5, y: H * 0.8, s: 1 }];
 			}
-			var last = performance.now();
+			var last = performance.now(), frameId, alive = true;
+			SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); window.removeEventListener("resize", fit); });
 			(function frame(now) {
+				if (!alive) { return; }
 				var dt = Math.min(0.05, (now - last) / 1000); last = now;
 				var W = cv.width, H = cv.height, src = sources(W, H), base = Math.min(W, H) * 0.13 * c.intensity;
 				g.clearRect(0, 0, W, H);
@@ -476,6 +518,14 @@
 						gl.addColorStop(0, "rgba(" + pal[1].join(",") + "," + fl + ")"); gl.addColorStop(1, "rgba(" + pal[1].join(",") + ",0)");
 						g.fillStyle = gl; g.beginPath(); g.arc(s.x, s.y - base * s.s, base * 3.2 * s.s, 0, 6.283); g.fill();
 					});
+				}
+				if (c.style === "fireplace") {
+					g.fillStyle = "#4a2e17";
+					g.fillRect(W * 0.32, H * 0.8, W * 0.36, H * 0.05);
+					g.fillStyle = "#5b3a1e";
+					g.fillRect(W * 0.35, H * 0.77, W * 0.3, H * 0.04);
+					g.fillStyle = "rgba(255,120,30,.5)";
+					g.fillRect(W * 0.34, H * 0.84, W * 0.32, H * 0.015);
 				}
 				if (c.style === "campfire") {
 					var s0 = src[0];
@@ -497,24 +547,35 @@
 						g.strokeStyle = "#222"; g.lineWidth = 2; g.beginPath(); g.moveTo(s.x, s.y + base * 0.15); g.lineTo(s.x, s.y + base * 0.05); g.stroke();
 					});
 				}
-				// flame particles
-				src.forEach(function (s) {
-					for (var k = 0; k < Math.round(4 * s.s * c.intensity) + 1; k++) {
-						parts.push({ x: s.x + (Math.random() - 0.5) * base * 0.8 * s.s, y: s.y, vx: (Math.random() - 0.5) * base * 0.3, vy: -base * (1.6 + Math.random()) * s.s, life: 1, r: base * (0.35 + Math.random() * 0.25) * s.s, cx: s.x });
-					}
-					if (c.sparks && Math.random() < dt * 3 * s.s) { sparks.push({ x: s.x, y: s.y - base * 0.5, vx: (Math.random() - 0.5) * base, vy: -base * (2 + Math.random() * 2), life: 1.5 + Math.random() }); }
+				// flames: layered tongues whose tips wobble, plus a few rising embers
+				var T = now / 1000;
+				src.forEach(function (s, si) {
+					if (c.sparks && Math.random() < dt * 3 * s.s) { sparks.push({ x: s.x, y: s.y - base * 0.5 * s.s, vx: (Math.random() - 0.5) * base, vy: -base * (2 + Math.random() * 2) * s.s, life: 1.5 + Math.random() }); }
+					var h = base * 2.4 * s.s, w = base * 1.3 * s.s;
+					var tongues = c.style === "candles" ? [[0, 1, 1]] : [[-0.32, 0.62, 0.55], [0.3, 0.7, 0.6], [-0.12, 0.85, 0.75], [0.12, 0.8, 0.7], [0, 1, 1]];
+					var layers = [[pal[2], 1, 0.75], [pal[1], 0.72, 0.85], [pal[0], 0.42, 0.95]];
+					layers.forEach(function (ly, li) {
+						tongues.forEach(function (tg, ti) {
+							var ph = si * 7.1 + ti * 2.3 + li * 0.7;
+							var hh = h * tg[1] * ly[1] * (0.86 + 0.14 * Math.sin(T * 7 + ph) + 0.06 * Math.sin(T * 13.7 + ph * 2));
+							var ww = w * tg[2] * ly[1];
+							var bx = s.x + tg[0] * w, by = s.y;
+							var tipx = bx + Math.sin(T * 3.1 + ph) * ww * 0.35 + Math.sin(T * 8.3 + ph) * ww * 0.12;
+							var gr = g.createLinearGradient(0, by, 0, by - hh);
+							gr.addColorStop(0, "rgba(" + ly[0].join(",") + "," + ly[2] + ")");
+							gr.addColorStop(0.6, "rgba(" + ly[0].join(",") + "," + (ly[2] * 0.75) + ")");
+							gr.addColorStop(1, "rgba(" + ly[0].join(",") + ",0)");
+							g.fillStyle = gr;
+							g.beginPath();
+							g.moveTo(bx - ww / 2, by);
+							g.bezierCurveTo(bx - ww / 2, by - hh * 0.45, tipx - ww * 0.1, by - hh * 0.7, tipx, by - hh);
+							g.bezierCurveTo(tipx + ww * 0.1, by - hh * 0.7, bx + ww / 2, by - hh * 0.45, bx + ww / 2, by);
+							g.quadraticCurveTo(bx, by + ww * 0.35, bx - ww / 2, by);
+							g.fill();
+						});
+					});
 				});
 				g.globalCompositeOperation = "lighter";
-				parts = parts.filter(function (p) {
-					p.life -= dt * 1.6; p.x += (p.vx + (p.cx - p.x) * 1.5) * dt; p.y += p.vy * dt;
-					if (p.life <= 0) { return false; }
-					var col = p.life > 0.7 ? pal[0] : p.life > 0.35 ? pal[1] : pal[2];
-					var rr = p.r * p.life;
-					var gr = g.createRadialGradient(p.x, p.y, 0, p.x, p.y, rr);
-					gr.addColorStop(0, "rgba(" + col.join(",") + "," + (0.55 * p.life) + ")"); gr.addColorStop(1, "rgba(" + col.join(",") + ",0)");
-					g.fillStyle = gr; g.beginPath(); g.arc(p.x, p.y, rr, 0, 6.283); g.fill();
-					return true;
-				});
 				sparks = sparks.filter(function (sp) {
 					sp.life -= dt; sp.x += sp.vx * dt + Math.sin(sp.life * 8) * 0.6; sp.y += sp.vy * dt;
 					g.fillStyle = "rgba(" + pal[1].join(",") + "," + Math.max(0, sp.life / 2) + ")";
@@ -522,7 +583,7 @@
 					return sp.life > 0;
 				});
 				g.globalCompositeOperation = "source-over";
-				requestAnimationFrame(frame);
+				frameId = requestAnimationFrame(frame);
 			})(last);
 		}
 	});
@@ -538,7 +599,7 @@
 		fields: [
 			{ key: "text", label: "Big text", type: "text", group: "Message", default: "WELCOME RAIDERS!" },
 			{ key: "sub", label: "Small text", type: "text", group: "Message", default: "make yourselves at home ♡" },
-			{ key: "style", label: "Style", type: "select", group: "Look", default: "slam", options: [["slam", "Slam in with a shockwave"], ["siren", "Siren lights"], ["neon", "Neon sign"], ["arcade", "Arcade announcement"], ["comic", "Comic burst"], ["elegant", "Elegant gold"], ["glitch", "Glitch"]] },
+			{ key: "style", label: "Style", type: "select", group: "Look", default: "slam", options: [["slam", "Slam in with a shockwave"], ["siren", "Siren lights"], ["neon", "Neon sign"], ["arcade", "Arcade announcement"], ["comic", "Comic burst"], ["elegant", "Elegant gold"], ["glitch", "Glitch"], ["ribbon", "Compact ribbon (lower third)"]] },
 			{ key: "rain", label: "Things falling", type: "select", group: "Look", default: "confetti", options: [["", "Nothing"], ["confetti", "Confetti"], ["money", "Money"], ["hearts", "Hearts"], ["stars", "Stars"], ["pizza", "Pizza"]] },
 			{ key: "stay", label: "Stay on screen (seconds, 0 = stay)", type: "number", group: "Timing", default: 8, min: 0, max: 600, step: 1 },
 			{ key: "every", label: "Repeat every (seconds, 0 = only when shown)", type: "number", group: "Timing", default: 0, min: 0, max: 3600, step: 5 },
@@ -559,6 +620,16 @@
 			{ name: "Lurkers, we see you", tags: ["cute"], values: { text: "LURKERS, WE SEE YOU 👀", sub: "and we appreciate you", style: "glitch", rain: "", font: "Rajdhani", fontsize: 90, color: "00e5ff", color2: "ff00e6" } },
 			{ name: "Thanks mods", tags: ["pro", "simple"], values: { text: "SHOUTOUT TO THE MODS", sub: "the real MVPs", style: "slam", rain: "stars", color: "22c55e", color2: "ffffff" } },
 			{ name: "GG", tags: ["gaming"], values: { text: "GG", sub: "good game everyone", style: "comic", rain: "confetti", font: "Bangers", fontsize: 220, color: "22d3ee", color2: "1e3a8a" } },
+			{ name: "Raid ribbon", tags: ["simple", "pro"], values: { text: "RAID INCOMING", sub: "say hi to our new friends!", style: "ribbon", rain: "", color: "e11d48", color2: "ffe4e6", font: "Rajdhani" } },
+			{ name: "Thank you for the raid", tags: ["cute", "gaming"], values: { text: "THANK YOU FOR THE RAID!", sub: "you're all legends", style: "slam", rain: "confetti", color: "7c3aed", color2: "facc15" } },
+			{ name: "Welcome new followers", tags: ["cute", "simple"], values: { text: "Welcome new followers!", sub: "glad you're here", style: "ribbon", rain: "hearts", color: "0ea5e9", color2: "e0f2fe", font: "Fredoka" } },
+			{ name: "Thanks for the subs", tags: ["gaming", "spicy"], values: { text: "THANK YOU FOR THE SUBS", sub: "the hype is real", style: "neon", rain: "stars", color: "a855f7", color2: "ffffff", font: "Audiowide", fontsize: 80 } },
+			{ name: "Thanks for the bits", tags: ["gaming"], values: { text: "THANKS FOR THE BITS!", sub: "you're a gem", style: "arcade", rain: "stars", font: "Press Start 2P", fontsize: 48, color: "c084fc", color2: "1e1b4b" } },
+			{ name: "Hype train", tags: ["gaming", "spicy"], values: { text: "ALL ABOARD THE HYPE TRAIN", sub: "choo choo!", style: "siren", rain: "confetti", font: "Black Ops One", fontsize: 80, color: "f97316", color2: "facc15" } },
+			{ name: "Make it rain", tags: ["spicy"], values: { text: "MAKE IT RAIN", sub: "thank you for the support", style: "slam", rain: "money", font: "Anton", fontsize: 140, color: "16a34a", color2: "facc15" } },
+			{ name: "You're amazing", tags: ["cute", "elegant"], values: { text: "you're amazing", sub: "thank you, truly", style: "elegant", rain: "hearts", font: "Pacifico", fontsize: 110, color: "f472b6", color2: "ffffff" } },
+			{ name: "Welcome back", tags: ["cozy", "simple"], values: { text: "WELCOME BACK", sub: "missed you, chat", style: "ribbon", rain: "", color: "111827", color2: "facc15", font: "Bebas Neue", fontsize: 130 } },
+			{ name: "First-time chatters", tags: ["cute"], values: { text: "FIRST TIME HERE?", sub: "say hi, we don't bite", style: "comic", rain: "confetti", font: "Bangers", color: "22d3ee", color2: "f472b6" } },
 			{ name: "Pizza party", tags: ["cute"], values: { text: "PIZZA PARTY", sub: "chat earned it", style: "comic", rain: "pizza", font: "Bangers", color: "ffb703", color2: "d62828" } }
 		],
 		css: [
@@ -598,6 +669,15 @@
 			"@keyframes so-glitch{0%{opacity:0}5%{opacity:1;transform:translate(10px,0) skewX(20deg)}10%{transform:translate(-8px,2px)}15%{transform:none}60%{transform:translate(4px,0) skewX(-10deg)}62%{transform:none}100%{opacity:1}}",
 			".so.out .so-box{opacity:0 !important;transition:opacity .8s;animation:none !important;}",
 			".so-drop{position:absolute;top:-10%;font-size:44px;animation:so-fall linear forwards;}",
+			".so-paper{display:block;width:.28em;height:.42em;border-radius:2px;animation:so-flip 1s ease-in-out infinite alternate;}",
+			"@keyframes so-flip{from{transform:rotateX(0) rotate(0)}to{transform:rotateX(180deg) rotate(90deg)}}",
+			".so.ribbon{align-items:flex-end;padding-bottom:6%;}",
+			".so.ribbon .so-box{display:flex;align-items:baseline;padding:.25em 1.4em .25em 1.2em;background:var(--c1);color:#fff;font-size:.42em;box-shadow:0 8px 24px rgba(0,0,0,.35);clip-path:polygon(0 0,100% 0,97% 50%,100% 100%,0 100%,3% 50%);}",
+			".so.ribbon .so-t{font-weight:800;}",
+			".so.ribbon .so-s{margin:0 0 0 .8em;font-size:.55em;color:var(--c2);text-shadow:none;letter-spacing:.04em;}",
+			".so.ribbon.on .so-box{animation:so-rib .9s cubic-bezier(.2,1.2,.3,1) both;}",
+			"@keyframes so-rib{from{transform:translateX(-120vw)}to{transform:none}}",
+			".so.ribbon.out .so-box{transition:transform .7s ease-in,opacity .7s;transform:translateX(120vw);}",
 			"@keyframes so-fall{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(130vh) rotate(540deg)}}"
 		].join("\n"),
 		render: function (root, c, ctx) {
@@ -613,12 +693,17 @@
 			function rain() {
 				var set = RAIN[c.rain];
 				if (!set) { return; }
-				for (var i = 0; i < 40; i++) {
+				for (var i = 0, n = c.rain === "confetti" ? 90 : 40; i < n; i++) {
 					var d = document.createElement("div");
 					d.className = "so-drop";
-					d.textContent = rand(set);
 					var dur = 3 + Math.random() * 3;
-					d.style.cssText += "left:" + (Math.random() * 100) + "%;font-size:" + (28 + Math.random() * 30) + "px;animation-duration:" + dur + "s;animation-delay:" + (Math.random() * 2) + "s;";
+					if (c.rain === "confetti") {
+						d.innerHTML = '<i class="so-paper" style="background:' + rand([SSO.color(c.color), SSO.color(c.color2), "#ffd400", "#ffffff", "#7c3aed", "#22c55e"]) + ";animation-duration:" + (0.6 + Math.random() * 0.8).toFixed(2) + 's"></i>';
+					} else { d.textContent = rand(set); }
+					d.style.left = (Math.random() * 100) + "%";
+					d.style.fontSize = (28 + Math.random() * 30) + "px";
+					d.style.animationDuration = dur + "s";
+					d.style.animationDelay = (Math.random() * 2).toFixed(2) + "s";
 					el.appendChild(d);
 					(function (node, t) { setTimeout(function () { if (node.parentNode) { node.parentNode.removeChild(node); } }, t); })(d, (dur + 2.2) * 1000);
 				}
@@ -636,6 +721,309 @@
 			play();
 			if (c.every > 0 || (ctx && ctx.preview)) { setInterval(play, Math.max(c.stay + 2, ctx && ctx.preview ? 10 : c.every) * 1000); }
 			if (c.onshow) { SSO.obs.on("obsSourceVisibleChanged", function (d) { if (d && d.visible) { play(); } }); SSO.obs.on("obsSourceActiveChanged", function (d) { if (d && d.active) { play(); } }); }
+		}
+	});
+
+	// ---------------------------------------------------------------- confetti / money rain
+	SSO.register({
+		id: "skyfall",
+		name: "Confetti & money rain",
+		category: "fun",
+		description: "Paper confetti, fluttering dollar bills, gold coins or petals drifting down — they tumble and flip like real paper. Runs gently all the time, or in short bursts.",
+		size: [1280, 720],
+		fields: [
+			{ key: "kind", label: "What falls", type: "select", group: "Rain", default: "confetti", options: [["confetti", "Confetti"], ["money", "Dollar bills"], ["coins", "Gold coins"], ["mixed", "Bills and coins"], ["snow", "Snowflakes"], ["petals", "Flower petals"], ["leaves", "Autumn leaves"], ["streamers", "Streamers"]] },
+			{ key: "amount", label: "How many", type: "range", group: "Rain", default: 40, min: 5, max: 300, step: 5 },
+			{ key: "speed", label: "Fall speed", type: "range", group: "Rain", default: 1, min: 0.3, max: 3, step: 0.1 },
+			{ key: "size", label: "Piece size", type: "range", group: "Rain", default: 1, min: 0.4, max: 3, step: 0.1 },
+			{ key: "mode", label: "When", type: "select", group: "Rain", default: "always", options: [["always", "All the time"], ["burst", "Bursts now and then"]] },
+			{ key: "every", label: "Burst every (seconds)", type: "number", group: "Rain", default: 60, min: 5, max: 3600, step: 5, show: { mode: "burst" } },
+			{ key: "onshow", label: "Burst when the OBS source is shown", type: "bool", group: "Rain", default: true, show: { mode: "burst" } },
+			{ key: "colors", label: "Confetti colours", type: "text", group: "Rain", default: "ff4d8d,ffd400,22d3ee,7c3aed,22c55e,ff7a00", show: { kind: ["confetti", "streamers"] } }
+		],
+		presets: [
+			{ name: "Confetti", tags: ["cute"], values: {} },
+			{ name: "Making it rain", tags: ["spicy", "gaming"], values: { kind: "money", amount: 50 } },
+			{ name: "Gold coins", tags: ["gaming", "retro"], values: { kind: "coins", amount: 35 } },
+			{ name: "Bills & coins burst", tags: ["spicy"], values: { kind: "mixed", mode: "burst", amount: 120, every: 90 } },
+			{ name: "Gold & white confetti", tags: ["elegant"], values: { colors: "f5d06f,ffffff,e8c37a,fff5c4", amount: 30, speed: 0.7 } },
+			{ name: "Sakura petals", tags: ["cozy", "cute", "elegant"], values: { kind: "petals", amount: 25, speed: 0.5 } },
+			{ name: "Autumn leaves", tags: ["cozy", "halloween"], values: { kind: "leaves", amount: 18, speed: 0.6, size: 1.3 } },
+			{ name: "Gentle snow", tags: ["cozy", "christmas"], values: { kind: "snow", amount: 120, speed: 0.6 } },
+			{ name: "Blizzard", tags: ["christmas"], values: { kind: "snow", amount: 300, speed: 1.6 } },
+			{ name: "Big soft flakes", tags: ["cozy", "christmas", "elegant"], values: { kind: "snow", amount: 50, speed: 0.4, size: 2 } },
+			{ name: "Falling leaves (heavy)", tags: ["cozy", "halloween"], values: { kind: "leaves", amount: 45, speed: 0.8, size: 1.6 } },
+			{ name: "Party streamers", tags: ["cute", "newyear"], values: { kind: "streamers", mode: "burst", amount: 60, every: 45 } },
+			{ name: "New year gold", tags: ["newyear", "elegant"], values: { colors: "f5d06f,c0c0c0,ffffff,111111", amount: 70 } }
+		],
+		render: function (root, c, ctx) {
+			var cv = document.createElement("canvas");
+			cv.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;";
+			root.appendChild(cv);
+			var g = cv.getContext("2d"), pieces = [], dpr = Math.min(window.devicePixelRatio || 1, 2);
+			function fit() { cv.width = (root.clientWidth || 1280) * dpr; cv.height = (root.clientHeight || 720) * dpr; }
+			fit(); window.addEventListener("resize", fit);
+			var cols = String(c.colors || "").split(/[ ,]+/).filter(Boolean).map(function (h) { return SSO.color(h); });
+			if (!cols.length) { cols = ["#ff4d8d", "#ffd400", "#22d3ee"]; }
+			var PET = ["#ffd1dc", "#ffc0cb", "#ffb7c5", "#fde2e8"], LEAF = ["#d9480f", "#e8590c", "#f08c00", "#c92a2a", "#a0522d", "#e67700"];
+			function make(top) {
+				var W = cv.width, H = cv.height, k = c.kind;
+				if (k === "mixed") { k = Math.random() < 0.6 ? "money" : "coins"; }
+				var depth = Math.random();
+				var s = dpr * c.size * (k === "money" ? 58 : k === "coins" ? 18 : k === "leaves" ? 22 : k === "snow" ? 2 + depth * depth * 9 : k === "petals" ? 9 : k === "streamers" ? 5 : 7) * (k === "snow" ? 1 : 0.8 + Math.random() * 0.4);
+				return { k: k, x: Math.random() * W, y: top ? -s * 3 - Math.random() * H * 0.3 : Math.random() * H, s: s,
+					vy: dpr * (k === "coins" ? 140 : k === "money" ? 55 : k === "snow" ? 18 + depth * 60 : 45) * c.speed * (0.7 + Math.random() * 0.6), depth: depth, li: Math.floor(Math.random() * 7),
+					sway: Math.random() * 6.283, swayS: 0.6 + Math.random() * 1.2, rot: Math.random() * 6.283, vr: (Math.random() - 0.5) * 3,
+					flip: Math.random() * 6.283, vf: 2 + Math.random() * 4,
+					col: k === "petals" ? PET[Math.floor(Math.random() * PET.length)] : k === "leaves" ? LEAF[Math.floor(Math.random() * LEAF.length)] : cols[Math.floor(Math.random() * cols.length)] };
+			}
+			if (c.mode === "always") { for (var i = 0; i < c.amount; i++) { pieces.push(make(false)); } }
+			function burst() { for (var i = 0; i < c.amount; i++) { pieces.push(make(true)); } }
+			if (c.mode === "burst") {
+				burst();
+				setInterval(burst, Math.max(5, ctx && ctx.preview ? 8 : c.every) * 1000);
+				if (c.onshow) { SSO.onCleanup(root, SSO.obs.on("obsSourceVisibleChanged", function (d) { if (d && d.visible) { burst(); } })); }
+			}
+			function shade(hex) { var m = /^#?([0-9a-f]{6})$/i.exec(hex); if (!m) { return hex; } var n = parseInt(m[1], 16); return "rgb(" + Math.round((n >> 16) * 0.7) + "," + Math.round(((n >> 8) & 255) * 0.7) + "," + Math.round((n & 255) * 0.7) + ")"; }
+			function bill(p) {
+				var w = p.s, h = p.s * 0.45;
+				g.fillStyle = "#8fbf86"; g.fillRect(-w / 2, -h / 2, w, h);
+				g.strokeStyle = "#3f6f3a"; g.lineWidth = Math.max(1, w * 0.04); g.strokeRect(-w / 2 + w * 0.06, -h / 2 + h * 0.12, w * 0.88, h * 0.76);
+				g.fillStyle = "#cfe5c9"; g.beginPath(); g.ellipse(0, 0, h * 0.3, h * 0.34, 0, 0, 6.283); g.fill();
+				g.fillStyle = "#2f5a2b"; g.font = "bold " + (h * 0.5) + "px Arial"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("$", 0, h * 0.03);
+				g.font = "bold " + (h * 0.26) + "px Arial"; g.fillText("100", -w * 0.33, -h * 0.22); g.fillText("100", w * 0.33, h * 0.24);
+			}
+			function coin(p) {
+				var r = p.s;
+				var gr = g.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r);
+				gr.addColorStop(0, "#fff3b0"); gr.addColorStop(0.5, "#f4c542"); gr.addColorStop(1, "#b8860b");
+				g.fillStyle = gr; g.beginPath(); g.arc(0, 0, r, 0, 6.283); g.fill();
+				g.strokeStyle = "#a0740a"; g.lineWidth = r * 0.12; g.beginPath(); g.arc(0, 0, r * 0.75, 0, 6.283); g.stroke();
+			}
+			function leaf(p) {
+				var s = p.s; g.fillStyle = p.col; g.beginPath(); g.moveTo(0, -s); g.quadraticCurveTo(s * 0.8, -s * 0.2, 0, s); g.quadraticCurveTo(-s * 0.8, -s * 0.2, 0, -s); g.fill();
+				g.strokeStyle = "rgba(0,0,0,.25)"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, -s); g.lineTo(0, s * 1.2); g.stroke();
+			}
+			var last = performance.now(), frameId, alive = true;
+			SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); window.removeEventListener("resize", fit); });
+			(function frame(now) {
+				if (!alive) { return; }
+				var dt = Math.min(0.05, (now - last) / 1000); last = now;
+				var H = cv.height, W = cv.width;
+				g.clearRect(0, 0, W, H);
+				for (var i = pieces.length - 1; i >= 0; i--) {
+					var p = pieces[i];
+					p.sway += p.swayS * dt; p.rot += p.vr * dt; p.flip += p.vf * dt;
+					p.y += p.vy * dt * (p.k === "money" ? 0.8 + 0.4 * Math.abs(Math.sin(p.flip)) : 1);
+					p.x += Math.sin(p.sway) * dpr * (p.k === "coins" ? 8 : p.k === "snow" ? 10 + p.depth * 25 : 40) * dt;
+					if (p.y > H + p.s * 4) {
+						if (c.mode === "always") { pieces[i] = make(true); } else { pieces.splice(i, 1); }
+						continue;
+					}
+					g.save(); g.translate(p.x, p.y); g.rotate(p.k === "coins" || p.k === "snow" && p.depth <= 0.85 ? 0 : p.rot);
+					var fy = Math.cos(p.flip);
+					if (p.k === "snow") {
+						var fs = SSO.flakeSprites ? SSO.flakeSprites() : null;
+						g.globalAlpha = 0.55 + p.depth * 0.4;
+						if (fs) { var fimg = p.depth > 0.85 && p.swayS > 1.4 ? fs[3] : fs[p.depth > 0.7 ? 2 : p.depth > 0.35 ? 1 : 0]; g.drawImage(fimg, -p.s, -p.s, p.s * 2, p.s * 2); }
+						else { g.fillStyle = "#fff"; g.beginPath(); g.arc(0, 0, p.s * 0.6, 0, 6.283); g.fill(); }
+						g.globalAlpha = 1;
+					}
+					else if (p.k === "coins") { g.scale(Math.max(0.12, Math.abs(fy)), 1); coin(p); }
+					else {
+						g.scale(1, Math.max(0.08, Math.abs(fy)));
+						if (p.k === "money") { bill(p); if (fy < 0) { g.fillStyle = "rgba(0,0,0,.12)"; g.fillRect(-p.s / 2, -p.s * 0.225, p.s, p.s * 0.45); } }
+						else if (p.k === "leaves") { if (SSO.leafSprites) { var ls = SSO.leafSprites(); g.drawImage(ls[p.li % ls.length], -p.s, -p.s, p.s * 2, p.s * 2); } else { leaf(p); } }
+						else if (p.k === "petals") { g.fillStyle = p.col; g.beginPath(); g.ellipse(0, 0, p.s, p.s * 0.6, 0, 0, 6.283); g.fill(); }
+						else if (p.k === "streamers") { g.strokeStyle = p.col; g.lineWidth = p.s * 0.6; g.beginPath(); g.moveTo(0, -p.s * 4); for (var q = 1; q <= 8; q++) { g.lineTo(Math.sin(q + p.sway * 3) * p.s, -p.s * 4 + q * p.s); } g.stroke(); }
+						else { g.fillStyle = fy < 0 ? shade(p.col) : p.col; g.fillRect(-p.s / 2, -p.s * 0.35, p.s, p.s * 0.7); }
+					}
+					g.restore();
+				}
+				frameId = requestAnimationFrame(frame);
+			})(last);
+		}
+	});
+
+	// ---------------------------------------------------------------- fairy-light garland
+	function quad(a, m, b, t) { return (1 - t) * (1 - t) * a + 2 * (1 - t) * t * m + t * t * b; }
+	SSO.register({
+		id: "garland",
+		name: "Fairy-light garland",
+		category: "fun",
+		description: "A string of warm fairy lights draped across the top (or bottom) of your screen, softly twinkling. Pure decoration — no text.",
+		size: [1280, 160],
+		sizeFor: function (c) { return [1280, Math.round(60 + c.sag * 1.6)]; },
+		fields: [
+			{ key: "loops", label: "Swags across", type: "range", group: "Lights", default: 3, min: 1, max: 8, step: 1 },
+			{ key: "sag", label: "Droop", type: "range", group: "Lights", default: 50, min: 5, max: 200, step: 5 },
+			{ key: "bulbs", label: "Bulbs per swag", type: "range", group: "Lights", default: 12, min: 4, max: 40, step: 1 },
+			{ key: "bulb", label: "Bulb", type: "select", group: "Lights", default: "fairy", options: [["fairy", "Tiny fairy lights"], ["globe", "Round globes"], ["xmas", "Classic Christmas bulbs"]] },
+			{ key: "colors", label: "Colours (comma separated)", type: "text", group: "Lights", default: "ffc46b" },
+			{ key: "wire", label: "Wire colour", type: "color", group: "Lights", default: "3a2f22" },
+			{ key: "twinkle", label: "Twinkle", type: "range", group: "Lights", default: 0.5, min: 0, max: 1, step: 0.05 },
+			{ key: "flip", label: "Run along the bottom instead", type: "bool", group: "Lights", default: false },
+			{ key: "leaves", label: "Greenery", type: "bool", group: "Lights", default: false }
+		],
+		presets: [
+			{ name: "Warm fairy lights", tags: ["cozy", "cute"], values: {} },
+			{ name: "Rainbow globes", tags: ["cute"], values: { bulb: "globe", colors: "ff6b6b,ffd93d,6bcb77,4d96ff,c77dff", bulbs: 9 } },
+			{ name: "Christmas bulbs", tags: ["christmas", "cozy"], values: { bulb: "xmas", colors: "e63946,2a9d8f,f4a261,457b9d,ffd166", leaves: true, wire: "1f3d1f", bulbs: 10 } },
+			{ name: "Cool white", tags: ["elegant", "simple"], values: { colors: "e8f4ff", wire: "8a8f99", loops: 4, sag: 35 } },
+			{ name: "Halloween lights", tags: ["halloween", "spooky"], values: { bulb: "globe", colors: "ff7a00,7c3aed,84cc16", wire: "111111", bulbs: 10 } },
+			{ name: "Bottom string", tags: ["cozy"], values: { flip: true, loops: 2, sag: 30 } }
+		],
+		render: function (root, c) {
+			var W = 1280, H = root.clientHeight || 160;
+			var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+			svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+			svg.setAttribute("preserveAspectRatio", "none");
+			svg.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;";
+			var cols = String(c.colors || "ffc46b").split(/[ ,]+/).filter(Boolean).map(function (h) { return SSO.color(h); });
+			var hang = c.flip ? -1 : 1, top = c.flip ? H - 10 : 8, low = top + Math.min(c.sag, H - 40) * 2 * hang;
+			var wires = "", glow = "", lights = "", sw = W / c.loops, k = 0;
+			for (var l = 0; l < c.loops; l++) {
+				var x0 = l * sw, x1 = x0 + sw, mx = x0 + sw / 2;
+				wires += '<path d="M' + x0 + " " + top + " Q" + mx + " " + low + " " + x1 + " " + top + '" stroke="' + SSO.color(c.wire) + '" stroke-width="2" fill="none"/>';
+				if (c.leaves) { for (var lf = 0; lf <= 12; lf++) { var lt = lf / 12, lx = quad(x0, mx, x1, lt), ly = quad(top, low, top, lt); wires += '<ellipse cx="' + lx + '" cy="' + ly + '" rx="13" ry="5" fill="' + (lf % 2 ? "#2f6b2f" : "#3d7f35") + '" transform="rotate(' + (lf * 47 % 180) + " " + lx + " " + ly + ')"/>'; } }
+				for (var b = 0; b < c.bulbs; b++) {
+					var t = (b + 0.5) / c.bulbs, x = quad(x0, mx, x1, t), y = quad(top, low, top, t);
+					var col = cols[k % cols.length];
+					var anim = c.twinkle > 0 ? ' style="animation:gl-tw ' + (2.5 + Math.random() * 3).toFixed(2) + "s ease-in-out " + (Math.random() * 4).toFixed(2) + 's infinite alternate"' : "";
+					if (c.bulb === "fairy") {
+						glow += '<circle cx="' + x + '" cy="' + (y + 3 * hang) + '" r="9" fill="' + col + '"' + anim + "/>";
+						lights += '<circle cx="' + x + '" cy="' + (y + 3 * hang) + '" r="3" fill="#fff8e6"/><circle cx="' + x + '" cy="' + (y + 3 * hang) + '" r="2.2" fill="' + col + '"' + anim + "/>";
+					} else if (c.bulb === "globe") {
+						glow += '<circle cx="' + x + '" cy="' + (y + 12 * hang) + '" r="18" fill="' + col + '"' + anim + "/>";
+						lights += '<rect x="' + (x - 3) + '" y="' + (y - (c.flip ? 6 : 0)) + '" width="6" height="6" fill="#555"/><circle cx="' + x + '" cy="' + (y + 12 * hang) + '" r="8" fill="' + col + '"' + anim + '/><circle cx="' + (x - 2.5) + '" cy="' + (y + 9 * hang) + '" r="2.2" fill="rgba(255,255,255,.7)"/>';
+					} else {
+						var slope = (quad(top, low, top, Math.min(1, t + 0.01)) - y) / (quad(x0, mx, x1, Math.min(1, t + 0.01)) - x || 1);
+						var rot = (Math.atan(slope) * 57.3 * 0.7 + (c.flip ? 180 : 0)).toFixed(1);
+						glow += '<circle cx="' + x + '" cy="' + (y + 16 * hang) + '" r="17" fill="' + col + '"' + anim + "/>";
+						lights += '<g transform="rotate(' + rot + " " + x + " " + y + ')"><rect x="' + (x - 3.5) + '" y="' + y + '" width="7" height="7" rx="1" fill="#2d4a2d"/><path d="M' + (x - 5) + " " + (y + 7) + " Q" + (x - 7) + " " + (y + 20) + " " + x + " " + (y + 25) + " Q" + (x + 7) + " " + (y + 20) + " " + (x + 5) + " " + (y + 7) + 'z" fill="' + col + '"' + anim + "/></g>";
+					}
+					k++;
+				}
+			}
+			svg.innerHTML = '<defs><filter id="gl-b" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="5"/></filter></defs>' + wires + '<g filter="url(#gl-b)" opacity=".85">' + glow + "</g>" + lights;
+			SSO.addStyle("@keyframes gl-tw{from{opacity:1}to{opacity:" + (1 - c.twinkle * 0.85).toFixed(2) + "}}", "gl-css");
+			root.appendChild(svg);
+		}
+	});
+
+	// ---------------------------------------------------------------- nap corner
+	var COATS = {
+		orange: ["#f4a64a", "#d9822b", "#fff1dc"], black: ["#2a2a2e", "#151518", "#3a3a40"], grey: ["#9aa0a8", "#6f757d", "#e5e7eb"], white: ["#f7f7f5", "#d9d9d4", "#ffffff"],
+		calico: ["#f7f3ea", "#e08a3c", "#2b2b2b"], golden: ["#e3b46a", "#c08a3e", "#f6e2b8"], beagle: ["#f2f0ea", "#a8692f", "#2e2a26"], husky: ["#8d949c", "#4b5157", "#f5f5f5"], chocolate: ["#7b4a2a", "#5a341c", "#a8724d"]
+	};
+	SSO.napPetSVG = function (kind, coat) { return napPet(kind, coat); };
+	function napPet(kind, coat) {
+		var k = COATS[coat] || COATS[kind === "dog" ? "golden" : "orange"], a = k[0], b = k[1], belly = k[2];
+		var patch = coat === "calico" ? '<ellipse cx="78" cy="58" rx="16" ry="10" fill="' + b + '"/><ellipse cx="112" cy="70" rx="12" ry="8" fill="' + belly + '"/>' : coat === "beagle" ? '<ellipse cx="96" cy="56" rx="28" ry="13" fill="' + belly + '"/>' : "";
+		var stripes = coat === "orange" || coat === "grey" ? '<path d="M70 52 q6 -6 12 0 M88 46 q6 -6 12 0 M106 48 q6 -6 12 0" stroke="' + b + '" stroke-width="4" fill="none" stroke-linecap="round"/>' : "";
+		if (kind === "dog") {
+			return '<g class="np-breathe"><ellipse cx="95" cy="72" rx="58" ry="26" fill="' + a + '"/>' + patch +
+				'<path d="M150 74 q22 -4 20 -18" stroke="' + a + '" stroke-width="10" fill="none" stroke-linecap="round" class="np-tail"/>' +
+				'<ellipse cx="70" cy="90" rx="22" ry="7" fill="' + a + '"/><ellipse cx="54" cy="91" rx="9" ry="6" fill="' + belly + '"/></g>' +
+				'<g class="np-head"><ellipse cx="46" cy="72" rx="26" ry="20" fill="' + a + '"/><ellipse cx="26" cy="80" rx="15" ry="10" fill="' + belly + '"/><ellipse cx="14" cy="77" rx="5" ry="4" fill="#2b2420"/>' +
+				'<path d="M34 70 q5 3 10 0 M50 68 q5 3 10 0" stroke="#2b2420" stroke-width="2.4" fill="none" stroke-linecap="round"/>' +
+				'<path class="np-ear" d="M58 56 q18 -2 16 28 q-12 2 -18 -10z" fill="' + b + '"/></g>';
+		}
+		return '<g class="np-breathe"><ellipse cx="95" cy="70" rx="56" ry="28" fill="' + a + '"/>' + patch + stripes +
+			'<path d="M148 78 C170 86 150 104 100 98 C80 96 64 96 54 92" stroke="' + a + '" stroke-width="11" fill="none" stroke-linecap="round" class="np-tail"/>' +
+			(coat === "orange" || coat === "grey" ? '<path d="M120 97 v-10 M108 98 v-10" stroke="' + b + '" stroke-width="4"/>' : "") + "</g>" +
+			'<g class="np-head"><ellipse cx="50" cy="72" rx="26" ry="21" fill="' + a + '"/><path class="np-ear" d="M32 60 L30 38 L46 54z" fill="' + a + '"/><path d="M58 54 L72 40 L70 62z" fill="' + a + '"/>' +
+			'<path d="M33 56 L32 45 L41 54z" fill="#f4a5b5"/><ellipse cx="44" cy="82" rx="11" ry="7" fill="' + belly + '"/>' +
+			'<path d="M36 72 q5 4 10 0 M54 72 q5 4 10 0" stroke="#2b2420" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M48 79 l3 3 3 -3z" fill="#e58b9b"/>' +
+			'<path d="M30 80 l-14 -2 M30 83 l-14 2 M66 80 l14 -2 M66 83 l14 2" stroke="rgba(255,255,255,.6)" stroke-width="1"/></g>';
+	}
+	SSO.register({
+		id: "napcorner",
+		name: "Nap corner",
+		category: "pets",
+		description: "A cat or dog curled up asleep in a basket, on a cushion or by a little fire. Slow breathing, the odd ear twitch and drifting Zzz — calm enough to leave on all stream.",
+		size: [420, 300],
+		fields: [
+			{ key: "pet", label: "Pet", type: "select", group: "Pet", default: "cat", options: [["cat", "Cat"], ["dog", "Dog"], ["both", "Cat and dog"]] },
+			{ key: "coat", label: "Cat colours", type: "select", group: "Pet", default: "orange", options: [["orange", "Orange tabby"], ["black", "Black"], ["grey", "Grey tabby"], ["white", "White"], ["calico", "Calico"]], show: { pet: ["cat", "both"] } },
+			{ key: "dogcoat", label: "Dog colours", type: "select", group: "Pet", default: "golden", options: [["golden", "Golden"], ["beagle", "Beagle"], ["husky", "Husky"], ["chocolate", "Chocolate"], ["black", "Black"]], show: { pet: ["dog", "both"] } },
+			{ key: "bed", label: "Bed", type: "select", group: "Scene", default: "basket", options: [["basket", "Wicker basket"], ["cushion", "Round cushion"], ["box", "Cardboard box"], ["rug", "Rug"], ["", "Nothing"]] },
+			{ key: "extra", label: "Next to it", type: "select", group: "Scene", default: "", options: [["", "Nothing"], ["candle", "A candle"], ["mug", "Steaming mug"], ["plant", "Plant"]] },
+			{ key: "lights", label: "Fairy lights above", type: "bool", group: "Scene", default: false },
+			{ key: "zzz", label: "Floating Zzz", type: "bool", group: "Scene", default: true },
+			{ key: "label", label: "Little sign (optional)", type: "text", group: "Scene", default: "" },
+			SSO.f.font("Kalam"),
+			{ key: "fontsize", label: "Sign text size", type: "range", group: "Scene", default: 18, min: 10, max: 48, step: 1 }
+		],
+		presets: [
+			{ name: "Cat in a basket", tags: ["cozy", "cute"], values: {} },
+			{ name: "Pup on a cushion", tags: ["cozy", "cute"], values: { pet: "dog", bed: "cushion", extra: "mug" } },
+			{ name: "Black cat, candle", tags: ["cozy", "spooky", "halloween"], values: { coat: "black", bed: "rug", extra: "candle" } },
+			{ name: "Box cat", tags: ["cute", "simple"], values: { coat: "grey", bed: "box", label: "do not disturb" } },
+			{ name: "Best friends", tags: ["cozy", "cute"], values: { pet: "both", coat: "calico", dogcoat: "beagle", bed: "rug", lights: true } },
+			{ name: "Fairy-light nap", tags: ["cozy", "christmas"], values: { coat: "white", bed: "cushion", lights: true, extra: "plant" } },
+			{ name: "Husky nap, lurk mode", tags: ["cozy"], values: { pet: "dog", dogcoat: "husky", bed: "rug", label: "lurk mode: on" } }
+		],
+		css: [
+			".np{position:absolute;left:0;top:0;right:0;bottom:0;}",
+			".np svg{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;}",
+			".np-breathe{animation:np-br 4.2s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%;}",
+			"@keyframes np-br{0%,100%{transform:scale(1,1)}50%{transform:scale(1.015,1.06)}}",
+			".np-head{animation:np-hd 4.2s ease-in-out infinite;}",
+			"@keyframes np-hd{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.2px)}}",
+			".np-ear{animation:np-ear 11s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%;}",
+			"@keyframes np-ear{0%,90%,94%,100%{transform:rotate(0)}92%{transform:rotate(-14deg)}}",
+			".np-tail{animation:np-tl 9s ease-in-out infinite;transform-box:fill-box;transform-origin:0 50%;}",
+			"@keyframes np-tl{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-6deg)}90%{transform:rotate(3deg)}}",
+			".np-z{position:absolute;color:#fffbe8;font-weight:700;text-shadow:0 0 2px rgba(0,0,0,.7),0 2px 6px rgba(0,0,0,.45);opacity:0;animation:np-z 6s ease-out infinite;}",
+			"@keyframes np-z{0%{opacity:0;transform:translate(0,0) scale(.6)}20%{opacity:.95}100%{opacity:0;transform:translate(30px,-70px) scale(1.2)}}",
+			".np-sign{position:absolute;left:50%;bottom:4%;transform:translateX(-50%) rotate(-2deg);background:#fdf6e3;color:#4a3a2a;padding:.2em .7em;border-radius:6px;box-shadow:0 3px 8px rgba(0,0,0,.3);white-space:nowrap;}",
+			".np-flame{animation:np-fl 1.8s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:50% 100%;}",
+			"@keyframes np-fl{0%{transform:scale(1,1) skewX(0)}50%{transform:scale(.92,1.08) skewX(3deg)}100%{transform:scale(1.04,.95) skewX(-2deg)}}",
+			".np-steam{animation:np-st 4s ease-in-out infinite;opacity:0;}",
+			"@keyframes np-st{0%{opacity:0;transform:translateY(0)}40%{opacity:.6}100%{opacity:0;transform:translateY(-14px)}}",
+			".np-bulb{animation:np-bl 3s ease-in-out infinite alternate;}",
+			"@keyframes np-bl{from{opacity:1}to{opacity:.45}}"
+		].join("\n"),
+		render: function (root, c) {
+			SSO.loadFont(c.font);
+			var el = document.createElement("div");
+			el.className = "np";
+			el.style.cssText = "font-family:" + SSO.fontStack(c.font) + ";font-size:" + c.fontsize + "px;";
+			var s = '<svg viewBox="0 0 420 300"><defs><radialGradient id="np-sh"><stop offset="0" stop-color="rgba(0,0,0,.35)"/><stop offset="1" stop-color="rgba(0,0,0,0)"/></radialGradient>' +
+				'<pattern id="np-wk" width="12" height="8" patternUnits="userSpaceOnUse"><rect width="12" height="8" fill="#b9874b"/><path d="M0 4 q3 -4 6 0 t6 0" stroke="#8a5f2c" stroke-width="2" fill="none"/></pattern></defs>';
+			if (c.lights) {
+				s += '<path d="M10 20 Q210 90 410 20" stroke="#3a2f22" stroke-width="2" fill="none"/>';
+				for (var i = 1; i < 14; i++) { var t = i / 14, x = 10 + 400 * t, y = (1 - t) * (1 - t) * 20 + 2 * (1 - t) * t * 90 + t * t * 20; s += '<circle class="np-bulb" style="animation-delay:' + (i * 0.37 % 3).toFixed(2) + 's" cx="' + x + '" cy="' + (y + 4) + '" r="4" fill="#ffc46b"/><circle cx="' + x + '" cy="' + (y + 4) + '" r="10" fill="#ffc46b" opacity=".25"/>'; }
+			}
+			s += '<ellipse cx="210" cy="262" rx="170" ry="16" fill="url(#np-sh)"/>';
+			var bx = c.extra ? 190 : 210;
+			if (c.bed === "rug") { s += '<ellipse cx="' + bx + '" cy="252" rx="160" ry="26" fill="#8a3b3b"/><ellipse cx="' + bx + '" cy="252" rx="140" ry="20" fill="none" stroke="#e8c37a" stroke-width="3" stroke-dasharray="8 6"/>'; }
+			if (c.bed === "cushion") { s += '<ellipse cx="' + bx + '" cy="240" rx="150" ry="34" fill="#7c6bd6"/><ellipse cx="' + bx + '" cy="232" rx="128" ry="22" fill="#9b8cf0"/>'; }
+			if (c.bed === "basket") { s += '<ellipse cx="' + bx + '" cy="214" rx="138" ry="24" fill="#6b4423"/><ellipse cx="' + bx + '" cy="216" rx="124" ry="18" fill="#e9dccb"/>'; }
+			if (c.bed === "box") { s += '<path d="M' + (bx - 130) + ' 200 h260 l-10 64 h-240z" fill="#c69a63"/><path d="M' + (bx - 130) + ' 200 l-26 -24 h70 l26 24z M' + (bx + 130) + ' 200 l26 -24 h-70 l-26 24z" fill="#b3854f"/>'; }
+			// pets
+			var place = function (kind, coat, x, y, sc, flip) { return '<g transform="translate(' + x + " " + y + ") scale(" + (flip ? -sc : sc) + " " + sc + ')">' + napPet(kind, coat) + "</g>"; };
+			var floorY = c.bed === "box" ? 98 : c.bed === "basket" ? 112 : 130, headX;
+			if (c.pet === "both") { s += place("dog", c.dogcoat, bx - 196, floorY + 20, 1.08, false) + place("cat", c.coat, bx + 196, floorY + 26, 0.98, true); headX = bx - 146; }
+			else { s += place(c.pet, c.pet === "dog" ? c.dogcoat : c.coat, bx - 120, floorY, 1.45, false); headX = bx - 50; }
+			if (c.bed === "basket") { s += '<path d="M' + (bx - 138) + ' 214 q0 46 30 52 h216 q30 -6 30 -52 q-138 30 -276 0z" fill="url(#np-wk)" stroke="#6b4423" stroke-width="2"/>'; }
+			if (c.bed === "box") { s += '<path d="M' + (bx - 130) + ' 222 h260 l-10 42 h-240z" fill="#c69a63"/><rect x="' + (bx - 30) + '" y="234" width="60" height="6" fill="#d9b483"/>'; }
+			if (c.extra === "candle") { s += '<rect x="370" y="200" width="22" height="58" rx="3" fill="#f5ecd7"/><path d="M381 200 v-6" stroke="#222" stroke-width="2"/><circle cx="381" cy="186" r="22" fill="#ffb347" opacity=".18"/><path class="np-flame" d="M381 194 q-7 -8 0 -22 q7 14 0 22z" fill="#ffb347"/><path d="M381 192 q-3 -4 0 -10 q3 6 0 10z" fill="#fff3c4"/>'; }
+			if (c.extra === "mug") { s += '<rect x="360" y="222" width="36" height="38" rx="6" fill="#e05d5d"/><path d="M396 230 q14 2 0 20" stroke="#e05d5d" stroke-width="5" fill="none"/><path class="np-steam" d="M370 214 q-6 -8 0 -16 q6 -8 0 -16 M384 214 q-6 -8 0 -16 q6 -8 0 -16" stroke="rgba(255,255,255,.8)" stroke-width="3" fill="none" stroke-linecap="round"/>'; }
+			if (c.extra === "plant") { s += '<path d="M362 230 h40 l-6 34 h-28z" fill="#c2703a"/><path d="M382 230 q-30 -30 -14 -60 q8 30 14 60 q4 -44 26 -56 q-10 32 -26 56 q14 -24 30 -22 q-12 12 -30 22" fill="#3f8a3a"/>'; }
+			s += "</svg>";
+			el.innerHTML = s + (c.label ? '<div class="np-sign">' + esc(c.label) + "</div>" : "");
+			if (c.zzz) {
+				["z", "Z", "z"].forEach(function (z, i) {
+					var d = document.createElement("div");
+					d.className = "np-z";
+					d.textContent = z;
+					d.style.cssText = "left:" + (headX / 4.2).toFixed(1) + "%;top:" + (c.bed === "box" ? 44 : 52) + "%;font-size:" + (18 + i * 6) + "px;animation-delay:" + (i * 2) + "s;";
+					el.appendChild(d);
+				});
+			}
+			root.appendChild(el);
 		}
 	});
 

@@ -17,7 +17,7 @@
 	}
 
 	// ---------------------------------------------------------------- socials list
-	var LIST_STYLES = [["clean", "Clean white text"], ["ink", "Dark text (for light scenes)"], ["pills", "Soft pills"], ["outline", "Outlined pills"], ["brand", "Brand-colour circles"], ["blocks", "Brand-colour blocks"], ["terminal", "Terminal"], ["hand", "Handwritten"], ["neon", "Neon"], ["glass", "Frosted glass card"], ["labels", "Small labels above"], ["pixel", "Pixel / retro"], ["serif", "Elegant serif"], ["stamp", "Sticker stamps"]];
+	var LIST_STYLES = [["clean", "Clean white text"], ["ink", "Dark text (for light scenes)"], ["pills", "Soft pills"], ["outline", "Outlined pills"], ["brand", "Brand-colour circles"], ["blocks", "Brand-colour blocks"], ["terminal", "Terminal"], ["hand", "Handwritten"], ["neon", "Neon"], ["glass", "Frosted glass card"], ["labels", "Small labels above"], ["pixel", "Pixel / retro"], ["serif", "Elegant serif"], ["stamp", "Sticker stamps"], ["plainwhite", "Plain white text (no shadow)"], ["plainblack", "Plain black text"], ["boxblack", "Black boxes"], ["boxwhite", "White boxes"], ["boxcolor", "Solid colour boxes (accent)"], ["contrast", "High contrast (yellow on black)"], ["compact", "Compact with dividers"]];
 	SSO.register({
 		id: "sociallist",
 		name: "Socials list",
@@ -56,7 +56,18 @@
 			{ name: "Elegant serif", tags: ["elegant"], values: { style: "serif", accent: "e8c37a", fontsize: 26 } },
 			{ name: "Sticker stamps", tags: ["cute", "punk"], values: { style: "stamp", layout: "grid" } },
 			{ name: "Row of pills", tags: ["simple"], values: { style: "pills", layout: "row", align: "center", fontsize: 20 } },
-			{ name: "Row, clean", tags: ["simple", "pro"], values: { layout: "row", align: "center", fontsize: 20, spotlight: true } }
+			{ name: "Row, clean", tags: ["simple", "pro"], values: { layout: "row", align: "center", fontsize: 20, spotlight: true } },
+			{ name: "Plain white, no shadow", tags: ["simple"], values: { style: "plainwhite", icons: "mono" } },
+			{ name: "Plain black text", tags: ["simple"], values: { style: "plainblack", icons: "mono" } },
+			{ name: "Black boxes", tags: ["simple", "pro"], values: { style: "boxblack", icons: "mono" } },
+			{ name: "White boxes", tags: ["simple", "pro"], values: { style: "boxwhite" } },
+			{ name: "Colour boxes", tags: ["simple", "cute"], values: { style: "boxcolor", accent: "7c3aed", icons: "mono" } },
+			{ name: "High contrast", tags: ["simple", "pro"], values: { style: "contrast", icons: "mono", font: "Montserrat" } },
+			{ name: "High contrast row", tags: ["simple", "pro"], values: { style: "contrast", icons: "mono", layout: "row", align: "center", fontsize: 18, gap: 0.2 } },
+			{ name: "Compact row with dividers", tags: ["simple", "pro"], values: { style: "compact", layout: "row", align: "center", fontsize: 16, icons: "mono" } },
+			{ name: "Compact row, brand icons", tags: ["simple"], values: { style: "compact", layout: "row", align: "center", fontsize: 16 } },
+			{ name: "Tiny black tags", tags: ["simple"], values: { style: "boxblack", layout: "row", align: "center", fontsize: 13, gap: 0.25, icons: "mono" } },
+			{ name: "Tiny white tags", tags: ["simple"], values: { style: "boxwhite", layout: "row", align: "center", fontsize: 13, gap: 0.25 } }
 		],
 		css: [
 			".sli{display:flex;flex-direction:column;}",
@@ -83,6 +94,13 @@
 			".sli.pixel{color:#fff;font-family:'Press Start 2P',monospace !important;text-shadow:3px 3px 0 #000;} .sli.pixel .sli-i:before{content:'[';color:var(--acc);margin-right:.3em;} .sli.pixel .sli-i:after{content:']';color:var(--acc);margin-left:.3em;}",
 			".sli.serif{color:#fff;font-family:'Playfair Display',serif !important;font-style:italic;text-shadow:0 2px 8px rgba(0,0,0,.6);} .sli.serif .sso-icon{color:var(--acc);}",
 			".sli.stamp .sli-i{padding:.4em .9em .4em .55em;background:#fff;color:#1a1a1a;border-radius:.5em;font-weight:800;box-shadow:0 0 0 3px #fff,0 0 0 5px rgba(0,0,0,.12),0 6px 14px rgba(0,0,0,.3);} .sli.stamp .sli-i:nth-child(odd){transform:rotate(-2deg);} .sli.stamp .sli-i:nth-child(even){transform:rotate(2deg);}",
+			".sli.plainwhite{color:#fff;} .sli.plainwhite .sli-t{font-weight:700;}",
+			".sli.plainblack{color:#000;} .sli.plainblack .sli-t{font-weight:700;}",
+			".sli.boxblack .sli-i{background:#000;color:#fff;padding:.35em .8em .35em .55em;border-radius:.25em;font-weight:700;}",
+			".sli.boxwhite .sli-i{background:#fff;color:#111;padding:.35em .8em .35em .55em;border-radius:.25em;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.2);}",
+			".sli.boxcolor .sli-i{background:var(--acc);color:var(--on);padding:.35em .8em .35em .55em;border-radius:.3em;font-weight:700;}",
+			".sli.contrast .sli-i{background:#000;color:#ffd400;padding:.3em .8em .3em .55em;font-weight:800;letter-spacing:.02em;}",
+			".sli.compact{color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.7);} .sli.compact .sli-i{margin:0;padding:0 .6em;} .sli.compact .sli-i+.sli-i{box-shadow:-1px 0 0 rgba(255,255,255,.35);} .sli.compact .sli-t{font-weight:600;}",
 			".sli-i.spot{transform:scale(1.06);} .sli.neon .sli-i.spot{text-shadow:0 0 6px #fff,0 0 18px var(--acc),0 0 40px var(--acc);}",
 			".sli-i.dim{opacity:.55;}"
 		].join("\n"),
@@ -95,7 +113,9 @@
 			var socials = SSO.parseSocials(c.socials);
 			var el = wrapIn(root, "sli " + c.style + " " + c.layout, c.align);
 			el.parentNode.style.alignItems = "center";
-			el.style.cssText = "--acc:" + SSO.color(c.accent) + ";--gap:" + c.gap + ";font-family:" + SSO.fontStack(font) + ";font-size:" + c.fontsize + "px;align-items:" + (c.layout === "column" ? c.align : "center") + ";justify-content:" + c.align + ";" + (c.fg ? "color:" + SSO.color(c.fg) + ";" : "");
+			var accHex = SSO.color(c.accent), accM = /^#([0-9a-f]{6})$/i.exec(accHex), accN = accM ? parseInt(accM[1], 16) : 0;
+			var onAcc = accM && (0.299 * (accN >> 16 & 255) + 0.587 * (accN >> 8 & 255) + 0.114 * (accN & 255)) > 160 ? "#111" : "#fff";
+			el.style.cssText = "--on:" + onAcc + ";--acc:" + SSO.color(c.accent) + ";--gap:" + c.gap + ";font-family:" + SSO.fontStack(font) + ";font-size:" + c.fontsize + "px;align-items:" + (c.layout === "column" ? c.align : "center") + ";justify-content:" + c.align + ";" + (c.fg ? "color:" + SSO.color(c.fg) + ";" : "");
 			el.innerHTML = (c.title ? '<div class="sli-h">' + esc(c.title) + "</div>" : "") + socials.map(function (s, i) {
 				var icon = c.style === "brand" ? '<span class="sli-ic" style="background:' + s.info.color + '">' + SSO.iconHTML(s.net, "mono") + "</span>" : SSO.iconHTML(s.net, icons);
 				var dark = /^#(e7e9ea|ffffff|53fc18|85c742|c7d5e0|fffc00|ffdd00|80f5d2)$/i.test(s.info.color);

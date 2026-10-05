@@ -161,3 +161,4 @@ for (const id of ['visualizer', 'bpm', 'decks', 'nowplaying', 'lasers', 'equaliz
  run(id);
  run(id, false);
 }
+

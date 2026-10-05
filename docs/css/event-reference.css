@@ -369,8 +369,7 @@ html {
     margin: 1.6rem 0;
     padding: 1.5rem 1.8rem;
     background: var(--events-warning-bg);
-    border: 1px solid var(--events-warning-border);
-    border-left-width: 4px;
+    border: 1px solid var(--events-border);
     border-radius: 10px;
     font-size: 1.5rem;
     line-height: 1.65;
@@ -378,12 +377,10 @@ html {
 
 .alert-note.alert-info {
     background: var(--events-info-bg);
-    border-color: var(--events-info-border);
 }
 
 .alert-note.alert-tip {
     background: var(--events-tip-bg);
-    border-color: var(--events-tip-border);
 }
 
 .field-table,
@@ -530,7 +527,7 @@ html {
     margin: 0 0 1.8rem;
     padding: 1.4rem 1.6rem 1.4rem 3.6rem;
     background: var(--events-surface-muted);
-    border-left: 3px solid var(--events-link);
+    border: 1px solid var(--events-border);
     border-radius: 8px;
     list-style: disc;
     text-align: start;
@@ -594,6 +591,112 @@ html {
 .back-to-top {
     margin-top: 2.2rem;
     text-align: right;
+}
+
+.event-table td:first-child code {
+    display: inline-block;
+    padding: 0.25rem 0.8rem;
+    border-radius: 999px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Persistent "On this page" sidebar (built by js/event-reference.js) for wide screens */
+.reference-sidebar {
+    display: none;
+}
+
+@media (min-width: 1560px) {
+    #event-reference.has-reference-sidebar {
+        display: grid;
+        grid-template-columns: 25rem minmax(0, 128rem);
+        justify-content: center;
+        column-gap: 3.2rem;
+        padding: 0 2.4rem;
+    }
+
+    #event-reference.has-reference-sidebar .events-container {
+        width: 100%;
+        margin: 0;
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    #event-reference.has-reference-sidebar .reference-index {
+        display: none;
+    }
+
+    #event-reference.has-reference-sidebar .events-container .reference-tools {
+        justify-content: flex-end;
+    }
+
+    .reference-sidebar {
+        display: block;
+        position: sticky;
+        top: 9.6rem;
+        align-self: start;
+        max-height: calc(100vh - 11.2rem);
+        margin-top: 11.2rem;
+        padding: 0.4rem 0.8rem 2rem 0;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        font-size: 1.4rem;
+    }
+
+    .reference-sidebar-title {
+        margin: 0 0 1.2rem;
+        color: var(--events-heading);
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .reference-sidebar-group {
+        margin: 1.8rem 0 0.6rem;
+        color: var(--events-muted);
+        font-size: 1.2rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+    }
+
+    .reference-sidebar ul {
+        display: block;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        text-align: start;
+    }
+
+    .reference-sidebar li {
+        display: block;
+        margin: 0;
+        padding: 0;
+    }
+
+    .reference-sidebar a {
+        display: block;
+        padding: 0.45rem 1rem;
+        border-radius: 6px;
+        color: var(--events-text);
+        line-height: 1.35;
+        text-align: start;
+        text-decoration: none;
+    }
+
+    .reference-sidebar a::after {
+        display: none;
+    }
+
+    .reference-sidebar a:hover {
+        color: var(--events-link-hover);
+        background: var(--events-row-hover);
+    }
+
+    .reference-sidebar a[aria-current] {
+        color: var(--events-link);
+        background: var(--events-surface-muted);
+        font-weight: 700;
+    }
 }
 
 @media (max-width: 900px) {

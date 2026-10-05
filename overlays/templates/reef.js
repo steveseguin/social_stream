@@ -200,7 +200,7 @@
 			}
 			build();
 			window.addEventListener("resize", build);
-			var t0 = performance.now(), last = t0, alive = true;
+			var t0 = performance.now(), last = t0, alive = true, frameId;
 			(function frame(now) {
 				if (!alive) { return; }
 				var dt = Math.min(0.05, (now - last) / 1000) * (o.speed || 1); last = now;
@@ -252,9 +252,9 @@
 				});
 				// foreground fish
 				fish.forEach(function (f) { if (f.depth <= 0.5) { drawFish(g, f); } });
-				requestAnimationFrame(frame);
+				frameId = requestAnimationFrame(frame);
 			})(performance.now());
-			return { stop: function () { alive = false; } };
+			return { stop: function () { alive = false; cancelAnimationFrame(frameId); window.removeEventListener("resize", build); } };
 		}
 	});
 

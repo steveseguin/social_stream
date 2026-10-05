@@ -9,7 +9,7 @@
 	<meta property="og:title" content="Overlay Studio - Social Stream Ninja">
 	<meta property="og:description" content="Free stream overlays you can customize and drop into OBS as a browser source.">
 	<link rel="icon" href="../favicon.ico">
-	<link rel="stylesheet" href="studio.css?v=5">
+	<link rel="stylesheet" href="studio.css?v=10">
 </head>
 <body>
 	<header class="top">
@@ -65,26 +65,29 @@
 		<a href="../docs/overlay-gallery.html"><b>Chat overlays & alerts</b><span>The full SSN overlay gallery.</span></a>
 	</div>
 
-	<script src="core.js?v=5"></script>
-	<script src="templates/countries.js?v=5"></script>
-	<script src="templates/engines.js?v=5"></script>
-	<script src="templates/socials.js?v=5"></script>
-	<script src="templates/text.js?v=5"></script>
-	<script src="templates/gaming.js?v=5"></script>
-	<script src="templates/time.js?v=5"></script>
-	<script src="templates/scenes.js?v=5"></script>
-	<script src="templates/maps.js?v=5"></script>
-	<script src="templates/fun.js?v=5"></script>
-	<script src="templates/obs.js?v=5"></script>
-	<script src="templates/pets.js?v=5"></script>
-	<script src="templates/extra.js?v=5"></script>
-	<script src="templates/themes.js?v=5"></script>
-	<script src="templates/music.js?v=5"></script>
-	<script src="templates/promo.js?v=5"></script>
-	<script src="templates/live.js?v=5"></script>
-	<script src="templates/games.js?v=5"></script>
-	<script src="templates/reef.js?v=5"></script>
-	<script src="templates/kaiju.js?v=5"></script>
+	<script src="core.js?v=11"></script>
+	<script src="templates/countries.js?v=10"></script>
+	<script src="templates/engines.js?v=11"></script>
+	<script src="templates/socials.js?v=11"></script>
+	<script src="templates/text.js?v=10"></script>
+	<script src="templates/gaming.js?v=10"></script>
+	<script src="templates/time.js?v=11"></script>
+	<script src="templates/scenes.js?v=11"></script>
+	<script src="templates/maps.js?v=11"></script>
+	<script src="templates/fun.js?v=10"></script>
+	<script src="templates/obs.js?v=11"></script>
+	<script src="templates/pets.js?v=10"></script>
+	<script src="templates/extra.js?v=11"></script>
+	<script src="templates/themes.js?v=10"></script>
+	<script src="templates/music.js?v=11"></script>
+	<script src="templates/promo.js?v=10"></script>
+	<script src="templates/live.js?v=10"></script>
+	<script src="templates/games.js?v=11"></script>
+	<script src="templates/reef.js?v=11"></script>
+	<script src="templates/kaiju.js?v=10"></script>
+	<script src="templates/party.js?v=11"></script>
+	<script src="templates/cozy.js?v=11"></script>
+	<script src="templates/themebar.js?v=11"></script>
 	<script>
 	(function () {
 		var $ = function (id) { return document.getElementById(id); };
@@ -238,7 +241,8 @@
 				var a = document.createElement("a");
 				a.className = "card";
 				a.href = "editor.html?" + card.query;
-				a.innerHTML = '<div class="thumb bg-' + bg + '"></div><div class="meta"><div><div class="name"></div><div class="sub"></div></div><span class="btn small">Customize</span></div>';
+				a.innerHTML = '<div class="thumb"></div><div class="meta"><div><div class="name"></div><div class="sub"></div></div><span class="btn small">Customize</span></div>';
+				a.querySelector(".thumb").className = "thumb bg-" + bg;
 				a.querySelector(".name").textContent = card.preset.name;
 				var sub = a.querySelector(".sub");
 				sub.textContent = card.def.name;
