@@ -909,20 +909,19 @@ if (typeof chrome.runtime == "undefined") {
 			const sender = args[1] || { tab: { id: null } };
 			const captureReply = args[2];
 			if (captureReply && args[0] && args[0].message) {
-				sender.ssappCaptureReply = true;
-				let response;
-				// Complete capture before releasing its callback: a source can delete
-				// the row immediately on receiving its MID.
+				let replied = false;
+				// Like Chrome, acknowledge the assigned MID before slow processing.
+				// Pending moderation prevents a deleted message from being relayed later.
 				handleRuntimeMessage(args[0], sender, function (value) {
-					response = value;
-					ipcRenderer.send("fromBackgroundResponse", value);
-				}).then(function () {
-					if (response && response.id === undefined && args[0].message.id !== undefined) {
-						response.id = args[0].message.id;
+					if (value && value.id === undefined && args[0].message.id !== undefined) {
+						value.id = args[0].message.id;
 					}
-					ipcRenderer.send("fromBackgroundResponse", response, captureReply);
+					replied = true;
+					ipcRenderer.send("fromBackgroundResponse", value);
+					ipcRenderer.send("fromBackgroundResponse", value, captureReply);
 				}).catch(function (error) {
-					ipcRenderer.send("fromBackgroundResponse", { error: error.message }, captureReply);
+					if (!replied) ipcRenderer.send("fromBackgroundResponse", { error: error.message }, captureReply);
+					else console.warn("[SSApp] Capture processing failed", error);
 				});
 				return;
 			}
@@ -5596,6 +5595,30 @@ function routeIndividualLikeEvent(message, alreadyRouted) {
 	};
 }
 
+// Only captures still being processed are retained; completed messages need no tombstone cache.
+const pendingModeratedCaptures = new Set();
+function cancelPendingModeratedCaptures(deletion) {
+	if (!["youtube", "youtubeshorts", "twitch", "kick"].includes(deletion.type)) return;
+	const matches = [];
+	pendingModeratedCaptures.forEach(function (pending) {
+		const message = pending.message;
+		if (message.type !== deletion.type) return;
+		const nativeId = deletion.meta && deletion.meta.messageId;
+		if (nativeId) {
+			if (String(message.meta && message.meta.messageId) !== String(nativeId)) return;
+		} else if (deletion.id) {
+			if (String(message.id) !== String(deletion.id)) return;
+		} else if (deletion.userid) {
+			if (String(message.userid) !== String(deletion.userid)) return;
+		} else if (deletion.type === "twitch" && deletion.meta && deletion.meta.pluralmind && deletion.username) {
+			if (message.username !== deletion.username) return;
+		} else if (deletion.chatname && message.chatname !== deletion.chatname) return;
+		matches.push(pending);
+	});
+	if (deletion.onlyLast && !deletion.id && !(deletion.meta && deletion.meta.messageId)) matches.splice(0, Math.max(0, matches.length - 1));
+	matches.forEach(function (pending) { pending.cancelled = true; });
+}
+
 async function processIncomingMessage(message, sender = null) {
 	// Carry chatmessage and textonly together through processing: true is a literal string,
 	// false/missing may be HTML. Ingestion does not itself prove HTML has been sanitized.
@@ -5731,25 +5754,32 @@ async function processIncomingMessage(message, sender = null) {
 			noteTabActivity(tabIdForActivity, message);
 		}
 
+		const pendingCapture = ["youtube", "youtubeshorts", "twitch", "kick"].includes(message.type)
+			? { message: Object.assign({}, message), cancelled: false } : null;
+		if (pendingCapture) pendingModeratedCaptures.add(pendingCapture);
 		try {
-			message = await applyBotActions(message, sender?.tab); // perform any immediate actions
-		} catch (e) {
-			console.warn(e);
-		}
-		if (!message) {
-			return message;
-		}
+			try {
+				message = await applyBotActions(message, sender?.tab); // perform any immediate actions
+			} catch (e) {
+				console.warn(e);
+			}
+			if (!message || (pendingCapture && pendingCapture.cancelled)) {
+				return message;
+			}
 
-		try {
-			message = await window.eventFlowSystem.processMessage(message); // perform any immediate actions
-		} catch (e) {
-			console.warn(e);
-		}
-		if (!message) {
-			return message;
-		}
+			try {
+				message = await window.eventFlowSystem.processMessage(message); // perform any immediate actions
+			} catch (e) {
+				console.warn(e);
+			}
+			if (!message || (pendingCapture && pendingCapture.cancelled)) {
+				return message;
+			}
 
-		await sendToDestinations(message, individualLikeRouting.routed); // send the data to the dock
+			await sendToDestinations(message, individualLikeRouting.routed, pendingCapture); // send the data to the dock
+		} finally {
+			if (pendingCapture) pendingModeratedCaptures.delete(pendingCapture);
+		}
 	}
 	return message;
 }
@@ -6432,6 +6462,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if ("delete" in request) {
 			sendResponse({ state: isExtensionOn });
 			if (isExtensionOn && (request.delete.type || request.delete.chatname || request.delete.id)) {
+				cancelPendingModeratedCaptures(request.delete);
 				sendToDestinations({ delete: request.delete });
 			}
 		} else if ("liveStats" in request) {
@@ -6449,6 +6480,17 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			} else {
 				sendResponse({ state: isExtensionOn });
 			}
+			// Return the allocated MID independently of slow processing/callback timeouts.
+			// This existing tab reply also supports old SSApp; duplicate replies are ignored by the source.
+			if ((request.message.type === "youtube" || request.message.type === "youtubeshorts") &&
+				typeof request.youtubeMessageRequestId === "string" && request.youtubeMessageRequestId.length <= 100 &&
+				sender && sender.tab && sender.tab.id !== undefined && Number.isSafeInteger(request.message.id)) {
+				Promise.resolve(chrome.tabs.sendMessage(sender.tab.id, {
+					youtubeMessageResponse: { requestId: request.youtubeMessageRequestId, id: request.message.id }
+				}, function () { chrome.runtime.lastError; })).catch(function (error) {
+					console.warn("[YouTube] Could not return captured message MID", error);
+				});
+			}
 			if (request.target) {
 				if (isExtensionOn) {
 					sendTargetP2P(request.message, request.target);
@@ -6456,18 +6498,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			} else {
 				var letsGo = await processIncomingMessage(request.message, sender);
 			}
-			// Legacy SSApp versions cannot return the background's MID through the
-			// original callback. Opt-in YouTube captures use the existing tab channel.
-			// Reply after processing so a held deletion cannot overtake the message.
-			if ((request.message.type === "youtube" || request.message.type === "youtubeshorts") &&
-				typeof request.youtubeMessageRequestId === "string" && request.youtubeMessageRequestId.length <= 100 &&
-				sender && !sender.ssappCaptureReply && sender.tab && sender.tab.id !== undefined && Number.isSafeInteger(request.message.id)) {
-				Promise.resolve(chrome.tabs.sendMessage(sender.tab.id, {
-					youtubeMessageResponse: { requestId: request.youtubeMessageRequestId, id: request.message.id }
-				}, function () { chrome.runtime.lastError; })).catch(function (error) {
-					console.warn("[YouTube] Could not return captured message MID", error);
-				});
-			}
+
 		} else if ("messages" in request) {
 			// Handle batch messages from YouTube and TikTok
 			sendResponse({ state: isExtensionOn });
@@ -7005,6 +7036,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				sendResponse({
 					ok: false,
 					status: error && typeof error.status !== "undefined" ? error.status : undefined,
+					retryAfter: error && error.retryAfter,
 					error: error && error.message ? error.message : "Rumble fetch failed"
 				});
 			}
@@ -8010,7 +8042,7 @@ function hasTargetedMetaPayload(message) {
 	return true;
 }
 
-async function sendToDestinations(message, individualLikeAlreadyRouted) {
+async function sendToDestinations(message, individualLikeAlreadyRouted, pendingCapture) {
 
 	if (typeof message == "object") {
 		captureLiveStatsFromMessage(message);
@@ -8173,6 +8205,9 @@ async function sendToDestinations(message, individualLikeAlreadyRouted) {
 			}
 		}
 	}
+
+	// Emote/pronoun/translation lookups can also yield before the first relay.
+	if (pendingCapture && pendingCapture.cancelled) return false;
 
 	if (message && typeof message === "object" && typeof sanitizeRelayPayloadFields === "function") {
 		message = sanitizeRelayPayloadFields(message) || message;
@@ -12040,6 +12075,12 @@ async function fetchRumbleJsonResponse(url) {
 			Accept: "application/json,text/plain;q=0.9,*/*;q=0.8"
 		}
 	});
+	if (rumbleResponse.status === 429) {
+		const rateLimitError = new Error("Rate limited by Rumble (HTTP 429). Backing off.");
+		rateLimitError.status = rumbleResponse.status;
+		rateLimitError.retryAfter = rumbleResponse.headers.get("Retry-After");
+		throw rateLimitError;
+	}
 	const responseText = await rumbleResponse.text();
 	let responseJson = {};
 	try {

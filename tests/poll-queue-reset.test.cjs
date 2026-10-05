@@ -14,7 +14,7 @@ assert.ok(start >= 0 && end > start, 'poll core extraction anchors exist');
 
 function element() {
     return {
-        children: [], style: {}, classList: { add() {}, remove() {} },
+        children: [], style: { setProperty() {} }, classList: { add() {}, remove() {}, toggle() {} },
         appendChild(child) { this.children.push(child); return child; },
         set innerHTML(value) { this.html = value; this.children = []; },
         get innerHTML() { return this.html || ''; }
@@ -30,7 +30,7 @@ function fixture(query = '?pollType=freeform&pollEnabled=true') {
     const context = vm.createContext({
         window: { location: { search: query } }, URLSearchParams, console, Date: Clock,
         setTimeout(callback, delay = 0) { timers.push({ callback, due: now + delay }); },
-        document: { getElementById(id) { return elements[id]; }, createElement: element, createDocumentFragment: element },
+        document: { body: element(), documentElement: element(), getElementById(id) { return elements[id]; }, createElement: element, createDocumentFragment: element },
         SocialStreamTransportDedupe: { create() { return () => false; } },
         SSNOverlayControl: { createStateTracker() { return () => null; }, accept() { return true; } },
         getDonationValueUSD(data) { return typeof data.donoValue === 'number' ? data.donoValue : 0; }
@@ -155,3 +155,4 @@ test('unchanged core settings do not discard queued votes', () => {
     f.advance(25);
     assert.deepEqual(f.state(), { results: { current: 1 }, totalVotes: 1 });
 });
+

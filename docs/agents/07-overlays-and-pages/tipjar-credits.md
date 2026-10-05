@@ -100,6 +100,8 @@ Hype mode:
 | `subpoints` | Points for subscriptions/memberships; default `2.5`. |
 | `giftpoints` | Points per gift; defaults to `subpoints`. |
 | `donationpoints` | Multiplier for donation value in hype mode; default `1`. |
+| `followpoints` | Points per `new_follower` event (Twitch/Kick follows, public YouTube subscribers via the API source); default `0` (ignored). |
+| `followergoal` or `goalmetric=followers` | Follower-goal preset: hype mode with `followpoints=1`, `subpoints=0`, tips off unless `donationpoints` is set, unit `followers`, title `Follower Goal`, no reset on completion. |
 | `notips`, `nosubs`, `nogifts`, `noresubs` | Exclude specific contribution classes. |
 | `excludegiftpurchase` | Excludes YouTube gifted-membership purchase events before Tip Jar/Hype processing. |
 | `countgiftredemptions` | Count gift-recipient events where available. |

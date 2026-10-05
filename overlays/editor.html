@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Overlay Editor - Social Stream Ninja</title>
+	<meta name="description" content="Customize a static stream overlay and copy its OBS browser source link.">
+	<link rel="icon" href="../favicon.ico">
+	<link rel="stylesheet" href="studio.css?v=10">
+</head>
+<body>
+	<header class="top">
+		<a class="brand" href="https://socialstream.ninja/"><img src="../icons/logo.svg" alt="">Social Stream Ninja</a>
+		<a class="link" href="index.html" style="margin-left:0">← Overlay Studio</a>
+		<span class="spacer"></span>
+	</header>
+	<div class="ed">
+		<aside class="ed-side">
+			<select class="tpl" id="tpl" aria-label="Overlay type"></select>
+			<h2 id="name"></h2>
+			<p class="desc" id="desc"></p>
+			<form id="form" autocomplete="off" onsubmit="return false"></form>
+			<fieldset class="presets-box"><legend>Try another style</legend><div class="presets" id="presets"></div></fieldset>
+		</aside>
+		<main class="ed-main">
+			<div class="ed-tools">
+				<div class="grp"><label for="w">OBS size</label><input type="number" id="w" min="50" max="7680"><span class="x">×</span><input type="number" id="h" min="20" max="4320"></div>
+				<div class="grp"><label for="bg">Preview on</label>
+					<select id="bg">
+						<option value="game">Game background</option>
+						<option value="dark">Dark</option>
+						<option value="light">Light</option>
+						<option value="checker">Checkerboard</option>
+					</select>
+				</div>
+				<button class="btn small" id="replay" type="button">Replay</button>
+				<div class="grp obs-test" title="Pretend OBS sent an event, to see how the overlay reacts">
+					<label>Test OBS:</label>
+					<button class="btn small" type="button" data-obs="obsSceneChanged">Scene change</button>
+					<button class="btn small" type="button" data-obs="obsStreamingStarted">Go live</button>
+					<button class="btn small" type="button" data-obs="obsStreamingStopped">End stream</button>
+					<button class="btn small" type="button" data-obs="obsRecordingStarted">Record</button>
+					<button class="btn small" type="button" data-obs="obsReplaybufferSaved">Save replay</button>
+				</div>
+			</div>
+			<div class="stage" id="stage"><div class="frame-box" id="box"><iframe id="preview" title="Overlay preview"></iframe></div></div>
+			<div class="out">
+				<div class="row">
+					<input id="url" readonly aria-label="Overlay link">
+					<button class="btn primary" id="copy" type="button">Copy link</button>
+					<a class="btn" id="open" target="_blank" rel="noopener">Open</a>
+				</div>
+				<div class="hint" id="hint"></div>
+			</div>
+		</main>
+	</div>
+	<div class="toast" id="toast"></div>
+
+	<script src="core.js?v=11"></script>
+	<script src="templates/countries.js?v=10"></script>
+	<script src="templates/engines.js?v=11"></script>
+	<script src="templates/socials.js?v=11"></script>
+	<script src="templates/time.js?v=11"></script>
+	<script src="templates/scenes.js?v=11"></script>
+	<script src="templates/maps.js?v=11"></script>
+	<script src="templates/fun.js?v=10"></script>
+	<script src="templates/text.js?v=10"></script>
+	<script src="templates/gaming.js?v=10"></script>
+	<script src="templates/obs.js?v=11"></script>
+	<script src="templates/pets.js?v=10"></script>
+	<script src="templates/extra.js?v=11"></script>
+	<script src="templates/themes.js?v=10"></script>
+	<script src="templates/music.js?v=11"></script>
+	<script src="templates/promo.js?v=10"></script>
+	<script src="templates/live.js?v=10"></script>
+	<script src="templates/games.js?v=11"></script>
+	<script src="templates/reef.js?v=11"></script>
+	<script src="templates/kaiju.js?v=10"></script>
+	<script src="templates/party.js?v=11"></script>
+	<script src="templates/cozy.js?v=11"></script>
+	<script src="templates/themebar.js?v=11"></script>
+	<script>
+	(function () {
+		var $ = function (id) { return document.getElementById(id); };
+		var params = new URLSearchParams(location.search);
+		var def = SSO.get(params.get("t")) || SSO.list()[0];
+		var cfg = SSO.readConfig(def, location.search);
+		var sizeTouched = params.has("w");
+		var size = [parseInt(params.get("w"), 10) || 0, parseInt(params.get("h"), 10) || 0];
+
+		// template picker
+		SSO.CATEGORIES.forEach(function (cat) {
+			var group = document.createElement("optgroup");
+			group.label = cat.label;
+			SSO.list().forEach(function (d) {
+				if (d.category !== cat.id) { return; }
+				var o = document.createElement("option");
+				o.value = d.id;
+				o.textContent = d.name;
+				group.appendChild(o);
+			});
+			$("tpl").appendChild(group);
+		});
+		$("tpl").value = def.id;
+		$("tpl").addEventListener("change", function () {
+			location.href = "editor.html?" + SSO.presetQuery(SSO.get($("tpl").value), SSO.get($("tpl").value).presets[0]);
+		});
+		$("name").textContent = def.name;
+		$("desc").textContent = def.description || "";
+		document.title = def.name + " - Overlay Editor - Social Stream Ninja";
+
+		def.presets.forEach(function (p) {
+			var b = document.createElement("button");
+			b.type = "button";
+			b.className = "chip";
+			b.textContent = p.name;
+			b.addEventListener("click", function () {
+				// Presets restyle; the viewer's own text, messages and socials carry over.
+				var keep = {};
+				def.fields.forEach(function (f) {
+					if ((f.type === "text" || f.type === "textarea" || f.type === "socials") && !(f.key in p.values)) { keep[f.key] = cfg[f.key]; }
+				});
+				cfg = SSO.readConfig(def, "");
+				Object.keys(keep).forEach(function (k) { cfg[k] = keep[k]; });
+				Object.keys(p.values).forEach(function (k) { cfg[k] = p.values[k]; });
+				buildForm();
+				if (!sizeTouched) { size = [0, 0]; }
+				update(true);
+			});
+			$("presets").appendChild(b);
+		});
+
+		// ---------- form ----------
+		function visible(field) {
+			if (!field.show) { return true; }
+			return Object.keys(field.show).every(function (k) {
+				var want = field.show[k];
+				var have = cfg[k];
+				if (Object.prototype.toString.call(want) === "[object Array]") { return want.map(String).indexOf(String(have)) !== -1; }
+				if (typeof want === "string" && want.charAt(0) === "!") { return String(have) !== want.slice(1); }
+				return String(have) === String(want);
+			});
+		}
+
+		function socialsEditor(field, wrap) {
+			var list = SSO.parseSocials(cfg[field.key]).map(function (s) { return { net: s.net, handle: s.handle }; });
+			var holder = document.createElement("div");
+			wrap.appendChild(holder);
+			function save() { cfg[field.key] = SSO.stringifySocials(list); update(); }
+			function draw() {
+				holder.innerHTML = "";
+				list.forEach(function (item, idx) {
+					var row = document.createElement("div");
+					row.className = "soc-row";
+					var sel = document.createElement("select");
+					Object.keys(SSO.NETWORKS).forEach(function (k) {
+						var o = document.createElement("option");
+						o.value = k;
+						o.textContent = SSO.NETWORKS[k].label;
+						sel.appendChild(o);
+					});
+					sel.value = item.net;
+					sel.setAttribute("aria-label", "Network");
+					sel.addEventListener("change", function () { item.net = sel.value; save(); });
+					var inp = document.createElement("input");
+					inp.type = "text";
+					inp.value = item.handle;
+					inp.placeholder = "@handle or link";
+					inp.setAttribute("aria-label", "Handle");
+					inp.addEventListener("input", function () { item.handle = inp.value; save(); });
+					var up = document.createElement("button");
+					up.type = "button";
+					up.className = "btn small";
+					up.textContent = "↑";
+					up.title = "Move up";
+					up.disabled = idx === 0;
+					up.addEventListener("click", function () { list.splice(idx - 1, 0, list.splice(idx, 1)[0]); save(); draw(); });
+					var del = document.createElement("button");
+					del.type = "button";
+					del.className = "btn small";
+					del.textContent = "✕";
+					del.title = "Remove";
+					del.addEventListener("click", function () { list.splice(idx, 1); save(); draw(); });
+					row.appendChild(sel); row.appendChild(inp); row.appendChild(up); row.appendChild(del);
+					holder.appendChild(row);
+				});
+				var add = document.createElement("button");
+				add.type = "button";
+				add.className = "btn small";
+				add.textContent = "+ Add account";
+				add.addEventListener("click", function () {
+					var used = list.map(function (s) { return s.net; });
+					var next = ["twitch", "youtube", "kick", "tiktok", "discord", "instagram", "x", "facebook"].filter(function (n) { return used.indexOf(n) === -1; })[0] || "website";
+					list.push({ net: next, handle: "" });
+					draw();
+					var inputs = holder.querySelectorAll("input");
+					inputs[inputs.length - 1].focus();
+				});
+				holder.appendChild(add);
+			}
+			draw();
+		}
+
+		function control(field) {
+			var wrap = document.createElement("div");
+			wrap.className = "fld" + (field.type === "bool" ? " bool" : "");
+			wrap.setAttribute("data-key", field.key);
+			var id = "f-" + field.key;
+			var value = cfg[field.key];
+			if (field.type === "bool") {
+				wrap.innerHTML = '<label><input type="checkbox" id="' + id + '"><span></span></label>';
+				wrap.querySelector("span").textContent = field.label;
+				var cb = wrap.querySelector("input");
+				cb.checked = !!value;
+				cb.addEventListener("change", function () { cfg[field.key] = cb.checked; update(); refreshVisibility(); });
+			} else {
+				var label = document.createElement("label");
+				label.htmlFor = id;
+				label.textContent = field.label;
+				wrap.appendChild(label);
+				if (field.type === "socials") {
+					label.removeAttribute("for");
+					socialsEditor(field, wrap);
+				} else if (field.type === "select") {
+					var sel = document.createElement("select");
+					sel.id = id;
+					field.options.forEach(function (o) {
+						var opt = document.createElement("option");
+						opt.value = o[0];
+						opt.textContent = o[1];
+						if (field.key === "font" && o[0]) { opt.style.fontFamily = SSO.fontStack(o[0]); }
+						sel.appendChild(opt);
+					});
+					sel.value = value;
+					sel.addEventListener("change", function () { cfg[field.key] = sel.value; update(); refreshVisibility(); });
+					wrap.appendChild(sel);
+				} else if (field.type === "textarea") {
+					var ta = document.createElement("textarea");
+					ta.id = id;
+					if (field.image) {
+						var up2 = document.createElement("div");
+						up2.className = "help";
+						up2.innerHTML = 'Host images on the <a href="https://fileupload.socialstream.ninja/" target="_blank" rel="noopener">SSN uploader</a> and paste each link on its own line.';
+						wrap.appendChild(up2);
+					}
+					ta.value = value;
+					ta.addEventListener("input", function () { cfg[field.key] = ta.value; update(); });
+					wrap.appendChild(ta);
+				} else if (field.type === "range") {
+					var row = document.createElement("div");
+					row.className = "row";
+					var rng = document.createElement("input");
+					rng.type = "range";
+					rng.id = id;
+					rng.min = field.min; rng.max = field.max; rng.step = field.step || 1;
+					rng.value = value;
+					var num = document.createElement("input");
+					num.type = "number";
+					num.className = "val";
+					num.min = field.min; num.max = field.max; num.step = field.step || 1;
+					num.value = value;
+					num.setAttribute("aria-label", field.label);
+					rng.addEventListener("input", function () { num.value = rng.value; cfg[field.key] = parseFloat(rng.value); update(); });
+					num.addEventListener("input", function () { if (num.value === "") { return; } rng.value = num.value; cfg[field.key] = parseFloat(num.value); update(); });
+					row.appendChild(rng); row.appendChild(num);
+					wrap.appendChild(row);
+				} else if (field.type === "color") {
+					var crow = document.createElement("div");
+					crow.className = "row";
+					var pick = document.createElement("input");
+					pick.type = "color";
+					pick.setAttribute("aria-label", field.label + " picker");
+					var txt = document.createElement("input");
+					txt.type = "text";
+					txt.id = id;
+					txt.value = value ? "#" + String(value).replace(/^#/, "") : "";
+					txt.placeholder = field.default === "" ? "none" : "#rrggbb";
+					var syncPick = function () {
+						var v = String(cfg[field.key] || "").replace(/^#/, "");
+						if (/^[0-9a-f]{6}/i.test(v)) { pick.value = "#" + v.slice(0, 6); }
+						else if (/^[0-9a-f]{3}$/i.test(v)) { pick.value = "#" + v[0] + v[0] + v[1] + v[1] + v[2] + v[2]; }
+					};
+					syncPick();
+					pick.addEventListener("input", function () {
+						var old = String(cfg[field.key] || "").replace(/^#/, "");
+						cfg[field.key] = pick.value.slice(1) + (old.length === 8 ? old.slice(6) : "");
+						txt.value = "#" + cfg[field.key];
+						update();
+					});
+					txt.addEventListener("input", function () { cfg[field.key] = txt.value.trim().replace(/^#/, ""); syncPick(); update(); });
+					crow.appendChild(pick); crow.appendChild(txt);
+					wrap.appendChild(crow);
+				} else {
+					var inp = document.createElement("input");
+					inp.type = field.type === "number" ? "number" : "text";
+					if (field.image) {
+						// Images can be hosted on the SSN uploader, then pasted back here as a link.
+						var up = document.createElement("div");
+						up.className = "help";
+						up.innerHTML = 'Need a link for your image? <a href="https://fileupload.socialstream.ninja/" target="_blank" rel="noopener">Upload it here</a>, then paste the link.';
+						wrap.appendChild(up);
+					}
+					inp.id = id;
+					if (field.type === "number") {
+						if (field.min != null) { inp.min = field.min; }
+						if (field.max != null) { inp.max = field.max; }
+						inp.step = field.step || 1;
+					}
+					inp.value = value;
+					inp.addEventListener("input", function () {
+						if (field.type === "number") {
+							if (inp.value === "" || isNaN(parseFloat(inp.value))) { return; }
+							cfg[field.key] = parseFloat(inp.value);
+						} else {
+							cfg[field.key] = inp.value;
+						}
+						update();
+						refreshVisibility();
+					});
+					wrap.appendChild(inp);
+				}
+			}
+			if (field.help) {
+				var help = document.createElement("div");
+				help.className = "help";
+				help.textContent = field.help;
+				wrap.appendChild(help);
+			}
+			return wrap;
+		}
+
+		function buildForm() {
+			var form = $("form");
+			form.innerHTML = "";
+			var groups = {};
+			var order = [];
+			def.fields.forEach(function (f) {
+				var g = f.group || "Settings";
+				if (!groups[g]) { groups[g] = []; order.push(g); }
+				groups[g].push(f);
+			});
+			order.forEach(function (g) {
+				var fs = document.createElement("fieldset");
+				var lg = document.createElement("legend");
+				lg.textContent = g;
+				fs.appendChild(lg);
+				groups[g].forEach(function (f) { fs.appendChild(control(f)); });
+				form.appendChild(fs);
+			});
+			refreshVisibility();
+		}
+		function refreshVisibility() {
+			def.fields.forEach(function (f) {
+				var el = $("form").querySelector('[data-key="' + f.key + '"]');
+				if (el) { el.style.display = visible(f) ? "" : "none"; }
+			});
+		}
+
+		// ---------- preview + output ----------
+		var bg = SSO.store.get("editor-bg") || "game";
+		$("bg").value = bg;
+		$("bg").addEventListener("change", function () { bg = $("bg").value; SSO.store.set("editor-bg", bg); $("box").className = "frame-box bg-" + bg; });
+		$("box").className = "frame-box bg-" + bg;
+
+		function currentSize() {
+			if (size[0] && size[1]) { return size; }
+			return def.sizeFor ? def.sizeFor(cfg) : def.size;
+		}
+		function fit() {
+			var s = currentSize();
+			var stage = $("stage");
+			var scale = Math.min((stage.clientWidth - 40) / s[0], (stage.clientHeight - 40) / s[1], 1);
+			var frame = $("preview");
+			frame.style.width = s[0] + "px";
+			frame.style.height = s[1] + "px";
+			frame.style.transform = "scale(" + scale + ")";
+			$("box").style.width = (s[0] * scale) + "px";
+			$("box").style.height = (s[1] * scale) + "px";
+		}
+		["w", "h"].forEach(function (k, i) {
+			$(k).addEventListener("input", function () {
+				var v = parseInt($(k).value, 10);
+				if (!(v > 0)) { return; }
+				var s = currentSize();
+				size = [s[0], s[1]];
+				size[i] = v;
+				sizeTouched = true;
+				fit();
+				update();
+			});
+		});
+
+		var timer;
+		function update(now) {
+			var query = SSO.buildQuery(def, cfg);
+			var s = currentSize();
+			$("w").value = s[0];
+			$("h").value = s[1];
+			var link = SSO.viewerBase() + "?" + query;
+			$("url").value = link;
+			$("open").href = link;
+			$("hint").innerHTML = "In OBS: <b>Sources → + → Browser</b>, paste the link, and set width <b>" + s[0] + "</b> and height <b>" + s[1] + "</b>. Bookmark this page to edit it later.";
+			try { history.replaceState(null, "", "editor.html?" + query + (sizeTouched ? "&w=" + s[0] + "&h=" + s[1] : "")); } catch (e) {}
+			fit();
+			clearTimeout(timer);
+			timer = setTimeout(function () { $("preview").src = "view.html?" + query + "&preview"; }, now ? 0 : 300);
+		}
+		$("replay").addEventListener("click", function () { update(true); });
+		var demoScenes = ["Gameplay", "Just Chatting", "Be Right Back", "Starting Soon"];
+		var obsBtns = document.querySelectorAll("[data-obs]");
+		for (var ob = 0; ob < obsBtns.length; ob++) {
+			obsBtns[ob].addEventListener("click", function () {
+				var name = this.getAttribute("data-obs");
+				var detail = name === "obsSceneChanged" ? { name: demoScenes[Math.floor(Math.random() * demoScenes.length)] } : {};
+				try { $("preview").contentWindow.postMessage({ ssoObsEvent: name, detail: detail }, "*"); } catch (e) {}
+				toast(name === "obsSceneChanged" ? "Sent: scene changed to " + detail.name : "Sent: " + this.textContent);
+			});
+		}
+		$("copy").addEventListener("click", function () {
+			var input = $("url");
+			var done = function () { toast("Link copied. Paste it into an OBS Browser Source."); };
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(input.value).then(done, function () { input.select(); document.execCommand("copy"); done(); });
+			} else {
+				input.select(); document.execCommand("copy"); done();
+			}
+		});
+		function toast(msg) {
+			var t = $("toast");
+			t.textContent = msg;
+			t.className = "toast on";
+			setTimeout(function () { t.className = "toast"; }, 2200);
+		}
+		var rt;
+		window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(fit, 100); });
+
+		buildForm();
+		update(true);
+	})();
+	</script>
+</body>
+</html>

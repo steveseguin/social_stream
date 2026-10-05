@@ -14,7 +14,7 @@
     <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
     <script src="./currency.js"></script>
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@400;700&family=Oswald:wght@400;700&family=Poppins:wght@400;600&family=Press+Start+2P&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&family=Courier+Prime:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@400;700&family=Oswald:wght@400;700&family=Poppins:wght@400;600&family=Press+Start+2P&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&family=Courier+Prime:wght@400;700&family=Metal+Mania&display=swap');
 
         body {
             margin: 0;
@@ -355,6 +355,258 @@
             color: #f0f;
         }
 
+        /* Leading option text stays readable once its bar fills the row */
+        .poll-option.option-high {
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
+        }
+
+        /* Plain black / white / high contrast / no background: clean boxes for under-cam or corner use */
+        .style-plain-black,
+        .style-plain-white,
+        .style-high-contrast,
+        .style-transparent,
+        .style-bar {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .style-plain-black {
+            color: #fff;
+            background-color: rgba(0, 0, 0, 0.92);
+        }
+
+        .style-plain-black .poll-title,
+        .style-plain-white .poll-title,
+        .style-transparent .poll-title {
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+
+        .style-plain-black .poll-option,
+        .style-plain-white .poll-option,
+        .style-high-contrast .poll-option,
+        .style-transparent .poll-option {
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .style-plain-black .poll-option {
+            background-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .style-plain-black .poll-bar {
+            background-color: var(--poll-accent, rgba(255, 255, 255, 0.28));
+            opacity: 0.55;
+        }
+
+        .style-plain-white {
+            color: #111;
+            background-color: #fff;
+            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
+        }
+
+        .style-plain-white .poll-option {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .style-plain-white .poll-bar {
+            background-color: var(--poll-accent, rgba(0, 0, 0, 0.16));
+            opacity: 0.45;
+        }
+
+        .style-plain-white .poll-option.option-high,
+        .style-cute .poll-option.option-high {
+            color: inherit;
+            text-shadow: none;
+        }
+
+        .style-high-contrast {
+            color: #fff;
+            background-color: #000;
+            font-weight: 800;
+        }
+
+        .style-high-contrast .poll-title {
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--poll-accent, #ffd400);
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .style-high-contrast .poll-option {
+            font-size: 20px;
+            font-weight: 800;
+            background-color: #1a1a1a;
+        }
+
+        .style-high-contrast .poll-bar {
+            background-color: var(--poll-accent, #ffd400);
+            opacity: 0.38;
+        }
+
+        .style-high-contrast .option-number,
+        .style-high-contrast .option-percentage,
+        .style-high-contrast .option-tally {
+            color: var(--poll-accent, #ffd400);
+        }
+
+        .style-transparent {
+            color: #fff;
+            background-color: transparent;
+            text-shadow: 0 0 3px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.75);
+        }
+
+        .style-transparent .poll-option {
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+        }
+
+        .style-transparent .poll-bar {
+            background-color: var(--poll-accent, rgba(255, 255, 255, 0.3));
+            opacity: 0.6;
+        }
+
+        /* Compact bar: question and options in one row, sized to sit under a webcam */
+        body.poll-bar-layout {
+            align-items: flex-end;
+        }
+
+        .poll-container.style-bar {
+            width: 100%;
+            max-width: none;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px 14px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            color: #fff;
+            background-color: rgba(0, 0, 0, 0.9);
+        }
+
+        .style-bar .poll-title {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 700;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        .style-bar #poll-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            flex: 1;
+        }
+
+        .style-bar .poll-option {
+            margin: 0;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 15px;
+            font-weight: 600;
+            background-color: rgba(255, 255, 255, 0.1);
+            flex: 0 1 auto;
+        }
+
+        .style-bar .option-number {
+            margin-right: 6px;
+            opacity: 0.7;
+        }
+
+        .style-bar .option-text {
+            flex-grow: 0;
+        }
+
+        .style-bar .option-percentage,
+        .style-bar .option-tally {
+            margin-left: 8px;
+            opacity: 0.85;
+        }
+
+        .style-bar .poll-bar {
+            background-color: var(--poll-accent, rgba(255, 255, 255, 0.3));
+            opacity: 0.55;
+        }
+
+        .style-bar .poll-instruction {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        /* Cute pastel */
+        .style-cute {
+            font-family: 'Poppins', sans-serif;
+            color: #7a2a55;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0 2.4px, transparent 3px) 0 0 / 22px 22px, linear-gradient(135deg, #ffc4dd, #ffd9ec 55%, #e9d5ff);
+            border-radius: 22px;
+            box-shadow: 0 8px 24px rgba(255, 92, 158, 0.25);
+        }
+
+        .style-cute .poll-title {
+            font-size: 26px;
+            font-weight: 600;
+            color: #c2185b;
+        }
+
+        .style-cute .poll-option {
+            padding: 10px 16px;
+            border-radius: 999px;
+            background-color: rgba(255, 255, 255, 0.75);
+            font-weight: 600;
+        }
+
+        .style-cute .poll-bar {
+            background-color: var(--poll-accent, #ff8fc0);
+            opacity: 0.45;
+        }
+
+        .style-cute .option-number {
+            color: #ff4f97;
+        }
+
+        /* Heavy metal */
+        .style-metal {
+            font-family: 'Oswald', sans-serif;
+            color: #e6e8eb;
+            background: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px), linear-gradient(180deg, #4a4f55 0%, #24282c 50%, #101113 100%);
+            border-radius: 6px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        .style-metal .poll-title {
+            font-family: 'Metal Mania', 'Oswald', sans-serif;
+            font-size: 36px;
+            letter-spacing: 1px;
+            background: linear-gradient(180deg, #fff 0%, #d9dde3 40%, #6e747c 52%, #c9ced6 70%, #fff 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.85));
+        }
+
+        .style-metal .poll-option {
+            padding: 10px 14px;
+            font-size: 19px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background-color: rgba(0, 0, 0, 0.35);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+        }
+
+        .style-metal .poll-bar {
+            background: linear-gradient(90deg, var(--poll-accent, #8a0000), var(--poll-accent, #c1121f));
+            opacity: 0.7;
+        }
+
+        .style-metal .option-number {
+            color: var(--poll-accent, #ff3b3b);
+        }
+
 		.hidden {
             display: none;
         }
@@ -517,6 +769,8 @@ settings.pollTimer = normalizeNumber(settings.pollTimer, 60) || 60;
 settings.pollOptions = normalizeOptionsList(settings.pollOptions);
 
 let results = {};
+// Numeric freeform votes refer to the last rendered, ranked options.
+let displayedFreeformOptions = [];
 let totalVotes = 0;
 let alreadyVoted = {};
 let donationTotals = {}; // Track donation amounts per option
@@ -537,12 +791,26 @@ function getPollInstructionText() {
     return 'Vote with #word.';
 }
 
+// Optional &accent=hex tints the bars in the newer styles; the bar style also anchors the poll to the bottom.
+function applyStyleExtras() {
+    const accent = (urlParams.get('accent') || '').replace(/^#/, '');
+    if (/^[0-9a-f]{3}([0-9a-f]{3})?$/i.test(accent)) {
+        document.documentElement.style.setProperty('--poll-accent', '#' + accent);
+    }
+    document.body.classList.toggle('poll-bar-layout', settings.styleType === 'bar');
+}
+
+function escapePollText(value) {
+    return String(value).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+
 function initializePoll() {
     pollContainer = document.getElementById('poll-container');
     pollTitle = document.getElementById('poll-title');
     pollOptionsContainer = document.getElementById('poll-options');
     
     pollContainer.className = `poll-container style-${settings.styleType} ${settings.pollEnabled ? '' : 'hidden'}`;
+    applyStyleExtras();
     pollTitle.innerText = settings.pollQuestion;
     updatePollOptions();
     debugLog('Poll UI initialized', {
@@ -555,6 +823,7 @@ function initializePoll() {
 }
 
 function updatePollOptions() {
+    displayedFreeformOptions = [];
     pollOptionsContainer.innerHTML = '';
 
     if (settings.pollType === 'yesno') {
@@ -639,6 +908,10 @@ function updatePollResults() {
         displayOptions = Object.entries(results).sort((a, b) => b[1] - a[1]).slice(0, 10);
     }
 
+    displayedFreeformOptions = settings.pollType === 'freeform'
+        ? displayOptions.map(([option]) => option)
+        : [];
+
     const maxVotes = Math.max(...displayOptions.map(([_, votes]) => votes), 0);
 
     displayOptions.forEach(([option, votes], index) => {
@@ -657,7 +930,7 @@ function updatePollResults() {
             html += `<span class="option-number">${index + 1}</span>`;
         }
         
-        html += `<span class="option-text">${option}</span>`;
+        html += `<span class="option-text">${escapePollText(option)}</span>`;
 
         // Show donation amount if donation-weighted voting is enabled and there are donations
         const optionDonations = donationTotals[option] || 0;
@@ -676,8 +949,7 @@ function updatePollResults() {
         optionElement.innerHTML = html;
 
         if (parseFloat(percentage) > 90) {
-            optionElement.style.color = '#fff';
-            optionElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.7)';
+            optionElement.classList.add('option-high');
         }
 
         fragment.appendChild(optionElement);
@@ -976,7 +1248,7 @@ function processVoteCandidate(vote, voterKey, voteContext, voteWeight, donationA
             }
         } else if (/^\d+$/.test(vote)) {
             const numericVote = Number(vote);
-            const resultsKeys = Object.keys(results);
+            const resultsKeys = displayedFreeformOptions;
             if (!Number.isNaN(numericVote) && numericVote > 0 && numericVote <= resultsKeys.length) {
                 const selectedOption = resultsKeys[numericVote - 1];
                 recordVote(selectedOption, voterKey, { ...voteContext, matchedBy: 'freeform-numeric' }, voteWeight, donationAmount);
@@ -1094,6 +1366,7 @@ function processData(data, source) {
                 const pollContainer = document.getElementById('poll-container');
                 if (pollContainer) {
                     pollContainer.className = `poll-container style-${settings.styleType} ${settings.pollEnabled ? '' : 'hidden'}`;
+                    applyStyleExtras();
                 }
                 justUIChange = true;
                 uiChanges.push({ key: 'styleType', value: nextStyle });

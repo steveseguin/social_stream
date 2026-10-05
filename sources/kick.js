@@ -1330,6 +1330,11 @@
 			return;
 		}
 		ele.dataset.mid = id;
+		ele.ssnMidPending = false;
+		if (ele.ssnDeletePending) {
+			ele.ssnDeletePending = false;
+			deleteThis(ele);
+		}
 		const key = getKickMessageKey(ele);
 		if (!key) {
 			kickDebugLog("message id not tracked; empty key", {
@@ -1415,6 +1420,10 @@
 		}
 		if (messageEle.deleted) {
 			kickDebugLog("delete skipped; row already marked deleted", getKickDebugRowInfo(messageEle));
+			return true;
+		}
+		if (messageEle.ssnMidPending && getKickTrackedMessageId(messageEle) === null) {
+			messageEle.ssnDeletePending = true;
 			return true;
 		}
 		messageEle.deleted = true;
@@ -1634,7 +1643,9 @@
 	  //}
 	  
 	  try {
+		ele.ssnMidPending = true;
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
+			ele.ssnMidPending = false;
 			if (ele && e && e.id){
 				rememberKickTrackedMessageId(ele, e.id);
 			}
@@ -1983,7 +1994,9 @@
 			badgeCount: data.chatbadges ? data.chatbadges.length : 0,
 			row: getKickDebugRowInfo(ele)
 		});
+		ele.ssnMidPending = true;
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
+			ele.ssnMidPending = false;
 			if (chrome.runtime && chrome.runtime.lastError) {
 				kickDebugLog("process:new send failed", {
 					messageId: messageId,
