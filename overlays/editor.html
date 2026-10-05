@@ -6,7 +6,7 @@
 	<title>Overlay Editor - Social Stream Ninja</title>
 	<meta name="description" content="Customize a static stream overlay and copy its OBS browser source link.">
 	<link rel="icon" href="../favicon.ico">
-	<link rel="stylesheet" href="studio.css?v=4">
+	<link rel="stylesheet" href="studio.css?v=10">
 </head>
 <body>
 	<header class="top">
@@ -19,8 +19,8 @@
 			<select class="tpl" id="tpl" aria-label="Overlay type"></select>
 			<h2 id="name"></h2>
 			<p class="desc" id="desc"></p>
-			<div class="presets" id="presets"></div>
 			<form id="form" autocomplete="off" onsubmit="return false"></form>
+			<fieldset class="presets-box"><legend>Try another style</legend><div class="presets" id="presets"></div></fieldset>
 		</aside>
 		<main class="ed-main">
 			<div class="ed-tools">
@@ -56,20 +56,29 @@
 	</div>
 	<div class="toast" id="toast"></div>
 
-	<script src="core.js?v=4"></script>
-	<script src="templates/countries.js?v=4"></script>
-	<script src="templates/engines.js?v=4"></script>
-	<script src="templates/socials.js?v=4"></script>
-	<script src="templates/time.js?v=4"></script>
-	<script src="templates/scenes.js?v=4"></script>
-	<script src="templates/maps.js?v=4"></script>
-	<script src="templates/fun.js?v=4"></script>
-	<script src="templates/text.js?v=4"></script>
-	<script src="templates/gaming.js?v=4"></script>
-	<script src="templates/obs.js?v=4"></script>
-	<script src="templates/pets.js?v=4"></script>
-	<script src="templates/extra.js?v=4"></script>
-	<script src="templates/themes.js?v=4"></script>
+	<script src="core.js?v=11"></script>
+	<script src="templates/countries.js?v=10"></script>
+	<script src="templates/engines.js?v=11"></script>
+	<script src="templates/socials.js?v=11"></script>
+	<script src="templates/time.js?v=11"></script>
+	<script src="templates/scenes.js?v=11"></script>
+	<script src="templates/maps.js?v=11"></script>
+	<script src="templates/fun.js?v=10"></script>
+	<script src="templates/text.js?v=10"></script>
+	<script src="templates/gaming.js?v=10"></script>
+	<script src="templates/obs.js?v=11"></script>
+	<script src="templates/pets.js?v=10"></script>
+	<script src="templates/extra.js?v=11"></script>
+	<script src="templates/themes.js?v=10"></script>
+	<script src="templates/music.js?v=11"></script>
+	<script src="templates/promo.js?v=10"></script>
+	<script src="templates/live.js?v=10"></script>
+	<script src="templates/games.js?v=11"></script>
+	<script src="templates/reef.js?v=11"></script>
+	<script src="templates/kaiju.js?v=10"></script>
+	<script src="templates/party.js?v=11"></script>
+	<script src="templates/cozy.js?v=11"></script>
+	<script src="templates/themebar.js?v=11"></script>
 	<script>
 	(function () {
 		var $ = function (id) { return document.getElementById(id); };
@@ -228,6 +237,12 @@
 				} else if (field.type === "textarea") {
 					var ta = document.createElement("textarea");
 					ta.id = id;
+					if (field.image) {
+						var up2 = document.createElement("div");
+						up2.className = "help";
+						up2.innerHTML = 'Host images on the <a href="https://fileupload.socialstream.ninja/" target="_blank" rel="noopener">SSN uploader</a> and paste each link on its own line.';
+						wrap.appendChild(up2);
+					}
 					ta.value = value;
 					ta.addEventListener("input", function () { cfg[field.key] = ta.value; update(); });
 					wrap.appendChild(ta);
@@ -278,6 +293,13 @@
 				} else {
 					var inp = document.createElement("input");
 					inp.type = field.type === "number" ? "number" : "text";
+					if (field.image) {
+						// Images can be hosted on the SSN uploader, then pasted back here as a link.
+						var up = document.createElement("div");
+						up.className = "help";
+						up.innerHTML = 'Need a link for your image? <a href="https://fileupload.socialstream.ninja/" target="_blank" rel="noopener">Upload it here</a>, then paste the link.';
+						wrap.appendChild(up);
+					}
 					inp.id = id;
 					if (field.type === "number") {
 						if (field.min != null) { inp.min = field.min; }

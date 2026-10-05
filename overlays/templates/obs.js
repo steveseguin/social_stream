@@ -112,15 +112,17 @@
 			var reset = ctx && ctx.params && ctx.params.has("reset");
 			var fixed = c.since ? SSO.parseTarget(c.since) : null;
 			var session = SSO.session("live:" + c.key, c.gap, { preview: preview, reset: reset, waitForStream: c.obsonly && SSO.obs.available() });
-			var live = !c.obsonly;
+			var live = !c.obsonly, alive = true;
+			SSO.onCleanup(root, function () { alive = false; });
 			if (c.obsonly) {
 				SSO.obs.status(function (st) {
+					if (!alive) { return; }
 					live = st ? !!st.streaming : !SSO.obs.available();
 					if (live) { session.resume(); }
 				});
 			}
-			SSO.obs.on("obsStreamingStarted", function () { session.resume(); live = true; });
-			SSO.obs.on("obsStreamingStopped", function () { session.stopped(); if (c.obsonly) { live = false; } });
+			SSO.onCleanup(root, SSO.obs.on("obsStreamingStarted", function () { session.resume(); live = true; }));
+			SSO.onCleanup(root, SSO.obs.on("obsStreamingStopped", function () { session.stopped(); if (c.obsonly) { live = false; } }));
 			function tick() {
 				if (!live) { el.className = "lt2 off"; time.textContent = c.offline; return; }
 				el.className = "lt2";

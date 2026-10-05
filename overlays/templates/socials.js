@@ -15,9 +15,13 @@
 		return '<span class="' + (cls || "") + '">' + SSO.iconHTML(s.net, icons) + (icons === "none" ? "" : " ") + '<span class="sso-handle">' + esc(s.handle) + "</span></span>";
 	}
 
-	function onResize(fn) {
-		var t;
-		window.addEventListener("resize", function () { clearTimeout(t); t = setTimeout(fn, 150); });
+	function onResize(host, fn) {
+		var t, alive = true;
+		function run() { if (alive) { fn(); } }
+		function resize() { clearTimeout(t); t = setTimeout(run, 150); }
+		window.addEventListener("resize", resize);
+		SSO.onCleanup(host, function () { alive = false; clearTimeout(t); window.removeEventListener("resize", resize); });
+		return run;
 	}
 
 	// Rotates through children of el, toggling .on/.off; returns nothing. Single child stays on.
@@ -54,8 +58,7 @@
 			void track.offsetWidth;
 			track.style.animation = kf + " " + (gw / Math.max(5, speed)) + "s linear infinite";
 		}
-		SSO.fontsReady(build);
-		onResize(build);
+		SSO.fontsReady(onResize(wrap, build));
 	}
 
 	// Extra room the banner needs above/below the bar for mascots and decorations.
@@ -182,7 +185,7 @@
 			{ key: "mode", label: "Motion", type: "select", group: "Content", default: "rotate", options: [["rotate", "Rotate one at a time"], ["scroll", "Scroll (news ticker)"], ["static", "Static (all at once)"]] },
 			{ key: "hold", label: "Seconds per message", type: "number", group: "Content", default: 6, min: 1, max: 120, step: 1, show: { mode: "rotate" } },
 			{ key: "transition", label: "Transition", type: "select", group: "Content", default: "slide", options: [["slide", "Slide up"], ["fade", "Fade"], ["flip", "Flip"], ["left", "Slide left"]], show: { mode: "rotate" } },
-			{ key: "speed", label: "Scroll speed (px/sec)", type: "range", group: "Content", default: 90, min: 20, max: 400, step: 5, show: { mode: "scroll" } },
+			{ key: "speed", label: "Scroll speed (px/sec)", type: "range", group: "Content", default: 45, min: 10, max: 400, step: 5, show: { mode: "scroll" } },
 			{ key: "label", label: "Badge text (e.g. LIVE, FOLLOW)", type: "text", group: "Content", default: "" },
 			{ key: "align", label: "Text alignment", type: "select", group: "Content", default: "left", options: [["left", "Left"], ["center", "Center"]] },
 			{ key: "bg", label: "Background", type: "color", group: "Style", default: "000000" },
@@ -217,7 +220,7 @@
 			{ name: "Neon", tags: ["cyber"], values: { bg: "0a0a1f", bgopacity: 0.85, fg: "e6fbff", accent: "00e5ff", font: "Orbitron", glow: true, radius: 10, fontsize: 18, mode: "scroll", sep: "✦" } },
 			{ name: "Frosted glass", tags: ["simple", "elegant"], values: { bg: "ffffff", bgopacity: 0.14, blur: 14, radius: 30, font: "Poppins", weight: "600", shadow: false, transition: "fade" } },
 			{ name: "Cat café", tags: ["cute", "cozy"], values: { bg: "3b2f4a", bgopacity: 0.95, fg: "fff4e6", accent: "ffb4a2", font: "Fredoka", radius: 16, mascot: "cat-orange", sep: "♥", height: 52 } },
-			{ name: "Retro pixel", tags: ["retro", "gaming"], values: { bg: "1d1d1d", bgopacity: 1, fg: "f5f5f5", accent: "ffcc00", font: "Press Start 2P", fontsize: 13, sep: "★", radius: 0, mode: "scroll", speed: 70 } },
+			{ name: "Retro pixel", tags: ["retro", "gaming"], values: { bg: "1d1d1d", bgopacity: 1, fg: "f5f5f5", accent: "ffcc00", font: "Press Start 2P", fontsize: 13, sep: "★", radius: 0, mode: "scroll", speed: 40 } },
 			{ name: "Bold label", tags: ["simple"], values: { label: "FOLLOW", bg: "ffcc00", bgopacity: 1, fg: "111111", accent: "111111", font: "Bebas Neue", fontsize: 28, weight: "400", radius: 4 } },
 			{ name: "Spicy flames", tags: ["spicy"], values: { bg: "1a0500", bg2: "5c1300", bgstyle: "gradient", bgopacity: 1, deco: "flames", fx: "fire", font: "Bangers", fontsize: 26, weight: "400", accent: "ffb000", sep: "🔥", radius: 8 } },
 			{ name: "Punk xerox", tags: ["punk"], values: { bgstyle: "paper", bg: "f1eee4", bgopacity: 1, fg: "111111", accent: "d7261e", font: "Special Elite", fontsize: 21, deco: "pins", tilt: -1.5, shadow: true, radius: 0, sep: "✖" } },
@@ -368,8 +371,7 @@
 					}
 				}
 				fit();
-				SSO.fontsReady(fit);
-				onResize(fit);
+				SSO.fontsReady(onResize(root, fit));
 			}
 		}
 	});
@@ -389,7 +391,9 @@
 			{ key: "layout", label: "Labels", type: "select", group: "Layout", default: "below", options: [["below", "Below the line"], ["above", "Above the line"], ["alternate", "Alternate"], ["inline", "On the line (chips)"]] },
 			{ key: "spread", label: "Spacing", type: "select", group: "Layout", default: "even", options: [["even", "Spread out"], ["center", "Grouped in the middle"], ["start", "Grouped at the start"]] },
 			{ key: "extend", label: "Line runs edge to edge", type: "bool", group: "Layout", default: true },
-			{ key: "line", label: "Line style", type: "select", group: "Line", default: "solid", options: [["solid", "Solid"], ["dashed", "Dashed"], ["dotted", "Dotted"], ["double", "Double"], ["fade", "Fade at the ends"]] },
+			{ key: "line", label: "Line style", type: "select", group: "Line", default: "solid", options: [["solid", "Solid"], ["dashed", "Dashed"], ["dotted", "Dotted"], ["double", "Double"], ["fade", "Fade at the ends"], ["fairy", "Fairy lights (warm glow)"]] },
+			{ key: "bulb", label: "Bulb colour", type: "color", group: "Line", default: "ffc46b", show: { line: "fairy" } },
+			{ key: "sag", label: "How much the string sags", type: "range", group: "Line", default: 14, min: 0, max: 60, step: 1, show: { line: "fairy" } },
 			{ key: "linecolor", label: "Line colour", type: "color", group: "Line", default: "ffffff" },
 			{ key: "lineopacity", label: "Line opacity", type: "range", group: "Line", default: 0.6, min: 0.05, max: 1, step: 0.05 },
 			{ key: "linewidth", label: "Line thickness", type: "range", group: "Line", default: 2, min: 1, max: 10, step: 1 },
@@ -410,6 +414,8 @@
 			{ name: "Gold travelling light", tags: ["elegant"], values: { linecolor: "f5c451", lineopacity: 0.8, travel: true, node: "diamond", nodebg: "1a1405", fg: "f5e6c4", font: "Playfair Display", weight: "400", layout: "alternate" } },
 			{ name: "Chips on a dashed line", tags: ["simple", "cute"], values: { layout: "inline", line: "dashed", nodebg: "ffffff", fg: "111111", icons: "brand", font: "Poppins", fontsize: 16, shadow: false, spread: "even" } },
 			{ name: "Neon fade", tags: ["cyber"], values: { line: "fade", linecolor: "00e5ff", lineopacity: 1, node: "ring", fg: "e6fbff", font: "Orbitron", fontsize: 14, upper: true, travel: true } },
+			{ name: "Fairy lights", tags: ["cozy", "cute"], values: { line: "fairy", linecolor: "3a2f22", lineopacity: 0.9, linewidth: 2, node: "circle", nodebg: "2a2118", fg: "fff3dc", font: "Kalam", fontsize: 20, weight: "400", icons: "tint", spread: "even" } },
+			{ name: "Fairy lights (rose)", tags: ["cozy", "cute"], values: { line: "fairy", bulb: "ffb3c7", linecolor: "2b2b2b", node: "ring", nodebg: "1a1015", fg: "ffe6ee", font: "Fredoka", fontsize: 18, icons: "mono", sag: 22 } },
 			{ name: "Vertical sidebar", tags: ["simple"], values: { orient: "v", spread: "start", node: "square", icons: "brand", netlabel: true, fontsize: 16 } }
 		],
 		css: [
@@ -417,6 +423,9 @@
 			".sl.v{flex-direction:column;align-items:flex-start;padding:24px;}",
 			".sl.sp-even{justify-content:space-around;} .sl.sp-center{justify-content:center;} .sl.sp-start{justify-content:flex-start;}",
 			".sl-line{position:absolute;pointer-events:none;}",
+			".sl-fairy{position:absolute;left:0;top:0;overflow:visible;pointer-events:none;}",
+			".slf-b{animation:slf-tw ease-in-out infinite;}",
+			"@keyframes slf-tw{0%,100%{opacity:1}50%{opacity:.55}}",
 			".sl-node{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;margin:0 14px;}",
 			".sl.v .sl-node{flex-direction:row;margin:10px 0;}",
 			".sl-bub{display:flex;align-items:center;justify-content:center;flex-shrink:0;box-sizing:border-box;}",
@@ -488,6 +497,41 @@
 			});
 			root.appendChild(el);
 
+			var fairy = null;
+			if (c.line === "fairy" && !vertical) {
+				line.style.display = "none";
+				fairy = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+				fairy.setAttribute("class", "sl-fairy");
+				el.insertBefore(fairy, el.firstChild);
+			}
+			// String of warm fairy lights: sags between the icons, bulbs twinkle slowly (live-stream friendly).
+			function drawFairy(er, nodes) {
+				var W = er.width, pts = [];
+				var centers = [];
+				for (var n = 0; n < nodes.length; n++) { var r = nodes[n].getBoundingClientRect(); centers.push([r.left - er.left + r.width / 2, r.top - er.top + r.height / 2]); }
+				var y0 = centers[0][1];
+				var xs = (c.extend ? [0] : []).concat(centers.map(function (p) { return p[0]; })).concat(c.extend ? [W] : []);
+				var d = "M" + xs[0] + " " + y0;
+				for (var k = 1; k < xs.length; k++) {
+					var mid = (xs[k - 1] + xs[k]) / 2;
+					d += " Q" + mid + " " + (y0 + c.sag * 2) + " " + xs[k] + " " + y0;
+				}
+				var bulbCol = SSO.color(c.bulb);
+				var svg = '<defs><radialGradient id="slf-g"><stop offset="0" stop-color="' + bulbCol + '" stop-opacity=".9"/><stop offset=".35" stop-color="' + bulbCol + '" stop-opacity=".35"/><stop offset="1" stop-color="' + bulbCol + '" stop-opacity="0"/></radialGradient></defs>' +
+					'<path class="slf-wire" d="' + d + '" fill="none" stroke="' + SSO.rgba(c.linecolor, Math.max(0.35, c.lineopacity)) + '" stroke-width="' + Math.max(1, lw * 0.6) + '"/>';
+				fairy.setAttribute("width", W);
+				fairy.setAttribute("height", er.height);
+				fairy.innerHTML = svg;
+				var wire = fairy.querySelector(".slf-wire"), len = wire.getTotalLength(), step = Math.max(26, c.nodesize * 0.7), bulbs = "";
+				for (var at = step / 2, b = 0; at < len; at += step, b++) {
+					var p = wire.getPointAtLength(at);
+					var dur = (3.5 + (b * 1.7) % 3).toFixed(2), delay = ((b * 0.83) % 4).toFixed(2);
+					bulbs += '<g class="slf-b" style="animation-duration:' + dur + "s;animation-delay:-" + delay + 's"><circle cx="' + p.x.toFixed(1) + '" cy="' + (p.y + 5).toFixed(1) + '" r="' + (step * 0.55).toFixed(1) + '" fill="url(#slf-g)"/>' +
+						'<line x1="' + p.x.toFixed(1) + '" y1="' + p.y.toFixed(1) + '" x2="' + p.x.toFixed(1) + '" y2="' + (p.y + 3).toFixed(1) + '" stroke="' + SSO.color(c.linecolor) + '" stroke-width="2"/>' +
+						'<ellipse cx="' + p.x.toFixed(1) + '" cy="' + (p.y + 6).toFixed(1) + '" rx="2.6" ry="3.6" fill="#fff6e0"/></g>';
+				}
+				fairy.insertAdjacentHTML("beforeend", bulbs);
+			}
 			function place() {
 				var anchor = el.querySelector(".sl-bub, .sl-chip");
 				if (!anchor) { return; }
@@ -508,10 +552,10 @@
 					line.style.right = c.extend ? "0" : (er.right - last.right + last.width / 2) + "px";
 					if (travel) { travel.style.top = (y + lw / 2) + "px"; }
 				}
+				if (fairy) { drawFairy(er, nodes); }
 			}
-			SSO.fontsReady(place);
+			SSO.fontsReady(onResize(root, place));
 			place();
-			onResize(place);
 		}
 	});
 

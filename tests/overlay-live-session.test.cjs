@@ -6,15 +6,16 @@ const MINUTE = 60000;
 function fixture(options = {}) {
   const clock = options.clock || { now: 100000 };
   const storage = options.storage || new Map();
-  const events = {}, intervals = [], definitions = {};
+  const events = {}, intervals = [], definitions = {}, cleanups = [];
   const display = { textContent: '' };
   const element = () => ({ style: {}, appendChild() {}, querySelector() { return display; }, innerHTML: '', className: '' });
   const SSO = {
     register(def) { definitions[def.id] = def; },
+    onCleanup(host, fn) { cleanups.push(fn); },
     f: { font: value => ({ key: 'font', default: value }) }, fxFields: () => [],
     esc: String, color: String, fontStack: String, rgba: () => '', loadFont() {},
     store: { get: key => storage.get(key), set: (key, value) => storage.set(key, value) },
-    obs: { available: () => options.obs !== false, status: cb => cb(options.obs === false ? null : { streaming: !!options.streaming }), on: (name, fn) => { events[name] = fn; } },
+    obs: { available: () => options.obs !== false, status: cb => cb(options.obs === false ? null : { streaming: !!options.streaming }), on: (name, fn) => { events[name] = fn; return () => { delete events[name]; }; } },
     parseTarget: value => new Date(value),
     splitDuration(ms) { const s = Math.floor(ms / 1000); return { d: Math.floor(s / 86400), h: Math.floor(s / 3600) % 24, m: Math.floor(s / 60) % 60, s: s % 60 }; },
     pad: value => String(value).padStart(2, '0')
@@ -74,3 +75,4 @@ for (const wait of [MINUTE, 120 * MINUTE]) {
   assert.equal(fixed.display.textContent, '00:02:40', 'Explicit fixed start remains authoritative');
 }
 console.log('PASS: OBS first start, idle reload, live reload, short/long drops, duplicate start, fallback, preview and fixed start');
+

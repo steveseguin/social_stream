@@ -9,6 +9,8 @@
 	// Canvas particle backdrops: rain streaks, falling code, rising embers.
 	function particles(canvas, kind, color, color2) {
 		var ctx = canvas.getContext("2d");
+		var alive = true, frameId;
+		SSO.onCleanup(canvas, function () { alive = false; cancelAnimationFrame(frameId); window.removeEventListener("resize", size); });
 		var list = [];
 		var glyphs = "01アイウエオカキクケコサシスセソ<>/{}[]#$%&*";
 		function size() {
@@ -23,6 +25,7 @@
 		size();
 		window.addEventListener("resize", size);
 		(function frame() {
+			if (!alive) { return; }
 			if (kind === "matrix") {
 				ctx.fillStyle = "rgba(0,0,0,.12)";
 				ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -60,7 +63,7 @@
 				}
 			}
 			ctx.globalAlpha = 1;
-			requestAnimationFrame(frame);
+			frameId = requestAnimationFrame(frame);
 		})();
 	}
 
@@ -102,7 +105,7 @@
 			var pc = document.createElement("canvas");
 			bg.appendChild(pc);
 			particles(pc, kind, kind === "matrix" ? d : kind === "rain" ? "#cfe6ff" : d, b);
-			if (kind === "rain") { bg.innerHTML += '<div style="position:absolute;left:0;top:0;right:0;bottom:0;background:radial-gradient(ellipse at 30% 40%,rgba(255,200,120,.18),transparent 60%);"></div>'; }
+			if (kind === "rain") { bg.insertAdjacentHTML("beforeend", '<div style="position:absolute;left:0;top:0;right:0;bottom:0;background:radial-gradient(ellipse at 30% 40%,rgba(255,200,120,.18),transparent 60%);"></div>'); }
 		} else if (kind === "vhs") {
 			bg.style.background = a;
 			bg.innerHTML = '<div class="scn-vhs-noise"></div><div class="scn-vhs-line"></div><div class="scn-vhs-scan"></div><div class="scn-vhs-tag">PLAY ▶</div>';
@@ -117,6 +120,8 @@
 
 	function stars(canvas, color) {
 		var ctx = canvas.getContext("2d");
+		var alive = true, frameId;
+		SSO.onCleanup(canvas, function () { alive = false; cancelAnimationFrame(frameId); window.removeEventListener("resize", size); });
 		var list = [];
 		function size() {
 			canvas.width = canvas.clientWidth || window.innerWidth;
@@ -130,6 +135,7 @@
 		size();
 		window.addEventListener("resize", size);
 		(function frame(t) {
+			if (!alive) { return; }
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			ctx.fillStyle = color;
 			for (var i = 0; i < list.length; i++) {
@@ -141,7 +147,7 @@
 				ctx.arc(s.x, s.y, s.r, 0, 6.283);
 				ctx.fill();
 			}
-			requestAnimationFrame(frame);
+			frameId = requestAnimationFrame(frame);
 		})(0);
 	}
 
