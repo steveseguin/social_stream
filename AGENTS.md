@@ -1,0 +1,184 @@
+# Social Stream Ninja – Agent Notes
+
+This repository supports three distinct delivery targets:
+
+- `sources/` and `sources/websocket/` scripts are shared between the Chrome extension **and** the Electron desktop app.  They must remain compatible with both environments.  New code should follow the existing pattern of feature-detecting `chrome.runtime` and falling back to relative imports or Electron IPC helpers.
+- `lite/` (and `doc/`) are standalone web apps.  They are deployed independently of the extension/Electron bundles and therefore cannot rely on manifest entries.  The production site serves them from `https://socialstream.ninja/lite/`.  Any shared module they import (for example `../../shared/utils/...`) must be published alongside them at `https://socialstream.ninja/shared/`.
+- The new `shared/` directory contains cross-surface utilities (`shared/utils/scriptLoader.js`, provider cores, etc.).  When deploying the Lite site or the extension/Electron builds, make sure this directory is bundled alongside the consumers (the Lite site needs `shared/**` to be served next to `lite/`, while the extension manifest exposes the same files via `web_accessible_resources`).
+
+Key architectural notes:
+
+- Content scripts such as `sources/websocket/twitch.js` and `sources/websocket/kick.js` remain classic scripts.  They load shared helpers with dynamic `import()` guarded by `chrome.runtime.getURL(…)` and a relative fallback so Electron (which lacks `chrome.*`) continues to work.
+- Prefer old-school browser scripts for pages/overlays and keep browser-facing code Chrome 80 friendly. Avoid `<script type="module">`, top-level `import`/`export`, and newer syntax or APIs unless there is already a compatibility path or Steve explicitly asks to raise the baseline.
+- Provider cores (`providers/twitch/chatClient.js`, `providers/kick/core.js`, `providers/youtube/liveChat.js`) must stay environment agnostic: no direct DOM or Chrome APIs, all logging should be optional, and transports (RTC vs extension messaging) sit in their respective adapters.
+- When adding new shared utilities, place them under `shared/` and update both the manifest (for extension access) and any standalone deployment scripts to include the folder.
+- Keep extension executable code self-contained in the package.
+  - Do not add static CDN script tags, such as `<script src="https://...">`.
+  - Do not add remote JS/WASM imports, such as `import("https://...")` or `from "https://..."`.
+  - Vendor approved third-party libraries under existing local vendor paths like `thirdparty/`, `shared/vendor/`, or `lite/vendor/`.
+  - Reference packaged dependencies with relative paths or `chrome.runtime.getURL(...)`.
+  - Remote fetches may load data/resources like JSON, API responses, images, and static assets, but not executable logic.
+
+If you need more context on how Electron wiring differs from the extension bootstrap, inspect the existing calls around `chrome.runtime.sendMessage` in `sources/websocket/*` and the IPC hooks in the Electron app before making changes.
+
+- Event payload vocabulary and field expectations are documented in `docs/event-reference.html`. Update that page whenever a source adds, renames, or re-shapes an event so downstream surfaces stay in sync.
+
+## Communication
+- VERY IMPORTANT: Be terse and direct. Answer the exact question or state the fix in one sentence first.
+- Answer only what Steve asked. Add context only when needed to prevent a concrete mistake; explain reasoning only when asked.
+- Use plain, everyday language. Include technical details only when needed to understand the issue or make a decision.
+- When asked to explain a proposed change, use short, specific descriptions of the issue, proposed fix, and behavior concern.
+- Validate a proposed fix and its behavior concerns before recommending it when local verification is possible. Report observed results; explicitly identify anything still unverified instead of presenting assumptions as findings.
+- Behavior changes mean actual differences. Never list unchanged functionality (for example, "messages should continue working") as a change or concern.
+- Separate intended behavior changes from concrete compatibility risks. Do not invent speculative risks to fill a section; if asked and none are identified, say so briefly.
+- Omit reassurance, analogies, repeated summaries, and testing checklists unless requested or necessary to explain a concrete risk.
+- When Steve asks to work through issues one at a time, discuss only the current issue.
+- Call out material oversights or red flags directly.
+
+## Message Contracts
+
+- `donoValue` is always a numeric USD amount, supplied optionally by the source when it has better context. Consumers must honor a valid override (including zero) before using `currency.js` to estimate USD from `hasDonation` and the source. Keep the original display amount/unit in `hasDonation`; do not put raw coins or foreign-currency amounts in `donoValue`. Unpriced TikTok gifts default to one coin per gift at the existing USD-per-coin rate.
+
+- Every outbound event follows the canonical structure referenced in `docs/event-reference.html`. Required fields (`platform`, `type`, `chatname`, `chatmessage`, etc.) must stay intact.
+- `textonly` applies only to `chatmessage`: `true` means render `chatmessage` as plain text, while `false` means `chatmessage` may contain sanitized/renderable HTML. Other normal fields are expected to be plain text; media fields such as `chatimg` and `contentimg` carry URLs/data.
+- Donation-style chat rows should use `hasDonation` and optional `donoValue`. Do not set `event: "donation"` just because a normal chat/tip row has a donation value; `event` changes routing/filter behavior and should only be used for true normalized platform actions or paid item types.
+- Prefer specific event names over generic donation names when a platform exposes distinct paid support types. For example, YouTube Super Chat uses `event: "superchat"`, Super Sticker uses `event: "supersticker"`, and Jewels/Gifts use `event: "jeweldonation"`.
+- Use existing payload fields first. Only populate `meta` when there is additional structured data that downstream consumers actually need and no existing field handles it well.
+- Additional, non-standard details that truly need to be transmitted belong inside the top-level `meta` object. Populate `meta` with plain JSON values (no functions/classes) so downstream consumers can safely parse them.
+- Avoid emitting ad-hoc top-level keys—coordinate changes through the event reference doc before shipping.
+
+## Custom Overlay Notes
+
+- Payload source of truth: [docs/event-reference.html](./docs/event-reference.html). Check it before changing payloads or building new overlays.
+- Helpful companion guide for custom pages and styling: [docs/customoverlays.md](./docs/customoverlays.md).
+- Most overlay pages need `?session=YOUR_SESSION_ID` in the URL or they will sit idle. Examples: `dock.html?session=YOUR_ID`, `featured.html?session=YOUR_ID`, `multi-alerts.html?session=YOUR_ID`.
+- Common optional URL params worth preserving when building overlays: `&password=...`, `&label=...`, `&server`, `&css=...`, `&b64css=...`, `&scale=...`, `&limit=...`, `&onlytype=...`, `&hidetype=...`.
+- Most custom overlays either connect by websocket or by a hidden VDO.Ninja iframe bridge and read incoming data from `event.data?.dataReceived?.overlayNinja`.
+- Treat overlay traffic as mixed payloads: plain chat messages, alert-like chat messages, and meta-only event updates can all come through the same feed.
+- Alert overlays often key off existing fields like `event`, `membership`, `subtitle`, `hasDonation`, `contentimg`, and `meta`. Do not invent one-off top-level keys when the documented fields already fit.
+- For style work, prefer URL-driven CSS (`&css=`, `&b64css=`), CSS variables, and class toggles over changing payload shapes.
+- Keep custom overlay/browser code old-school and Chrome 80 friendly: no `<script type="module">`, no top-level `import` / `export`, and avoid newer browser APIs unless there is a fallback.
+
+Minimal iframe bridge listener pattern:
+
+```js
+window.addEventListener("message", (event) => {
+  const payload = event.data?.dataReceived?.overlayNinja;
+  if (payload !== undefined) {
+    handlePayload(payload);
+  }
+});
+```
+
+Sample payloads based on the fake test data in [background.js](./background.js):
+
+```json
+{
+  "chatname": "Jess",
+  "chatmessage": "Looking good! This is a test message.",
+  "chatimg": "https://socialstream.ninja/media/user1.jpg",
+  "type": "youtube",
+  "nameColor": "",
+  "chatbadges": "",
+  "backgroundColor": "",
+  "textColor": ""
+}
+```
+
+```json
+{
+  "chatname": "Sir Drinks-a-lot",
+  "chatmessage": "COFFEE!",
+  "chatimg": "https://socialstream.ninja/media/user5.jpg",
+  "type": "discord",
+  "membership": "Coffee Addiction",
+  "subtitle": "32 Years",
+  "private": true,
+  "chatbadges": [
+    "https://socialstream.ninja/icons/bot.png",
+    "https://socialstream.ninja/icons/announcement.png"
+  ]
+}
+```
+
+```json
+{
+  "chatname": "Ava",
+  "chatmessage": "",
+  "chatimg": "https://socialstream.ninja/media/user1.jpg",
+  "contentimg": "https://socialstream.ninja/media/logo.png",
+  "type": "youtube"
+}
+```
+
+```json
+{
+  "event": "viewer_updates",
+  "meta": {
+    "youtube": 815,
+    "twitch": 221,
+    "kick": 94
+  }
+}
+```
+
+```json
+{
+  "type": "whatnot",
+  "event": "auction_update",
+  "meta": {
+    "status": "winning",
+    "statusText": "redatv2004 is Winning!",
+    "bidder": "redatv2004",
+    "title": "500 Spot Silver Slab Mega Set - #191",
+    "category": "Coins, U.S. currency",
+    "price": 88,
+    "priceText": "$88",
+    "bids": 7,
+    "bidsText": "7 Bids",
+    "timer": "00:19",
+    "shipping": "Shipping + Taxes are extra"
+  }
+}
+```
+
+## Surface Parity Notes
+
+- YouTube capture now targets three modes: scraping (DOM), Data API polling, and Data API streaming. Treat the streaming initiative as additive—do **not** regress the existing polling or scraping paths.
+- All `sources/websocket/**/*.html|js` assets load inside both the Chrome extension and the Electron app. Any new page (e.g., a streaming client) must accept configuration via URL parameters (`?channel=...`, `?videoId=...`) just like the legacy polling pages.
+- Lite plugins (`lite/plugins/**`) are standalone web-only integrations. They never ship inside the extension or Electron bundle, but they should still share core logic via `shared/` when practical.
+
+## Accessibility, UI, UX, and Integrations
+
+- Prioritize accessibility and a clear, consistent user experience when designing or changing features.
+- Popup menus must reuse the existing theme colors, styled buttons, switches, section hierarchy, and meaningful icons/emotes with text labels. Put basic setup first and advanced controls in subsections. Verify input contrast in light and dark modes. Keep menus terse; put longer instructions in `docs/` and link to them from the menu.
+- Shared popup control styling lives in `popup-ui.css`. Reuse its field, focus, action-button, and subsection rules across old and new panels; avoid provider-specific colors or inline styles for equivalent actions. Keep labels above fields, use `.switch` for on/off settings, and reserve `.tts-test-button` for test/play actions rather than reset/clear actions.
+- Keep the default experience simple for new users, with plain labels, sensible defaults, and easy previews. Make advanced options and effects available through clearly labelled optional controls.
+- Provide keyboard access, visible focus, accessible control names, and understandable feedback. Do not rely only on color or sound to communicate state.
+- Inspect existing app integrations, especially the Event Flow editor, before adding new configuration or automation. Reuse existing patterns and capabilities where practical, and avoid disconnected or competing ways to configure the same behavior.
+
+## Git Safety
+
+- VERY IMPORTANT: Never use `git restore`, `git revert`, or any revert/restore operation unless Steve explicitly asks for that exact action.
+- VERY IMPORTANT: Always work from and target the `beta` branch in this repository. Never work from, commit to, push to, or target `main`.
+- VERY IMPORTANT: Use Steve's configured Git identity for commits. Never set an AI assistant as author or committer, and never add AI co-author trailers or attribution to commit messages.
+
+## Git Push Contract
+
+- VERY IMPORTANT: When Steve says `push`, treat it as an instruction to push to `beta`.
+- VERY IMPORTANT: Always push all current changes. Do not stash, exclude, unstage, or preserve local changes outside the push unless Steve explicitly says to leave something unpushed.
+- VERY IMPORTANT: Do it serially in this exact order only: `git add -A`, `git commit` (use `--allow-empty` if needed), `git pull --rebase origin beta`, `git push origin beta`.
+- VERY IMPORTANT: Do not parallelize any git commands in that flow.
+- VERY IMPORTANT: Do not add extra git inspection commands unless Steve explicitly asks for them.
+
+## Menu Regression Checks
+
+- SSApp testing is optional. Run it when useful for the task, without requesting separate permission; do not treat it as a mandatory check or routine prerequisite for changes, commits, or pushes. `node tests/popup-search-electron.test.cjs` remains optional and excluded from mandatory test suites and required checks.
+- Run `node tests/popup-search.test.js` when changes affect popup menus or popup search, or when Steve explicitly requests it. It is not a blanket prerequisite for the Git Push Contract.
+- The Electron suite requires the sibling `ssapp` checkout and local Playwright; set `SSAPP_REPO` if the app checkout is elsewhere. It uses an isolated profile and local relay, never live source channels.
+
+
+## Commerce overlay use case
+- Monetization presentation is primarily an OBS Browser Source viewed by the audience. Keep operator controls, private session details, setup feedback, and publishing credentials off the viewer overlay.
+- Reuse one commerce state and control API for the SSN popup, Stream Deck, Event Flow, and any optional OBS control dock. A dock is an alternative operator surface, not a requirement for using the overlay.
+- Report selected/hidden/scheduled state without claiming that OBS is live or the source is visible; SSN cannot infer OBS scene visibility from a successful control command.

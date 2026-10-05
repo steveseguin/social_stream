@@ -1,0 +1,205 @@
+name: Deploy Main and Beta to GitHub Pages
+on:
+  push:
+    branches:
+      - main
+      - beta
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: deploy-gh-pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    if: "!contains(github.event.head_commit.message, '[skip pages]') && !contains(github.event.head_commit.message, '[auto-enhanced]') && github.actor != 'github-pages[bot]'"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create deployment structure
+        run: mkdir -p gh-pages-content/beta
+
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-content
+
+      - name: Checkout beta branch
+        uses: actions/checkout@v4
+        with:
+          ref: beta
+          path: beta-content
+
+      - name: Prepare content
+        run: |
+          python3 - <<'PY'
+          import shutil
+          from pathlib import Path
+
+          for checkout in ('main-content', 'beta-content'):
+              skills = Path(checkout) / 'docs' / 'skills'
+              source = skills / 'control-social-stream'
+              if source.is_dir():
+                  shutil.make_archive(str(skills / 'control-social-stream'), 'zip', skills, 'control-social-stream')
+          PY
+          for checkout in main-content beta-content; do
+            if [ -f "$checkout/aievent.html" ]; then
+              test -f "$checkout/aievent-overlay.html"
+              for asset in core.js client.js setup.js display.js setup.css overlay.css; do
+                test -f "$checkout/shared/aiEventOverlay/$asset"
+              done
+              for asset in render.js relay.js; do
+                if grep -q "shared/aiEventOverlay/$asset" "$checkout/aievent-overlay.html"; then
+                  test -f "$checkout/shared/aiEventOverlay/$asset"
+                fi
+              done
+            fi
+            if [ -f "$checkout/commerce-board.html" ]; then
+              test -f "$checkout/shared/monetization/boards.js"
+              test -f "$checkout/shared/monetization/board-overlay.js"
+              test -f "$checkout/shared/monetization/board-overlay.css"
+              test -f "$checkout/shared/monetization/board-controls.js"
+              test -f "$checkout/shared/monetization/board-controls.css"
+            fi
+            # Content-image handling is shared by the dock and featured overlay.
+            if grep -q 'shared/utils/contentImage.js' "$checkout/dock.html" "$checkout/featured.html"; then
+              test -f "$checkout/shared/utils/contentImage.js"
+            fi
+            # Badge rendering and its packaged sanitizer must accompany overlays.
+            if grep -q 'shared/utils/chatBadges.js' "$checkout/dock.html"; then
+              test -f "$checkout/shared/utils/chatBadges.js"
+              test -f "$checkout/shared/utils/chatBadges.css"
+              test -f "$checkout/libs/objects.js"
+            fi
+            # Final chat HTML checks use the same packaged sanitizer on both overlays.
+            if grep -q 'shared/utils/chatHtml.js' "$checkout/dock.html" "$checkout/featured.html"; then
+              test -f "$checkout/shared/utils/chatHtml.js"
+              test -f "$checkout/libs/objects.js"
+            fi
+            # Alert sounds and their shared picker must ship together on the site.
+            if [ -f "$checkout/shared/alerts/sound-library.js" ]; then
+              test -f "$checkout/shared/alerts/sound-library.css"
+              test -f "$checkout/audio/alerts/voice-thank-you.wav"
+              test -f "$checkout/audio/alerts/applause.wav"
+              test -f "$checkout/media/alerts/celebration.svg"
+            fi
+            generator="$checkout/scripts/build-docs-search-index.py"
+            if [ -f "$generator" ]; then
+              python3 "$generator" --docs-root "$checkout/docs" --output "$checkout/docs/search-index.json"
+            fi
+          done
+          rsync -av \
+            --exclude='/.git/' \
+            --exclude='/.agents/' \
+            --exclude='/.claude/' \
+            --exclude='/.codex/' \
+            --exclude='/.codex-tmp/' \
+            --exclude='/.codex-tmp-*.diff' \
+            --exclude='/.playwright-mcp/' \
+            --exclude='/.npm-cache/' \
+            --exclude='/.github/' \
+            --exclude='/.githooks/' \
+            --exclude='/node_modules/' \
+            --exclude='/scripts/' \
+            --exclude='/tests/' \
+            --exclude='/tmp/' \
+            --exclude='/tmp-*' \
+            --exclude='/tmp_*' \
+            --exclude='/.tmp_*' \
+            --exclude='/artifacts/' \
+            --exclude='/playwright-report/' \
+            --exclude='/test-results/' \
+            --exclude='/%SystemDrive%/' \
+            --exclude='/face-preview.png' \
+            --exclude='*.log' \
+            main-content/ gh-pages-content/
+          rsync -av \
+            --exclude='/.git/' \
+            --exclude='/.agents/' \
+            --exclude='/.claude/' \
+            --exclude='/.codex/' \
+            --exclude='/.codex-tmp/' \
+            --exclude='/.codex-tmp-*.diff' \
+            --exclude='/.playwright-mcp/' \
+            --exclude='/.npm-cache/' \
+            --exclude='/.github/' \
+            --exclude='/.githooks/' \
+            --exclude='/node_modules/' \
+            --exclude='/scripts/' \
+            --exclude='/tests/' \
+            --exclude='/tmp/' \
+            --exclude='/tmp-*' \
+            --exclude='/tmp_*' \
+            --exclude='/.tmp_*' \
+            --exclude='/artifacts/' \
+            --exclude='/playwright-report/' \
+            --exclude='/test-results/' \
+            --exclude='/%SystemDrive%/' \
+            --exclude='/face-preview.png' \
+            --exclude='*.log' \
+            beta-content/ gh-pages-content/beta/
+          # Public viewer URLs are stable even while creator controls ship on beta.
+          # Keep the viewer's versioned dependencies separate from stable app assets.
+          python3 beta-content/scripts/build-public-shop.py --source beta-content --output gh-pages-content
+          seo_script="${GITHUB_REF_NAME}-content/scripts/prepare-pages-seo.py"
+          python3 "$seo_script" --root gh-pages-content
+          python3 "$seo_script" --root gh-pages-content --check
+          # Each checkout selects its own language editions. Stable
+          # gains translations when its catalogs/config are promoted together.
+          # Use the triggering branch's builder for both editions so fallback
+          # support does not depend on the other branch being updated first.
+          translation_script="${GITHUB_REF_NAME}-content/scripts/build-site-translations.py"
+          for edition in main beta; do
+            if [ ! -f "$translation_script" ]; then continue; fi
+            destination="gh-pages-content"
+            prefix=""
+            visibility="--public"
+            if [ "$edition" = beta ]; then
+              destination="gh-pages-content/beta"
+              prefix="/beta"
+              visibility=""
+            fi
+            if [ -f "$edition-content/translations/site/publish.json" ]; then
+              python3 "$translation_script" --root "$destination" --published --allow-english-fallback --base-path "$prefix" $visibility
+              python3 "$translation_script" --root "$destination" --published --allow-english-fallback --base-path "$prefix" $visibility --check
+            elif [ "$edition" = beta ]; then
+              python3 "$translation_script" --root "$destination" --allow-english-fallback
+              python3 "$translation_script" --root "$destination" --allow-english-fallback --check
+            fi
+          done
+          # Include stable translations in the sitemap; beta remains noindex.
+          python3 beta-content/scripts/prepare-pages-seo.py --root gh-pages-content
+          python3 beta-content/scripts/prepare-pages-seo.py --root gh-pages-content --check
+          touch gh-pages-content/.nojekyll
+          echo "Removing files larger than 25MB from deployment payload"
+          find gh-pages-content -type f -size +25M -print -delete || true
+          echo "Deployment content (recursive):"
+          ls -laR gh-pages-content
+
+      - name: Push to gh-pages branch
+        run: |
+          cd gh-pages-content
+          git init
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          # Copied checkout ignore files exclude generated language directories.
+          for language in es pt-br ru fr de ja zh-cn zh-tw it pl ko uk ar tr cs th; do
+            if [ -d "$language" ]; then git add --force -- "$language"; fi
+            if [ -d "beta/$language" ]; then git add --force -- "beta/$language"; fi
+          done
+          # /* Ensure this commit message contains '[skip pages]' */
+          git commit -m "Deploy main and beta to GitHub Pages [skip pages]"
+          git branch -M gh-pages
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          for attempt in 1 2 3; do
+            if git push -f origin gh-pages; then
+              exit 0
+            fi
+            echo "gh-pages push failed on attempt ${attempt}; retrying after ref-lock backoff..."
+            sleep $((attempt * 10))
+          done
+          git push -f origin gh-pages

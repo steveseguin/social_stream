@@ -1,0 +1,28 @@
+name: Validate settings configs
+
+on:
+  push:
+    branches:
+      - main
+      - beta
+    paths:
+      - 'settings/config*.json'
+      - 'scripts/validate-configs.sh'
+      - '.github/workflows/validate-configs.yml'
+  pull_request:
+    paths:
+      - 'settings/config*.json'
+      - 'scripts/validate-configs.sh'
+      - '.github/workflows/validate-configs.yml'
+  workflow_dispatch:
+
+jobs:
+  json:
+    name: Validate config JSON
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate settings/config*.json
+        run: bash scripts/validate-configs.sh

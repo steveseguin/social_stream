@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Social Stream Ninja">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:url" content="https://socialstream.ninja/docs/making-games.html">
+    <meta property="og:title" content="Build games and rewards with gifts and chat - Social Stream Ninja">
+    <meta property="og:description" content="Build small stream games and actions from TikTok gifts, Twitch Bits, Facebook Stars, YouTube Supers, and chat. Includes three editable HTML starters.">
+    <meta property="og:image" content="https://socialstream.ninja/media/logo.png">
+    <meta property="og:image:width" content="1024">
+    <meta property="og:image:height" content="1024">
+    <meta property="og:image:alt" content="Social Stream Ninja logo">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:url" content="https://socialstream.ninja/docs/making-games.html">
+    <meta name="twitter:title" content="Build games and rewards with gifts and chat - Social Stream Ninja">
+    <meta name="twitter:description" content="Build small stream games and actions from TikTok gifts, Twitch Bits, Facebook Stars, YouTube Supers, and chat. Includes three editable HTML starters.">
+    <meta name="twitter:image" content="https://socialstream.ninja/media/logo.png">
+    <meta name="twitter:image:alt" content="Social Stream Ninja logo">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Build games and rewards with gifts and chat - Social Stream Ninja</title>
+    <meta name="description" content="Build small stream games and actions from TikTok gifts, Twitch Bits, Facebook Stars, YouTube Supers, and chat. Includes three editable HTML starters.">
+    <link rel="canonical" href="https://socialstream.ninja/docs/making-games.html">
+    <link rel="icon" href="../favicon.ico">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/guides.css">
+    <link rel="stylesheet" href="css/site-shell.css">
+    <script src="js/site-shell.js"></script>
+</head>
+<body>
+    <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+    <section class="page-hero"><div class="container"><h1>Build games and rewards</h1><p>Turn a gift, a support amount, or a chat command into something on your stream.</p></div></section>
+    <main class="guide-section"><div class="container">
+        <section class="guide-card" id="start">
+            <h2>Yes, your game can react to TikTok gifts</h2>
+            <p>Social Stream Ninja captures an event, sends it to your page, and your JavaScript decides what happens: boost a rocket, grow a garden, spawn an enemy, or advance a shared goal. You choose the action and its threshold in your game. You do not change a platform's gift prices through SSN.</p>
+            <p><strong>Start here:</strong> <a href="#templates">try the three templates</a>, then choose whether your rule uses <a href="#amounts">platform units, a gift identity, or estimated USD</a>.</p>
+            <p>For a new visual design, see <a href="#custom-design">customize a game and run it locally</a>.</p>
+            <p>For a sound, alert, OBS action, or webhook, start with <a href="../actions/event-flow-guide.html">Event Flow</a>. A custom HTML page is useful when you need a game board or your own game state. For finished games, see the <a href="games-gallery.html">game gallery</a>.</p>
+        </section>
+        <section class="guide-card" id="templates">
+            <h2>Three small, editable starters</h2>
+            <p>Each preview has sample buttons and a “Last received payload” inspector. Samples are fictional events, not purchases. Preview mode never joins your live session.</p>
+            <ul class="guide-list">
+                <li><strong><a href="../games/templates/coin-rocket.html?demo">Coin rocket</a>:</strong> 10 TikTok coins, 100 Twitch Bits, or 100 Facebook Stars earn one boost. Remainders accumulate separately for each viewer and platform. Change <code>COST</code> in the HTML to set your amounts.</li>
+                <li><strong><a href="../games/templates/support-goal.html?demo">Shared support goal</a>:</strong> combine estimated USD support from the four platforms to build a moon base. Change <code>GOAL_USD</code> or replace the progress display with damage, fuel, or a timer.</li>
+                <li><strong><a href="../games/templates/event-garden.html?demo">Gift and event garden</a>:</strong> a chosen TikTok gift adds flowers, a captured TikTok follow adds a tree, and free <code>!water</code> chat adds water. Set <code>GIFT_ID</code> to a captured ID, or set <code>GIFT_NAME</code> to its exact name. “Demo flower” is a fictional example.</li>
+            </ul>
+            <p>Open the HTML source and look for <code>EDIT THIS RULE</code> or <code>EDIT THESE RULES</code>. The <code>receive(data)</code> function is where you replace the sample action with your game logic. Connection and counting helpers are in <a href="../games/templates/starter.js">starter.js</a>; visual styles are in <a href="../games/templates/starter.css">starter.css</a>.</p>
+        </section>
+        <section class="guide-card" id="connect">
+            <h2>Connect a starter to your stream</h2>
+            <ol class="guide-steps">
+                <li>Start SSN and connect your chat source. Confirm its chat and gift/support rows reach the dock. For TikTok setup, see <a href="tiktok-app-modes-guide.html">connection modes</a>.</li>
+                <li>Open a starter without <code>?demo</code>, using your SSN session ID. Include your session password if one is set.</li>
+                <li>Check the page in a browser, then add the same URL as an OBS Browser Source, for example at 1000 × 800. Add <code>&amp;clean</code> to hide the inspector, connection status, and host buttons.</li>
+            </ol>
+            <pre>https://socialstream.ninja/games/templates/coin-rocket.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;clean</pre>
+            <p>If you use the beta site, keep <code>/beta/</code> before <code>games/</code>. Omit the password parameter when no password is set. Keep your session links private.</p>
+            <p>The default connection uses the same iframe bridge as SSN overlays. To use the hosted WebSocket captured-chat route, enable SSN's <strong>Send messages to Dock from Extension via server</strong> setting and append <code>&amp;server2</code>. See the <a href="local-websocket-server-guide.html">WebSocket guide</a> for local setup; these templates also accept <code>&amp;server2&amp;localserver</code> and <code>&amp;localserverport=3000</code>. <code>localserver</code> alone does not enable a route. The older <code>server</code> feed uses a different channel and may depend on a dock publishing to it.</p>
+            <h3>Make your own copy</h3>
+            <p><a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">Download the beta source ZIP</a> and extract it. Edit files under <code>games/templates/</code>, keeping the directory structure: the starters also load <code>js/local-server-url.js</code>, and the support goal loads <code>currency.js</code> from the repository root.</p>
+            <p>Drag the starter HTML into Chrome or Edge and copy its <code>file:///</code> address. Add everything from <code>?</code> onward in your working SSN game link, including your session and any password. Open that address in your browser, then paste it into an OBS Browser Source's <strong>URL</strong> field with <strong>Local file</strong> unchecked. OBS saves this address for next time.</p>
+            <pre>file:///C:/SSN/social_stream-beta/games/templates/coin-rocket.html?session=YOUR_SESSION&amp;clean</pre>
+            <p>Use the actual path on your computer. Keep the extracted folder in the same place; there is no server to install or start. See the <a href="overlay-customization-guide.html#local-file">file setup guide</a> for more examples.</p>
+        </section>
+<section class="guide-card" id="custom-design">
+<h2>Customize a game design and run it locally</h2>
+<p>Use the three starters above for a new game, or copy the exact page you use from <code>games/</code>. <code>games.html</code> and <code>battle.html</code> also have their own game behavior; the starters' rule constants are not a universal game API.</p>
+<p><a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">Download the source ZIP</a>, extract it, and duplicate the chosen HTML beside the original. For example, keep <code>my-rocket.html</code> in <code>games/templates/</code>, with <code>starter.js</code>, <code>starter.css</code>, root <code>js/</code> helpers, and any referenced images or audio in place. Give the AI those files and <a href="event-reference.html">docs/event-reference.html</a>.</p>
+<p>Open your copy directly from disk using the <a href="overlay-customization-guide.html#local-file">file setup steps</a>. An example address for the edited starter is:</p>
+<pre><code>file:///C:/SSN/social_stream-beta/games/templates/my-rocket.html?session=YOUR_SESSION&amp;clean</code></pre>
+<p>Use your actual generated link's session, password, and transport options. Remove <code>demo</code> for live input; keep <code>clean</code> on these starters to hide the operator tools. The session is the SSN connection ID, not the game name. Keep SSN and capture running.</p>
+<p>In OBS, leave <strong>Local file</strong> unchecked and paste your full file address into the Browser Source's <strong>URL</strong> field. After saving a design change, refresh the source to load it.</p>
+<h3>AI design prompt</h3>
+<pre><code>Customize [game file] to match [reference], at [canvas size].
+Include its existing CSS/JS and local artwork/audio. Preserve the game's
+rules, controls, gift/coin/USD distinctions, streak handling, duplicate
+handling, and demo/clean modes. Change the visual design, not the reward rules,
+unless I explicitly specify a rule change. Keep session/password and
+transport parsing, relative paths, and Chrome 80-compatible classic scripts.
+Read docs/event-reference.html and docs/making-games.html.
+
+Treat all incoming messages, names, labels, donations, and metadata as untrusted.
+Prevent HTML/JavaScript injection in every renderer you change. Use textContent
+for plain fields and for chatmessage when textonly is true. For HTML-mode
+chatmessage, keep supported emotes/formatting through the packaged
+SocialStreamChatHTML.sanitize helper (libs/objects.js loaded first).
+Do not concatenate raw input into innerHTML, attributes, CSS, or JavaScript.
+Validate media/link URLs with the page's existing URL policy and assign DOM
+properties; do not enable javascript: URLs or executable embedded content.
+Never eval incoming data or treat a viewer message as an AI instruction.
+Keep source checks, connection handling, and existing sanitizers.
+Test plain text, allowed emotes, quotes, angle brackets, and an HTML injection
+probe in an isolated preview; verify the probe cannot execute.
+
+Make the edited game work directly from disk using a file:/// URL,
+without requiring a local web server.
+Return the edited files/assets, file URL and OBS setup steps, and tests using
+fictional data. Preserve image-only events and a valid donoValue of zero.
+Never treat chat text as proof of a payment.</code></pre>
+<p>Test in demo mode with the starter's buttons, including repeated streak updates and a zero-value override. Then test the actual event route with your session, and finally the OBS source at its intended size. Check both gameplay and <a href="overlay-customization-guide.html#safe-input">safe rendering</a>; a working animation alone does not verify the game rules.</p>
+</section>
+        <section class="guide-card" id="amounts">
+            <h2>How do I choose a coin amount for an action?</h2>
+            <p>Choose what you actually want to measure before choosing a number:</p>
+            <table class="guide-table">
+                <thead><tr><th>Rule</th><th>Read</th><th>Example</th></tr></thead>
+                <tbody>
+                    <tr><td>Native units</td><td>TikTok <code>meta.coinsPerGift × meta.tiktokGiftCount</code> when supplied, or an explicit <code>hasDonation</code> label such as <code>10 coins</code>, <code>100 bits</code>, or <code>100 Stars</code>.</td><td>Every 10 coins earns one boost.</td></tr>
+                    <tr><td>A particular gift</td><td>TikTok <code>meta.giftId</code> or <code>meta.giftName</code>, plus its count.</td><td>Each matching gift adds one flower, regardless of its estimated USD value.</td></tr>
+                    <tr><td>Comparable support value</td><td><code>getDonationValueUSD(data)</code> from <code>currency.js</code>.</td><td>Each estimated $1 adds 10 fuel; $25 completes a goal.</td></tr>
+                    <tr><td>A free or membership action</td><td>The source's actual <code>event</code>, or a chat command.</td><td>A follow grows a tree; a new subscription plays an animation.</td></tr>
+                </tbody>
+            </table>
+            <p>Decide whether your amount is <strong>exact</strong> (<code>coins === 10</code>), a <strong>minimum per event</strong> (<code>coins &gt;= 10</code>), or a <strong>running balance</strong>. The rocket uses a running balance: 25 coins earns two boosts and leaves five coins. A single exact-10 rule would ignore 25 coins. If choosing one of several actions per event, check the highest threshold first so one event does not trigger every lower tier.</p>
+            <p>On TikTok, viewers buy Coins and spend them on Gifts; the coin cost is shown with the gift. Choose gifts available in your own LIVE and inspect the captured data before publishing a rule. A named gift, a gift count, Coins, and Diamonds are different measurements. Do not recover “exact coins” by dividing a USD estimate or treating a diamond count as coins. <a href="https://support.tiktok.com/en/live-gifts-wallet/gifts/gifts">TikTok's explanation of Coins and Gifts</a>.</p>
+            <p>If capture supplies only a gift name/count or a diamond label, the coin starter skips that event unless explicit coin metadata is available. Use a gift-identity rule or the estimated-USD starter instead. Coin metadata can also come from SSN's gift mapping, so compare it with the current LIVE gift tray when exact pricing matters. Gift catalogs and capture methods differ; there is no universal coin field guaranteed on every TikTok message.</p>
+        </section>
+        <section class="guide-card" id="platforms">
+            <h2>What each platform sends</h2>
+            <p><code>type</code> identifies the source; <code>event</code> identifies an action when present. Availability depends on capture mode, settings, and what the platform exposes. These examples describe SSN's current code paths, not a guarantee that every account delivers every event.</p>
+            <table class="guide-table">
+                <thead><tr><th>Platform</th><th>Support and event data</th><th>Keep separate</th></tr></thead>
+                <tbody>
+                    <tr><td>TikTok</td><td><code>type: "tiktok"</code>, <code>event: "gift"</code>. Donation capture can supply <code>hasDonation</code> and <code>donoValue</code>. Gift metadata may include ID, name, count, coins per gift, diamonds per gift, and streak identity.</td><td>Coins buy Gifts; Diamonds are creator rewards. SSApp WebSocket capture settles streaks before forwarding; browser capture can send cumulative updates. Disabling TikTok donation capture can leave gift events without monetary fields.</td></tr>
+                    <tr><td>Twitch</td><td>Cheers use Bits, such as <code>hasDonation: "100 bits"</code>. API capture can use <code>event: "cheer"</code> and <code>donoValue: 1</code>; rendered chat capture may have no event marker.</td><td>Subscriptions, gift subscriptions, raids, and Channel Points are separate actions. A subscriber badge on an ordinary message is not a new subscription. Direct Cheers and Bits used in Twitch Extensions are different integrations.</td></tr>
+                    <tr><td>Facebook</td><td>Visible Live Chat Stars rows supply e.g. <code>hasDonation: "100 Stars"</code> and <code>donoValue: 1</code>, with no <code>event</code> marker.</td><td>The comments API path does not infer Stars from chat text. A visible Stars row must be available to the DOM capture path; ordinary comments and reactions do not establish a paid amount.</td></tr>
+                    <tr><td>YouTube</td><td><code>superchat</code> and <code>supersticker</code> carry the original currency amount in <code>hasDonation</code>. Gifts use <code>jeweldonation</code> with <code>N Jewels</code>, or <code>1 YouTube Gift</code> when the amount is hidden.</td><td>Viewers spend Jewels on Gifts; creators earn Rubies. Memberships and gifted memberships are separate events, not Jewels. Super Thanks is a separate product, not a promise of a live-chat donation event.</td></tr>
+                </tbody>
+            </table>
+            <p>Platform references: <a href="https://support.tiktok.com/en/live-gifts-wallet/diamonds/diamonds">TikTok Diamonds</a>; <a href="https://www.twitch.tv/creatorcamp/en/paths/monetize-your-content/twitch-basics/">Twitch Bits and subscriptions</a>; <a href="https://about.fb.com/news/2022/06/tools-helping-creators-build-businesses/">Meta's Stars overview</a>; <a href="https://support.google.com/youtube/answer/9178363?hl=en">YouTube Super Chat and Super Stickers</a>; <a href="https://support.google.com/youtube/answer/15427201?hl=en">YouTube Jewels, Gifts, and Rubies</a>. Terminology checked September 29, 2026; consult current platform pages for eligibility and availability.</p>
+            <p>Other sources can also report tips, gifts, memberships, or purchases. Inspect the <a href="event-reference.html">event reference</a> before adding them to the starter's <code>isSupport</code> filter. A product sale or gifted subscription is not automatically a tip. For example, YouTube distinguishes gift purchases from recipient redemption notices; counting both would reward the same gift twice.</p>
+        </section>
+        <section class="guide-card" id="usd">
+            <h2>Use donoValue and currency.js correctly</h2>
+            <p><code>hasDonation</code> is the original display label, such as <code>€5.00</code> or <code>100 bits</code>. <code>donoValue</code> is an optional numeric USD amount supplied by the source. Honor a valid override, including zero, before estimating from the label. Preserve the original label for display.</p>
+            <pre>&lt;script src="../../currency.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+// From games/templates/: use the existing helper, including its zero handling.
+var usd = getDonationValueUSD(data);
+// Use usd for your rule; display data.hasDonation for the original amount/unit.
+&lt;/script&gt;</pre>
+            <p><strong>Existing conversion behavior:</strong> SSN currently estimates one TikTok coin at $0.01, one TikTok diamond at $0.005, one Twitch Bit or Facebook Star at $0.01, and one YouTube Jewel at $0.005. An unpriced TikTok gift defaults to one coin per gift; a YouTube Gift without a Jewel count has its own $0.01 placeholder estimate. Fiat conversion also uses internal approximate rates, not a live exchange-rate service.</p>
+            <p>These are SSN's comparison values. They are not a common definition of viewer spending, creator net revenue, or cash available to withdraw. Different capture methods can produce different estimates. In particular, a one-coin fallback for an unknown TikTok gift does not prove that gift costs one coin.</p>
+            <p>Do not use <code>donoValue || convertToUSD(...)</code>: that discards an intentional zero. Do not parse digits from <code>chatmessage</code> to detect payments, or require <code>event === "donation"</code>: Facebook Stars and some Cheers have no event marker. The support-goal starter selects support types first, then calls the shared converter.</p>
+            <p>Source: <a href="../currency.js">currency.js</a> and the <a href="event-reference.html">payload reference</a>. Gift metadata is optional; the examples do not invent fields missing from your capture.</p>
+        </section>
+        <section class="guide-card" id="streaks">
+            <h2>Count a gift streak once</h2>
+            <p>TikTok can report cumulative counts 1, 2, 3 for the same streak. That is three gifts, not six. For additive actions, retain the largest count or amount already seen for the streak and apply only the increase. A completed update with the same total adds nothing.</p>
+            <pre>// All three events refer to the same streak:
+// incoming total: 1, 2, 3, 3
+// added to game:  1, 1, 1, 0
+var newCoins = RewardStarter.increment(data, RewardStarter.coins(data), 'coins');</pre>
+            <p>The helper uses native TikTok group/sender/gift IDs when available, then <code>meta.tiktokGiftStreakId</code> or message IDs. Ordinary message IDs also suppress repeated delivery. It does not wait for <code>repeatEnd</code> because browser capture may never supply it. If your design needs one action only after a completed streak, that requires a separate completion rule using the fields your connection actually sends.</p>
+            <p>These learning templates remember up to 2,000 identities in memory. Reset and reload erase that memory and game progress. Messages without stable IDs cannot be reliably deduplicated; a second capture of the same channel can also use different IDs. Start with one capture route. The rocket groups balances by platform and user ID, falling back to display name; identical names can share a balance when IDs are missing. For a persistent game, add saved state and replay handling before depending on paid rewards surviving restarts.</p>
+        </section>
+        <section class="guide-card" id="event-flow">
+            <h2>For rewards without a custom game</h2>
+            <p>In <a href="../actions/event-flow-guide.html">Event Flow</a>, use <strong>Compare Property</strong> with <code>donoValue</code>, <strong>greater than or equal</strong>, and your USD threshold, then connect an action such as a sound, animation, or OBS control. The comparison uses the source override when valid and the existing currency conversion when needed.</p>
+            <p>For a particular TikTok gift, compare <code>meta.giftId</code> or <code>meta.giftName</code>, and scope your flow to TikTok gift events. Numeric comparisons on <code>hasDonation</code> also resolve to USD; they are not raw coin comparisons. Use the native metadata or custom code for coin-specific rules.</p>
+            <p>A threshold evaluated per received message is different from a running balance or a streak counter. Do not assume an Event Flow threshold automatically performs the starter's accumulation and duplicate handling. Use the <a href="../actions/state-nodes-guide.html">state nodes</a> when your flow needs state, or keep that logic in your game.</p>
+        </section>
+        <section class="guide-card" id="verify">
+            <h2>Try it before attaching a paid action</h2>
+            <ol class="guide-steps">
+                <li>Use the sample buttons. A 1 → 2 → 3 streak should add three gifts' worth; the zero-override sample should add no USD value; an unknown price should add no exact coins.</li>
+                <li>Connect your real source and inspect an actual captured payload. Confirm the gift name/ID, amount/unit, count, and the event your rule expects. A sample proves the rule, not live platform capture.</li>
+                <li>Verify it in your OBS scene. Check repeated events, a reconnect, and a reload. Avoid shutting down or refreshing this Browser Source when preserving the in-memory run matters.</li>
+            </ol>
+            <p>For an unattended or AFK game, SSN, source capture, and the game page must all keep running. A sleeping computer, expired source login, or disconnected feed interrupts actions; these starters do not backfill missed events or handle refunds. Automated reactions do not establish permission to monetize an unattended stream: check the platform's current LIVE and monetization rules for your format.</p>
+            <p>If nothing arrives, first check the SSN dock, then the session/password and transport setting. If chat arrives but a gift does not match, inspect the payload and donation/event filters. Follow and subscription availability varies by source; see the <a href="event-reference.html">event reference</a>. For more connection details, see <a href="customoverlays.md">custom overlays</a>.</p>
+        </section>
+    </div></main>
+    <footer><div class="container"><p>Social Stream Ninja · <a href="games-gallery.html">Games</a> · <a href="event-reference.html">Event reference</a></p></div></footer>
+    <script data-copy-markdown src="js/main.js"></script>
+</body>
+</html>

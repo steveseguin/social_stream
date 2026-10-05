@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en"><head>
+    <meta charset="utf-8">
+    <meta name="description" content="Gift and event garden · SSN starter: an interactive stream activity for Social Stream Ninja. Connect your chat session and add the game to your OBS scene.">
+    <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex"><title>Gift and event garden · SSN starter</title><link rel="stylesheet" href="starter.css"></head>
+<body><main><div class="host"><a href="../../docs/making-games.html">Build games and rewards</a><p id="connection" role="status"></p></div>
+<p class="eyebrow">Template 03 · Gift identity and free chat</p><h1>Grow something together.</h1><p id="rules"></p>
+<section class="stage" aria-label="Community garden"><div id="garden" class="art" aria-hidden="true">🌱</div><p id="score" class="score" aria-live="polite"></p><p id="latest" role="status" translate="no">The garden is ready.</p></section>
+<div class="host"><div id="demo-controls"><button id="water" type="button">Sample: !water</button><button id="flower" type="button">Sample: matching gift</button><button id="follow" type="button">Sample: TikTok follow</button><button id="streak" type="button">Sample: matching streak 1, 2, 3</button><button id="other" type="button">Sample: another gift</button></div>
+<button id="reset" type="button">Reset run</button><details><summary>Last received payload</summary><pre id="payload">Use a sample button to inspect an event.</pre></details><p class="muted">Edit the gift rule in this HTML file using metadata from your own capture. Reload starts a new garden.</p></div></main>
+<script src="../../js/local-server-url.js"></script><script src="starter.js"></script><script>
+'use strict';
+// EDIT THIS RULE: use a captured gift ID when available. Otherwise match the
+// captured name exactly. The demo name below is fictional, not a gift price list.
+var GIFT_ID = '', GIFT_NAME = 'Demo flower';
+var water = 0, flowers = 0, followers = 0, R = RewardStarter;
+R.text('rules', 'Type !water to add water. Each matching TikTok gift ({0}) adds a flower. A TikTok follow adds a tree.', [GIFT_ID || GIFT_NAME]);
+function render() {
+    R.text('score', 'Water: {0} · Flowers: {1} · Trees: {2}', [water, flowers, followers]);
+    R.text('garden', '🌱 ' + '🌸'.repeat(Math.min(flowers, 12)) + '🌳'.repeat(Math.min(followers, 6)) + (water ? ' 💧' : ''));
+}
+function receive(data) {
+    var meta = data.meta || {}, added = 0, action = '';
+    // textonly=true is literal chat. For HTML chat, extract text in an inert template.
+    var command = String(data.chatmessage || '');
+    if (!data.textonly) { var template = document.createElement('template'); template.innerHTML = command; command = template.content.textContent || ''; }
+    if (!data.event && !data.hasDonation && command.trim().toLowerCase() === '!water') {
+        added = R.increment(data, 1, 'water'); water += added; action = 'water';
+    } else if (R.platform(data) === 'tiktok' && data.event === 'followed') {
+        added = R.increment(data, 1, 'follow'); followers += added; action = 'trees';
+    } else if (R.platform(data) === 'tiktok' && data.event === 'gift' &&
+        (GIFT_ID ? String(meta.giftId || '') === GIFT_ID : meta.giftName === GIFT_NAME)) {
+        added = R.increment(data, R.giftCount(data), 'gift-count'); flowers += added; action = 'flowers';
+    }
+    if (!added) { R.log('No new matching action on this event.'); return; }
+    var messages = { water: '{0} added water: {1}.', flowers: '{0} added flowers: {1}.', trees: '{0} added trees: {1}.' };
+    R.log(messages[action], [data.chatname || R.format('A viewer'), added]); render();
+}
+function flower(id, count) { return { id: id, type: 'tiktok', event: 'gift', chatname: 'Sample viewer', chatmessage: 'Sent Demo flower x' + count, meta: { giftName: GIFT_NAME, giftId: GIFT_ID || 'demo-flower', tiktokGiftCount: count } }; }
+R.start(receive, function () { water = 0; flowers = 0; followers = 0; render(); R.log('The garden is ready.'); }, {
+    water: function (id) { return { id: 'water-' + id, type: 'youtube', chatname: 'Sample viewer', chatmessage: '!water', textonly: true }; },
+    flower: function (id) { return flower('flower-' + id, 1); },
+    follow: function (id) { return { id: 'follow-' + id, type: 'tiktok', event: 'followed', chatname: 'Sample viewer' }; },
+    streak: function (id) { return [1, 2, 3].map(function (count) { var data = flower('flower-' + id + '-' + count, count); data.meta.tiktokGiftStreakId = 'garden-' + id; return data; }); },
+    other: function (id) { var data = flower('other-' + id, 1); data.meta.giftName = 'Different gift'; data.meta.giftId = 'different'; return data; }
+});
+</script></body></html>
