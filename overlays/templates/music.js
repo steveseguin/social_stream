@@ -50,17 +50,22 @@
 		}
 		fit();
 		window.addEventListener("resize", fit);
+		SSO.onCleanup(root, function () { window.removeEventListener("resize", fit); });
 		return stage;
 	}
-	function raf(fn) {
-		var last = null;
+	function raf(host, fn) {
+		var last = null, alive = true, frameId;
+		function stop() { alive = false; cancelAnimationFrame(frameId); }
+		SSO.onCleanup(host, stop);
 		(function frame(now) {
+			if (!alive) { return; }
 			if (last === null) { last = now; }
 			var dt = Math.min(0.05, (now - last) / 1000);
 			last = now;
 			fn(dt, now);
-			requestAnimationFrame(frame);
+			if (alive) { frameId = requestAnimationFrame(frame); }
 		})(performance.now());
+		return { stop: stop };
 	}
 	function canvasIn(host) {
 		var cv = document.createElement("canvas");
@@ -73,6 +78,7 @@
 		}
 		fit();
 		window.addEventListener("resize", fit);
+		SSO.onCleanup(host, function () { window.removeEventListener("resize", fit); });
 		return cv;
 	}
 	SSO.addEngine = addEngine;
@@ -205,7 +211,7 @@
 				var pulse = ctr;
 			}
 			var spec = SSO.music.spectrum(c.style === "radial" ? Math.round(c.bands / 2) : c.bands, c.bpm, c.energy);
-			raf(function (dt) {
+			raf(root, function (dt) {
 				var st = spec.update(dt);
 				g.clearRect(0, 0, cv.width, cv.height);
 				drawViz(g, cv.width, cv.height, spec, st, c);
@@ -257,7 +263,7 @@
 			root.appendChild(wrap);
 			var num = wrap.querySelector(".bp-num"), dots = wrap.querySelectorAll(".bp-dots i"), ph = wrap.querySelector(".bp-ph"), box = wrap.querySelector(".bp");
 			num.textContent = (c.bpm % 1 ? c.bpm.toFixed(1) : c.bpm);
-			raf(function () {
+			raf(root, function () {
 				var b = SSO.music.beat(c.bpm), beatN = Math.floor(b) % 4, frac = b % 1;
 				for (var i = 0; i < 4; i++) { dots[i].className = i === beatN && frac < 0.5 ? "on" : ""; }
 				if (ph) { var bar = Math.floor(b / 4); ph.textContent = "BAR " + (bar % 8 + 1) + " · PHRASE " + (Math.floor(bar / 8) % 4 + 1); }
@@ -406,7 +412,7 @@
 				waveData.push(arr);
 			}
 			if (xf) { setInterval(function () { xf.style.left = (20 + Math.random() * 100) + "px"; }, 6000); }
-			raf(function () {
+			raf(root, function () {
 				var beat = SSO.music.beat(c.bpm), ph = beat % 1, kick = Math.exp(-ph * 6);
 				for (var v = 0; v < vus.length; v++) {
 					var lvl = Math.round((0.45 + kick * 0.45 + Math.random() * 0.12) * vus[v].children.length - v);
@@ -503,7 +509,7 @@
 			if (tracks.length > 1) {
 				setInterval(function () { card.className = "np " + c.style + " swap"; setTimeout(function () { idx++; show(); card.className = "np " + c.style; }, 400); }, c.hold * 1000);
 			}
-			raf(function () {
+			raf(root, function () {
 				var b = SSO.music.beat(c.bpm), ph = b % 1;
 				for (var i = 0; i < bars.length; i++) { bars[i].style.height = (25 + (Math.exp(-((ph + i * 0.21) % 1) * 4)) * 75) + "%"; }
 				bar.style.transform = "scaleX(" + Math.min(1, (Date.now() - shownAt) / (c.hold * 1000)) + ")";
@@ -517,9 +523,8 @@
 		start: function (host, o) {
 			var cv = canvasIn(host), g = cv.getContext("2d");
 			host.style.background = "radial-gradient(ellipse at 50% 100%," + SSO.rgba(o.c3.replace("#", ""), 0.18) + "," + o.c1 + " 70%)";
-			var bpm = o.bpm || 126, alive = true;
-			(function frame() {
-				if (!alive) { return; }
+			var bpm = o.bpm || 126;
+			return raf(host, function () {
 				var W = cv.width, H = cv.height, b = SSO.music.beat(bpm), ph = b % 1, kick = Math.exp(-ph * 5), bar = Math.floor(b / 4);
 				g.clearRect(0, 0, W, H);
 				g.globalCompositeOperation = "lighter";
@@ -542,9 +547,7 @@
 				g.fillStyle = hz; g.fillRect(0, 0, W, H);
 				if (o.strobe !== false && bar % 8 === 7 && ph < 0.12) { g.fillStyle = "rgba(255,255,255,.25)"; g.fillRect(0, 0, W, H); }
 				g.globalCompositeOperation = "source-over";
-				requestAnimationFrame(frame);
-			})();
-			return { stop: function () { alive = false; } };
+			});
 		}
 	});
 	addEngine({
@@ -552,18 +555,14 @@
 		start: function (host, o) {
 			var cv = canvasIn(host), g = cv.getContext("2d");
 			host.style.background = "linear-gradient(180deg," + o.c1 + ",#000)";
-			var spec = SSO.music.spectrum(64, o.bpm || 124, 1), alive = true, last = performance.now();
-			(function frame(now) {
-				if (!alive) { return; }
-				var dt = Math.min(0.05, ((now || performance.now()) - last) / 1000); last = now || performance.now();
+			var spec = SSO.music.spectrum(64, o.bpm || 124, 1);
+			return raf(host, function (dt) {
 				var st = spec.update(dt);
 				g.clearRect(0, 0, cv.width, cv.height);
 				g.globalAlpha = 0.85;
 				drawViz(g, cv.width, cv.height, spec, st, { style: "mirror", c1: o.c2, c2: o.c3, c3: "#ffffff", glow: true, gap: 0.35 });
 				g.globalAlpha = 1;
-				requestAnimationFrame(frame);
-			})();
-			return { stop: function () { alive = false; } };
+			});
 		}
 	});
 

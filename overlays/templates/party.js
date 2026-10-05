@@ -406,9 +406,10 @@
 				var t2 = rand(pool);
 				return { t: t2, seed: Math.random() * 1e9, adj: rand(ADJ), act: rand(ACTIONS) };
 			}
-			var walkers = 0;
+			var walkers = 0, alive = true;
+			SSO.onCleanup(root, function () { alive = false; });
 			function spawn(startAt) {
-				if (walkers >= c.count) { return; }
+				if (!alive || walkers >= c.count) { return; }
 				walkers++;
 				var pick = freshKey(), W = stage.clientWidth || 1280, fromLeft = Math.random() < 0.5;
 				var size = c.size * (pick.t.small ? 0.75 : 1);
@@ -423,6 +424,7 @@
 				var actAt = W * (0.25 + Math.random() * 0.5), acted = startAt != null && Math.random() < 0.5, pause = 0, last = performance.now();
 				var flip = function (d) { inner.style.transform = d > 0 ? "" : "scaleX(-1)"; };
 				(function step(now) {
+					if (!alive) { return; }
 					var dt = Math.min(0.05, (now - last) / 1000); last = now;
 					if (pause > 0) { pause -= dt; }
 					else {
@@ -437,13 +439,14 @@
 						if (act === "nap") { el.insertAdjacentHTML("beforeend", '<div class="pc-fx">💤</div>'); }
 						if (act === "juggle") { el.insertAdjacentHTML("beforeend", '<div class="pc-fx">🔴🟡🔵</div>'); }
 						if (act === "selfie") { el.insertAdjacentHTML("beforeend", '<div class="pc-fx">📸</div>'); }
-						if (act === "lookaround") { flip(-dir); setTimeout(function () { flip(dir); }, 1400); }
+						if (act === "lookaround") { flip(-dir); setTimeout(function () { if (alive) { flip(dir); } }, 1400); }
 						if (act === "sneeze") { el.insertAdjacentHTML("beforeend", '<div class="pc-fx">💨</div>'); }
 						if (c.talk && (act === "shout" || act === "wave" || Math.random() < 0.4)) {
 							bub.textContent = rand(SAY); bub.className = "pc-bub on";
-							setTimeout(function () { bub.className = "pc-bub"; }, 2600);
+							setTimeout(function () { if (alive) { bub.className = "pc-bub"; } }, 2600);
 						}
 						setTimeout(function () {
+							if (!alive) { return; }
 							var fx = el.querySelector(".pc-fx"); if (fx) { fx.parentNode.removeChild(fx); }
 							el.className = "pc walk" + (c.names ? " named" : "");
 						}, dur * 1000);
@@ -493,8 +496,10 @@
 				if (c.style === "fireplace") { return [{ x: W * 0.42, y: H * 0.78, s: 0.8 }, { x: W * 0.58, y: H * 0.78, s: 0.8 }]; }
 				return [{ x: W * 0.5, y: H * 0.8, s: 1 }];
 			}
-			var last = performance.now();
+			var last = performance.now(), frameId, alive = true;
+			SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); window.removeEventListener("resize", fit); });
 			(function frame(now) {
+				if (!alive) { return; }
 				var dt = Math.min(0.05, (now - last) / 1000); last = now;
 				var W = cv.width, H = cv.height, src = sources(W, H), base = Math.min(W, H) * 0.13 * c.intensity;
 				g.clearRect(0, 0, W, H);
@@ -578,7 +583,7 @@
 					return sp.life > 0;
 				});
 				g.globalCompositeOperation = "source-over";
-				requestAnimationFrame(frame);
+				frameId = requestAnimationFrame(frame);
 			})(last);
 		}
 	});
@@ -777,7 +782,7 @@
 			if (c.mode === "burst") {
 				burst();
 				setInterval(burst, Math.max(5, ctx && ctx.preview ? 8 : c.every) * 1000);
-				if (c.onshow) { SSO.obs.on("obsSourceVisibleChanged", function (d) { if (d && d.visible) { burst(); } }); }
+				if (c.onshow) { SSO.onCleanup(root, SSO.obs.on("obsSourceVisibleChanged", function (d) { if (d && d.visible) { burst(); } })); }
 			}
 			function shade(hex) { var m = /^#?([0-9a-f]{6})$/i.exec(hex); if (!m) { return hex; } var n = parseInt(m[1], 16); return "rgb(" + Math.round((n >> 16) * 0.7) + "," + Math.round(((n >> 8) & 255) * 0.7) + "," + Math.round((n & 255) * 0.7) + ")"; }
 			function bill(p) {
@@ -799,8 +804,10 @@
 				var s = p.s; g.fillStyle = p.col; g.beginPath(); g.moveTo(0, -s); g.quadraticCurveTo(s * 0.8, -s * 0.2, 0, s); g.quadraticCurveTo(-s * 0.8, -s * 0.2, 0, -s); g.fill();
 				g.strokeStyle = "rgba(0,0,0,.25)"; g.lineWidth = 1; g.beginPath(); g.moveTo(0, -s); g.lineTo(0, s * 1.2); g.stroke();
 			}
-			var last = performance.now();
+			var last = performance.now(), frameId, alive = true;
+			SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); window.removeEventListener("resize", fit); });
 			(function frame(now) {
+				if (!alive) { return; }
 				var dt = Math.min(0.05, (now - last) / 1000); last = now;
 				var H = cv.height, W = cv.width;
 				g.clearRect(0, 0, W, H);
@@ -833,7 +840,7 @@
 					}
 					g.restore();
 				}
-				requestAnimationFrame(frame);
+				frameId = requestAnimationFrame(frame);
 			})(last);
 		}
 	});

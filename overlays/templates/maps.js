@@ -477,8 +477,11 @@
 			function fit() { cv.width = cv.clientWidth || window.innerWidth; cv.height = cv.clientHeight || window.innerHeight; }
 			fit();
 			window.addEventListener("resize", fit);
+			var alive = true, frameId;
+			SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); window.removeEventListener("resize", fit); });
 			for (var i = 0; i < 260; i++) { drops.push({ x: Math.random(), y: Math.random(), v: 0.6 + Math.random(), s: Math.random() }); }
 			(function anim() {
+				if (!alive) { return; }
 				g.clearRect(0, 0, cv.width, cv.height);
 				var kind = wx && wx.kind;
 				if (kind === "rain" || kind === "storm" || kind === "snow") {
@@ -496,7 +499,7 @@
 						if (d.y > 1) { d.y = -0.05; d.x = Math.random() * 1.1; }
 					});
 				}
-				requestAnimationFrame(anim);
+				frameId = requestAnimationFrame(anim);
 			})();
 			if (c.style === "window" && stars) {
 				stars.width = stars.clientWidth || window.innerWidth;

@@ -60,7 +60,15 @@
 		var uT = gl.getUniformLocation(prog, "T"), uU = gl.getUniformLocation(prog, "U"), uN = gl.getUniformLocation(prog, "N"), uL = gl.getUniformLocation(prog, "LH");
 		var pal = FIRE_PAL[opts.palette] || FIRE_PAL.warm;
 		["P0", "P1", "P2", "P3"].forEach(function (n, i) { gl.uniform3fv(gl.getUniformLocation(prog, n), pal[i]); });
-		var data = new Float32Array(32), scale = 1, alive = true, t0 = performance.now(), cw = -1, ch = -1;
+		var data = new Float32Array(32), scale = 1, alive = true, t0 = performance.now(), cw = -1, ch = -1, frameId;
+		function stop() {
+			if (!alive) { return; }
+			alive = false;
+			cancelAnimationFrame(frameId);
+			var ext = gl.getExtension("WEBGL_lose_context");
+			if (ext) { ext.loseContext(); }
+		}
+		SSO.onCleanup(host, stop);
 		function fit() {
 			var w = host.clientWidth, h = host.clientHeight;
 			if (w === cw && h === ch) { return; }
@@ -82,9 +90,9 @@
 			gl.clearColor(0, 0, 0, 0);
 			gl.clear(gl.COLOR_BUFFER_BIT);
 			gl.drawArrays(gl.TRIANGLES, 0, 6);
-			requestAnimationFrame(frame);
+			frameId = requestAnimationFrame(frame);
 		})(t0);
-		return { canvas: cv, stop: function () { alive = false; } };
+		return { canvas: cv, stop: stop };
 	};
 
 	// Soft flicker value 0..1 that all fire lighting shares.
@@ -677,7 +685,7 @@
 			el.appendChild(host);
 			root.appendChild(el);
 			var eng = SSO.ENGINES[c.decor] || SSO.ENGINES.hearth, def = eng.colors || [];
-			eng.start(host, { c1: SSO.color(c.c1 || def[0]), c2: SSO.color(c.c2 || def[1]), c3: SSO.color(def[2]), fire: c.fire || "", coat: c.coat, speed: 1 });
+			SSO.startEngine(eng.id, host, { c1: SSO.color(c.c1 || def[0]), c2: SSO.color(c.c2 || def[1]), c3: SSO.color(def[2]), fire: c.fire || "", coat: c.coat, speed: 1 });
 			if (c.title || c.subtitle) {
 				var tx = document.createElement("div");
 				tx.className = "fp-txt";
@@ -721,7 +729,12 @@
 		var oldRender = cf.render;
 		cf.render = function (root, c, ctx) {
 			var test = document.createElement("canvas"), ok = false;
-			try { ok = !!(test.getContext("webgl") || test.getContext("experimental-webgl")); } catch (e) { ok = false; }
+			try {
+				var probe = test.getContext("webgl") || test.getContext("experimental-webgl");
+				ok = !!probe;
+				var ext = probe && probe.getExtension("WEBGL_lose_context");
+				if (ext) { ext.loseContext(); }
+			} catch (e) { ok = false; }
 			if (!ok) { return oldRender.apply(this, arguments); }
 			var back = canvasIn(root, 1), fireHost = document.createElement("div"), front, G = null, bg = null, fgc = null, emb = embers(), t = 0, last = performance.now();
 			fireHost.style.cssText = "position:absolute;left:0;top:0;width:100%;height:100%;";
@@ -789,7 +802,10 @@
 				G = L;
 			}
 			var fire = SSO.fireGL(fireHost, { palette: c.color, quality: 0.8, sources: function () { return G ? G.src : []; } });
+			var alive = true, frameId;
+			SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); });
 			(function frame(now) {
+				if (!alive) { return; }
 				var dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
 				if (back._fit() || !bg) { front._fit(); build(); }
 				var g = back.getContext("2d"), f = front.getContext("2d"), d = back._d, L = G;
@@ -813,7 +829,7 @@
 				f.clearRect(0, 0, L.W, L.H);
 				f.drawImage(fgc, 0, 0, L.W, L.H);
 				if (c.sparks && L.bed) { emb(f, dt, [[L.bed[0], L.bed[1], L.bed[2], L.bed[3]]], 4 * c.intensity, lightCol); }
-				requestAnimationFrame(frame);
+				frameId = requestAnimationFrame(frame);
 			})(last);
 		};
 	}

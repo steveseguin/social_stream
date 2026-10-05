@@ -15,9 +15,13 @@
 		return '<span class="' + (cls || "") + '">' + SSO.iconHTML(s.net, icons) + (icons === "none" ? "" : " ") + '<span class="sso-handle">' + esc(s.handle) + "</span></span>";
 	}
 
-	function onResize(fn) {
-		var t;
-		window.addEventListener("resize", function () { clearTimeout(t); t = setTimeout(fn, 150); });
+	function onResize(host, fn) {
+		var t, alive = true;
+		function run() { if (alive) { fn(); } }
+		function resize() { clearTimeout(t); t = setTimeout(run, 150); }
+		window.addEventListener("resize", resize);
+		SSO.onCleanup(host, function () { alive = false; clearTimeout(t); window.removeEventListener("resize", resize); });
+		return run;
 	}
 
 	// Rotates through children of el, toggling .on/.off; returns nothing. Single child stays on.
@@ -54,8 +58,7 @@
 			void track.offsetWidth;
 			track.style.animation = kf + " " + (gw / Math.max(5, speed)) + "s linear infinite";
 		}
-		SSO.fontsReady(build);
-		onResize(build);
+		SSO.fontsReady(onResize(wrap, build));
 	}
 
 	// Extra room the banner needs above/below the bar for mascots and decorations.
@@ -368,8 +371,7 @@
 					}
 				}
 				fit();
-				SSO.fontsReady(fit);
-				onResize(fit);
+				SSO.fontsReady(onResize(root, fit));
 			}
 		}
 	});
@@ -552,9 +554,8 @@
 				}
 				if (fairy) { drawFairy(er, nodes); }
 			}
-			SSO.fontsReady(place);
+			SSO.fontsReady(onResize(root, place));
 			place();
-			onResize(place);
 		}
 	});
 

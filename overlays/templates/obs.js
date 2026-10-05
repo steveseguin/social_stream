@@ -12,7 +12,8 @@
 		var now = Date.now();
 		var data = {};
 		try { data = JSON.parse(SSO.store.get(store) || "{}") || {}; } catch (e) { data = {}; }
-		if (opts.reset || !data.start || !data.seen || now - data.seen > gap) { data = { start: now, seen: now }; }
+		// OBS-only timers can be loaded long before the first broadcast starts.
+		if (opts.reset || !data.start || !data.seen || now - data.seen > gap) { data = { start: now, seen: now, waiting: !!opts.waitForStream }; }
 		function save() { data.seen = Date.now(); SSO.store.set(store, JSON.stringify(data)); }
 		if (!opts.preview) {
 			save();
@@ -21,8 +22,12 @@
 		return {
 			start: function () { return data.start; },
 			restart: function () { data = { start: Date.now(), seen: Date.now() }; if (!opts.preview) { save(); } },
-			// Called on obsStreamingStarted: only a long break counts as a new stream.
-			resume: function () { if (Date.now() - (data.stopped || data.seen) > gap) { this.restart(); } },
+			// Start a waiting OBS timer; subsequent short drops keep the same stream.
+			resume: function () {
+				if (data.waiting || Date.now() - (data.stopped || data.seen) > gap) { this.restart(); }
+				delete data.stopped;
+				if (!opts.preview) { save(); }
+			},
 			stopped: function () { data.stopped = Date.now(); if (!opts.preview) { save(); } }
 		};
 	};
@@ -106,13 +111,18 @@
 			var preview = ctx && ctx.preview;
 			var reset = ctx && ctx.params && ctx.params.has("reset");
 			var fixed = c.since ? SSO.parseTarget(c.since) : null;
-			var session = SSO.session("live:" + c.key, c.gap, { preview: preview, reset: reset });
-			var live = !c.obsonly;
+			var session = SSO.session("live:" + c.key, c.gap, { preview: preview, reset: reset, waitForStream: c.obsonly && SSO.obs.available() });
+			var live = !c.obsonly, alive = true;
+			SSO.onCleanup(root, function () { alive = false; });
 			if (c.obsonly) {
-				SSO.obs.status(function (st) { live = st ? !!st.streaming : !SSO.obs.available(); });
+				SSO.obs.status(function (st) {
+					if (!alive) { return; }
+					live = st ? !!st.streaming : !SSO.obs.available();
+					if (live) { session.resume(); }
+				});
 			}
-			SSO.obs.on("obsStreamingStarted", function () { session.resume(); live = true; });
-			SSO.obs.on("obsStreamingStopped", function () { session.stopped(); if (c.obsonly) { live = false; } });
+			SSO.onCleanup(root, SSO.obs.on("obsStreamingStarted", function () { session.resume(); live = true; }));
+			SSO.onCleanup(root, SSO.obs.on("obsStreamingStopped", function () { session.stopped(); if (c.obsonly) { live = false; } }));
 			function tick() {
 				if (!live) { el.className = "lt2 off"; time.textContent = c.offline; return; }
 				el.className = "lt2";

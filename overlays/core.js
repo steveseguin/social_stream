@@ -62,6 +62,12 @@
 		var v = String(value == null ? "" : value).trim();
 		if (!v) { return fallback || "transparent"; }
 		if (/^[0-9a-f]{3}([0-9a-f]{3})?([0-9a-f]{2})?$/i.test(v)) { return "#" + v; }
+		// Colours are also used in generated HTML attributes. Validate the CSS value
+		// and reject markup delimiters before allowing it into those attributes.
+		if (/[<>"']/.test(v)) { return fallback || "transparent"; }
+		var style = document.createElement("span").style;
+		style.color = v;
+		if (!style.color) { return fallback || "transparent"; }
 		return v;
 	};
 	SSO.rgba = function (value, alpha) {
@@ -516,7 +522,9 @@
 	SSO.obs = {
 		available: function () { return !!global.obsstudio; },
 		on: function (name, fn) {
-			global.addEventListener(name, function (e) { fn(e && e.detail ? e.detail : {}); });
+			function listener(e) { fn(e && e.detail ? e.detail : {}); }
+			global.addEventListener(name, listener);
+			return function () { global.removeEventListener(name, listener); };
 		},
 		status: function (cb) {
 			try {

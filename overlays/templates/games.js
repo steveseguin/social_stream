@@ -9,12 +9,13 @@
 		function fit() { var d = Math.min(window.devicePixelRatio || 1, 2) * (scale || 1); cv.width = Math.max(2, Math.round((host.clientWidth || 640) * d)); cv.height = Math.max(2, Math.round((host.clientHeight || 360) * d)); }
 		fit();
 		window.addEventListener("resize", fit);
+		SSO.onCleanup(host, function () { window.removeEventListener("resize", fit); });
 		return cv;
 	}
 	function loop(fn) {
-		var alive = true, last = null;
-		(function f(now) { if (!alive) { return; } if (last === null) { last = now; } var dt = Math.min(0.05, (now - last) / 1000); last = now; fn(dt); requestAnimationFrame(f); })(performance.now());
-		return { stop: function () { alive = false; } };
+		var alive = true, last = null, frameId;
+		(function f(now) { if (!alive) { return; } if (last === null) { last = now; } var dt = Math.min(0.05, (now - last) / 1000); last = now; fn(dt); frameId = requestAnimationFrame(f); })(performance.now());
+		return { stop: function () { alive = false; cancelAnimationFrame(frameId); } };
 	}
 
 	// ---------------------------------------------------------------- snake

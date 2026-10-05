@@ -377,10 +377,13 @@
 					tk.className = "tk";
 					tk.textContent = lines.join("     •     ") + "     •     ";
 					msg.appendChild(tk);
+					var alive = true, frameId;
+					SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); });
 					SSO.fontsReady(function () {
+						if (!alive) { return; }
 						tk.textContent = tk.textContent + tk.textContent;
 						var half = tk.scrollWidth / 2, x = 0, last = performance.now();
-						(function step(now) { x -= c.speed * Math.min(0.05, (now - last) / 1000); last = now; if (-x >= half) { x += half; } tk.style.transform = "translateX(" + x.toFixed(1) + "px)"; requestAnimationFrame(step); })(last);
+						(function step(now) { if (!alive) { return; } x -= c.speed * Math.min(0.05, (now - last) / 1000); last = now; if (-x >= half) { x += half; } tk.style.transform = "translateX(" + x.toFixed(1) + "px)"; frameId = requestAnimationFrame(step); })(last);
 					});
 				} else {
 					var els = lines.map(function (l) { var d = document.createElement("div"); d.className = "ln"; d.textContent = l; msg.appendChild(d); return d; }), i = 0;

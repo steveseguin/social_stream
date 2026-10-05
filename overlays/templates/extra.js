@@ -135,6 +135,8 @@
 			el.innerHTML = c.image ? '<img src="' + esc(c.image) + '" alt="">' : esc(c.text);
 			root.appendChild(el);
 			var x = 40, y = 40, dx = 1, dy = 1, last = null, hue = 0;
+			var alive = true, frameId;
+			SSO.onCleanup(root, function () { alive = false; cancelAnimationFrame(frameId); });
 			function recolor() {
 				if (!c.recolor) { return; }
 				hue = (hue + 67 + Math.random() * 90) % 360;
@@ -142,6 +144,7 @@
 				else { el.style.color = "hsl(" + hue + ",95%,62%)"; }
 			}
 			function frame(t) {
+				if (!alive) { return; }
 				if (last === null) { last = t; }
 				var dt = Math.min(0.05, (t - last) / 1000);
 				last = t;
@@ -160,9 +163,9 @@
 					setTimeout(function () { if (pop.parentNode) { pop.parentNode.removeChild(pop); } }, 2500);
 				}
 				el.style.transform = "translate(" + x + "px," + y + "px)";
-				requestAnimationFrame(frame);
+				frameId = requestAnimationFrame(frame);
 			}
-			requestAnimationFrame(frame);
+			frameId = requestAnimationFrame(frame);
 		}
 	});
 
