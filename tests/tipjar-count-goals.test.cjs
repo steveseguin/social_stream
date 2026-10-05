@@ -238,6 +238,20 @@ async function testJarPrefillReset(baseUrl, browser) {
 		await page.waitForTimeout(200);
 		assert.strictEqual(await page.evaluate(() => jarHearts.length), 0, 'An empty total must not prefill');
 		assert.deepStrictEqual(errors, []);
+		for (const mode of ['', '&hype&donationpoints=1']) {
+			const next = await openTipJar(context, baseUrl + '/tipjar.html?preview&style=jar&goal=100&celebration=hearts' + mode);
+			await next.page.evaluate(() => processData({ id: 'reset-donation', type: 'youtube', chatname: 'Fixture', hasDonation: '$50', donoValue: 50 }));
+			await next.page.waitForFunction(() => jarHearts.length > 0);
+			await next.page.evaluate(() => processData({ cmd: 'resettipjar' }));
+			await next.page.waitForTimeout(2500);
+			assert.strictEqual(await next.page.evaluate(() => currentAmount), 0);
+			assert.strictEqual(await next.page.evaluate(() => jarHearts.length), 0, 'Reset must cancel pending donation hearts');
+			assert.strictEqual(await next.page.evaluate(() => jarHeartTimers.size), 0);
+			await next.page.evaluate(() => processData({ id: 'after-reset', type: 'youtube', chatname: 'Fixture', hasDonation: '$5', donoValue: 5 }));
+			await next.page.waitForFunction(() => jarHearts.length > 0);
+			assert.deepStrictEqual(next.errors, []);
+			await next.page.close();
+		}
 	} finally {
 		await context.close();
 	}
@@ -297,7 +311,7 @@ async function main() {
 		await testFollowerTipExclusion(baseUrl, browser);
 		console.log("PASS Follower and Hype goals honor tip exclusion while preserving follower contributions");
 		await testJarPrefillReset(baseUrl, browser);
-		console.log("PASS Reset keeps the jar empty while its starting hearts are still loading");
+		console.log("PASS Reset clears prefilled jars and cancels queued donation hearts in donation and Hype modes");
 		await testGoalLayouts(baseUrl, browser);
 		console.log("PASS Goal layouts render donations, count/Hype/recurring goals, and narrow widths");
 	} finally {

@@ -80,11 +80,11 @@
         left: 0;
         width: 100%; 
         text-align: center; 
-        color: #fff;
+        color: #0A1236;
         font-weight: bold;
         font-size: 24px;
         z-index: 4;
-        text-shadow: 0 0 2px rgba(0, 0, 0, 0.9), 0 2px 6px rgba(0, 0, 0, 0.75);
+        text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
     }
 
     #completion-text {
@@ -93,12 +93,12 @@
         left: 0;
         width: 100%;
         text-align: center;
-        color: #fff;
+        color: #0A1236;
         font-weight: bold;
         font-size: 20px;
         z-index: 4;
         display: none;
-        text-shadow: 0 0 2px rgba(0, 0, 0, 0.9), 0 2px 6px rgba(0, 0, 0, 0.75);
+        text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
     }
 
     body.hype-mode #completion-text {
@@ -379,11 +379,6 @@
         margin: 20px 0;
     }
 
-    body.gold .minimal-amount { color: #edc56b; text-shadow: 0 2px 10px rgba(237, 197, 107, 0.45); }
-    body.gold .minimal-percentage { background: linear-gradient(45deg, #edc56b, #f5dfa7); -webkit-background-clip: text; }
-    body.neon .minimal-amount { color: #df8bff; text-shadow: 0 0 12px rgba(223, 139, 255, 0.6); }
-    body.neon .minimal-percentage { background: linear-gradient(45deg, #df8bff, #69e4ef); -webkit-background-clip: text; }
-
     /* Fluid Goal Bar Style */
     #bar-style {
         width: 100%;
@@ -542,17 +537,19 @@
         border: 1px solid rgba(255, 255, 255, 0.18);
         border-radius: 3px;
         overflow: hidden;
-        box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.55);
     }
 
-    .compact-fill::before,
-    .vertical-fill::before {
+    /* Refreshed appearance: gloss, a glowing leading edge and gauge ticks for the compact and vertical bars */
+    body.tipjar-refresh .compact-track { box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.55); }
+
+    body.tipjar-refresh .compact-fill::before,
+    body.tipjar-refresh .vertical-fill::before {
         content: '';
         position: absolute;
         pointer-events: none;
     }
 
-    .compact-fill::before {
+    body.tipjar-refresh .compact-fill::before {
         left: 0;
         right: 0;
         top: 0;
@@ -560,7 +557,7 @@
         background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0));
     }
 
-    .compact-fill::after {
+    body.tipjar-refresh .compact-fill::after {
         content: '';
         position: absolute;
         top: 0;
@@ -571,7 +568,7 @@
         box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
     }
 
-    .vertical-fill::before {
+    body.tipjar-refresh .vertical-fill::before {
         top: 0;
         bottom: 0;
         left: 0;
@@ -579,7 +576,7 @@
         background: linear-gradient(90deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.08) 38%, rgba(0, 0, 0, 0) 60%, rgba(0, 0, 0, 0.22) 100%);
     }
 
-    .vertical-fill::after {
+    body.tipjar-refresh .vertical-fill::after {
         content: '';
         position: absolute;
         left: 0;
@@ -634,11 +631,12 @@
         border: 1px solid rgba(255, 255, 255, 0.18);
         border-radius: 4px;
         overflow: hidden;
-        box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.55);
     }
 
+    body.tipjar-refresh .vertical-track { box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.55); }
+
     /* Quarter marks so the column reads like a gauge */
-    .vertical-track::after {
+    body.tipjar-refresh .vertical-track::after {
         content: '';
         position: absolute;
         top: 0;
@@ -695,6 +693,7 @@
     body.neon { --goal-accent: #df8bff; --goal-accent-end: #69e4ef; }
     body.gold { --goal-accent: #edc56b; --goal-accent-end: #f5dfa7; --goal-panel: rgba(30, 26, 20, 0.95); }
     body.tipjar-refresh .style-container { min-width: 0; font-variant-numeric: tabular-nums; }
+    body.tipjar-refresh #tip-text, body.tipjar-refresh #completion-text { color: #fff; text-shadow: 0 0 2px rgba(0, 0, 0, 0.9), 0 2px 6px rgba(0, 0, 0, 0.75); }
     body.tipjar-refresh .goal-title, body.tipjar-refresh .fluid-bar-title, body.tipjar-refresh .vertical-title, body.tipjar-refresh #tip-text { overflow-wrap: anywhere; }
     body.tipjar-refresh .goal-meter-container {
         background: var(--goal-panel);
@@ -1679,8 +1678,7 @@
         const nativeUnitLabel = urlParams.get('tipjarunitlabel') || getDonationTypeLabel(donationTypeFilter);
 
         // Fluid goal bar styling + recurring goal levels
-        // An explicit gold/neon theme colours every bar; the default theme keeps the classic blue-to-red fill.
-        const themeFill = theme === 'gold' ? ['#edc56b', '#f5dfa7'] : (theme === 'neon' ? ['#df8bff', '#69e4ef'] : ['#2196F3', '#f44336']);
+        const themeFill = !refreshedAppearance ? ['#2196F3', '#f44336'] : theme === 'gold' ? ['#edc56b', '#f5dfa7'] : (theme === 'neon' ? ['#df8bff', '#69e4ef'] : ['#2196F3', '#f44336']);
         const fillStartColor = urlParams.get('fillstart') || urlParams.get('barcolorstart') || themeFill[0];
         const fillEndColor = urlParams.get('fillend') || urlParams.get('barcolorend') || themeFill[1];
         const fillMode = (urlParams.get('fillmode') || 'progress').toLowerCase(); // progress | gradient | solid
@@ -1860,9 +1858,10 @@
                 render: { visible: false }
             };
             
-            const leftWall = Bodies.rectangle(100, 300, 20, 500, wallOptions);
-            const rightWall = Bodies.rectangle(300, 300, 20, 500, wallOptions);
-            const bottomWall = Bodies.rectangle(200, 470, 200, 20, wallOptions);
+            // Walls follow the glass of the jar artwork (about x 35-365), so tips spread across the whole jar.
+            const leftWall = Bodies.rectangle(25, 300, 20, 500, wallOptions);
+            const rightWall = Bodies.rectangle(375, 300, 20, 500, wallOptions);
+            const bottomWall = Bodies.rectangle(200, 470, 360, 20, wallOptions);
             const leftSlope = Bodies.rectangle(150, 500, 140, 20, {
                 isStatic: true,
                 angle: Math.PI * 0.15,
@@ -2769,22 +2768,30 @@
             }
         }
 
-        const MAX_JAR_HEARTS = 60;
+        const MAX_JAR_HEARTS = 90;
         const jarHearts = [];
-        const jarSeedTimers = [];
+        const jarHeartTimers = new Set();
 
-        function addHeart(amount) {
+        function scheduleJarHeart(amount, delay) {
+            const timer = setTimeout(() => {
+                jarHeartTimers.delete(timer);
+                addHeart(amount);
+            }, delay);
+            jarHeartTimers.add(timer);
+        }
+
+        function addHeart(amount, restAt) {
             if (style !== 'jar' || !world) return;
-            
+
             const heartSize = Math.min(20 + (amount / 10), 50);
-            const xPosition = 110 + Math.random() * 180;
+            const xPosition = restAt ? restAt.x : 80 + Math.random() * 240;
             
             // dropitem swaps the golden heart for a generated coin, gem, star or bill.
             const useSprite = dropItem && dropItem !== 'heart';
             const spriteTexture = useSprite ? dropItemTexture(dropItem) : "./media/goldenheart.png";
             const spriteSize = useSprite ? 64 : 50;
 
-            const heart = Matter.Bodies.circle(xPosition, 50, heartSize / 2, {
+            const heart = Matter.Bodies.circle(xPosition, restAt ? restAt.y : 50, heartSize / 2, {
                 restitution: 0.4,
                 friction: 0.9,
                 density: 0.004,
@@ -2799,11 +2806,17 @@
                 }
             });
 
-            const velocityY = 2 + Math.random() * 2;
-            Matter.Body.setVelocity(heart, { 
-                x: (Math.random() - 0.5) * 2,
-                y: velocityY 
-            });
+            if (restAt) {
+                // Prefilled hearts start settled and asleep, so a resumed jar is already full and perfectly still.
+                Matter.Body.setAngle(heart, restAt.angle);
+                Matter.Sleeping.set(heart, true);
+            } else {
+                const velocityY = 2 + Math.random() * 2;
+                Matter.Body.setVelocity(heart, {
+                    x: (Math.random() - 0.5) * 2,
+                    y: velocityY
+                });
+            }
 
             Matter.World.add(world, heart);
             jarHearts.push(heart);
@@ -2813,19 +2826,31 @@
             }
         }
 
-        // Pre-fill the jar to match a starting or saved total (about 36 hearts at 100%).
+        // Pre-fill the jar to match a starting or saved total (72 hearts at 100%): stacked in
+        // offset rows on the jar floor, placed all at once so the first frame already shows the level.
         function seedJarHearts() {
             if (style !== 'jar' || !world) return;
             const percentage = Math.max(0, Math.min(100, getProgressState().percentage || 0));
-            const count = Math.round(percentage / 100 * 36);
+            const count = Math.round(percentage / 100 * 72);
+            if (!count) return;
+            engine.enableSleeping = true;
+            // A fixed 32px heart makes a full goal reach about three quarters of the way up the jar.
+            const amount = 120;
+            const size = 32;
+            const cols = Math.max(1, Math.floor(316 / size));
             for (let i = 0; i < count; i++) {
-                jarSeedTimers.push(setTimeout(() => addHeart(goal / 36), i * 90));
+                const row = Math.floor(i / cols);
+                const col = i % cols;
+                const offset = row % 2 ? size / 2 : 0;
+                const x = Math.min(362 - size / 2, 40 + size / 2 + col * size + offset);
+                const y = 458 - size / 2 - row * size * 0.86;
+                addHeart(amount, { x: x, y: y, angle: ((i * 37) % 9 - 4) * 0.08 });
             }
         }
 
         function clearJarContents() {
-            jarSeedTimers.forEach(clearTimeout);
-            jarSeedTimers.length = 0;
+            jarHeartTimers.forEach(clearTimeout);
+            jarHeartTimers.clear();
             if (style !== 'jar' || !world || typeof Matter === 'undefined' || !Matter.Composite) return;
             const bodies = Matter.Composite.allBodies(world);
             bodies.forEach(body => {
@@ -4003,9 +4028,7 @@
             } else if (celebration === 'hearts' && style === 'jar') {
                 const heartCount = Math.min(Math.ceil(contribution.points / 2.5), 10);
                 for (let i = 0; i < heartCount; i++) {
-                    setTimeout(() => {
-                        addHeart(contribution.points / heartCount);
-                    }, i * 200 + Math.random() * 300);
+                    scheduleJarHeart(contribution.points / heartCount, i * 200 + Math.random() * 300);
                 }
             } else if (celebration === 'confetti') {
                 createConfetti();
@@ -4097,9 +4120,7 @@
             } else if (celebration === 'hearts' && style === 'jar') {
                 const heartCount = Math.min(Math.ceil(goalValue / (hypeMode ? 2.5 : 5)), 10);
                 for (let i = 0; i < heartCount; i++) {
-                    setTimeout(() => {
-                        addHeart(goalValue / heartCount);
-                    }, i * 200 + Math.random() * 300);
+                    scheduleJarHeart(goalValue / heartCount, i * 200 + Math.random() * 300);
                 }
             } else if (celebration === 'confetti') {
                 createConfetti();
