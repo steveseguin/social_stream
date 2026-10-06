@@ -78,7 +78,7 @@
 		isDuplicate(name, message, contextKey = "") {
 			if (!name && !message) return true;
 			const currentTime = Date.now();
-			const messageKey = contextKey ? `${contextKey}:${name}:${message}` : `${name}:${message}`;
+			const messageKey = contextKey || `${name}:${message}`;
 			const existing = this._entries.get(messageKey);
 			if (existing) {
 				if (!this._timeWindow || (currentTime - existing.time) <= this._timeWindow) {
@@ -136,6 +136,11 @@
 			if (data.textonly && data.chatmessage) {
 				const message = document.createElement("template").content.appendChild(document.createElement("div"));
 				message.innerHTML = data.chatmessage;
+				if (!data.hasDonation && !data.event) {
+					message.querySelectorAll("img").forEach(function(image) {
+						image.replaceWith(document.createTextNode(image.getAttribute("alt") || "[emote]"));
+					});
+				}
 				data.chatmessage = message.textContent || "";
 			}
 			var payload = {
@@ -556,7 +561,7 @@
 						return;
 					}
 					node.src = node.src + "";
-					resp += "<img src='" + node.src + "' />";
+					resp += "<img src='" + node.src + "' alt='" + escapeHtml(node.alt || "", true) + "' />";
 				} else if (node.nodeName == "SVG") {
 					resp += node.outerHTML;
 				}
@@ -2661,6 +2666,18 @@
 		return { hasEventIndicator, join, share, follow, like };
 	}
 
+	function getTikTokMessageId(ele) {
+		try {
+			var fiberKey = Object.keys(ele).find(function(key) { return key.indexOf("__reactFiber") === 0; });
+			var fiber = fiberKey && ele[fiberKey];
+			for (var depth = 0; fiber && depth < 8; depth++, fiber = fiber.return) {
+				var message = fiber.memoizedProps && fiber.memoizedProps.message;
+				if (message && message.msgId) return String(message.msgId);
+			}
+		} catch (e) {}
+		return "";
+	}
+
 	function processMessage(ele) {
 		// TikTok reuses DOM elements, so dataset.skip must never decide whether a chat message is new.
 		if (!ele) return;
@@ -3013,10 +3030,8 @@
 			(!!chatmessage && chatmessage.includes(".tiktokcdn.com/img/") && chatmessage.includes("×"));
 		// Gift counts repeat legitimately in later streaks on recycled DOM slots.
 		// Their bounded streak tracker below handles duplicate renders instead.
-		if (!isGiftMessage && messageLog?.isDuplicate(chatname, chatmessage)) {
-			////console.log("duplicate message; skipping",chatname, chatmessage);
-			return;
-		}
+		const nativeMessageId = !ital && !isGiftMessage ? getTikTokMessageId(ele) : "";
+		if (nativeMessageId && (!chatname || !chatmessage.trim())) return;
 		var data = {};
 		data.chatname = chatname;
 		data.chatbadges = chatbadges;
@@ -3031,6 +3046,7 @@
 		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "tiktok";
+		if (nativeMessageId) data.meta = { messageId: nativeMessageId };
 		data.event = ital;
 		if (data.event && typeof data.nameColor === "string") {
 			const normalizedColor = data.nameColor.trim().toLowerCase();
@@ -3050,6 +3066,7 @@
 			////console.log("Has the channel changed? If so, click the page to validate it");
 			return;
 		}
+		if (!isGiftMessage && messageLog?.isDuplicate(chatname, chatmessage, nativeMessageId ? "chat:" + nativeMessageId : "")) return;
 		addTikTokEventMeta(data, memberLevel);
 		addTikTokTopViewerMeta(data);
 		lastMessageTime = Date.now();
