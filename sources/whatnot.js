@@ -6,7 +6,9 @@
 	var settings = {};
 	var observer = null;
 	var observedList = null;
-	var processedMessageNodes = new WeakSet();
+	var observedChatLocation = "";
+	var processedMessageNodes = new WeakMap();
+	var processedMessageIndices = new Set();
 	var lastDataIndex = -1;
 	var lastViewerCount = null;
 	var lastAuctionSnapshot = "";
@@ -21,6 +23,7 @@
 	var webSocketActivityWindowMs = 30000;
 	var lastWebSocketLivestreamState = "";
 	var lastWebSocketGiveawayState = "";
+	var lastPinnedItemState = "";
 	var webSocketSnapshotRefreshTimer = null;
 
 	function escapeHtml(unsafe) {
@@ -931,6 +934,7 @@
 	}
 
 	function scheduleWebSocketSnapshotRefresh() {
+		if (chatOnly) return;
 		if (webSocketSnapshotRefreshTimer) {
 			clearTimeout(webSocketSnapshotRefreshTimer);
 		}
@@ -963,7 +967,7 @@
 		scheduleWebSocketSnapshotRefresh();
 	}
 
-	function handleWebSocketGiveawayEntryUpdate(payload) {
+	function handleWebSocketGiveawayEntryUpdate(payload, wsChannel) {
 		if (!payload || typeof payload !== "object") {
 			return;
 		}
@@ -975,6 +979,27 @@
 			return;
 		}
 		lastWebSocketGiveawayState = snapshotKey;
+		var meta = buildWebSocketMeta(wsChannel, "giveaway_entry_count_updated", payload);
+		meta.giveaway = JSON.parse(snapshotKey);
+		sendMetaEvent("commerce_update", meta);
+		scheduleWebSocketSnapshotRefresh();
+	}
+
+	function handleWebSocketPinnedItems(payload, wsChannel) {
+		if (!payload || !Array.isArray(payload.item)) return;
+		var items = payload.item.slice(0, 50).map(function (item) {
+			var result = {};
+			["type", "id", "productId", "name"].forEach(function (key) {
+				if (item && (typeof item[key] === "string" || typeof item[key] === "number")) result[key] = item[key];
+			});
+			return result;
+		});
+		var state = JSON.stringify([wsChannel.replace(/^[^:]+:/, ""), items]);
+		if (state === lastPinnedItemState) return;
+		lastPinnedItemState = state;
+		var meta = buildWebSocketMeta(wsChannel, "pinned_item_updated", payload);
+		meta.pinnedItems = items;
+		sendMetaEvent("commerce_update", meta);
 		scheduleWebSocketSnapshotRefresh();
 	}
 
@@ -1006,21 +1031,27 @@
 		if (!isExtensionOn || !payload || typeof payload !== "object" || Array.isArray(payload)) {
 			return;
 		}
-		// The page interceptor and desktop monitor can deliver the same packet.
-		// Only suppress a brief duplicate, not later sales of the same product.
-		var packetKey = wsChannel + "|" + eventType + "|" + JSON.stringify(payload);
+		// Public/authenticated channels and the desktop monitor can overlap.
+		// Native event timestamps identify repeats without collapsing later sales.
+		var product = payload.product || {};
+		var bid = product.highestBid || {};
+		var identity = payload.id || (eventType === "new_bid" && bid.id) || payload.timestamp
+			|| (eventType === "giveaway_won" && (payload.orderId || product.orderId))
+			|| (eventType === "giveaway_started" && product.giveaway && product.giveaway.giveawayEndTime);
+		var stream = payload.livestreamId || product.livestreamId || wsChannel.replace(/^[^:]+:/, "");
+		var packetKey = JSON.stringify([stream, eventType, product.id || payload.productId,
+			payload.orderId || product.orderId, payload.transactionId,
+			identity || payload]);
 		var now = Date.now();
-		if (recentCommercePackets.has(packetKey) && now - recentCommercePackets.get(packetKey) < 1000) {
+		if (recentCommercePackets.has(packetKey) && (identity || now - recentCommercePackets.get(packetKey) < 1000)) {
 			return;
 		}
 		recentCommercePackets.delete(packetKey);
 		recentCommercePackets.set(packetKey, now);
-		if (recentCommercePackets.size > 250) {
+		if (recentCommercePackets.size > 2000) {
 			recentCommercePackets.delete(recentCommercePackets.keys().next().value);
 		}
 
-		var product = payload.product || {};
-		var bid = product.highestBid || {};
 		var user = payload.user || payload.purchaserUser || product.purchaserUser || {};
 		// Payment notifications can identify the purchaser without a user object.
 		// Use only the identity on this packet; never borrow a previous buyer.
@@ -1041,7 +1072,9 @@
 			auction_ended: "Auction ended",
 			product_sold: "Item sold",
 			payment_failed: "Payment failed",
-			payment_succeeded: "Payment succeeded"
+			payment_succeeded: "Payment succeeded",
+			giveaway_started: "Giveaway started",
+			giveaway_won: "Giveaway won"
 		};
 		var data = createWebSocketChatData(user, "");
 		data.platform = "whatnot";
@@ -1066,6 +1099,7 @@
 			transactionId: payload.transactionId,
 			livestreamId: payload.livestreamId || product.livestreamId,
 			bidId: bid.id,
+			entryCount: payload.giveaway && payload.giveaway.entryCount,
 			bids: product.bidCount,
 			auctionEndTime: product.auctionEndTime,
 			status: product.status,
@@ -1170,12 +1204,12 @@
 		if (!payload || typeof payload !== "object") {
 			return;
 		}
-		if (rememberWebSocketMessageId(payload.id || "")) {
-			return;
-		}
 		var user = payload.user || {};
 		var messageText = payload.message == null ? "" : String(payload.message);
 		if (!user.username && !messageText) {
+			return;
+		}
+		if (rememberWebSocketMessageId(payload.id ? wsChannel + "|" + payload.id : "")) {
 			return;
 		}
 		lastWebSocketChatAt = Date.now();
@@ -1279,6 +1313,8 @@
 			case "product_sold":
 			case "payment_failed":
 			case "payment_succeeded":
+			case "giveaway_started":
+			case "giveaway_won":
 				handleWebSocketCommerceEvent(parsedArray[4], wsChannel, eventType);
 				return;
 			case "new_msg":
@@ -1302,15 +1338,16 @@
 				handleWebSocketLivestreamUpdate(payload);
 				return;
 			case "giveaway_entry_count_updated":
-				handleWebSocketGiveawayEntryUpdate(payload);
+				handleWebSocketGiveawayEntryUpdate(payload, wsChannel);
+				return;
+			case "pinned_item_updated":
+				handleWebSocketPinnedItems(payload, wsChannel);
 				return;
 			case "product_created":
 			case "product_updated":
 			case "product_deleted":
 			case "product_pinned":
 			case "product_unpinned":
-			case "giveaway_started":
-			case "giveaway_won":
 			case "user_joined":
 				handleWebSocketSnapshotPayload(payload);
 				return;
@@ -1328,6 +1365,97 @@
 			return;
 		}
 		handleWhatnotWebSocketFrame(event.data.data);
+	}
+
+	// The public auction channel is separate from chat and requires no login.
+	// Use the same parser in the lightweight source and the Whatnot website.
+	function connectPublicAuction(showId, onStatus) {
+		if (!/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(showId)) return function () {};
+		var socket = null;
+		var retry = null;
+		var heartbeat = null;
+		var timeout = null;
+		var stopped = false;
+		var attempts = 0;
+		var reference = 0;
+		var topic = "public_auction:" + showId;
+		function status(value) { if (onStatus) onStatus(value); }
+		function clearSocket() {
+			clearInterval(heartbeat);
+			clearTimeout(timeout);
+			if (socket) {
+				socket.onopen = socket.onmessage = socket.onerror = socket.onclose = null;
+				try { socket.close(); } catch (e) {}
+				socket = null;
+			}
+		}
+		function reconnect() {
+			clearSocket();
+			clearTimeout(retry);
+			if (stopped) return;
+			status("reconnecting");
+			retry = setTimeout(open, Math.min(30000, 1000 * Math.pow(2, Math.min(attempts++, 5))));
+		}
+		function open() {
+			if (stopped) return;
+			clearSocket();
+			status("connecting");
+			try {
+				socket = new WebSocket("wss://www.whatnot.com/services/auction/socket/websocket?vsn=2.0.0&client_type=web&client_layer=nextjs&locale=en-US");
+			} catch (e) { reconnect(); return; }
+			var current = socket;
+			var joinRef = String(++reference);
+			var pending = null;
+			var joined = false;
+			var openedAt = Date.now();
+			timeout = setTimeout(reconnect, 15000);
+			current.onopen = function () {
+				if (socket !== current) return;
+				try { current.send(JSON.stringify([joinRef, joinRef, topic, "phx_join", {}])); }
+				catch (e) { reconnect(); return; }
+				heartbeat = setInterval(function () {
+					if (pending) {
+						if (Date.now() - pending.at >= 20000) reconnect();
+						return;
+					}
+					pending = { ref: String(++reference), at: Date.now() };
+					try { current.send(JSON.stringify([null, pending.ref, "phoenix", "heartbeat", {}])); }
+					catch (e) { reconnect(); }
+				}, 10000);
+			};
+			current.onmessage = function (event) {
+				if (socket !== current || typeof event.data !== "string") return;
+				var frame;
+				try { frame = JSON.parse(event.data); } catch (e) { return; }
+				if (!Array.isArray(frame) || frame.length !== 5) return;
+				if (frame[2] === "phoenix" && frame[3] === "phx_reply" && pending && frame[1] === pending.ref && frame[4] && frame[4].status === "ok") {
+					pending = null;
+					if (joined && Date.now() - openedAt >= 30000) attempts = 0;
+					return;
+				}
+				if (frame[2] !== topic) return;
+				if (frame[3] === "phx_reply" && frame[1] === joinRef) {
+					if (!frame[4] || frame[4].status !== "ok") { reconnect(); return; }
+					joined = true;
+					clearTimeout(timeout);
+					status("connected");
+				} else if (frame[3] === "phx_error" || frame[3] === "phx_close") {
+					reconnect();
+				} else if (joined) {
+					handleWhatnotWebSocketFrame(event.data);
+				}
+			};
+			current.onerror = current.onclose = function () { if (socket === current) reconnect(); };
+		}
+		function stop() {
+			stopped = true;
+			clearTimeout(retry);
+			clearSocket();
+			window.removeEventListener("pagehide", stop);
+		}
+		window.addEventListener("pagehide", stop);
+		open();
+		return stop;
 	}
 
 	function registerElectronWebSocketListener() {
@@ -1398,18 +1526,18 @@
 	}
 
 	function processMessage(messageElement) {
-		if (hasRecentWebSocketChat() || !messageElement || processedMessageNodes.has(messageElement)) {
+		if (hasRecentWebSocketChat() || !messageElement) {
 			return;
 		}
 
-		processedMessageNodes.add(messageElement);
-
 		var messageIndex = getMessageIndex(messageElement);
+		if (processedMessageNodes.has(messageElement) && processedMessageNodes.get(messageElement) === messageIndex) {
+			return;
+		}
 		if (messageIndex !== null) {
-			if (messageIndex <= lastDataIndex) {
+			if (messageIndex <= lastDataIndex || processedMessageIndices.has(messageIndex)) {
 				return;
 			}
-			lastDataIndex = messageIndex;
 		}
 
 		var contentContainer = getMessageContentContainer(messageElement);
@@ -1418,8 +1546,17 @@
 		var chatimg = getAvatarFromMessage(messageElement);
 		var chatbadges = getBadgesFromMessage(contentContainer, chatimg);
 
-		if (!chatNameRaw && !messageBody) {
+		if (!messageBody) {
 			return;
+		}
+		processedMessageNodes.set(messageElement, messageIndex);
+		if (messageIndex !== null) {
+			processedMessageIndices.add(messageIndex);
+			if (processedMessageIndices.size > 2000) {
+				var oldestIndex = processedMessageIndices.values().next().value;
+				processedMessageIndices.delete(oldestIndex);
+				lastDataIndex = Math.max(lastDataIndex, oldestIndex);
+			}
 		}
 
 		var data = {};
@@ -1458,16 +1595,21 @@
 			data.meta = meta;
 		}
 
-		pushMessage(data);
+		// Keep the parsed row if the virtual list reuses it before the bridge arrives.
+		setTimeout(function () {
+			if (!hasRecentWebSocketChat()) pushMessage(data);
+		}, 100);
 	}
 
 	function collectMessageNodes(node) {
 		var matches = [];
+		if (node && node.nodeType === 3) node = node.parentElement;
 		if (!node || node.nodeType !== 1) {
 			return matches;
 		}
-		if (node.matches && node.matches("[data-testid='chat-message']")) {
-			matches.push(node);
+		var parentMessage = node.closest && node.closest("[data-testid='chat-message']");
+		if (parentMessage) {
+			matches.push(parentMessage);
 		}
 		if (node.querySelectorAll) {
 			node.querySelectorAll("[data-testid='chat-message']").forEach(function (found) {
@@ -1479,6 +1621,7 @@
 
 	function onMutationsObserved(mutations) {
 		mutations.forEach(function (mutation) {
+			if (mutation.type !== "childList") collectMessageNodes(mutation.target).forEach(processMessage);
 			if (!mutation.addedNodes || !mutation.addedNodes.length) {
 				return;
 			}
@@ -1486,9 +1629,7 @@
 				var addedNode = mutation.addedNodes[i];
 				var messageNodes = collectMessageNodes(addedNode);
 				for (var j = 0; j < messageNodes.length; j++) {
-					// Let the socket bridge arrive before falling back to the rendered row.
-					// The DOM can update first on the first message after a quiet period.
-					setTimeout(processMessage, 100, messageNodes[j]);
+					processMessage(messageNodes[j]);
 				}
 			}
 		});
@@ -1504,11 +1645,16 @@
 			observer = null;
 		}
 
+		var replacingList = observedList && observedChatLocation === window.location.pathname;
 		observedList = listElement;
-		processedMessageNodes = new WeakSet();
-		lastDataIndex = -1;
+		observedChatLocation = window.location.pathname;
+		if (!replacingList) {
+			processedMessageNodes = new WeakMap();
+			processedMessageIndices = new Set();
+			lastDataIndex = -1;
+		}
 
-		var mutationConfig = { childList: true, subtree: true };
+		var mutationConfig = { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["data-index"] };
 		var MutationObserverImpl = window.MutationObserver || window.WebKitMutationObserver;
 		observer = new MutationObserverImpl(onMutationsObserved);
 		observer.observe(listElement, mutationConfig);
@@ -1516,8 +1662,12 @@
 		var existing = listElement.querySelectorAll("[data-testid='chat-message']");
 		var maxExistingIndex = -1;
 		for (var i = 0; i < existing.length; i++) {
-			processedMessageNodes.add(existing[i]);
+			if (replacingList) {
+				processMessage(existing[i]);
+				continue;
+			}
 			var existingIndex = getMessageIndex(existing[i]);
+			processedMessageNodes.set(existing[i], existingIndex);
 			if (existingIndex !== null && existingIndex > maxExistingIndex) {
 				maxExistingIndex = existingIndex;
 			}
@@ -1535,7 +1685,7 @@
 				listElement = fallbackMessage.parentElement;
 			}
 		}
-		if (!listElement || listElement === observedList) {
+		if (!listElement || (listElement === observedList && observedChatLocation === window.location.pathname)) {
 			return;
 		}
 		observeChatList(listElement);
@@ -1550,7 +1700,9 @@
 				settings = options.settings || {};
 				chatOnlyMessageHandler = typeof options.onMessage === "function" ? options.onMessage : null;
 			},
-			processMessage: handleWebSocketChatMessage
+			processMessage: handleWebSocketChatMessage,
+			processFrame: handleWhatnotWebSocketFrame,
+			connectAuction: connectPublicAuction
 		};
 		return;
 	}
@@ -1612,6 +1764,18 @@
 
 	window.addEventListener("message", handleWhatnotWindowMessage);
 	registerElectronWebSocketListener();
+	var auctionShowId = "";
+	var stopAuction = null;
+	function watchAuctionShow() {
+		var match = window.location.pathname.match(/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:dashboard\/)?live\/([a-f0-9-]{36})\/?$/i);
+		var nextId = match ? match[1].toLowerCase() : "";
+		if (nextId === auctionShowId) return;
+		if (stopAuction) stopAuction();
+		auctionShowId = nextId;
+		stopAuction = nextId ? connectPublicAuction(nextId) : null;
+	}
+	watchAuctionShow();
+	setInterval(watchAuctionShow, 1500);
 
 	console.log("social stream injected");
 

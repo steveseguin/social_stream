@@ -80,8 +80,10 @@ the unreleased entry in `references/version-log.md` for version compatibility.
 
 SSApp 0.4.32 with the updated Whatnot page sources adds `platforms.whatnot`.
 Use a live show URL or its UUID (`videoId`); the default `websocket` mode captures
-public chat without loading the video. Check the platform capability before adding
-it. Seller profiles, sign-in, sending chat, and auctions are outside this mode.
+public chat without loading the video. Updated Whatnot page sources also capture
+public auction and giveaway updates; enable stream-event capture to forward them.
+Check the platform capability before adding it. Seller profiles, sign-in, and
+sending chat are outside this mode.
 Regional show links such as `/en-GB/live/UUID` require the regional-link update
 described in `references/version-log.md`; for older builds, pass the UUID as `videoId`.
 
