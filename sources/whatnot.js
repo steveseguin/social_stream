@@ -15,11 +15,13 @@
 	var lastCommerceSnapshot = "";
 	var lastWebSocketChatAt = 0;
 	var lastWebSocketViewerAt = 0;
+	var lastWebSocketViewerReceivedAt = 0;
 	var recentWebSocketMessageIds = [];
 	var recentWebSocketMessageLookup = Object.create(null);
 	var recentWebSocketActivityIds = [];
 	var recentWebSocketActivityLookup = Object.create(null);
 	var recentCommercePackets = new Map();
+	var recentSystemPackets = new Map();
 	var webSocketActivityWindowMs = 30000;
 	var lastWebSocketLivestreamState = "";
 	var lastWebSocketGiveawayState = "";
@@ -753,7 +755,7 @@
 	}
 
 	function rememberWebSocketMessageId(messageId) {
-		return rememberRecentWebSocketId(recentWebSocketMessageIds, recentWebSocketMessageLookup, messageId, 250);
+		return rememberRecentWebSocketId(recentWebSocketMessageIds, recentWebSocketMessageLookup, messageId, 2000);
 	}
 
 	function rememberWebSocketActivityId(activityId) {
@@ -918,7 +920,7 @@
 		return data;
 	}
 
-	function sendWebSocketViewerCount(count) {
+	function sendWebSocketViewerCount(count, receivedAt) {
 		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode)) {
 			return;
 		}
@@ -926,6 +928,9 @@
 		if (!Number.isFinite(parsed)) {
 			return;
 		}
+		receivedAt = Number.isFinite(receivedAt) && receivedAt > 0 ? receivedAt : Date.now();
+		if (receivedAt < lastWebSocketViewerReceivedAt) return;
+		lastWebSocketViewerReceivedAt = receivedAt;
 		lastWebSocketViewerAt = Date.now();
 		if (lastViewerCount !== parsed) {
 			lastViewerCount = parsed;
@@ -945,12 +950,12 @@
 		}, 200);
 	}
 
-	function handleWebSocketLivestreamUpdate(payload) {
+	function handleWebSocketLivestreamUpdate(payload, receivedAt) {
 		if (!payload || typeof payload !== "object") {
 			return;
 		}
 		if (typeof payload.activeViewers !== "undefined") {
-			sendWebSocketViewerCount(payload.activeViewers);
+			sendWebSocketViewerCount(payload.activeViewers, receivedAt);
 		}
 		var snapshotKey = JSON.stringify({
 			status: payload.status || "",
@@ -1039,8 +1044,9 @@
 			|| (eventType === "giveaway_won" && (payload.orderId || product.orderId))
 			|| (eventType === "giveaway_started" && product.giveaway && product.giveaway.giveawayEndTime);
 		var stream = payload.livestreamId || product.livestreamId || wsChannel.replace(/^[^:]+:/, "");
+		var nativeEventId = payload.id || (eventType === "new_bid" && bid.id);
 		var packetKey = JSON.stringify([stream, eventType, product.id || payload.productId,
-			payload.orderId || product.orderId, payload.transactionId,
+			nativeEventId ? "" : payload.orderId || product.orderId, nativeEventId ? "" : payload.transactionId,
 			identity || payload]);
 		var now = Date.now();
 		if (recentCommercePackets.has(packetKey) && (identity || now - recentCommercePackets.get(packetKey) < 1000)) {
@@ -1175,7 +1181,7 @@
 		return true;
 	}
 
-	function handleWebSocketPhxReply(payload, wsChannel) {
+	function handleWebSocketPhxReply(payload, wsChannel, receivedAt) {
 		if (!payload || typeof payload !== "object" || payload.status !== "ok") {
 			return;
 		}
@@ -1184,7 +1190,7 @@
 			return;
 		}
 		if (response.livestream && typeof response.livestream === "object") {
-			handleWebSocketLivestreamUpdate(response.livestream);
+			handleWebSocketLivestreamUpdate(response.livestream, receivedAt);
 		}
 		if (!Array.isArray(response.latestLiveActivityEvents) || !response.latestLiveActivityEvents.length) {
 			return;
@@ -1204,6 +1210,7 @@
 		if (!payload || typeof payload !== "object") {
 			return;
 		}
+		if (payload.message == null && !(payload.properties && payload.properties.adscb)) return;
 		var user = payload.user || {};
 		var messageText = payload.message == null ? "" : String(payload.message);
 		if (!user.username && !messageText) {
@@ -1241,11 +1248,12 @@
 		if (!tip) {
 			return;
 		}
+		var money = getMoneyDetails(tip.tipValue, tip.magnitude);
+		if (rememberSystemPacket(payload, wsChannel, "tip_sent")) return;
 		var user = tip.senderUser || {};
 		var data = createWebSocketChatData(user, tip.message || "");
 		data.event = "donation";
 		data.hasDonation = formatMoneyValue(tip.tipValue, tip.magnitude);
-		var money = getMoneyDetails(tip.tipValue, tip.magnitude);
 		if (money && String(money.currency).toUpperCase() === "USD") {
 			data.donoValue = money.amount;
 		}
@@ -1259,6 +1267,7 @@
 			return;
 		}
 		var tier = user.loyaltyTierForSeller || "";
+		if (!tier || rememberSystemPacket(payload, wsChannel, "user_loyalty_tier_level_up")) return;
 		var data = createWebSocketChatData(user, "leveled up to " + tier + " loyalty");
 		data.event = "member";
 		data.membership = tier;
@@ -1271,6 +1280,7 @@
 		if (!user || !user.username) {
 			return;
 		}
+		if (rememberSystemPacket(payload, wsChannel, eventType)) return;
 		var numRaiders = payload && payload.eventSpecificInfo && typeof payload.eventSpecificInfo.numRaiders === "number"
 			? payload.eventSpecificInfo.numRaiders
 			: (payload && typeof payload.numRaiders === "number" ? payload.numRaiders
@@ -1288,7 +1298,23 @@
 		pushMessage(data);
 	}
 
-	function handleWhatnotWebSocketFrame(rawData) {
+	function rememberSystemPacket(payload, wsChannel, eventType) {
+		// Separate native IDs preserve distinct tips with identical text/amounts.
+		// Without an ID, retain the payload so a shared timestamp cannot merge users.
+		var systemId = payload.id || (payload.tip && payload.tip.id);
+		if (!systemId && eventType === "user_loyalty_tier_level_up" && payload.user && payload.user.id) {
+			systemId = payload.user.id + "|" + payload.user.loyaltyTierForSeller;
+		}
+		var systemKey = JSON.stringify([wsChannel, eventType, systemId || payload]);
+		var now = Date.now();
+		if (recentSystemPackets.has(systemKey) && (systemId || payload.timestamp || now - recentSystemPackets.get(systemKey) < 1000)) return true;
+		recentSystemPackets.delete(systemKey);
+		recentSystemPackets.set(systemKey, now);
+		if (recentSystemPackets.size > 1000) recentSystemPackets.delete(recentSystemPackets.keys().next().value);
+		return false;
+	}
+
+	function handleWhatnotWebSocketFrame(rawData, receivedAt) {
 		var payloadText = normalizeWebSocketData(rawData);
 		if (!payloadText) {
 			return;
@@ -1332,10 +1358,10 @@
 				handleWebSocketLoyaltyLevelUp(payload, wsChannel);
 				return;
 			case "livestream_view_count_updated":
-				sendWebSocketViewerCount(payload && payload.viewCount);
+				sendWebSocketViewerCount(payload && payload.viewCount, receivedAt);
 				return;
 			case "livestream_update":
-				handleWebSocketLivestreamUpdate(payload);
+				handleWebSocketLivestreamUpdate(payload, receivedAt);
 				return;
 			case "giveaway_entry_count_updated":
 				handleWebSocketGiveawayEntryUpdate(payload, wsChannel);
@@ -1352,7 +1378,7 @@
 				handleWebSocketSnapshotPayload(payload);
 				return;
 			case "phx_reply":
-				handleWebSocketPhxReply(payload, wsChannel);
+				handleWebSocketPhxReply(payload, wsChannel, receivedAt);
 				return;
 		}
 	}
@@ -1364,7 +1390,7 @@
 		if (event.data.type !== "receive") {
 			return;
 		}
-		handleWhatnotWebSocketFrame(event.data.data);
+		handleWhatnotWebSocketFrame(event.data.data, event.data.receivedAt);
 	}
 
 	// The public auction channel is separate from chat and requires no login.
@@ -1467,7 +1493,7 @@
 				if (!payload || payload.type !== "message") {
 					return;
 				}
-				handleWhatnotWebSocketFrame(payload.data);
+				handleWhatnotWebSocketFrame(payload.data, payload.timestamp);
 			});
 		} catch (e) {}
 	}

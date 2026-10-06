@@ -2798,6 +2798,14 @@
 		}
 		try {
 			[...ele.children].forEach(ele4 => {
+				// ID-less gifts in a replacement/reload snapshot cannot be distinguished
+				// from already delivered gifts. Keep the history exclusion for those rows;
+				// newly inserted gifts still go through the normal observer.
+				if (captureExisting && !ele4.id && getYouTubeJewelDonationNode(ele4) &&
+					!ele4.ssnYouTubeCaptureTimer && !ele4.ssnYouTubePending) {
+					ele4.skip = true;
+					return;
+				}
 				if (captureExisting) {
 					var mid = youtubeRecoveryMids[ele4.id];
 					if (Number.isSafeInteger(mid) && mid > 0) ele4.dataset.mid = mid;

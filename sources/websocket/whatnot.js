@@ -137,6 +137,7 @@
 
 	function receiveChat(payload, history) {
 		if (!payload || typeof payload !== "object" || (payload.topic && payload.topic !== "chat:" + showId)) return;
+		if (payload.message == null && !(payload.properties && payload.properties.adscb)) return;
 		if (!(payload.user && payload.user.username) && (payload.message == null || String(payload.message) === "")) return;
 		if (rememberId(payload.id)) return;
 		if (history && !historyInitialized) return;
