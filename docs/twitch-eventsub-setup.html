@@ -38,8 +38,9 @@
     <meta name="description" content="Connect Twitch chat to Social Stream Ninja using normal page capture or the richer EventSub WebSocket source, with OAuth, scope, event, and troubleshooting notes.">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body>
+<body class="visual-guide">
     <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 
     <section class="page-hero">
@@ -51,8 +52,9 @@
 
     <main class="guide-section">
         <div class="container">
-            <div class="guide-card">
-                <h2>Choose A Twitch Source Mode</h2>
+            <nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">Choose A Twitch Source Mode</a><a href="#read-section-2">Desktop App Setup</a><a href="#read-section-3">Browser Extension EventSub Setup</a><a href="#read-section-4">What Twitch Requests</a><a href="#read-section-5">Events The Current Source Handles</a><a href="#read-section-6">First Checks When An Event Is Missing</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Choose A Twitch Source Mode</h2>
                 <table class="guide-table guide-table-stack">
                     <thead>
                         <tr><th>Mode</th><th>Best For</th><th>Important Difference</th></tr>
@@ -73,7 +75,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Desktop App Setup</h2>
+                <h2 id="read-section-2">Desktop App Setup</h2>
                 <ol class="guide-steps">
                     <li>Select <strong>Add source → Twitch</strong>.</li>
                     <li>Enter the Twitch channel login used in its URL. For <code>twitch.tv/examplechannel</code>, enter <code>examplechannel</code>.</li>
@@ -88,7 +90,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Browser Extension EventSub Setup</h2>
+                <h2 id="read-section-3">Browser Extension EventSub Setup</h2>
                 <ol class="guide-steps">
                     <li>Install and enable the current Social Stream Ninja extension.</li>
                     <li>Open the <a href="https://socialstream.ninja/sources/websocket/twitch.html?channel=examplechannel" target="_blank" rel="noopener">Twitch EventSub source page</a>.</li>
@@ -101,7 +103,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>What Twitch Requests</h2>
+                <h2 id="read-section-4">What Twitch Requests</h2>
                 <p>Social Stream asks for a user token with permissions needed by the controls and subscriptions it supports. Granting a scope does not make an account a broadcaster or moderator; Twitch still checks the account's role for the selected channel.</p>
                 <table class="guide-table guide-table-stack">
                     <thead>
@@ -119,7 +121,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Events The Current Source Handles</h2>
+                <h2 id="read-section-5">Events The Current Source Handles</h2>
                 <ul class="guide-list">
                     <li><strong>Follows:</strong> <code>new_follower</code>.</li>
                     <li><strong>Subscriptions:</strong> <code>new_subscriber</code>, <code>resub</code>, and <code>subscription_gift</code>.</li>
@@ -135,7 +137,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>First Checks When An Event Is Missing</h2>
+                <h2 id="read-section-6">First Checks When An Event Is Missing</h2>
                 <ol class="guide-steps">
                     <li>Confirm the source page says the correct <strong>User</strong> and <strong>Channel</strong>.</li>
                     <li>Keep the source page/window open and confirm its chat connection is active.</li>

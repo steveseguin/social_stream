@@ -306,6 +306,9 @@
         border: 1px solid rgba(255, 255, 255, 0.12);
     }
     body.no-toast #notification { display: none !important; }
+    body.toast-bottom #notification { top: auto; bottom: 8px; }
+    body.toast-below-title #notification { top: 46px; }
+    body.tipjar-refresh #cup-overlay { z-index: 2; }
 
     @keyframes notificationPop {
         0% {
@@ -2826,12 +2829,12 @@
             }
         }
 
-        // Pre-fill the jar to match a starting or saved total (72 hearts at 100%): stacked in
+        // Pre-fill the jar to match a starting or saved total (64 hearts at 100%): stacked in
         // offset rows on the jar floor, placed all at once so the first frame already shows the level.
         function seedJarHearts() {
             if (style !== 'jar' || !world) return;
             const percentage = Math.max(0, Math.min(100, getProgressState().percentage || 0));
-            const count = Math.round(percentage / 100 * 72);
+            const count = Math.round(percentage / 100 * 64);
             if (!count) return;
             engine.enableSleeping = true;
             // A fixed 32px heart makes a full goal reach about three quarters of the way up the jar.
@@ -4241,6 +4244,8 @@ function processData(data) {
         // Initialize display
         renderAmount();
         if (urlParams.has('notoast')) document.body.classList.add('no-toast');
+        // Keep the tip popup off the readout: tall artwork styles show it just under the title, bars and panels along the bottom edge.
+        document.body.classList.add(style === 'jar' || style === 'gauge' || isVesselStyle ? 'toast-below-title' : 'toast-bottom');
         seedJarHearts();
 
         // Gradient fill + meter widths depend on track size, so recompute on resize.

@@ -27,8 +27,9 @@
 <link rel="stylesheet" href="css/workflow-guides.css">
 <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
 <script src="js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body class="workflow-guide">
+<body class="workflow-guide visual-guide">
 <header class="site-header"><div class="site-bar">
 <a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
 <nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation">
@@ -40,10 +41,12 @@
 <section class="page-hero"><div class="container"><h1>Design custom counters and leaderboards</h1><p>Customize viewer counts, chat activity, supporter rankings, point scoreboards, and metadata panels.</p></div></section>
 <main class="guide-section"><div class="container">
 <nav class="workflow-toc" aria-label="On this page"><a href="overlay-customization-guide.html">All overlay design guides</a><a href="#choose">Choose a file</a><a href="#files">Download</a><a href="#connect">Session and OBS</a><a href="#design">Design</a><a href="#prompt">AI prompt</a><a href="#test">Test</a></nav>
-<section class="guide-card" id="choose"><h2>Choose the right starting page</h2><p>Choose the page for the number you want to show. <code>hype.html</code> shows viewer/chatter statistics; <code>meta.html</code> presents structured updates; <code>leaderboard.html</code> ranks activity/support; <code>scoreboard.html</code> presents configured points. A visual redesign should not silently change what a number measures.</p>
+<section class="guide-card" id="choose"><h2 id="read-section-1">Choose the right starting page</h2><p>Choose the page for the number you want to show. <code>hype.html</code> shows viewer/chatter statistics; <code>meta.html</code> presents structured updates; <code>leaderboard.html</code> ranks activity/support; <code>scoreboard.html</code> presents configured points. A visual redesign should not silently change what a number measures.</p>
+<figure class="guide-shot"><a href="images/guides/visual/find-stats.webp"><img src="images/guides/visual/find-stats.webp" width="519" height="332" alt="Find leaderboard settings before customizing the display." loading="lazy" decoding="async"></a><figcaption>Find leaderboard settings before customizing the display.</figcaption></figure>
+
 
 </section>
-<section class="guide-card" id="files"><h2>Download and keep the file structure</h2>
+<section class="guide-card" id="files"><h2 id="read-section-2">Download and keep the file structure</h2>
 <ol class="guide-steps"><li><a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">Download the source ZIP</a> and extract it. These guides use the beta source; keep the files from one download together.</li>
 <li>Copy <code>scoreboard.html</code> to <code>my-scoreboard.html</code> beside the original. If choosing a different page or theme, keep its copy in that file's original folder.</li>
 <li>Open the copied HTML and its referenced CSS/JS in your editor or AI tool. Add supplied artwork/fonts to the same project and use relative paths. Start with CSS overrides; include the renderer when changing generated markup.</li></ol>
@@ -56,7 +59,7 @@
 <tr><td data-label="File"><a href="../currency.js"><code>currency.js</code></a></td><td data-label="Why it matters">Used by the leaderboard for support values.</td></tr>
 <tr><td data-label="File"><a href="../sources/images/unknown.png"><code>sources/images/unknown.png</code></a></td><td data-label="Why it matters">Example of platform icons; keep sources/images/.</td></tr>
 </tbody></table></section>
-<section class="guide-card" id="connect"><h2>Connect your copy and open it in OBS</h2>
+<section class="guide-card" id="connect"><h2 id="read-section-3">Connect your copy and open it in OBS</h2>
 <p>Start SSN and make the original generated overlay URL work first. The <code>session=</code> value connects to that SSN session; it is not your channel name or this file's name. Keep SSN, the relevant feature, and its data sources running.</p>
 <ol class="guide-steps"><li>Drag your edited HTML file into Chrome or Edge. Copy its address from the address bar; it starts with <code>file:///</code>.</li>
 <li>Copy everything from <code>?</code> onward in your working SSN overlay link and add it to the end of that file address. Keep all settings, including the session, password, and any <code>#</code> ending.</li>
@@ -65,8 +68,8 @@
 <pre><code>file:///C:/SSN/social_stream-beta/my-scoreboard.html?session=YOUR_SESSION</code></pre>
 <p>Use the actual file address on your computer. OBS saves it with the source; keep the downloaded folder in the same place. After saving design changes, refresh the Browser Source. The <a href="overlay-customization-guide.html#local-file">shared setup guide</a> includes Mac examples and an optional launcher for the Local file checkbox.</p>
 </section>
-<section class="guide-card" id="design"><h2>Where to change the design</h2><p>Style rows, rank badges, platform icons, value columns, panel backgrounds, and rank-change animation. Keep stable user identity, ties, sorting, and the selected period/category. The source's actual counters and metadata should drive the values; ordinary text saying "100 viewers" is not a viewer update.</p><p>Check the target's empty state. Some views deliberately remain hidden until a snapshot or matching activity arrives. Use that page's own demo/preview options where available; a generic <code>?demo</code> is not supported by every counter.</p></section>
-<section class="guide-card" id="prompt"><h2>Copy this AI prompt</h2><p>Give the AI your copied source files and reference artwork. Replace the bracketed details. Keep the input-safety instructions in the prompt.</p><pre><code>Customize my-scoreboard.html, copied from scoreboard.html.
+<section class="guide-card" id="design"><h2 id="read-section-4">Where to change the design</h2><p>Style rows, rank badges, platform icons, value columns, panel backgrounds, and rank-change animation. Keep stable user identity, ties, sorting, and the selected period/category. The source's actual counters and metadata should drive the values; ordinary text saying "100 viewers" is not a viewer update.</p><p>Check the target's empty state. Some views deliberately remain hidden until a snapshot or matching activity arrives. Use that page's own demo/preview options where available; a generic <code>?demo</code> is not supported by every counter.</p></section>
+<section class="guide-card" id="prompt"><h2 id="read-section-5">Copy this AI prompt</h2><p>Give the AI your copied source files and reference artwork. Replace the bracketed details. Keep the input-safety instructions in the prompt.</p><details class="guide-extra"><summary>Show the full prompt</summary><pre><code>Customize my-scoreboard.html, copied from scoreboard.html.
 Design: [describe the look or attach a reference].
 Colors/fonts/assets: [supply hex colors and local filenames].
 OBS canvas and placement: [size and position].
@@ -96,8 +99,8 @@ Make the edited overlay work directly from disk using a file:/// URL,
 without requiring a local web server.
 Return the edited files, any additional assets, exact local browser/OBS
 setup instructions using placeholders, and the specific tests performed.
-Do not put my private session link or credentials into a public example.</code></pre></section>
-<section class="guide-card" id="test"><h2>Test this overlay type</h2>
+Do not put my private session link or credentials into a public example.</code></pre></details></section>
+<section class="guide-card" id="test"><h2 id="read-section-6">Test this overlay type</h2>
 <p>Use a preview or test setup first. The <a href="test-message-guide.html">test-message guide</a> explains how to send fictional payloads through SSN; a test submitted to your production session can trigger its existing automations.</p>
 <ol class="guide-steps"><li>For scoreboard.html use ?preview; for leaderboard.html use ?demo to inspect a populated layout. Remove the preview/demo flag for the live link.</li>
 <li>For Hype/metadata, use the test tool's viewer-update payload or the actual host counter; plain chat alone does not prove the counter works.</li>

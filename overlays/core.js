@@ -5,7 +5,7 @@
 
 	var SSO = {};
 	var templates = [];
-	var templateMap = {};
+	var templateMap = Object.create(null);
 
 	SSO.CATEGORIES = [
 		{ id: "socials", label: "Banners & socials" },
@@ -97,7 +97,7 @@
 			case "number":
 			case "range":
 				var n = parseFloat(raw);
-				if (isNaN(n)) { return fieldDefault(field); }
+				if (!isFinite(n)) { return fieldDefault(field); }
 				if (field.min != null) { n = Math.max(field.min, n); }
 				if (field.max != null) { n = Math.min(field.max, n); }
 				return n;
@@ -541,7 +541,8 @@
 	};
 	global.addEventListener("message", function (e) {
 		var d = e.data;
-		if (d && d.ssoObsEvent) {
+		if (new URLSearchParams(global.location.search).has("preview") && e.source === global.parent && e.origin === global.location.origin &&
+			d && typeof d.ssoObsEvent === "string" && /^obs(?:SceneChanged|StreamingStarted|StreamingStopped|RecordingStarted|RecordingStopped|ReplaybufferSaved|SourceVisibleChanged)$/.test(d.ssoObsEvent)) {
 			var ev;
 			try { ev = new CustomEvent(d.ssoObsEvent, { detail: d.detail || {} }); } catch (err) { ev = document.createEvent("CustomEvent"); ev.initCustomEvent(d.ssoObsEvent, false, false, d.detail || {}); }
 			global.dispatchEvent(ev);

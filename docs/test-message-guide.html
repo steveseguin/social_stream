@@ -38,8 +38,9 @@
 	<meta name="description" content="Send controlled fake chat messages, donations, memberships, raids, rewards, and other events into a Social Stream Ninja session for safe testing.">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body>
+<body class="visual-guide">
 	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 
 	<section class="page-hero">
@@ -51,14 +52,15 @@
 
 	<main class="guide-section">
 		<div class="container">
-			<div class="guide-card">
-				<h2>What This Tool Does</h2>
+			<nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">What This Tool Does</a><a href="#read-section-2">Quick Start For SSApp Or The Extension</a><a href="#read-section-3">Example: One Fake 1,000 KICKs Message</a><a href="#read-section-4">Using Presets And Custom JSON</a><a href="#read-section-5">Choose The Right Delivery Mode</a><a href="#read-section-6">Common Fixes</a></nav>
+<div class="guide-card">
+				<h2 id="read-section-1">What This Tool Does</h2>
 				<p>The <a href="../createtestmessage.html">Create Test Message page</a> sends synthetic Social Stream payloads to your dock, overlays, alerts, or Event Flow setup. Use it to test without waiting for a real chat message, donation, membership, raid, reward, or other event.</p>
 				<div class="warning-note"><strong>Use a test session when possible.</strong> A submitted message behaves like incoming session traffic and can trigger alerts, sounds, webhooks, OBS actions, or other automations.</div>
 			</div>
 
 			<div class="guide-card">
-				<h2>Quick Start For SSApp Or The Extension</h2>
+				<h2 id="read-section-2">Quick Start For SSApp Or The Extension</h2>
 				<ol class="guide-steps">
 					<li>Open Social Stream Ninja and make sure the service is active.</li>
 					<li>Under <strong>Global settings and tools</strong> &rarr; <strong>Mechanics</strong>, enable <strong>remote API control of extension</strong>. SSApp uses the same setting name.</li>
@@ -73,7 +75,7 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>Example: One Fake 1,000 KICKs Message</h2>
+				<h2 id="read-section-3">Example: One Fake 1,000 KICKs Message</h2>
 				<p>This creates one Kick-style support message worth 1,000 KICKs. It does not create 1,000 separate messages.</p>
 				<ol class="guide-steps">
 					<li>Choose the <strong>Chat Message</strong> preset.</li>
@@ -93,7 +95,7 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>Using Presets And Custom JSON</h2>
+				<h2 id="read-section-4">Using Presets And Custom JSON</h2>
 				<p>Presets provide a starting payload for common cases such as donations, subscribers, gifted subscriptions, raids, rewards, viewer updates, first-time chatters, and train events.</p>
 				<ul class="guide-list">
 					<li><strong>Load Preset</strong> replaces the JSON with the selected preset and current field values.</li>
@@ -106,7 +108,7 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>Choose The Right Delivery Mode</h2>
+				<h2 id="read-section-5">Choose The Right Delivery Mode</h2>
 				<table class="guide-table guide-table-stack">
 					<thead><tr><th>Send Via</th><th>Use It When</th><th>Required Setup</th></tr></thead>
 					<tbody>
@@ -119,7 +121,7 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>Common Fixes</h2>
+				<h2 id="read-section-6">Common Fixes</h2>
 				<ul class="guide-list">
 					<li><strong>Nothing appears:</strong> confirm the target page is open and uses the same Session ID.</li>
 					<li><strong>Extension API ingest fails:</strong> enable <strong>remote API control of extension</strong>, then reload the dock or overlay and try again.</li>

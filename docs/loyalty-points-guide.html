@@ -40,8 +40,9 @@
 <script src="../docs/js/site-shell.js">
 </script>
 <link rel="stylesheet" href="css/workflow-guides.css">
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body class="workflow-guide">
+<body class="workflow-guide visual-guide">
 <header class="site-header">
 <div class="site-bar">
 <a class="site-brand" href="../index.html">
@@ -92,7 +93,9 @@
 <a href="#check">Troubleshooting</a>
 </nav>
 <section class="guide-card" id="enable">
-<h2>1. Enable participation points</h2>
+<h2 id="read-section-1">1. Enable participation points</h2>
+<figure class="guide-shot"><a href="images/guides/visual/find-points.webp"><img src="images/guides/visual/find-points.webp" width="519" height="355" alt="Search for Points System to find participation rewards." loading="lazy" decoding="async"></a><figcaption>Search for Points System to find participation rewards.</figcaption></figure>
+
 <ol class="guide-steps">
 <li>Open SSN’s <strong>Global settings and tools → Points System</strong>. Turn on <strong>Enable loyalty points system</strong>.</li>
 <li>Start with <strong>Points per engagement: 1</strong> and <strong>Engagement window (minutes): 15</strong>, then adjust to suit your stream.</li>
@@ -123,13 +126,13 @@
 </figure>
 </section>
 <section class="guide-card" id="balances">
-<h2>2. Check and manage balances</h2>
+<h2 id="read-section-2">2. Check and manage balances</h2>
 <p>Viewers use <code>!points</code> for their balance and <code>!leaderboard</code> for rankings when enabled. Replies require a source that can post back to chat; if no reply arrives, check the balance through <strong>Manage User Points</strong> before assuming no points were earned.</p>
 <p><code>!points</code> shows the available balance, earned points, spending and reservations. <code>!leaderboard</code> and the loyalty leaderboard rank and display total earned points. Redeeming a reward reduces the available balance; earned-point rankings reflect the total earned.</p>
 <p>Use <strong>Manage User Points</strong> for a specific viewer and platform, or <strong>View Leaderboard</strong> for an overview. Accounts are keyed by username and source type: matching names on Twitch and YouTube have separate balances. Do not assume a viewer’s accounts are automatically linked.</p>
 </section>
 <section class="guide-card" id="reward">
-<h2>3. Offer a sticker reward</h2>
+<h2 id="read-section-3">3. Offer a sticker reward</h2>
 <ol class="guide-steps">
 <li>In <strong>Points System → Sticker rewards</strong>, enable sticker rewards and choose the packs you want available. Set a point price suited to your earning rate.</li>
 <li>Copy the <strong>OBS browser source</strong> link into OBS and keep the sticker source loaded.</li>
@@ -143,12 +146,12 @@
 <p>See <a href="sticker-gallery.html">Sticker packs and setup</a> for previews, custom artwork, and GIF choices. <code>!stickers</code> is the sticker catalog command; <code>!rewards</code> lists the general points reward commands.</p>
 </section>
 <section class="guide-card" id="custom">
-<h2>4. Add optional Event Flow rewards</h2>
+<h2 id="read-section-4">4. Add optional Event Flow rewards</h2>
 <p>For custom actions, use the existing Event Flow editor and its <strong>Spend Points</strong> action. Put your exact command condition before spending, set <strong>Amount to Spend</strong>, and connect the paid action after a successful spend. Include a cooldown in the flow.</p>
 <p>Test both an insufficient balance and a sufficient balance before enabling a reward. A custom action that fails after charging does not automatically inherit the sticker system’s delivery/refund behavior. Review failure handling before attaching paid commands to media or external actions. See <a href="../actions/event-flow-guide.html">Event Flow</a>.</p>
 </section>
 <section class="guide-card" id="backup">
-<h2>5. Preserve points across moves</h2>
+<h2 id="read-section-5">5. Preserve points across moves</h2>
 <p>Points live in local browser/app storage. Sharing a session ID with another computer or installation does not synchronize balances.</p>
 <ol class="guide-steps">
 <li>Use <strong>Points System → Backup &amp; Restore → Export Points</strong> and retain the JSON file.</li>
@@ -158,7 +161,7 @@
 <p>Keep a dedicated points export alongside your <a href="safe-updates-backups.html">settings backup</a>. <strong>Reset All Points</strong> clears the points ledger; use it only for an intentional reset after exporting.</p>
 </section>
 <section class="guide-card" id="check">
-<h2>Troubleshooting</h2>
+<h2 id="read-section-6">Troubleshooting</h2>
 <ul class="guide-list">
 <li>
 <strong>Balance stays unchanged:</strong> check capture, the master switch, the engagement window, and the viewer’s platform account.</li>

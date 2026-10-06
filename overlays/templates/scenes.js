@@ -515,7 +515,7 @@
 		],
 		css: [
 			".fr{position:absolute;box-sizing:border-box;}",
-			".fr-tag{position:absolute;padding:.25em .8em;border-radius:.4em;font-weight:700;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:2;}",
+			".fr-tag{position:absolute;padding:.25em .8em;border-radius:.4em;font-weight:700;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:6;}",
 			".fr-c{position:absolute;width:18%;height:22%;box-sizing:border-box;}",
 			"@keyframes fr-rgb{from{background-position:0 0}to{background-position:300% 0}}",
 			"@keyframes fr-fire{from{filter:brightness(1)}to{filter:brightness(1.35) saturate(1.3)}}",

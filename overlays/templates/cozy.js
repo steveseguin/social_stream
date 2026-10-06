@@ -460,7 +460,7 @@
 					}
 				}
 				if (catImg && catImg.complete && catImg.naturalWidth) {
-					var cw2 = L.FW * 0.34, chh = cw2 * 75 / 180, cxp = L.cx + L.FW * 0.08, cyp = L.floorY + (L.H - L.floorY) * 0.62, br = 1 + 0.025 * Math.sin(t * 1.5);
+					var cw2 = L.FW * 0.34, chh = cw2 * 75 / 180, cxp = L.cx - L.FW * 0.4, cyp = L.floorY + (L.H - L.floorY) * 0.62, br = 1 + 0.025 * Math.sin(t * 1.5);
 					g.save(); g.translate(cxp, cyp); g.scale(1, br); g.drawImage(catImg, -cw2 / 2, -chh, cw2, chh); g.restore();
 					var zt = (t % 6) / 6;
 					g.fillStyle = "rgba(255,250,230," + (Math.sin(zt * Math.PI) * 0.8).toFixed(2) + ")"; g.font = "700 " + Math.round(L.H * (0.02 + zt * 0.015)) + "px sans-serif";
@@ -720,7 +720,8 @@
 		var host = document.createElement("div");
 		host.style.cssText = "position:absolute;left:0;right:0;bottom:0;height:30%;pointer-events:none;border-radius:inherit;overflow:hidden;";
 		var gl = SSO.fireGL(host, { line: function (W, H) { return H * 0.55; }, quality: 0.6 });
-		if (gl) { fr.appendChild(host); }
+		// Behind the name tag, so a LIVE badge on the bottom edge stays readable.
+		if (gl) { fr.insertBefore(host, fr.firstChild); }
 	});
 
 	// ---------------------------------------------------------------- campfire / fireplace / candles overlay, WebGL version
@@ -843,10 +844,10 @@
 		{ name: "Autumn leaves", tags: ["cozy", "halloween"], values: { engine: "autumn" } }
 	]);
 	add("screen", [
-		{ name: "Fireside starting soon", tags: ["cozy"], values: { backdrop: "hearth", c1: "4a3328", c2: "8a3b26", c3: "ffb347", title: "starting soon", subtitle: "pull up a chair by the fire", layout: "bottom", font: "Kalam", fontsize: 100, dim: 0, accent: "ffb347" } },
-		{ name: "Fireside BRB", tags: ["cozy"], values: { backdrop: "hearthcat", c1: "3f3a34", c2: "7a4a30", c3: "ffb347", title: "be right back", subtitle: "the cat is in charge", minutes: 0, layout: "bottom", font: "Kalam", fontsize: 100, dim: 0, accent: "ffb347" } },
-		{ name: "Christmas by the fire", tags: ["christmas", "cozy"], values: { backdrop: "hearthxmas", c1: "2e3b2c", c2: "8a3b26", c3: "c1121f", title: "Starting soon", subtitle: "grab some cocoa", layout: "bottom", font: "Mountains of Christmas", fontsize: 120, dim: 0, accent: "ffd166" } },
-		{ name: "Haunted hearth", tags: ["spooky", "halloween"], values: { backdrop: "hearthspooky", c1: "231a2c", c2: "4a3f4f", c3: "7c3aed", title: "starting soon...", subtitle: "if you dare", layout: "bottom", font: "Creepster", fontsize: 110, dim: 0, accent: "a3ff7a", fg: "e9ffd9" } },
+		{ name: "Fireside starting soon", tags: ["cozy"], values: { backdrop: "hearth", c1: "4a3328", c2: "8a3b26", c3: "ffb347", title: "starting soon", subtitle: "pull up a chair by the fire", layout: "bottom", panel: true, font: "Kalam", fontsize: 100, dim: 0, accent: "ffb347" } },
+		{ name: "Fireside BRB", tags: ["cozy"], values: { backdrop: "hearthcat", c1: "3f3a34", c2: "7a4a30", c3: "ffb347", title: "be right back", subtitle: "the cat is in charge", minutes: 0, layout: "bottom", panel: true, font: "Kalam", fontsize: 100, dim: 0, accent: "ffb347" } },
+		{ name: "Christmas by the fire", tags: ["christmas", "cozy"], values: { backdrop: "hearthxmas", c1: "2e3b2c", c2: "8a3b26", c3: "c1121f", title: "Starting soon", subtitle: "grab some cocoa", layout: "bottom", panel: true, font: "Mountains of Christmas", fontsize: 120, dim: 0, accent: "ffd166" } },
+		{ name: "Haunted hearth", tags: ["spooky", "halloween"], values: { backdrop: "hearthspooky", c1: "231a2c", c2: "4a3f4f", c3: "7c3aed", title: "starting soon...", subtitle: "if you dare", layout: "bottom", panel: true, font: "Creepster", fontsize: 110, dim: 0, accent: "a3ff7a", fg: "e9ffd9" } },
 		{ name: "Snowy night starting", tags: ["cozy", "christmas"], values: { backdrop: "snownight", c1: "0b1a33", c2: "4a6a96", c3: "ffc46b", title: "starting soon", subtitle: "it's cold out, come on in", layout: "top", font: "Fredoka", fontsize: 110, dim: 0, accent: "ffc46b" } },
 		{ name: "Snowy night BRB", tags: ["cozy"], values: { backdrop: "snownight", c1: "1a1030", c2: "6a5a96", c3: "ffc46b", title: "brb", subtitle: "shoveling the driveway", minutes: 0, layout: "center", panel: true, font: "Fredoka", fontsize: 120, dim: 0 } },
 		{ name: "Autumn starting soon", tags: ["cozy", "halloween"], values: { backdrop: "autumn", c1: "3a1405", c2: "e08a3a", c3: "ffb347", title: "Starting soon", subtitle: "grab a warm drink", layout: "center", font: "Amatic SC", fontsize: 150, dim: 0.1, accent: "ffd08a" } },

@@ -797,6 +797,9 @@
 		var resp = "";
 		element = getKickRenderedContentNode(element);
 		if (!element || isKickIgnoredContentNode(element)){return resp;}
+		if (settings.textonlymode && element.nodeName === "IMG") {
+			return element.getAttribute("alt") || element.getAttribute("aria-label") || element.getAttribute("title") || "";
+		}
 		
 		if (!element.childNodes || !element.childNodes.length){
 			if (element.textContent){
@@ -817,7 +820,7 @@
 				} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 					resp += escapeHtml(node.textContent);
 				} else if (node.nodeType === 1){
-					resp += node.textContent || "";
+					resp += getAllContentNodes(node);
 				}
 			});
 			return resp;
@@ -1255,11 +1258,43 @@
 		return rowPosition + "|" + username + "|" + replyLabel + "|" + messageText + "|" + imgSrcs.join(",");
 	}
 
+	function getKickNativeMessageId(ele) {
+		if (!ele) return "";
+		try {
+			var fiberKey = Object.keys(ele).find(function(key) { return key.indexOf("__reactFiber") === 0; });
+			var fiber = fiberKey && ele[fiberKey];
+			for (var depth = 0; fiber && depth < 8; depth++, fiber = fiber.return) {
+				var props = fiber.memoizedProps;
+				if (!props) continue;
+				var message = props.message;
+				if (!message && depth === 0) {
+					var children = Array.isArray(props.children) ? props.children : [props.children];
+					for (var i = 0; i < children.length; i++) {
+						if (children[i] && children[i].props && children[i].props.message) {
+							message = children[i].props.message;
+							break;
+						}
+					}
+				}
+				if (!message && Array.isArray(props.messages) && ele.dataset.index !== undefined) {
+					message = props.messages[Number(ele.dataset.index)];
+				}
+				if (message && typeof message.id === "string") {
+					var nativeId = message.id.match(/(?:^|-)([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i);
+					if (nativeId) return nativeId[1];
+				}
+			}
+		} catch (e) {}
+		return "";
+	}
+
 	function getKickMessageKey(ele) {
 		const messageEle = getKickMessageContainer(ele) || (ele?.nodeType === 1 ? ele : null);
 		if (!messageEle?.dataset) {
 			return "";
 		}
+		var nativeId = getKickNativeMessageId(messageEle);
+		if (nativeId) return "message:" + nativeId;
 		if (messageEle.dataset.chatEntry) {
 			return `entry:${messageEle.dataset.chatEntry}`;
 		}
@@ -1746,29 +1781,6 @@
 			return;
 		}
 
-		var retryingEmptyMessage = parseInt(ele.dataset.ssEmptyRetryCount || "0", 10) > 0;
-		let sibling = ele.nextElementSibling;
-		let nextCount = 0;
-		while(sibling) {
-			nextCount++;
-			if (nextCount>5){
-				kickDebugLog("process:new skipped; no matched sibling within lookahead", {
-					messageId: messageId,
-					row: getKickDebugRowInfo(ele)
-				});
-				return;
-			}
-			if (!retryingEmptyMessage && sibling.dataset && sibling.dataset.matched){
-				kickDebugLog("process:new skipped; later sibling already matched", {
-					messageId: messageId,
-					sibling: getKickDebugRowInfo(sibling),
-					row: getKickDebugRowInfo(ele)
-				});
-				return;
-			}
-			sibling = sibling.nextElementSibling;
-		}
-
 		if (processedMessages.has(messageId)) {
 			kickDebugLog("process:new skipped; processedMessages duplicate", {
 				messageId: messageId,
@@ -1876,6 +1888,10 @@
 
 	  try {
 		messageId = getKickMessageKey(ele) || messageId;
+		if (processedMessages.has(messageId)) {
+			clearKickProcessingState(ele);
+			return;
+		}
 		ele.dataset.matched = true;
 		ele.dataset.ssMessageKey = messageId;
 		delete ele.dataset.ssProcessingKey;
@@ -1970,6 +1986,9 @@
 			row: getKickDebugRowInfo(ele)
 		});
 		return;
+	  }
+	  if (messageId.indexOf("message:") === 0) {
+		data.meta = { messageId: messageId.slice(8) };
 	  }
 	  if (kickUsername){
 		  data.sourceName = kickUsername;

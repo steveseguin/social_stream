@@ -77,6 +77,10 @@
 			if (document.fonts && document.fonts.addEventListener) { document.fonts.addEventListener("loadingdone", fit); }
 			setTimeout(fit, 1500);
 			window.addEventListener("resize", fit);
+			SSO.onCleanup(root, function () {
+				window.removeEventListener("resize", fit);
+				if (document.fonts && document.fonts.removeEventListener) { document.fonts.removeEventListener("loadingdone", fit); }
+			});
 		}
 	});
 
@@ -700,6 +704,7 @@
 				'<div class="so-box">' + (c.style === "comic" ? '<div class="so-burst"></div>' : "") + '<div class="so-t">' + esc(c.text) + "</div>" + (c.sub ? '<div class="so-s">' + esc(c.sub) + "</div>" : "") + "</div>";
 			root.appendChild(el);
 			var hideT;
+			SSO.onCleanup(root, function () { clearTimeout(hideT); });
 			function rain() {
 				var set = RAIN[c.rain];
 				if (!set) { return; }
@@ -730,7 +735,7 @@
 			}
 			play();
 			if (c.every > 0 || (ctx && ctx.preview)) { setInterval(play, Math.max(c.stay + 2, ctx && ctx.preview ? 10 : c.every) * 1000); }
-			if (c.onshow) { SSO.obs.on("obsSourceVisibleChanged", function (d) { if (d && d.visible) { play(); } }); SSO.obs.on("obsSourceActiveChanged", function (d) { if (d && d.active) { play(); } }); }
+			if (c.onshow) { SSO.onCleanup(root, SSO.obs.on("obsSourceVisibleChanged", function (d) { if (d && d.visible) { play(); } })); SSO.onCleanup(root, SSO.obs.on("obsSourceActiveChanged", function (d) { if (d && d.active) { play(); } })); }
 		}
 	});
 
@@ -743,7 +748,7 @@
 		size: [1280, 720],
 		fields: [
 			{ key: "kind", label: "What falls", type: "select", group: "Rain", default: "confetti", options: [["confetti", "Confetti"], ["money", "Dollar bills"], ["coins", "Gold coins"], ["mixed", "Bills and coins"], ["snow", "Snowflakes"], ["petals", "Flower petals"], ["leaves", "Autumn leaves"], ["streamers", "Streamers"]] },
-			{ key: "amount", label: "How many", type: "range", group: "Rain", default: 40, min: 5, max: 300, step: 5 },
+			{ key: "amount", label: "How many", type: "range", group: "Rain", default: 80, min: 5, max: 300, step: 5 },
 			{ key: "speed", label: "Fall speed", type: "range", group: "Rain", default: 1, min: 0.3, max: 3, step: 0.1 },
 			{ key: "size", label: "Piece size", type: "range", group: "Rain", default: 1, min: 0.4, max: 3, step: 0.1 },
 			{ key: "mode", label: "When", type: "select", group: "Rain", default: "always", options: [["always", "All the time"], ["burst", "Bursts now and then"]] },
@@ -754,9 +759,9 @@
 		presets: [
 			{ name: "Confetti", tags: ["cute"], values: {} },
 			{ name: "Making it rain", tags: ["spicy", "gaming"], values: { kind: "money", amount: 50 } },
-			{ name: "Gold coins", tags: ["gaming", "retro"], values: { kind: "coins", amount: 35 } },
+			{ name: "Gold coins", tags: ["gaming", "retro"], values: { kind: "coins", amount: 40 } },
 			{ name: "Bills & coins burst", tags: ["spicy"], values: { kind: "mixed", mode: "burst", amount: 120, every: 90 } },
-			{ name: "Gold & white confetti", tags: ["elegant"], values: { colors: "f5d06f,ffffff,e8c37a,fff5c4", amount: 30, speed: 0.7 } },
+			{ name: "Gold & white confetti", tags: ["elegant"], values: { colors: "f5d06f,ffffff,e8c37a,fff5c4", amount: 60, speed: 0.7 } },
 			{ name: "Sakura petals", tags: ["cozy", "cute", "elegant"], values: { kind: "petals", amount: 25, speed: 0.5 } },
 			{ name: "Autumn leaves", tags: ["cozy", "halloween"], values: { kind: "leaves", amount: 18, speed: 0.6, size: 1.3 } },
 			{ name: "Gentle snow", tags: ["cozy", "christmas"], values: { kind: "snow", amount: 120, speed: 0.6 } },
@@ -764,7 +769,7 @@
 			{ name: "Big soft flakes", tags: ["cozy", "christmas", "elegant"], values: { kind: "snow", amount: 50, speed: 0.4, size: 2 } },
 			{ name: "Falling leaves (heavy)", tags: ["cozy", "halloween"], values: { kind: "leaves", amount: 45, speed: 0.8, size: 1.6 } },
 			{ name: "Party streamers", tags: ["cute", "newyear"], values: { kind: "streamers", mode: "burst", amount: 60, every: 45 } },
-			{ name: "New year gold", tags: ["newyear", "elegant"], values: { colors: "f5d06f,c0c0c0,ffffff,111111", amount: 70 } }
+			{ name: "New year gold", tags: ["newyear", "elegant"], values: { colors: "f5d06f,c0c0c0,ffffff,111111", amount: 110 } }
 		],
 		render: function (root, c, ctx) {
 			var cv = document.createElement("canvas");
@@ -780,7 +785,7 @@
 				var W = cv.width, H = cv.height, k = c.kind;
 				if (k === "mixed") { k = Math.random() < 0.6 ? "money" : "coins"; }
 				var depth = Math.random();
-				var s = dpr * c.size * (k === "money" ? 58 : k === "coins" ? 18 : k === "leaves" ? 22 : k === "snow" ? 2 + depth * depth * 9 : k === "petals" ? 9 : k === "streamers" ? 5 : 7) * (k === "snow" ? 1 : 0.8 + Math.random() * 0.4);
+				var s = dpr * c.size * (k === "money" ? 58 : k === "coins" ? 18 : k === "leaves" ? 22 : k === "snow" ? 2 + depth * depth * 9 : k === "petals" ? 9 : k === "streamers" ? 6 : 13) * (k === "snow" ? 1 : 0.8 + Math.random() * 0.4);
 				return { k: k, x: Math.random() * W, y: top ? -s * 3 - Math.random() * H * 0.3 : Math.random() * H, s: s,
 					vy: dpr * (k === "coins" ? 140 : k === "money" ? 55 : k === "snow" ? 18 + depth * 60 : 45) * c.speed * (0.7 + Math.random() * 0.6), depth: depth, li: Math.floor(Math.random() * 7),
 					sway: Math.random() * 6.283, swayS: 0.6 + Math.random() * 1.2, rot: Math.random() * 6.283, vr: (Math.random() - 0.5) * 3,

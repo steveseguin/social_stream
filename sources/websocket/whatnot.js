@@ -93,7 +93,7 @@
 		try {
 			var url = new URL(/^https?:\/\//i.test(raw) ? raw : "https://" + raw);
 			if (!/^https?:$/.test(url.protocol) || url.username || url.password || url.port || !/^(?:www\.)?whatnot\.com$/i.test(url.hostname)) return "";
-			var match = url.pathname.match(/^\/(?:dashboard\/)?live\/([^/]+)\/?$/i);
+			var match = url.pathname.match(/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:dashboard\/)?live\/([^/]+)\/?$/i);
 			return match && uuid.test(match[1]) ? match[1].toLowerCase() : "";
 		} catch (e) { return ""; }
 	}

@@ -40,8 +40,9 @@
 <script src="../docs/js/site-shell.js">
 </script>
 <link rel="stylesheet" href="css/workflow-guides.css">
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body class="workflow-guide">
+<body class="workflow-guide visual-guide">
 <header class="site-header">
 <div class="site-bar">
 <a class="site-brand" href="../index.html">
@@ -91,8 +92,10 @@
 <a href="#combine">6. Chat and alerts in one browser tab</a>
 </nav>
 <section class="guide-card" id="setup">
-<h2>1. Combine capture in one session</h2>
+<h2 id="read-section-1">1. Combine capture in one session</h2>
 <p>Add the intended source chats in SSN and confirm one fresh message from each reaches the same unfiltered <strong>Streaming Chat Dock</strong>. Keep that Dock as your operator view.</p>
+<figure class="guide-shot"><a href="images/guides/obs-studio-sources.png"><img src="images/guides/obs-studio-sources.png" width="265" height="580" alt="Keep each overlay in its own OBS Browser Source." loading="lazy" decoding="async"></a><figcaption>Keep each overlay in its own OBS Browser Source.</figcaption></figure>
+
 <p>Copy generated links so their session, password, version, and server settings remain intact. Add each audience view as a separate OBS Browser Source. Give OBS sources descriptive names such as <strong>Twitch chat</strong> and <strong>YouTube chat</strong>.</p>
 <figure class="guide-figure">
 <ol class="workflow-diagram">
@@ -113,7 +116,7 @@
 </figure>
 </section>
 <section class="guide-card" id="rolling">
-<h2>2. Split rolling chat by platform</h2>
+<h2 id="read-section-2">2. Split rolling chat by platform</h2>
 <p>For rolling chat, make two copies of your generated <code>dock.html</code> URL. Append these options to the respective copies:</p>
 <table class="guide-table guide-table-stack">
 <thead>
@@ -156,20 +159,20 @@
 <p>Use <strong>onlyfrom</strong> and <strong>hidefrom</strong> for these pages. Do not assume an option such as <code>onlytype</code> from another overlay works here. Use <code>youtubeshorts</code> separately when the capture reports that type. See <a href="source-types-guide.html">Source types</a>.</p>
 </section>
 <section class="guide-card" id="featured">
-<h2>3. Split selected messages</h2>
+<h2 id="read-section-3">3. Split selected messages</h2>
 <p>For selected rather than rolling chat, duplicate your generated <code>featured.html</code> link and add <code>&amp;onlyfrom=twitch</code> to one copy and <code>&amp;onlyfrom=youtube</code> to the other. Keep the operator Dock open to select messages.</p>
 <p>The current Featured Chat <code>onlyfrom</code> accepts one source type. The Dock’s comma-separated example above should not be copied into that field on Featured Chat.</p>
 <div class="guide-note">This filters which selections a featured page accepts. It does not create independent operator queues, and a rejected selection is not a clear command. Clear the featured message explicitly when switching segments so an older accepted selection is not left visible.</div>
 </section>
 <section class="guide-card" id="channels">
-<h2>4. Two channels on the same platform</h2>
+<h2 id="read-section-4">4. Two channels on the same platform</h2>
 <p>
 <code>onlyfrom=twitch</code> selects Twitch as a platform, not a particular Twitch channel. Channel names and stream titles are metadata, not interchangeable URL filter names. Add <code>&amp;showchannelname</code> to show channel names when supplied by the source.</p>
 <p>For advanced Dock filtering, <code>&amp;filtertid=123</code> accepts the numeric originating tab ID; comma-separated IDs are supported. Inspect an actual captured payload to obtain its <code>tid</code> (see <a href="event-reference.html">Event reference</a> and <a href="commands.html">Commands &amp; API</a>). Do not use a platform channel ID here. Tab IDs can change when sources reopen, and sources without a matching tab ID may be excluded. This is a Dock option, not a general Featured Chat channel filter.</p>
 <p>For fully independent productions, use separate capture instances/profiles with distinct sessions and open only each production’s intended sources there. Giving one overlay a different session without matching capture will leave it idle. An overlay’s <code>label</code> identifies a page for routing; it is not a channel filter.</p>
 </section>
 <section class="guide-card" id="check">
-<h2>5. Verify each audience view</h2>
+<h2 id="read-section-5">5. Verify each audience view</h2>
 <ol class="guide-steps">
 <li>Send a fictional Twitch test message and a fictional YouTube test message into an isolated session using <a href="test-message-guide.html">Create test messages</a>.</li>
 <li>Confirm both appear in the operator Dock, and each rolling overlay shows only its intended source.</li>
@@ -179,7 +182,7 @@
 <p>If a view is blank, remove its filter temporarily. If chat returns, check the exact source type or tab ID. If it remains blank, use <a href="sessions-passwords-relay-modes.html">session and routing troubleshooting</a>. Changing an OBS source’s name does not update its saved URL.</p>
 </section>
 <section class="guide-card" id="combine">
-<h2>6. Chat and alerts in one browser tab</h2>
+<h2 id="read-section-6">6. Chat and alerts in one browser tab</h2>
 <p>Use <a href="../combine.html">Combine overlays</a> to layer existing overlay URLs in one tab or one OBS Browser Source. This is useful when reading chat on a phone during an IRL stream.</p>
 <ol class="guide-steps">
 <li>Paste your generated Streaming Chat Dock URL into the bottom layer and your Multi-Stream Alert Box URL into the top layer. Keep the session, password, and connection options in both links.</li>

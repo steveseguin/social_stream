@@ -38,8 +38,9 @@
     <meta name="description" content="Set up and use the Social Stream Ninja AI chat bot, connect an AI provider, test safely, control live replies, and troubleshoot missing responses.">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body>
+<body class="visual-guide">
     <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 
     <section class="page-hero">
@@ -51,8 +52,9 @@
 
     <main class="guide-section">
         <div class="container">
-            <div class="guide-card">
-                <h2>Understand the Three Separate Parts</h2>
+            <nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">Understand the Three Separate Parts</a><a href="#read-section-2">1. Configure an AI Provider</a><a href="#read-section-3">2. Enable and Configure the Primary Bot</a><a href="#read-section-4">3. Run a Safe End-to-End Test</a><a href="#read-section-5">4. Know When Silence Is Normal</a><a href="#read-section-6">5. Choose Where Replies Go</a><a href="#read-section-9">Other AI Bot Pages</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Understand the Three Separate Parts</h2>
                 <p>A working AI provider is only the first part of a live chat bot. The provider, the Primary bot, and the reply destination must each be configured.</p>
                 <table class="guide-table guide-table-stack">
                     <thead>
@@ -70,7 +72,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>1. Configure an AI Provider</h2>
+                <h2 id="read-section-2">1. Configure an AI Provider</h2>
                 <ol class="guide-steps">
                     <li>Open the Social Stream settings and expand <strong>Chat Bots and AI services</strong>.</li>
                     <li>Open <strong>Configure LLM Service Provider</strong>.</li>
@@ -109,7 +111,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>2. Enable and Configure the Primary Bot</h2>
+                <h2 id="read-section-3">2. Enable and Configure the Primary Bot</h2>
                 <p>Open <strong>Chat Bot - Primary</strong>. This is separate from both provider setup and the private <code>chatbot.html</code> interface.</p>
                 <table class="guide-table guide-table-stack">
                     <thead>
@@ -133,7 +135,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>3. Run a Safe End-to-End Test</h2>
+                <h2 id="read-section-4">3. Run a Safe End-to-End Test</h2>
                 <ol class="guide-steps">
                     <li>Turn Social Stream on and confirm the live source is open.</li>
                     <li>Send a normal message from a second viewer account directly in the source platform's chat, such as YouTube or Twitch, and confirm it appears in the Social Stream dock. Do not use a message typed into the dock or host-chat controls for this first test; reflected bot or host messages can be skipped to prevent reply loops.</li>
@@ -150,7 +152,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>4. Know When Silence Is Normal</h2>
+                <h2 id="read-section-5">4. Know When Silence Is Normal</h2>
                 <p>The Primary bot is selective by default. An empty trigger list means every eligible message can be considered; it does not mean every message must receive a reply.</p>
                 <ul class="guide-list">
                     <li>A short greeting such as <code>hello</code> may be ignored if the model does not think a response adds value.</li>
@@ -163,7 +165,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>5. Choose Where Replies Go</h2>
+                <h2 id="read-section-6">5. Choose Where Replies Go</h2>
                 <table class="guide-table guide-table-stack">
                     <thead>
                         <tr><th>Mode</th><th>Result</th><th>Requirements</th></tr>
@@ -178,7 +180,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>6. Clear and Auto-Hide Bot Replies</h2>
+                <h2 id="read-section-7">6. Clear and Auto-Hide Bot Replies</h2>
                 <p>These controls affect the Primary Chat Bot page, <code>bot.html</code>. They do not clear the main featured-message overlay.</p>
                 <table class="guide-table guide-table-stack">
                     <thead>
@@ -207,7 +209,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Troubleshoot by the Last Thing That Worked</h2>
+                <h2 id="read-section-8">Troubleshoot by the Last Thing That Worked</h2>
                 <table class="guide-table guide-table-stack">
                     <thead>
                         <tr><th>What You See</th><th>Likely Area</th><th>What to Check</th></tr>
@@ -229,7 +231,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Other AI Bot Pages</h2>
+                <h2 id="read-section-9">Other AI Bot Pages</h2>
                 <p>The Primary bot, private chat, censor bot, and AI cohost are separate tools with different settings and histories.</p>
                 <figure class="guide-figure">
                     <img src="images/guides/guide-chatbot-pages-reference.png" alt="Reference table comparing the Primary bot overlay, private chatbot, censor bot, and AI cohost" class="guide-image">

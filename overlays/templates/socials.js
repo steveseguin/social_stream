@@ -193,7 +193,7 @@
 			{ key: "fg", label: "Text colour", type: "color", group: "Style", default: "ffffff" },
 			{ key: "accent", label: "Accent (badge, separators)", type: "color", group: "Style", default: "ff2d55" },
 			{ key: "border", label: "Border colour (blank = none)", type: "color", group: "Style", default: "" },
-			{ key: "radius", label: "Corner radius", type: "range", group: "Style", default: 6, min: 0, max: 40, step: 1 },
+			{ key: "radius", label: "Corner radius", type: "range", group: "Style", default: 6, min: 0, max: 999, step: 1 },
 			{ key: "height", label: "Bar height", type: "range", group: "Style", default: 52, min: 24, max: 200, step: 1 },
 			{ key: "blur", label: "Frosted glass blur", type: "range", group: "Style", default: 0, min: 0, max: 30, step: 1 },
 			{ key: "shadow", label: "Drop shadow", type: "bool", group: "Style", default: true },
@@ -585,7 +585,7 @@
 			{ key: "fg", label: "Text colour", type: "color", group: "Style", default: "ffffff" },
 			{ key: "accent", label: "Title colour", type: "color", group: "Style", default: "ffffff" },
 			{ key: "border", label: "Border colour (blank = none)", type: "color", group: "Style", default: "ffffff22" },
-			{ key: "radius", label: "Corner radius", type: "range", group: "Style", default: 16, min: 0, max: 40, step: 1 },
+			{ key: "radius", label: "Corner radius", type: "range", group: "Style", default: 16, min: 0, max: 999, step: 1 },
 			{ key: "blur", label: "Frosted glass blur", type: "range", group: "Style", default: 0, min: 0, max: 30, step: 1 },
 			{ key: "flagbg", label: "Flag behind the card", type: "select", group: "Style", default: "", options: [["", "None"]].concat(SSO.COUNTRIES.map(function (k) { return [k[0], k[1]]; })) },
 			{ key: "flagmono", label: "Black & white flag", type: "bool", group: "Style", default: false, show: { flagbg: "!" } },
@@ -649,7 +649,7 @@
 				card.style.zIndex = "0";
 				card.style.overflow = "hidden";
 				card.insertBefore(fl, card.firstChild);
-				SSO.wavingFlag(fl, c.flagbg, { mono: c.flagmono, amp: 3, darken: 1 - c.bgopacity * 0.6, grain: c.flagmono, vignette: true });
+				SSO.wavingFlag(fl, c.flagbg, { mono: c.flagmono, amp: 3, darken: 0.2 + c.bgopacity * 0.75, grain: c.flagmono, vignette: true });
 				card.style.background = "transparent";
 			}
 			var wrap = document.createElement("div");

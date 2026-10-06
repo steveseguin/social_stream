@@ -6,7 +6,7 @@
 	function getJSON(url, headers) {
 		return fetch(url, headers ? { headers: headers } : undefined).then(function (r) { if (!r.ok) { throw new Error(r.status); } return r.json(); });
 	}
-	function strip(html) { var d = document.createElement("div"); d.innerHTML = html; return (d.textContent || "").replace(/\s+/g, " ").trim(); }
+	function strip(html) { var d = new DOMParser().parseFromString(String(html), "text/html"); return (d.body.textContent || "").replace(/\s+/g, " ").trim(); }
 	function card(root, cls) {
 		var w = document.createElement("div");
 		w.style.cssText = "position:absolute;left:0;top:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;padding:10px;box-sizing:border-box;";
@@ -145,7 +145,7 @@
 					else {
 						holder.innerHTML = rows.map(function (r) { return '<div class="cr-c" style="background:' + SSO.rgba(c.bg, c.bgopacity) + '"><b>' + esc(r.id) + "</b><span>" + esc(r.price) + '</span><small style="color:' + r.col + '">' + r.ch + "</small></div>"; }).join("");
 					}
-				}).catch(function () { if (update) { update([]); } });
+				}).catch(function () { if (update) { update([]); } else { holder.textContent = "Prices unavailable right now."; } });
 			}
 			load();
 			setInterval(load, 150000);
@@ -288,6 +288,11 @@
 				["Which console maker created the Game Boy?", "Nintendo", ["Sega", "Sony", "Atari"]]
 			].map(function (q) { return { category: "General", difficulty: "easy", question: q[0], correct_answer: q[1], incorrect_answers: q[2], local: true }; });
 			var failures = 0;
+			var alive = true, nextQuestion, revealAnswer, initialLoad;
+			SSO.onCleanup(root, function () {
+				alive = false;
+				clearTimeout(nextQuestion); clearTimeout(revealAnswer); clearTimeout(initialLoad);
+			});
 			function fill() {
 				var url = "https://opentdb.com/api.php?amount=20&type=multiple&encode=url3986" + (c.category ? "&category=" + c.category : "") + (c.difficulty ? "&difficulty=" + c.difficulty : "");
 				return getJSON(url).then(function (j) {
@@ -301,6 +306,7 @@
 			}
 			function dec(s) { try { return decodeURIComponent(s); } catch (e) { return s; } }
 			function ask() {
+				if (!alive) { return; }
 				if (!queue.length) { fill().then(ask); return; }
 				var q = queue.shift();
 				var right = dec(q.correct_answer);
@@ -312,14 +318,14 @@
 				bar.style.transition = "none"; bar.style.transform = "scaleX(1)";
 				void bar.offsetWidth;
 				bar.style.transition = "transform " + c.think + "s linear"; bar.style.transform = "scaleX(0)";
-				setTimeout(function () {
+				revealAnswer = setTimeout(function () {
 					var opts = aEl.querySelectorAll(".tv-a");
 					for (var k = 0; k < opts.length; k++) { opts[k].className = "tv-a " + (opts[k].getAttribute("data-r") === "1" ? "right" : "wrong"); }
-					setTimeout(ask, (c.reveal + c.pause) * 1000);
+					nextQuestion = setTimeout(ask, (c.reveal + c.pause) * 1000);
 				}, c.think * 1000);
 			}
 			// small random delay so several trivia sources don't hit the API at the same moment
-			setTimeout(function () { fill().then(ask); }, Math.random() * 2500);
+			initialLoad = setTimeout(function () { fill().then(ask); }, Math.random() * 2500);
 		}
 	});
 
@@ -425,7 +431,7 @@
 				return row ? row[col - 1] || "" : "";
 			}
 			function apply(values) {
-				lines = values.map(function (v) { return String(c.template || "{value}").replace(/\{value\}/g, v); });
+				lines = values.map(function (v) { return String(c.template || "{value}").replace(/\{value\}/g, function () { return v; }); });
 				if (update) { update(lines.map(esc)); return; }
 				if (c.display === "rotate") { li = li % Math.max(1, lines.length); vEl.textContent = lines[li] || ""; return; }
 				vEl.textContent = lines.join(" · ");

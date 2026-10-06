@@ -38,8 +38,9 @@
 	<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body class="guides-page">
+<body class="guides-page visual-guide">
 	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 
 	<section class="page-hero">
@@ -51,8 +52,9 @@
 
 	<main class="guide-section">
 		<div class="container">
-			<div class="guide-card">
-				<h2>Quick Chooser</h2>
+			<nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">Quick Chooser</a><a href="#read-section-2">1. Enable Local Server</a><a href="#read-section-3">2. Local Control API and MCP</a><a href="#read-section-4">3. Headless Home Server or VPS</a><a href="#read-section-5">4. Local Media Server</a><a href="#read-section-6">Server Fallback Is Different</a><a href="#read-section-7">Other Temporary Local Ports</a></nav>
+<div class="guide-card">
+				<h2 id="read-section-1">Quick Chooser</h2>
 				<table class="guide-table guide-table-stack">
 					<thead>
 						<tr><th>I Want To</th><th>Use</th><th>Default Address</th></tr>
@@ -83,31 +85,33 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>1. Enable Local Server</h2>
+				<h2 id="read-section-2">1. Enable Local Server</h2>
 				<p>This File-menu option starts a room- and channel-aware WebSocket relay inside the desktop app. Supported Social Stream pages can use it to exchange chat and commands on the same computer. It is an alternative endpoint for page-specific server routing.</p>
+<figure class="guide-shot"><a href="images/guides/guide-local-server-file-menu.png"><img src="images/guides/guide-local-server-file-menu.png" width="390" height="561" alt="The local server is available from the desktop app menu." loading="lazy" decoding="async"></a><figcaption>The local server is available from the desktop app menu.</figcaption></figure>
+
 				<p>It does not host the Social Stream website, capture a platform by itself, or provide the HTTP automation API. Start with the <a href="local-websocket-server-guide.html">Enable Local Server guide</a>.</p>
 			</div>
 
 			<div class="guide-card">
-				<h2>2. Local Control API and MCP</h2>
+				<h2 id="read-section-3">2. Local Control API and MCP</h2>
 				<p>This opt-in loopback API lets programs on the SSApp computer manage supported sources and settings, read status and diagnostics, inspect app or source windows, and follow captured events. The bundled MCP adapter presents those operations as tools to compatible AI clients.</p>
 				<p>Enable it under <strong>File &gt; Local AI / Automation</strong>. It is separate from <strong>Enable Local Server</strong>. See the <a href="llm-control-guide.html">Local Control API and MCP guide</a>.</p>
 			</div>
 
 			<div class="guide-card">
-				<h2>3. Headless Home Server or VPS</h2>
+				<h2 id="read-section-4">3. Headless Home Server or VPS</h2>
 				<p>Headless mode runs the full Electron desktop app with its source windows hidden. On Linux it still needs a display backend such as Xvfb. This is useful when a dedicated computer should keep capturing chat without a monitor attached.</p>
 				<p>Headless mode does not create a public control API. Remote control uses Social Stream's normal WebRTC or WebSocket transport. See the <a href="headless-server-guide.html">headless hosting guide</a>.</p>
 			</div>
 
 			<div class="guide-card">
-				<h2>4. Local Media Server</h2>
+				<h2 id="read-section-5">4. Local Media Server</h2>
 				<p>The desktop app starts this automatically when local Event Flow media is available. It serves only files approved through SSApp and selected runtime assets through a random per-profile token path.</p>
 				<p>It is not a general web or file server. See <a href="media-hosting-event-flow.html">Media Files for Event Flow</a> to choose between local files, uploads, and cloud hosting.</p>
 			</div>
 
 			<div class="guide-card">
-				<h2>Server Fallback Is Different</h2>
+				<h2 id="read-section-6">Server Fallback Is Different</h2>
 				<p>Settings such as <strong>Send chat messages to API server</strong> and <strong>Dock sends its commands to Extension via server</strong> choose how chat and commands are routed. Their generated URL flags include <code>server</code>, <code>server2</code>, and <code>server3</code>.</p>
 				<p>Those settings normally use Social Stream's hosted WebSocket service. When a supported page also has <code>localserver</code>, it uses the desktop app's local relay instead. See <a href="sessions-passwords-relay-modes.html">Sessions, Passwords, Relay, and Server Modes</a> for the routing controls.</p>
 				<div class="warning-note">
@@ -116,7 +120,7 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>Other Temporary Local Ports</h2>
+				<h2 id="read-section-7">Other Temporary Local Ports</h2>
 				<p>Some sign-in and account-link workflows briefly open a loopback callback port and close it when the workflow ends. These temporary listeners are not general SSN servers or automation APIs.</p>
 			</div>
 		</div>

@@ -27,8 +27,9 @@
 <link rel="stylesheet" href="css/workflow-guides.css">
 <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
 <script src="js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body class="workflow-guide">
+<body class="workflow-guide visual-guide">
 <header class="site-header"><div class="site-bar">
 <a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
 <nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation">
@@ -40,10 +41,12 @@
 <section class="page-hero"><div class="container"><h1>Design custom word clouds and maps</h1><p>Give word clouds and audience maps a new look while preserving how chat becomes data.</p></div></section>
 <main class="guide-section"><div class="container">
 <nav class="workflow-toc" aria-label="On this page"><a href="overlay-customization-guide.html">All overlay design guides</a><a href="#choose">Choose a file</a><a href="#files">Download</a><a href="#connect">Session and OBS</a><a href="#design">Design</a><a href="#prompt">AI prompt</a><a href="#test">Test</a></nav>
-<section class="guide-card" id="choose"><h2>Choose the right starting page</h2><p>Choose <code>wordcloud.html</code> for repeated words or <code>map.html</code> for viewer locations. Both need more than a static background: the renderer positions data-driven elements. Keep the full source folder, including the map's additional <code>thirdparty/map/</code> datasets.</p>
+<section class="guide-card" id="choose"><h2 id="read-section-1">Choose the right starting page</h2><p>Choose <code>wordcloud.html</code> for repeated words or <code>map.html</code> for viewer locations. Both need more than a static background: the renderer positions data-driven elements. Keep the full source folder, including the map's additional <code>thirdparty/map/</code> datasets.</p>
+<figure class="guide-shot"><a href="images/guides/visual/find-wordcloud.webp"><img src="images/guides/visual/find-wordcloud.webp" width="519" height="417" alt="Find the word cloud overlay in settings." loading="lazy" decoding="async"></a><figcaption>Find the word cloud overlay in settings.</figcaption></figure>
+
 
 </section>
-<section class="guide-card" id="files"><h2>Download and keep the file structure</h2>
+<section class="guide-card" id="files"><h2 id="read-section-2">Download and keep the file structure</h2>
 <ol class="guide-steps"><li><a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">Download the source ZIP</a> and extract it. These guides use the beta source; keep the files from one download together.</li>
 <li>Copy <code>wordcloud.html</code> to <code>my-wordcloud.html</code> beside the original. If choosing a different page or theme, keep its copy in that file's original folder.</li>
 <li>Open the copied HTML and its referenced CSS/JS in your editor or AI tool. Add supplied artwork/fonts to the same project and use relative paths. Start with CSS overrides; include the renderer when changing generated markup.</li></ol>
@@ -57,7 +60,7 @@
 <tr><td data-label="File"><a href="../thirdparty/iso-3166.json"><code>thirdparty/iso-3166.json</code></a></td><td data-label="Why it matters">Country lookup data.</td></tr>
 <tr><td data-label="File"><a href="../shared/overlay-control-transport.js"><code>shared/overlay-control-transport.js</code></a></td><td data-label="Why it matters">Existing state/control receiver.</td></tr>
 </tbody></table></section>
-<section class="guide-card" id="connect"><h2>Connect your copy and open it in OBS</h2>
+<section class="guide-card" id="connect"><h2 id="read-section-3">Connect your copy and open it in OBS</h2>
 <p>Start SSN and make the original generated overlay URL work first. The <code>session=</code> value connects to that SSN session; it is not your channel name or this file's name. Keep SSN, the relevant feature, and its data sources running.</p>
 <ol class="guide-steps"><li>Drag your edited HTML file into Chrome or Edge. Copy its address from the address bar; it starts with <code>file:///</code>.</li>
 <li>Copy everything from <code>?</code> onward in your working SSN overlay link and add it to the end of that file address. Keep all settings, including the session, password, and any <code>#</code> ending.</li>
@@ -66,8 +69,8 @@
 <pre><code>file:///C:/SSN/social_stream-beta/my-wordcloud.html?session=YOUR_SESSION</code></pre>
 <p>Use the actual file address on your computer. OBS saves it with the source; keep the downloaded folder in the same place. After saving design changes, refresh the Browser Source. The <a href="overlay-customization-guide.html#local-file">shared setup guide</a> includes Mac examples and an optional launcher for the Local file checkbox.</p>
 </section>
-<section class="guide-card" id="design"><h2>Where to change the design</h2><p>For the word cloud, change fonts, palette, background, spacing, and the mapping between frequency and size. Preserve filtering and count accumulation. Its default mode accepts single-word messages; <code>allwords</code> changes that behavior, so retain the option the operator chose.</p><p>For the map, start with its existing map-style, region, label, and color controls. Change marker/panel styling without replacing location matching or counting. For simple style changes, use the hosted map link with OBS Custom CSS. Its separate JSON data files can be blocked when opened from disk; for an edited HTML copy, ask the AI to include that data in the page so it opens directly.</p></section>
-<section class="guide-card" id="prompt"><h2>Copy this AI prompt</h2><p>Give the AI your copied source files and reference artwork. Replace the bracketed details. Keep the input-safety instructions in the prompt.</p><pre><code>Customize my-wordcloud.html, copied from wordcloud.html.
+<section class="guide-card" id="design"><h2 id="read-section-4">Where to change the design</h2><p>For the word cloud, change fonts, palette, background, spacing, and the mapping between frequency and size. Preserve filtering and count accumulation. Its default mode accepts single-word messages; <code>allwords</code> changes that behavior, so retain the option the operator chose.</p><p>For the map, start with its existing map-style, region, label, and color controls. Change marker/panel styling without replacing location matching or counting. For simple style changes, use the hosted map link with OBS Custom CSS. Its separate JSON data files can be blocked when opened from disk; for an edited HTML copy, ask the AI to include that data in the page so it opens directly.</p></section>
+<section class="guide-card" id="prompt"><h2 id="read-section-5">Copy this AI prompt</h2><p>Give the AI your copied source files and reference artwork. Replace the bracketed details. Keep the input-safety instructions in the prompt.</p><details class="guide-extra"><summary>Show the full prompt</summary><pre><code>Customize my-wordcloud.html, copied from wordcloud.html.
 Design: [describe the look or attach a reference].
 Colors/fonts/assets: [supply hex colors and local filenames].
 OBS canvas and placement: [size and position].
@@ -97,8 +100,8 @@ Make the edited overlay work directly from disk using a file:/// URL,
 without requiring a local web server.
 Return the edited files, any additional assets, exact local browser/OBS
 setup instructions using placeholders, and the specific tests performed.
-Do not put my private session link or credentials into a public example.</code></pre></section>
-<section class="guide-card" id="test"><h2>Test this overlay type</h2>
+Do not put my private session link or credentials into a public example.</code></pre></details></section>
+<section class="guide-card" id="test"><h2 id="read-section-6">Test this overlay type</h2>
 <p>Use a preview or test setup first. The <a href="test-message-guide.html">test-message guide</a> explains how to send fictional payloads through SSN; a test submitted to your production session can trigger its existing automations.</p>
 <ol class="guide-steps"><li>For word clouds, send repeated simple one-word messages, then a sentence with allwords enabled only if that is your intended mode.</li>
 <li>For maps, use the configured location syntax and test a known location, an unrecognized location, and the same viewer's second entry.</li>

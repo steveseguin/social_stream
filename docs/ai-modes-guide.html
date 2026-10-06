@@ -38,8 +38,9 @@
     <meta name="description" content="Choose and configure Social Stream Ninja AI features: voice cohosts, public and private chat bots, ChatGPT browser companion mode, moderation, translation, RAG, summaries, TTS, and AI-built overlays.">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body>
+<body class="visual-guide">
 	<a class="skip-link" href="#main-content">Skip to main content</a>
     <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 
@@ -52,8 +53,9 @@
 
     <main class="guide-section" id="main-content">
         <div class="container">
-            <div class="guide-card">
-                <h2>Choose the Result You Want</h2>
+            <nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">Choose the Result You Want</a><a href="#read-section-2">Two Different Meanings of “ChatGPT”</a><a href="#read-section-3">Option 1: ChatGPT Browser Companion (Experimental)</a><a href="#read-section-4">Option 2: Configure an AI Provider Inside SSN</a><a href="#read-section-5">Option 3: Voice AI Cohost</a><a href="#read-section-6">Option 4: Primary Live-Chat Bot</a><a href="#read-section-10">Common Fixes</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Choose the Result You Want</h2>
                 <table class="guide-table guide-table-stack">
                     <thead>
                         <tr><th>I Want To...</th><th>Use</th><th>API Key?</th></tr>
@@ -71,7 +73,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Two Different Meanings of “ChatGPT”</h2>
+                <h2 id="read-section-2">Two Different Meanings of “ChatGPT”</h2>
                 <table class="guide-table guide-table-stack">
                     <thead>
                         <tr><th>Option</th><th>What It Is</th><th>Conversation</th></tr>
@@ -87,7 +89,7 @@
             </div>
 
             <div class="guide-card" id="browser-companion">
-                <h2>Option 1: ChatGPT Browser Companion (Experimental)</h2>
+                <h2 id="read-section-3">Option 1: ChatGPT Browser Companion (Experimental)</h2>
                 <p>This is the closest option when you already use ChatGPT in Chrome and do not want an API key. SSN can capture new text turns from the page as source type <code>openai</code>, just like it captures a chat source.</p>
                 <h3>Capture a ChatGPT Conversation</h3>
                 <ol class="guide-steps">
@@ -122,7 +124,7 @@
             </div>
 
             <div class="guide-card" id="providers">
-                <h2>Option 2: Configure an AI Provider Inside SSN</h2>
+                <h2 id="read-section-4">Option 2: Configure an AI Provider Inside SSN</h2>
                 <p>Use a provider when SSN should generate replies, moderate messages, translate chat, search a knowledge base, or build overlays.</p>
                 <table class="guide-table guide-table-stack">
                     <thead>
@@ -145,7 +147,7 @@
             </div>
 
             <div class="guide-card" id="voice-cohost">
-                <h2>Option 3: Voice AI Cohost</h2>
+                <h2 id="read-section-5">Option 3: Voice AI Cohost</h2>
                 <p>The cohost is designed for the exact “talk to AI while it also sees live chat” workflow. Your microphone and selected live-chat messages feed the same cohost session, and the response can be spoken on stream.</p>
                 <figure class="guide-figure">
                     <img src="images/guides/guide-ai-cohost-controls.png" alt="AI cohost controls showing media devices, AI provider settings, system instructions, and live chat mode" class="guide-image">
@@ -169,7 +171,7 @@
             </div>
 
             <div class="guide-card" id="primary-bot">
-                <h2>Option 4: Primary Live-Chat Bot</h2>
+                <h2 id="read-section-6">Option 4: Primary Live-Chat Bot</h2>
                 <p>The Primary bot evaluates captured viewer messages and can answer in an overlay, through TTS, or back into supported platform chats.</p>
                 <ol class="guide-steps">
                     <li>Configure and test an AI provider.</li>
@@ -184,7 +186,7 @@
             </div>
 
             <div class="guide-card" id="private-bot">
-                <h2>Option 5: Private One-on-One Bot</h2>
+                <h2 id="read-section-7">Option 5: Private One-on-One Bot</h2>
                 <p><code>chatbot.html</code> is a private helper and prompt-testing page. Enable <strong>Chat Bot - Private Interface</strong>, open the page with your session, and use the configured LLM provider.</p>
                 <div class="guide-note">
                     <p>The private bot is separate from the Primary live-chat bot and currently does not share its RAG dataset or other chat history.</p>
@@ -192,7 +194,7 @@
             </div>
 
             <div class="guide-card" id="processing-tools">
-                <h2>Option 6: AI Processing Tools</h2>
+                <h2 id="read-section-8">Option 6: AI Processing Tools</h2>
                 <table class="guide-table guide-table-stack">
                     <thead>
                         <tr><th>Tool</th><th>What It Does</th><th>Start Safely</th></tr>
@@ -207,7 +209,7 @@
             </div>
 
             <div class="guide-card" id="overlay-builder">
-                <h2>Option 7: AI Overlay Builder</h2>
+                <h2 id="read-section-9">Option 7: AI Overlay Builder</h2>
                 <p>Use <code>aiprompt.html</code> to describe, generate, preview, and save an overlay. Use <code>aioverlay.html</code> as the OBS output page after it is saved.</p>
                 <figure class="guide-figure">
                     <img src="images/guides/guide-ai-overlay-builder.png" alt="AI Overlay Builder showing prompt, preview, save controls, and event simulation buttons" class="guide-image">
@@ -217,7 +219,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Common Fixes</h2>
+                <h2 id="read-section-10">Common Fixes</h2>
                 <ul class="guide-list">
                     <li><strong>Connected, but no live reply:</strong> enable the Primary bot or the specific AI feature; provider setup alone does not process chat.</li>
                     <li><strong>Cohost sees chat but stays quiet:</strong> Context only intentionally waits for the streamer to ask about chat. Switch to Questions and mentions or Every message for automatic replies.</li>

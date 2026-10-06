@@ -320,6 +320,29 @@
 		};
 	}
 
+	const deletedYouTubeMessageIds = new Set();
+	document.addEventListener("yt-action", function (event) {
+		try {
+			var detail = event.detail;
+			if (!detail || detail.actionName !== "yt-live-chat-actions" || !detail.args || !Array.isArray(detail.args[0])) return;
+			detail.args[0].forEach(function (action) {
+				var removal = action.removeChatItemAction || action.markChatItemAsDeletedAction;
+				var id = removal && removal.targetItemId;
+				if (!id || deletedYouTubeMessageIds.has(id)) return;
+				deletedYouTubeMessageIds.add(id);
+				if (deletedYouTubeMessageIds.size > 2000) deletedYouTubeMessageIds.delete(deletedYouTubeMessageIds.values().next().value);
+				var row = document.getElementById(id);
+				if (row) row.deleted = true;
+				// Only an explicit YouTube moderation action deletes a destination row.
+				// Normal list pruning also removes DOM nodes and must not delete chat.
+				chrome.runtime.sendMessage(chrome.runtime.id, { "delete": {
+					type: youtubeShorts ? "youtubeshorts" : "youtube",
+					meta: { messageId: id }
+				}}, function () {});
+			});
+		} catch (e) {}
+	}, true);
+
 	function setupDeletionObserver(target) {
 	  const deletionObserver = new MutationObserver((mutations) => {
 		mutations.forEach((mutation) => {
@@ -357,6 +380,7 @@
 	}
 
 	function sendYouTubeMessage(data, ele) {
+		if (ele.deleted || deletedYouTubeMessageIds.has(ele.id)) return;
 		const requestId = messageReplyPrefix + (++messageReplyCounter);
 		const request = { message: data };
 		if (window.ninjafy) request.youtubeMessageRequestId = requestId;
@@ -387,6 +411,9 @@
 	  try {
 		const chatname = ele.querySelector("#author-name");
 		const id = parseInt(ele.dataset.mid, 10);
+		// A row deleted before capture has no destination message to remove. Falling
+		// back to its author would also delete that author's unrelated earlier chat.
+		if (!Number.isSafeInteger(id) || id <= 0) return;
 		if (chatname || Number.isFinite(id)) {
 		  const data = {
 			type: (youtubeShorts ? "youtubeshorts" : "youtube")
@@ -403,6 +430,21 @@
 	}
 
 	const messageHistory = new Set();
+	var youtubeChatInitialized = false;
+	var youtubeStaleRecoveryKey = "ssn_youtube_stale_recovery";
+	var youtubeRecoveryMids = {};
+	try {
+		// Only an automatic stale-chat reload resumes unseen rows from the new snapshot.
+		// Opening a chat or manually reloading it still skips its existing history.
+		var recovery = JSON.parse(sessionStorage.getItem(youtubeStaleRecoveryKey) || "null");
+		sessionStorage.removeItem(youtubeStaleRecoveryKey);
+		if (recovery && recovery.url === window.location.href && Array.isArray(recovery.ids) &&
+			Date.now() - recovery.at < 10 * 60 * 1000) {
+			recovery.ids.slice(-300).forEach(function (id) { messageHistory.add(id); });
+			youtubeRecoveryMids = recovery.mids || {};
+			youtubeChatInitialized = true;
+		}
+	} catch (e) {}
 	const avatarHistory = new Map();
 	const removedJewelDonationSlots = new Set();
 	const removedJewelDonationSlotOrder = [];
@@ -520,23 +562,30 @@
 		return removedJewelDonationSlots.has(historyKey);
 	}
 
+	function queueYouTubeMessage(ele, eventType, wait) {
+		if (!ele || ele.ssnYouTubeCaptureTimer) return;
+		ele.ssnYouTubeCaptureTimer = setTimeout(function () {
+			ele.ssnYouTubeCaptureTimer = null;
+			processMessage(ele, eventType);
+		}, wait);
+	}
+
 	function retryYouTubeMessageWhenReady(ele, eventType) {
 		try {
 			if (!ele || !ele.isConnected) {
 				return false;
 			}
-			var retryCount = parseInt(ele.dataset.ssnRetryCount || "0", 10) || 0;
-			if (retryCount >= 4) {
-				return false;
-			}
-			ele.dataset.ssnRetryCount = String(retryCount + 1);
+			// Keep incomplete rows eligible for their later DOM updates, even after the
+			// short timer retries finish. Do not poll empty rows indefinitely.
+			ele.ssnYouTubePending = true;
 			ele.skip = false;
 			if (ele.id) {
 				messageHistory.delete(ele.id);
 			}
-			setTimeout(function () {
-				processMessage(ele, eventType);
-			}, Math.max(captureDelay || 200, 500));
+			var retryCount = parseInt(ele.dataset.ssnRetryCount || "0", 10) || 0;
+			if (retryCount >= 4) return false;
+			ele.dataset.ssnRetryCount = String(retryCount + 1);
+			queueYouTubeMessage(ele, eventType, Math.max(captureDelay || 200, 500));
 			return true;
 		} catch (e) {
 			return false;
@@ -1081,14 +1130,14 @@
 							setTimeout(()=>{
 								if (ele.id.length<40){
 									setTimeout(()=>{
-										messageHistory.add(ele.id);
+										if (ele.skip) messageHistory.add(ele.id);
 									},2000);
 								} else {
-									messageHistory.add(ele.id);
+									if (ele.skip) messageHistory.add(ele.id);
 								}
 							},2000);
 						} else {
-							messageHistory.add(ele.id);
+							if (ele.skip) messageHistory.add(ele.id);
 						}
 					},2000);
 				}
@@ -1096,6 +1145,7 @@
 			} else if (eventType == "jeweldonation"){
 				if (isKnownRemovedYouTubeJewelDonationSlot(ele)) return 5;
 		    } else {
+				retryYouTubeMessageWhenReady(ele, eventType);
 				return 6; // no id.
 		    }
 			if (ele.querySelector("[in-banner]")) {
@@ -1105,6 +1155,7 @@
 		} catch (e) {}
 
 		ele.skip = true;
+		ele.ssnYouTubePending = false;
 
 		//console.log(ele);
 
@@ -1163,6 +1214,10 @@
 		
 		try {
 			var nameElement = ele.querySelector("#author-name");
+			if (!nameElement && ele.tagName === "YT-LIVE-CHAT-TEXT-MESSAGE-RENDERER") {
+				retryYouTubeMessageWhenReady(ele, eventType);
+				return 8;
+			}
 			chatname = escapeHtml(nameElement.innerText);
 			if (!chatname){
 				retryYouTubeMessageWhenReady(ele, eventType);
@@ -1955,6 +2010,14 @@
 	  //console.log(target);
 	  var onMutationsObserved = function (mutations) {
 		mutations.forEach(function (mutation) {
+		  if (mutation.target !== target) {
+			// YouTube can insert a row before assigning its ID, author or text.
+			// Only revisit incomplete rows; edits to delivered messages are not new chat.
+			var row = mutation.target.nodeType === 1 ? mutation.target : mutation.target.parentElement;
+			while (row && row.parentElement !== target) row = row.parentElement;
+			if (row && row.ssnYouTubePending) checkType(row, callback);
+			return;
+		  }
 		  //console.log(mutation.addedNodes);
 		  if (mutation.removedNodes.length) {
 			for (var j = 0, jlen = mutation.removedNodes.length; j < jlen; j++) {
@@ -1980,7 +2043,7 @@
 	  if (!target) {
 		return;
 	  }
-	  var config = {childList: true, subtree: false};
+	  var config = {childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["id"]};
 	  var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 	  var observer = new MutationObserver(onMutationsObserved);
 	  observer.observe(target, config);
@@ -2014,6 +2077,7 @@
 	var youtubeLastResourceCount = 0;
 	var youtubeResourceActivitySampled = false;
 	var youtubeLastResourceActivityAt = Date.now();
+	var youtubeResourceObserver = null;
 	var youtubeStaleReloadMinMs = 60 * 1000;
 	var youtubeStaleReloadMaxMs = 5 * 60 * 1000;
 	var youtubeStaleReloadActivityWindowMs = 5 * 60 * 1000;
@@ -2062,7 +2126,13 @@
 		if (performance && performance.setResourceTimingBufferSize) {
 			performance.setResourceTimingBufferSize(10000);
 		}
-	} catch (e) {}
+		if (typeof PerformanceObserver === "function") {
+			youtubeResourceObserver = new PerformanceObserver(function (list) {
+				if (list.getEntries().length) youtubeLastResourceActivityAt = Date.now();
+			});
+			youtubeResourceObserver.observe({ entryTypes: ["resource"] });
+		}
+	} catch (e) { youtubeResourceObserver = null; }
 
 	function applyLargerFont() {
 		if (!largerFontApplied) {
@@ -2552,6 +2622,8 @@
 	}
 
 	function updateYouTubeResourceActivity(now) {
+		// The observer continues receiving entries after the page's timing buffer fills.
+		if (youtubeResourceObserver) return false;
 		try {
 			if (!performance || !performance.getEntriesByType) {
 				return false;
@@ -2562,7 +2634,7 @@
 				youtubeResourceActivitySampled = true;
 				return false;
 			}
-			if (resourceCount > youtubeLastResourceCount) {
+			if (resourceCount !== youtubeLastResourceCount) {
 				youtubeLastResourceCount = resourceCount;
 				youtubeLastResourceActivityAt = now;
 				return true;
@@ -2674,6 +2746,16 @@
 		});
 		recordYouTubeStaleReload(now);
 		try {
+			var recoveryMids = {};
+			Array.from(ele.children).forEach(function (row) {
+				var mid = parseInt(row.dataset.mid, 10);
+				if (row.id && Number.isSafeInteger(mid) && mid > 0) recoveryMids[row.id] = mid;
+			});
+			sessionStorage.setItem(youtubeStaleRecoveryKey, JSON.stringify({
+				url: window.location.href, at: now, ids: Array.from(messageHistory).slice(-300), mids: recoveryMids
+			}));
+		} catch (e) {}
+		try {
 			window.location.reload();
 		} catch (e) {
 			try {
@@ -2710,12 +2792,18 @@
 		youtubeObservedItemsHost = null;
 	}
 
-	function seedYouTubeChatItems(ele) {
+	function seedYouTubeChatItems(ele, captureExisting) {
 		if (!ele || !ele.children) {
 			return;
 		}
 		try {
 			[...ele.children].forEach(ele4 => {
+				if (captureExisting) {
+					var mid = youtubeRecoveryMids[ele4.id];
+					if (Number.isSafeInteger(mid) && mid > 0) ele4.dataset.mid = mid;
+					checkType(ele4, captureExisting);
+					return;
+				}
 				if (debugmode) {
 					checkType(ele4, processMessage);
 				}
@@ -2760,14 +2848,18 @@
 		youtubeObservedItems = ele;
 		youtubeObservedItemsHost = getYouTubeChatItemsHost(ele);
 		youtubeDeletionObserver = setupDeletionObserver(ele);
-		seedYouTubeChatItems(ele);
-		youtubeChatObserver = onElementInserted(ele, function (ele2, eventtype=false) {
-			if (isYouTubeChatActivityNode(ele2)) {
+		function captureRow(ele2, eventtype=false) {
+			if (ele2.skip || (ele2.id && messageHistory.has(ele2.id))) return;
+			if (!ele2.ssnYouTubePending && isYouTubeChatActivityNode(ele2)) {
 				markYouTubeChatActivity();
 			}
 			scheduleYouTubeChatAutoScroll(ele);
-			setTimeout(() => processMessage(ele2, eventtype), captureDelay);
-		});
+			queueYouTubeMessage(ele2, eventtype, captureDelay);
+		}
+		youtubeChatObserver = onElementInserted(ele, captureRow);
+		seedYouTubeChatItems(ele, youtubeChatInitialized ? captureRow : null);
+		youtubeRecoveryMids = {};
+		youtubeChatInitialized = true;
 		youtubeChatStructureObserver = observeYouTubeChatStructure(youtubeObservedItemsHost);
 		youtubeEmptySince = 0;
 		youtubeLastObserverRefreshAt = Date.now();

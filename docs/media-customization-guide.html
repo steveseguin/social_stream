@@ -27,8 +27,9 @@
 <link rel="stylesheet" href="css/workflow-guides.css">
 <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
 <script src="js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body class="workflow-guide">
+<body class="workflow-guide visual-guide">
 <header class="site-header"><div class="site-bar">
 <a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
 <nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation">
@@ -40,10 +41,12 @@
 <section class="page-hero"><div class="container"><h1>Design custom music and AI displays</h1><p>Restyle now-playing cards, cohost avatars, and AI-generated overlays using the right output page.</p></div></section>
 <main class="guide-section"><div class="container">
 <nav class="workflow-toc" aria-label="On this page"><a href="overlay-customization-guide.html">All overlay design guides</a><a href="#choose">Choose a file</a><a href="#files">Download</a><a href="#connect">Session and OBS</a><a href="#design">Design</a><a href="#prompt">AI prompt</a><a href="#test">Test</a></nav>
-<section class="guide-card" id="choose"><h2>Choose the right starting page</h2><p>Copy the audience display, not its setup page. Spotify setup lives separately from <code>spotify-overlay.html</code>; AI Overlay Builder uses <code>aiprompt.html</code> to build and <code>aioverlay.html</code> to display. AI Event Overlay is another feature with saved configurations and a private display URL.</p>
+<section class="guide-card" id="choose"><h2 id="read-section-1">Choose the right starting page</h2><p>Copy the audience display, not its setup page. Spotify setup lives separately from <code>spotify-overlay.html</code>; AI Overlay Builder uses <code>aiprompt.html</code> to build and <code>aioverlay.html</code> to display. AI Event Overlay is another feature with saved configurations and a private display URL.</p>
+<figure class="guide-shot"><a href="images/guides/guide-ai-cohost-controls.png"><img src="images/guides/guide-ai-cohost-controls.png" width="1745" height="859" alt="Choose the AI co-host display when you want an AI conversation overlay." loading="lazy" decoding="async"></a><figcaption>Choose the AI co-host display when you want an AI conversation overlay.</figcaption></figure>
+
 
 </section>
-<section class="guide-card" id="files"><h2>Download and keep the file structure</h2>
+<section class="guide-card" id="files"><h2 id="read-section-2">Download and keep the file structure</h2>
 <ol class="guide-steps"><li><a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">Download the source ZIP</a> and extract it. These guides use the beta source; keep the files from one download together.</li>
 <li>Copy <code>spotify-overlay.html</code> to <code>my-music.html</code> beside the original. If choosing a different page or theme, keep its copy in that file's original folder.</li>
 <li>Open the copied HTML and its referenced CSS/JS in your editor or AI tool. Add supplied artwork/fonts to the same project and use relative paths. Start with CSS overrides; include the renderer when changing generated markup.</li></ol>
@@ -58,7 +61,7 @@
 <tr><td data-label="File"><a href="../shared/aiEventOverlay/render.js"><code>shared/aiEventOverlay/render.js</code></a></td><td data-label="Why it matters">AI template renderer and its field/sandbox rules.</td></tr>
 <tr><td data-label="File"><a href="../shared/aiEventOverlay/overlay.css"><code>shared/aiEventOverlay/overlay.css</code></a></td><td data-label="Why it matters">AI Event Overlay display styling.</td></tr>
 </tbody></table></section>
-<section class="guide-card" id="connect"><h2>Connect your copy and open it in OBS</h2>
+<section class="guide-card" id="connect"><h2 id="read-section-3">Connect your copy and open it in OBS</h2>
 <p>Start SSN and make the original generated overlay URL work first. The <code>session=</code> value connects to that SSN session; it is not your channel name or this file's name. Keep SSN, the relevant feature, and its data sources running.</p>
 <ol class="guide-steps"><li>Drag your edited HTML file into Chrome or Edge. Copy its address from the address bar; it starts with <code>file:///</code>.</li>
 <li>Copy everything from <code>?</code> onward in your working SSN overlay link and add it to the end of that file address. Keep all settings, including the session, password, and any <code>#</code> ending.</li>
@@ -67,8 +70,8 @@
 <pre><code>file:///C:/SSN/social_stream-beta/my-music.html?session=YOUR_SESSION</code></pre>
 <p>Use the actual file address on your computer. OBS saves it with the source; keep the downloaded folder in the same place. After saving design changes, refresh the Browser Source. The <a href="overlay-customization-guide.html#local-file">shared setup guide</a> includes Mac examples and an optional launcher for the Local file checkbox.</p>
 </section>
-<section class="guide-card" id="design"><h2>Where to change the design</h2><p>For music, change cover-art framing, track/artist typography, progress, and paused/hidden states. Keep playback authorization in the existing SSN integration. For cohost output, change avatar layout, speech bubble, and idle/talking states while preserving reply routing and the existing audio source.</p><p>For generated AI Event designs, use the saved design prompt and empty <code>data-field</code> elements described in the <a href="index.html?file=ai-event-overlay.md">AI Event guide</a>. Its renderer fills text locally and blocks generated JavaScript. Preserve that boundary. Copy the whole display link, including any <code>#aieventauth=...</code> fragment; the session alone is not enough for that feature.</p></section>
-<section class="guide-card" id="prompt"><h2>Copy this AI prompt</h2><p>Give the AI your copied source files and reference artwork. Replace the bracketed details. Keep the input-safety instructions in the prompt. This prompt is for editing source files. For generated AI Event templates, use that feature's saved design prompt and plain-text <code>data-field</code> bindings; do not add scripts to the generated template.</p><pre><code>Customize my-music.html, copied from spotify-overlay.html.
+<section class="guide-card" id="design"><h2 id="read-section-4">Where to change the design</h2><p>For music, change cover-art framing, track/artist typography, progress, and paused/hidden states. Keep playback authorization in the existing SSN integration. For cohost output, change avatar layout, speech bubble, and idle/talking states while preserving reply routing and the existing audio source.</p><p>For generated AI Event designs, use the saved design prompt and empty <code>data-field</code> elements described in the <a href="index.html?file=ai-event-overlay.md">AI Event guide</a>. Its renderer fills text locally and blocks generated JavaScript. Preserve that boundary. Copy the whole display link, including any <code>#aieventauth=...</code> fragment; the session alone is not enough for that feature.</p></section>
+<section class="guide-card" id="prompt"><h2 id="read-section-5">Copy this AI prompt</h2><p>Give the AI your copied source files and reference artwork. Replace the bracketed details. Keep the input-safety instructions in the prompt. This prompt is for editing source files. For generated AI Event templates, use that feature's saved design prompt and plain-text <code>data-field</code> bindings; do not add scripts to the generated template.</p><details class="guide-extra"><summary>Show the full prompt</summary><pre><code>Customize my-music.html, copied from spotify-overlay.html.
 Design: [describe the look or attach a reference].
 Colors/fonts/assets: [supply hex colors and local filenames].
 OBS canvas and placement: [size and position].
@@ -98,8 +101,8 @@ Make the edited overlay work directly from disk using a file:/// URL,
 without requiring a local web server.
 Return the edited files, any additional assets, exact local browser/OBS
 setup instructions using placeholders, and the specific tests performed.
-Do not put my private session link or credentials into a public example.</code></pre></section>
-<section class="guide-card" id="test"><h2>Test this overlay type</h2>
+Do not put my private session link or credentials into a public example.</code></pre></details></section>
+<section class="guide-card" id="test"><h2 id="read-section-6">Test this overlay type</h2>
 <p>Use a preview or test setup first. The <a href="test-message-guide.html">test-message guide</a> explains how to send fictional payloads through SSN; a test submitted to your production session can trigger its existing automations.</p>
 <ol class="guide-steps"><li>For Spotify, play and pause through the configured integration; test a long track title, missing cover art, and no-song state.</li>
 <li>For cohost, use cohost-overlay.html?preview for layout, then remove preview and generate a test reply through SSN. Check idle/talking transitions and duplicate audio.</li>

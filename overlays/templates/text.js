@@ -146,16 +146,17 @@
 			root.appendChild(wrap);
 			var body = el.querySelector(".tm2-body");
 			var text = SSO.lines(c.lines).join("\n");
-			var i = 0;
+			var i = 0, typing;
+			SSO.onCleanup(root, function () { clearTimeout(typing); });
 			function step() {
 				if (i > text.length) {
-					setTimeout(function () { i = 0; step(); }, c.pause * 1000);
+					typing = setTimeout(function () { i = 0; step(); }, c.pause * 1000);
 					return;
 				}
 				body.innerHTML = esc(text.slice(0, i)) + '<span class="tm2-cur"></span>';
 				var ch = text.charAt(i);
 				i++;
-				setTimeout(step, ch === "\n" ? 500 : 1000 / c.speed * (0.6 + Math.random() * 0.8));
+				typing = setTimeout(step, ch === "\n" ? 500 : 1000 / c.speed * (0.6 + Math.random() * 0.8));
 			}
 			step();
 		}

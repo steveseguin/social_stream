@@ -6,25 +6,25 @@
 	<title>Overlay Editor - Social Stream Ninja</title>
 	<meta name="description" content="Customize a static stream overlay and copy its OBS browser source link.">
 	<link rel="icon" href="../favicon.ico">
-	<link rel="stylesheet" href="studio.css?v=12">
+	<link rel="stylesheet" href="../docs/css/site-shell.css">
+	<script src="../docs/js/site-shell.js"></script>
+	<link rel="stylesheet" href="studio.css?v=15">
 </head>
-<body>
-	<header class="top">
-		<a class="brand" href="https://socialstream.ninja/"><img src="../icons/logo.svg" alt="">Social Stream Ninja</a>
-		<a class="link" href="index.html" style="margin-left:0">← Overlay Studio</a>
-		<span class="spacer"></span>
-	</header>
+<body class="site-header-offset studio-editor">
+	<a class="studio-skip" href="#form">Skip to settings</a>
+	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+	<nav class="studio-breadcrumb" aria-label="Overlay navigation"><a href="index.html">← Overlay Studio</a><span aria-current="page">Customize overlay</span></nav>
 	<div class="ed">
 		<aside class="ed-side">
 			<select class="tpl" id="tpl" aria-label="Overlay type"></select>
-			<h2 id="name"></h2>
+			<h1 id="name"></h1>
 			<p class="desc" id="desc"></p>
-			<form id="form" autocomplete="off" onsubmit="return false"></form>
+			<form id="form" tabindex="-1" autocomplete="off" onsubmit="return false"></form>
 			<fieldset class="presets-box"><legend>Try another style</legend><div class="presets" id="presets"></div></fieldset>
 		</aside>
 		<main class="ed-main">
 			<div class="ed-tools">
-				<div class="grp"><label for="w">OBS size</label><input type="number" id="w" min="50" max="7680"><span class="x">×</span><input type="number" id="h" min="20" max="4320"></div>
+				<div class="grp"><label for="w">OBS size</label><input type="number" id="w" aria-label="OBS width" min="50" max="7680"><span class="x">×</span><input type="number" id="h" aria-label="OBS height" min="20" max="4320"></div>
 				<div class="grp"><label for="bg">Preview on</label>
 					<select id="bg">
 						<option value="game">Game background</option>
@@ -54,38 +54,40 @@
 			</div>
 		</main>
 	</div>
-	<div class="toast" id="toast"></div>
+	<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-	<script src="core.js?v=12"></script>
-	<script src="templates/countries.js?v=12"></script>
-	<script src="templates/engines.js?v=12"></script>
-	<script src="templates/socials.js?v=12"></script>
-	<script src="templates/time.js?v=12"></script>
-	<script src="templates/scenes.js?v=12"></script>
-	<script src="templates/maps.js?v=12"></script>
-	<script src="templates/fun.js?v=12"></script>
-	<script src="templates/text.js?v=12"></script>
-	<script src="templates/gaming.js?v=12"></script>
-	<script src="templates/obs.js?v=12"></script>
-	<script src="templates/pets.js?v=12"></script>
-	<script src="templates/extra.js?v=12"></script>
-	<script src="templates/themes.js?v=12"></script>
-	<script src="templates/music.js?v=12"></script>
-	<script src="templates/promo.js?v=12"></script>
-	<script src="templates/live.js?v=12"></script>
-	<script src="templates/games.js?v=12"></script>
-	<script src="templates/reef.js?v=12"></script>
-	<script src="templates/kaiju.js?v=12"></script>
-	<script src="templates/party.js?v=12"></script>
-	<script src="templates/cozy.js?v=12"></script>
-	<script src="templates/themebar.js?v=12"></script>
+	<script src="core.js?v=15"></script>
+	<script src="templates/countries.js?v=15"></script>
+	<script src="templates/engines.js?v=15"></script>
+	<script src="templates/socials.js?v=15"></script>
+	<script src="templates/time.js?v=15"></script>
+	<script src="templates/scenes.js?v=15"></script>
+	<script src="templates/maps.js?v=15"></script>
+	<script src="templates/fun.js?v=15"></script>
+	<script src="templates/text.js?v=15"></script>
+	<script src="templates/gaming.js?v=15"></script>
+	<script src="templates/obs.js?v=15"></script>
+	<script src="templates/pets.js?v=15"></script>
+	<script src="templates/extra.js?v=15"></script>
+	<script src="templates/themes.js?v=15"></script>
+	<script src="templates/music.js?v=15"></script>
+	<script src="templates/promo.js?v=15"></script>
+	<script src="templates/live.js?v=15"></script>
+	<script src="templates/games.js?v=15"></script>
+	<script src="templates/reef.js?v=15"></script>
+	<script src="templates/kaiju.js?v=15"></script>
+	<script src="templates/party.js?v=15"></script>
+	<script src="templates/cozy.js?v=15"></script>
+	<script src="templates/themebar.js?v=15"></script>
 	<script>
 	(function () {
 		var $ = function (id) { return document.getElementById(id); };
 		var params = new URLSearchParams(location.search);
 		var def = SSO.get(params.get("t")) || SSO.list()[0];
 		var cfg = SSO.readConfig(def, location.search);
-		var sizeTouched = params.has("w");
+		var sizeTouched = params.has("w") || params.has("h");
+		var extra = new URLSearchParams();
+		["css", "b64css", "cssb64", "scale"].forEach(function (key) { if (params.has(key)) { extra.set(key, params.get(key)); } });
 		var size = [parseInt(params.get("w"), 10) || 0, parseInt(params.get("h"), 10) || 0];
 
 		// template picker
@@ -172,14 +174,14 @@
 					up.type = "button";
 					up.className = "btn small";
 					up.textContent = "↑";
-					up.title = "Move up";
+					up.title = "Move up"; up.setAttribute("aria-label", "Move account up");
 					up.disabled = idx === 0;
 					up.addEventListener("click", function () { list.splice(idx - 1, 0, list.splice(idx, 1)[0]); save(); draw(); });
 					var del = document.createElement("button");
 					del.type = "button";
 					del.className = "btn small";
 					del.textContent = "✕";
-					del.title = "Remove";
+					del.title = "Remove"; del.setAttribute("aria-label", "Remove account");
 					del.addEventListener("click", function () { list.splice(idx, 1); save(); draw(); });
 					row.appendChild(sel); row.appendChild(inp); row.appendChild(up); row.appendChild(del);
 					holder.appendChild(row);
@@ -261,7 +263,8 @@
 					num.value = value;
 					num.setAttribute("aria-label", field.label);
 					rng.addEventListener("input", function () { num.value = rng.value; cfg[field.key] = parseFloat(rng.value); update(); });
-					num.addEventListener("input", function () { if (num.value === "") { return; } rng.value = num.value; cfg[field.key] = parseFloat(num.value); update(); });
+					num.addEventListener("input", function () { if (num.value === "") { return; } rng.value = num.value; cfg[field.key] = parseFloat(rng.value); update(); });
+					num.addEventListener("change", function () { num.value = rng.value; });
 					row.appendChild(rng); row.appendChild(num);
 					wrap.appendChild(row);
 				} else if (field.type === "color") {
@@ -305,12 +308,17 @@
 						if (field.min != null) { inp.min = field.min; }
 						if (field.max != null) { inp.max = field.max; }
 						inp.step = field.step || 1;
+						inp.addEventListener("change", function () { inp.value = cfg[field.key]; });
 					}
 					inp.value = value;
 					inp.addEventListener("input", function () {
 						if (field.type === "number") {
 							if (inp.value === "" || isNaN(parseFloat(inp.value))) { return; }
-							cfg[field.key] = parseFloat(inp.value);
+							var n = parseFloat(inp.value);
+							if (!isFinite(n)) { return; }
+							if (field.min != null) { n = Math.max(field.min, n); }
+							if (field.max != null) { n = Math.min(field.max, n); }
+							cfg[field.key] = n;
 						} else {
 							cfg[field.key] = inp.value;
 						}
@@ -358,13 +366,14 @@
 
 		// ---------- preview + output ----------
 		var bg = SSO.store.get("editor-bg") || "game";
+		if (["game", "dark", "light", "checker"].indexOf(bg) === -1) { bg = "game"; }
 		$("bg").value = bg;
 		$("bg").addEventListener("change", function () { bg = $("bg").value; SSO.store.set("editor-bg", bg); $("box").className = "frame-box bg-" + bg; });
 		$("box").className = "frame-box bg-" + bg;
 
 		function currentSize() {
-			if (size[0] && size[1]) { return size; }
-			return def.sizeFor ? def.sizeFor(cfg) : def.size;
+			var base = def.sizeFor ? def.sizeFor(cfg) : def.size;
+			return [SSO.clamp(Math.round(size[0] || base[0]), 50, 7680), SSO.clamp(Math.round(size[1] || base[1]), 20, 4320)];
 		}
 		function fit() {
 			var s = currentSize();
@@ -378,6 +387,7 @@
 			$("box").style.height = (s[1] * scale) + "px";
 		}
 		["w", "h"].forEach(function (k, i) {
+			$(k).addEventListener("change", function () { $(k).value = currentSize()[i]; });
 			$(k).addEventListener("input", function () {
 				var v = parseInt($(k).value, 10);
 				if (!(v > 0)) { return; }
@@ -392,10 +402,10 @@
 
 		var timer;
 		function update(now) {
-			var query = SSO.buildQuery(def, cfg);
+			var query = SSO.buildQuery(def, cfg) + (extra.toString() ? "&" + extra.toString() : "");
 			var s = currentSize();
-			$("w").value = s[0];
-			$("h").value = s[1];
+			if (document.activeElement !== $("w")) { $("w").value = s[0]; }
+			if (document.activeElement !== $("h")) { $("h").value = s[1]; }
 			var link = SSO.viewerBase() + "?" + query;
 			$("url").value = link;
 			$("open").href = link;
@@ -419,17 +429,25 @@
 		$("copy").addEventListener("click", function () {
 			var input = $("url");
 			var done = function () { toast("Link copied. Paste it into an OBS Browser Source."); };
+			function fallback() {
+				input.focus(); input.select();
+				var copied = false;
+				try { copied = document.execCommand("copy"); } catch (e) {}
+				if (copied) { done(); } else { toast("Link selected. Press Ctrl+C (Command+C on Mac) to copy."); }
+			}
 			if (navigator.clipboard && navigator.clipboard.writeText) {
-				navigator.clipboard.writeText(input.value).then(done, function () { input.select(); document.execCommand("copy"); done(); });
+				navigator.clipboard.writeText(input.value).then(done, fallback);
 			} else {
-				input.select(); document.execCommand("copy"); done();
+				fallback();
 			}
 		});
+		var toastTimer;
 		function toast(msg) {
+			clearTimeout(toastTimer);
 			var t = $("toast");
 			t.textContent = msg;
 			t.className = "toast on";
-			setTimeout(function () { t.className = "toast"; }, 2200);
+			toastTimer = setTimeout(function () { t.className = "toast"; }, 2200);
 		}
 		var rt;
 		window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(fit, 100); });

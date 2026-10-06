@@ -38,8 +38,9 @@
 	<meta name="description" content="Collect stream participants, donors, members, and subscribers, then run a Social Stream Ninja credits roll in OBS, SSApp, or by remote control.">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body>
+<body class="visual-guide">
 	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 
 	<section class="page-hero">
@@ -51,8 +52,9 @@
 
 	<main class="guide-section">
 		<div class="container">
-			<div class="guide-card">
-				<h2>Recommended setup for an ending scene</h2>
+			<nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">Recommended setup for an ending scene</a><a href="#read-section-2">Choose the correct trigger mode</a><a href="#read-section-3">What the four controls do</a><a href="#read-section-4">Who appears in the roll</a><a href="#read-section-5">Quick setup, filters, and saved data</a><a href="#read-section-6">OBS setup details</a><a href="#read-section-7">Stream Deck and API control</a><a href="#read-section-8">Common problems</a></nav>
+<div class="guide-card">
+				<h2 id="read-section-1">Recommended setup for an ending scene</h2>
 				<p>Use <strong>Background collection</strong> when the Credits Browser Source exists only in an ending scene or may be unloaded while hidden. The app or extension collects activity during the stream, so the Credits page does not need to stay open.</p>
 				<ol class="guide-steps">
 					<li>Keep Social Stream Ninja active and keep your normal chat sources capturing throughout the stream.</li>
@@ -71,7 +73,7 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>Choose the correct trigger mode</h2>
+				<h2 id="read-section-2">Choose the correct trigger mode</h2>
 				<table class="guide-table guide-table-stack">
 					<thead><tr><th>Mode</th><th>Where activity is collected</th><th>How the roll starts</th><th>Best use</th></tr></thead>
 					<tbody>
@@ -84,7 +86,7 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>What the four controls do</h2>
+				<h2 id="read-section-3">What the four controls do</h2>
 				<table class="guide-table guide-table-stack">
 					<thead><tr><th>Control</th><th>Result</th></tr></thead>
 					<tbody>
@@ -98,7 +100,7 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>Who appears in the roll</h2>
+				<h2 id="read-section-4">Who appears in the roll</h2>
 				<p>Credits can recognize captured chat participants, memberships/subscriptions, and donation-style activity. A person needs a captured event with a name and platform type; Social Stream cannot list silent viewers whom the platform never reports.</p>
 				<ul class="guide-list">
 					<li><strong>Participant:</strong> a captured message or named activity event.</li>
@@ -114,7 +116,7 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>Quick setup, filters, and saved data</h2>
+				<h2 id="read-section-5">Quick setup, filters, and saved data</h2>
 				<ul class="guide-list">
 					<li><strong>Loop supporters:</strong> enables looping, saved overlay data, supporter-only filtering, donation priority, and donation amounts.</li>
 					<li><strong>Donors only:</strong> enables looping, saved overlay data, donor-only filtering, and donation amounts.</li>
@@ -127,7 +129,7 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>OBS setup details</h2>
+				<h2 id="read-section-6">OBS setup details</h2>
 				<ol class="guide-steps">
 					<li>Finish the Credits options first, then copy the Credits URL so the selected URL parameters are included.</li>
 					<li>Add that URL as an OBS Browser Source. A normal 1920 &times; 1080 source works well for full-screen styles.</li>
@@ -139,7 +141,7 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>Stream Deck and API control</h2>
+				<h2 id="read-section-7">Stream Deck and API control</h2>
 				<p>The official Stream Deck plugin exposes Start, Preview, Test, and Reset actions for Credits. The same commands are available through Social Stream's remote-control API:</p>
 				<table class="guide-table guide-table-stack">
 					<thead><tr><th>Action</th><th>HTTP example</th></tr></thead>
@@ -155,7 +157,7 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>Common problems</h2>
+				<h2 id="read-section-8">Common problems</h2>
 				<ul class="guide-list">
 					<li><strong>Test works, but the real list is empty:</strong> test entries are built in and do not prove that activity was collected. Confirm the intended trigger mode was selected before the stream and that chat sources were capturing.</li>
 					<li><strong>No controls appear after reopening settings:</strong> Start and Preview are shown for Manual and Background modes. Auto starts through visibility instead.</li>

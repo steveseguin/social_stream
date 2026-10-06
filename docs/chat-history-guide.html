@@ -20,8 +20,9 @@
 <link rel="stylesheet" href="css/workflow-guides.css">
 <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
 <script src="js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body class="workflow-guide">
+<body class="workflow-guide visual-guide">
 <header class="site-header">
 <div class="site-bar">
 <a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
@@ -55,13 +56,15 @@
 <a href="#initialization">Existing message history</a>
 </nav>
 <section class="guide-card" id="storage">
-<h2>What the local message database does</h2>
+<h2 id="read-section-1">What the local message database does</h2>
 <p>SSN saves captured messages in a database on the browser or desktop installation doing the capture. The chat history page uses that database to look up earlier messages.</p>
+<figure class="guide-shot"><a href="images/guides/visual/find-history.webp"><img src="images/guides/visual/find-history.webp" width="519" height="338" alt="Find the local message database controls in settings." loading="lazy" decoding="async"></a><figcaption>Find the local message database controls in settings.</figcaption></figure>
+
 <p>The <strong>Disable the local message database</strong> setting stops new messages from being stored. Live capture and dock display can continue, so seeing messages in the dock does not confirm that history is being saved.</p>
 <p>First-time chatter detection and related history-based viewer recognition also depend on the local database.</p>
 </section>
 <section class="guide-card" id="points">
-<h2>Keep loyalty points working</h2>
+<h2 id="read-section-2">Keep loyalty points working</h2>
 <p>Points earning and the <code>!points</code>, <code>!leaderboard</code> and <code>!rewards</code> command handlers run when captured messages are stored. Disabling the local message database stops those handlers, even when the points switches are enabled.</p>
 <ol class="guide-steps">
 <li>Find <strong>Disable the local message database</strong> in SSN settings and leave it off.</li>
@@ -72,7 +75,7 @@
 <p>See the <a href="loyalty-points-guide.html">loyalty points guide</a> for earning, rankings, rewards and backups.</p>
 </section>
 <section class="guide-card" id="initialization">
-<h2>How existing history is used</h2>
+<h2 id="read-section-3">How existing history is used</h2>
 <p>When the points ledger is empty and has not already been initialized or reset, SSN can calculate initial points from saved chat history. This runs once to initialize balances.</p>
 <p>Historical engagements use the live earning rules: the first qualifying engagement earns base points, and later qualifying engagements can receive streak bonuses. Only available message history can be considered; keep a points export when moving or recovering an installation.</p>
 </section>

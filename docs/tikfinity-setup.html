@@ -38,8 +38,9 @@
     <meta name="description" content="Set up TikFinity as a fallback TikTok LIVE chat source in Social Stream Ninja, with screenshots and troubleshooting.">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body>
+<body class="visual-guide">
     <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 
     <section class="page-hero"><div class="container">
@@ -48,7 +49,7 @@
     </div></section>
     <main class="guide-section"><div class="container">
         <section class="guide-card" id="before-you-start">
-            <h2>When to use this</h2>
+            <h2 id="read-section-1">When to use this</h2>
             <p>If SSN's direct TikTok modes keep failing or missing messages, TikFinity offers another way to receive the LIVE chat. It may help when TikTok blocks or limits connections from your network, provided TikFinity can still connect to the stream.</p>
             <p>This connection receives chat and supported activity. It does not send TikTok replies. You do not need OBS to use a TikFinity <strong>OBS Dock</strong> as an SSN source.</p>
             <ul class="guide-list">
@@ -59,7 +60,7 @@
             <p><a href="#connect">1. Connect TikTok</a> &middot; <a href="#dock">2. Choose activity</a> &middot; <a href="#ssn">3. Add to SSN</a> &middot; <a href="#verify">4. Check capture</a> &middot; <a href="#troubleshooting">Troubleshooting</a></p>
         </section>
         <section class="guide-card" id="desktop-api">
-            <h2>SSApp: direct TikFinity Desktop connection (beta)</h2>
+            <h2 id="read-section-2">SSApp: direct TikFinity Desktop connection (beta)</h2>
             <p>Development builds after SSApp 0.4.32 also offer <strong>TikFinity Desktop (Local API, Beta)</strong> in the existing TikTok Connection dropdown. If that choice is missing, use the Activity Feed instructions below.</p>
             <ol class="guide-steps">
                 <li>Run <a href="https://tikfinity.zerody.one/app/">TikFinity Desktop</a> on the same computer as SSApp. Sign in to TikFinity and connect your LIVE stream there.</li>
@@ -71,7 +72,7 @@
             <p><strong>Connected to TikFinity Desktop</strong> confirms the local connection only. If LIVE events stop, check TikFinity's dashboard and selected stream. SSApp reconnects when Desktop closes its local connection; it cannot repair TikFinity's upstream connection.</p>
         </section>
         <section class="guide-card" id="connect">
-            <h2>1. Enter the TikTok username in TikFinity</h2>
+            <h2 id="read-section-3">1. Enter the TikTok username in TikFinity</h2>
             <ol class="guide-steps">
                 <li>Open <a href="https://tikfinity.zerody.one/tiktok/setup">TikFinity Setup</a>. If you already have a TikFinity dashboard open, use its <strong>Setup</strong> navigation instead of opening another tab. Sign in to <em>TikFinity</em> if prompted.</li>
                 <li>Under <strong>Connect TikTok Account</strong>, enter the TikTok username of the public LIVE you want to capture. Use the account's username, not its display name.</li>
@@ -80,7 +81,7 @@
             <div class="callout-box"><strong>Use one dashboard tab:</strong> navigate between Setup and OBS Docks in the same TikFinity tab. If opening another dashboard interrupts the first, keep the newest connected tab and close the extra dashboard tabs. Keep the separate SSN capture source running.</div>
         </section>
         <section class="guide-card" id="dock">
-            <h2>2. Choose what the Activity Feed shows</h2>
+            <h2 id="read-section-4">2. Choose what the Activity Feed shows</h2>
             <ol class="guide-steps">
                 <li>In the same TikFinity tab, go to <strong>Overlays &rarr; OBS Docks</strong>, or open <a href="https://tikfinity.zerody.one/tiktok/obsdocks" target="_self">TikFinity OBS Docks</a>.</li>
                 <li>Choose <strong>Dock 1</strong> or <strong>Dock 2</strong>. Open its gear/settings button.</li>
@@ -94,7 +95,7 @@
             <p>Dock display preferences are saved in each browser. If the capture page in SSApp shows different categories from your Chrome preview, open the gear button in that capture page and choose its categories too.</p>
         </section>
         <section class="guide-card" id="ssn">
-            <h2>3. Add the dock URL to Social Stream Ninja</h2>
+            <h2 id="read-section-5">3. Add the dock URL to Social Stream Ninja</h2>
             <ol class="guide-steps">
                 <li>In SSApp, open <strong>Sources and Settings</strong> and choose <strong>Add other source</strong> (called <strong>Other chat sites</strong> in older versions).</li>
                 <li>Paste the complete TikFinity Activity Feed URL, add the source, and activate it. SSApp detects TikFinity automatically.</li>
@@ -106,7 +107,7 @@
             <figure class="guide-figure"><a href="images/tikfinity/ssapp-fallback.png" target="_blank" rel="noopener"><img class="guide-image" src="images/tikfinity/ssapp-fallback.png" alt="TikTok connection options in SSApp with a Set up TikFinity fallback guide link" loading="lazy"></a><figcaption>The fallback guide is available directly beneath the TikTok connection options.</figcaption></figure>
         </section>
         <section class="guide-card" id="verify">
-            <h2>4. Check new messages in SSN</h2>
+            <h2 id="read-section-6">4. Check new messages in SSN</h2>
             <ol class="guide-steps">
                 <li>Open your SSN chat dock and wait for a <strong>new</strong> TikTok message. Do not use older messages still visible in TikFinity as a capture test.</li>
                 <li>Confirm the new message appears once in both TikFinity and SSN, with the correct name and text.</li>
@@ -118,7 +119,7 @@
             <p>Built-in TikTok emoji codes such as <code>[laughcry]</code> and <code>[wow]</code> render as images in an updated SSN source. Text-only mode intentionally keeps text instead; reload the TikFinity source after changing that setting.</p>
         </section>
         <section class="guide-card" id="troubleshooting">
-            <h2>If something is missing</h2>
+            <h2 id="read-section-7">If something is missing</h2>
             <ul class="guide-list">
                 <li><strong>Only the TikFinity logo appears:</strong> check that the selected TikTok account is live and that TikFinity's main dashboard is connected. An open widget alone does not establish the upstream TikTok connection.</li>
                 <li><strong>TikFinity has old messages but SSN is empty:</strong> wait for new activity, confirm the full dock URL, and reload the SSN source. If the widget itself stops receiving new messages, reconnect TikFinity first.</li>

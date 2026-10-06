@@ -38,8 +38,9 @@
     <meta name="description" content="Connect Kick chat and alerts to Social Stream Ninja, choose Standard or WebSocket mode, sign in safely, and fix channel slug or OAuth problems.">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body>
+<body class="visual-guide">
     <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 
     <section class="page-hero">
@@ -51,8 +52,9 @@
 
     <main class="guide-section">
         <div class="container">
-            <div class="guide-card">
-                <h2>Choose A Kick Source Mode</h2>
+            <nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">Choose A Kick Source Mode</a><a href="#read-section-2">Use The URL Slug, Not The Display Name</a><a href="#read-section-3">Desktop App Setup</a><a href="#read-section-4">Browser Extension WebSocket Setup</a><a href="#read-section-5">What The Current Kick Login Requests</a><a href="#read-section-6">Official Events The Current Source Subscribes To</a><a href="#read-section-7">Fix A Kick Source That Will Not Connect</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Choose A Kick Source Mode</h2>
                 <table class="guide-table guide-table-stack">
                     <thead>
                         <tr><th>Mode</th><th>Best For</th><th>Sign-In</th></tr>
@@ -73,7 +75,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Use The URL Slug, Not The Display Name</h2>
+                <h2 id="read-section-2">Use The URL Slug, Not The Display Name</h2>
                 <p>For <code>https://kick.com/example-channel</code>, the source value is <code>example-channel</code>. You may paste the full URL or enter only that slug.</p>
                 <div class="warning-note">
                     <p><strong>Kick display names can differ from URL slugs.</strong> A display name may contain underscores while the URL uses hyphens. Copy the slug from the address bar instead of retyping the displayed name.</p>
@@ -81,7 +83,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Desktop App Setup</h2>
+                <h2 id="read-section-3">Desktop App Setup</h2>
                 <ol class="guide-steps">
                     <li>Select <strong>Add source → Kick</strong>.</li>
                     <li>Paste the full Kick channel URL or enter its URL slug.</li>
@@ -97,7 +99,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Browser Extension WebSocket Setup</h2>
+                <h2 id="read-section-4">Browser Extension WebSocket Setup</h2>
                 <ol class="guide-steps">
                     <li>Install and enable the current Social Stream Ninja extension.</li>
                     <li>Open the <a href="https://socialstream.ninja/sources/websocket/kick.html?channel=example-channel" target="_blank" rel="noopener">Kick WebSocket source page</a>.</li>
@@ -111,7 +113,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>What The Current Kick Login Requests</h2>
+                <h2 id="read-section-5">What The Current Kick Login Requests</h2>
                 <table class="guide-table guide-table-stack">
                     <thead>
                         <tr><th>Permission Group</th><th>Used For</th></tr>
@@ -131,7 +133,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Official Events The Current Source Subscribes To</h2>
+                <h2 id="read-section-6">Official Events The Current Source Subscribes To</h2>
                 <ul class="guide-list">
                     <li><strong>Chat:</strong> <code>chat.message.sent</code>.</li>
                     <li><strong>Follows:</strong> <code>channel.followed</code> → Social Stream <code>new_follower</code>.</li>
@@ -148,7 +150,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Fix A Kick Source That Will Not Connect</h2>
+                <h2 id="read-section-7">Fix A Kick Source That Will Not Connect</h2>
                 <ol class="guide-steps">
                     <li>Copy the exact channel slug from the Kick URL.</li>
                     <li>Check that <strong>Channel</strong> shows the intended slug and <strong>Chat socket</strong> changes from disconnected.</li>

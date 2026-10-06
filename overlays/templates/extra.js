@@ -177,7 +177,7 @@
 		description: "Cycle through images: sponsors, art, memes, pet photos. Paste image links, one per line.",
 		size: [640, 360],
 		fields: [
-			{ key: "images", label: "Image links (one per line)", type: "textarea", image: true, group: "Content", default: "https://socialstream.ninja/media/user1.jpg\nhttps://socialstream.ninja/media/user2.jpg\nhttps://socialstream.ninja/media/user3.jpg" },
+			{ key: "images", label: "Image links (one per line)", type: "textarea", image: true, group: "Content", default: ["user1.jpg", "user2.jpg", "user3.jpg"].map(function (file) { return SSO.assetBase() + "media/" + file; }).join("\n") },
 			{ key: "captions", label: "Captions (one per line, optional)", type: "textarea", group: "Content", default: "" },
 			{ key: "hold", label: "Seconds per image", type: "number", group: "Content", default: 6, min: 1, max: 600, step: 0.5 },
 			{ key: "fit", label: "Fit", type: "select", group: "Style", default: "contain", options: [["contain", "Show the whole image"], ["cover", "Fill and crop"]] },
@@ -264,7 +264,7 @@
 		presets: [
 			{ name: "Discord card", tags: ["simple"], values: {} },
 			{ name: "Neon QR", tags: ["cyber", "gaming"], values: { style: "neon", bg: "0a0014", fg: "ffffff", accent: "ff3ec8", title: "Scan for socials", net: "linktree", font: "Orbitron", fontsize: 24 } },
-			{ name: "Tip jar sticker", tags: ["cute"], values: { style: "sticker", bg: "fff3b0", fg: "3a2a00", accent: "ff7a00", title: "Buy me a coffee ☕", net: "kofi", font: "Fredoka", tilt: 0 } },
+			{ name: "Tip jar sticker", tags: ["cute"], values: { style: "sticker", bg: "fff3b0", fg: "3a2a00", accent: "ff7a00", title: "Buy me a coffee ☕", net: "kofi", font: "Fredoka" } },
 			{ name: "Pixel QR", tags: ["minecraft", "retro"], values: { style: "pixel", bg: "2b2b2b", fg: "ffffff", accent: "7fd34e", title: "Join the server", net: "discord", font: "Silkscreen", fontsize: 20, dark: "000000" } },
 			{ name: "Just the code", tags: ["simple"], values: { style: "minimal", title: "", caption: "", net: "" } }
 		],

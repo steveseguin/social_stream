@@ -19,29 +19,29 @@
 </head>
 <body>
 	<div id="sso-root"></div>
-	<script src="core.js?v=12"></script>
-	<script src="templates/countries.js?v=12"></script>
-	<script src="templates/engines.js?v=12"></script>
-	<script src="templates/socials.js?v=12"></script>
-	<script src="templates/time.js?v=12"></script>
-	<script src="templates/scenes.js?v=12"></script>
-	<script src="templates/maps.js?v=12"></script>
-	<script src="templates/fun.js?v=12"></script>
-	<script src="templates/text.js?v=12"></script>
-	<script src="templates/gaming.js?v=12"></script>
-	<script src="templates/obs.js?v=12"></script>
-	<script src="templates/pets.js?v=12"></script>
-	<script src="templates/extra.js?v=12"></script>
-	<script src="templates/themes.js?v=12"></script>
-	<script src="templates/music.js?v=12"></script>
-	<script src="templates/promo.js?v=12"></script>
-	<script src="templates/live.js?v=12"></script>
-	<script src="templates/games.js?v=12"></script>
-	<script src="templates/reef.js?v=12"></script>
-	<script src="templates/kaiju.js?v=12"></script>
-	<script src="templates/party.js?v=12"></script>
-	<script src="templates/cozy.js?v=12"></script>
-	<script src="templates/themebar.js?v=12"></script>
+	<script src="core.js?v=15"></script>
+	<script src="templates/countries.js?v=15"></script>
+	<script src="templates/engines.js?v=15"></script>
+	<script src="templates/socials.js?v=15"></script>
+	<script src="templates/time.js?v=15"></script>
+	<script src="templates/scenes.js?v=15"></script>
+	<script src="templates/maps.js?v=15"></script>
+	<script src="templates/fun.js?v=15"></script>
+	<script src="templates/text.js?v=15"></script>
+	<script src="templates/gaming.js?v=15"></script>
+	<script src="templates/obs.js?v=15"></script>
+	<script src="templates/pets.js?v=15"></script>
+	<script src="templates/extra.js?v=15"></script>
+	<script src="templates/themes.js?v=15"></script>
+	<script src="templates/music.js?v=15"></script>
+	<script src="templates/promo.js?v=15"></script>
+	<script src="templates/live.js?v=15"></script>
+	<script src="templates/games.js?v=15"></script>
+	<script src="templates/reef.js?v=15"></script>
+	<script src="templates/kaiju.js?v=15"></script>
+	<script src="templates/party.js?v=15"></script>
+	<script src="templates/cozy.js?v=15"></script>
+	<script src="templates/themebar.js?v=15"></script>
 	<script>
 	(function () {
 		var params = new URLSearchParams(location.search);
@@ -50,7 +50,7 @@
 
 		if (params.has("scale")) {
 			var scale = parseFloat(params.get("scale"));
-			if (scale > 0) {
+			if (isFinite(scale) && scale > 0) {
 				root.style.transformOrigin = "0 0";
 				root.style.transform = "scale(" + scale + ")";
 				root.style.width = (100 / scale) + "%";

@@ -1079,7 +1079,7 @@
 
                 <article class="platform-card" id="tiktok">
                     <h3>TikTok Live &ndash; DOM Capture and TikFinity Feed</h3>
-                    <p class="source-note">Implementation: <code>sources/tiktok.js</code> for native TikTok pages and <code>sources/tikfinity.js</code> for TikFinity's activity-feed widget/iframe. SSApp still has a native TikTok integration with the widest event coverage (see SSApp docs).</p>
+                    <p class="source-note">Implementation: <code>sources/tiktok.js</code> for native TikTok pages and <code>sources/tikfinity.js</code> for TikFinity's activity-feed widget/iframe. SSApp still has a native TikTok integration with the widest event coverage (see SSApp docs). Standard chat includes <code>meta.messageId</code> when the page exposes a native message ID; distinct messages with identical text retain distinct IDs.</p>
                     <ul class="requirements">
                         <li>Works on the broadcaster's live page. Gift/like/follow banners only populate when the session is authenticated.</li>
                         <li>TikTok provides many events via DOM detection <strong>without requiring WebSocket mode</strong> &ndash; gifts, follows, likes, and opt-in joins are captured from rendered rows.</li>
@@ -1272,7 +1272,7 @@
 
                 <article class="platform-card" id="kick-dom">
                     <h3>Kick – Standard DOM Capture</h3>
-                    <p class="source-note">Implementation: <code>sources/kick.js</code></p>
+                    <p class="source-note">Implementation: <code>sources/kick.js</code>. Chat includes <code>meta.messageId</code> when the page exposes a native message ID.</p>
                     <ul class="requirements">
                         <li>Needs an authenticated session to resolve profile images and subscriber badges.</li>
                         <li>Limited event detection via chat text matching and badges; viewer counts still work when the toggle is enabled.</li>
