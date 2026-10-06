@@ -27,8 +27,9 @@
 <link rel="stylesheet" href="css/workflow-guides.css">
 <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
 <script src="js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body class="workflow-guide">
+<body class="workflow-guide visual-guide">
 <header class="site-header"><div class="site-bar">
 <a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
 <nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation">
@@ -40,8 +41,10 @@
 <section class="page-hero"><div class="container"><h1>Design your own Social Stream overlays</h1><p>Download, customize, connect, and test local overlay designs in OBS, with guides for each overlay family.</p></div></section>
 <main class="guide-section"><div class="container">
 <nav class="workflow-toc" aria-label="On this page"><a href="#choose">Choose a type</a><a href="#download">Download</a><a href="#session">Session IDs</a><a href="#local-file">Open in OBS</a><a href="#design">Design and AI</a><a href="#safe-input">Safe inputs</a><a href="#test">Testing</a><a href="#references">Files to give AI</a><a href="#troubleshooting">Troubleshooting</a></nav>
-<section class="guide-card" id="choose"><h2>Choose the overlay you want to redesign</h2>
+<section class="guide-card" id="choose"><h2 id="read-section-1">Choose the overlay you want to redesign</h2><div class="guide-flow-visual"><strong>Download the files</strong><span aria-hidden="true">→</span><strong>Change the design</strong><span aria-hidden="true">→</span><strong>Open in OBS</strong></div>
 <p>You can change an existing page's colors, fonts, layout, artwork, and motion. The <strong>HTML file</strong> is the page; the <strong>OBS URL</strong> points to it and supplies session and display settings. For a small restyle, use OBS Custom CSS on the hosted page. For deeper changes, download the source and run your own copy.</p>
+<figure class="guide-shot"><a href="images/guides/custom-chat-preview.png"><img src="images/guides/custom-chat-preview.png" width="960" height="520" alt="Choose a working overlay before changing its appearance." loading="lazy" decoding="async"></a><figcaption>Choose a working overlay before changing its appearance.</figcaption></figure>
+
 <p>These guides cover overlay families, including their themes. Pick the receiver for the feature you use: a chat page, a selected-message page, and a poll do not all consume the same input.</p>
 <table class="guide-table guide-table-stack"><thead><tr><th scope="col">Design guide</th><th scope="col">Starting files</th><th scope="col">What drives it</th></tr></thead><tbody>
 <tr><td data-label="Design guide"><a href="chat-customization-guide.html">Chat and Dock</a></td><td data-label="Starting files"><code>sampleoverlay.html, dock.html, themes/*</code></td><td data-label="What drives it">Every captured chat message</td></tr>
@@ -64,7 +67,7 @@
 </tbody></table>
 <p>For a ready-made design start in the <a href="overlay-gallery.html">Overlay Gallery</a> or <a href="templates.html">Templates Gallery</a>. For an existing StreamElements/Streamlabs chat skin, follow the <a href="streamelements-chat-guide.html">import guide</a>. The imported self-contained HTML has its own export/setup instructions.</p>
 </section>
-<section class="guide-card" id="download"><h2>1. Download the actual files</h2>
+<section class="guide-card" id="download"><h2 id="read-section-2">1. Download the actual files</h2>
 <ol class="guide-steps"><li><a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">Download the beta source ZIP</a>, or open the <a href="https://github.com/steveseguin/social_stream/tree/beta">beta repository</a> and choose <strong>Code &rarr; Download ZIP</strong>.</li>
 <li>Extract the ZIP into a folder you can keep, such as <code>C:\SSN\social_stream-beta\</code>. Do not edit inside the compressed archive. These are page source files; editing a separate copy does not require reinstalling SSN.</li>
 <li>Find the file shown in the table above. Duplicate it beside the original: for example <code>poll.html</code> becomes <code>my-poll.html</code>. For <code>themes/featured-styles/featured-modern.html</code>, keep the copy in <code>themes/featured-styles/</code>.</li>
@@ -88,7 +91,7 @@
         event-reference.html</code></pre>
 <p>A reference such as <code>../../shared/utils/chatHtml.js</code> is relative to the page that loads it. Moving that page to the root breaks the path. Copy local artwork and fonts into the project too, then use relative URLs. Keep downloaded versions together; your edited copy will not automatically receive future SSN fixes.</p>
 </section>
-<section class="guide-card" id="session"><h2>2. Keep the session and connection settings</h2>
+<section class="guide-card" id="session"><h2 id="read-section-3">2. Keep the session and connection settings</h2>
 <p>Start SSN, connect a source, and confirm the original overlay works. Copy the <strong>complete generated link</strong> from the relevant SSN tool. The value after <code>session=</code> identifies your SSN session; it is not a YouTube channel, a Twitch username, a filename, or the poll's title.</p>
 <pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION&amp;password=YOUR_PASSWORD&amp;server2</code></pre>
 <p>The example uses placeholders. SSN and the page must use the same actual session and any configured password. Changing the filename does not change the session. Keep SSN and capture running: an overlay receives data; it does not capture platform chat by itself.</p>
@@ -98,7 +101,7 @@
 <li><strong>Use placeholders in shared examples.</strong> Keep your real session link, password, and private display tokens out of public screenshots, repositories, and AI prompt examples.</li></ul>
 <p>When a copy stays blank, check the original generated link first. Some pages prompt for missing settings; others remain hidden or redirect. Supplying the correct session explicitly avoids relying on those page-specific defaults.</p>
 </section>
-<section class="guide-card" id="local-file"><h2>3. Open your file in OBS</h2>
+<section class="guide-card" id="local-file"><h2 id="read-section-4">3. Open your file in OBS</h2>
 <p>Open the edited HTML directly from your computer. There is no server to install or start.</p>
 <ol class="guide-steps"><li>Drag your copied HTML file into Chrome or Edge. Copy its full address from the address bar; it starts with <code>file:///</code>.</li>
 <li>Copy everything from <code>?</code> onward in your working SSN overlay link and add it to the end of that file address. This keeps your session, password, other settings, and any <code>#</code> ending.</li>
@@ -133,7 +136,7 @@ window.location.replace(localPage.href);
 </details>
 <p>OBS documents its file/URL modes, dimensions, Custom CSS, and refresh controls in the <a href="https://obsproject.com/kb/browser-source">Browser Source reference</a>.</p>
 </section>
-<section class="guide-card" id="design"><h2>4. Change the design, or ask AI to do it</h2>
+<section class="guide-card" id="design"><h2 id="read-section-5">4. Change the design, or ask AI to do it</h2>
 <p>For a CSS-only change, keep the hosted link and use OBS's <strong>Custom CSS</strong> field. It applies only to that source, so a normal browser opening the same URL will not show those overrides. For an edited HTML file, append overrides after its existing styles, or link a local stylesheet after them. Supply your logo, font files, brand colors, canvas size, and a visual reference.</p>
 <p>Some pages support <code>&amp;css=</code> or <code>&amp;b64css=</code>; support is per page. <code>poll.html</code>, for example, reads neither. Check the page's parser before using URL options. A web page cannot generally load an arbitrary font or image from another computer's local disk.</p>
 <p>When changing markup, preserve IDs/classes referenced by scripts. If JavaScript rebuilds an element on each update, permanent artwork must live outside that element or be recreated by the renderer. Copy a shared stylesheet/script and change your page's reference if you want the edit to affect only your design.</p>
@@ -168,7 +171,7 @@ for this overlay's real trigger. Use session placeholders in shared examples.
 Explain any behavior changes separately from the design edits.</code></pre>
 <p>The type guides describe the real trigger to preserve. Do not accept a design that only works because it hard-codes sample messages. Keep a copy of the original file and compare the edited display using the same test inputs.</p>
 </section>
-<section class="guide-card" id="safe-input"><h2>5. Keep incoming chat from becoming code</h2>
+<section class="guide-card" id="safe-input"><h2 id="read-section-6">5. Keep incoming chat from becoming code</h2>
 <p>Messages, names, titles, amounts, metadata, and media links can originate with viewers or external services. Sanitize at the point where the custom renderer inserts them. A string received through SSN is not permission to execute it. Use plain DOM text for plain fields; use the packaged sanitizer for the message body's supported HTML. See <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html">OWASP's explanation of safe sinks and HTML sanitization</a>.</p>
 <p>In SSN, <code>textonly</code> applies only to <code>chatmessage</code>. When true, render that body as literal text. Otherwise it may contain emotes and allowed formatting. Render other normal fields as text; media fields such as <code>chatimg</code> and <code>contentimg</code> are URLs/data, not HTML snippets.</p>
 <pre><code id="safe-chat-render-example">&lt;!-- Example for a copied page at the repository root. --&gt;
@@ -194,7 +197,7 @@ function renderChatBody(element, data) {
 <li>Have the AI test a harmless probe such as <code>&lt;img src=x onerror="window.__ssnInjectionProbe=1"&gt;</code> in the changed renderer. It must not execute, set the marker, or leave executable event attributes. Test a script-scheme link as well. Run probes locally, not in public chat.</li></ul>
 <p>A passing probe only checks the paths exercised. Keep tests focused on the renderers and fields changed by the design.</p>
 </section>
-<section class="guide-card" id="test"><h2>6. Test layout, connection, and OBS separately</h2>
+<section class="guide-card" id="test"><h2 id="read-section-7">6. Test layout, connection, and OBS separately</h2>
 <ol class="guide-steps"><li><strong>Layout:</strong> use the page's documented preview/demo mode, where available, or fictional local samples. Test long names/messages, missing avatars, empty data, and the expected number of rows.</li>
 <li><strong>SSN delivery:</strong> keep SSN active and use <a href="test-message-guide.html">Create Test Message</a> with the same session. The usual Extension API ingest mode needs <strong>remote API control of extension</strong> enabled. Use an isolated test setup; submitted tests can trigger configured automations.</li>
 <li><strong>The actual trigger:</strong> feature a Dock message for a featured card, send a poll vote for a poll, select a winner for a giveaway, change ticker text for a ticker, or start a timer for a timer. Plain chat is not a universal test.</li>
@@ -202,7 +205,7 @@ function renderChatBody(element, data) {
 <li><strong>OBS:</strong> check the source at its final size, transparency, animations, audio, fonts, and layering. Exercise show/hide, clear/reset, and a refresh. The browser and OBS have separate storage and sessions; browser login or localStorage is not automatically shared.</li></ol>
 <p>For pages that collect data in memory, unloading or refreshing can lose state. Check the type guide before enabling automatic refresh or shutdown-when-hidden. Host-managed displays have different recovery behavior. Remove <code>demo</code>/<code>preview</code> flags before expecting live data.</p>
 </section>
-<section class="guide-card" id="references"><h2>Useful files and references to give your AI</h2>
+<section class="guide-card" id="references"><h2 id="read-section-8">Useful files and references to give your AI</h2>
 <ul class="guide-list"><li><a href="event-reference.html"><code>docs/event-reference.html</code></a>: canonical fields, named events, metadata, media, and donation values.</li>
 <li><a href="index.html?file=customoverlays.md"><code>docs/customoverlays.md</code></a>: custom receivers and connection examples.</li>
 <li><a href="events-alerts-compatibility.html">Events and Alerts Compatibility</a>: which events/fields a design can expect from a source.</li>
@@ -214,7 +217,7 @@ function renderChatBody(element, data) {
 <li><a href="../actions/event-flow-guide.html">Event Flow</a> and <a href="commands.html">Commands &amp; API</a>: reuse existing controls when the design needs a trigger.</li></ul>
 <p>Give the actual overlay source and its referenced CSS/JS as well as these docs. An event reference alone does not describe a poll's control state or every overlay's private rendering structure.</p>
 </section>
-<section class="guide-card" id="troubleshooting"><h2>When the copy does not work</h2>
+<section class="guide-card" id="troubleshooting"><h2 id="read-section-9">When the copy does not work</h2>
 <table class="guide-table guide-table-stack"><thead><tr><th scope="col">Symptom</th><th scope="col">Check</th></tr></thead><tbody>
 <tr><td data-label="Symptom">File not found</td><td data-label="Check">Drag the HTML into your browser again and copy its current file address. Check that the filename ends in .html, not .html.txt.</td></tr>
 <tr><td data-label="Symptom">Missing script, font, or image</td><td data-label="Check">Keep the extracted folder structure intact, with the edited copy beside the original. Check that any added artwork and fonts are in the expected folders.</td></tr>

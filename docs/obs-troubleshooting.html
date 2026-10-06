@@ -38,14 +38,16 @@
     <meta name="description" content="Troubleshoot blank Social Stream Ninja OBS overlays, wrong sessions, silent TTS, browser source cache, and source capture problems.">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body>
+<body class="visual-guide">
     <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
     <section class="page-hero"><div class="container"><h1>OBS Troubleshooting</h1><p>Find out whether the source, session, overlay, or OBS browser source is the problem.</p></div></section>
     <main class="guide-section">
         <div class="container">
-            <div class="guide-card">
-                <h2>Start With The Dock</h2>
+            <nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">Start With The Dock</a><a href="#read-section-2">Replace The Saved OBS URL And Refresh Its Cache</a><a href="#read-section-3">Decision Tree</a><a href="#read-section-4">Check The Overlay URL</a><a href="#read-section-5">If TTS Is Silent In OBS</a><a href="#read-section-6">Common Fixes</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">Start With The Dock</h2>
                 <p>The dock is the fastest test. If the dock is empty, do not debug OBS yet. Fix the platform source first.</p>
                 <figure class="guide-figure">
                     <img src="images/guides/obs-dock-message-check.png" alt="Social Stream Ninja dock showing received chat messages" class="guide-image">
@@ -54,7 +56,7 @@
             </div>
 
             <div class="guide-card" id="replace-url-and-cache">
-                <h2>Replace The Saved OBS URL And Refresh Its Cache</h2>
+                <h2 id="read-section-2">Replace The Saved OBS URL And Refresh Its Cache</h2>
                 <p>Do these in this order. Refreshing the cache alone does not add a changed session, password, or server-routing option to an old URL.</p>
                 <ol class="guide-steps">
                     <li>In Social Stream Ninja, copy a freshly generated link for the exact Dock or overlay you use. Copy the whole link instead of editing its parameters by hand.</li>
@@ -81,7 +83,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Decision Tree</h2>
+                <h2 id="read-section-3">Decision Tree</h2>
                 <table class="guide-table guide-table-stack">
                     <thead><tr><th>Test</th><th>Meaning</th><th>Next Step</th></tr></thead>
                     <tbody>
@@ -94,7 +96,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Check The Overlay URL</h2>
+                <h2 id="read-section-4">Check The Overlay URL</h2>
                 <p>Use the exact same session ID everywhere. A one-character difference creates a separate room.</p>
                 <pre>https://socialstream.ninja/dock.html?session=YOUR_SESSION</pre>
                 <pre>https://socialstream.ninja/featured.html?session=YOUR_SESSION</pre>
@@ -105,7 +107,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>If TTS Is Silent In OBS</h2>
+                <h2 id="read-section-5">If TTS Is Silent In OBS</h2>
                 <p>Plain system TTS is the common trap. It may speak through your speakers while OBS Browser Source hears nothing.</p>
                 <figure class="guide-figure">
                     <img src="images/guides/guide-tts-obs-audio.png" alt="OBS audio capture note explaining system TTS limitations" class="guide-image">
@@ -115,7 +117,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Common Fixes</h2>
+                <h2 id="read-section-6">Common Fixes</h2>
                 <ul class="guide-list">
                     <li><a href="#replace-url-and-cache">Replace the saved URL, then refresh the Browser Source cache</a>.</li>
                     <li>Make the source visible and check that width/height are not tiny.</li>

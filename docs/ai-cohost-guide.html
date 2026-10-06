@@ -84,8 +84,9 @@
     </style>
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body>
+<body class="visual-guide">
 	<a class="skip-link" href="#main-content">Skip to main content</a>
     <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 
@@ -98,8 +99,9 @@
 
     <main class="guide-section" id="main-content">
         <div class="container">
-            <div class="guide-card">
-                <h2>What It Does</h2>
+            <nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">What It Does</a><a href="#read-section-2">Dock Right-click Co-host Setup</a><a href="#read-section-3">Simple AI Option</a><a href="#read-section-4">Voice Conversation Support</a><a href="#read-section-5">OpenAI Realtime Setup</a><a href="#read-section-6">OpenAI Speed, Quality, And Cost</a><a href="#read-section-12">Design Notes</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">What It Does</h2>
 				<p>There are two co-host workflows: a continuous voice companion in <code>cohost.html</code>, and manual dock actions that send approved lines to <code>cohost-overlay.html</code>.</p>
                 <div class="cohost-guide-grid">
                     <div class="cohost-guide-card">
@@ -122,7 +124,7 @@
             </div>
 
             <div class="guide-card">
-				<h2>Dock Right-click Co-host Setup</h2>
+				<h2 id="read-section-2">Dock Right-click Co-host Setup</h2>
 				<ol class="guide-steps">
 					<li>Open the Streaming Chat dock with your session: <code>dock.html?session=YOUR_SESSION_ID</code>.</li>
 					<li>Add the AI stage overlay to OBS: <code>cohost-overlay.html?session=YOUR_SESSION_ID</code>. Add <code>&amp;tts</code> only for a text-response workflow.</li>
@@ -140,7 +142,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Simple AI Option</h2>
+                <h2 id="read-section-3">Simple AI Option</h2>
                 <p><code>llm.socialstream.ninja</code> is available through <strong>SSN Hosted Trial LLM</strong> as a free simple option for testing while the trial is available.</p>
                 <ul class="guide-list">
                     <li>Open <strong>Chat Bots and AI services &gt; Configure LLM Service Provider</strong>.</li>
@@ -151,7 +153,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Voice Conversation Support</h2>
+                <h2 id="read-section-4">Voice Conversation Support</h2>
                 <ul class="guide-list">
                     <li><strong>OpenAI Realtime:</strong> Streams the microphone selected on <code>cohost.html</code> directly to OpenAI for one native speech-to-speech conversation. The spoken conversation and live-chat context stay in the same co-host session.</li>
                     <li><strong>SSN Desktop:</strong> Uses local Whisper with the microphone selected on <code>cohost.html</code>. The first use downloads about 42 MB; later transcription runs offline.</li>
@@ -167,7 +169,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>OpenAI Realtime Setup</h2>
+                <h2 id="read-section-5">OpenAI Realtime Setup</h2>
 				<ol class="guide-steps">
 					<li>In the SSN popup, choose <strong>ChatGPT API</strong>, add your OpenAI project API key, and use <strong>Test selected chat bot</strong>.</li>
 					<li>Open the generated <code>cohost.html?session=YOUR_SESSION_ID</code> link from the popup. Its private, expiring co-host capability authorizes Realtime without enabling the separate Private Chat Bot option.</li>
@@ -184,7 +186,7 @@
             </div>
 
 			<div class="guide-card">
-				<h2>OpenAI Speed, Quality, And Cost</h2>
+				<h2 id="read-section-6">OpenAI Speed, Quality, And Cost</h2>
 				<ul class="guide-list">
 					<li><strong>Model:</strong> Mini is normally faster and costs less. Full quality is more capable and costs more.</li>
 					<li><strong>Reasoning effort:</strong> Minimal or Low normally lowers response delay and billed output usage. High or Extra high can improve complex answers but may respond more slowly and cost more. Changes apply while connected.</li>
@@ -194,7 +196,7 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>Optional Stream Controls</h2>
+				<h2 id="read-section-7">Optional Stream Controls</h2>
 				<p>OpenAI Realtime supports the Spotify, OBS scene, and featured-chat tools below. SSN Configured LLM currently supports Spotify only; other co-host providers do not yet expose these tools.</p>
 				<ol class="guide-steps">
 					<li>In the SSN popup, enable only the co-host tools you want: Spotify, OBS scenes, or featured chat.</li>
@@ -208,7 +210,7 @@
 			</div>
 
             <div class="guide-card">
-                <h2>How The Pages Talk</h2>
+                <h2 id="read-section-8">How The Pages Talk</h2>
                 <p>The dock and overlay use the existing Social Stream session bridge. Messages are sent as <code>overlayNinja</code> payloads and targeted by label.</p>
                 <div class="cohost-flow">
                     <p><strong>Read on Co-host:</strong> dock sends the selected chat message directly to <code>cohost-overlay.html</code>.</p>
@@ -227,7 +229,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Available Actions</h2>
+                <h2 id="read-section-9">Available Actions</h2>
                 <table class="field-table">
                     <thead>
                         <tr>
@@ -267,7 +269,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Status And Troubleshooting</h2>
+                <h2 id="read-section-10">Status And Troubleshooting</h2>
                 <ul class="guide-list">
                     <li>If the Co-host menu is missing, the co-host overlay is not detected in the same session.</li>
                     <li>If Answer or Light Roast is disabled, the SSN bridge or Private Chat Bot is not available.</li>
@@ -291,7 +293,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Useful URL Parameters</h2>
+                <h2 id="read-section-11">Useful URL Parameters</h2>
                 <ul class="guide-list">
                     <li><code>session=YOUR_SESSION_ID</code> - required for the dock and overlay to share a room.</li>
 					<li><code>tts</code> or <code>speak=1</code> - lets the overlay speak with browser TTS.</li>
@@ -306,7 +308,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Design Notes</h2>
+                <h2 id="read-section-12">Design Notes</h2>
                 <ul class="guide-list">
 					<li>For dock/manual text workflows, the overlay is the visual and optional TTS playout source. For native OpenAI voice, capture <code>cohost.html</code> audio separately; the stage overlay does not replay that same WebRTC audio.</li>
                     <li>The dock is the control surface, so streamer approval stays off-stream.</li>

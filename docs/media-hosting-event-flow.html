@@ -182,22 +182,24 @@
     </style>
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body>
+<body class="visual-guide">
     <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 
     <section class="page-hero"><div class="container"><h1>Media Files for Event Flow</h1><p>Use your own sounds, images, GIFs, and videos in OBS.</p></div></section>
 
     <main class="guide-section">
         <div class="container">
-            <div class="guide-card answer-card">
-                <h2>Short Answer</h2>
+            <nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">Short Answer</a><a href="#read-section-2">Pick the Best Route</a><a href="#read-section-3">Option 1: Use the Built-in Upload</a><a href="#read-section-4">Option 2: Keep the Library on the OBS Computer</a><a href="#read-section-5">What About the Chrome Extension?</a><a href="#read-section-6">Option 3: Host a Larger Library Online</a><a href="#read-section-9">Before Going Live</a></nav>
+<div class="guide-card answer-card">
+                <h2 id="read-section-1">Short Answer</h2>
                 <p><strong>The Social Stream desktop app can play approved local files without uploading them.</strong> Use <strong>Choose Local File</strong> in Event Flow, then copy the generated <strong>Local Flow Actions URL</strong> into OBS.</p>
                 <p>The Chrome extension cannot serve files from your disk by itself. Extension users should continue using Upload or a hosted media URL unless they also run a supported desktop companion.</p>
             </div>
 
             <div class="guide-card">
-                <h2>Pick the Best Route</h2>
+                <h2 id="read-section-2">Pick the Best Route</h2>
                 <div class="choice-grid">
                     <div class="choice-card">
                         <span class="choice-label">Fastest</span>
@@ -223,7 +225,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Option 1: Use the Built-in Upload</h2>
+                <h2 id="read-section-3">Option 1: Use the Built-in Upload</h2>
                 <ol class="guide-steps">
                     <li>In Event Flow, select <strong>Play Audio Clip</strong> or <strong>Display Media Overlay</strong>.</li>
                     <li>Click <strong>Upload</strong>, choose the file, and finish the upload in the page that opens.</li>
@@ -240,7 +242,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Option 2: Keep the Library on the OBS Computer</h2>
+                <h2 id="read-section-4">Option 2: Keep the Library on the OBS Computer</h2>
                 <p>The standalone desktop app includes a Local Media Library and a loopback server that only listens on this computer. Event Flow stores a stable media ID instead of putting your disk path into the flow.</p>
                 <ol class="guide-steps">
                     <li>Start the Social Stream standalone app and open Event Flow.</li>
@@ -305,13 +307,13 @@ file:///C:/SSN/social_stream/user-media/audio/booty.mp3</pre>
             </div>
 
             <div class="guide-card">
-                <h2>What About the Chrome Extension?</h2>
+                <h2 id="read-section-5">What About the Chrome Extension?</h2>
                 <p>The extension uses the same Event Flow format, so desktop-created flows remain compatible. Local actions store an opaque media ID rather than a Windows, macOS, or Linux path.</p>
                 <p>The extension cannot expose arbitrary files from your disk to OBS by itself. Without a supported companion bridge, use <strong>Upload</strong> or a normal hosted URL. If an imported flow references local media, the extension explains that the desktop app or bridge is required instead of silently failing.</p>
             </div>
 
             <div class="guide-card">
-                <h2>Option 3: Host a Larger Library Online</h2>
+                <h2 id="read-section-6">Option 3: Host a Larger Library Online</h2>
                 <table class="guide-table guide-table-stack">
                     <thead><tr><th>Provider</th><th>Good For</th><th>Important Notes</th></tr></thead>
                     <tbody>
@@ -343,7 +345,7 @@ file:///C:/SSN/social_stream/user-media/audio/booty.mp3</pre>
             </div>
 
             <div class="guide-card">
-                <h2>Cloudflare R2 Setup</h2>
+                <h2 id="read-section-7">Cloudflare R2 Setup</h2>
                 <ol class="guide-steps">
                     <li>Create an R2 bucket using the <strong>Standard</strong> storage class.</li>
                     <li>Upload your media with clear folder names such as <code>audio/</code>, <code>images/</code>, and <code>video/</code>.</li>
@@ -373,7 +375,7 @@ file:///C:/SSN/social_stream/user-media/audio/booty.mp3</pre>
             </div>
 
             <div class="guide-card">
-                <h2>Backblaze B2 CORS Example</h2>
+                <h2 id="read-section-8">Backblaze B2 CORS Example</h2>
                 <p>Make the bucket public, use the direct file URL, and apply a download-only rule if a browser reports a CORS error:</p>
                 <pre>[
   {
@@ -393,7 +395,7 @@ file:///C:/SSN/social_stream/user-media/audio/booty.mp3</pre>
             </div>
 
             <div class="guide-card">
-                <h2>Before Going Live</h2>
+                <h2 id="read-section-9">Before Going Live</h2>
                 <ol class="guide-steps">
                     <li>Open the exact media URL in a private/incognito window. It must load the file directly.</li>
                     <li>Use <strong>Image</strong> for PNG, JPG, WebP, or GIF media. Use <strong>Video/Embed</strong> for video or embed URLs.</li>

@@ -133,8 +133,9 @@
 		</style>
 	<link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-	<body>
+	<body class="visual-guide">
 		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 
 		<section class="page-hero">
@@ -146,8 +147,9 @@
 
 		<main class="guide-section">
 			<div class="container">
-				<div class="guide-card">
-					<h2>Start Here</h2>
+				<nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">Start Here</a><a href="#read-section-2">Windows: "Windows Protected Your PC"</a><a href="#read-section-3">Windows: Defender Blocked Or Removed The File</a><a href="#read-section-4">Windows: Smart App Control Blocked The App</a><a href="#read-section-5">Other Windows Messages</a><a href="#read-section-6">macOS: Developer Or Notarization Warning</a><a href="#read-section-10">If It Still Will Not Open</a></nav>
+<div class="guide-card">
+					<h2 id="read-section-1">Start Here</h2><div class="guide-flow-visual"><strong>Download the correct version</strong><span aria-hidden="true">→</span><strong>Read the system message</strong><span aria-hidden="true">→</span><strong>Follow the matching steps</strong></div>
 					<p>Windows and macOS sometimes ask for extra confirmation before running an app downloaded outside their app stores. This is especially common with a new release, a less frequently downloaded app, or a private/custom build.</p>
 					<div class="warning-note"><strong>Never bypass a security warning unless you are comfortable doing so and fully understand what you are allowing.</strong> Only continue if you downloaded the app from the official Social Stream Ninja releases page or received a custom build from someone you trust. If you are unsure, stop and report the warning instead.</div>
 					<p>If the warning says the app contains malware, will damage your computer, or names a specific threat, do not allow it. Save a screenshot and check the troubleshooting section below.</p>
@@ -164,7 +166,7 @@
 				</div>
 
 				<div class="guide-card" id="windows">
-					<h2>Windows: "Windows Protected Your PC"</h2>
+					<h2 id="read-section-2">Windows: "Windows Protected Your PC"</h2>
 					<div class="example-alert">
 						<span class="example-label">Example message</span>
 						<strong>Microsoft Defender SmartScreen prevented an unrecognized app from starting.</strong>
@@ -181,7 +183,7 @@
 				</div>
 
 				<div class="guide-card">
-					<h2>Windows: Defender Blocked Or Removed The File</h2>
+					<h2 id="read-section-3">Windows: Defender Blocked Or Removed The File</h2>
 					<div class="example-alert">
 						<span class="example-label">Possible messages</span>
 						<strong>Threat found, Potentially unwanted app found, This app has been blocked, or Threat quarantined</strong>
@@ -198,7 +200,7 @@
 				</div>
 
 				<div class="guide-card">
-					<h2>Windows: Smart App Control Blocked The App</h2>
+					<h2 id="read-section-4">Windows: Smart App Control Blocked The App</h2>
 					<p>Smart App Control is different from the normal SmartScreen warning. Windows does not provide a one-app <strong>Run anyway</strong> exception for it.</p>
 					<ul class="guide-list">
 						<li>On a work or school computer, ask the administrator to approve the app.</li>
@@ -209,7 +211,7 @@
 				</div>
 
 				<div class="guide-card">
-					<h2>Other Windows Messages</h2>
+					<h2 id="read-section-5">Other Windows Messages</h2>
 					<table class="guide-table guide-table-stack route-table">
 						<thead><tr><th>Message</th><th>What To Do</th></tr></thead>
 						<tbody>
@@ -222,7 +224,7 @@
 				</div>
 
 				<div class="guide-card" id="macos">
-					<h2>macOS: Developer Or Notarization Warning</h2>
+					<h2 id="read-section-6">macOS: Developer Or Notarization Warning</h2>
 					<div class="example-alert">
 						<span class="example-label">Possible messages</span>
 						<strong>Apple cannot check the app for malicious software, or the developer cannot be verified</strong>
@@ -240,7 +242,7 @@
 				</div>
 
 				<div class="guide-card">
-					<h2>macOS: "The App Is Damaged" Or "Will Damage Your Computer"</h2>
+					<h2 id="read-section-7">macOS: "The App Is Damaged" Or "Will Damage Your Computer"</h2>
 					<p>Do not use a Terminal command to strip the app's quarantine information. These messages can mean the download is incomplete or modified, a signature is invalid, or macOS detected a security problem.</p>
 					<ol class="guide-steps">
 						<li>Move that copy to the Trash.</li>
@@ -252,7 +254,7 @@
 				</div>
 
 				<div class="guide-card" id="linux">
-					<h2>Linux: AppImage Will Not Start</h2>
+					<h2 id="read-section-8">Linux: AppImage Will Not Start</h2>
 					<p>The AppImage may need permission to run:</p>
 					<ol class="guide-steps">
 						<li>Right-click the AppImage and open <strong>Properties</strong>.</li>
@@ -266,7 +268,7 @@
 				</div>
 
 				<div class="guide-card">
-					<h2>Safer Alternatives To Bypassing A Warning</h2>
+					<h2 id="read-section-9">Safer Alternatives To Bypassing A Warning</h2>
 					<p>You do not have to override an operating-system warning to use Social Stream Ninja.</p>
 					<ul class="guide-list">
 						<li><strong>Report the warning:</strong> send a screenshot and the details listed below so it can be investigated.</li>
@@ -278,7 +280,7 @@
 				</div>
 
 				<div class="guide-card">
-					<h2>If It Still Will Not Open</h2>
+					<h2 id="read-section-10">If It Still Will Not Open</h2>
 					<p>Send support the following details:</p>
 					<ul class="guide-list">
 						<li>A screenshot showing the complete warning.</li>

@@ -38,8 +38,9 @@
 	<link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body class="guides-page">
+<body class="guides-page visual-guide">
 	<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 
 	<section class="page-hero">
@@ -53,7 +54,7 @@
 		<div class="container">
 <p>Jump to <a href="#setup">initial setup</a>, <a href="#http-api">HTTP API</a>, <a href="#mcp">MCP</a>, <a href="#owncast">Owncast and Rocket.Chat</a>, or <a href="#verify">checking capture</a>.</p>
 			<div class="guide-card">
-				<h2>Yes. Use the Normal Linux AppImage</h2>
+				<h2 id="read-section-1">Yes. Use the Normal Linux AppImage</h2><div class="guide-flow-visual"><strong>Install the AppImage</strong><span aria-hidden="true">→</span><strong>Sign in once</strong><span aria-hidden="true">→</span><strong>Start with Xvfb</strong></div>
 <p>Download the usual Linux app and make it executable. On a VPS without a desktop, launching the AppImage alone is not enough: use a virtual display and the <code>--ssapp-headless-control</code> flag. The steps below keep chat capture running after you disconnect from SSH and after a server reboot.</p>
 				<p>Headless mode keeps SSApp's Electron windows hidden, but the source pages are still real browser windows. Linux therefore needs a virtual display such as Xvfb. This is not a small background-only chat daemon.</p>
 				<div class="guide-note">
@@ -62,7 +63,7 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>Before You Start</h2>
+				<h2 id="read-section-2">Before You Start</h2>
 				<ul class="guide-list">
 					<li>Use Ubuntu 22.04+, Debian 12+, or a similar Linux distribution.</li>
 					<li>Allow at least 2 GB of memory for a small setup and more for several source windows.</li>
@@ -73,7 +74,7 @@
 			</div>
 
 			<div class="guide-card">
-				<h2>1. Install Xvfb and the AppImage</h2>
+				<h2 id="read-section-3">1. Install Xvfb and the AppImage</h2>
 				<pre><code>sudo apt-get update
 sudo apt-get install -y xvfb x11-utils xauth curl
 sudo mkdir -p /opt/socialstream
@@ -84,7 +85,7 @@ sudo chmod 755 /opt/socialstream/socialstreamninja.AppImage</code></pre>
 
 
 			<div class="guide-card" id="setup">
-				<h2>2. Prepare the Profile and Sign In Once</h2>
+				<h2 id="read-section-4">2. Prepare the Profile and Sign In Once</h2>
 <p>Use the same account and data directory for setup and the background service. Create a dedicated account:</p><pre><code>id ssapp &gt;/dev/null 2&gt;&amp;1 || sudo useradd --system --create-home --home-dir /var/lib/ssapp --shell /usr/sbin/nologin ssapp
 sudo install -d -o ssapp -g ssapp -m 700 /var/lib/ssapp
 sudo apt-get install -y x11vnc
@@ -98,7 +99,7 @@ sudo -u ssapp Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp -extension GLX</code
 <p>Use <code>SSAPP_USER_DATA_DIR</code>, not Chromium's <code>--user-data-dir</code>. Complete sign-ins on the VPS; browser cookies copied from another OS may not decrypt.</p>
 			</div>
 			<div class="guide-card">
-				<h2>3. Start the App Headlessly</h2>
+				<h2 id="read-section-5">3. Start the App Headlessly</h2>
 				<pre><code>sudo -u ssapp env SSAPP_USER_DATA_DIR=/var/lib/ssapp xvfb-run -a -s "-screen 0 1920x1080x24 -nolisten tcp -extension GLX" \
   /opt/socialstream/socialstreamninja.AppImage \
   --ozone-platform=x11 --ssapp-headless-control --no-hwa</code></pre>
@@ -106,14 +107,14 @@ sudo -u ssapp Xvfb :99 -screen 0 1920x1080x24 -nolisten tcp -extension GLX</code
 			</div>
 
 			<div class="guide-card">
-				<h2>4. Control It from Another Computer</h2>
+				<h2 id="read-section-6">4. Control It from Another Computer</h2>
 				<p>Use the same Social Stream session ID and optional password on the headless app and the remote controller. WebRTC is the normal transport. If it is unsuitable for the environment, use Social Stream's hosted WebSocket server mode.</p>
 				<p>Supported remote controls can add, start, stop, restart, mute, and hide public sources. They do not remotely complete sign-in, OAuth, CAPTCHA, cookies, credentials, or other private account setup.</p>
 				<p>See <a href="sessions-passwords-relay-modes.html">Sessions, Passwords, Relay, and Server Modes</a> when the remote controller connects but messages or commands do not arrive.</p>
 			</div>
 
 			<div class="guide-card">
-				<h2>Keep It Running with systemd</h2>
+				<h2 id="read-section-7">Keep It Running with systemd</h2>
 <p>Stop the foreground app with Ctrl+C first. Create <code>/etc/systemd/system/ssapp.service</code> with <code>sudo nano /etc/systemd/system/ssapp.service</code> and paste this unit:</p>
 				<pre><code>[Unit]
 Description=Social Stream Ninja (headless)
@@ -142,7 +143,7 @@ journalctl -u ssapp -f</code></pre>
 
 
 			<div class="guide-card" id="http-api">
-				<h2>Optional HTTP API for Scripts on the VPS</h2>
+				<h2 id="read-section-8">Optional HTTP API for Scripts on the VPS</h2>
 <p>Headless mode does not enable the control API. To enable it for your service, run <code>sudo systemctl edit ssapp</code> and save this override:</p><pre><code>[Service]
 Environment=SSAPP_CONTROL_API=1</code></pre><pre><code>sudo systemctl daemon-reload
 sudo systemctl restart ssapp
@@ -172,7 +173,7 @@ curl -sS http://127.0.0.1:17777/api/v1/command \
 			</div>
 
 			<div class="guide-card" id="mcp">
-				<h2>Optional MCP for an AI Client on the VPS</h2>
+				<h2 id="read-section-9">Optional MCP for an AI Client on the VPS</h2>
 <p>MCP lets a compatible AI client call SSApp controls as tools. Enable the API above and keep the main app service running. Register this configuration in a client running <strong>on the VPS</strong>:</p><pre><code>{
   &quot;mcpServers&quot;: {
     &quot;social-stream&quot;: {
@@ -191,7 +192,7 @@ curl -sS http://127.0.0.1:17777/api/v1/command \
 			</div>
 
 			<div class="guide-card" id="owncast">
-				<h2>Owncast, Rocket.Chat, and Featured Messages</h2>
+				<h2 id="read-section-10">Owncast, Rocket.Chat, and Featured Messages</h2>
 <p>You can run SSApp on the same VPS as Owncast and Rocket.Chat if it has enough resources. Installing SSApp does not by itself connect Rocket.Chat or put overlays into the video.</p>
 <pre><code>Supported chat source → SSApp → Social Stream dock / featured overlay
                                            ↓
@@ -203,7 +204,7 @@ Video input → server broadcaster renders overlays → Owncast → viewers</cod
 			</div>
 
 			<div class="guide-card" id="verify">
-				<h2>Check the Complete Workflow Before Leaving It Unattended</h2>
+				<h2 id="read-section-11">Check the Complete Workflow Before Leaving It Unattended</h2>
 <ol class="guide-steps">
 <li>Send a real message in a connected chat and confirm it arrives in your Social Stream dock.</li>
 <li>Feature that message and confirm the featured overlay changes. For Owncast, verify it in the actual viewer video too.</li>
@@ -215,7 +216,7 @@ Video input → server broadcaster renders overlays → Owncast → viewers</cod
 <p>For updates, stop the service, back up <code>/var/lib/ssapp</code>, replace the AppImage at the same path, and start the service again. Retain the previous executable until the new version passes the message checks.</p>
 			</div>
 			<div class="guide-card">
-				<h2>Troubleshooting</h2>
+				<h2 id="read-section-12">Troubleshooting</h2>
 				<table class="guide-table guide-table-stack">
 					<thead><tr><th>Problem</th><th>What To Check</th></tr></thead>
 					<tbody>
@@ -229,7 +230,7 @@ Video input → server broadcaster renders overlays → Owncast → viewers</cod
 			</div>
 
 			<div class="guide-card">
-				<h2>Related Guides</h2>
+				<h2 id="read-section-13">Related Guides</h2>
 				<ul class="guide-list">
 					<li><a href="local-services-guide.html">Local Servers and Services Explained</a></li>
 					<li><a href="llm-control-guide.html">Local Control API and MCP</a></li>

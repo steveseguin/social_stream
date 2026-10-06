@@ -38,8 +38,9 @@
     <meta name="description" content="Plain-English guide to Social Stream Ninja desktop app source modes, Standard mode, WebSocket mode, TikTok presets, source windows, and common app troubleshooting.">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body>
+<body class="visual-guide">
     <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 
     <section class="page-hero">
@@ -51,8 +52,9 @@
 
     <main class="guide-section">
         <div class="container">
-            <div class="guide-card">
-                <h2>What The App Is For</h2>
+            <nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">What The App Is For</a><a href="#read-section-2">Mode Names</a><a href="#read-section-3">Use Standard Mode When</a><a href="#read-section-4">Use WebSocket Or API Mode When</a><a href="#tiktok-in-the-app">TikTok In The App</a><a href="#read-section-6">What To Check Before OBS</a><a href="#read-section-7">Common Fixes</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">What The App Is For</h2>
                 <p>The desktop app manages Social Stream source windows outside your normal browser. It can help with source organization and some browser-tab throttling problems. It is not the same as Chrome, and it does not automatically share your Chrome login or cookies.</p>
                 <figure class="guide-figure">
                     <img src="images/guides/guide-standalone-add-source.png" alt="Standalone app Add source sidebar with YouTube, Twitch, Kick, VPZONE, Velora, Instagram Live, Facebook, and TikTok source buttons" class="guide-image guide-image-narrow">
@@ -61,7 +63,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Mode Names</h2>
+                <h2 id="read-section-2">Mode Names</h2>
                 <p>Some sources have more than one connection mode. The right mode depends on the platform, login state, and whether you need richer events or simple page capture.</p>
                 <figure class="guide-figure">
                     <img src="images/guides/guide-standalone-source-modes.png" alt="Standalone app sample source entries showing Standard and WebSocket connection mode controls, plus TikTok connection preset controls" class="guide-image">
@@ -81,7 +83,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Use Standard Mode When</h2>
+                <h2 id="read-section-3">Use Standard Mode When</h2>
                 <ul class="guide-list">
                     <li>The platform works when you can see the live page or popout chat.</li>
                     <li>The site needs you to sign in, solve a prompt, or keep a visible chat panel open.</li>
@@ -92,7 +94,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Use WebSocket Or API Mode When</h2>
+                <h2 id="read-section-4">Use WebSocket Or API Mode When</h2>
                 <ul class="guide-list">
                     <li>The source specifically supports WebSocket/API mode.</li>
                     <li>You want a source that can keep working better in the background.</li>
@@ -121,7 +123,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>What To Check Before OBS</h2>
+                <h2 id="read-section-6">What To Check Before OBS</h2>
                 <ol class="guide-steps">
                     <li>Confirm the app source is activated.</li>
                     <li>Confirm the source window is signed in if the platform needs login.</li>
@@ -132,7 +134,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Common Fixes</h2>
+                <h2 id="read-section-7">Common Fixes</h2>
                 <ul class="guide-list">
                     <li><strong>Chrome is logged in but the app is not:</strong> sign in to the platform inside the app source window or use the extension as the capture path.</li>
                     <li><strong>Source says active but no chat arrives:</strong> check the mode, source window, live URL/user name, and dock session.</li>

@@ -40,8 +40,9 @@
 <script src="../docs/js/site-shell.js">
 </script>
 <link rel="stylesheet" href="css/workflow-guides.css">
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body class="workflow-guide">
+<body class="workflow-guide visual-guide">
 <header class="site-header">
 <div class="site-bar">
 <a class="site-brand" href="../index.html">
@@ -90,7 +91,7 @@
 <a href="#check">5. Verify the boundary</a>
 </nav>
 <section class="guide-card" id="scope">
-<h2>1. Choose where to filter</h2>
+<h2 id="read-section-1">1. Choose where to filter</h2>
 <p>Open SSN’s popup or desktop <strong>Sources and Settings</strong>. Use menu search to find the exact labels below.</p>
 <figure class="guide-figure">
 <ol class="workflow-diagram">
@@ -139,7 +140,7 @@
 </table>
 </section>
 <section class="guide-card" id="users">
-<h2>2. Block or restore a user</h2>
+<h2 id="read-section-2">2. Block or restore a user</h2>
 <ol class="guide-steps">
 <li>For a message already in the Dock, right-click and open <strong>User Actions → Block User</strong>. This removes that user’s messages and adds them to the SSN hide-user list.</li>
 <li>For a prepared list, find <strong>Blocked users</strong> under global Message - Visibility. Enable its switch and enter comma-separated usernames.</li>
@@ -149,8 +150,10 @@
 <p>To keep messages visible after the Dock receives a deletion, add <code>&amp;showdeleted</code> to that Dock’s URL. Deleted messages stay readable with a <strong>Deleted</strong> label and dimmed text. For example: <code>dock.html?session=YOUR_SESSION_ID&amp;showdeleted</code>. Use this on your personal Dock; a separate OBS Dock without the option uses the existing behavior of removing deleted messages. This cannot show messages that were blocked before SSN captured them.</p>
 </section>
 <section class="guide-card" id="words">
-<h2>3. Filter words and commands</h2>
+<h2 id="read-section-3">3. Filter words and commands</h2>
 <p>For global profanity handling, search for <strong>Censor</strong> or <strong>Block messages that contain swear words</strong>. Censoring replaces matched text; blocking removes the whole message. Choose the behavior you want before testing.</p>
+<figure class="guide-shot"><a href="images/guides/visual/find-filters.webp"><img src="images/guides/visual/find-filters.webp" width="519" height="192" alt="Find command filtering in settings." loading="lazy" decoding="async"></a><figcaption>Find command filtering in settings.</figcaption></figure>
+
 <p>For a custom Dock-only phrase list, find <strong>Contains text or name</strong> in the Streaming Chat Dock options. Turn it on, enter a word or phrase, and select <strong>Add</strong>. Matching is case-insensitive and checks both message text and the chatter’s name. A short fragment can match inside a longer word. If blur mode is enabled, matches can be blurred instead of removed.</p>
 <p>Copy the updated Dock link and replace the URL wherever that Dock is open. For command clutter, the Dock supports <code>&amp;hidecommands</code>. For example:</p>
 <pre>
@@ -159,7 +162,7 @@
 <p>This example changes a Dock’s presentation. It does not disable commands in Points, Waitlist, or Event Flow.</p>
 </section>
 <section class="guide-card" id="roles">
-<h2>4. Handle bots and trusted links</h2>
+<h2 id="read-section-4">4. Handle bots and trusted links</h2>
 <p>Under global <strong>Message - Visibility → Assign roles/classes to certain users</strong>, use <strong>Identify by name who are bots</strong>. Enter, for example, <code>moobot:twitch,nightbot:twitch</code>. A platform suffix limits classification to that source type.</p>
 <p>Then choose a global bot-hiding option if no output needs those messages, or add <code>&amp;hidebots</code> to a Dock URL to hide them only there. To replace ordinary links while allowing bot links, use:</p>
 <pre>
@@ -168,7 +171,7 @@
 <p>The bot must be identified first. Assigning an SSN role does not grant privileges on Twitch or another platform. See the <a href="index.html?file=role-based-controls.md">role controls reference</a>.</p>
 </section>
 <section class="guide-card" id="check">
-<h2>5. Verify the boundary</h2>
+<h2 id="read-section-5">5. Verify the boundary</h2>
 <p>Open one unfiltered Dock and one filtered Dock on the same session. Send fictional <a href="test-message-guide.html">test messages</a>: a normal line, a blocked phrase, a command, and a bot message. Local filters should affect only the configured page; global filters should affect downstream outputs. Test manual and automatic featuring separately.</p>
 <p>If too much disappears, turn off the last filter you added, check the blocked-user list, and check donation/member/queue-only toolbar modes. Old OBS URLs retain old options. For a reviewed-message workflow, see <a href="dock-live-guide.html">Using the Dock</a>.</p>
 </section>

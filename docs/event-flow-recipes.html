@@ -38,16 +38,18 @@
     <meta name="description" content="Practical Event Flow recipes for Social Stream Ninja: sounds, media, rewards, OBS actions, webhooks, and safe testing.">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body>
+<body class="visual-guide">
     <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
     <section class="page-hero"><div class="container"><h1>Event Flow Recipes</h1>
 <p><a href="giveaway-points-guide.html">Giveaways, paid tickets, game prizes and recovery guide</a></p><p>Build useful automations one small recipe at a time.</p></div></section>
 
     <main class="guide-section">
         <div class="container">
-            <div class="guide-card">
-                <h2>What Event Flow Is For</h2>
+            <nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">What Event Flow Is For</a><a href="#read-section-2">Before Any Recipe</a><a href="#read-section-3">Recipe Ideas</a><a href="#read-section-4">Kick Reward Media Example</a><a href="#read-section-5">Common Fixes</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">What Event Flow Is For</h2>
                 <p><a href="streamdeck-event-flow.html">Run a custom workflow from a Stream Deck key or HTTP/WebSocket/P2P API call</a>.</p>
                 <p>Event Flow is the advanced automation editor. Use it when popup toggles are not enough: filter chat, trigger media, relay messages, call webhooks, or control OBS.</p>
                 <figure class="guide-figure">
@@ -57,7 +59,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Before Any Recipe</h2>
+                <h2 id="read-section-2">Before Any Recipe</h2>
                 <ol class="guide-steps">
                     <li>Use one test platform and one Social Stream session.</li>
                     <li>Open the dock and confirm chat arrives.</li>
@@ -68,7 +70,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Recipe Ideas</h2>
+                <h2 id="read-section-3">Recipe Ideas</h2>
                 <table class="guide-table guide-table-stack">
                     <thead><tr><th>Recipe</th><th>Trigger</th><th>Action</th></tr></thead>
                     <tbody>
@@ -83,7 +85,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Kick Reward Media Example</h2>
+                <h2 id="read-section-4">Kick Reward Media Example</h2>
                 <p>This is the most common practical Event Flow pattern: match a reward, then play media through Flow Actions.</p>
                 <figure class="guide-figure">
                     <img src="images/kick-channel-points-event-flow/event-flow-reward-trigger.png" alt="Event Flow reward trigger example for Kick rewards" class="guide-image">
@@ -97,7 +99,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Common Fixes</h2>
+                <h2 id="read-section-5">Common Fixes</h2>
                 <ul class="guide-list">
                     <li><strong>Nothing happens:</strong> confirm the source event arrives in the dock first.</li>
                     <li><strong>Audio or media does not play:</strong> keep <code>actions.html</code> open with the same session, then check the <a href="media-hosting-event-flow.html">Event Flow media hosting guide</a>.</li>

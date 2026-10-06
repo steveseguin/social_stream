@@ -30,8 +30,9 @@
     <link rel="stylesheet" href="css/workflow-guides.css">
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
     <script src="js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body class="workflow-guide">
+<body class="workflow-guide visual-guide">
 <header class="site-header">
 <div class="site-bar">
 <a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a>
@@ -72,7 +73,7 @@
 </nav>
 
 <section class="guide-card" id="file-or-url">
-<h2>Do I edit the OBS link or the HTML file?</h2>
+<h2 id="read-section-1">Do I edit the OBS link or the HTML file?</h2>
 <p><strong>The overlay file is <code>poll.html</code>.</strong> It contains the poll's layout, styles, and voting code. The URL you copy into OBS points to that file and adds connection settings, such as your session ID, after the <code>?</code>.</p>
 <pre><code>https://socialstream.ninja/poll.html?session=YOUR_SESSION</code></pre>
 <p>For colors, fonts, spacing, and bar styling, you can keep the hosted URL and add <strong>Custom CSS</strong> in OBS. For a design with new artwork, a logo, or a different layout, edit a copy of <code>poll.html</code> and point OBS at your copy. A custom copy does not automatically appear in SSN's theme dropdown.</p>
@@ -81,7 +82,7 @@
 </section>
 
 <section class="guide-card" id="obs-css">
-<h2>1. Style the hosted poll in OBS</h2>
+<h2 id="read-section-2">1. Style the hosted poll in OBS</h2>
 <ol class="guide-steps">
 <li>In SSN, open <strong>Graphical Poll &rarr; Poll Options</strong>. Choose <strong>Default</strong> under <strong>Poll Style/Theme</strong> as the starting point for this example, and turn on <strong>Enable Poll</strong>.</li>
 <li>Copy the Graphical Poll link. In OBS, add or open its <strong>Browser Source</strong>, leave <strong>Local file</strong> unchecked, and paste the link into <strong>URL</strong>.</li>
@@ -134,7 +135,7 @@
 </section>
 
 <section class="guide-card" id="edit-file">
-<h2>2. Make an editable copy of the poll</h2>
+<h2 id="read-section-3">2. Make an editable copy of the poll</h2>
 <ol class="guide-steps">
 <li>Download the <a href="https://github.com/steveseguin/social_stream/archive/refs/heads/beta.zip">Social Stream Ninja source ZIP (beta)</a> and extract it. You can inspect <a href="https://github.com/steveseguin/social_stream/blob/beta/poll.html">the poll.html source on GitHub</a>.</li>
 <li>In the extracted folder, duplicate <code>poll.html</code> as <code>my-poll.html</code>. Keep it beside the original, at the top level of the folder.</li>
@@ -157,7 +158,7 @@
 </section>
 
 <section class="guide-card" id="ai-prompt">
-<h2>3. Give AI the existing file and a specific brief</h2>
+<h2 id="read-section-4">3. Give AI the existing file and a specific brief</h2>
 <p>Attach <code>my-poll.html</code> and your design reference, or open the extracted folder in your coding tool. Replace the bracketed details in this prompt:</p>
 <pre><code>Customize this existing Social Stream Ninja poll overlay.
 
@@ -198,7 +199,7 @@ list any extra image/font files needed, and include the file URL steps for OBS.<
 </section>
 
 <section class="guide-card" id="local-setup">
-<h2>4. Open your edited poll in OBS</h2>
+<h2 id="read-section-5">4. Open your edited poll in OBS</h2>
 <p>Open <code>my-poll.html</code> directly from your computer. There is no server to install or start.</p>
 <ol class="guide-steps">
 <li>Drag <code>my-poll.html</code> into Chrome or Edge. Copy the address from the address bar; it starts with <code>file:///</code>.</li>
@@ -216,7 +217,7 @@ list any extra image/font files needed, and include the file URL steps for OBS.<
 </section>
 
 <section class="guide-card" id="check">
-<h2>5. Test the design with a real poll</h2>
+<h2 id="read-section-6">5. Test the design with a real poll</h2>
 <ol class="guide-steps">
 <li>Keep SSN and a captured chat source running. In <strong>Poll Options</strong>, enable the poll, set <strong>Free-form</strong>, enter a question, and choose <strong>Exact vote only</strong>.</li>
 <li>Send <code>#coffee</code> and <code>#tea</code> from different chat users, or use distinct fictional users with the <a href="test-message-guide.html">test-message tools</a>. With multiple votes disabled, repeating a vote from the same user will not add another vote.</li>

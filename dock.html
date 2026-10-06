@@ -663,6 +663,16 @@
 				display: var(--scrollbar-visible);
 			}
 
+			html.hidescrollbar,
+			html.hidescrollbar * {
+				scrollbar-width: none !important;
+			}
+
+			html.hidescrollbar::-webkit-scrollbar,
+			html.hidescrollbar *::-webkit-scrollbar {
+				display: none !important;
+			}
+
 			::-webkit-scrollbar-track {
 				-webkit-box-shadow: inset 0 0 13px rgb(0 0 0 / 90%);
 				border-radius: 4px;
@@ -3407,6 +3417,9 @@
 			var tainted = false;
 
 			var urlParams = new URLSearchParams(window.location.search);
+			if (urlParams.has("hidescrollbar")) {
+				document.documentElement.classList.add("hidescrollbar");
+			}
 			var SERVER_EXCLUSIVE_TRANSPORT_VERSION = "3.52.0";
 			var LEGACY_PAGE_WEBHOOK_MAX_VERSION = "3.21.10";
 			function isRawDonationWebhook(data) {

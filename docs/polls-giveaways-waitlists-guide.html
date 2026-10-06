@@ -40,8 +40,9 @@
 <script src="../docs/js/site-shell.js">
 </script>
 <link rel="stylesheet" href="css/workflow-guides.css">
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body class="workflow-guide">
+<body class="workflow-guide visual-guide">
 <header class="site-header">
 <div class="site-bar">
 <a class="site-brand" href="../index.html">
@@ -92,7 +93,7 @@
 <a href="#check">5. Rehearse and recover</a>
 </nav>
 <section class="guide-card" id="choose">
-<h2>1. Choose the tool</h2>
+<h2 id="read-section-1">1. Choose the tool</h2>
 <table class="guide-table guide-table-stack">
 <thead>
 <tr>
@@ -122,7 +123,7 @@
 <p>Use the generated link from that section as an OBS Browser Source. Keep SSN and your chat sources active, and preserve the link’s session, password, and server options. The <strong>Giveaway Tool</strong> offers a separate pool with winner-card, name-reel, and community-wheel presentations. Use its Giveaway Options panel for dedicated giveaway controls; Wait List / Winner Draw remains available independently.</p>
 </section>
 <section class="guide-card" id="poll">
-<h2>2. Run a multiple-choice poll</h2>
+<h2 id="read-section-2">2. Run a multiple-choice poll</h2>
 <ol class="guide-steps">
 <li>Open <strong>Graphical Poll → Poll Options</strong>. Set <strong>Poll Type</strong> to <strong>Multiple Choice</strong>.</li>
 <li>Enter <strong>What should we play next?</strong> as the question and <code>Adventure, Puzzle</code> as the comma-separated options. Set <strong>Vote Matching</strong> to <strong>Exact vote only</strong>.</li>
@@ -139,7 +140,7 @@
 <p>Free-form polls accept hashtag votes; <strong>Hashtag anywhere</strong> allows a hashtag within a longer message. <strong>Save Current Poll</strong> saves a preset for reuse; it is not a permanent record of audience results. Repeated votes from the same voter are ignored unless multiple votes are enabled.</p>
 <p>Want your own colors, fonts, logo, or layout? See <a href="poll-customization-guide.html">Customize your graphical poll</a> for OBS CSS, an AI editing prompt, and instructions for running an edited <code>poll.html</code> locally.</p>
 </section>
-<section class="guide-card" id="giveaway"><h2>Dedicated giveaway tools</h2>
+<section class="guide-card" id="giveaway"><h2 id="read-section-3">Dedicated giveaway tools</h2>
 <p>For a walkthrough with screenshots, see <a href="giveaway-guide.html">Your first giveaway</a>. Open <strong>Giveaway Tool &rarr; Giveaway Options</strong>. Set the entry keyword, choose exact-message or separate-word matching, and optionally restrict entries to members. Click <strong>Open entries</strong>, then <strong>Draw winner</strong> when ready. Drawing closes entries automatically. Before any draw, you can close and reopen entries using the same rules. <strong>New round</strong> clears the current pool, preserves past results in history, and leaves entries closed.</p>
 <p>Choose <strong>Winner card</strong>, <strong>Name reel</strong>, or <strong>Community wheel</strong>, and one of six styles. Preview uses fictional names and never joins your session. Copy the generated <code>giveaway.html?session=YOUR_SESSION&amp;managed</code> link into OBS. The managed audience display contains no operator controls or session details. Style and title are link settings; entry rules are host settings applied when entries open.</p>
 <p>Managed displays for the same Giveaway ID share the host's pool and selected winner. Free keyword entries have equal odds; paid draws weight selection by ticket count. Identity is deduplicated within each platform using the supplied user ID, username, or display name; different platforms are separate identities. With repeat winners off, each winner is removed from the current round's eligible pool. New rounds allow those viewers to enter again. The pool holds up to 10,000 participants; the wheel illustrates a sample of up to 120 names for large pools, but selection always uses the entire eligible ticket pool.</p>
@@ -155,7 +156,7 @@
 </tbody></table>
 <pre>{"action":"drawgiveaway","get":"draw-1"}</pre>
 <p>Protocol 2 Stream Deck requests use the same action names and receive correlated host responses. These responses describe giveaway state, not OBS visibility. The older standalone community wheel remains available by omitting <code>managed</code>; it has its own local pool and is not controlled by these host actions. Its local storage is now scoped by session and password, exact matching means the whole message, and its draw uses secure randomness.</p></section><section class="guide-card" id="draw">
-<h2>3. Draw a winner</h2>
+<h2 id="read-section-4">3. Draw a winner</h2>
 <ol class="guide-steps">
 <li>Open <strong>Wait List / Winner Draw → Enable and customize</strong>. Enable the trigger and set a clear command such as <code>!join</code>.</li>
 <li>Turn on <strong>Configure as winner-draw mode instead of queue</strong>. Copy the updated link to the OBS Browser Source.</li>
@@ -186,7 +187,7 @@
 </figure>
 </section>
 <section class="guide-card" id="queue">
-<h2>4. Run a viewer queue</h2>
+<h2 id="read-section-5">4. Run a viewer queue</h2>
 <p>Use the same waitlist setup, but turn winner-draw mode off and copy its updated URL. Viewers join using your configured command.</p>
 <table class="guide-table guide-table-stack">
 <thead>
@@ -221,7 +222,7 @@
 <p>Choose whether removed viewers may rejoin with the rejoin option. Optional <strong>waitlist control commands</strong> are limited to mod/host/admin users: <code>!wlstop</code>, <code>!wlremove</code>, <code>!wlreset</code>, <code>!wlpick</code>, and <code>!wlhighlight</code>. Enable these deliberately; the viewer entry command alone does not enable them.</p>
 </section>
 <section class="guide-card" id="check">
-<h2>5. Rehearse and recover</h2>
+<h2 id="read-section-6">5. Rehearse and recover</h2>
 <p>Use distinct fictional users in <a href="test-message-guide.html">test messages</a> to check voting and entry behavior. One person using two platforms is not reliably one shared identity. Confirm the result appears in OBS before inviting viewers to participate.</p>
 <ul class="guide-list">
 <li>

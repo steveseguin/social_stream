@@ -38,20 +38,22 @@
     <meta name="description" content="What the TikTok sign server is, why the desktop app says Sign server unavailable, and how to fix it: wait out rate limits, add an Euler API key, or switch modes.">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body>
+<body class="visual-guide">
     <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
     <section class="page-hero"><div class="container"><h1>TikTok Signing</h1><p>What the sign server is, why it sometimes fails, and how to get reconnected.</p></div></section>
     <main class="guide-section">
         <div class="container">
-            <div class="guide-card">
-                <h2>What Is TikTok Signing?</h2>
+            <nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">What Is TikTok Signing?</a><a href="#read-section-2">&quot;Sign Server Unavailable&quot;</a><a href="#read-section-3">Add Your Own Euler API Key</a><a href="#read-section-4">Modes That Avoid the Sign Server</a><a href="#read-section-5">Sending Replies To TikTok</a><a href="#read-section-6">Related</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">What Is TikTok Signing?</h2>
                 <p>TikTok requires connection requests to its live chat feed to be cryptographically signed. The desktop app signs these requests through a third-party signing service run by <a href="https://www.eulerstream.com/" target="_blank" rel="noopener">Euler Stream</a>. No account or API key is needed for normal use. The app uses Euler's free tier automatically.</p>
                 <p>Because this service sits between the app and TikTok, TikTok sources can stop working even when nothing is wrong on your end: the sign server may be down, rate-limited, or temporarily broken by a TikTok-side change.</p>
             </div>
 
             <div class="guide-card">
-                <h2>&quot;Sign Server Unavailable&quot;</h2>
+                <h2 id="read-section-2">&quot;Sign Server Unavailable&quot;</h2>
                 <p>This status means the app could not get a valid signature from the signing service. Common causes:</p>
                 <ul class="guide-list">
                     <li><strong>Rate limits.</strong> The free tier is limited per IP address (a few connections per minute, with hourly and daily caps; see <a href="https://www.eulerstream.com/docs/api/rate-limits" target="_blank" rel="noopener">Euler's rate limits</a>). Repeatedly deleting and re-adding the source, or rapidly switching modes, burns through the quota and keeps the error going.</li>
@@ -69,7 +71,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Add Your Own Euler API Key</h2>
+                <h2 id="read-section-3">Add Your Own Euler API Key</h2>
                 <p>Your own key gives you a dedicated quota instead of sharing the anonymous per-IP allowance.</p>
                 <ul class="guide-list">
                     <li>Create a free account and key at the <a href="https://www.eulerstream.com/dashboard" target="_blank" rel="noopener">Euler Stream dashboard</a>.</li>
@@ -80,7 +82,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>Modes That Avoid the Sign Server</h2>
+                <h2 id="read-section-4">Modes That Avoid the Sign Server</h2>
                 <table class="guide-table guide-table-stack">
                     <thead><tr><th>Mode</th><th>How It Works</th><th>Trade-offs</th></tr></thead>
                     <tbody>
@@ -92,13 +94,13 @@
             </div>
 
             <div class="guide-card">
-                <h2>Sending Replies To TikTok</h2>
+                <h2 id="read-section-5">Sending Replies To TikTok</h2>
                 <p>Sending chat messages from the dock back to TikTok requires being signed into your TikTok account inside the desktop app. The app needs your TikTok session to post as you. If you are not signed in, or the TikTok connection is down, outgoing messages will only reach your other platforms.</p>
                 <p>Note that Euler Proxy mode never supports replies, regardless of sign-in state.</p>
             </div>
 
             <div class="guide-card">
-                <h2>Related</h2>
+                <h2 id="read-section-6">Related</h2>
                 <p><a href="tiktok-app-modes-guide.html">TikTok app modes</a>, <a href="tiktok-guide.html">TikTok guide</a>, and <a href="tiktok-quick-start.html">TikTok quick start</a>.</p>
             </div>
         </div>

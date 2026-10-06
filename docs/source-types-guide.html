@@ -38,8 +38,9 @@
 		<meta name="description" content="How Social Stream Ninja source type names work in payloads, filters, Event Flow, desktop app sources, custom capture, and replies.">
 	<link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-	<body>
+	<body class="visual-guide">
 		<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 		<section class="page-hero">
 			<div class="container">
@@ -50,7 +51,7 @@
 		<main class="guide-section">
 			<div class="container">
 				<div class="guide-card">
-					<h2>On This Page</h2>
+					<h2 id="read-section-1">On This Page</h2>
 					<ul class="guide-list">
 						<li><a href="#what-is-a-type">What a type is</a></li>
 						<li><a href="#common-and-confusing-types">Common and confusing names</a></li>
@@ -64,7 +65,7 @@
 				</div>
 
 				<div class="guide-card" id="what-is-a-type">
-					<h2>What Is a <code>type</code>?</h2>
+					<h2 id="read-section-2">What Is a <code>type</code>?</h2>
 					<p><code>type</code> is the canonical source identifier on an incoming Social Stream payload. Overlays, URL filters, APIs, and Event Flow use it to tell platforms and source variants apart.</p>
 					<pre><code>{
   "type": "youtubeshorts",
@@ -111,7 +112,7 @@
 				</div>
 
 				<div class="guide-card" id="common-and-confusing-types">
-					<h2>Common and Confusing Types</h2>
+					<h2 id="read-section-3">Common and Confusing Types</h2>
 					<table class="guide-table guide-table-stack">
 						<thead>
 							<tr>
@@ -162,7 +163,7 @@
 				</div>
 
 				<div class="guide-card" id="youtube-shorts-event-flow">
-					<h2>YouTube Shorts and Event Flow</h2>
+					<h2 id="read-section-4">YouTube Shorts and Event Flow</h2>
 					<p><strong>Incoming matching is exact:</strong> use <code>youtubeshorts</code> in a From Source trigger for Shorts messages, and <code>youtube</code> for regular YouTube live chat.</p>
 					<p><strong>Outgoing matching is also exact:</strong> Relay Chat treats them as separate destinations.</p>
 					<ul class="guide-list">
@@ -181,7 +182,7 @@
 				</div>
 
 				<div class="guide-card" id="instagram-live">
-					<h2>Instagram Live vs Instagram Comments</h2>
+					<h2 id="read-section-5">Instagram Live vs Instagram Comments</h2>
 					<p>Use <code>instagramlive</code> for live-room chat captured by the Instagram Live or InstaFeed live source. Use <code>instagram</code> for non-live feed, post, or static comments.</p>
 					<ul class="guide-list">
 						<li><strong>Live chat flow:</strong> From Source = <code>instagramlive</code>.</li>
@@ -192,7 +193,7 @@
 				</div>
 
 				<div class="guide-card" id="generic-and-unnamed-sources">
-					<h2>Generic, Custom, and Unnamed Sources</h2>
+					<h2 id="read-section-6">Generic, Custom, and Unnamed Sources</h2>
 					<p><code>sources/generic.js</code> is a broad DOM-capture fallback. It looks for common chat rows, names, messages, avatars, and inputs. It starts with <code>generic</code>, then normally derives a lowercase type from a known platform or the page hostname.</p>
 					<ul class="guide-list">
 						<li>Use it to prove that an ordinary DOM chat can be captured before writing a dedicated source.</li>
@@ -205,7 +206,7 @@
 				</div>
 
 				<div class="guide-card" id="desktop-app-injection">
-					<h2>Desktop App Script Injection</h2>
+					<h2 id="read-section-7">Desktop App Script Injection</h2>
 					<p>The desktop app saves a source <code>target</code>, chooses one or more <code>sourceFile</code>/<code>sourceFiles</code>, opens a source window, and injects shared capture scripts from this project. A Chrome-runtime compatibility bridge carries captured messages and reply commands between the page and app.</p>
 					<ul class="guide-list">
 						<li>A target and script filename need not match the payload type. The <code>youtubeshorts</code> target loads <code>sources/youtube.js</code>, which emits <code>youtube</code> or <code>youtubeshorts</code> from page context.</li>
@@ -222,7 +223,7 @@
 				</div>
 
 				<div class="guide-card" id="replying-to-sources">
-					<h2>Replying and Relaying to Sources</h2>
+					<h2 id="read-section-8">Replying and Relaying to Sources</h2>
 					<p>Incoming identity and outbound capability are related, but they are not the same contract.</p>
 					<table class="guide-table guide-table-stack">
 						<thead>
@@ -260,7 +261,7 @@
 				</div>
 
 				<div class="guide-card" id="where-to-find-details">
-					<h2>Where to Find Exact Details</h2>
+					<h2 id="read-section-9">Where to Find Exact Details</h2>
 					<ul class="guide-list">
 						<li><a href="event-reference.html">Event Reference</a>: canonical fields and platform event names.</li>
 						<li><a href="../actions/event-flow-guide.html">Event Flow Guide</a>: triggers, actions, templates, reflection handling, and tests.</li>

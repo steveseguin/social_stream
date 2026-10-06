@@ -38,16 +38,18 @@
     <meta name="description" content="Practical guide for using the Social Stream Ninja AI Overlay Builder, previewing generated overlays, and loading them into OBS.">
 <link rel="stylesheet" href="../docs/css/site-shell.css">
 <script src="../docs/js/site-shell.js"></script>
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body>
+<body class="visual-guide">
     <header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
 
     <section class="page-hero"><div class="container"><h1>AI Overlay Builder</h1><p>Generate an overlay, test it, then load the saved output in OBS.</p></div></section>
 
     <main class="guide-section">
         <div class="container">
-            <div class="guide-card">
-                <h2>What It Is</h2>
+            <nav class="guide-jump-links" aria-label="On this page"><a href="#read-section-1">What It Is</a><a href="#read-section-2">1. Build In The Prompt Page</a><a href="#read-section-3">2. Add The Output Page To OBS</a><a href="#read-section-4">3. Use Templates When You Need Faster Setup</a><a href="#read-section-5">Include safe input handling in the design prompt</a><a href="#read-section-6">Common Fixes</a></nav>
+<div class="guide-card">
+                <h2 id="read-section-1">What It Is</h2>
                 <p>The AI Overlay Builder helps create HTML overlays from a prompt. It is not the OBS page by itself. Use <code>aiprompt.html</code> to build and preview, then use <code>aioverlay.html</code> for the output page.</p>
                 <figure class="guide-figure">
                     <img src="images/guides/guide-ai-overlay-builder.png" alt="AI Overlay Builder page with prompt box, preview controls, event simulation buttons, save controls, and HTML source tab" class="guide-image">
@@ -56,7 +58,7 @@
             </div>
 
             <div class="guide-card">
-                <h2>1. Build In The Prompt Page</h2>
+                <h2 id="read-section-2">1. Build In The Prompt Page</h2>
                 <ol class="guide-steps">
                     <li>Open <code>aiprompt.html?session=YOUR_SESSION</code>.</li>
                     <li>Describe what the overlay should do and how it should look.</li>
@@ -67,14 +69,14 @@
             </div>
 
             <div class="guide-card">
-                <h2>2. Add The Output Page To OBS</h2>
+                <h2 id="read-section-3">2. Add The Output Page To OBS</h2>
                 <p>After saving, add the output page as an OBS Browser Source. Keep the same session and saved page name.</p>
                 <pre>https://socialstream.ninja/aioverlay.html?session=YOUR_SESSION&amp;overlay=chat-overlay</pre>
                 <p>If the overlay is transparent or only appears during events, use the builder's simulation buttons first so you know it can render.</p>
             </div>
 
             <div class="guide-card">
-                <h2>3. Use Templates When You Need Faster Setup</h2>
+                <h2 id="read-section-4">3. Use Templates When You Need Faster Setup</h2>
                 <p>If you want something reliable quickly, start from a template and customize it. Use the AI builder when you want something more specific.</p>
                 <figure class="guide-figure">
                     <img src="images/guides/template-sample-overlay-preview.png" alt="Sample Social Stream Ninja overlay preview showing a styled chat message" class="guide-image">
@@ -82,7 +84,7 @@
                 </figure>
             </div>
 
-<div class="guide-card" id="safe-design-prompt"><h2>Include safe input handling in the design prompt</h2>
+<div class="guide-card" id="safe-design-prompt"><h2 id="read-section-5">Include safe input handling in the design prompt</h2>
 <p>Give the AI the <a href="event-reference.html">event reference</a> and keep this instruction with your design brief:</p>
 <pre><code>Treat all incoming messages, names, labels, donations, and metadata as untrusted.
 Prevent HTML/JavaScript injection in every renderer you change. Use textContent
@@ -99,7 +101,7 @@ probe in an isolated preview; verify the probe cannot execute.</code></pre>
 <p>For editing and downloading existing page files, session IDs, and opening files directly in OBS, follow the <a href="overlay-customization-guide.html">overlay design guides</a>. For a saved builder output, use its output URL and saved name; copying <code>aioverlay.html</code> alone does not embed the saved design. AI Event Overlay is a separate feature; follow its <a href="index.html?file=ai-event-overlay.md">template-field and private-display-link instructions</a>.</p>
 </div>
             <div class="guide-card">
-                <h2>Common Fixes</h2>
+                <h2 id="read-section-6">Common Fixes</h2>
                 <ul class="guide-list">
                     <li><strong>Blank preview:</strong> click a simulation button and check the console panel.</li>
                     <li><strong>OBS blank:</strong> confirm the saved page name and session match the builder.</li>

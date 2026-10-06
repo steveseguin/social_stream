@@ -40,8 +40,9 @@
 <script src="../docs/js/site-shell.js">
 </script>
 <link rel="stylesheet" href="css/workflow-guides.css">
+<link rel="stylesheet" href="css/visual-guides.css">
 </head>
-<body class="workflow-guide">
+<body class="workflow-guide visual-guide">
 <header class="site-header">
 <div class="site-bar">
 <a class="site-brand" href="../index.html">
@@ -91,13 +92,15 @@
 <a href="#check">Troubleshooting</a>
 </nav>
 <section class="guide-card" id="prepare">
-<h2>1. Confirm both chats can receive replies</h2>
+<h2 id="read-section-1">1. Confirm both chats can receive replies</h2>
 <p>Connect your Twitch and YouTube Live chats to the same SSN session. Confirm both appear in the Dock, then send one manual reply to each from a message with a known source tab. Use your own test channels. A read-only capture source cannot send a relay.</p>
 <p>Keep only the intended destination chats open for this setup. A platform destination can include multiple eligible source tabs on that platform. If you use a separate Twitch bot account, complete <a href="twitch-bot-account-chatbot.html">Bot accounts for replies</a> first.</p>
 </section>
 <section class="guide-card" id="one-way">
-<h2>2. Create Twitch → YouTube in Event Flow</h2>
+<h2 id="read-section-2">2. Create Twitch → YouTube in Event Flow</h2>
 <p>Open the <strong>Event Flow Editor</strong> from SSN’s menu (also linked from the Actions overlay section). Create a flow and give it a clear name such as <strong>Twitch to YouTube</strong>.</p>
+<figure class="guide-shot"><a href="images/guides/guide-event-flow-overview.png"><img src="images/guides/guide-event-flow-overview.png" width="1220" height="720" alt="Build each relay direction in the Event Flow editor." loading="lazy" decoding="async"></a><figcaption>Build each relay direction in the Event Flow editor.</figcaption></figure>
+
 <ol class="guide-steps">
 <li>Add a <strong>From Source</strong> trigger from <strong>User &amp; Source</strong>. Choose Twitch as its source.</li>
 <li>Add a <strong>Relay Chat</strong> action and connect the trigger output to the action input.</li>
@@ -125,24 +128,24 @@
 <p>YouTube Shorts has its own source type and destination. Choose <strong>YouTube Shorts</strong> where appropriate; it is not interchangeable with YouTube.</p>
 </section>
 <section class="guide-card" id="return">
-<h2>3. Add the return direction</h2>
+<h2 id="read-section-3">3. Add the return direction</h2>
 <p>Create a second flow named <strong>YouTube to Twitch</strong>: <strong>From Source: YouTube → Relay Chat: Twitch</strong>. Save and enable it. Send a fresh message from each side and confirm each produces one cross-platform copy.</p>
 <p>Keep <strong>Relay all messages (!NOT RECOMMENDED!)</strong> off when using these flows, so a second relay system is not doing the same work. Also check whether another bot or multistream service is already bridging the chats.</p>
 </section>
 <section class="guide-card" id="echoes">
-<h2>4. Understand reflections</h2>
+<h2 id="read-section-4">4. Understand reflections</h2>
 <p>A reflection is a message SSN sent that gets captured again from the destination chat. Current Relay Chat actions skip recognized reflections automatically. They also exclude the originating tab.</p>
 <p>To hide the captured echo from the Dock and overlays, add a <strong>Reflection Filter</strong> action early in the relevant flow and select <strong>Block All</strong>. <strong>Allow First</strong> keeps one matching reflection within its configured window; <strong>Allow All</strong> displays them. This controls display after capture, not where a relay is sent.</p>
 <div class="guide-note">The current Relay Chat properties do not have a “No Reflections” checkbox. Use the separate Reflection Filter for display control. If an external service rewrites a relayed message, automatic recognition may not catch it.</div>
 </section>
 <section class="guide-card" id="advanced">
-<h2>5. Narrow what you relay</h2>
+<h2 id="read-section-5">5. Narrow what you relay</h2>
 <p>For commands, add a <strong>Message Starts With</strong> trigger set to <code>!</code> and connect it through a <strong>NOT</strong> gate; combine that result with your source condition using <strong>AND</strong> before Relay Chat. See the <a href="../actions/event-flow-guide.html">Event Flow guide</a> for connecting logic gates. Test both a normal line and a command.</p>
 <p>If you choose the simpler global relay instead, use <strong>Global settings and tools → Commands → Pick relay destinations</strong> and enter <code>twitch,youtube</code>. A blank list means all eligible destinations. That list controls destinations, not which incoming platforms can trigger a relay. Disable the Event Flow relay pair before enabling this alternative.</p>
 <p>SSApp’s account-role allow/block fields in the same Commands section can restrict which accounts send relays. Use the role assigned to your intended sender; an unmatched role can leave no eligible destination.</p>
 </section>
 <section class="guide-card" id="check">
-<h2>Troubleshooting</h2>
+<h2 id="read-section-6">Troubleshooting</h2>
 <ul class="guide-list">
 <li>
 <strong>Nothing sends:</strong> retry a manual reply, verify login/posting permission, enable the saved flow, and check destination and account-role restrictions.</li>

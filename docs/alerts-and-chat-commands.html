@@ -9,102 +9,81 @@
     <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/guides.css">
-    <style>
-        main.container { padding-top: 10.4rem; padding-bottom: 3rem; }
-        .guide-card { margin-bottom: 2rem; }
-        .guide-card li { margin-bottom: 0.7rem; }
-        .table-scroll { overflow-x: auto; }
-        code { overflow-wrap: anywhere; }
-    </style>
-    <script>
-        (function () {
-            var saved = localStorage.getItem('darkMode');
-            if (saved === 'true' || (saved !== 'false' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) document.documentElement.classList.add('dark-mode');
-        })();
-    </script>
+        <link rel="stylesheet" href="css/site-shell.css">
+    <link rel="stylesheet" href="css/visual-guides.css">
+    <script src="js/site-shell.js"></script>
 </head>
-<body>
-<header><div class="container"><a href="guides.html">Social Stream Ninja &middot; Guides</a></div></header>
-<main class="container">
-    <h1>Set up alerts, chat commands and reminders</h1>
-    <p>Add sounds for stream events, answers to common questions, and occasional chat reminders. Start with one command and one alert, then add the rest. Fixed replies do not need an AI bot or an Event Flow.</p>
-    <nav aria-label="On this page">
-        <p><a href="#connect">Connect chat</a> &middot; <a href="#commands">Commands</a> &middot; <a href="#reminders">Reminders</a> &middot; <a href="#alerts">Alerts and sounds</a> &middot; <a href="#troubleshooting">Troubleshooting</a></p>
-    </nav>
-
-    <section class="guide-card" id="connect">
-        <h2>1. Connect your chat</h2>
-        <ol>
-            <li>Open the Social Stream Ninja desktop app or browser extension, turn capture on, and connect your live chat. See the <a href="guides.html">setup guides</a> if you have not connected a source yet.</li>
-            <li>Sign in to the account you want to post replies from. Confirm a viewer's message appears in your Social Stream chat dock.</li>
-            <li>Send a message from the dock to the intended platform and check that it appears in the platform's own chat. Reading chat and posting replies are separate capabilities.</li>
-        </ol>
-        <p><strong>TikTok:</strong> for chat replies, use a signed-in Standard connection or the desktop app's Local Signer reply path. Compatibility (WebSocket) mode does not send replies. Follow the <a href="tiktok-app-modes-guide.html">TikTok connection guide</a> if messages appear in the dock but replies do not reach TikTok.</p>
-    </section>
-
-    <section class="guide-card" id="commands">
-        <h2>2. Add custom command replies</h2>
-        <ol>
-            <li>Open Social Stream settings and search for <strong>Auto-responder</strong>.</li>
-            <li>Enable a command entry. In <strong>Triggering command(s)</strong>, enter <code>!discord</code>. In <strong>Message to respond with</strong>, enter your Discord invite link and a short invitation.</li>
-            <li>Enable <strong>Trigger only if full message matches exactly</strong> if commands should work only when sent on their own.</li>
-            <li>Set <strong>Trigger timeout (ms)</strong> to <code>10000</code> for a ten-second cooldown. Leave <strong>Reply to all instead of just the source</strong> off to answer in the originating chat.</li>
-            <li>Optionally enter <code>youtube,tiktok</code> under <strong>Limit to specific sites</strong> to accept these commands only from those platforms.</li>
-            <li>Have a viewer send the command in the platform chat. Check that it arrives in the dock and produces one reply in the intended platform chat.</li>
-            <li>Add another command entry for each answer you want to provide.</li>
-        </ol>
-        <p>Replace the bracketed placeholders below with your own details. Replies are limited to 200 characters in the settings; split long lists across commands or link to a page containing the full list.</p>
-        <div class="table-scroll">
-            <table class="guide-table">
-                <thead><tr><th scope="col">Command</th><th scope="col">Example reply</th></tr></thead>
-                <tbody>
-                    <tr><td><code>!device</code></td><td>I play on [device model] with [accessories/settings].</td></tr>
-                    <tr><td><code>!gunsmiths</code></td><td>My current loadout codes: [codes or a link to your list].</td></tr>
-                    <tr><td><code>!social</code></td><td>Find my channels here: [your social links or profile page].</td></tr>
-                    <tr><td><code>!discord</code></td><td>Join our Discord: [your invite link].</td></tr>
-                    <tr><td><code>!follow</code></td><td>Enjoying the stream? Please like and follow or subscribe!</td></tr>
-                </tbody>
-            </table>
-        </div>
-        <p>Command names are yours to choose. For example, enter <code>!device, idevice</code> in one entry to accept either spelling. These replies post the text and links you enter; they do not look up your device, loadouts, or social profiles automatically.</p>
-    </section>
-
-    <section class="guide-card" id="reminders">
-        <h2>3. Add an automatic reminder</h2>
-        <ol>
-            <li>In settings, find <strong>Send fixed messages at intervals</strong> and enable a message entry.</li>
-            <li>Enter a short <strong>Message to broadcast</strong>, such as <em>Enjoying the stream? Please like and follow or subscribe!</em></li>
-            <li>Set <strong>Interval between broadcasts in minutes</strong> to <code>15</code>. Leave <strong>Starting time offset</strong> at <code>0</code> for no extra delay before the timer starts. An interval of zero sends only once.</li>
-            <li>Enable <strong>Skip auto-message if chat is too quiet</strong> if you want reminders to pause during quiet periods.</li>
-        </ol>
-        <p>Timed messages broadcast to eligible connected chats. Keep only the intended destinations enabled for sending. Use a command such as <code>!follow</code> instead if you want a reminder only when someone asks.</p>
-    </section>
-
-    <section class="guide-card" id="alerts">
-        <h2>4. Add alerts and your own sounds</h2>
-        <ol>
-            <li>Open <strong>Multi-Alerts</strong> in settings. Enable the follow, subscription/member, and donation alert categories you want to display, and choose their styles.</li>
-            <li>Open <strong>Sound &amp; Timing</strong>, enable <strong>Play alert sound</strong>, and choose the volume.</li>
-            <li>Expand <strong>Per-type custom sounds (override above)</strong>. Use the separate <strong>Follow sound</strong>, <strong>Subscription sound</strong>, and <strong>Donation sound</strong> fields to upload your files or supply direct audio URLs. Use <strong>Listen</strong> to preview a selected sound.</li>
-            <li>For a custom image, GIF, or video, open <strong>Event animations &amp; sound effects</strong>, enable a rule, select its event, and add media. Leave amount limits blank when the alert should apply to any donation amount. See <a href="alert-effects.html">animation and sound alerts</a> for rule options.</li>
-            <li>Copy your configured Multi-Alerts link and add it as a <strong>Browser Source</strong> in OBS. Use the link from your own settings so the overlay connects to your session.</li>
-            <li>Use <strong>Test alert</strong> to check the local preview. After changing settings, copy the updated link into OBS. Check the browser source's audio in OBS before going live.</li>
-        </ol>
-        <p>An event rule can specify its own sound, overriding the category sound. Use one place to configure each sound so the result is easy to manage.</p>
-        <p><strong>YouTube:</strong> free channel subscribers use the <strong>Follow</strong> alert category; paid memberships use <strong>Subscription</strong>. New subscriber alerts need the API connection signed in as the channel owner. They can be delayed or incomplete and cover public subscriptions only. Use the <a href="event-reference.html#youtube-ws">YouTube event guide</a> to choose the connection for the alerts you need.</p>
-        <p><strong>Donations and gifts:</strong> alerts display events your connected source supplies, such as YouTube Super Chats and TikTok gifts. An external tipping service needs its own supported connection; adding the overlay alone does not connect a payment account.</p>
-    </section>
-
-    <section class="guide-card" id="troubleshooting">
-        <h2>If something does not work</h2>
-        <ul>
-            <li><strong>No command reply:</strong> check that the entry is enabled, the command matches, the cooldown has elapsed, and the account can send to that chat. Check source restrictions and message filters. Test with a viewer account rather than a message posted by the bot itself.</li>
-            <li><strong>Replies appear in extra chats:</strong> turn off <strong>Reply to all instead of just the source</strong> and check your sending destinations.</li>
-            <li><strong>No live alerts:</strong> confirm the event reaches Social Stream, then check the overlay's session link and event/platform filters. A preview shows the appearance; it does not connect a platform or prove a live event was received.</li>
-            <li><strong>No sound:</strong> check <strong>Play alert sound</strong>, volume, and the OBS browser source's audio settings. Open a custom audio URL directly to confirm it plays without signing in. In a normal browser, click the overlay if playback is blocked.</li>
-            <li><strong>Repeated replies or sounds:</strong> check for duplicate enabled commands, another bot answering the same command, or two active alert sources playing the same sound.</li>
-        </ul>
-    </section>
-</main>
-</body>
-</html>
+<body class="visual-guide">
+<header class="site-header"><div class="site-bar"><a class="site-brand" href="../index.html"><img src="../icons/logo.svg" width="32" height="32" alt=""><span>Social Stream Ninja</span></a><nav class="site-nav" id="ssn-site-nav" aria-label="Main navigation"><a href="../index.html">Home</a><a href="../docs/features.html">Features</a><a href="../docs/inspiration.html" class="site-priority-inspiration">Inspiration</a><a href="../docs/download.html">Download</a><a href="../docs/guides.html">Guides</a><a href="../docs/commands.html">Commands &amp; API</a><a href="../docs/supported-sites.html">Supported Sites</a><a href="../docs/overlay-gallery.html" class="site-priority-gallery">Overlay Gallery</a><a href="../docs/services.html" class="site-priority-hire">Hire</a><a href="../docs/support.html">Support</a></nav><div class="site-actions"><button class="site-theme" type="button" aria-label="Switch theme"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/></svg></button><button class="site-menu" type="button" aria-label="Open navigation menu" aria-expanded="false" aria-controls="ssn-site-nav"><span aria-hidden="true">&#9776;</span></button></div></div></header>
+<section class="page-hero"><div class="container"><h1>Set up alerts, chat commands and reminders</h1><p>Start with one command and one alert, then add the rest.</p></div></section>
+<main class="guide-section"><div class="container">
+<nav class="guide-choices" aria-label="Choose what to set up">
+<a class="guide-choice" href="#commands"><img src="images/guides/visual/command-concept.webp" width="960" height="640" alt=""><strong>Commands</strong><span>A viewer asks. Your bot replies.</span></a>
+<a class="guide-choice" href="#reminders"><img src="images/guides/visual/reminder-concept.webp" width="960" height="640" alt=""><strong>Reminders</strong><span>A short message on a timer.</span></a>
+<a class="guide-choice" href="#alerts"><img src="images/guides/visual/alert-concept.webp" width="960" height="640" alt=""><strong>Alerts and sounds</strong><span>A stream event appears on screen.</span></a>
+</nav>
+<section class="guide-card" id="connect"><h2>1. Connect your chat</h2>
+<ol><li>Open Social Stream Ninja, turn capture on, and connect your live chat.</li><li>Check that a viewer's message appears in your Social Stream chat dock.</li><li>Send a message from the dock to the intended platform. Check that it appears in the platform's own chat.</li></ol>
+<p>Need help connecting? Open the <a href="guides.html">setup guides</a>.</p>
+<details class="guide-extra"><summary>TikTok connection modes</summary><p>Chat replies need a signed-in Standard connection or the desktop app's Local Signer reply path. Compatibility (WebSocket) mode does not send replies. See the <a href="tiktok-app-modes-guide.html">TikTok connection guide</a>.</p></details>
+</section>
+<section class="guide-card" id="commands"><h2>2. Add custom command replies</h2>
+<p>Use fixed replies for your device, loadouts, social links, or Discord invite. No AI bot is needed.</p>
+<p class="guide-search"><span>Search settings...</span><code>Auto-responder</code></p>
+<figure class="guide-shot guide-shot-compact"><a href="images/guides/visual/find-command.webp"><img src="images/guides/visual/find-command.webp" alt="Search for Auto-responder, then open the matching result." loading="lazy" decoding="async"></a><figcaption>Search for Auto-responder, then open the matching result.</figcaption></figure>
+<div class="guide-step-layout"><div><ol>
+<li>Enable a command entry.</li>
+<li>Enter <code>!discord</code> in <strong>Triggering command(s)</strong>.</li>
+<li>Enter your invitation and link in <strong>Message to respond with</strong>.</li>
+<li>Have a viewer send <code>!discord</code> in the platform chat. Check for one reply in that same chat.</li>
+</ol><p>Use <strong>+ Add New</strong> for each extra command.</p></div>
+<figure class="guide-shot"><a href="images/guides/visual/command-settings.webp"><img src="images/guides/visual/command-settings.webp" alt="One enabled entry: a command, a reply, and a cooldown." loading="lazy" decoding="async"></a><figcaption>One enabled entry: a command, a reply, and a cooldown.</figcaption></figure>
+</div>
+<details class="guide-extra"><summary>Command examples</summary>
+<div class="guide-table-scroll"><table class="guide-table"><thead><tr><th scope="col">Command</th><th scope="col">Example reply</th></tr></thead><tbody>
+<tr><td><code>!device</code></td><td>I play on [device model].</td></tr>
+<tr><td><code>!gunsmiths</code></td><td>My loadout codes: [codes or a link to your list].</td></tr>
+<tr><td><code>!social</code></td><td>My social links: [your profile page].</td></tr>
+<tr><td><code>!discord</code></td><td>Join our Discord: [your invite link].</td></tr>
+<tr><td><code>!follow</code></td><td>Enjoying the stream? Please like and follow or subscribe!</td></tr>
+</tbody></table></div><p>Replace the bracketed details. Replies are limited to 200 characters; use a link for long lists.</p>
+<p>For aliases, enter <code>!device, idevice</code> in the same command entry.</p></details>
+<details class="guide-extra"><summary>Cooldowns and reply destinations</summary><ul>
+<li>Set <strong>Trigger timeout (ms)</strong> to <code>10000</code> for a ten-second cooldown.</li>
+<li>Leave <strong>Reply to all instead of just the source</strong> off to answer in the originating chat.</li>
+<li>Enter <code>youtube,tiktok</code> under <strong>Limit to specific sites</strong> if only those platforms should trigger the command.</li>
+<li>Enable <strong>Trigger only if full message matches exactly</strong> if commands should work only when sent on their own.</li>
+</ul></details></section>
+<section class="guide-card" id="reminders"><h2>3. Add an automatic reminder</h2>
+<p class="guide-search"><span>Search settings...</span><code>Send fixed messages</code></p>
+<figure class="guide-shot guide-shot-compact"><a href="images/guides/visual/find-reminder.webp"><img src="images/guides/visual/find-reminder.webp" alt="Open Send fixed messages at intervals." loading="lazy" decoding="async"></a><figcaption>Open Send fixed messages at intervals.</figcaption></figure>
+<div class="guide-step-layout"><div><ol>
+<li>Enable a message entry.</li><li>Enter your reminder in <strong>Message to broadcast</strong>.</li>
+<li>Set <strong>Interval between broadcasts in minutes</strong> to <code>15</code>.</li>
+<li>Leave <strong>Starting time offset</strong> at <code>0</code> for no extra delay.</li>
+</ol><p>Timed messages go to eligible connected chats. Keep only your intended sending destinations enabled.</p>
+<p>Enable <strong>Skip auto-message if chat is too quiet</strong> to pause reminders during quiet periods.</p></div>
+<figure class="guide-shot"><a href="images/guides/visual/reminder-settings.webp"><img src="images/guides/visual/reminder-settings.webp" alt="An enabled reminder with a 15-minute interval." loading="lazy" decoding="async"></a><figcaption>An enabled reminder with a 15-minute interval.</figcaption></figure>
+</div></section>
+<section class="guide-card" id="alerts"><h2>4. Add alerts and your own sounds</h2>
+<p class="guide-search"><span>Search settings...</span><code>Multi-Alerts</code></p>
+<figure class="guide-shot guide-shot-compact"><a href="images/guides/visual/find-alert.webp"><img src="images/guides/visual/find-alert.webp" alt="Open the Multi-Stream Alert Box settings." loading="lazy" decoding="async"></a><figcaption>Open the Multi-Stream Alert Box settings.</figcaption></figure>
+<div class="guide-step-layout"><div><ol>
+<li>Choose your alert categories and styles.</li><li>Open <strong>Sound &amp; Timing</strong>. Enable <strong>Play alert sound</strong> and set the volume.</li>
+<li>Expand <strong>Per-type custom sounds (override above)</strong>. Upload separate follow, subscription, and donation sounds.</li>
+<li>Use <strong>Listen</strong> to hear each sound.</li>
+</ol><p>For GIFs, images, or videos, follow <a href="alert-effects.html">animation and sound alerts</a>.</p></div>
+<figure class="guide-shot"><a href="images/guides/visual/alert-sounds.webp"><img src="images/guides/visual/alert-sounds.webp" alt="Each alert category has its own sound picker and upload option." loading="lazy" decoding="async"></a><figcaption>Each alert category has its own sound picker and upload option.</figcaption></figure>
+</div><h3>Add the overlay to OBS</h3><ol><li>Copy your configured Multi-Alerts link.</li><li>Add a <strong>Browser Source</strong> in OBS and paste the link into its <strong>URL</strong> field.</li><li>Check the picture and audio in OBS. After changing overlay settings, copy the updated link into OBS.</li></ol>
+<figure class="guide-shot"><a href="images/guides/obs-browser-source-url.png"><img src="images/guides/obs-browser-source-url.png" alt="Paste your overlay link into the OBS Browser Source URL field." loading="lazy" decoding="async"></a><figcaption>Paste your overlay link into the OBS Browser Source URL field.</figcaption></figure>
+<details class="guide-extra"><summary>YouTube subscribers, memberships, and donations</summary><p>Free YouTube subscribers use the <strong>Follow</strong> alert category. Paid memberships use <strong>Subscription</strong>.</p><p>Subscriber alerts need the API connection signed in as the channel owner. They cover public subscriptions and can be delayed or incomplete. See the <a href="event-reference.html#youtube-ws">YouTube event guide</a>.</p><p>Alerts display events supplied by your sources, such as Super Chats and TikTok gifts. An external tipping service needs its own supported connection.</p></details>
+</section>
+<section class="guide-card" id="troubleshooting"><h2>If something does not work</h2>
+<details class="guide-extra"><summary>No command reply</summary><p>Check that the entry is enabled, the command matches, the cooldown has elapsed, and the account can send to that chat. Check source restrictions and message filters. Test with a viewer account.</p></details>
+<details class="guide-extra"><summary>No live alerts</summary><p>Confirm the event reaches Social Stream, then check the overlay's session link and event/platform filters. A preview checks appearance; it does not connect a platform.</p></details>
+<details class="guide-extra"><summary>No sound</summary><p>Check Play alert sound, volume, and the OBS browser source's audio settings. A custom audio URL must play without signing in. In a normal browser, click the overlay if playback is blocked.</p></details>
+<details class="guide-extra"><summary>Repeated replies or sounds</summary><p>Check for duplicate commands, another bot answering the same command, or two alert sources playing the same sound.</p></details>
+</section>
+</div></main>
+<script data-copy-markdown src="js/main.js"></script>
+</body></html>
