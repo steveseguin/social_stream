@@ -1486,7 +1486,9 @@
 				var addedNode = mutation.addedNodes[i];
 				var messageNodes = collectMessageNodes(addedNode);
 				for (var j = 0; j < messageNodes.length; j++) {
-					processMessage(messageNodes[j]);
+					// Let the socket bridge arrive before falling back to the rendered row.
+					// The DOM can update first on the first message after a quiet period.
+					setTimeout(processMessage, 100, messageNodes[j]);
 				}
 			}
 		});
