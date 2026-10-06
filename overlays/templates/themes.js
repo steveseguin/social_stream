@@ -211,7 +211,7 @@
 		{ name: "Stars & stripes", tags: ["country"], values: { bgstyle: "flag", country: "us", flagdark: 0.5, fg: "ffffff", accent: "ffffff", font: "Saira Stencil One", fontsize: 22, upper: true, sep: "★", radius: 6 } }
 	].concat(COUNTRY_PICKS.filter(function (k) { return k !== "us"; }).map(function (code) {
 		var th = SSO.countryTheme(code);
-		return { name: SSO.countryName(code) + " pride", tags: ["country"], values: { bgstyle: "flag", country: code, flagdark: 0.5, fg: "ffffff", accent: th[0] === "#ffffff" ? th[1] : th[0], font: "Teko", fontsize: 28, weight: "600", upper: true, sep: "•", radius: 6, label: code.toUpperCase() } };
+		return { name: SSO.countryName(code) + " pride", tags: ["country"], values: { bgstyle: "flag", country: code, flagdark: 0.5, fg: "ffffff", accent: th[0] === "#ffffff" || th[0] === "#000000" ? th[1] : th[0], font: "Teko", fontsize: 28, weight: "600", upper: true, sep: "•", radius: 6, label: code.toUpperCase() } };
 	})).concat([
 		{ name: "Spooky cobwebs", tags: ["halloween", "spooky"], values: { bg: "0d0614", bgopacity: 0.95, fg: "ff9a3c", accent: "ff7a00", font: "Butcherman", fontsize: 22, weight: "400", deco: "cobweb", sep: "🎃", radius: 4 } },
 		{ name: "Bat flight", tags: ["halloween", "spooky"], values: { bg: "1a0b26", bgstyle: "gradient", bg2: "3b1257", bgopacity: 1, fg: "f3e8ff", accent: "ff7a00", font: "Creepster", fontsize: 24, weight: "400", deco: "bats", sep: "🦇", radius: 999 } },
@@ -223,13 +223,16 @@
 	]));
 	(SSO.get("banner").fields.filter(function (f) { return f.key === "sep"; })[0] || { options: [] }).options.push(["❄", "❄ snowflake"], ["🎃", "🎃 pumpkin"], ["🦇", "🦇 bat"], ["🎉", "🎉 party"]);
 
+	// The countdown sits on top of the flag, so use a pale tint of the flag colour rather than the colour itself.
+	function lightTint(hex) { var n = parseInt(String(hex).replace("#", ""), 16) || 0, mix = function (v) { return Math.round(v + (255 - v) * 0.7); }; return ((1 << 24) + (mix(n >> 16 & 255) << 16) + (mix(n >> 8 & 255) << 8) + mix(n & 255)).toString(16).slice(1); }
+
 	add("screen", [
 		{ name: "Patriot — starting soon", tags: ["country"], values: { backdrop: "flag", country: "us", flagmono: true, title: "STARTING SOON", subtitle: "★  ★  ★", font: "Teko", fontsize: 170, upper: true, dim: 0.2, socials: "twitch:yourname,youtube:@yourname,tiktok:@yourname", minutes: 5 } },
 		{ name: "Patriot — be right back", tags: ["country"], values: { backdrop: "flag", country: "us", flagmono: true, title: "BE RIGHT BACK", subtitle: "★  ★  ★", font: "Teko", fontsize: 170, upper: true, dim: 0.3, minutes: 0, layout: "split", panel: true, socials: "twitch:yourname,youtube:@yourname,discord:discord.gg/yourname", qr: "https://socialstream.ninja" } },
 		{ name: "Patriot — ending", tags: ["country"], values: { backdrop: "flag", country: "us", flagmono: true, title: "THANKS FOR RIDING ALONG", subtitle: "★  ★  ★", font: "Teko", fontsize: 130, upper: true, dim: 0.35, minutes: 0, socials: "twitch:yourname,youtube:@yourname", socialsfade: 10 } }
 	].concat(COUNTRY_PICKS.slice(0, 16).map(function (code) {
 		var th = SSO.countryTheme(code);
-		return { name: SSO.countryName(code) + " — starting soon", tags: ["country"], values: { backdrop: "flag", country: code, title: "Starting soon", subtitle: SSO.countryName(code) + " in the house", font: "Montserrat", fontsize: 130, dim: 0.35, panel: true, accent: th[0] === "#ffffff" ? th[1] : th[0] } };
+		return { name: SSO.countryName(code) + " — starting soon", tags: ["country"], values: { backdrop: "flag", country: code, title: "Starting soon", subtitle: SSO.countryName(code) + " in the house", font: "Montserrat", fontsize: 130, dim: 0.35, panel: true, accent: lightTint(th[0] === "#ffffff" || th[0] === "#000000" ? th[1] : th[0]) } };
 	})).concat([
 		{ name: "Halloween — starting soon", tags: ["halloween", "spooky"], values: { backdrop: "halloween", c1: "12051f", c2: "ff7a00", c3: "6b2fb3", title: "Starting soon...", subtitle: "if you dare", font: "Butcherman", fontsize: 130, fg: "ff9a3c", accent: "ff9a3c", dim: 0, layout: "top" } },
 		{ name: "Halloween — BRB", tags: ["halloween", "spooky"], values: { backdrop: "halloween", c1: "12051f", c2: "ff7a00", c3: "6b2fb3", title: "be right back", subtitle: "don't let the bats bite", font: "Creepster", fontsize: 140, fg: "ffffff", fx: "drip", fx1: "ff7a00", fx3: "6b0000", minutes: 0, dim: 0, layout: "top" } },
@@ -254,8 +257,8 @@
 	]);
 
 	add("socialcard", [
-		{ name: "Patriot card", tags: ["country"], values: { flagbg: "us", flagmono: true, bg: "000000", bgopacity: 0.55, fg: "ffffff", accent: "ffffff", font: "Teko", fontsize: 24, title: "★ FOLLOW THE RIDE ★", rowbg: "ffffff", rowopacity: 0.1, icons: "mono", border: "ffffff40", socials: "twitch:yourname,youtube:@yourname,tiktok:@yourname,instagram:@yourname,discord:discord.gg/yourname" } },
-		{ name: "Canada card", tags: ["country"], values: { flagbg: "ca", bg: "000000", bgopacity: 0.55, title: "Find me online 🍁" } },
+		{ name: "Patriot card", tags: ["country"], values: { flagbg: "us", flagmono: true, bg: "000000", bgopacity: 0.85, fg: "ffffff", accent: "ffffff", font: "Teko", fontsize: 18, title: "★ FOLLOW THE RIDE ★", rowbg: "ffffff", rowopacity: 0.1, icons: "mono", border: "ffffff40", socials: "twitch:yourname,youtube:@yourname,tiktok:@yourname,instagram:@yourname,discord:discord.gg/yourname" } },
+		{ name: "Canada card", tags: ["country"], values: { flagbg: "ca", bg: "000000", bgopacity: 0.85, title: "Find me online 🍁" } },
 		{ name: "Halloween card", tags: ["halloween"], values: { bg: "12051f", bgopacity: 0.94, fg: "ffe8d1", accent: "ff7a00", font: "Creepster", title: "Haunt me here", rowbg: "ff7a00", rowopacity: 0.12, border: "ff7a0055" } },
 		{ name: "Christmas card", tags: ["christmas"], values: { bg: "0b3d2e", bgopacity: 0.95, fg: "ffffff", accent: "ffd166", font: "Mountains of Christmas", fontsize: 22, title: "Season's greetings ❄", rowbg: "ffffff", rowopacity: 0.08, border: "ffd16666" } }
 	]);

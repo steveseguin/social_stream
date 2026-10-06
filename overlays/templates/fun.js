@@ -185,10 +185,10 @@
 		render: function (root, c) {
 			var list = String(c.emoji).split(/\s+/).filter(Boolean);
 			if (!list.length) { return; }
-			var name = "fz" + Math.round(Math.random() * 1e6);
+			var name = "sso-float-" + c.dir;
 			var h = window.innerHeight + 100;
 			var dir = c.dir === "down" ? 1 : -1;
-			SSO.addStyle("@keyframes " + name + "{0%{transform:translate(0,0) rotate(0);opacity:0}10%{opacity:1}25%{transform:translate(var(--sw),calc(" + (dir * 0.25) + " * var(--h))) rotate(8deg)}50%{transform:translate(calc(var(--sw) * -1),calc(" + (dir * 0.5) + " * var(--h))) rotate(-8deg)}75%{transform:translate(var(--sw),calc(" + (dir * 0.75) + " * var(--h))) rotate(6deg)}90%{opacity:1}100%{transform:translate(0,calc(" + dir + " * var(--h))) rotate(0);opacity:0}}");
+			SSO.addStyle("@keyframes " + name + "{0%{transform:translate(0,0) rotate(0);opacity:0}10%{opacity:1}25%{transform:translate(var(--sw),calc(" + (dir * 0.25) + " * var(--h))) rotate(8deg)}50%{transform:translate(calc(var(--sw) * -1),calc(" + (dir * 0.5) + " * var(--h))) rotate(-8deg)}75%{transform:translate(var(--sw),calc(" + (dir * 0.75) + " * var(--h))) rotate(6deg)}90%{opacity:1}100%{transform:translate(0,calc(" + dir + " * var(--h))) rotate(0);opacity:0}}", name);
 			setInterval(function () {
 				if (root.childElementCount > 200) { return; }
 				var el = document.createElement("div");

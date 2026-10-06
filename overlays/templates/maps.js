@@ -105,6 +105,8 @@
 		].join("\n"),
 		render: function (root, c) {
 			SSO.loadFont(c.font);
+			var alive = true;
+			SSO.onCleanup(root, function () { alive = false; });
 			var theme = THEMES[c.theme] || THEMES.atlas;
 			var el = document.createElement("div");
 			el.className = "dn";
@@ -124,11 +126,14 @@
 				}).catch(function () { regions = {}; });
 			}
 			fetch(SSO.assetBase() + "thirdparty/world-110m.json").then(function (r) { return r.json(); }).then(function (world) {
+				if (!alive) { return; }
 				var land = window.topojson.feature(world, world.objects.land);
 				countries = window.topojson.feature(world, world.objects.countries).features;
 				draw(land);
 				if (c.look === "continents") { var waitRegions = setInterval(function () { if (regions) { clearInterval(waitRegions); draw(land); } }, 200); }
-				window.addEventListener("resize", function () { draw(land); });
+				function resize() { draw(land); }
+				window.addEventListener("resize", resize);
+				SSO.onCleanup(root, function () { window.removeEventListener("resize", resize); });
 				setInterval(function () { draw(land); }, 60000);
 				setInterval(function () { updateTimes(); }, 1000);
 			}).catch(function () {
@@ -145,7 +150,8 @@
 				} else {
 					proj = (c.proj === "flat" ? d3.geoEquirectangular() : d3.geoNaturalEarth1()).rotate([-c.center, 0]).fitExtent([[6, 6], [w - 6, h - 6]], { type: "Sphere" });
 				}
-				var path = d3.geoPath(proj);
+				// Shapes entirely on the far side of the globe project to null; draw them as empty paths.
+				var geoPathFn = d3.geoPath(proj), path = function (o) { return geoPathFn(o) || ""; };
 				var anti = [sun[1] + 180, -sun[0]];
 				var night = function (r) { return d3.geoCircle().center(anti).radius(r)(); };
 				var svg = '<svg viewBox="0 0 ' + w + " " + h + '" xmlns="http://www.w3.org/2000/svg">' +

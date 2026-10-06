@@ -227,6 +227,20 @@
 		],
 		css: CSS,
 		render: function (root, c, ctx) {
+			var alive = true, pending = [];
+			function later(fn, ms) {
+				var id = window.setTimeout(function () {
+					var at = pending.indexOf(id);
+					if (at !== -1) { pending.splice(at, 1); }
+					if (alive) { fn(); }
+				}, ms);
+				pending.push(id);
+				return id;
+			}
+			SSO.onCleanup(root, function () {
+				alive = false;
+				pending.forEach(function (id) { clearTimeout(id); });
+			});
 			SSO.loadFont(c.font);
 			var stage = document.createElement("div");
 			stage.className = "pets-stage";
@@ -254,6 +268,7 @@
 				return { el: el, slot: (i + 1) / (all.length + 1), busy: false };
 			});
 			function placeTags() {
+				if (!alive) { return; }
 				tags.forEach(function (t) { t.el.style.left = (t.slot * W() - t.el.offsetWidth / 2) + "px"; });
 			}
 			placeTags();
@@ -263,11 +278,11 @@
 				if (t.busy) { if (after) { after(); } return; }
 				t.busy = true;
 				t.el.className = "ptag " + (mode === "chew" ? "chewed" : "hit");
-				setTimeout(function () {
+				later(function () {
 					t.el.className = "ptag fall";
-					setTimeout(function () {
+					later(function () {
 						t.el.className = "ptag back";
-						setTimeout(function () { t.el.className = "ptag"; t.busy = false; }, 700);
+						later(function () { t.el.className = "ptag"; t.busy = false; }, 700);
 					}, preview ? 3000 : 9000);
 					if (after) { after(); }
 				}, mode === "chew" ? 2200 : 800);
@@ -338,9 +353,9 @@
 				p.bubble.textContent = text;
 				p.bubble.className = "pet-bubble on";
 				clearTimeout(p.sayT);
-				p.sayT = setTimeout(function () { p.bubble.className = "pet-bubble"; }, ms || 2200);
+				p.sayT = later(function () { p.bubble.className = "pet-bubble"; }, ms || 2200);
 			}
-			function wait(ms, fn) { setTimeout(fn, ms); }
+			function wait(ms, fn) { later(fn, ms); }
 			function face(p, targetX) { p.flip.className = "pet-flip" + (targetX < p.x ? " left" : ""); }
 			function walkTo(p, targetX, fast, done) {
 				targetX = SSO.clamp(targetX, 0, W() - c.size);
@@ -351,6 +366,7 @@
 				var start = null, from = p.x, dist = Math.abs(targetX - from);
 				var dur = Math.max(200, dist / speed * 1000);
 				function step(t) {
+					if (!alive) { return; }
 					if (start === null) { start = t; }
 					var k = Math.min(1, (t - start) / dur);
 					p.x = from + (targetX - from) * k;
@@ -467,21 +483,23 @@
 				setInterval(function () { wakeAll(""); }, everyMs);
 			}
 			wait(preview ? 1500 : 4000, function () { if (!c.sleepy) { wakeAll(""); } else if (preview) { wakeAll(""); } });
-			if (c.onscene) { SSO.obs.on("obsSceneChanged", function () { wakeAll(Math.random() < 0.5 ? "!" : "?"); }); }
-			SSO.obs.on("obsSourceVisibleChanged", function (d) { if (d && d.visible) { wakeAll("!"); } });
+			if (c.onscene) { SSO.onCleanup(root, SSO.obs.on("obsSceneChanged", function () { wakeAll(Math.random() < 0.5 ? "!" : "?"); })); }
+			SSO.onCleanup(root, SSO.obs.on("obsSourceVisibleChanged", function (d) { if (d && d.visible) { wakeAll("!"); } }));
 			if (c.onlive) {
-				SSO.obs.on("obsStreamingStarted", function () {
+				SSO.onCleanup(root, SSO.obs.on("obsStreamingStarted", function () {
 					pets.forEach(function (p) { pose(p, "leap happy"); say(p, c.livetext, 3500); });
 					wait(900, function () { wakeAll(""); });
-				});
+				}));
 			}
-			SSO.obs.on("obsStreamingStopped", function () { pets.forEach(function (p) { say(p, "bye! 👋", 2500); }); });
-			SSO.obs.on("obsRecordingStarted", function () { pets.forEach(function (p) { say(p, "📹", 1800); }); });
-			SSO.obs.on("obsReplaybufferSaved", function () { pets.forEach(function (p) { say(p, "clip it! ✂️", 2000); }); });
-			window.addEventListener("resize", function () {
+			SSO.onCleanup(root, SSO.obs.on("obsStreamingStopped", function () { pets.forEach(function (p) { say(p, "bye! 👋", 2500); }); }));
+			SSO.onCleanup(root, SSO.obs.on("obsRecordingStarted", function () { pets.forEach(function (p) { say(p, "📹", 1800); }); }));
+			SSO.onCleanup(root, SSO.obs.on("obsReplaybufferSaved", function () { pets.forEach(function (p) { say(p, "clip it! ✂️", 2000); }); }));
+			function resize() {
 				placeTags();
 				line.innerHTML = lineSVG(c.line, c.linecolor, W());
-			});
+			}
+			window.addEventListener("resize", resize);
+			SSO.onCleanup(root, function () { window.removeEventListener("resize", resize); });
 		}
 	});
 })();

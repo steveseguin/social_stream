@@ -358,7 +358,7 @@
 		],
 		css: [
 			".mc{display:flex;align-items:center;padding:.6em .8em;box-sizing:border-box;max-width:100%;}",
-			".mc.street{background:#0c0c0c;color:#fff;box-shadow:.12em .12em 0 var(--acc);}",
+			".mc.street{background:#0c0c0c;color:#fff;box-shadow:0 10px 26px rgba(0,0,0,.45);}",
 			".mc.clean{background:#fff;color:#1a1a1a;border-radius:18px;box-shadow:0 14px 36px rgba(0,0,0,.3);}",
 			".mc.neon{background:rgba(6,4,18,.85);color:#fff;border-radius:16px;box-shadow:0 0 0 2px var(--acc),0 0 26px var(--acc);}",
 			".mc.sticker{background:#fff;color:#3a2a33;border-radius:26px;box-shadow:0 0 0 6px #fff,0 0 0 8px rgba(0,0,0,.1),0 12px 30px rgba(0,0,0,.25);transform:rotate(-1.5deg);}",

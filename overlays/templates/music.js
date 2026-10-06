@@ -612,7 +612,7 @@
 			".ru.club{padding:1em 1.3em;border-radius:6px;background:#0a0a0c;color:#fff;border-left:0;box-shadow:inset 0 0 0 1px #26262c,0 12px 30px rgba(0,0,0,.45);}",
 			".ru.club h3{text-transform:uppercase;letter-spacing:.2em;font-size:1.05em;color:var(--acc);}",
 			".ru.kawaii{padding:1em 1.3em;border-radius:28px;background:#fff0f6;color:#6b3a5b;border:4px dashed var(--acc);}",
-			".ru.punk{padding:1em 1.3em;background:#111;color:#fff;transform:rotate(1deg);box-shadow:6px 6px 0 var(--acc);}",
+			".ru.punk{padding:1em 1.3em;background:#111;color:#fff;transform:rotate(1deg);box-shadow:6px 6px 0 rgba(0,0,0,.6);}",
 			".ru.punk h3{background:var(--acc);color:#111;display:inline-block;padding:.05em .4em;transform:rotate(-2deg);}",
 			".ru-pill{display:flex;align-items:center;padding:.5em 1.1em;border-radius:999px;white-space:nowrap;}",
 			".ru-pill b{margin-right:.7em;font-size:.65em;letter-spacing:.2em;text-transform:uppercase;color:var(--acc);}",

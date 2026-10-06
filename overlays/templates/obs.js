@@ -201,17 +201,17 @@
 			if (ctx && ctx.preview) { set("live", true); set("rec", true); }
 			else { set("live", false); }
 			SSO.obs.status(function (st) { if (st) { set("live", !!st.streaming); set("rec", !!st.recording); } });
-			SSO.obs.on("obsStreamingStarted", function () { set("live", true); });
-			SSO.obs.on("obsStreamingStopped", function () { set("live", false); });
-			SSO.obs.on("obsRecordingStarted", function () { set("rec", true); });
-			SSO.obs.on("obsRecordingStopped", function () { set("rec", false); });
-			SSO.obs.on("obsReplaybufferSaved", function () {
+			SSO.onCleanup(root, SSO.obs.on("obsStreamingStarted", function () { set("live", true); }));
+			SSO.onCleanup(root, SSO.obs.on("obsStreamingStopped", function () { set("live", false); }));
+			SSO.onCleanup(root, SSO.obs.on("obsRecordingStarted", function () { set("rec", true); }));
+			SSO.onCleanup(root, SSO.obs.on("obsRecordingStopped", function () { set("rec", false); }));
+			SSO.onCleanup(root, SSO.obs.on("obsReplaybufferSaved", function () {
 				if (!c.showreplay) { return; }
 				var b = el.querySelector(".replay");
 				b.className = "st-b replay";
 				void b.offsetWidth;
 				b.className = "st-b replay flash";
-			});
+			}));
 		}
 	});
 
@@ -247,11 +247,14 @@
 			var name = el.querySelector(".sn-name");
 			var map = {};
 			SSO.lines(c.names).forEach(function (l) { var b = l.split("|"); if (b[1]) { map[b[0].trim().toLowerCase()] = b[1].trim(); } });
-			var hideT;
+			var hideT, showT, alive = true;
+			SSO.onCleanup(root, function () { alive = false; clearTimeout(hideT); clearTimeout(showT); });
 			function show(scene) {
+				if (!alive) { return; }
+				clearTimeout(showT);
 				var text = map[String(scene).toLowerCase()] || scene;
 				el.className = "sn a-" + c.anim + " out";
-				setTimeout(function () {
+				showT = setTimeout(function () {
 					name.className = "sn-name";
 					name.textContent = text;
 					if (c.fx) { SSO.applyFX(name, c.fx, c.fx1, c.fx2, c.fx3); }
@@ -260,7 +263,7 @@
 				clearTimeout(hideT);
 				if (c.stay > 0) { hideT = setTimeout(function () { el.className = "sn a-" + c.anim + " out"; }, c.stay * 1000 + 250); }
 			}
-			SSO.obs.on("obsSceneChanged", function (d) { if (d && d.name) { show(d.name); } });
+			SSO.onCleanup(root, SSO.obs.on("obsSceneChanged", function (d) { if (d && d.name) { show(d.name); } }));
 			if (ctx && ctx.preview) {
 				var demo = ["Just Chatting", "Gameplay", "Be Right Back"];
 				var i = 0;
@@ -325,8 +328,8 @@
 			root.appendChild(el);
 			var preview = ctx && ctx.preview;
 			var session = SSO.session("grow:" + c.key, c.gap, { preview: preview, reset: ctx && ctx.params && ctx.params.has("reset") });
-			SSO.obs.on("obsStreamingStarted", function () { session.resume(); });
-			SSO.obs.on("obsStreamingStopped", function () { session.stopped(); });
+			SSO.onCleanup(root, SSO.obs.on("obsStreamingStarted", function () { session.resume(); }));
+			SSO.onCleanup(root, SSO.obs.on("obsStreamingStopped", function () { session.stopped(); }));
 			var rnd = SSO.seeded(c.kind + c.key);
 			var W = el.clientWidth || window.innerWidth;
 			var H = el.clientHeight || window.innerHeight;
@@ -450,7 +453,7 @@
 			{ key: "palette", label: "Colours", type: "select", group: "Look", default: "sunset", options: Object.keys(PALETTES).map(function (k) { return [k, k.charAt(0).toUpperCase() + k.slice(1)]; }) },
 			{ key: "minutes", label: "Minutes for one full colour cycle", type: "number", group: "Look", default: 30, min: 0.5, max: 1440, step: 0.5 },
 			{ key: "strength", label: "Strength", type: "range", group: "Look", default: 0.5, min: 0.05, max: 1, step: 0.05 },
-			{ key: "size", label: "Glow size", type: "range", group: "Look", default: 160, min: 10, max: 800, step: 5 }
+			{ key: "size", label: "Glow size", type: "range", group: "Look", default: 160, min: 1, max: 800, step: 1 }
 		],
 		presets: [
 			{ name: "Sunset edges", tags: ["cozy", "simple"], values: {} },
