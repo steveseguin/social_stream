@@ -21,6 +21,16 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.1.0 | 0.4.2 | Versioned responses, request and operation IDs, SSE status events, token-file and stored credentials, visible-app controls, expanded source/settings discovery, and version-aware MCP tools |
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
+## Unreleased Whatnot regional show links
+
+Minimum supported build: the SSApp development checkout based on 0.4.33 containing
+the Whatnot regional-link update; no released minimum has been assigned.
+Whatnot `addSource` and source updates accept regional show URLs such as
+`https://www.whatnot.com/en-GB/live/UUID`, including regional dashboard show URLs.
+The chat-only page requires the corresponding updated Social Stream page sources.
+On older builds, supply the show's UUID as `videoId` or use `/live/UUID`.
+The control API and MCP command schemas are unchanged.
+
 ## Unreleased YouTube default mode
 
 Minimum supported build: the SSApp development checkout based on 0.4.32 containing

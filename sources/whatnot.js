@@ -151,13 +151,13 @@
 		if (!messageElement) {
 			return null;
 		}
-		var directDivChildren = Array.from(messageElement.children || []).filter(function (child) {
-			return child && child.nodeType === 1 && child.tagName && child.tagName.toLowerCase() === "div";
+		var contentChildren = Array.from(messageElement.children || []).filter(function (child) {
+			return child && child.nodeType === 1 && /^(div|button)$/i.test(child.tagName || "");
 		});
-		if (directDivChildren.length) {
-			return directDivChildren[directDivChildren.length - 1];
+		if (contentChildren.length) {
+			return contentChildren[contentChildren.length - 1];
 		}
-		var linked = messageElement.querySelector("a + div");
+		var linked = messageElement.querySelector("a + div, a + button");
 		return linked || null;
 	}
 
