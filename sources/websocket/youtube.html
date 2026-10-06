@@ -692,6 +692,8 @@ try {
 	var richChatInnertubeContext = null;
 	var richChatFetchPromise = null;
 	var richChatLastFetchTime = 0;
+	var richChatSyncTimeout = null;
+	const youtubeApiMessageIds = new Map();
 	var richMessageById = new Map();
 	var richMessageByFallbackKey = new Map();
 	var richMessageCacheOrder = [];
@@ -1494,6 +1496,12 @@ function enableBackgroundKeepAlive() {
 	}
 
 	function resetRichChatCache() {
+		if (richChatSyncTimeout) {
+			clearTimeout(richChatSyncTimeout);
+			activeTimeouts.delete(richChatSyncTimeout);
+		}
+		richChatSyncTimeout = null;
+		youtubeApiMessageIds.clear();
 		richChatContinuation = null;
 		richChatContinuationVideoId = '';
 		richChatApiKey = '';
@@ -1623,6 +1631,16 @@ function enableBackgroundKeepAlive() {
 	function collectRichMessagesFromNode(node) {
 		if (!node || typeof node !== 'object') {
 			return;
+		}
+		const removal = node.removeChatItemAction || node.markChatItemAsDeletedAction;
+		if (removal && removal.targetItemId) {
+			const key = getYouTubeMessageKey(removal.targetItemId);
+			const apiId = youtubeApiMessageIds.get(key);
+			if (apiId) {
+				forwardYouTubeDelete({ type: youtubeShorts ? 'youtubeshorts' : 'youtube', meta: { messageId: apiId } });
+			} else {
+				rememberDeletedYouTubeMessage(removal.targetItemId);
+			}
 		}
 		const renderer = node.liveChatTextMessageRenderer || node.liveChatPaidMessageRenderer;
 		if (renderer) {
@@ -1904,6 +1922,17 @@ function enableBackgroundKeepAlive() {
 			} finally {
 				richChatLastFetchTime = Date.now();
 				richChatFetchPromise = null;
+				// Deletions can arrive while the API chat stream is otherwise quiet.
+				if (liveChatId && richChatContinuationVideoId === expectedVideoId) {
+					if (richChatSyncTimeout) {
+						clearTimeout(richChatSyncTimeout);
+						activeTimeouts.delete(richChatSyncTimeout);
+					}
+					richChatSyncTimeout = setTrackedTimeout(function() {
+						richChatSyncTimeout = null;
+						if (liveChatId && richChatContinuationVideoId === expectedVideoId) syncYouTubeRichChatData(expectedVideoId);
+					}, 5000, !isPageVisible);
+				}
 			}
 		})();
 		return richChatFetchPromise;
@@ -3970,6 +3999,7 @@ function enableBackgroundKeepAlive() {
 		liveChatStreamReadBuffer = '';
 		lastPollingTime = Date.now();
 		updateLiveChatStreamIndicator('streaming');
+		syncYouTubeRichChatData((currentStream && currentStream.id) || videoId);
 		readLiveChatStream(controller, token);
 		return true;
 	}
@@ -3979,6 +4009,7 @@ function enableBackgroundKeepAlive() {
 			return false;
 		}
 		liveChatPollingActive = true;
+		syncYouTubeRichChatData((currentStream && currentStream.id) || videoId);
 		try {
 			const token = getStoredToken();
 			if (!token) {
@@ -4201,10 +4232,24 @@ function enableBackgroundKeepAlive() {
 	const deletedYouTubeMessageIds = new Set();
 	const pendingYouTubeMessages = new Set();
 	const cancelledYouTubeMessages = new WeakSet();
+	function getYouTubeMessageKey(id) {
+		id = String(id || '');
+		try {
+			const bytes = atob(id.replace(/^LCC\./, '').replace(/-/g, '+').replace(/_/g, '/'));
+			// Web chat and Data API IDs wrap the same client ID in fields 1 and 2.
+			if ((bytes.charCodeAt(0) === 10 || bytes.charCodeAt(0) === 18) &&
+				bytes.charCodeAt(1) === bytes.length - 2 && bytes.charCodeAt(2) === 10 &&
+				bytes.charCodeAt(3) === bytes.length - 4) return bytes.slice(4);
+		} catch (_) {}
+		return id;
+	}
+	function rememberDeletedYouTubeMessage(id) {
+		deletedYouTubeMessageIds.add(getYouTubeMessageKey(id));
+		if (deletedYouTubeMessageIds.size > 2000) deletedYouTubeMessageIds.delete(deletedYouTubeMessageIds.values().next().value);
+	}
 	function forwardYouTubeDelete(data) {
 		if (data.meta && data.meta.messageId) {
-			deletedYouTubeMessageIds.add(String(data.meta.messageId));
-			if (deletedYouTubeMessageIds.size > 2000) deletedYouTubeMessageIds.delete(deletedYouTubeMessageIds.values().next().value);
+			rememberDeletedYouTubeMessage(data.meta.messageId);
 		}
 		function matchesMessage(message) {
 			return data.meta && data.meta.messageId
@@ -4215,6 +4260,11 @@ function enableBackgroundKeepAlive() {
 			if (matchesMessage(message)) cancelledYouTubeMessages.add(message);
 		});
 		messageQueue = messageQueue.filter(message => !matchesMessage(message));
+		if (data.meta && data.meta.messageId) {
+			document.querySelectorAll('#textarea [data-youtube-message-id]').forEach(function(row) {
+				if (row.dataset.youtubeMessageId === String(data.meta.messageId)) row.remove();
+			});
+		}
 		window.dispatchEvent(new CustomEvent('youtubeDelete', { detail: data, bubbles: true }));
 	}
 
@@ -4279,6 +4329,11 @@ function enableBackgroundKeepAlive() {
 		document.getElementById('textarea').setAttribute('data-connected', 'true');
 
 		const normalizedItems = Array.isArray(data.items) ? data.items.map(normalizeLiveChatMessageItem) : [];
+		normalizedItems.forEach(function(item) {
+			if (!item || !item.id) return;
+			youtubeApiMessageIds.set(getYouTubeMessageKey(item.id), item.id);
+			if (youtubeApiMessageIds.size > 5000) youtubeApiMessageIds.delete(youtubeApiMessageIds.keys().next().value);
+		});
 		const richChatVideoId = (currentStream && currentStream.id) || videoId;
 		if (normalizedItems.length > 0 && richChatVideoId) {
 			const richChatPromise = syncYouTubeRichChatData(richChatVideoId).catch(function(error) {
@@ -6600,7 +6655,7 @@ function enableBackgroundKeepAlive() {
 	var youtubeShorts = getInitialYouTubeShortsMode();
 
 	function processMessage(messageData, options = {}) {
-		if (messageData.messageId && deletedYouTubeMessageIds.has(String(messageData.messageId))) return;
+		if (messageData.messageId && deletedYouTubeMessageIds.has(getYouTubeMessageKey(messageData.messageId))) return;
 		const { suppressRelay = false } = options;
 		try {
 			// Apply member chat only filter if enabled
@@ -6689,6 +6744,7 @@ function enableBackgroundKeepAlive() {
 					if (textarea) {
 						const shouldStick = shouldStickToBottom(textarea);
 						var span = document.createElement("div");
+						if (messageData.messageId) span.dataset.youtubeMessageId = messageData.messageId;
 						const badgeHtml = renderChatBadgesForPage(chatbadges);
 						
 						span.innerHTML = `${badgeHtml}<strong>${safeAuthorName}</strong>: `;

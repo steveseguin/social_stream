@@ -320,6 +320,29 @@
 		};
 	}
 
+	const deletedYouTubeMessageIds = new Set();
+	document.addEventListener("yt-action", function (event) {
+		try {
+			var detail = event.detail;
+			if (!detail || detail.actionName !== "yt-live-chat-actions" || !detail.args || !Array.isArray(detail.args[0])) return;
+			detail.args[0].forEach(function (action) {
+				var removal = action.removeChatItemAction || action.markChatItemAsDeletedAction;
+				var id = removal && removal.targetItemId;
+				if (!id || deletedYouTubeMessageIds.has(id)) return;
+				deletedYouTubeMessageIds.add(id);
+				if (deletedYouTubeMessageIds.size > 2000) deletedYouTubeMessageIds.delete(deletedYouTubeMessageIds.values().next().value);
+				var row = document.getElementById(id);
+				if (row) row.deleted = true;
+				// Only an explicit YouTube moderation action deletes a destination row.
+				// Normal list pruning also removes DOM nodes and must not delete chat.
+				chrome.runtime.sendMessage(chrome.runtime.id, { "delete": {
+					type: youtubeShorts ? "youtubeshorts" : "youtube",
+					meta: { messageId: id }
+				}}, function () {});
+			});
+		} catch (e) {}
+	}, true);
+
 	function setupDeletionObserver(target) {
 	  const deletionObserver = new MutationObserver((mutations) => {
 		mutations.forEach((mutation) => {
@@ -357,6 +380,7 @@
 	}
 
 	function sendYouTubeMessage(data, ele) {
+		if (ele.deleted || deletedYouTubeMessageIds.has(ele.id)) return;
 		const requestId = messageReplyPrefix + (++messageReplyCounter);
 		const request = { message: data };
 		if (window.ninjafy) request.youtubeMessageRequestId = requestId;
