@@ -12273,10 +12273,14 @@
 					}
 
 					if (data.chatmessage) {
-						data.chatmessage = data.chatmessage
-							.replace(/[\r\n]+/g, "")
-							.replace(/\s+/g, " ")
-							.trim();
+						if (data.type === "picarto" && data.textonly) {
+							data.chatmessage = data.chatmessage.replace(/[^\S\r\n]+/g, " ").trim();
+						} else {
+							data.chatmessage = data.chatmessage
+								.replace(/[\r\n]+/g, "")
+								.replace(/\s+/g, " ")
+								.trim();
+						}
 					}
 					
 					var chatmessage = data.chatmessage || "";
@@ -12327,6 +12331,9 @@
 					if (data.textonly) {
 						// Missing legacy flags retain HTML mode; a true flag must preserve literal characters.
 						chatmessage = escapeHtml(chatmessage); // Encode the display copy once; keep the stored/transmitted plain body unchanged.
+						if (data.type === "picarto") {
+							chatmessage = chatmessage.replace(/\r\n|\r|\n/g, "<br>");
+						}
 					}
 
 					if (largeavatar && data.chatname && data.type && avatars) {

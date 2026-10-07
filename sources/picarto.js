@@ -139,7 +139,11 @@ function pushMessage(data){
 		try{
 			 // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			 if (settings.textonlymode){
-				chatmessage = escapeHtml(content.querySelector("[class*='Message__StyledSpan']").textContent);
+				var plainMessage = messageElement.cloneNode(true);
+				plainMessage.querySelectorAll("br").forEach(function (br) {
+					br.replaceWith(document.createTextNode("\n"));
+				});
+				chatmessage = plainMessage.textContent;
 			 } else {
 				 
 				if (content.querySelector("[class*='Message__StyledSpan']").querySelector("img")){
@@ -149,6 +153,8 @@ function pushMessage(data){
 				content.querySelector("[class*='Message__StyledSpan']").childNodes.forEach(ele2=>{
 					if (ele2.nodeType == Node.TEXT_NODE){
 						chatmessage += escapeHtml(ele2.textContent);
+					} else if (ele2.nodeName === "BR"){
+						chatmessage += "<br>";
 					} else if (ele2.querySelector("img")){
 						chatmessage += "<img src='"+ele2.querySelector("img").src+"'/>";
 					} else {
