@@ -1,8 +1,40 @@
 (function () {
 	var settings = {};
 	var messageHistory = [];
-	var maxMessageHistory = 200;
+	var maxMessageHistory = 5000;
 	var started = false;
+	var observedChat = null;
+	var chatObserver = null;
+	var chatPath = "";
+	var isExtensionOn = true;
+	var viewerRequest = null;
+
+	function viewerChannel() {
+		if (!/^(www\.)?goodgame\.ru$/.test(location.hostname)) { return ""; }
+		var match = location.pathname.match(/^\/(?:channel\/)?([^/]+)\/chat\/?$/);
+		return match ? match[1] : "";
+	}
+
+	function checkViewers() {
+		var channel = viewerChannel();
+		if (!channel || viewerRequest || !isExtensionOn || !(settings.showviewercount || settings.hypemode)) { return; }
+		var xhr = new XMLHttpRequest();
+		viewerRequest = xhr;
+		xhr.open("GET", "/api/4/streams/" + channel);
+		xhr.timeout = 10000;
+		xhr.onload = function () {
+			if (xhr.status !== 200 || channel !== viewerChannel() || !isExtensionOn || !(settings.showviewercount || settings.hypemode)) { return; }
+			try {
+				var stream = JSON.parse(xhr.responseText);
+				var count = stream.viewers;
+				if (typeof stream.key !== "string" || stream.key.toLowerCase() !== decodeURIComponent(channel).toLowerCase()) { return; }
+				if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 0) { return; }
+				pushMessage({ type: "goodgame", event: "viewer_update", meta: count });
+			} catch (e) {}
+		};
+		xhr.onloadend = function () { if (viewerRequest === xhr) { viewerRequest = null; } };
+		xhr.send();
+	}
 
 	function hasChromeRuntime() {
 		return typeof chrome !== "undefined" && chrome && chrome.runtime && chrome.runtime.id;
@@ -147,6 +179,8 @@
 	}
 
 	function buildMessageKey(element, name, msg, chatimg) {
+		var id = element.getAttribute("data-ssn-goodgame-id");
+		if (id) { return location.pathname + ":" + id; }
 		var tooltip = "";
 		try {
 			tooltip = element.getAttribute("tooltip") || "";
@@ -170,7 +204,16 @@
 	}
 
 	function processMessage(element) {
-		if (!element || !element.isConnected) {
+		if (!viewerChannel() || !element || !element.isConnected || element.skip || element.classList.contains("deleted")) {
+			return;
+		}
+		// The packaged page bridge supplies IDs for Angular rows. Wait for it before
+		// using a text key, which cannot distinguish identical messages in one second.
+		if (element.hasAttribute("ng-repeat") && !element.hasAttribute("data-ssn-goodgame-id") && !element.ssnIdWaited) {
+			if (!element.ssnIdPending) {
+				element.ssnIdPending = true;
+				setTimeout(function () { element.ssnIdWaited = true; processMessage(element); }, 1000);
+			}
 			return;
 		}
 
@@ -188,8 +231,10 @@
 
 		var key = buildMessageKey(element, name, msg, chatimg);
 		if (hasSeenMessage(key)) {
+			element.skip = true;
 			return;
 		}
+		element.skip = true;
 		rememberMessage(key);
 
 		var data = {};
@@ -206,6 +251,8 @@
 		// Wire contract: textonly=true means a literal chatmessage string with no app-added HTML; false means HTML for the normal relay sanitization path.
 		data.textonly = settings.textonlymode || false;
 		data.type = "goodgame";
+		var nativeId = element.getAttribute("data-ssn-goodgame-id");
+		if (nativeId) { data.meta = { messageId: nativeId }; }
 
 		pushMessage(data);
 	}
@@ -233,6 +280,9 @@
 
 		var onMutationsObserved = function (mutations) {
 			mutations.forEach(function (mutation) {
+				var parent = mutation.target.nodeType === 1 ? mutation.target : mutation.target.parentElement;
+				var row = parent && parent.closest(".message-block");
+				if (row) { processMessage(row); }
 				if (!mutation.addedNodes.length) {
 					return;
 				}
@@ -247,7 +297,6 @@
 							if (node.skip) {
 								continue;
 							}
-							node.skip = true;
 							processMessage(node);
 							continue;
 						}
@@ -257,7 +306,6 @@
 							if (nested.skip) {
 								return;
 							}
-							nested.skip = true;
 							processMessage(nested);
 						});
 					} catch (e) {}
@@ -266,22 +314,35 @@
 		};
 
 		var observer = new (window.MutationObserver || window.WebKitMutationObserver)(onMutationsObserved);
-		observer.observe(target, { childList: true, subtree: true });
+		observer.observe(target, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["data-ssn-goodgame-id"] });
+		return observer;
 	}
 
 	function start() {
-		if (started) {
-			return;
+		if (chatPath !== location.pathname) {
+			chatPath = location.pathname;
+			started = false;
+			messageHistory = [];
+			if (chatObserver) { chatObserver.disconnect(); }
+			chatObserver = null;
+			observedChat = null;
 		}
-
-		var container = document.querySelector(".chat-section");
+		var container = viewerChannel() ? document.querySelector(".chat-section") : null;
+		if (container === observedChat) { return; }
+		if (chatObserver) { chatObserver.disconnect(); }
+		chatObserver = null;
+		observedChat = container;
 		if (!container) {
 			return;
 		}
 
+		if (!started) {
+			markExistingMessages(container);
+		} else {
+			container.querySelectorAll(".message-block").forEach(processMessage);
+		}
 		started = true;
-		markExistingMessages(container);
-		onElementInserted(container);
+		chatObserver = onElementInserted(container);
 	}
 
 	if (hasChromeRuntime()) {
@@ -293,6 +354,8 @@
 			if ("settings" in response) {
 				settings = response.settings;
 			}
+			if ("state" in response) { isExtensionOn = response.state; }
+			checkViewers();
 		});
 
 		chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -312,6 +375,14 @@
 				if (typeof request === "object" && request) {
 					if ("settings" in request) {
 						settings = request.settings;
+						if ("state" in request) { isExtensionOn = request.state; }
+						checkViewers();
+						sendResponse(true);
+						return;
+					}
+					if ("state" in request) {
+						isExtensionOn = request.state;
+						checkViewers();
 						sendResponse(true);
 						return;
 					}
@@ -324,4 +395,5 @@
 	console.log("social stream injected");
 
 	setInterval(start, 2000);
+	setInterval(checkViewers, 30000);
 })();

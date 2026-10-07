@@ -2666,8 +2666,32 @@
 		return { hasEventIndicator, join, share, follow, like };
 	}
 
+	var deletedTikTokMessageIds = new Set();
+	document.addEventListener('ssn-tiktok-delete', function(event) {
+		try {
+			var ids = JSON.parse(event.detail);
+			if (!Array.isArray(ids)) return;
+			ids.forEach(function(id) {
+				if (typeof id !== 'string' || !/^\d{1,30}$/.test(id) || deletedTikTokMessageIds.has(id)) return;
+				deletedTikTokMessageIds.add(id);
+				if (deletedTikTokMessageIds.size > 5000) deletedTikTokMessageIds.delete(deletedTikTokMessageIds.values().next().value);
+				chrome.runtime.sendMessage(chrome.runtime.id, { delete: { type: 'tiktok', meta: { messageId: id } } }, function() {});
+			});
+		} catch (e) {}
+	});
+
 	function getTikTokMessageId(ele) {
 		try {
+			var bridgedId = "";
+			if (typeof window.__ssnReadTikTokChatId === 'function') {
+				bridgedId = window.__ssnReadTikTokChatId(ele);
+			} else {
+				ele.removeAttribute('data-ssn-tiktok-chat-id');
+				ele.dispatchEvent(new CustomEvent('ssn-read-tiktok-chat-id', { bubbles: true }));
+				bridgedId = ele.getAttribute('data-ssn-tiktok-chat-id');
+				ele.removeAttribute('data-ssn-tiktok-chat-id');
+			}
+			if (bridgedId) return bridgedId;
 			var fiberKey = Object.keys(ele).find(function(key) { return key.indexOf("__reactFiber") === 0; });
 			var fiber = fiberKey && ele[fiberKey];
 			for (var depth = 0; fiber && depth < 8; depth++, fiber = fiber.return) {
@@ -2680,7 +2704,7 @@
 
 	function processMessage(ele) {
 		// TikTok reuses DOM elements, so dataset.skip must never decide whether a chat message is new.
-		if (!ele) return;
+		if (!ele || !ele.isConnected) return;
 		if (ele.querySelector("[class*='DivTopGiverContainer']")) {
 			return;
 		}
@@ -3031,6 +3055,7 @@
 		// Gift counts repeat legitimately in later streaks on recycled DOM slots.
 		// Their bounded streak tracker below handles duplicate renders instead.
 		const nativeMessageId = !ital && !isGiftMessage ? getTikTokMessageId(ele) : "";
+		if (nativeMessageId && deletedTikTokMessageIds.has(nativeMessageId)) return;
 		if (nativeMessageId && (!chatname || !chatmessage.trim())) return;
 		var data = {};
 		data.chatname = chatname;
@@ -3766,6 +3791,8 @@
 			return;
 		}
 		counter+=1;
+		var moderationRow = document.querySelector('[data-e2e="chat-message"]');
+		if (moderationRow) moderationRow.dispatchEvent(new CustomEvent('ssn-tiktok-connect', { bubbles: true }));
 		
 		if (counter > 3  && counter < 15 && document.querySelector("div[contenteditable='plaintext-only'][disabled][placeholder]")){
 			const lastReload = sessionStorage.getItem('lastReload');
