@@ -126,6 +126,7 @@ TTS.premiumQueueTTS = [];
 TTS.premiumQueueActive = false;
 TTS.premiumSerial = 0;
 TTS.browserKokoroStreamActive = false;
+TTS.browserKokoroStreamSerial = 0;
 TTS.browserKokoroSkipRequested = false;
 TTS.resolveCurrentAudioPlayback = null;
 TTS.volume = 1;
@@ -702,6 +703,7 @@ TTS.playAudioBlobAndWait = async function(audioBlob) {
             if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
                 await TTS.audioContext.resume();
             }
+            if (settled) return; // cancelled or timed out while waiting for audio permission
             await audio.play();
         } catch (e) {
             console.error("Audio playback failed:", e);
@@ -2763,6 +2765,9 @@ TTS.kokoroTTS = async function(text, options) {
       }
     }
     
+    if (premiumSerial !== TTS.premiumSerial) {
+      return; // stopped or replaced while the model was loading
+    }
     TTS.premiumQueueActive = true;
     
     // Create a new streamer for each text processing
@@ -2789,13 +2794,14 @@ TTS.kokoroTTS = async function(text, options) {
       let playedAnyAudio = false;
       const previousOnEnded = TTS.audio ? TTS.audio.onended : null;
       TTS.browserKokoroStreamActive = true;
+      TTS.browserKokoroStreamSerial = premiumSerial;
       TTS.browserKokoroSkipRequested = false;
       try {
         if (TTS.audio) {
           TTS.audio.onended = null;
         }
         for await (const { audio } of stream) {
-          if (TTS.browserKokoroSkipRequested) {
+          if (premiumSerial !== TTS.premiumSerial || TTS.browserKokoroSkipRequested) {
             break;
           }
           if (!audio) continue;
@@ -2827,12 +2833,17 @@ TTS.kokoroTTS = async function(text, options) {
           playedAnyAudio = true;
         }
       } finally {
-        if (TTS.audio) {
-          TTS.audio.onended = previousOnEnded || TTS.finishedAudio;
+        if (TTS.browserKokoroStreamSerial === premiumSerial) {
+          // A stopped generation may finish after another provider has started playing.
+          if (premiumSerial === TTS.premiumSerial || !TTS.premiumQueueActive) {
+            if (TTS.audio) {
+              TTS.audio.onended = previousOnEnded || TTS.finishedAudio;
+            }
+            TTS.resolveCurrentAudioPlayback = null;
+          }
+          TTS.browserKokoroStreamActive = false;
+          TTS.browserKokoroSkipRequested = false;
         }
-        TTS.browserKokoroStreamActive = false;
-        TTS.browserKokoroSkipRequested = false;
-        TTS.resolveCurrentAudioPlayback = null;
       }
 
       if (!playedAnyAudio) {

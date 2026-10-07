@@ -27736,8 +27736,8 @@ async function ip() {
 }
 const { KokoroTTS: Xu, TextSplitterStream: op } = sp;
 class qu {
-  constructor() {
-    this.chunks = [], this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  constructor(audioContext) {
+    this.chunks = [], this.audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
   }
   async appendChunk(C) {
     const d = C.toBlob();
@@ -27783,13 +27783,25 @@ class pf extends Xu {
     const d = await Xu.from_pretrained(...C);
     return Object.assign(new pf(), d);
   }
+  async generate_from_ids(...args) {
+    // ONNX sessions must finish the current inference before a replacement starts.
+    const previous = this.pendingGeneration || Promise.resolve();
+    const pending = previous.catch(() => {}).then(() => super.generate_from_ids(...args));
+    this.pendingGeneration = pending;
+    try {
+      return await pending;
+    } finally {
+      if (this.pendingGeneration === pending) this.pendingGeneration = null;
+    }
+  }
   async *stream(C, d = {}) {
     const { streamAudio: k = !1, ...P } = d;
-    this.streamHandler.reset();
+    // Keep cancelled and replacement utterances from sharing pending audio chunks.
+    const streamHandler = new qu(this.streamHandler.audioContext);
     for await (const j of super.stream(C, P))
-      k ? yield j : await this.streamHandler.appendChunk(j.audio);
+      k ? yield j : await streamHandler.appendChunk(j.audio);
     if (!k) {
-      const j = await this.streamHandler.mergeChunks();
+      const j = await streamHandler.mergeChunks();
       if (j) {
         const O = qu.audioBufferToWav(j), R = new Blob([O], { type: "audio/wav" });
         yield { audio: { toBlob: () => R } };
