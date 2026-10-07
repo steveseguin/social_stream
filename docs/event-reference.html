@@ -103,6 +103,11 @@
                                     <li><a href="#livacha">Livacha</a></li>
                                     <li><a href="#streamplace">Streamplace</a></li>
                                     <li><a href="#worldswave">WorldsWave</a></li>
+                                    <li><a href="#goodgame">Goodgame</a></li>
+                                    <li><a href="#pilled">Pilled</a></li>
+                                    <li><a href="#owncast">Owncast</a></li>
+                                    <li><a href="#picarto">Picarto</a></li>
+                                    <li><a href="#piczel">Piczel</a></li>
                                     <li><a href="#flextv">FLEX TV</a></li>
                                     <li><a href="#sealteamsloth">Seal Team Sloth</a></li>
                                     <li><a href="#meetme-dom">MeetMe</a></li>
@@ -339,33 +344,36 @@
                             <td>Rendered chat rows with names, author colors, badge images, and member metadata</td>
                         </tr>
                         <tr>
-                            <td><strong>Goodgame, Pilled, Owncast, Picarto, Piczel</strong></td>
+                            <td><a href="#goodgame"><strong>Goodgame</strong></a></td>
                             <td>-</td>
                             <td>-</td>
                             <td>-</td>
-                            <td>Rendered chat plus opt-in viewer count polls. See <a href="#additional-viewer-counts">supported chat URLs and counter fields</a>.</td>
+                            <td>Chat, viewer counts, and native chat message IDs when available</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#pilled"><strong>Pilled</strong></a></td>
+                            <td>-</td><td>-</td><td>-</td>
+                            <td>Chat and viewer counts on dedicated chat and topic pages</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#owncast"><strong>Owncast</strong></a></td>
+                            <td>-</td><td>-</td><td>-</td>
+                            <td>Chat and viewer counts from the Owncast server</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#picarto"><strong>Picarto</strong></a></td>
+                            <td>-</td><td>-</td><td>-</td>
+                            <td>Chat and viewer counts on the public chat popout</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#piczel"><strong>Piczel</strong></a></td>
+                            <td>-</td><td>-</td><td>-</td>
+                            <td>Chat capture and viewer counts on chat and watch pages</td>
                         </tr>
                     </tbody>
                 </table>
                 </div>
                 <p class="field-highlights">*YouTube subscriber alerts are polled and may be delayed or incomplete. The API reference does not promise a fixed four-hour delivery window. See the <a href="https://developers.google.com/youtube/v3/docs/subscriptions/list">official subscription API limits</a>.</p>
-            </section>
-
-            <section id="additional-viewer-counts">
-                <h2>Goodgame, Pilled, Owncast, Picarto, and Piczel Viewer Counts</h2>
-                <p>Enable viewer counts or hype mode to receive <code>event: "viewer_update"</code> with an integer <code>meta</code>, refreshed every 30 seconds. These counts come from the platform's stream API; active chatters are counted separately. Failed requests do not produce a zero count.</p>
-                <div class="table-scroll" role="region" tabindex="0" aria-label="Additional viewer count sources">
-                    <table class="field-table">
-                        <thead><tr><th scope="col">Source type</th><th scope="col">Page to capture</th><th scope="col">Viewer count</th></tr></thead>
-                        <tbody>
-                            <tr><td><code>goodgame</code></td><td><code>goodgame.ru/CHANNEL/chat</code></td><td>Stream <code>viewers</code>. Chat rows also include the native ID in <code>meta.messageId</code> when available.</td></tr>
-                            <tr><td><code>pilled</code></td><td><code>pilled.net/livechat/USERNAME</code> or <code>pilled.net/comment/TOPIC_ID</code></td><td>The current live topic's <code>topicFacts.liveViews</code>. The dedicated chat URL supports counts without opening the video page.</td></tr>
-                            <tr><td><code>owncast</code></td><td>Your Owncast stream page</td><td><code>viewerCount</code> from that server's <code>/api/status</code>.</td></tr>
-                            <tr><td><code>picarto</code></td><td><code>picarto.tv/chatpopout/CHANNEL/public</code></td><td>Channel <code>viewers</code>.</td></tr>
-                            <tr><td><code>piczel</code></td><td><code>piczel.tv/chat/CHANNEL</code> or <code>piczel.tv/watch/CHANNEL</code></td><td>The matching stream's <code>viewers</code>.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
             </section>
 
             <section class="field-overview" id="field-overview">
@@ -2402,6 +2410,24 @@
                 <p>New chat rows use <code>type</code>/<code>platform</code> of <code>wtv</code> or <code>prime</code>, plain-text <code>chatname</code>, <code>nameColor</code>, and sanitized <code>chatmessage</code>. Inline emotes become safe images or alt text in text-only mode. Prime also includes the row's <code>userid</code> and supports both signed-in profile links and signed-out username labels. Avatars and badges are left empty when not available in the verified row structure.</p>
                 <p>Initial history, pinned cards, and reply previews are excluded. w.tv virtualizes its chat: keep it scrolled to the newest messages for capture. Its DOM test IDs are render indexes, not native message IDs. Prime skips older history loaded above the initial messages and ignored-user placeholders.</p>
                 <p>Neither popup exposes a verified stream viewer count, so these adapters do not emit viewer updates or infer donation, subscription, or moderation events.</p>
+            </section>
+
+            <section class="section-summary" id="additional-viewer-counts">
+                <h2>Goodgame, Pilled, Owncast, Picarto, and Piczel Viewer Counts</h2>
+                <p>Enable <em>Show viewer count</em> or <em>Track active chatters</em> (<code>showviewercount</code> or <code>hypemode</code>) to collect viewer counts. Opening the Viewer Count &amp; Chat Activity overlay with viewers displayed also requests them. Each source emits <code>event: "viewer_update"</code> with a nonnegative integer <code>meta</code>, refreshed every 30 seconds while capture is enabled. These are stream viewer counts; active chatters are counted separately. A reported zero is valid; failed requests do not produce a zero count.</p>
+                <p>Normal chat uses the source's <code>type</code>, <code>chatname</code>, <code>chatmessage</code>, and <code>textonly</code> fields without a viewer event marker. Viewer updates contain <code>type</code>, <code>event</code>, and integer <code>meta</code>; the background combines them into <code>viewer_updates</code> for overlays.</p>
+                <div class="table-scroll" role="region" tabindex="0" aria-label="Additional viewer count sources">
+                    <table class="field-table">
+                        <thead><tr><th scope="col">Source / type</th><th scope="col">Page to capture</th><th scope="col">Viewer count and chat fields</th></tr></thead>
+                        <tbody>
+                            <tr id="goodgame"><td><strong>Goodgame</strong><br><code>goodgame</code></td><td><code>goodgame.ru/CHANNEL/chat</code></td><td>Stream <code>viewers</code>. Chat rows also include the native ID as a string in <code>meta.messageId</code> when available.</td></tr>
+                            <tr id="pilled"><td><strong>Pilled</strong><br><code>pilled</code></td><td><code>pilled.net/livechat/USERNAME</code> or <code>pilled.net/comment/TOPIC_ID</code></td><td>The current live topic's <code>topicFacts.liveViews</code>. The dedicated chat URL supports counts without opening the video page.</td></tr>
+                            <tr id="owncast"><td><strong>Owncast</strong><br><code>owncast</code></td><td>Your captured Owncast stream or chat page</td><td><code>viewerCount</code> from that server's <code>/api/status</code>.</td></tr>
+                            <tr id="picarto"><td><strong>Picarto</strong><br><code>picarto</code></td><td><code>picarto.tv/chatpopout/CHANNEL/public</code></td><td>Channel <code>viewers</code>.</td></tr>
+                            <tr id="piczel"><td><strong>Piczel</strong><br><code>piczel</code></td><td><code>piczel.tv/chat/CHANNEL</code> or <code>piczel.tv/watch/CHANNEL</code></td><td>The matching stream's <code>viewers</code>. Join the chat or sign in to expose chat rows; viewer counts can be collected before joining.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </section>
 
             <section class="section-summary" id="cross-platform">
