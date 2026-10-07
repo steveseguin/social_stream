@@ -3064,8 +3064,30 @@ TTS.piperTTS = async function(text, options) {
             }
         }
 
-        // Use Piper TTS with speed setting
-        await TTS.piperInstance.speak(text, TTS.piperSettings.speed);
+        if (!TTS.audio) {
+            TTS.audio = document.createElement("audio");
+            TTS.audio.onended = TTS.finishedAudio;
+        }
+
+        // Keep replacement requests from running inference on the same model at once.
+        const piper = TTS.piperInstance;
+        const speed = TTS.piperSettings.speed;
+        const previous = piper.pendingSynthesis || Promise.resolve();
+        const pending = previous.catch(() => {}).then(() => {
+            if (premiumSerial !== TTS.premiumSerial) return null;
+            return piper.synthesize(text, speed);
+        });
+        piper.pendingSynthesis = pending;
+        let audioBlob;
+        try {
+            audioBlob = await pending;
+        } finally {
+            if (piper.pendingSynthesis === pending) piper.pendingSynthesis = null;
+        }
+        if (premiumSerial !== TTS.premiumSerial || !audioBlob) return;
+
+        // Use the shared player so stop and skip control Piper's actual audio element.
+        await TTS.playAudioBlobAndWait(audioBlob);
 
         // Finished playing
         if (premiumSerial === TTS.premiumSerial) {
