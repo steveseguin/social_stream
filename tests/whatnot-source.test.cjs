@@ -18,10 +18,11 @@ const packet = (event, payload) => JSON.stringify([null, null, 'public_livestrea
 
 function capture() {
     const messages = [], listeners = {};
-    let electronListener, settingsListener, now = 10000;
+    const electronListeners = [];
+    let settingsListener, now = 10000;
     const window = { location: { pathname: '/live/fixture' },
-        addEventListener: (name, callback) => { listeners[name] = callback; },
-        ninjafy: { onWebSocketMessage: callback => { electronListener = callback; } } };
+        addEventListener: (name, callback) => { (listeners[name] || (listeners[name] = [])).push(callback); },
+        ninjafy: { onWebSocketMessage: callback => { electronListeners.push(callback); } } };
     const context = vm.createContext({
         window, document: { body: { getAttribute: () => null }, querySelector: () => null, querySelectorAll: () => [] },
         console: { log() {}, warn() {}, error() {} }, setInterval() {}, setTimeout() {}, clearTimeout() {},
@@ -32,11 +33,13 @@ function capture() {
                 if (request.message) messages.push(JSON.parse(JSON.stringify(request.message)));
             } } }
     });
-    vm.runInContext(fs.readFileSync(path.join(__dirname, '../sources/whatnot.js'), 'utf8'), context);
+    const inject = () => vm.runInContext(fs.readFileSync(path.join(__dirname, '../sources/whatnot.js'), 'utf8'), context);
+    inject();
     return {
         messages,
-        receive: data => electronListener({ type: 'message', data }),
-        page: data => listeners.message({ source: window, data: { source: 'whatnot-ws-interceptor', type: 'receive', data } }),
+        inject,
+        receive: data => electronListeners.forEach(listener => listener({ type: 'message', data })),
+        page: data => listeners.message.forEach(listener => listener({ source: window, data: { source: 'whatnot-ws-interceptor', type: 'receive', data } })),
         advance: () => { now += 1500; },
         enabled: state => settingsListener({ state }, {}, () => {})
     };
@@ -198,6 +201,16 @@ test('duplicate capture bridges emit once, but later/repeated item sales are pre
     assert.equal(c.messages.length, 2);
     c.advance(); c.page(data);
     assert.equal(c.messages.length, 3);
+});
+
+test('reinjection preserves one capture and keeps distinct messages with identical text', () => {
+    const c = capture();
+    c.inject();
+    for (const id of ['chat-1', 'chat-2']) {
+        const data = packet('new_msg', { id, user: { id: 'viewer-1', username: 'Viewer' }, message: 'Hello' });
+        c.receive(data); c.page(data);
+    }
+    assert.deepEqual(c.messages.map(message => message.meta.messageId), ['chat-1', 'chat-2']);
 });
 
 test('disabled capture and malformed packets do not produce commerce events', () => {

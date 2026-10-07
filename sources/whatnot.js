@@ -1,4 +1,7 @@
 (function () {
+	if (window.__SSN_WHATNOT_SOURCE_LOADED__) return;
+	window.__SSN_WHATNOT_SOURCE_LOADED__ = true;
+
 	var chatOnly = /\/sources\/websocket\/whatnot(?:\.html)?\/?$/i.test(window.location.pathname)
 		&& document.body && document.body.getAttribute("data-whatnot-chat-only") === "true";
 	var chatOnlyMessageHandler = null;
@@ -22,6 +25,7 @@
 	var recentWebSocketActivityLookup = Object.create(null);
 	var recentCommercePackets = new Map();
 	var recentSystemPackets = new Map();
+	var activePublicAuctionTopic = "";
 	var webSocketActivityWindowMs = 30000;
 	var lastWebSocketLivestreamState = "";
 	var lastWebSocketGiveawayState = "";
@@ -1041,10 +1045,12 @@
 		var product = payload.product || {};
 		var bid = product.highestBid || {};
 		var identity = payload.id || (eventType === "new_bid" && bid.id) || payload.timestamp
+			|| ((eventType === "auction_started" || eventType === "auction_ended") && (product.auctionEndTime || product.timestamp))
 			|| (eventType === "giveaway_won" && (payload.orderId || product.orderId))
 			|| (eventType === "giveaway_started" && product.giveaway && product.giveaway.giveawayEndTime);
 		var stream = payload.livestreamId || product.livestreamId || wsChannel.replace(/^[^:]+:/, "");
-		var nativeEventId = payload.id || (eventType === "new_bid" && bid.id);
+		var nativeEventId = payload.id || (eventType === "new_bid" && bid.id)
+			|| ((eventType === "auction_started" || eventType === "auction_ended") && identity);
 		var packetKey = JSON.stringify([stream, eventType, product.id || payload.productId,
 			nativeEventId ? "" : payload.orderId || product.orderId, nativeEventId ? "" : payload.transactionId,
 			identity || payload]);
@@ -1314,7 +1320,7 @@
 		return false;
 	}
 
-	function handleWhatnotWebSocketFrame(rawData, receivedAt) {
+	function handleWhatnotWebSocketFrame(rawData, receivedAt, fromPublicAuction) {
 		var payloadText = normalizeWebSocketData(rawData);
 		if (!payloadText) {
 			return;
@@ -1331,6 +1337,10 @@
 		var wsChannel = parsedArray[2] || "";
 		var eventType = parsedArray[3] || "";
 		var payload = parsedArray[4] || {};
+		// The dedicated reader owns this public topic while connected. Desktop
+		// monitoring and page interception also see its socket; delayed copies
+		// must not replay auction alerts or older giveaway/viewer state.
+		if (!fromPublicAuction && activePublicAuctionTopic && wsChannel === activePublicAuctionTopic) return;
 
 		switch (eventType) {
 			case "auction_started":
@@ -1407,6 +1417,7 @@
 		var topic = "public_auction:" + showId;
 		function status(value) { if (onStatus) onStatus(value); }
 		function clearSocket() {
+			if (activePublicAuctionTopic === topic) activePublicAuctionTopic = "";
 			clearInterval(heartbeat);
 			clearTimeout(timeout);
 			if (socket) {
@@ -1463,12 +1474,14 @@
 				if (frame[3] === "phx_reply" && frame[1] === joinRef) {
 					if (!frame[4] || frame[4].status !== "ok") { reconnect(); return; }
 					joined = true;
+					activePublicAuctionTopic = topic;
 					clearTimeout(timeout);
+					handleWhatnotWebSocketFrame(event.data, Date.now(), true);
 					status("connected");
 				} else if (frame[3] === "phx_error" || frame[3] === "phx_close") {
 					reconnect();
 				} else if (joined) {
-					handleWhatnotWebSocketFrame(event.data);
+					handleWhatnotWebSocketFrame(event.data, Date.now(), true);
 				}
 			};
 			current.onerror = current.onclose = function () { if (socket === current) reconnect(); };
