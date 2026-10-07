@@ -3032,6 +3032,7 @@ TTS.initPiper = async function(voiceName) {
  * @param {string} text - Text to speak
  */
 TTS.piperTTS = async function(text, options) {
+    const premiumSerial = ++TTS.premiumSerial;
     try {
         const requestedVoice = TTS.getVoiceOverride(options) || TTS.piperSettings.voice;
         // Initialize if needed
@@ -3045,7 +3046,6 @@ TTS.piperTTS = async function(text, options) {
         }
         
         TTS.premiumQueueActive = true;
-        const premiumSerial = ++TTS.premiumSerial;
 
         // Use Piper TTS with speed setting
         await TTS.piperInstance.speak(text, TTS.piperSettings.speed);

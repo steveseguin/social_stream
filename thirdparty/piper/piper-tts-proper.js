@@ -114,13 +114,35 @@
           executionProviders: ['wasm'],
           graphOptimizationLevel: 'all',
           enableCpuMemArena: true,
-          enableMemPattern: true,
+          // Piper's variable-length intermediates cannot reuse the first run's memory pattern.
+          enableMemPattern: false,
           executionMode: 'sequential',
           interOpNumThreads: 1,
           intraOpNumThreads: 1
         };
         
-        this.session = await ort.InferenceSession.create(modelBuffer, sessionOptions);
+        const wasmObjectUrls = [];
+        try {
+          // SSApp's file pages expose Node globals, but this browser runtime has no fs loader.
+          // Blob URLs keep its WASM loading on the browser fetch path.
+          if (window.location.protocol === 'file:' && typeof process === 'object' && process.versions && process.versions.node) {
+            const wasmPaths = {};
+            for (const filename of ['ort-wasm.wasm', 'ort-wasm-simd.wasm']) {
+              const response = await fetch(wasmRoot + filename);
+              if (!response.ok) throw new Error('Could not load Piper runtime: ' + filename);
+              const url = URL.createObjectURL(await response.blob());
+              wasmObjectUrls.push(url);
+              wasmPaths[filename] = url;
+            }
+            ort.env.wasm.wasmPaths = wasmPaths;
+          }
+          this.session = await ort.InferenceSession.create(modelBuffer, sessionOptions);
+        } finally {
+          if (wasmObjectUrls.length) {
+            ort.env.wasm.wasmPaths = wasmRoot;
+            wasmObjectUrls.forEach(url => URL.revokeObjectURL(url));
+          }
+        }
         console.log('ONNX session created successfully');
         
         this.initialized = true;
