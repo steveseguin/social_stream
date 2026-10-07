@@ -10571,7 +10571,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 }
                 this.activeAudioUrl = URL.createObjectURL(audioBlob);
 				audioElement.src = this.activeAudioUrl;
-				if (settings.volume) audioElement.volume = settings.volume;
+				audioElement.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
 				
 				try {
                     this.setTestRunning(section, true, "Playing...");
