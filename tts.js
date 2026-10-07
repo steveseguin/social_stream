@@ -2453,11 +2453,16 @@ TTS.googleTTS = function(tts, options) {
         };
 
         fetch(url, otherparam)
-            .then(data => data.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Google TTS request failed with HTTP ' + response.status);
+                return response.json();
+            })
             .then(async res => {
                 if (premiumSerial !== TTS.premiumSerial) {
                     return; // skipped while the audio was being fetched
                 }
+
+                if (!res.audioContent) throw new Error('Google TTS returned no audio');
 
                 // Send to NeuroSync in parallel
                 if (TTS.neuroSyncEnabled) {
@@ -2479,6 +2484,7 @@ TTS.googleTTS = function(tts, options) {
                   }).catch(err => {
                     console.error("NeuroSync error:", err);
                   });
+                  TTS.finishedAudio();
                   return;
                 }
                 
@@ -2490,10 +2496,10 @@ TTS.googleTTS = function(tts, options) {
                 
                 TTS.applyVolume(TTS.audio);
                 try {
-                    if (TTS.audioContext.state === 'suspended') {
+                    if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
                         await TTS.audioContext.resume();
                     }
-                    TTS.audio.play();
+                    await TTS.audio.play();
                 } catch (e) {
                     if (premiumSerial === TTS.premiumSerial) {
                         TTS.finishedAudio();
@@ -2898,19 +2904,19 @@ TTS.initEspeak = async function() {
  * @param {string} text - Text to speak
  */
 TTS.espeakTTS = async function(text, options) {
+    TTS.premiumQueueActive = true;
+    const premiumSerial = ++TTS.premiumSerial;
     try {
         // Initialize if needed
         if (!TTS.espeakLoaded || !TTS.espeakInstance) {
             const initialized = await TTS.initEspeak();
+            if (premiumSerial !== TTS.premiumSerial) return;
             if (!initialized) {
                 console.error("Failed to initialize eSpeak TTS - please use a different TTS provider");
                 TTS.finishedAudio();
                 return;
             }
         }
-        
-        TTS.premiumQueueActive = true;
-        const premiumSerial = ++TTS.premiumSerial;
 
         // Initialize audio context if needed
         TTS.initAudioContext();
@@ -3032,20 +3038,20 @@ TTS.initPiper = async function(voiceName) {
  * @param {string} text - Text to speak
  */
 TTS.piperTTS = async function(text, options) {
+    TTS.premiumQueueActive = true;
     const premiumSerial = ++TTS.premiumSerial;
     try {
         const requestedVoice = TTS.getVoiceOverride(options) || TTS.piperSettings.voice;
         // Initialize if needed
         if (!TTS.piperLoaded || !TTS.piperInstance || TTS.piperActiveVoice !== requestedVoice) {
             const initialized = await TTS.initPiper(requestedVoice);
+            if (premiumSerial !== TTS.premiumSerial) return;
             if (!initialized) {
                 console.error("Failed to initialize Piper TTS");
                 TTS.finishedAudio();
                 return;
             }
         }
-        
-        TTS.premiumQueueActive = true;
 
         // Use Piper TTS with speed setting
         await TTS.piperInstance.speak(text, TTS.piperSettings.speed);
@@ -3148,19 +3154,19 @@ TTS.initKitten = async function() {
  * @param {string} text - Text to speak
  */
 TTS.kittenTTS = async function(text, options) {
+    TTS.premiumQueueActive = true;
+    const premiumSerial = ++TTS.premiumSerial;
     try {
         // Initialize if needed
         if (!TTS.kittenLoaded || !TTS.kittenInstance) {
             const initialized = await TTS.initKitten();
+            if (premiumSerial !== TTS.premiumSerial) return;
             if (!initialized) {
                 console.error("Failed to initialize Kitten TTS");
                 TTS.finishedAudio();
                 return;
             }
         }
-        
-        TTS.premiumQueueActive = true;
-        const premiumSerial = ++TTS.premiumSerial;
 
         // Initialize audio context if needed
         TTS.initAudioContext();

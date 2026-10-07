@@ -64,10 +64,19 @@ async function run() {
       TTS.audio = document.createElement("audio");
       TTS.audio.onended = TTS.finishedAudio;
 
-      let playingCount = 0;
+      let playingCount = 0, endedCount = 0, duringSecond;
+      let requestCount = 0;
+      const nativeFetch = window.fetch;
+      window.fetch = function() { requestCount++; return nativeFetch.apply(this, arguments); };
       TTS.audio.addEventListener("playing", () => {
         playingCount++;
+        if (playingCount === 2) {
+          const activeBeforeThird = TTS.premiumQueueActive;
+          send(3, "person three", "third message");
+          duringSecond = { activeBeforeThird, requestCount, queuedAfterThird: TTS.premiumQueueTTS.length };
+        }
       });
+      TTS.audio.addEventListener("ended", () => { endedCount++; });
 
       function send(id, name, message) {
         TTS.speechMeta({
@@ -95,50 +104,20 @@ async function run() {
       }
 
       send(1, "person one", "first message");
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      await waitFor(() => playingCount === 1);
       send(2, "person two", "second message");
-
-      await waitFor(() => playingCount === 2);
-      const activeBeforeThird = TTS.premiumQueueActive;
-
-      send(3, "person three", "third message");
-      await new Promise((resolve) => setTimeout(resolve, 150));
-
-      return {
-        activeBeforeThird,
-        playingCount,
-        queuedAfterThird: TTS.premiumQueueTTS.length,
-      };
+      await waitFor(() => endedCount === 3 && !TTS.premiumQueueActive && !TTS.premiumQueueTTS.length, 10000);
+      return { ...duringSecond, playingCount, endedCount };
     });
   } finally {
     await browser.close();
   }
-
-  assert.strictEqual(
-    result.activeBeforeThird,
-    true,
-    "the ElevenLabs queue must remain active while the second message is playing",
-  );
-  assert.strictEqual(
-    requests.length,
-    2,
-    "the third ElevenLabs request must wait until the second audio finishes",
-  );
-  assert.strictEqual(
-    result.playingCount,
-    2,
-    "the third message must not replace the currently playing second message",
-  );
-  assert.strictEqual(
-    result.queuedAfterThird,
-    1,
-    "the third message must remain queued behind the second message",
-  );
-
-  console.log("PASS ElevenLabs pause-before-ended queue regression");
+  assert.strictEqual(result.activeBeforeThird, true, "the queue must remain active during the second message");
+  assert.strictEqual(result.requestCount, 2, "the third request must wait until the second audio finishes");
+  assert.strictEqual(result.queuedAfterThird, 1, "the third message must queue behind the second message");
+  assert.strictEqual(result.playingCount, 3, "each message must start playback once");
+  assert.strictEqual(result.endedCount, 3, "all three messages must finish");
+  assert.deepStrictEqual(requests.map(text => text.match(/(first|second|third) message/)[1]), ["first", "second", "third"]);
+  console.log("PASS ElevenLabs queue ordering and complete playback");
 }
-
-run().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+run().catch(error => { console.error(error); process.exitCode = 1; });

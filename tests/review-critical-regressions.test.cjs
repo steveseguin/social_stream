@@ -110,7 +110,7 @@ test('Cancelling the Lite TikTok username prompt leaves Connect usable for anoth
 test('Kick badge collection preserves supported SVG badges through display formatting', () => {
     const context = vm.createContext({});
     const source = read('sources/websocket/kick.js');
-    vm.runInContext(read('providers/kick/core.js').replace(/^export /gm, '') + '\n'
+    vm.runInContext(read('shared/kickBadges.js').replace(/^export /gm, '') + '\n' + read('providers/kick/core.js').replace(/^import[^\n]*\n/gm, '').replace(/^export /gm, '') + '\n'
         + source.slice(source.indexOf('function collectBadgesFromSources('),
             source.indexOf('function collectNameColorFromSources(')), context);
     const svg = '<svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4"/></svg>';
@@ -125,7 +125,7 @@ test('Kick badge collection preserves supported SVG badges through display forma
     const displayed = context.formatBadgesForDisplay(collected);
     assert.deepEqual(JSON.parse(JSON.stringify(displayed)), [
         { type: 'svg', html: svg },
-        { type: 'text', text: 'Moderator' },
+        JSON.parse(JSON.stringify(context.getKickRoleBadge('moderator'))),
         { src: 'https://example.com/badge.png', type: 'img' }
     ]);
     assert.deepEqual(JSON.parse(JSON.stringify(context.mapBadges(collected))),
@@ -492,6 +492,7 @@ test('YouTube API Super Chat emits one paid row, with normal chat and backlog be
     const chatStatus = {};
     const context = vm.createContext({ console, Date,
         document: { getElementById: () => ({ setAttribute: (key, value) => { chatStatus[key] = value; } }) },
+        youtubeApiMessageIds: new Map(), getYouTubeMessageKey: id => id, lastMessageTimeIds: new Set(),
         youtubeRecommendedInterval: 5000, lastSuccessfulPollTime: 0, currentStream: null, videoId: null,
         initialBacklogProcessing: false, initialBacklogTimestamp: 0, lastMessageTime: null, nextPageToken: null,
         LIVE_CHAT_MAX_RESULTS: 200, consecutiveMaxMessages: 0, consecutiveEmptyPolls: 0, quickPollCount: 0,

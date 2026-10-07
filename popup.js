@@ -10657,6 +10657,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     },
 
     async kittenTTS(text, settings) {
+        const token = {};
+        this.audioFetchToken = token;
+        this.premiumQueueActive = true;
         try {
             const baseUrl = chrome.runtime.getURL('');
 
@@ -10695,7 +10698,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 await window.kittenTtsInstance.init(modelUrl, voicesUrl, wasmPaths);
             }
             
-            this.premiumQueueActive = true;
+            if (this.audioFetchToken !== token) return;
             
             // Generate speech with selected voice and speed
             const audioBlob = await window.kittenTtsInstance.generateSpeech(
@@ -10704,23 +10707,27 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 settings.kitten.speed || 1.0
             );
             
+            if (this.audioFetchToken !== token) return;
+
             // Play audio
             if (!this.audio) {
                 this.audio = document.createElement("audio");
                 this.audio.onended = () => this.finishedAudio();
             }
             
-            this.audio.src = URL.createObjectURL(audioBlob);
-            if (settings.volume) {
-                this.audio.volume = settings.volume;
-            }
+            this.activeAudioUrl = URL.createObjectURL(audioBlob);
+            this.activeAudioElement = this.audio;
+            this.audio.src = this.activeAudioUrl;
+            this.audio.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
             
             await this.audio.play().catch(e => {
+                if (this.audioFetchToken !== token) return;
                 console.error("Audio playback failed:", e);
                 this.finishedAudio();
             });
             
         } catch (error) {
+            if (this.audioFetchToken !== token) return;
             console.error("Kitten TTS error:", error);
             this.showFeedback(`Kitten TTS Error: ${error.message}`, 'error');
             this.finishedAudio();
@@ -10795,6 +10802,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 
     async geminiTTS(text, settings) {
         this.premiumQueueActive = true;
+        const token = {};
+        this.audioFetchToken = token;
         const model = settings.gemini.model || "gemini-2.5-flash-preview-tts";
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
         const speechConfig = {
@@ -10849,9 +10858,11 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             const audioBlob = mimeType.includes("wav")
                 ? new Blob([pcmBytes], { type: mimeType })
                 : this.pcm16ToWav(pcmBytes, settings.gemini.sampleRate || 24000, 1);
+            if (this.audioFetchToken !== token) return;
             const blobUrl = URL.createObjectURL(audioBlob);
             this.playAudio(blobUrl);
         } catch (error) {
+            if (this.audioFetchToken !== token) return;
             this.showFeedback(`Gemini TTS Error: ${error.message}`, 'error');
             console.error("Gemini TTS error:", error);
             this.finishedAudio();
@@ -11074,6 +11085,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     },
     
     async fetchAudioContent(url, options, type) {
+        const token = {};
+        this.audioFetchToken = token;
         const fetchOptions = Object.assign({}, options || {});
         let timeoutId = null;
         if (typeof AbortController !== "undefined" && !fetchOptions.signal) {
@@ -11103,13 +11116,16 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 				if (!json.audioContent && !json.audio_data) {
 					throw new Error('No audio data received');
 				}
+                if (this.audioFetchToken !== token) return;
 				this.playAudio(`data:audio/mp3;base64,${json.audioContent || json.audio_data}`);
 			} else if (type === 'blob') {
 				const blob = await response.blob();
+                if (this.audioFetchToken !== token) return;
 				const blobUrl = URL.createObjectURL(blob);
 				this.playAudio(blobUrl);
 			}
 		} catch (error) {
+            if (this.audioFetchToken !== token) return;
 			const message = error && error.name === "AbortError" ? "Request timed out. Check that the TTS server is running." : error.message;
 			this.showFeedback(`Audio fetch error: ${message}`, 'error');
 			console.error("Error fetching audio:", error);
@@ -11122,16 +11138,20 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 	},
     
     playAudio(src) {
+        const token = this.audioFetchToken;
         if (!this.audio) {
             this.audio = document.createElement("audio");
             this.audio.onended = () => this.finishedAudio();
         }
         
+        this.activeAudioElement = this.audio;
+        this.activeAudioUrl = src.startsWith('blob:') ? src : null;
         this.audio.src = src;
-        this.audio.volume = this.getSettings().volume;
+        this.audio.volume = this.getSettings(this.currentTtsSection || "").volume;
         
         try {
             this.audio.play().catch(e => {
+                if (this.audioFetchToken !== token) return;
                 console.error("Audio playback failed:", e);
                 this.finishedAudio();
             });
@@ -11169,6 +11189,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 
     finishTtsTest(section = this.currentTtsSection || "", keepCancelFlag = false) {
         this.localPiperTest = null;
+        this.audioFetchToken = null;
         if (this.activeSystemUtterance) {
             this.activeSystemUtterance.onstart = null;
             this.activeSystemUtterance.onend = null;
