@@ -2883,9 +2883,6 @@ TTS.kokoroTTS = async function(text, options) {
       TTS.browserKokoroStreamSerial = premiumSerial;
       TTS.browserKokoroSkipRequested = false;
       try {
-        if (TTS.audio) {
-          TTS.audio.onended = null;
-        }
         for await (const { audio } of stream) {
           if (premiumSerial !== TTS.premiumSerial || TTS.browserKokoroSkipRequested) {
             break;
