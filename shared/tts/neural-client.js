@@ -84,7 +84,7 @@
                 self.pending = { id: id, resolve: resolve, reject: reject, timer: timer, progress: function(progress) {
                     try {
                         if (progress.chunk && player) {
-                            playback = playback.then(function() { if (serial === self.serial) return player.enqueue(progress.chunk, progress.sampleRate); }).catch(function(error) { playbackError = error; self.cancel(); });
+                            playback = playback.then(function() { if (serial === self.serial) return player.enqueue(progress.chunk, progress.sampleRate); }).catch(function(error) { playbackError = error; if (serial === self.serial) self.cancel(); });
                         } else if (callbacks.onProgress) callbacks.onProgress(progress);
                     } catch (error) { playbackError = error; self.cancel(); }
                 } };
