@@ -13,6 +13,14 @@
         this.stopped = false;
         this.onStart = onStart;
         this.setVolume(volume);
+        // Start the output while the model loads so OBS can open its audio stream
+        // before the first word. This silent source is not part of the speech queue.
+        this.warmup = this.context.createBufferSource();
+        this.warmup.buffer = this.context.createBuffer(1, 128, this.context.sampleRate);
+        this.warmup.loop = true;
+        this.warmup.connect(this.gain);
+        this.warmup.start();
+        if (this.context.state === 'suspended') this.context.resume().catch(function() {});
     }
     Player.prototype.setVolume = function(volume) { this.gain.gain.value = Math.max(0, Math.min(1, Number(volume) || 0)); };
     Player.prototype.enqueue = async function(samples, sampleRate) {
@@ -44,16 +52,18 @@
         this.sources.forEach(function(source) { source.onended = null; try { source.stop(); } catch (_) {} source.disconnect(); });
         this.sources.clear();
         if (this.finish) this.finish();
+        try { this.warmup.stop(); } catch (_) {}
+        this.warmup.disconnect();
         this.gain.disconnect();
         if (this.context.state !== 'closed') this.context.close().catch(function() {});
     };
 
     function Client() { this.worker = null; this.nextId = 0; this.pending = null; this.player = null; this.serial = 0; }
-    Client.prototype.cancel = function() {
+    Client.prototype.cancel = function(reason) {
         this.serial++;
         if (this.worker) this.worker.terminate();
         this.worker = null;
-        if (this.pending) { clearTimeout(this.pending.timer); this.pending.reject(new Error('Speech cancelled.')); this.pending = null; }
+        if (this.pending) { clearTimeout(this.pending.timer); this.pending.reject(new Error(reason || 'Speech cancelled.')); this.pending = null; }
         if (this.player) this.player.stop();
         this.player = null;
     };
@@ -76,11 +86,11 @@
                     clearTimeout(pending.timer); self.pending = null;
                     if (data.error) pending.reject(new Error(data.error)); else pending.resolve(data.result);
                 };
-                this.worker.onerror = function() { self.cancel(); if (callbacks.onError) callbacks.onError('Background speech could not load.'); };
-                this.worker.onmessageerror = function() { self.cancel(); };
+                this.worker.onerror = function() { self.cancel('Background speech could not load. Try Standard processing or another voice provider.'); };
+                this.worker.onmessageerror = function() { self.cancel('Background speech returned unreadable audio.'); };
             }
             var result = await new Promise(function(resolve, reject) {
-                var timer = setTimeout(function() { self.cancel(); }, 300000);
+                var timer = setTimeout(function() { self.cancel('Speech generation timed out. Try a smaller model or another voice provider.'); }, 300000);
                 self.pending = { id: id, resolve: resolve, reject: reject, timer: timer, progress: function(progress) {
                     try {
                         if (progress.chunk && player) {
@@ -88,7 +98,8 @@
                         } else if (callbacks.onProgress) callbacks.onProgress(progress);
                     } catch (error) { playbackError = error; self.cancel(); }
                 } };
-                self.worker.postMessage({ id: id, options: options });
+                try { self.worker.postMessage({ id: id, options: options }); }
+                catch (error) { clearTimeout(timer); self.pending = null; reject(error); }
             });
             if (serial !== this.serial) throw new Error('Speech cancelled.');
             if (!options.stream && player) {

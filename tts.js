@@ -2179,6 +2179,7 @@ TTS.cancelNeuralSpeech = function() {
 
 TTS.neuralSpeech = async function(text, provider, options) {
     var serial = ++TTS.premiumSerial;
+    var failure = null;
     TTS.premiumQueueActive = true;
     TTS.neuralActive = true;
     try {
@@ -2196,6 +2197,11 @@ TTS.neuralSpeech = async function(text, provider, options) {
             onProgress: function(progress) {
                 if (serial !== TTS.premiumSerial) return;
                 TTS.neuralStatus = progress.message || "";
+                var button = document.getElementById("tts");
+                if (button && progress.message) {
+                    button.title = progress.message;
+                    button.setAttribute("aria-label", progress.message);
+                }
                 if (progress.device) { TTS.kokoroDevice = progress.device; TTS.kokoroDtype = progress.dtype; }
             },
             onStart: function() { if (serial === TTS.premiumSerial) TTS.updateButtonState('speaking'); }
@@ -2206,15 +2212,18 @@ TTS.neuralSpeech = async function(text, provider, options) {
     } catch (error) {
         if (serial === TTS.premiumSerial) {
             TTS.neuralStatus = error.message;
+            failure = error.message;
             console.error("Background TTS:", error);
-            var button = document.getElementById("tts");
-            if (button) button.title = error.message;
         }
     } finally {
         if (serial === TTS.premiumSerial) {
             TTS.neuralActive = false;
             TTS.finishedAudio();
-            if (!TTS.premiumQueueActive) TTS.updateButtonState(TTS.speech ? 'on' : 'off');
+            if (!TTS.premiumQueueActive) {
+                TTS.updateButtonState(TTS.speech ? 'on' : 'off');
+                var button = document.getElementById("tts");
+                if (button && failure) { button.title = failure; button.setAttribute("aria-label", failure); }
+            }
         }
     }
 };

@@ -2669,6 +2669,9 @@
         </div>
     
 
+<section class="section-summary" id="flow-audio-actions"><h2>Event Flow audio controls</h2>
+<p>The Actions overlay accepts <code>actionType: "play_audio"</code> with <code>audioUrl</code>, <code>volume</code> (0–1), and optional <code>audioPlayback: "queue"</code> or <code>"interrupt"</code>. Omitting the playback option keeps overlapping playback. Local media continues to use <code>sourceType: "local"</code>, <code>localAssetId</code>, and <code>localAssetName</code>. Queue mode holds up to 30 waiting clips with a two-minute limit per clip; interrupt mode replaces that queue's current clip and clears its waiting items.</p>
+<p><code>actionType: "stop_audio"</code> stops Flow Actions audio clips and clears the sound queue. These are overlay control messages, not source chat events or proof that OBS output was heard. Event Flow resolves a configured random sound set to one audio URL before sending the action. See <a href="../actions/event-flow-guide.html">Event Flow setup</a>.</p></section>
 </main>
 
     <footer>

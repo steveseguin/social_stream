@@ -64,6 +64,16 @@ jobs:
               test -f "$checkout/shared/monetization/board-controls.js"
               test -f "$checkout/shared/monetization/board-controls.css"
             fi
+            # Background speech needs its worker and packaged runtime on the site.
+            if [ -f "$checkout/shared/tts/neural-worker.js" ]; then
+              for asset in neural-client.js pcm.js; do
+                test -f "$checkout/shared/tts/$asset"
+              done
+              for asset in runtime.js kitten-models.json ort-wasm-simd-threaded.asyncify.mjs ort-wasm-simd-threaded.asyncify.part1.bin ort-wasm-simd-threaded.asyncify.part2.bin; do
+                test -f "$checkout/thirdparty/neural-tts/$asset"
+                test "$(wc -c < "$checkout/thirdparty/neural-tts/$asset")" -le 26214400
+              done
+            fi
             # Content-image handling is shared by the dock and featured overlay.
             if grep -q 'shared/utils/contentImage.js' "$checkout/dock.html" "$checkout/featured.html"; then
               test -f "$checkout/shared/utils/contentImage.js"
@@ -85,6 +95,14 @@ jobs:
               test -f "$checkout/audio/alerts/voice-thank-you.wav"
               test -f "$checkout/audio/alerts/applause.wav"
               test -f "$checkout/media/alerts/celebration.svg"
+            fi
+            if [ -f "$checkout/audio-library.html" ]; then
+              for asset in audio-browser.js audio-browser.css audio-catalog.js; do
+                test -f "$checkout/shared/alerts/$asset"
+              done
+              test -f "$checkout/media/audio/catalog-art.webp"
+              test -f "$checkout/audio/catalog/sfx-arena-horn.mp3"
+              test -f "$checkout/audio/catalog/voice-en-friendly-thanks-watching.mp3"
             fi
             generator="$checkout/scripts/build-docs-search-index.py"
             if [ -f "$generator" ]; then

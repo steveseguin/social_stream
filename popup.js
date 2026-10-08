@@ -9858,7 +9858,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         const controls = this.getKokoroCacheControls(section);
         if (!controls) return;
         const provider = this.getProviderSelect(section)?.value || "system";
-        const showControls = provider === "kokoro" && !ssapp;
+        const local = this.getSettings(section).kokoro;
+        const showControls = provider === "kokoro" && !ssapp && !local.background && !local.stream && local.dtype !== 'fp32';
         controls.container.classList.toggle('hidden', !showControls);
         if (showControls) {
             this.refreshKokoroCacheState(section);
@@ -14041,6 +14042,30 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
 	}
+
+    ["", "2", "10", "18"].forEach(function(section) {
+        var processing = document.getElementById('kokororuntimeSelect' + section);
+        if (!processing) return;
+        var controls = ['kokorodeviceSelect', 'kokorodtypeSelect', 'kokoroplaybackSelect'].map(function(id) {
+            return document.getElementById(id + section);
+        });
+        controls.forEach(function(control) {
+            if (!control) return;
+            control.addEventListener('change', function() {
+                if (control.value && processing.value !== 'worker') {
+                    processing.value = 'worker';
+                    updateSettings(processing, true);
+                }
+                TTSManager.updateKokoroCacheControls(section);
+            });
+        });
+        processing.addEventListener('change', function() {
+            if (!processing.value) controls.forEach(function(control) {
+                if (control && control.value) { control.value = ''; updateSettings(control, true); }
+            });
+            TTSManager.updateKokoroCacheControls(section);
+        });
+    });
 
 	updateVideoStatsSettingsVisibility();
 	setupFirstTimerControls();

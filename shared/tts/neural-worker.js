@@ -27,9 +27,23 @@ async function asset(url, progress) {
     return response.arrayBuffer();
 }
 
-async function initialize(options, progress) {
+async function initialize(options, progress, recovery) {
+    if (!ort.env.wasm.wasmBinary) {
+        // Keep each packaged asset below the site's per-file deployment limit.
+        const parts = await Promise.all([1, 2].map(async part => {
+            const url = new URL('../../thirdparty/neural-tts/ort-wasm-simd-threaded.asyncify.part' + part + '.bin', import.meta.url);
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Speech runtime could not load. Reload the page and try again.');
+            return new Uint8Array(await response.arrayBuffer());
+        }));
+        const binary = new Uint8Array(parts[0].length + parts[1].length);
+        binary.set(parts[0]);
+        binary.set(parts[1], parts[0].length);
+        ort.env.wasm.wasmBinary = binary.buffer;
+        env.backends.onnx.wasm.wasmBinary = binary.buffer;
+    }
     const key = [options.engine, options.model, options.device, options.dtype, !!options.mac].join(':');
-    if (session && modelKey === key) return;
+    if (session && modelKey === key && !recovery) return;
     if (session) await session.release();
     session = null;
     modelKey = null;
@@ -37,13 +51,16 @@ async function initialize(options, progress) {
     device = 'wasm';
     dtype = 'q8';
     if (options.engine === 'kokoro') {
+        const requestedDevice = recovery ? recovery.device : options.device;
+        const requestedDtype = recovery ? recovery.dtype : options.dtype;
         let adapter;
-        if (options.device !== 'wasm' && !(options.mac && options.device === 'auto')) {
+        if (requestedDevice !== 'wasm' && !(options.mac && requestedDevice === 'auto')) {
             try { adapter = navigator.gpu && await navigator.gpu.requestAdapter(); } catch (_) {}
         }
-        if (options.device === 'webgpu' && !adapter) throw new Error('GPU speech is unavailable. Choose Automatic or CPU.');
+        if (requestedDevice === 'webgpu' && !adapter) throw new Error('GPU speech is unavailable. Choose Automatic or CPU.');
         if (adapter) device = 'webgpu';
-        dtype = options.dtype === 'auto' ? (device === 'webgpu' ? (adapter.features.has('shader-f16') ? 'fp16' : 'fp32') : 'q8') : options.dtype;
+        dtype = requestedDtype === 'auto' ? (device === 'webgpu' ? (adapter.features.has('shader-f16') ? 'fp16' : 'fp32') : 'q8') : requestedDtype;
+        if (device === 'wasm' && dtype === 'fp16') throw new Error('FP16 speech requires a compatible GPU. Choose Automatic, Compact or Full quality.');
         if (device === 'webgpu' && dtype === 'fp16' && !adapter.features.has('shader-f16')) {
             throw new Error('This GPU cannot use FP16. Choose Automatic or Full quality.');
         }
@@ -55,11 +72,18 @@ async function initialize(options, progress) {
         };
         try { session = await load(); }
         catch (error) {
-            if (device !== 'webgpu' || options.device === 'webgpu') throw error;
-            device = 'wasm';
-            dtype = options.dtype === 'auto' ? 'q8' : options.dtype;
-            progress({ message: 'GPU unavailable; loading the CPU voice…' });
-            session = await load();
+            if (device === 'webgpu' && dtype === 'fp16' && options.dtype === 'auto') {
+                dtype = 'fp32';
+                progress({ message: 'Trying full precision on the GPU…' });
+                try { session = await load(); } catch (fallbackError) { error = fallbackError; }
+            }
+            if (!session) {
+                if (device !== 'webgpu' || options.device === 'webgpu') throw error;
+                device = 'wasm';
+                dtype = options.dtype === 'auto' ? 'q8' : options.dtype;
+                progress({ message: 'GPU unavailable; loading the CPU voice…' });
+                session = await load();
+            }
         }
     } else {
         const response = await fetch(new URL('../../thirdparty/neural-tts/kitten-models.json', import.meta.url));
@@ -127,7 +151,8 @@ async function synthesize(text, options, progress) {
             speed: new ort.Tensor('float32', [options.speed * (kittenConfig.config.speed_priors[voice] || 1)], [1]) };
     }
     try {
-        output = await session.run(feeds);
+        try { output = await session.run(feeds); }
+        catch (error) { error.neuralInferenceFailure = true; throw error; }
         const samples = output[session.outputNames[0]].data;
         return Float32Array.from(options.engine === 'kitten' ? samples.slice(0, Math.max(1, samples.length - 5000)) : samples);
     } finally {
@@ -146,7 +171,22 @@ self.onmessage = async function(event) {
         const parts = splitText(options.text, options.stream ? 120 : 240), chunks = [];
         for (let i = 0; i < parts.length; i++) {
             progress({ message: 'Generating speech ' + (i + 1) + '/' + parts.length + '…' });
-            const samples = await synthesize(parts[i], options, progress);
+            let samples;
+            // GPU shader errors can occur on the first run, after model loading succeeded.
+            // Retry only the unfinished section; already played sections must not repeat.
+            while (true) {
+                try { samples = await synthesize(parts[i], options, progress); break; }
+                catch (error) {
+                    if (!error.neuralInferenceFailure || options.engine !== 'kokoro' || device !== 'webgpu') throw error;
+                    if (dtype === 'fp16' && options.dtype === 'auto') {
+                        progress({ message: 'Trying full precision on the GPU…' });
+                        await initialize(options, progress, { device: 'webgpu', dtype: 'fp32' });
+                    } else if (options.device === 'auto') {
+                        progress({ message: 'GPU unavailable; loading the CPU voice…' });
+                        await initialize(options, progress, { device: 'wasm', dtype: options.dtype === 'auto' ? 'q8' : options.dtype });
+                    } else { throw error; }
+                }
+            }
             if (!samples) {
                 const length = Array.from(parts[i]).length;
                 if (length < 2) throw new Error('Speech cannot fit in the model.');
