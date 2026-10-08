@@ -13,7 +13,7 @@
     var limit = 36, active = null, activeId = '', serial = 0;
     var fields = ['search', 'collection', 'category', 'event', 'language', 'style', 'duration'];
     var languages = { en: 'English', es: 'Español', 'pt-BR': 'Português (Brasil)' };
-    var styles = { friendly: 'Friendly', upbeat: 'Upbeat', dry: 'Dry' };
+    var styles = { friendly: 'Friendly', upbeat: 'Upbeat', playful: 'Playful' };
     var volume = document.getElementById('preview-volume');
     var theme = params.get('theme');
     if (theme === 'light' || (!theme && window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches)) document.documentElement.classList.add('light');
@@ -86,7 +86,7 @@
             var title = make('div'); title.appendChild(make('h2', sound.text || sound.name));
             title.appendChild(make('p', [sound.duration ? sound.duration.toFixed(1) + 's' : '', languages[sound.language] || sound.category, styles[sound.style]].filter(Boolean).join(' · '), 'sound-meta'));
             top.appendChild(art); top.appendChild(title); card.appendChild(top);
-            card.appendChild(make('p', sound.language ? sound.name + ' · Synthetic voice' : sound.description, 'sound-description'));
+            card.appendChild(make('p', sound.language ? sound.name + ' · AI-generated voice' : sound.description, 'sound-description'));
             var controls = make('div', '', 'card-actions');
             var listen = button('Listen', 'Preview ' + (sound.text || sound.name), function () { preview(sound); }); listen.setAttribute('data-preview', sound.id); listen.setAttribute('data-name', sound.text || sound.name); controls.appendChild(listen);
             controls.appendChild(button(embedded ? 'Use sound' : 'Copy URL', (embedded ? 'Use ' : 'Copy URL for ') + (sound.text || sound.name), function () { use(sound); }, 'use-sound'));

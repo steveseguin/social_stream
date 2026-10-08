@@ -179,6 +179,20 @@
 		return null;
 	}
 
+	function getYouTubeMessageId(ele) {
+		if (!ele) return "";
+		if (ele.id) return ele.id;
+		// SSApp can read the page's gift model. YouTube leaves these rows' HTML
+		// IDs empty even though each gift has a native message ID in its data.
+		if (window.ninjafy) {
+			try {
+				var gift = getYouTubeJewelDonationNode(ele);
+				if (gift && gift.data && typeof gift.data.id === "string") return gift.data.id;
+			} catch (e) {}
+		}
+		return "";
+	}
+
 	function normalizeYouTubeGiftImageUrl(url) {
 		url = normalizeDonationText(url);
 		if (!url) {
@@ -465,6 +479,11 @@
 
 	function getYouTubeJewelDonationNeighborText(node) {
 		try {
+			// A moderation edit can change the neighboring text while YouTube rebuilds
+			// the same gift row. Use the chat message's identity when it is available.
+			if (node && node.id) {
+				return "id:" + node.id;
+			}
 			var giftNode = getYouTubeJewelDonationNode(node);
 			if (giftNode) {
 				return getYouTubeJewelDonationHistoryText(giftNode).substring(0, 120);
@@ -487,6 +506,8 @@
 		try {
 			var slotNode = ele;
 			var giftNode = getYouTubeJewelDonationNode(ele) || ele;
+			var nativeId = getYouTubeMessageId(giftNode);
+			if (nativeId) return "jd_id_" + nativeId;
 			var textKey = getYouTubeJewelDonationHistoryText(giftNode);
 			if (!textKey) {
 				return "";
@@ -579,8 +600,9 @@
 			// short timer retries finish. Do not poll empty rows indefinitely.
 			ele.ssnYouTubePending = true;
 			ele.skip = false;
-			if (ele.id) {
-				messageHistory.delete(ele.id);
+			var messageId = getYouTubeMessageId(ele);
+			if (messageId) {
+				messageHistory.delete(messageId);
 			}
 			var retryCount = parseInt(ele.dataset.ssnRetryCount || "0", 10) || 0;
 			if (retryCount >= 4) return false;
@@ -1114,17 +1136,21 @@
 		if (settings.customyoutubestate) {
 			return 3;
 		}
+		var messageId = getYouTubeMessageId(ele);
 		try {
 			if (ele.skip) {
 				return 4;
-			} else if (ele.id) {
-				if (messageHistory.has(ele.id)) return 5;
-				messageHistory.add(ele.id);
+			} else if (eventType === "jeweldonation" && isKnownRemovedYouTubeJewelDonationSlot(ele)) {
+				ele.skip = true;
+				return 5;
+			} else if (messageId) {
+				if (messageHistory.has(messageId)) return 5;
+				messageHistory.add(messageId);
 				if (messageHistory.size > 300) { // 250 seems to be Youtube's max?
 				    const iterator = messageHistory.values();
 				    messageHistory.delete(iterator.next().value);	  
 				}
-				if (ele.id.length<40){
+				if (ele.id && ele.id.length<40){
 					setTimeout(()=>{
 						if (ele.id.length<40){
 							setTimeout(()=>{
@@ -1142,9 +1168,7 @@
 					},2000);
 				}
 				//console.log(messageHistory);
-			} else if (eventType == "jeweldonation"){
-				if (isKnownRemovedYouTubeJewelDonationSlot(ele)) return 5;
-		    } else {
+		    } else if (eventType !== "jeweldonation") {
 				retryYouTubeMessageWhenReady(ele, eventType);
 				return 6; // no id.
 		    }
@@ -1737,8 +1761,9 @@
 		if (jewelDonation && jewelDonation.meta) {
 			data.meta = Object.assign({}, data.meta, jewelDonation.meta);
 		}
-		if (ele.id) {
-			data.meta = Object.assign({}, data.meta, { messageId: ele.id });
+		messageId = getYouTubeMessageId(ele);
+		if (messageId) {
+			data.meta = Object.assign({}, data.meta, { messageId: messageId });
 		}
 		
 		if (channelName){
@@ -2749,7 +2774,8 @@
 			var recoveryMids = {};
 			Array.from(ele.children).forEach(function (row) {
 				var mid = parseInt(row.dataset.mid, 10);
-				if (row.id && Number.isSafeInteger(mid) && mid > 0) recoveryMids[row.id] = mid;
+				var messageId = getYouTubeMessageId(row);
+				if (messageId && Number.isSafeInteger(mid) && mid > 0) recoveryMids[messageId] = mid;
 			});
 			sessionStorage.setItem(youtubeStaleRecoveryKey, JSON.stringify({
 				url: window.location.href, at: now, ids: Array.from(messageHistory).slice(-300), mids: recoveryMids
@@ -2798,16 +2824,17 @@
 		}
 		try {
 			[...ele.children].forEach(ele4 => {
+				var messageId = getYouTubeMessageId(ele4);
 				// ID-less gifts in a replacement/reload snapshot cannot be distinguished
 				// from already delivered gifts. Keep the history exclusion for those rows;
 				// newly inserted gifts still go through the normal observer.
-				if (captureExisting && !ele4.id && getYouTubeJewelDonationNode(ele4) &&
+				if (captureExisting && !messageId && getYouTubeJewelDonationNode(ele4) &&
 					!ele4.ssnYouTubeCaptureTimer && !ele4.ssnYouTubePending) {
 					ele4.skip = true;
 					return;
 				}
 				if (captureExisting) {
-					var mid = youtubeRecoveryMids[ele4.id];
+					var mid = youtubeRecoveryMids[messageId];
 					if (Number.isSafeInteger(mid) && mid > 0) ele4.dataset.mid = mid;
 					checkType(ele4, captureExisting);
 					return;
@@ -2817,8 +2844,8 @@
 				}
 				ele4.skip = true;
 				cleared = true;
-				if (ele4.id) {
-					messageHistory.add(ele4.id);
+				if (messageId) {
+					messageHistory.add(messageId);
 				}
 			});
 		} catch (e) {}
@@ -2851,13 +2878,27 @@
 		if (!forceRefresh && youtubeObservedItems === ele && youtubeChatObserver && youtubeDeletionObserver) {
 			return;
 		}
+		if (youtubeObservedItems && youtubeObservedItems !== ele) {
+			// Replacing the entire list does not remove rows through its own observer.
+			// Keep handled gift identities even if regular chat has filled the ID cache.
+			Array.from(youtubeObservedItems.children).forEach(function (row) {
+				rememberRemovedYouTubeJewelDonationSlot(row);
+			});
+		}
 		disconnectYouTubeChatObservers();
 		ele.skip = true;
 		youtubeObservedItems = ele;
 		youtubeObservedItemsHost = getYouTubeChatItemsHost(ele);
 		youtubeDeletionObserver = setupDeletionObserver(ele);
 		function captureRow(ele2, eventtype=false) {
-			if (ele2.skip || (ele2.id && messageHistory.has(ele2.id))) return;
+			var messageId = getYouTubeMessageId(ele2);
+			if (ele2.skip) return;
+			if (messageId && messageHistory.has(messageId)) {
+				// A rebuilt gift is still handled after ordinary chat ages its ID out
+				// of the shared history; retain it for the gift replacement check.
+				if (eventtype === "jeweldonation") ele2.skip = true;
+				return;
+			}
 			if (!ele2.ssnYouTubePending && isYouTubeChatActivityNode(ele2)) {
 				markYouTubeChatActivity();
 			}

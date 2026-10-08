@@ -11,10 +11,10 @@
         ['whoosh', 'Whoosh', 'Effects'], ['cash-register', 'Cash register', 'Effects'],
         ['boing', 'Boing', 'Effects'], ['record-scratch', 'Record scratch', 'Effects'],
         ['pop', 'Pop', 'Effects'], ['camera', 'Camera shutter', 'Effects'],
-        ['voice-thank-you', 'Thank you!', 'Voiced phrases (synthetic)'],
-        ['voice-welcome', 'Welcome to the stream!', 'Voiced phrases (synthetic)'],
-        ['voice-lets-go', "Let’s go!", 'Voiced phrases (synthetic)'],
-        ['voice-hype-train', 'All aboard the hype train!', 'Voiced phrases (synthetic)']
+        ['voice-thank-you', 'Thanks for watching!', 'Voiced phrases'],
+        ['voice-welcome', 'Welcome to the stream!', 'Voiced phrases'],
+        ['voice-lets-go', "Let’s go!", 'Voiced phrases'],
+        ['voice-hype-train', 'All aboard the hype train!', 'Voiced phrases']
     ].map(function (entry) {
         return { name: entry[1], group: entry[2], url: './audio/alerts/' + entry[0] + '.wav' };
     }).concat([
