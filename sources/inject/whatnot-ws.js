@@ -87,6 +87,7 @@
         console.log("Received message:", event.data);
         safely(() => postMessage({
           type: WSEventType.RECEIVE,
+          receivedAt: Date.now(),
           data: normalizeToString(event.data)
         }), cleanUp);
       }

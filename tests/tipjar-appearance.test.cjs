@@ -19,6 +19,8 @@ async function testLegacyAppearance(browser, baseUrl) {
                     await page.goto(baseUrl + '/tipjar.html?preview&style=' + style + '&theme=' + theme + '&startamount=63.5&goal=100');
                     await page.evaluate(() => document.fonts.ready);
                     await page.addStyleTag({ content: '*, *::before, *::after { animation: none !important; transition: none !important; }' });
+                    // Freeze the physics canvas too; CSS animation controls do not stop Matter rendering.
+                    await page.evaluate(() => { if (typeof render !== 'undefined' && render) Matter.Render.stop(render); });
                     const current = await page.screenshot({ animations: 'disabled' });
                     await page.locator('style').first().evaluate((el, css) => { el.textContent = css; }, legacyCss);
                     const legacy = await page.screenshot({ animations: 'disabled' });
@@ -37,6 +39,8 @@ async function testLegacyAppearance(browser, baseUrl) {
         ]) {
             await page.goto(baseUrl + '/tipjar.html?preview&startamount=35&goal=100&' + params);
             await page.addStyleTag({ content: '*, *::before, *::after { animation: none !important; transition: none !important; }' });
+            // Freeze the physics canvas too; CSS animation controls do not stop Matter rendering.
+            await page.evaluate(() => { if (typeof render !== 'undefined' && render) Matter.Render.stop(render); });
             const current = await page.screenshot({ animations: 'disabled' });
             await page.locator('style').first().evaluate((el, css) => { el.textContent = css; }, legacyCss);
             assert(current.equals(await page.screenshot({ animations: 'disabled' })), 'Custom appearance changed: ' + params);

@@ -1,6 +1,34 @@
 (function () {
 	
 	var isExtensionOn = true;
+	var viewerRequest = null;
+	function viewerChannel() {
+		if (location.hostname !== "piczel.tv") { return ""; }
+		var match = location.pathname.match(/^\/(?:chat|watch)\/([^/]+)\/?$/);
+		return match ? match[1] : "";
+	}
+	function checkViewers() {
+		var channel = viewerChannel();
+		if (!channel || viewerRequest || !isExtensionOn || !(settings.showviewercount || settings.hypemode)) { return; }
+		var xhr = new XMLHttpRequest();
+		viewerRequest = xhr;
+		xhr.open("GET", "https://api.piczel.tv/streams/" + channel);
+		xhr.timeout = 10000;
+		xhr.onload = function () {
+			if (xhr.status !== 200 || channel !== viewerChannel() || !isExtensionOn || !(settings.showviewercount || settings.hypemode)) { return; }
+			try {
+				var response = JSON.parse(xhr.responseText);
+				if (response.type !== "stream" || !Array.isArray(response.data)) { return; }
+				var stream = response.data.find(function (item) { return item && typeof item.slug === "string" && item.slug.toLowerCase() === decodeURIComponent(channel).toLowerCase(); });
+				if (!stream || typeof stream.live !== "boolean") { return; }
+				var count = stream.live ? stream.viewers : 0;
+				if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 0) { return; }
+				pushMessage({ type: "piczel", event: "viewer_update", meta: count });
+			} catch (e) {}
+		};
+		xhr.onloadend = function () { if (viewerRequest === xhr) { viewerRequest = null; } };
+		xhr.send();
+	}
 function pushMessage(data){	  
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
@@ -262,7 +290,10 @@ function pushMessage(data){
 		if ("settings" in response){
 			settings = response.settings;
 		}
+		if ("state" in response) { isExtensionOn = response.state; }
+		checkViewers();
 	});
+	setInterval(checkViewers, 30000);
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
@@ -280,6 +311,14 @@ function pushMessage(data){
 				if (typeof request === "object"){
 					if ("settings" in request){
 						settings = request.settings;
+						if ("state" in request) { isExtensionOn = request.state; }
+						checkViewers();
+						sendResponse(true);
+						return;
+					}
+					if ("state" in request) {
+						isExtensionOn = request.state;
+						checkViewers();
 						sendResponse(true);
 						return;
 					}

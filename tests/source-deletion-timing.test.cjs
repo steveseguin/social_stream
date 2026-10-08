@@ -106,7 +106,8 @@ test('YouTube DOM cancels deletion during its placeholder-avatar wait', async ()
   }
   const c = vm.createContext({
     settings: { textonlymode: true, excludeReplyingTo: true }, youtubeShorts: false,
-    messageHistory: new Set(), avatarHistory: new Map(), channelName: '', channelThumbnail: '', videoId: '',
+    messageHistory: new Set(), avatarHistory: new Map(), deletedYouTubeMessageIds: new Set(),
+    channelName: '', channelThumbnail: '', videoId: '',
     EMOTELIST: false, BTTV: false, SEVENTV: false, FFZ: false, chrome: runtime(packets),
     window: {}, setTimeout, clearTimeout, pendingMessageReplies: new Map(),
     messageReplyPrefix: 'fixture:', messageReplyCounter: 0,
@@ -123,7 +124,8 @@ test('YouTube DOM cancels deletion during its placeholder-avatar wait', async ()
   c.deleteThis(target);
   avatar.resolve();
   await pending;
-  assert.equal(packets.filter(p => p.delete).length, 1);
+  assert.equal(packets.filter(p => p.delete).length, 0,
+    'An uncaptured row must not delete earlier messages from the same author');
   assert.equal(packets.filter(p => p.message).length, 0);
   const later = row('later');
   await c.processMessage(later);
@@ -190,13 +192,13 @@ function youtubeFixture(retry) {
   let ready = false;
   const c = vm.createContext({
     console: fixtureConsole(errors), settings: { textonlymode: true, excludeReplyingTo: true },
-    youtubeShorts: false, messageQueue: [], deletedYouTubeMessageIds: new Set(),
+    youtubeShorts: false, messageQueue: [], deletedYouTubeMessageIds: new Set(), youtubeApiMessageIds: new Map(), atob,
     pendingYouTubeMessages: new Set(), cancelledYouTubeMessages: new WeakSet(),
     isPageVisible: false, currentStream: null, videoId: null, currentSourceName: '', currentSourceImage: '',
     youtubeRecommendedInterval: 5000, lastSuccessfulPollTime: 0, initialBacklogProcessing: false,
     lastMessageTime: null, lastMessageTimeIds: new Set(), nextPageToken: null, LIVE_CHAT_MAX_RESULTS: 500,
     consecutiveMaxMessages: 0, consecutiveEmptyPolls: 0, slowerPollingMode: false, quickPollCount: 0,
-    document: { getElementById: () => ({ setAttribute() {} }) }, extractYouTubeGiftMetadata: () => null,
+    document: { getElementById: () => ({ setAttribute() {} }), querySelectorAll: () => [] }, extractYouTubeGiftMetadata: () => null,
     getRichMessageForMessageData: () => null,
     getRichBadgesForMessageData: () => ready ? [{ type: 'text', text: 'Member' }] : [],
     messageDataNeedsRichChannelEmojiResolution: () => retry === 'emoji' && !ready,
@@ -208,7 +210,8 @@ function youtubeFixture(retry) {
     window: { dispatchEvent: event => events.push({ type: event.type, detail: event.detail }) }
   });
   install(c, source, ['normalizeLiveChatType', 'normalizeLiveChatMessageItem', 'processLiveChatResponseData',
-    'forwardYouTubeDelete', 'processYouTubeUserBanned', 'normalizeYouTubeBanType', 'normalizeYouTubeBanDurationSeconds',
+    'forwardYouTubeDelete', 'rememberDeletedYouTubeMessage', 'getYouTubeMessageKey',
+    'processYouTubeUserBanned', 'normalizeYouTubeBanType', 'normalizeYouTubeBanDurationSeconds',
     'queueMessage', 'messageDataNeedsRichBadgeResolution', 'queueMessageAfterRichBadgeRetry',
     'queueMessageAfterRichEmojiRetry', 'continueQueuedMessageAfterRichEmojiResolution',
     'processQueuedMessageData', 'processMessage', 'pushMessage', 'applySourceIdentity']);

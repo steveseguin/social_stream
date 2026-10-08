@@ -13,6 +13,7 @@
     <title>Actions Overlay - Social Stream Ninja</title>
     <script src="thirdparty/obs-websocket.min.js"></script>
     <script type="text/javascript" src="tts.js"></script>
+    <script src="shared/alerts/audio-player.js"></script>
     <style>
 		body, html {
 			margin: 0;
@@ -1461,7 +1462,11 @@
 							? resolveLocalMediaUrl(payload.localAssetId)
 							: payload.audioUrl;
                     if (audioUrl) {
-						playAudio(audioUrl, payload.volume);
+                        if (payload.audioPlayback === 'queue' || payload.audioPlayback === 'interrupt') {
+                            window.SSNFlowAudio.onBlocked = function (blocked) { audioUnlockPrompt.hidden = !blocked && !blockedAudio; };
+                            window.SSNFlowAudio.play(audioUrl, payload.volume, payload.audioPlayback);
+                        }
+                        else playAudio(audioUrl, payload.volume);
 					} else if (payload.sourceType === 'local') {
 						showLocalMediaDiagnostic(payload.localAssetName);
                     } else {
@@ -1470,6 +1475,14 @@
 					}
                     break;
                     
+                case 'stop_audio':
+                    window.SSNFlowAudio.stop();
+                    blockedAudio = null;
+                    audioUnlockPrompt.hidden = true;
+                    audioPlaybackSequence++;
+                    if (window.ssnLegacyAudioClips) { window.ssnLegacyAudioClips.forEach(audio => audio.pause()); window.ssnLegacyAudioClips.clear(); }
+                    break;
+
                 // OBS Browser Source API Actions
                 case 'obsChangeScene':
                     if (payload.sceneName) {
@@ -2154,12 +2167,14 @@
                 // HTML audio does not use an AudioContext. Waiting for a suspended
                 // context here can prevent play() from reporting an autoplay block.
                 await audio.play();
+                if (window.ssnLegacyAudioClips) window.ssnLegacyAudioClips.add(audio);
                 if (sequence === audioPlaybackSequence) {
                     blockedAudio = null;
                     audioUnlockPrompt.hidden = true;
                 }
                 console.log("Playing audio:", audio.src);
             } catch (error) {
+                if (window.ssnLegacyAudioClips) window.ssnLegacyAudioClips.delete(audio);
                 if (error && error.name === 'NotAllowedError') {
                     if (sequence === audioPlaybackSequence) {
                         // Keep only the latest clip, so unlocking cannot play a backlog.
@@ -2178,6 +2193,7 @@
         }
 
         function retryBlockedAudio() {
+            if (window.SSNFlowAudio && window.SSNFlowAudio.retry()) return;
             if (!blockedAudio) return;
             var pending = blockedAudio;
             blockedAudio = null;
@@ -2192,6 +2208,9 @@
             audioUnlockPrompt.hidden = true;
             try {
                 const audio = new Audio(audioUrl);
+                if (!window.ssnLegacyAudioClips) window.ssnLegacyAudioClips = new Set();
+                window.ssnLegacyAudioClips.add(audio);
+                audio.onended = audio.onerror = function () { window.ssnLegacyAudioClips.delete(audio); };
                 audio.volume = volume !== undefined ? parseFloat(volume) : globalVolume;
                 await startAudioPlayback(audio, sequence);
             } catch (e) {

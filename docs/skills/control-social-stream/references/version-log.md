@@ -21,6 +21,14 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.1.0 | 0.4.2 | Versioned responses, request and operation IDs, SSE status events, token-file and stored credentials, visible-app controls, expanded source/settings discovery, and version-aware MCP tools |
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
+## Whatnot public auction capture — October 6, 2026
+
+Minimum SSApp: 0.4.32 with the updated Whatnot source files and settings.
+WebSocket mode also receives the public auction feed, including auction lifecycle,
+bid, giveaway-count, and pinned-item updates. Stream-event capture settings apply.
+The source reconnects chat and auctions independently. Auction events have no
+recovery snapshot. The control API and MCP command schemas are unchanged.
+
 ## Unreleased Whatnot regional show links
 
 Minimum supported build: the SSApp development checkout based on 0.4.33 containing

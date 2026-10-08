@@ -453,6 +453,7 @@ class EventFlowEditor {
                     { id: 'showText', name: '📝 Show Text' },
                     { id: 'clearLayer', name: '🗑️ Clear Layer' },
                     { id: 'playAudioClip', name: '🔊 Play Audio Clip' },
+                    { id: 'stopAudioClips', name: '🔇 Stop Audio Clips' },
                     { id: 'delay', name: '⏱️ Delay' }
                 ]
             },
@@ -3329,7 +3330,7 @@ class EventFlowEditor {
 					node.config = { sceneName: 'Your Scene Name' };
 					break;
 				case 'playAudioClip':
-					node.config = { audioUrl: './audio/chime.wav', volume: 0.35 };
+					node.config = { audioUrl: './audio/chime.wav', volume: 0.35, audioPlayback: 'queue', audioCooldown: 0 };
 					break;
 				case 'delay':
 					node.config = { delayMs: 1000 };
@@ -6449,6 +6450,9 @@ class EventFlowEditor {
 					</div>`;
 				break;
 				
+			case 'stopAudioClips':
+                html += '<p class="property-help">Stops audio clips and clears the sound queue in the Flow Actions overlay.</p>';
+                break;
 			case 'playAudioClip':
 				html += `${this.renderLocalMediaSource(node, {
 						label: 'Audio URL or Local File',
@@ -6460,7 +6464,19 @@ class EventFlowEditor {
 						 <div class="property-group">
 							<label class="property-label" for="prop-volume">Volume (0 = silent, 1 = full volume)</label>
 							<input type="number" class="property-input" id="prop-volume" value="${node.config.volume ?? 1.0}" min="0" max="1" step="0.1">
-						</div><div class="property-help">Live sound plays through your Flow Actions browser source. Use sound in only one overlay for the same event to avoid doubling it. <a href="event-flow-guide.html" target="_blank" rel="noopener">Setup guide</a></div>`;
+						</div>
+                        <details class="property-group"><summary>Playback options</summary>
+                            <label class="property-label" for="prop-audioPlayback">When another clip is playing</label>
+                            <select class="property-input" id="prop-audioPlayback">
+                                <option value="overlap" ${!node.config.audioPlayback || node.config.audioPlayback === 'overlap' ? 'selected' : ''}>Play together</option>
+                                <option value="queue" ${node.config.audioPlayback === 'queue' ? 'selected' : ''}>Wait in the sound queue</option>
+                                <option value="interrupt" ${node.config.audioPlayback === 'interrupt' ? 'selected' : ''}>Replace the queued sound</option>
+                            </select>
+                            <label class="property-label" for="prop-audioCooldown">Cooldown for this action (seconds)</label>
+                            <input class="property-input" id="prop-audioCooldown" type="number" min="0" max="3600" step="1" value="${Math.max(0, Number(node.config.audioCooldown) || 0)}">
+                            <p class="property-help">The queue holds up to 30 waiting clips, each up to two minutes. For point rewards, put a Rate Limiter before Spend Points; skipping a sound does not refund a separate charge.</p>
+                        </details>
+                        <div class="property-help">Live sound plays through your Flow Actions browser source. Use sound in only one overlay for the same event to avoid doubling it. <a href="event-flow-guide.html" target="_blank" rel="noopener">Setup guide</a></div>`;
 				break;
 
 			default:
@@ -6579,6 +6595,7 @@ class EventFlowEditor {
         document.querySelectorAll('#node-properties-content .property-input:not([data-node-meta="true"])').forEach(input => {
             const propId = input.id.replace('prop-', '');
             input.addEventListener('input', (e) => { // 'change' for select/checkbox, 'input' for text/textarea
+                if (nodeData.actionType === 'playAudioClip' && propId === 'audioUrl') delete nodeData.config.audioChoices;
                 if (e.target.type === 'checkbox') {
                     nodeData.config[propId] = e.target.checked;
                     if (propId === 'includeMessage' && document.getElementById('webhook-body-group')) {
@@ -7263,7 +7280,20 @@ class EventFlowEditor {
                 container: host, input, id: 'eventflow-audio', label: 'Play this sound — Flow Actions overlay',
                 getValue: () => nodeData.config.sourceType === 'local' ? '' : (nodeData.config.audioUrl || ''),
                 getVolume: () => nodeData.config.volume === undefined ? 0.35 : nodeData.config.volume,
+                getChoices: () => nodeData.config.audioChoices || [],
+                setChoices: values => {
+                    nodeData.config.sourceType = 'url';
+                    nodeData.config.audioUrl = values[0];
+                    nodeData.config.audioChoices = values;
+                    delete nodeData.config.localAssetId;
+                    delete nodeData.config.localAssetName;
+                    delete nodeData.config.localMediaType;
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                    this.showNodeProperties(nodeData);
+                },
                 setValue: value => {
+                    delete nodeData.config.audioChoices;
                     nodeData.config.sourceType = 'url';
                     nodeData.config.audioUrl = value;
                     delete nodeData.config.localAssetId;
@@ -7279,7 +7309,7 @@ class EventFlowEditor {
             });
             const help = document.createElement('p');
             help.className = 'property-help';
-            help.textContent = 'Listen plays locally. This action plays in the Flow Actions OBS browser source. If Multi-Alerts also handles this event, use sound in only one overlay to avoid doubling it. For a local file, use its Preview button below.';
+            help.textContent = (nodeData.config.audioChoices && nodeData.config.audioChoices.length > 1 ? 'Random set: ' + nodeData.config.audioChoices.length + ' sounds. Choose a single sound to replace the set. ' : '') + 'Listen plays locally. This action plays in the Flow Actions OBS browser source. If Multi-Alerts also handles this event, use sound in only one overlay to avoid doubling it. For a local file, use its Preview button below.';
             host.appendChild(help);
         }
         if (uploadAudioBtn) {

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sound library — Social Stream Ninja</title>
+  <link rel="icon" href="icons/favicon.ico">
+  <link rel="stylesheet" href="shared/alerts/audio-browser.css">
+  <script defer src="shared/alerts/audio-catalog.js"></script>
+  <script defer src="shared/alerts/audio-browser.js"></script>
+</head>
+<body>
+  <header>
+    <div><a class="brand" href="./">SOCIAL STREAM NINJA</a><h1>Find your sound.</h1><p>Original effects and ready-to-play voices for your stream.</p><p id="random-help" hidden>Choose one sound, or use + to build a random set.</p></div>
+    <button id="close-browser" type="button" hidden>Close</button>
+  </header>
+  <main>
+    <section class="browser-tools" aria-label="Find sounds">
+      <label class="search-label" for="search">Search sounds or phrases<input id="search" type="search" placeholder="Try air horn, thank you, or raid…" autocomplete="off"></label>
+      <div class="filters">
+        <label>Collection<select id="collection"><option value="">All sounds</option><option value="recommended" selected>Recommended</option><option value="favorites">Favorites</option><option value="recent">Recently used</option><option value="new">New</option></select></label>
+        <label>Category<select id="category"><option value="">All categories</option></select></label>
+        <label>Use for<select id="event"><option value="">Any moment</option><option value="follow">Follows</option><option value="subscription">Subscriptions</option><option value="donation">Donations</option><option value="raid">Raids</option><option value="reward">Rewards</option><option value="reaction">Reactions</option><option value="transition">Transitions</option></select></label>
+        <label>Language<select id="language"><option value="">All languages</option><option value="none">Effects only</option><option value="en">English</option><option value="es">Español</option><option value="pt-BR">Português (Brasil)</option></select></label>
+        <label>Delivery<select id="style"><option value="">Any delivery</option><option value="friendly">Friendly</option><option value="upbeat">Upbeat</option><option value="playful">Playful</option></select></label>
+        <label>Length<select id="duration"><option value="">Any length</option><option value="2">Up to 2 seconds</option><option value="5">Up to 5 seconds</option><option value="10">Up to 10 seconds</option></select></label>
+      </div>
+    </section>
+    <div class="results-bar"><p id="count" role="status" aria-live="polite"></p><button id="reset" type="button">Clear filters</button></div>
+    <div id="sounds" class="sound-grid" aria-label="Sound results"></div>
+    <p id="empty" hidden>No sounds match. Try another phrase or clear the filters.</p>
+    <button id="more" type="button" hidden>Show more sounds</button>
+  </main>
+  <footer class="player">
+    <div><strong id="playing">Listen before you choose</strong><span id="play-status" role="status" aria-live="polite">Previews play here, not on your stream.</span></div>
+    <label for="preview-volume">Preview volume <input id="preview-volume" type="range" min="0" max="100" value="35"><output id="volume-label" for="preview-volume">35%</output></label>
+    <button id="stop" type="button" disabled>Stop preview</button>
+    <button id="use-choices" type="button" hidden disabled>Use random set (0)</button>
+  </footer>
+  <noscript>Enable JavaScript to browse and preview sounds.</noscript>
+</body>
+</html>

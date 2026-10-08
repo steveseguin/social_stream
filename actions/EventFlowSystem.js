@@ -4376,15 +4376,28 @@ class EventFlowSystem {
 				}
 				break;
 
-			case 'playAudioClip':
-				if (config.audioUrl || (config.sourceType === 'local' && config.localAssetId)) {
+			case 'playAudioClip': {
+                const choices = config.sourceType !== 'local' && Array.isArray(config.audioChoices) ? config.audioChoices.filter(value => typeof value === 'string' && value).slice(0, 20) : [];
+                const selectedAudio = choices.length ? choices[Math.floor(Math.random() * choices.length)] : config.audioUrl;
+                const cooldown = Math.max(0, Math.min(3600, Number(config.audioCooldown) || 0)) * 1000;
+                if (cooldown) {
+                    if (!this.audioClipCooldowns) this.audioClipCooldowns = new Map();
+                    const key = String(flow && flow.id || '') + ':' + actionNode.id;
+                    const previous = this.audioClipCooldowns.get(key);
+                    if (previous && Date.now() - previous < cooldown) break;
+                    this.audioClipCooldowns.delete(key);
+                    this.audioClipCooldowns.set(key, Date.now());
+                    if (this.audioClipCooldowns.size > 1000) this.audioClipCooldowns.delete(this.audioClipCooldowns.keys().next().value);
+                }
+				if (selectedAudio || (config.sourceType === 'local' && config.localAssetId)) {
 					const actionPayload = {
 						actionType: 'play_audio',
-						audioUrl: config.sourceType === 'local' && config.localAssetId ? '' : config.audioUrl,
+						audioUrl: config.sourceType === 'local' && config.localAssetId ? '' : selectedAudio,
 						sourceType: config.sourceType === 'local' && config.localAssetId ? 'local' : 'url',
 						localAssetId: config.sourceType === 'local' && config.localAssetId ? config.localAssetId : undefined,
 						localAssetName: config.sourceType === 'local' && config.localAssetId ? config.localAssetName : undefined,
-						volume: config.volume !== undefined ? config.volume : 1.0
+						volume: config.volume !== undefined ? config.volume : 1.0,
+                        audioPlayback: config.audioPlayback === 'queue' || config.audioPlayback === 'interrupt' ? config.audioPlayback : undefined
 					};
 					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
 						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
@@ -4399,6 +4412,13 @@ class EventFlowSystem {
 					console.warn('[ExecuteAction - playAudioClip] Audio URL not configured.');
 				}
 				break;
+            }
+            case 'stopAudioClips': {
+                const payload = { overlayNinja: { actionType: 'stop_audio' } };
+                if (this.sendTargetP2P) this.sendTargetP2P(payload, 'actions');
+                else if (this.sendMessageToTabs) this.sendMessageToTabs({ ...payload, targetPage: 'actions' }, true);
+                break;
+            }
                 
             case 'delay':
                 // Delay the message by specified milliseconds

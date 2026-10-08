@@ -1485,6 +1485,28 @@
 				margin-right: 8px;
 				vertical-align: middle;
 			}
+			.highlight-chat.split-row {
+				box-sizing: border-box;
+				flex-wrap: wrap;
+			}
+			.split-row > .leftside {
+				min-width: 0;
+				flex: 0 0 40%;
+			}
+			.split-row > .leftside .hl-name {
+				max-width: calc(100% - 10px);
+			}
+			.split-row > .hl-message {
+				min-width: 0;
+				flex: 1 1 40%;
+				box-sizing: border-box;
+			}
+			.split-row > .donationAmount {
+				max-width: 98%;
+				box-sizing: border-box;
+				white-space: normal;
+				overflow-wrap: anywhere;
+			}
 			.leftside > img, .leftside > video{
 				top: 0px;
 				margin: 2px 2px auto 1px;
@@ -2637,6 +2659,10 @@
 			.alignright .hl-message.hl-content.bubble {
 				margin-left: auto;
 				display: flex;
+			}
+
+			.alignright #output:not(.horizontal) .hl-message.hl-content.bubble {
+				display: block;
 			}
 
 			.alignright .compactmode.horizontal .hl-message {
@@ -12273,10 +12299,14 @@
 					}
 
 					if (data.chatmessage) {
-						data.chatmessage = data.chatmessage
-							.replace(/[\r\n]+/g, "")
-							.replace(/\s+/g, " ")
-							.trim();
+						if (data.type === "picarto" && data.textonly) {
+							data.chatmessage = data.chatmessage.replace(/[^\S\r\n]+/g, " ").trim();
+						} else {
+							data.chatmessage = data.chatmessage
+								.replace(/[\r\n]+/g, "")
+								.replace(/\s+/g, " ")
+								.trim();
+						}
 					}
 					
 					var chatmessage = data.chatmessage || "";
@@ -12327,6 +12357,9 @@
 					if (data.textonly) {
 						// Missing legacy flags retain HTML mode; a true flag must preserve literal characters.
 						chatmessage = escapeHtml(chatmessage); // Encode the display copy once; keep the stored/transmitted plain body unchanged.
+						if (data.type === "picarto") {
+							chatmessage = chatmessage.replace(/\r\n|\r|\n/g, "<br>");
+						}
 					}
 
 					if (largeavatar && data.chatname && data.type && avatars) {
@@ -12620,7 +12653,7 @@
 					} else if (twoLines) {
 						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + '<div class="hl-firstline">' + "" + "<div class='queueid'></div>" + showType + chatImg + chatname + '</div><div class="hl-message"><span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">'+ timeArrived  + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
 					} else if (splitMode) {
-						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid' title='Order in Queue, with 1 being next up.'></div>" + "<div class='leftside " + larger + "'>"  + showType  + chatImg + chatname + "</div>" + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
+						var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + (horizontal ? "" : " split-row") + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid' title='Order in Queue, with 1 being next up.'></div>" + "<div class='leftside " + larger + "'>"  + showType  + chatImg + chatname + "</div>" + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
 					} else if (compactmode) {
 						if (bubble){
 							var node = createElementFromHTML('<div id="msg_' + safeDataId + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + safeDataType + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + safeDataId + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");

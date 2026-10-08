@@ -101,8 +101,14 @@
                                     <li><a href="#shareplay">SharePlay</a></li>
                                     <li><a href="#gosh">Gosh</a></li>
                                     <li><a href="#livacha">Livacha</a></li>
+                                    <li><a href="#chatango">Chatango</a></li>
                                     <li><a href="#streamplace">Streamplace</a></li>
                                     <li><a href="#worldswave">WorldsWave</a></li>
+                                    <li><a href="#goodgame">Goodgame</a></li>
+                                    <li><a href="#pilled">Pilled</a></li>
+                                    <li><a href="#owncast">Owncast</a></li>
+                                    <li><a href="#picarto">Picarto</a></li>
+                                    <li><a href="#piczel">Piczel</a></li>
                                     <li><a href="#flextv">FLEX TV</a></li>
                                     <li><a href="#sealteamsloth">Seal Team Sloth</a></li>
                                     <li><a href="#meetme-dom">MeetMe</a></li>
@@ -337,6 +343,33 @@
                             <td>-</td>
                             <td>-</td>
                             <td>Rendered chat rows with names, author colors, badge images, and member metadata</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#goodgame"><strong>Goodgame</strong></a></td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>Chat, viewer counts, and native chat message IDs when available</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#pilled"><strong>Pilled</strong></a></td>
+                            <td>-</td><td>-</td><td>-</td>
+                            <td>Chat and viewer counts on dedicated chat and topic pages</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#owncast"><strong>Owncast</strong></a></td>
+                            <td>-</td><td>-</td><td>-</td>
+                            <td>Chat and viewer counts from the Owncast server</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#picarto"><strong>Picarto</strong></a></td>
+                            <td>-</td><td>-</td><td>-</td>
+                            <td>Chat and viewer counts on the public chat popout</td>
+                        </tr>
+                        <tr>
+                            <td><a href="#piczel"><strong>Piczel</strong></a></td>
+                            <td>-</td><td>-</td><td>-</td>
+                            <td>Chat capture and viewer counts on chat and watch pages</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1153,7 +1186,7 @@
                     <h3>Whatnot</h3>
                     <p class="source-note">Implementation: <code>sources/whatnot.js</code></p>
                     <ul class="requirements">
-                        <li>Open the live Whatnot show page with chat visible; the existing websocket capture supplies chat, auction/sale notifications, payment failures, raids, donations, and fast viewer updates. Product/giveaway snapshots still rely on DOM sections rendered in the show view.</li>
+                        <li>Use the Whatnot source in SSApp for public chat and auction events without video, or open the live show page for website capture. Both connect to the public auction feed. Website capture also reads rendered auction and catalog sections.</li>
                         <li><em>Capture Stream Events</em> controls Whatnot system events plus auction/catalog metadata updates; joined rows also require <em>Capture "joined" stream events</em>; viewer counts still follow the viewer/hype toggles.</li>
                     </ul>
                     <div class="table-scroll" role="region" tabindex="0" aria-label="Whatnot table">
@@ -1194,12 +1227,17 @@
                             <tr>
                                 <td class="status-event"><code>commerce_update</code></td>
                                 <td>When catalog sections change (products, surprise sets, upcoming giveaways), often accelerated by websocket giveaway/product lifecycle packets.</td>
-                                <td>Metadata-only snapshot with section counts and item arrays under <code>meta.products</code>, <code>meta.surpriseSets</code>, and <code>meta.upcomingGiveaways</code>.</td>
+                                <td>Metadata-only update. Website section snapshots use <code>meta.products</code>, <code>meta.surpriseSets</code>, and <code>meta.upcomingGiveaways</code>. Public giveaway updates use <code>meta.giveaway.productId</code> and <code>meta.giveaway.entryCount</code>. Pinned-item updates use <code>meta.pinnedItems</code>, containing the supplied type, ID, product ID, or name. <code>meta.websocketEvent</code> identifies <code>giveaway_entry_count_updated</code> or <code>pinned_item_updated</code>; unchanged states are suppressed.</td>
                             </tr>
                             <tr>
                                 <td><code>auction_started</code>, <code>new_bid</code>, <code>auction_ended</code>, <code>product_sold</code></td>
                                 <td>The corresponding live websocket notification arrives. These are individual events, separate from the existing display snapshots.</td>
                                 <td><code>platform/type: "whatnot"</code>, plain-text <code>chatname</code>, <code>userid</code> when supplied, product name in <code>subtitle</code>, and a plain-text <code>chatmessage</code> with <code>textonly: true</code>. Available identifiers and auction details are under <code>meta</code>: <code>productId</code>, <code>auctionId</code>, <code>orderId</code>, <code>transactionId</code>, <code>livestreamId</code>, <code>bidId</code>, <code>bids</code>, <code>auctionEndTime</code>, and <code>status</code>. Optional <code>price</code> is in major currency units, with <code>priceText</code> and <code>currency</code> when supplied.</td>
+                            </tr>
+                            <tr>
+                                <td><code>giveaway_started</code>, <code>giveaway_won</code></td>
+                                <td>The public auction feed announces a giveaway start or winner.</td>
+                                <td>Uses the auction event fields for the supplied product and winner. <code>meta.entryCount</code> contains the entry count when supplied. Entrant lists and raw order details are not forwarded.</td>
                             </tr>
                             <tr>
                                 <td><code>payment_failed</code></td>
@@ -1217,7 +1255,7 @@
                     <p class="field-highlights">Auction/commerce display updates remain DOM-backed snapshots. To match an individual websocket event in Event Flow, use <em>Event Type (Advanced)</em>, select <em>Custom Event</em>, and enter its exact name. Labels can use <code>**{username}**\n{subtitle}</code> with selected text weight; conditions can compare <code>meta.paymentStatus</code> with <code>failed</code>. An <a href="thermal-printer-guide.html#whatnot-item-labels">importable Whatnot label example</a> is available. Existing stream-event capture settings still apply.</p>
                     <p class="field-highlights">Additional optional fields are <code>meta.catalogProductId</code> (the packet's <code>product.productId</code>), <code>meta.parentProductId</code> (<code>product.parentId</code>), <code>meta.transactionType</code> (Whatnot's sale type, unchanged), and <code>meta.placeOrderErrorReason</code> (Whatnot's supplied order/payment error code). These product references describe the catalog or parent listing; they do not replace an order ID. Stock quantity is not treated as purchased quantity.</p>
                     <p class="field-highlights">For payment-success automation, set an <em>Event Type (Advanced)</em> trigger to <em>Custom Event</em>: <code>payment_succeeded</code>, and filter the source to Whatnot. Existing conditions and templates can use that event's <code>userid</code>, <code>chatname</code>, <code>subtitle</code> and <code>meta.orderId</code> directly. No remembered purchase is needed when the notification contains the required details.</p>
-                    <p class="field-highlights">An auction ending or an item being marked sold does not confirm successful payment: these notifications are not emitted as paid <code>purchase</code> events and do not set donation amounts. A success event is emitted only for a received <code>payment_succeeded</code> notification; capture does not poll for payment completion or infer it from a sale. Other <code>paymentStatus</code> values are forwarded only when explicitly supplied in a captured packet. Missing identifiers are omitted; a product ID alone may cover multiple sales, so use a supplied order/auction ID to correlate notifications. Capture does not remember purchases or match payment updates; any such workflow must be explicitly configured in Event Flow. Brief duplicate packets from the two existing capture bridges are suppressed. Raw order/payment objects are not forwarded.</p>
+                    <p class="field-highlights">An auction ending or an item being marked sold does not confirm successful payment: these notifications are not emitted as paid <code>purchase</code> events and do not set donation amounts. A success event is emitted only for a received <code>payment_succeeded</code> notification; capture does not poll for payment completion or infer it from a sale. Other <code>paymentStatus</code> values are forwarded only when explicitly supplied in a captured packet. Missing identifiers are omitted; a product ID alone may cover multiple sales, so use a supplied order/auction ID to correlate notifications. Capture does not remember purchases or match payment updates; any such workflow must be explicitly configured in Event Flow. Repeated commerce notifications with the same native event timestamp/ID are suppressed across overlapping channels and reconnects, within a 2,000-event cache. Packets without a native event identity use a brief duplicate window. Raw order/payment objects are not forwarded.</p>
                 </article>
 
                 <article class="platform-card" id="ebay">
@@ -2298,6 +2336,10 @@
                         <li>Uses the standard <code>focusChat</code> reply hook when a visible, editable input is present. Authenticated sending remains unverified.</li>
                     </ul>
                 </article>
+				<article class="platform-card" id="robotstreamer">
+					<h3>RobotStreamer</h3>
+					<p>Open <code>https://robotstreamer.com/chat.html?c=CHANNEL_ID</code> and keep Stream Chat selected for channel-only capture. Each new message, including messages grouped beneath the same author, uses <code>platform/type: "robotstreamer"</code>, plain-text <code>chatname</code>, <code>userid</code>, <code>chatimg</code>, <code>chatbadges</code>, and <code>nameColor</code>. Message bodies preserve safe inline images; <code>textonlymode</code> uses literal text and image labels. Initial history and system notices are excluded. RobotStreamer deletions are not forwarded; remove moderated messages in the SSN dock if needed.</p>
+				</article>
 				<article class="platform-card" id="castyr">
 					<h3>Castyr - DOM Capture</h3>
 					<p class="source-note">Implementation: <code>sources/castyr.js</code></p>
@@ -2352,6 +2394,11 @@
                 <p>Message IDs are used internally to avoid recapturing edits and remounted rows. Initial history and prepended older messages are skipped; timestamps and reaction menus are outside the captured body. No donation, membership, moderation, or viewer-count events are inferred.</p>
             </section>
 
+            <section class="section-summary" id="chatango">
+                <h2>Chatango - Group Chat</h2>
+                <p>Open <code>https://ROOM.chatango.com/</code>, or a page with an embedded Chatango room. New rows emit standard chat with <code>type</code>/<code>platform: "chatango"</code>, plain-text <code>chatname</code>, <code>nameColor</code>, <code>chatmessage</code>, and <code>chatimg</code> when available. Inline images use HTTP(S) URLs; text-only mode uses their alt text or <code>[image]</code>. Rows already displayed when capture attaches and older messages prepended while scrolling back are skipped.</p>
+            </section>
+
             <section class="section-summary" id="vaughn">
                 <h2>Vaughn Live - Channel Chat Capture</h2>
                 <p class="source-note">Implementation: <code>sources/vaughn.js</code>. Open <code>https://vaughn.live/USERNAME</code> with chat visible, or paste the channel URL into the desktop app's Add other source.</p>
@@ -2373,6 +2420,24 @@
                 <p>New chat rows use <code>type</code>/<code>platform</code> of <code>wtv</code> or <code>prime</code>, plain-text <code>chatname</code>, <code>nameColor</code>, and sanitized <code>chatmessage</code>. Inline emotes become safe images or alt text in text-only mode. Prime also includes the row's <code>userid</code> and supports both signed-in profile links and signed-out username labels. Avatars and badges are left empty when not available in the verified row structure.</p>
                 <p>Initial history, pinned cards, and reply previews are excluded. w.tv virtualizes its chat: keep it scrolled to the newest messages for capture. Its DOM test IDs are render indexes, not native message IDs. Prime skips older history loaded above the initial messages and ignored-user placeholders.</p>
                 <p>Neither popup exposes a verified stream viewer count, so these adapters do not emit viewer updates or infer donation, subscription, or moderation events.</p>
+            </section>
+
+            <section class="section-summary" id="additional-viewer-counts">
+                <h2>Goodgame, Pilled, Owncast, Picarto, and Piczel Viewer Counts</h2>
+                <p>Enable <em>Show viewer count</em> or <em>Track active chatters</em> (<code>showviewercount</code> or <code>hypemode</code>) to collect viewer counts. Opening the Viewer Count &amp; Chat Activity overlay with viewers displayed also requests them. Each source emits <code>event: "viewer_update"</code> with a nonnegative integer <code>meta</code>, refreshed every 30 seconds while capture is enabled. These are stream viewer counts; active chatters are counted separately. A reported zero is valid; failed requests do not produce a zero count.</p>
+                <p>Normal chat uses the source's <code>type</code>, <code>chatname</code>, <code>chatmessage</code>, and <code>textonly</code> fields without a viewer event marker. Viewer updates contain <code>type</code>, <code>event</code>, and integer <code>meta</code>; the background combines them into <code>viewer_updates</code> for overlays.</p>
+                <div class="table-scroll" role="region" tabindex="0" aria-label="Additional viewer count sources">
+                    <table class="field-table">
+                        <thead><tr><th scope="col">Source / type</th><th scope="col">Page to capture</th><th scope="col">Viewer count and chat fields</th></tr></thead>
+                        <tbody>
+                            <tr id="goodgame"><td><strong>Goodgame</strong><br><code>goodgame</code></td><td><code>goodgame.ru/CHANNEL/chat</code></td><td>Stream <code>viewers</code>. Chat rows also include the native ID as a string in <code>meta.messageId</code> when available.</td></tr>
+                            <tr id="pilled"><td><strong>Pilled</strong><br><code>pilled</code></td><td><code>pilled.net/livechat/USERNAME</code> or <code>pilled.net/comment/TOPIC_ID</code></td><td>The current live topic's <code>topicFacts.liveViews</code>. The dedicated chat URL supports counts without opening the video page.</td></tr>
+                            <tr id="owncast"><td><strong>Owncast</strong><br><code>owncast</code></td><td>Your captured Owncast stream or chat page</td><td><code>viewerCount</code> from that server's <code>/api/status</code>.</td></tr>
+                            <tr id="picarto"><td><strong>Picarto</strong><br><code>picarto</code></td><td><code>picarto.tv/chatpopout/CHANNEL/public</code></td><td>Channel <code>viewers</code>.</td></tr>
+                            <tr id="piczel"><td><strong>Piczel</strong><br><code>piczel</code></td><td><code>piczel.tv/chat/CHANNEL</code> or <code>piczel.tv/watch/CHANNEL</code></td><td>The matching stream's <code>viewers</code>. Join the chat or sign in to expose chat rows; viewer counts can be collected before joining.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </section>
 
             <section class="section-summary" id="cross-platform">
@@ -2604,6 +2669,9 @@
         </div>
     
 
+<section class="section-summary" id="flow-audio-actions"><h2>Event Flow audio controls</h2>
+<p>The Actions overlay accepts <code>actionType: "play_audio"</code> with <code>audioUrl</code>, <code>volume</code> (0–1), and optional <code>audioPlayback: "queue"</code> or <code>"interrupt"</code>. Omitting the playback option keeps overlapping playback. Local media continues to use <code>sourceType: "local"</code>, <code>localAssetId</code>, and <code>localAssetName</code>. Queue mode holds up to 30 waiting clips with a two-minute limit per clip; interrupt mode replaces that queue's current clip and clears its waiting items.</p>
+<p><code>actionType: "stop_audio"</code> stops Flow Actions audio clips and clears the sound queue. These are overlay control messages, not source chat events or proof that OBS output was heard. Event Flow resolves a configured random sound set to one audio URL before sending the action. See <a href="../actions/event-flow-guide.html">Event Flow setup</a>.</p></section>
 </main>
 
     <footer>

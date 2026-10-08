@@ -1289,6 +1289,14 @@ document.addEventListener('DOMContentLoaded', function() {
 			notes: 'Captures new rendered chat messages, name colors, inline emotes, and optional viewer-count updates.'
 		},
 		{
+			name: 'RobotStreamer',
+			icon: 'robotstreamer.png',
+			description: 'Live streaming platform with pop-out chat.',
+			type: 'popout',
+			instructions: `<ul><li>Open the channel chat popout: https://robotstreamer.com/chat.html?c=CHANNEL_ID</li><li>Keep Stream Chat selected to capture only that channel. Global Chat includes other channels.</li><li>In the desktop app, use Add other source and paste the popout URL.</li></ul>`,
+			notes: 'Captures new messages individually, including grouped messages, avatars, badges, name colors, and emotes. Loaded history and system notices are excluded. Remove moderated messages in the SSN dock if needed; RobotStreamer deletions are not forwarded.'
+		},
+		{
 			name: 'CI.ME',
 			icon: 'cime.png',
 			description: 'Korean live streaming platform.',
@@ -1308,6 +1316,19 @@ document.addEventListener('DOMContentLoaded', function() {
 			instructions: `
 				<ul>
 					<li>URL: https://chat.castr.io/room/XXXXXXXX</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Chatango',
+			icon: 'chatango.png',
+			description: 'Group chat, including embedded Chatango rooms.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>Open your room at https://ROOM.chatango.com/ and keep it open while capturing.</li>
+					<li>In the desktop app, add the room URL using Add other source.</li>
+					<li>The extension also captures Chatango rooms embedded in other websites.</li>
 				</ul>
 			`
 		},

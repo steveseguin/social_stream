@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="description" content="Recover Settings from dock.html. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
+    <meta name="description" content="Recover settings from Social Stream links. Part of the Social Stream Ninja toolkit for managing live chat, stream overlays and audience interactions.">
     <meta name="robots" content="noindex">
     <link rel="icon" href="icons/favicon.ico" type="image/x-icon">
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Recover Settings from dock.html</title>
+    <title>Recover Social Stream settings</title>
     <style>
         :root {
             --bg: #0f1720;
@@ -95,255 +95,99 @@
         button:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(58, 194, 255, 0.35); background: var(--accent-strong); }
         button:active { transform: translateY(0); }
         button[disabled] { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
-        .pill {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            background: rgba(58, 194, 255, 0.12);
-            border: 1px solid var(--border);
-            border-radius: 999px;
-            padding: 8px 12px;
-            margin: 6px 6px 0 0;
-            color: var(--text);
-            font-size: 13px;
-            min-width: 0;
-            max-width: 100%;
-            overflow: hidden;
-        }
-        .pill strong { color: var(--accent); font-weight: 700; white-space: nowrap; }
-        .pill .pill-value {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            min-width: 0;
-            display: block;
-        }
         .error { color: var(--error); margin-top: 6px; }
         .small { color: var(--muted); font-size: 13px; }
-        .grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin: 10px 0; }
         .panel {
             background: #0e1a24;
             border: 1px solid var(--border);
             border-radius: 10px;
             padding: 12px 14px;
         }
+        [hidden] { display: none !important; }
+        select { max-width: 100%; padding: 10px; color: var(--text); background: var(--panel); border: 1px solid var(--border); border-radius: 6px; }
+        button:focus, select:focus, summary:focus { outline: 2px solid var(--accent); outline-offset: 4px; }
+        .secondary { color: var(--text); background: var(--border); box-shadow: none; }
+        .secondary:hover { background: var(--panel); }
+        .query-options { margin: 12px 0 20px; }
+        summary { cursor: pointer; font-weight: 600; }
+        #inputHelp, .import-help { margin-top: 10px; }
+        #status { margin: 12px 0; }
+        #warnings { padding-left: 22px; color: #ffda91; overflow-wrap: anywhere; }
+        #warnings:empty { display: none; }
+        #summary { color: var(--text); overflow-wrap: anywhere; }
+        #output { min-height: 260px; }
+        #linkTypes { margin-bottom: 16px; }
+        #linkTypes:empty { display: none; }
+        @media (max-width: 520px) {
+            body { padding: 16px 10px; }
+            .card { padding: 18px 14px; }
+            .row button { width: 100%; }
+        }
     </style>
 </head>
 <body>
     <main class="card">
-        <h1>Recover extension settings from dock.html</h1>
-        <p>Paste a dock.html link to rebuild a settings file you can import in the extension (same format as the built‑in export: stream ID, password, and a <code>settings</code> dump derived from your URL params).</p>
-
-        <label for="dockUrl">Dock URL</label>
-        <input id="dockUrl" type="text" placeholder="https://socialstream.ninja/dock.html?session=xxxx&password=yyyy&bubble&compact" />
-        <div class="row" style="margin-top: 8px;">
-            <button id="generateBtn">Generate settings JSON</button>
-            <button id="downloadBtn" disabled>Download .data file</button>
-            <button id="copyBtn" disabled>Copy JSON</button>
-        </div>
-        <div id="error" class="error" role="alert" aria-live="polite"></div>
-
-        <div class="panel" style="margin-top: 16px;">
-            <div class="grid" id="summary" aria-live="polite"></div>
-            <p class="small">Everything below is ready to import via the popup menu (Export/Import settings). URL params are converted to <code>settings</code> entries; no additional metadata is added.</p>
-            <label for="output">Generated JSON</label>
-            <textarea id="output" readonly spellcheck="false" placeholder="JSON will appear here after you generate it."></textarea>
-        </div>
+        <h1>Recover settings from your links</h1>
+        <p>Paste your Social Stream links to create one settings file. Combine a dock, featured chat, alerts, and other overlays from the same session.</p>
+        <label for="recoveryUrls">Your links <span class="small">&mdash; one per line</span></label>
+        <textarea id="recoveryUrls" rows="5" spellcheck="false" autocomplete="off" aria-describedby="inputHelp" placeholder="https://socialstream.ninja/dock.html?session=YOUR_ID&amp;color&#10;https://socialstream.ninja/featured.html?session=YOUR_ID&amp;fade"></textarea>
+        <p id="inputHelp" class="small">Only settings contained in these links can be recovered. Links are read in your browser; they are not opened or submitted.</p>
+        <details class="query-options">
+            <summary>Pasting just a query string?</summary>
+            <label for="queryPage">Page for links without a filename</label>
+            <select id="queryPage">
+                <option value="dock.html">Main chat / dock</option>
+                <option value="featured.html">Featured chat</option>
+                <option value="multi-alerts.html">Multi-stream alerts</option>
+                <option value="emotes.html">Emote wall</option>
+                <option value="hype.html">Viewer count / activity</option>
+                <option value="waitlist.html">Waitlist</option>
+                <option value="ticker.html">Ticker</option>
+                <option value="wordcloud.html">Word cloud</option>
+                <option value="gif.html">GIF overlay</option>
+                <option value="bot.html">Chat bot</option>
+                <option value="chatbot.html">Private chat bot</option>
+                <option value="cohost.html">Co-host</option>
+                <option value="cohost-overlay.html">Co-host overlay</option>
+                <option value="aiprompt.html">AI prompt</option>
+                <option value="aievent.html">AI event</option>
+                <option value="tipjar.html">Tip jar</option>
+                <option value="credits.html">Credits</option>
+                <option value="giveaway.html">Giveaway</option>
+                <option value="poll.html">Poll</option>
+                <option value="events.html">Events dashboard</option>
+                <option value="actions.html">Flow actions</option>
+                <option value="leaderboard.html">Leaderboard</option>
+                <option value="games.html">Games</option>
+                <option value="scoreboard.html">Scoreboard</option>
+                <option value="spotify-overlay.html">Spotify</option>
+                <option value="map.html">Map</option>
+                <option value="meta.html">Meta bar / hype train</option>
+                <option value="timer.html">Timer</option>
+                <option value="reactions.html">Reactions</option>
+            </select>
+            <p class="small">For example: <code>?session=YOUR_ID&amp;color</code>. Full links are detected automatically.</p>
+        </details>
+        <div id="linkTypes"></div>
+        <button id="generateBtn" type="button">Recover settings</button>
+        <div id="error" class="error" role="alert"></div>
+        <p id="status" role="status" aria-live="polite"></p>
+        <section id="result" class="panel" hidden aria-label="Recovered settings">
+            <p id="summary"></p>
+            <ul id="warnings"></ul>
+            <div class="row">
+                <button id="downloadBtn" type="button" disabled>Download settings file</button>
+                <button id="copyBtn" type="button" class="secondary" disabled>Copy JSON</button>
+            </div>
+            <p class="small import-help">In the Social Stream menu, use <strong>Import settings</strong> to open the downloaded <code>.data</code> file. Importing replaces your saved settings; export your current settings first if you want to keep them.</p>
+            <details id="jsonDetails">
+                <summary>View settings JSON</summary>
+                <label for="output">Generated JSON</label>
+                <textarea id="output" rows="12" readonly spellcheck="false"></textarea>
+            </details>
+        </section>
     </main>
 
-    <script>
-        (function() {
-            const dockInput = document.getElementById("dockUrl");
-            const output = document.getElementById("output");
-            const summary = document.getElementById("summary");
-            const errorBox = document.getElementById("error");
-            const downloadBtn = document.getElementById("downloadBtn");
-            const copyBtn = document.getElementById("copyBtn");
-
-            const SKIP_KEYS = ["session", "password", "pass", "pw", "v"];
-            const NUMBER_KEYS = new Set([
-                "scale","opacity","chromaalpha","showtime","delaytime","beepvolume","autoshowtime","volume","rate","pitch",
-                "kokorospeed","kittenspeed","elevenrate","elevenlatency","elevenstability","elevensimilarity","elevenstyle",
-                "elevenspeakerboost","googlerate","googlepitch","speechifyspeed","openaispeed","limit","hideshortmessages",
-                "padding","trimname","elevenrate","elevenlatency","elevenstability","elevensimilarity","elevenstyle","elevenspeakerboost",
-                "latency","queuetime","chartime","trim"
-            ]);
-            const EQUALS_PARAMS = new Set([
-                "chroma=fff","skipmessages=3","exclude=kick","exclude=kofi","exclude=youtube","limitbadges=2","chartime=100","trim=200"
-            ]);
-
-            function normalizeUrl(raw) {
-                if (!raw) return null;
-                const trimmed = raw.trim();
-                if (!trimmed) return null;
-
-                // Allow users to paste just the query portion
-                if (trimmed.startsWith("session=") || trimmed.startsWith("?session=")) {
-                    return new URL("https://socialstream.ninja/dock.html" + (trimmed.startsWith("?") ? trimmed : "?" + trimmed));
-                }
-
-                try {
-                    return new URL(trimmed);
-                } catch (e) {
-                    // If no protocol was provided, try https by default
-                    try {
-                        return new URL("https://" + trimmed);
-                    } catch (err) {
-                        return null;
-                    }
-                }
-            }
-
-            function deriveStreamId(params) {
-                return params.get("session") || params.get("room") || params.get("push") || params.get("view") || params.get("label") || "";
-            }
-
-            function derivePassword(params) {
-                return params.get("password") || params.get("pass") || params.get("pw") || "";
-            }
-
-            function buildSettingsFromUrl(urlObj) {
-                const params = urlObj.searchParams;
-                const streamID = deriveStreamId(params);
-                const password = derivePassword(params);
-
-                const extras = new URLSearchParams();
-                let extrasString = "";
-                const settings = {};
-
-                params.forEach((value, key) => {
-                    const lowerKey = key.toLowerCase();
-                    if (SKIP_KEYS.includes(lowerKey)) return;
-                    extras.append(key, value);
-                    extrasString = extras.toString();
-
-                    const combined = value ? `${key}=${value}` : key;
-                    const entryKey = EQUALS_PARAMS.has(combined) ? combined : key;
-                    const entry = settings[entryKey] || {};
-
-                    entry.param1 = true;
-
-                    if (value !== null && value !== "") {
-                        const isNumberKey = NUMBER_KEYS.has(lowerKey);
-                        const numeric = !isNaN(parseFloat(value));
-                        if (isNumberKey || numeric) {
-                            entry.numbersetting = String(value);
-                        } else if (value === "true" || value === "false") {
-                            entry.setting = value === "true";
-                        } else {
-                            entry.textparam1 = value;
-                        }
-                    }
-
-                    settings[entryKey] = entry;
-                });
-
-                const urlParamsString = extrasString ? "?" + extrasString : "";
-
-                return {
-                    streamID,
-                    password,
-                    settings,
-                    extrasString: urlParamsString,
-                    rawDockUrl: urlObj.href
-                };
-            }
-
-            function renderSummary(payload) {
-                summary.innerHTML = "";
-                const parts = [
-                    { label: "Stream ID", value: payload.streamID || "Not found" },
-                    { label: "Password", value: payload.password ? "••••••" : "None" },
-                    { label: "Extra params", value: payload.extrasString || "None" },
-                    { label: "Settings entries", value: Object.keys(payload.settings).length }
-                ];
-                parts.forEach(part => {
-                    const pill = document.createElement("div");
-                    pill.className = "pill";
-                    const strong = document.createElement("strong");
-                    strong.textContent = part.label + ":";
-                    const valueSpan = document.createElement("span");
-                    valueSpan.className = "pill-value";
-                    valueSpan.textContent = " " + part.value;
-                    pill.appendChild(strong);
-                    pill.appendChild(valueSpan);
-                    summary.appendChild(pill);
-                });
-            }
-
-            function setError(msg) {
-                errorBox.textContent = msg || "";
-                if (msg) {
-                    output.value = "";
-                    summary.innerHTML = "";
-                    downloadBtn.disabled = true;
-                    copyBtn.disabled = true;
-                }
-            }
-
-            function generate() {
-                setError("");
-                const urlObj = normalizeUrl(dockInput.value);
-                if (!urlObj) {
-                    setError("Please enter a valid dock.html URL (or query string).");
-                    return;
-                }
-
-                const payload = buildSettingsFromUrl(urlObj);
-                if (!payload.streamID) {
-                    setError("No session/stream ID found in that URL.");
-                    return;
-                }
-
-                const exportObj = {
-                    streamID: payload.streamID,
-                    state: true,
-                    settings: payload.settings
-                };
-                if (payload.password) {
-                    exportObj.password = payload.password;
-                }
-
-                const json = JSON.stringify(exportObj, null, 2);
-                output.value = json;
-                renderSummary(payload);
-                downloadBtn.disabled = false;
-                copyBtn.disabled = false;
-            }
-
-            function downloadFile() {
-                if (!output.value) return;
-                const blob = new Blob([output.value], { type: "application/json" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "socialstream-settings.data";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            }
-
-            async function copyJson() {
-                if (!output.value) return;
-                try {
-                    await navigator.clipboard.writeText(output.value);
-                    copyBtn.textContent = "Copied";
-                    setTimeout(() => { copyBtn.textContent = "Copy JSON"; }, 900);
-                } catch (e) {
-                    setError("Could not copy to clipboard. Copy manually from the text area.");
-                }
-            }
-
-            document.getElementById("generateBtn").addEventListener("click", generate);
-            dockInput.addEventListener("keydown", (e) => {
-                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-                    generate();
-                }
-            });
-            downloadBtn.addEventListener("click", downloadFile);
-            copyBtn.addEventListener("click", copyJson);
-        })();
-    </script>
+    <script src="recover.js"></script>
 </body>
 </html>

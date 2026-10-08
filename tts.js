@@ -126,6 +126,7 @@ TTS.premiumQueueTTS = [];
 TTS.premiumQueueActive = false;
 TTS.premiumSerial = 0;
 TTS.browserKokoroStreamActive = false;
+TTS.browserKokoroStreamSerial = 0;
 TTS.browserKokoroSkipRequested = false;
 TTS.resolveCurrentAudioPlayback = null;
 TTS.volume = 1;
@@ -142,6 +143,7 @@ TTS.normalizeVolume = function(value) {
 };
 
 TTS.applyVolume = function(audio) {
+    if (TTS.neuralClient) TTS.neuralClient.setVolume(TTS.normalizeVolume(TTS.volume));
     if (audio) {
         audio.volume = TTS.normalizeVolume(TTS.volume);
     }
@@ -409,7 +411,7 @@ TTS.normalizeKokoroDevice = function(value) {
 
 TTS.normalizeKokoroDtype = function(value) {
     var normalized = (value || "auto").toString().trim().toLowerCase();
-    if (["auto", "fp16", "q8"].indexOf(normalized) !== -1) {
+    if (["auto", "fp16", "fp32", "q8"].indexOf(normalized) !== -1) {
         return normalized;
     }
     console.warn("[TTS Kokoro] Ignoring unsupported dtype:", value);
@@ -702,6 +704,7 @@ TTS.playAudioBlobAndWait = async function(audioBlob) {
             if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
                 await TTS.audioContext.resume();
             }
+            if (settled) return; // cancelled or timed out while waiting for audio permission
             await audio.play();
         } catch (e) {
             console.error("Audio playback failed:", e);
@@ -1084,6 +1087,10 @@ TTS.configure = function(urlParams) {
     TTS.kokoroSettings.voiceName = urlParams.get("voicekokoro") || "af_aoede";
     TTS.kokoroSettings.device = TTS.normalizeKokoroDevice(urlParams.get("kokorodevice") || urlParams.get("kokorobackend"));
     TTS.kokoroSettings.dtype = TTS.normalizeKokoroDtype(urlParams.get("kokorodtype") || urlParams.get("kokoroprecision"));
+    TTS.kokoroSettings.background = urlParams.get("kokororuntime") === "worker";
+    TTS.kokoroSettings.stream = urlParams.get("kokoroplayback") === "stream";
+    TTS.kittenSettings.model = ["nano", "micro", "mini"].indexOf(urlParams.get("kittenmodel")) !== -1 ? urlParams.get("kittenmodel") : "legacy";
+    TTS.kittenSettings.stream = urlParams.get("kittenplayback") === "stream";
     if (urlParams.has("kokorowasm")) {
         TTS.kokoroSettings.device = "wasm";
         TTS.kokoroSettings.dtype = "q8";
@@ -1303,7 +1310,7 @@ TTS.configure = function(urlParams) {
     }
 
     // Initialize Kokoro if needed
-    if (TTS.useKokoroTTS) {
+    if (TTS.useKokoroTTS && !TTS.useNeuralWorker("kokoro")) {
         try {
             TTS.initKokoro();
         } catch(e) {
@@ -1330,7 +1337,7 @@ TTS.configure = function(urlParams) {
     }
     
     // Initialize Kitten TTS if needed
-    if (TTS.useKitten) {
+    if (TTS.useKitten && !TTS.useNeuralWorker("kitten")) {
         try {
             TTS.initKitten();
         } catch(e) {
@@ -1684,6 +1691,11 @@ TTS.webSystemTTS = function(text, options, finishPremiumQueue = false) {
  * Clear the TTS queue without stopping
  */
 TTS.clearQueue = function() {
+    if (TTS.neuralActive) {
+        TTS.premiumQueueTTS = [];
+        TTS.cancelNeuralSpeech();
+        TTS.premiumQueueActive = false;
+    }
     TTS.pendingTikTokGiftSpeech.forEach(function(pending) {
         if (pending && pending.timer) {
             clearTimeout(pending.timer);
@@ -1710,6 +1722,11 @@ TTS.clearQueue = function() {
  * Skip the currently playing TTS message and play the next one in queue
  */
 TTS.skipCurrent = function() {
+    if (TTS.neuralActive) {
+        TTS.cancelNeuralSpeech();
+        TTS.finishedAudio();
+        return;
+    }
     if (window.speechSynthesis && window.speechSynthesis.speaking) {
         // For system TTS
         window.speechSynthesis.cancel();
@@ -1742,6 +1759,14 @@ TTS.skipCurrent = function() {
  * Toggle TTS on/off
  */
 TTS.toggle = function() {
+    if (TTS.neuralActive) {
+        TTS.speech = false;
+        TTS.premiumQueueTTS = [];
+        TTS.cancelNeuralSpeech();
+        TTS.premiumQueueActive = false;
+        TTS.updateButtonState('off');
+        return;
+    }
     var ele = document.getElementById("tts");
 
     if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) {
@@ -2141,6 +2166,68 @@ TTS.isNewKokoroVoice = function(voice) {
     return /^(ef_dora|em_alex|em_santa|pf_dora|pm_alex|pm_santa)$/.test(voice || "");
 };
 
+TTS.useNeuralWorker = function(provider) {
+    if (provider === "kitten") return !!TTS.kittenSettings.model && TTS.kittenSettings.model !== "legacy";
+    return provider === "kokoro" && (TTS.kokoroSettings.background || TTS.kokoroSettings.stream || TTS.kokoroSettings.dtype === "fp32");
+};
+
+TTS.cancelNeuralSpeech = function() {
+    TTS.premiumSerial++;
+    TTS.neuralActive = false;
+    if (TTS.neuralClient) TTS.neuralClient.cancel();
+};
+
+TTS.neuralSpeech = async function(text, provider, options) {
+    var serial = ++TTS.premiumSerial;
+    var failure = null;
+    TTS.premiumQueueActive = true;
+    TTS.neuralActive = true;
+    try {
+        if (!window.SSNNeuralTTS) await import('./shared/tts/neural-client.js');
+        if (serial !== TTS.premiumSerial) return;
+        if (!TTS.neuralClient) TTS.neuralClient = new window.SSNNeuralTTS.Client();
+        var settings = provider === "kokoro" ? TTS.kokoroSettings : TTS.kittenSettings;
+        var result = await TTS.neuralClient.speak({
+            engine: provider, text: text, model: settings.model || "nano",
+            voice: TTS.getVoiceOverride(options) || settings.voiceName || settings.voice,
+            speed: settings.speed || 1, device: settings.device || "auto", dtype: settings.dtype || "auto",
+            mac: TTS.isMacBrowserKokoro(), stream: !!settings.stream && !TTS.neuroSyncEnabled,
+            silent: !!TTS.neuroSyncEnabled, volume: TTS.normalizeVolume(TTS.volume)
+        }, {
+            onProgress: function(progress) {
+                if (serial !== TTS.premiumSerial) return;
+                TTS.neuralStatus = progress.message || "";
+                var button = document.getElementById("tts");
+                if (button && progress.message) {
+                    button.title = progress.message;
+                    button.setAttribute("aria-label", progress.message);
+                }
+                if (progress.device) { TTS.kokoroDevice = progress.device; TTS.kokoroDtype = progress.dtype; }
+            },
+            onStart: function() { if (serial === TTS.premiumSerial) TTS.updateButtonState('speaking'); }
+        });
+        if (serial !== TTS.premiumSerial) return;
+        if (TTS.neuroSyncEnabled) await TTS.sendToNeuroSync(result.blob, { isKokoroAudio: provider === "kokoro" });
+        TTS.neuralStatus = "Ready";
+    } catch (error) {
+        if (serial === TTS.premiumSerial) {
+            TTS.neuralStatus = error.message;
+            failure = error.message;
+            console.error("Background TTS:", error);
+        }
+    } finally {
+        if (serial === TTS.premiumSerial) {
+            TTS.neuralActive = false;
+            TTS.finishedAudio();
+            if (!TTS.premiumQueueActive) {
+                TTS.updateButtonState(TTS.speech ? 'on' : 'off');
+                var button = document.getElementById("tts");
+                if (button && failure) { button.title = failure; button.setAttribute("aria-label", failure); }
+            }
+        }
+    }
+};
+
 TTS.initKokoro = async function(voice) {
     if ((window.ninjafy || window.electronApi) && !TTS.isNewKokoroVoice(voice || TTS.kokoroSettings.voiceName)) {
         return true; // Electron already handles existing voices
@@ -2453,11 +2540,16 @@ TTS.googleTTS = function(tts, options) {
         };
 
         fetch(url, otherparam)
-            .then(data => data.json())
+            .then(response => {
+                if (!response.ok) throw new Error('Google TTS request failed with HTTP ' + response.status);
+                return response.json();
+            })
             .then(async res => {
                 if (premiumSerial !== TTS.premiumSerial) {
                     return; // skipped while the audio was being fetched
                 }
+
+                if (!res.audioContent) throw new Error('Google TTS returned no audio');
 
                 // Send to NeuroSync in parallel
                 if (TTS.neuroSyncEnabled) {
@@ -2479,6 +2571,7 @@ TTS.googleTTS = function(tts, options) {
                   }).catch(err => {
                     console.error("NeuroSync error:", err);
                   });
+                  TTS.finishedAudio();
                   return;
                 }
                 
@@ -2490,10 +2583,10 @@ TTS.googleTTS = function(tts, options) {
                 
                 TTS.applyVolume(TTS.audio);
                 try {
-                    if (TTS.audioContext.state === 'suspended') {
+                    if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
                         await TTS.audioContext.resume();
                     }
-                    TTS.audio.play();
+                    await TTS.audio.play();
                 } catch (e) {
                     if (premiumSerial === TTS.premiumSerial) {
                         TTS.finishedAudio();
@@ -2690,6 +2783,7 @@ TTS.SpeechifyTTS = function(tts, options) {
  * @param {string} text - Text to speak
  */
 TTS.kokoroTTS = async function(text, options) {
+  if (TTS.useNeuralWorker("kokoro")) return TTS.neuralSpeech(text, "kokoro", options);
   TTS.premiumQueueActive = true;
   const premiumSerial = ++TTS.premiumSerial;
   const voiceOverride = TTS.getVoiceOverride(options);
@@ -2757,6 +2851,9 @@ TTS.kokoroTTS = async function(text, options) {
       }
     }
     
+    if (premiumSerial !== TTS.premiumSerial) {
+      return; // stopped or replaced while the model was loading
+    }
     TTS.premiumQueueActive = true;
     
     // Create a new streamer for each text processing
@@ -2783,13 +2880,11 @@ TTS.kokoroTTS = async function(text, options) {
       let playedAnyAudio = false;
       const previousOnEnded = TTS.audio ? TTS.audio.onended : null;
       TTS.browserKokoroStreamActive = true;
+      TTS.browserKokoroStreamSerial = premiumSerial;
       TTS.browserKokoroSkipRequested = false;
       try {
-        if (TTS.audio) {
-          TTS.audio.onended = null;
-        }
         for await (const { audio } of stream) {
-          if (TTS.browserKokoroSkipRequested) {
+          if (premiumSerial !== TTS.premiumSerial || TTS.browserKokoroSkipRequested) {
             break;
           }
           if (!audio) continue;
@@ -2821,12 +2916,17 @@ TTS.kokoroTTS = async function(text, options) {
           playedAnyAudio = true;
         }
       } finally {
-        if (TTS.audio) {
-          TTS.audio.onended = previousOnEnded || TTS.finishedAudio;
+        if (TTS.browserKokoroStreamSerial === premiumSerial) {
+          // A stopped generation may finish after another provider has started playing.
+          if (premiumSerial === TTS.premiumSerial || !TTS.premiumQueueActive) {
+            if (TTS.audio) {
+              TTS.audio.onended = previousOnEnded || TTS.finishedAudio;
+            }
+            TTS.resolveCurrentAudioPlayback = null;
+          }
+          TTS.browserKokoroStreamActive = false;
+          TTS.browserKokoroSkipRequested = false;
         }
-        TTS.browserKokoroStreamActive = false;
-        TTS.browserKokoroSkipRequested = false;
-        TTS.resolveCurrentAudioPlayback = null;
       }
 
       if (!playedAnyAudio) {
@@ -2898,19 +2998,19 @@ TTS.initEspeak = async function() {
  * @param {string} text - Text to speak
  */
 TTS.espeakTTS = async function(text, options) {
+    TTS.premiumQueueActive = true;
+    const premiumSerial = ++TTS.premiumSerial;
     try {
         // Initialize if needed
         if (!TTS.espeakLoaded || !TTS.espeakInstance) {
             const initialized = await TTS.initEspeak();
+            if (premiumSerial !== TTS.premiumSerial) return;
             if (!initialized) {
                 console.error("Failed to initialize eSpeak TTS - please use a different TTS provider");
                 TTS.finishedAudio();
                 return;
             }
         }
-        
-        TTS.premiumQueueActive = true;
-        const premiumSerial = ++TTS.premiumSerial;
 
         // Initialize audio context if needed
         TTS.initAudioContext();
@@ -3032,23 +3132,45 @@ TTS.initPiper = async function(voiceName) {
  * @param {string} text - Text to speak
  */
 TTS.piperTTS = async function(text, options) {
+    TTS.premiumQueueActive = true;
+    const premiumSerial = ++TTS.premiumSerial;
     try {
         const requestedVoice = TTS.getVoiceOverride(options) || TTS.piperSettings.voice;
         // Initialize if needed
         if (!TTS.piperLoaded || !TTS.piperInstance || TTS.piperActiveVoice !== requestedVoice) {
             const initialized = await TTS.initPiper(requestedVoice);
+            if (premiumSerial !== TTS.premiumSerial) return;
             if (!initialized) {
                 console.error("Failed to initialize Piper TTS");
                 TTS.finishedAudio();
                 return;
             }
         }
-        
-        TTS.premiumQueueActive = true;
-        const premiumSerial = ++TTS.premiumSerial;
 
-        // Use Piper TTS with speed setting
-        await TTS.piperInstance.speak(text, TTS.piperSettings.speed);
+        if (!TTS.audio) {
+            TTS.audio = document.createElement("audio");
+            TTS.audio.onended = TTS.finishedAudio;
+        }
+
+        // Keep replacement requests from running inference on the same model at once.
+        const piper = TTS.piperInstance;
+        const speed = TTS.piperSettings.speed;
+        const previous = piper.pendingSynthesis || Promise.resolve();
+        const pending = previous.catch(() => {}).then(() => {
+            if (premiumSerial !== TTS.premiumSerial) return null;
+            return piper.synthesize(text, speed);
+        });
+        piper.pendingSynthesis = pending;
+        let audioBlob;
+        try {
+            audioBlob = await pending;
+        } finally {
+            if (piper.pendingSynthesis === pending) piper.pendingSynthesis = null;
+        }
+        if (premiumSerial !== TTS.premiumSerial || !audioBlob) return;
+
+        // Use the shared player so stop and skip control Piper's actual audio element.
+        await TTS.playAudioBlobAndWait(audioBlob);
 
         // Finished playing
         if (premiumSerial === TTS.premiumSerial) {
@@ -3148,19 +3270,20 @@ TTS.initKitten = async function() {
  * @param {string} text - Text to speak
  */
 TTS.kittenTTS = async function(text, options) {
+    if (TTS.useNeuralWorker("kitten")) return TTS.neuralSpeech(text, "kitten", options);
+    TTS.premiumQueueActive = true;
+    const premiumSerial = ++TTS.premiumSerial;
     try {
         // Initialize if needed
         if (!TTS.kittenLoaded || !TTS.kittenInstance) {
             const initialized = await TTS.initKitten();
+            if (premiumSerial !== TTS.premiumSerial) return;
             if (!initialized) {
                 console.error("Failed to initialize Kitten TTS");
                 TTS.finishedAudio();
                 return;
             }
         }
-        
-        TTS.premiumQueueActive = true;
-        const premiumSerial = ++TTS.premiumSerial;
 
         // Initialize audio context if needed
         TTS.initAudioContext();

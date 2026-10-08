@@ -2,6 +2,64 @@
 	 
 	
 	var isExtensionOn = true;
+	var viewerRequestPending = false;
+	var viewerUserName = "";
+	var viewerUserId = null;
+
+	async function viewerJson(path) {
+		var controller = new AbortController();
+		var timer = setTimeout(function () { controller.abort(); }, 10000);
+		try {
+			var response = await fetch("https://pilled-lqs-api.pilled.net/" + path, { signal: controller.signal });
+			if (!response.ok) { throw new Error("Viewer request failed"); }
+			return await response.json();
+		} finally {
+			clearTimeout(timer);
+		}
+	}
+
+	async function checkViewers() {
+		if (!isChatPage() || viewerRequestPending || !isExtensionOn || !(settings.showviewercount || settings.hypemode)) { return; }
+		var page = location.href;
+		var parts = location.pathname.split("/");
+		viewerRequestPending = true;
+		try {
+			var topic;
+			if (parts[1] === "comment") {
+				if (!/^\d+$/.test(parts[2])) { return; }
+				topic = await viewerJson("topic/getTopicByTopicIDNew/" + parts[2]);
+				if (!topic || String(topic.topicID) !== parts[2]) { return; }
+			} else {
+				var username = decodeURIComponent(parts[2]);
+				if (viewerUserName !== username || viewerUserId === null) {
+					var user = await viewerJson("user/getUserByUsername/" + encodeURIComponent(username));
+					if (!user || typeof user.userName !== "string" || user.userName.toLowerCase() !== username.toLowerCase() || !Number.isSafeInteger(user.userID)) { return; }
+					viewerUserName = username;
+					viewerUserId = user.userID;
+				}
+				if (page !== location.href || !isExtensionOn || !(settings.showviewercount || settings.hypemode)) { return; }
+				var videos = await viewerJson("topic/getUserVideos/" + viewerUserId + "/0?filter=recent");
+				if (!Array.isArray(videos)) { return; }
+				if (videos.some(function (video) { return !video || video.userID !== viewerUserId; })) { return; }
+				topic = videos.find(function (video) { return video && video.userID === viewerUserId && video.isLiveNow === true; });
+				// A successful channel lookup with no current live video means it is offline.
+				if (!topic) {
+					if (videos.some(function (video) { return video.isLive && typeof video.isLiveNow !== "boolean"; })) { return; }
+					topic = { isLiveNow: false };
+				}
+			}
+			if (page !== location.href || !isExtensionOn || !(settings.showviewercount || settings.hypemode)) { return; }
+			if (typeof topic.isLiveNow !== "boolean") { return; }
+			var count = topic.isLiveNow ? (topic.topicFacts && topic.topicFacts.liveViews) : 0;
+			if (topic.isLiveNow && count === undefined) { count = topic.liveViews; }
+			if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 0) { return; }
+			pushMessage({ type: "pilled", event: "viewer_update", meta: count });
+		} catch (e) {
+			// Unavailable counts are unknown, not zero.
+		} finally {
+			viewerRequestPending = false;
+		}
+	}
 function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function() {
@@ -214,6 +272,8 @@ function toDataURL(url, callback) {
 		if ("settings" in response){
 			settings = response.settings;
 		}
+		if ("state" in response) { isExtensionOn = response.state; }
+		checkViewers();
 	});
 
 	chrome.runtime.onMessage.addListener(
@@ -228,6 +288,14 @@ function toDataURL(url, callback) {
 				if (typeof request === "object"){
 					if ("settings" in request){
 						settings = request.settings;
+						if ("state" in request) { isExtensionOn = request.state; }
+						checkViewers();
+						sendResponse(true);
+						return;
+					}
+					if ("state" in request) {
+						isExtensionOn = request.state;
+						checkViewers();
 						sendResponse(true);
 						return;
 					}
@@ -296,5 +364,6 @@ function toDataURL(url, callback) {
 	}
 	checkChat();
 	setInterval(checkChat,2000);
+	setInterval(checkViewers,30000);
 
 })();

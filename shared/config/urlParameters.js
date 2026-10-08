@@ -1663,6 +1663,60 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Reads URLs instead of saying \"link\""
+          },
+          {
+            "key": "kokororuntime",
+            "displayName": "kokororuntime",
+            "aliases": [
+              "kokororuntime"
+            ],
+            "values": "worker",
+            "description": "Generates Kokoro speech in a background worker; omitted uses standard processing"
+          },
+          {
+            "key": "kokoroplayback",
+            "displayName": "kokoroplayback",
+            "aliases": [
+              "kokoroplayback"
+            ],
+            "values": "stream",
+            "description": "Plays Kokoro sections as they finish generating; also enables background processing"
+          },
+          {
+            "key": "kokorodevice",
+            "displayName": "kokorodevice",
+            "aliases": [
+              "kokorodevice"
+            ],
+            "values": "auto, wasm, webgpu",
+            "description": "Kokoro processor: automatic, CPU, or WebGPU; use with kokororuntime=worker for background generation"
+          },
+          {
+            "key": "kokorodtype",
+            "displayName": "kokorodtype",
+            "aliases": [
+              "kokorodtype"
+            ],
+            "values": "auto, q8, fp16, fp32",
+            "description": "Kokoro model precision; FP32 also enables background processing; FP16 needs a compatible GPU"
+          },
+          {
+            "key": "kittenmodel",
+            "displayName": "kittenmodel",
+            "aliases": [
+              "kittenmodel"
+            ],
+            "values": "nano, micro, mini",
+            "description": "Selects a Kitten 0.8 model with background CPU generation; omitted keeps the original model"
+          },
+          {
+            "key": "kittenplayback",
+            "displayName": "kittenplayback",
+            "aliases": [
+              "kittenplayback"
+            ],
+            "values": "stream",
+            "description": "Plays Kitten 0.8 sections as they finish generating; requires a Kitten 0.8 model"
           }
         ]
       },
@@ -2709,15 +2763,78 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
     ]
   },
   {
-    "title": "Viewer Count & Chat Activity Title (`hype.html`)",
-    "slug": "viewer-count-chat-activity-title-hype-html",
-    "description": "Set **Custom title** under **Viewer Count & Chat Activity Overlay → Enable and customize**, then copy the updated overlay link into OBS.",
+    "title": "Viewer Count & Chat Activity (`hype.html`)",
+    "slug": "viewer-count-chat-activity-hype-html",
+    "description": "Choose **Display Style** under **Viewer Count & Chat Activity Overlay → Customize**, then copy the updated overlay link into OBS. Expand **Layout and appearance** to customize spacing, accent color, grid columns, or movement. Set the OBS Browser Source width and height to the area the overlay should occupy. Original styles keep their existing sizing. New badge styles shrink to fit; Cards and Grid arrange platforms into columns; Vertical list stacks them. Scrolling ticker moves back and forth only when the row is too wide, and Rotating spotlight shows one platform at a time. Reduced-motion preferences use a stationary grid for these two animated layouts. Use a grid or ticker if shrinking makes a long row too small to read.",
     "sections": [
       {
         "title": "General Parameters",
         "slug": "general-parameters",
         "description": "",
         "items": [
+          {
+            "key": "style",
+            "displayName": "style",
+            "aliases": [
+              "style"
+            ],
+            "values": "default, compact, modern, minimal, topbar, micro, pills, glass, neon, outline, broadcast, scoreboard, cards, vertical, grid, autofit, ticker, rotate",
+            "description": "Selects the viewer-count design. The first five styles retain their original defaults"
+          },
+          {
+            "key": "viewerlayout",
+            "displayName": "viewerlayout",
+            "aliases": [
+              "viewerlayout"
+            ],
+            "values": "fit, wrap, grid, vertical, ticker, rotate, fixed",
+            "description": "Overrides the style's layout. Fit shrinks a row; wrap adds rows; grid uses columns; vertical stacks platforms; ticker scrolls an overflowing row; rotate cycles platforms; fixed allows clipping. Omit to use the style default. Available with original and new styles"
+          },
+          {
+            "key": "viewerspacing",
+            "displayName": "viewerspacing",
+            "aliases": [
+              "viewerspacing"
+            ],
+            "values": "tight, normal, airy",
+            "description": "Space between platforms in new styles or an explicit viewerlayout"
+          },
+          {
+            "key": "vieweraccent",
+            "displayName": "vieweraccent",
+            "aliases": [
+              "vieweraccent"
+            ],
+            "values": "CSS color",
+            "description": "Border/highlight color in accented new styles, e.g. &vieweraccent=ffcc66"
+          },
+          {
+            "key": "viewercolumns",
+            "displayName": "viewercolumns",
+            "aliases": [
+              "viewercolumns"
+            ],
+            "values": "integer, 1–12",
+            "description": "Column count for Cards or a grid layout; omitted means automatic"
+          },
+          {
+            "key": "viewermotion",
+            "displayName": "viewermotion",
+            "aliases": [
+              "viewermotion"
+            ],
+            "values": "slow, fast",
+            "description": "Ticker speed or rotation interval. Default rotation is 6 seconds per platform; slow is 10 seconds and fast is 3 seconds"
+          },
+          {
+            "key": "scale",
+            "displayName": "scale",
+            "aliases": [
+              "scale"
+            ],
+            "values": "positive number",
+            "description": "Overall size; fitting layouts can shrink below this size to stay within the browser-source area"
+          },
           {
             "key": "title",
             "displayName": "title",

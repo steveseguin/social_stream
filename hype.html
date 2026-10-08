@@ -536,6 +536,8 @@ span.zero-width-parent img.zero-width-emote {
 	margin-bottom: 5px;
 }
 	</style>
+	<link rel="stylesheet" href="hype-layout.css" />
+	<script src="js/hype-layout.js"></script>
 </head>
 <body class="electronDraggable" id="output">
 	<div id="parentHolder" class="hidden">
@@ -1086,6 +1088,10 @@ document.body.style.transform = `scale(${scale})`;
 document.body.style.transformOrigin = '0 0';
 document.body.style.width = `${100/scale}%`;
 document.body.style.height = `${100/scale}%`;
+
+if (window.SSNHypeLayout) {
+    SSNHypeLayout({ params: urlParams, parent: parentHolder, track: hypeContainer, title: hypeTitle, scale: scale, alignment: alignment });
+}
 
 function getSourceImage(type) {
     if (type === "global") return "global";

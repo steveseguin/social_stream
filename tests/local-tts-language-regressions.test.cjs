@@ -10,7 +10,7 @@ const {chromium}=require('playwright-core');const root=path.resolve(__dirname,'.
  assert.deepEqual(Array.from(engine.encodePhonemes({phonemes:['a','b'],phoneme_ids:[1,0,141,0,2]})),[1,0,4,0,7,0,2]);
  console.log('PASS Piper uses the selected model vocabulary, including low-quality voices');
 
- const server=http.createServer((req,res)=>{const u=new URL(req.url,'http://localhost');if(u.pathname==='/'){res.setHeader('Content-Security-Policy',"script-src 'self' 'wasm-unsafe-eval'; object-src 'none'");res.end('<html><body></body></html>');return;}const f=path.resolve(root,'.'+decodeURIComponent(u.pathname));if(!f.startsWith(root+path.sep)||!fs.existsSync(f)||fs.statSync(f).isDirectory()){res.writeHead(404);return res.end();}res.setHeader('Content-Type',f.endsWith('.js')?'text/javascript':f.endsWith('.wasm')?'application/wasm':'application/octet-stream');let body=fs.readFileSync(f);if(/kokoro-bundle.es(?:.ext)?.js$/.test(f))body=Buffer.from(body.toString()+'\nexport { Zu as testPhonemes };');res.end(body);});
+ const server=http.createServer((req,res)=>{const u=new URL(req.url,'http://localhost');if(u.pathname==='/'){res.setHeader('Content-Security-Policy',"script-src 'self' 'wasm-unsafe-eval'; object-src 'none'");res.end('<html><body></body></html>');return;}const f=path.resolve(root,'.'+decodeURIComponent(u.pathname));if(!f.startsWith(root+path.sep)||!fs.existsSync(f)||fs.statSync(f).isDirectory()){res.writeHead(404);return res.end();}res.setHeader('Content-Type',/\.m?js$/.test(f)?'text/javascript':f.endsWith('.wasm')?'application/wasm':'application/octet-stream');let body=fs.readFileSync(f);if(/kokoro-bundle.es(?:.ext)?.js$/.test(f))body=Buffer.from(body.toString()+'\nexport { Zu as testPhonemes };');res.end(body);});
  await new Promise(r=>server.listen(0,'127.0.0.1',r));let browser;try{browser=await chromium.launch({channel:'chrome',headless:true});const page=await browser.newPage();await page.goto('http://127.0.0.1:'+server.address().port);
  for(const bundle of ['kokoro-bundle.es.js','kokoro-bundle.es.ext.js']){
  const result=await page.evaluate(async bundle=>{const m=await import('/thirdparty/'+bundle);return{english:await m.testPhonemes('Hello! The price is $5.25.','a'),spanish:await m.testPhonemes('Hola, gracias por participar.','e'),portuguese:await m.testPhonemes('Olá, obrigado por participar.','p')};},bundle);
@@ -35,6 +35,24 @@ const {chromium}=require('playwright-core');const root=path.resolve(__dirname,'.
  await voicePage.route('**/voices/ef_dora.bin',route=>{downloads++;return route.fulfill({status:downloads===1?503:200,headers:{'access-control-allow-origin':'*'},body:downloads===1?'Unavailable':Buffer.alloc(522240)});});
  const voiceRetry=await voicePage.evaluate(async()=>{const m=await import('/thirdparty/kokoro-bundle.es.js');const instance=new m.KokoroTTS(async()=>({waveform:{data:new Float32Array([0.1,0.2])}}),()=>{});let failed=false;try{await instance.generate_from_ids({dims:[1,5]},{voice:'ef_dora'});}catch(e){failed=/503/.test(e.message);}await instance.generate_from_ids({dims:[1,5]},{voice:'ef_dora'});await instance.generate_from_ids({dims:[1,5]},{voice:'ef_dora'});return failed;});
  assert.equal(voiceRetry,true);assert.equal(downloads,2);await voicePage.close();console.log('PASS failed voice downloads are retried; successful voices are reused');
+ const concurrentPage=await browser.newPage();await concurrentPage.goto('http://127.0.0.1:'+server.address().port);
+ await concurrentPage.route('**/voices/ef_dora.bin',route=>route.fulfill({status:200,headers:{'access-control-allow-origin':'*'},body:Buffer.alloc(522240)}));
+ for(const bundle of ['kokoro-bundle.es.js','kokoro-bundle.es.ext.js']){
+  const result=await concurrentPage.evaluate(async bundle=>{
+   const m=await import('/thirdparty/'+bundle);let active=0,maximum=0,calls=0;
+   const instance=new m.KokoroTTS(async()=>{
+    active++;maximum=Math.max(maximum,active);const call=++calls;
+    try{await new Promise(resolve=>setTimeout(resolve,20));if(call===1)throw Error('inference failure');return{waveform:{data:new Float32Array([.1,.2])}};}
+    finally{active--;}
+   },()=>{});
+   const run=()=>instance.generate_from_ids({dims:[1,5]},{voice:'ef_dora'});
+   const outcomes=await Promise.allSettled([run(),run()]);await run();
+   return{maximum,calls,outcomes:outcomes.map(x=>x.status)};
+  },bundle);
+  assert.deepEqual(result,{maximum:1,calls:3,outcomes:['rejected','fulfilled']});
+  console.log('PASS',bundle,'serializes replacement inference and recovers after errors');
+ }
+ await concurrentPage.close();
  const managerSource=popup.slice(popup.indexOf('const TTSManager ='),popup.indexOf('\n};',popup.indexOf('const TTSManager ='))+3);
  await ui.addScriptTag({content:managerSource+'\nwindow.testTtsManager=TTSManager;'});
  const cancelled=await ui.evaluate(async()=>{const m=testTtsManager;let release,syntheses=0;window.ort={};window.ProperPiperTTS=class{constructor(voice){this.voiceId=voice;}init(){return new Promise(r=>release=r);}synthesize(){syntheses++;}};m.setTestRunning=()=>{};m.showFeedback=()=>{};const pending=m.piperTTS('test',{volume:1},'');m.cancelTest('');release();await pending;return{syntheses,busy:m.piperPreviewBusy,active:m.premiumQueueActive};});

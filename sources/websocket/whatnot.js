@@ -33,6 +33,14 @@
 	let sourceSettings = {};
 	let lastStatus = "disconnected";
 	let lastStatusMessage = "Waiting to connect.";
+	let stopAuction = null;
+	let auctionStatus = "connecting";
+
+	function connectedStatus() {
+		if (joined) setStatus("connected", auctionStatus === "connected"
+			? "Connected to Whatnot chat and auctions."
+			: "Chat connected. Auction feed " + auctionStatus + "...");
+	}
 
 	function runtimeAvailable() {
 		return typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.sendMessage === "function";
@@ -129,6 +137,8 @@
 
 	function receiveChat(payload, history) {
 		if (!payload || typeof payload !== "object" || (payload.topic && payload.topic !== "chat:" + showId)) return;
+		if (payload.message == null && !(payload.properties && payload.properties.adscb)) return;
+		if (!(payload.user && payload.user.username) && (payload.message == null || String(payload.message) === "")) return;
 		if (rememberId(payload.id)) return;
 		if (history && !historyInitialized) return;
 		if (!captureEnabled) return;
@@ -138,6 +148,7 @@
 	function renderMessage(data) {
 		if (!captureEnabled) return;
 		relay({ message: data });
+		if (!data.chatmessage && !data.chatname) return;
 		const row = document.createElement("div");
 		row.className = "message";
 		const name = document.createElement("span");
@@ -245,7 +256,7 @@
 				}
 				joined = true;
 				clearTimeout(timeoutTimer);
-				setStatus("connected", "Connected to Whatnot chat.");
+				connectedStatus();
 			} else if (kind === "phx_error" || kind === "phx_close") {
 				scheduleReconnect("Chat connection closed.");
 			} else if (joined && kind === "new_msg") {
@@ -257,6 +268,8 @@
 				historyInitialized = true;
 				recoverHistory = true;
 				persistSeenIds();
+			} else if (joined && captureEnabled) {
+				window.SSNWhatnotChat.processFrame(event.data);
 			}
 		};
 		current.onerror = function () { if (socket === current) scheduleReconnect("Could not connect to Whatnot chat."); };
@@ -279,11 +292,17 @@
 		loadSeenIds();
 		active = true;
 		attempts = 0;
+		stopAuction = window.SSNWhatnotChat.connectAuction(showId, function (status) {
+			auctionStatus = status;
+			connectedStatus();
+		});
 		openSocket();
 	}
 
 	function disconnect() {
 		active = false;
+		if (stopAuction) stopAuction();
+		stopAuction = null;
 		clearTimeout(reconnectTimer);
 		reconnectTimer = null;
 		clearSocket();

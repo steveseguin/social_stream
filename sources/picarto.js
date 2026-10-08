@@ -1,6 +1,32 @@
 (function () {
 	
 	var isExtensionOn = true;
+	var viewerRequest = null;
+	function viewerChannel() {
+		if (!/^(www\.)?picarto\.tv$/.test(location.hostname)) { return ""; }
+		var match = location.pathname.match(/^\/chatpopout\/([^/]+)(?:\/public)?\/?$/);
+		return match ? match[1] : "";
+	}
+	function checkViewers() {
+		var channel = viewerChannel();
+		if (!channel || viewerRequest || !isExtensionOn || !(settings.showviewercount || settings.hypemode)) { return; }
+		var xhr = new XMLHttpRequest();
+		viewerRequest = xhr;
+		xhr.open("GET", "https://api.picarto.tv/api/v1/channel/name/" + channel);
+		xhr.timeout = 10000;
+		xhr.onload = function () {
+			if (xhr.status !== 200 || channel !== viewerChannel() || !isExtensionOn || !(settings.showviewercount || settings.hypemode)) { return; }
+			try {
+				var stream = JSON.parse(xhr.responseText);
+				if (typeof stream.name !== "string" || stream.name.toLowerCase() !== decodeURIComponent(channel).toLowerCase() || typeof stream.online !== "boolean") { return; }
+				var count = stream.online ? stream.viewers : 0;
+				if (typeof count !== "number" || !Number.isSafeInteger(count) || count < 0) { return; }
+				pushMessage({ type: "picarto", event: "viewer_update", meta: count });
+			} catch (e) {}
+		};
+		xhr.onloadend = function () { if (viewerRequest === xhr) { viewerRequest = null; } };
+		xhr.send();
+	}
 function pushMessage(data){	  
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
@@ -89,6 +115,8 @@ function pushMessage(data){
 	
 	async function processMessage(first, ele){
 		var content = ele;
+		var messageElement = content.querySelector("[class*='Message__StyledSpan']");
+		if (!messageElement || messageElement.ssnCaptured || messageElement.ssnPending) { return; }
 		
 		var chatname="";
 		try {
@@ -105,11 +133,17 @@ function pushMessage(data){
 			}
 		}
 		
+		if (!chatname || (!messageElement.textContent.trim() && !messageElement.querySelector("img"))) { return; }
+		messageElement.ssnPending = true;
 		var chatmessage="";
 		try{
 			 // textonlymode selects literal chatmessage text versus constructed HTML. Keep plain characters unchanged; add reply/emote markup only in HTML mode.
 			 if (settings.textonlymode){
-				chatmessage = escapeHtml(content.querySelector("[class*='Message__StyledSpan']").textContent);
+				var plainMessage = messageElement.cloneNode(true);
+				plainMessage.querySelectorAll("br").forEach(function (br) {
+					br.replaceWith(document.createTextNode("\n"));
+				});
+				chatmessage = plainMessage.textContent;
 			 } else {
 				 
 				if (content.querySelector("[class*='Message__StyledSpan']").querySelector("img")){
@@ -119,6 +153,8 @@ function pushMessage(data){
 				content.querySelector("[class*='Message__StyledSpan']").childNodes.forEach(ele2=>{
 					if (ele2.nodeType == Node.TEXT_NODE){
 						chatmessage += escapeHtml(ele2.textContent);
+					} else if (ele2.nodeName === "BR"){
+						chatmessage += "<br>";
 					} else if (ele2.querySelector("img")){
 						chatmessage += "<img src='"+ele2.querySelector("img").src+"'/>";
 					} else {
@@ -128,8 +164,12 @@ function pushMessage(data){
 				chatmessage = chatmessage.trim();
 			 }
 		} catch(e){
+			messageElement.ssnPending = false;
 			return;
 		}
+		messageElement.ssnPending = false;
+		if (!chatmessage) { return; }
+		messageElement.ssnCaptured = true;
 
 		var chatimg="";
 		try{
@@ -163,44 +203,32 @@ function pushMessage(data){
 	
 	
 	function onElementInserted(containerSelector, callback) {
-		var onMutationsObserved = function(mutations) {
-			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							if (!mutation.addedNodes[i].children.length){continue;}
-							
-							if (mutation.addedNodes[i].dataset.set123){continue;}
-							mutation.addedNodes[i].dataset.set123 = "true";
-							
-							if (mutation.addedNodes[i].nextSibling && mutation.addedNodes[i].nextSibling.innerText.length){continue;}
-							
-							if (mutation.addedNodes[i].className.includes("ChannelChat__MessageBoxWrapper")){
-								callback(mutation.addedNodes[i], mutation.addedNodes[i]);
-							} else if (mutation.addedNodes[i].className.includes("StandardTypeMessagecontainer__BlockRow")){
-								if (mutation.addedNodes[i].parentNode.parentNode.parentNode.className.includes("ChannelChat__MessageBoxWrapper")){
-									callback(mutation.addedNodes[i].parentNode.parentNode.parentNode, mutation.addedNodes[i]);
-								} else if (mutation.addedNodes[i].parentNode.parentNode.className.includes("ChannelChat__MessageBoxWrapper")){
-									callback(mutation.addedNodes[i].parentNode.parentNode, mutation.addedNodes[i]);
-								} else if (mutation.addedNodes[i].parentNode.className.includes("ChannelChat__MessageBoxWrapper")){
-									callback(mutation.addedNodes[i].parentNode, mutation.addedNodes[i]);
-								} else if (mutation.addedNodes[i].parentNode.parentNode.parentNode.parentNode.className.includes("ChannelChat__MessageBoxWrapper")){
-									callback(mutation.addedNodes[i].parentNode.parentNode.parentNode.parentNode, mutation.addedNodes[i]);
-								} 
-							}
-						} catch(e){}
-					}
-				}
-			});
-		};
 		var target = document.querySelector(containerSelector);
-		if (!target){return;}
-		var config = { childList: true, subtree: true };
-		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		var observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
+		if (!target) { return; }
+		function inspect(node) {
+			if (!node || node.nodeType !== 1) { return; }
+			var messages = [];
+			var closest = node.closest("[class*='Message__StyledSpan']");
+			if (closest) { messages.push(closest); }
+			node.querySelectorAll("[class*='Message__StyledSpan']").forEach(function (message) { messages.push(message); });
+			if (!messages.length) {
+				var authorGroup = node.closest("[class*='ChannelChat__MessageBoxWrapper']");
+				if (authorGroup) { authorGroup.querySelectorAll("[class*='Message__StyledSpan']").forEach(function (message) { messages.push(message); }); }
+			}
+			messages.forEach(function (message) {
+				var group = message.closest("[class*='ChannelChat__MessageBoxWrapper']");
+				if (group) { callback(group, message.parentElement); }
+			});
+		}
+		var observer = new (window.MutationObserver || window.WebKitMutationObserver)(function (mutations) {
+			mutations.forEach(function (mutation) {
+				inspect(mutation.target.nodeType === 1 ? mutation.target : mutation.target.parentElement);
+				mutation.addedNodes.forEach(inspect);
+			});
+		});
+		observer.observe(target, { childList: true, subtree: true, characterData: true });
 	}
-	console.log("social stream injected");
+		console.log("social stream injected");
 	
 	
 	setInterval(function(){ // clear existing messages; just too much for a stream.
@@ -208,6 +236,7 @@ function pushMessage(data){
 		
 		if (document.querySelector("[class*='styled__ChatContainer']") && !document.querySelector("[class*='styled__ChatContainer']").marked){
 			document.querySelector("[class*='styled__ChatContainer']").marked = true;
+			document.querySelectorAll("[class*='styled__ChatContainer'] [class*='Message__StyledSpan']").forEach(function (message) { message.ssnCaptured = true; });
 			console.log("LOADED SocialStream EXTENSION");
 			
 			try { 
@@ -250,7 +279,10 @@ function pushMessage(data){
 		if ("settings" in response){
 			settings = response.settings;
 		}
+		if ("state" in response) { isExtensionOn = response.state; }
+		checkViewers();
 	});
+	setInterval(checkViewers, 30000);
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
@@ -268,6 +300,14 @@ function pushMessage(data){
 				if (typeof request === "object"){
 					if ("settings" in request){
 						settings = request.settings;
+						if ("state" in request) { isExtensionOn = request.state; }
+						checkViewers();
+						sendResponse(true);
+						return;
+					}
+					if ("state" in request) {
+						isExtensionOn = request.state;
+						checkViewers();
 						sendResponse(true);
 						return;
 					}

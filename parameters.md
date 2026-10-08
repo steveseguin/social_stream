@@ -233,6 +233,12 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `simpletts` | boolean | Simplified TTS output without "says" phrases |
 | `readevents` | boolean | Enables TTS for stream events |
 | `readouturls` | boolean | Reads URLs instead of saying "link" |
+| `kokororuntime` | `worker` | Generates Kokoro speech in a background worker; omitted uses standard processing |
+| `kokoroplayback` | `stream` | Plays Kokoro sections as they finish generating; also enables background processing |
+| `kokorodevice` | `auto`, `wasm`, `webgpu` | Kokoro processor: automatic, CPU, or WebGPU; use with `kokororuntime=worker` for background generation |
+| `kokorodtype` | `auto`, `q8`, `fp16`, `fp32` | Kokoro model precision; FP32 also enables background processing; FP16 needs a compatible GPU |
+| `kittenmodel` | `nano`, `micro`, `mini` | Selects a Kitten 0.8 model with background CPU generation; omitted keeps the original model |
+| `kittenplayback` | `stream` | Plays Kitten 0.8 sections as they finish generating; requires a Kitten 0.8 model |
 
 ### Donation & Member Parameters
 
@@ -413,12 +419,21 @@ In Dock settings → Message Mechanics, enable **Louder built-in beep** and use 
 | `filtertid` | comma-separated numbers | Filter by thread IDs |
 | `branded` | boolean | Shows channel icon |
 
-## Viewer Count & Chat Activity Title (`hype.html`)
+## Viewer Count & Chat Activity (`hype.html`)
 
-Set **Custom title** under **Viewer Count & Chat Activity Overlay → Enable and customize**, then copy the updated overlay link into OBS.
+Choose **Display Style** under **Viewer Count & Chat Activity Overlay → Customize**, then copy the updated overlay link into OBS. Expand **Layout and appearance** to customize spacing, accent color, grid columns, or movement. Set the OBS Browser Source width and height to the area the overlay should occupy.
+
+Original styles keep their existing sizing. New badge styles shrink to fit; Cards and Grid arrange platforms into columns; Vertical list stacks them. Scrolling ticker moves back and forth only when the row is too wide, and Rotating spotlight shows one platform at a time. Reduced-motion preferences use a stationary grid for these two animated layouts. Use a grid or ticker if shrinking makes a long row too small to read.
 
 | Parameter | Values | Description |
 |-----------|--------|-------------|
+| `style` | `default`, `compact`, `modern`, `minimal`, `topbar`, `micro`, `pills`, `glass`, `neon`, `outline`, `broadcast`, `scoreboard`, `cards`, `vertical`, `grid`, `autofit`, `ticker`, `rotate` | Selects the viewer-count design. The first five styles retain their original defaults |
+| `viewerlayout` | `fit`, `wrap`, `grid`, `vertical`, `ticker`, `rotate`, `fixed` | Overrides the style's layout. Fit shrinks a row; wrap adds rows; grid uses columns; vertical stacks platforms; ticker scrolls an overflowing row; rotate cycles platforms; fixed allows clipping. Omit to use the style default. Available with original and new styles |
+| `viewerspacing` | `tight`, `normal`, `airy` | Space between platforms in new styles or an explicit `viewerlayout` |
+| `vieweraccent` | CSS color | Border/highlight color in accented new styles, e.g. `&vieweraccent=ffcc66` |
+| `viewercolumns` | integer, 1–12 | Column count for Cards or a grid layout; omitted means automatic |
+| `viewermotion` | `slow`, `fast` | Ticker speed or rotation interval. Default rotation is 6 seconds per platform; slow is 10 seconds and fast is 3 seconds |
+| `scale` | positive number | Overall size; fitting layouts can shrink below this size to stay within the browser-source area |
 | `title` | string | Overrides the title with plain text, e.g. `&title=Watching%20now`. Missing, empty, or whitespace-only values keep the default title for the selected viewer/chatter mode |
 | `hidetitle` | boolean | Hides the title, including a custom title. Minimal and Dock Style also hide the title |
 

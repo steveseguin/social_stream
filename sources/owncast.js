@@ -1,6 +1,25 @@
 (function () {
 	
 	var isExtensionOn = true;
+	var viewerRequest = null;
+	function checkViewers() {
+		if (viewerRequest || !isExtensionOn || !(settings.showviewercount || settings.hypemode)) { return; }
+		var xhr = new XMLHttpRequest();
+		viewerRequest = xhr;
+		xhr.open("GET", "/api/status");
+		xhr.timeout = 10000;
+		xhr.onload = function () {
+			if (xhr.status !== 200 || !isExtensionOn || !(settings.showviewercount || settings.hypemode)) { return; }
+			try {
+				var status = JSON.parse(xhr.responseText);
+				var count = status.viewerCount;
+				if (typeof status.online !== "boolean" || typeof count !== "number" || !Number.isSafeInteger(count) || count < 0) { return; }
+				chrome.runtime.sendMessage(chrome.runtime.id, { message: { type: "owncast", event: "viewer_update", meta: count } }, function () {});
+			} catch (e) {}
+		};
+		xhr.onloadend = function () { if (viewerRequest === xhr) { viewerRequest = null; } };
+		xhr.send();
+	}
 function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function() {
@@ -244,6 +263,14 @@ function toDataURL(url, callback) {
 				if (typeof request === "object"){
 					if ("settings" in request){
 						settings = request.settings;
+						if ("state" in request) { isExtensionOn = request.state; }
+						checkViewers();
+						sendResponse(true);
+						return;
+					}
+					if ("state" in request) {
+						isExtensionOn = request.state;
+						checkViewers();
 						sendResponse(true);
 						return;
 					}
@@ -264,7 +291,10 @@ function toDataURL(url, callback) {
 		if ("settings" in response){
 			settings = response.settings;
 		}
+		if ("state" in response) { isExtensionOn = response.state; }
+		checkViewers();
 	});
+	setInterval(checkViewers, 30000);
 
 
 	var dataIndex = -1;
