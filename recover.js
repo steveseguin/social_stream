@@ -339,8 +339,9 @@
                 try { response = await fetch('popup.html'); }
                 catch (error) { throw new Error('Could not load the settings controls. Open recovery from the extension or the Social Stream website and try again.'); }
                 if (!response.ok) throw new Error('Could not load popup.html. Open this tool from the extension or the Social Stream website and try again.');
-                schema = createSchema(await response.text());
-                if (!schema.groups[1] || !schema.groups[2]) throw new Error('The settings controls could not be read. Reload this page and try again.');
+                var loadedSchema = createSchema(await response.text());
+                if (!loadedSchema.groups[1] || !loadedSchema.groups[2]) throw new Error('The settings controls could not be read. Reload this page and try again.');
+                schema = loadedSchema;
             }
             if (input.value !== source) return;
             var result = recover(source, schema, document.getElementById('queryPage').value, readLinkTypes(source));
