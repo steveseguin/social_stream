@@ -10136,6 +10136,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             kokoro: {
                 voice: getId('kokoroVoiceSelect')?.selectedOptions[0]?.value || "af_aoede",
                 rate: getParam('kokorospeed') ? getNumber('kokorospeed', 1.0) : 1.0,
+                background: getOption('kokororuntime') === 'worker',
+                stream: getOption('kokoroplayback') === 'stream',
+                device: getOption('kokorodevice', 'auto') || 'auto',
+                dtype: getOption('kokorodtype', 'auto') || 'auto',
             },
             
             piper: {
@@ -10145,6 +10149,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             // Kitten TTS settings
             kitten: {
                 voice: getId('kittenVoiceSelect')?.selectedOptions[0]?.value || "expr-voice-4-f",
+                model: getOption('kittenmodel', 'legacy') || 'legacy',
+                stream: getOption('kittenplayback') === 'stream',
                 speed: getParam('kittenspeed') ? getNumber('kittenspeed', 1.0) : 1.0,
                 sampleRate: 24000  // Fixed value - not configurable in new library
             },
@@ -10377,13 +10383,15 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 }
 			} else if (settings.service == "kokoro") {
                 if (!this.premiumQueueActive) {
-                    await this.kokoroTTS(text, settings, section);
+                    if (settings.kokoro.background || settings.kokoro.stream || settings.kokoro.dtype === 'fp32') await this.neuralTTS(text, settings, section);
+                    else await this.kokoroTTS(text, settings, section);
                 }
             } else if (settings.service == "piper") {
                 await this.piperTTS(text, settings, section);
             } else if (settings.service == "kitten") {
                 if (!this.premiumQueueActive) {
-                    await this.kittenTTS(text, settings, section);
+                    if (settings.kitten.model !== 'legacy') await this.neuralTTS(text, settings, section);
+                    else await this.kittenTTS(text, settings, section);
                 }
             } else if (!settings.service || (settings.service == "system")) {
                 this.systemTTS(text, settings, section);
@@ -10398,6 +10406,32 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         }
     },
     
+    async neuralTTS(text, settings, section = "") {
+        const token = {};
+        this.neuralTest = token;
+        this.premiumQueueActive = true;
+        this.setTestRunning(section, true, "Generating...");
+        try {
+            if (!window.SSNNeuralTTS) await import('./shared/tts/neural-client.js');
+            if (this.neuralTest !== token) return;
+            if (!this.neuralClient) this.neuralClient = new window.SSNNeuralTTS.Client();
+            const local = settings.service === 'kokoro' ? settings.kokoro : settings.kitten;
+            const result = await this.neuralClient.speak({
+                engine: settings.service, text, voice: local.voice, model: local.model || 'nano',
+                speed: local.rate || local.speed || 1, device: local.device || 'auto', dtype: local.dtype || 'auto',
+                mac: /Mac/i.test(navigator.platform || navigator.userAgent), stream: !!local.stream, volume: settings.volume
+            }, {
+                onProgress: progress => { if (this.neuralTest === token && progress.message) this.showFeedback(progress.message, 'info', section, 0); },
+                onStart: () => { if (this.neuralTest === token) this.setTestRunning(section, true, "Playing..."); }
+            });
+            if (this.neuralTest === token) this.showFeedback("Audio played here on " + (result.device === 'webgpu' ? 'GPU' : 'CPU') + ". Check OBS playback separately.", 'success', section);
+        } catch (error) {
+            if (this.neuralTest === token) this.showFeedback(error.message, 'error', section, 0);
+        } finally {
+            if (this.neuralTest === token) this.finishedAudio(section);
+        }
+    },
+
     async systemTTS(text, settings, section = this.currentTtsSection || "") {
         let desktopBridge = window.ninjafy || window.electronApi;
         try {
@@ -11164,6 +11198,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     cancelTest(section = this.currentTtsSection || "") {
         if (!this.premiumQueueActive) return;
         this.cancelRequested = true;
+        if (this.neuralTest && this.neuralClient) this.neuralClient.cancel();
         if (this.activeSystemUtterance) {
             this.activeSystemUtterance.onstart = null;
             this.activeSystemUtterance.onend = null;
@@ -11188,6 +11223,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     },
 
     finishTtsTest(section = this.currentTtsSection || "", keepCancelFlag = false) {
+        this.neuralTest = null;
         this.localPiperTest = null;
         this.audioFetchToken = null;
         if (this.activeSystemUtterance) {

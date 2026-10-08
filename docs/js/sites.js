@@ -1320,6 +1320,19 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
+			name: 'Chatango',
+			icon: 'chatango.png',
+			description: 'Group chat, including embedded Chatango rooms.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>Open your room at https://ROOM.chatango.com/ and keep it open while capturing.</li>
+					<li>In the desktop app, add the room URL using Add other source.</li>
+					<li>The extension also captures Chatango rooms embedded in other websites.</li>
+				</ul>
+			`
+		},
+		{
 			name: 'Chatroll',
 			icon: 'chatroll.png',
 			description: 'Embeddable chat service.',

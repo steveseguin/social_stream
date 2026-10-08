@@ -143,6 +143,7 @@ TTS.normalizeVolume = function(value) {
 };
 
 TTS.applyVolume = function(audio) {
+    if (TTS.neuralClient) TTS.neuralClient.setVolume(TTS.normalizeVolume(TTS.volume));
     if (audio) {
         audio.volume = TTS.normalizeVolume(TTS.volume);
     }
@@ -410,7 +411,7 @@ TTS.normalizeKokoroDevice = function(value) {
 
 TTS.normalizeKokoroDtype = function(value) {
     var normalized = (value || "auto").toString().trim().toLowerCase();
-    if (["auto", "fp16", "q8"].indexOf(normalized) !== -1) {
+    if (["auto", "fp16", "fp32", "q8"].indexOf(normalized) !== -1) {
         return normalized;
     }
     console.warn("[TTS Kokoro] Ignoring unsupported dtype:", value);
@@ -1086,6 +1087,10 @@ TTS.configure = function(urlParams) {
     TTS.kokoroSettings.voiceName = urlParams.get("voicekokoro") || "af_aoede";
     TTS.kokoroSettings.device = TTS.normalizeKokoroDevice(urlParams.get("kokorodevice") || urlParams.get("kokorobackend"));
     TTS.kokoroSettings.dtype = TTS.normalizeKokoroDtype(urlParams.get("kokorodtype") || urlParams.get("kokoroprecision"));
+    TTS.kokoroSettings.background = urlParams.get("kokororuntime") === "worker";
+    TTS.kokoroSettings.stream = urlParams.get("kokoroplayback") === "stream";
+    TTS.kittenSettings.model = ["nano", "micro", "mini"].indexOf(urlParams.get("kittenmodel")) !== -1 ? urlParams.get("kittenmodel") : "legacy";
+    TTS.kittenSettings.stream = urlParams.get("kittenplayback") === "stream";
     if (urlParams.has("kokorowasm")) {
         TTS.kokoroSettings.device = "wasm";
         TTS.kokoroSettings.dtype = "q8";
@@ -1305,7 +1310,7 @@ TTS.configure = function(urlParams) {
     }
 
     // Initialize Kokoro if needed
-    if (TTS.useKokoroTTS) {
+    if (TTS.useKokoroTTS && !TTS.useNeuralWorker("kokoro")) {
         try {
             TTS.initKokoro();
         } catch(e) {
@@ -1332,7 +1337,7 @@ TTS.configure = function(urlParams) {
     }
     
     // Initialize Kitten TTS if needed
-    if (TTS.useKitten) {
+    if (TTS.useKitten && !TTS.useNeuralWorker("kitten")) {
         try {
             TTS.initKitten();
         } catch(e) {
@@ -1686,6 +1691,11 @@ TTS.webSystemTTS = function(text, options, finishPremiumQueue = false) {
  * Clear the TTS queue without stopping
  */
 TTS.clearQueue = function() {
+    if (TTS.neuralActive) {
+        TTS.premiumQueueTTS = [];
+        TTS.cancelNeuralSpeech();
+        TTS.premiumQueueActive = false;
+    }
     TTS.pendingTikTokGiftSpeech.forEach(function(pending) {
         if (pending && pending.timer) {
             clearTimeout(pending.timer);
@@ -1712,6 +1722,11 @@ TTS.clearQueue = function() {
  * Skip the currently playing TTS message and play the next one in queue
  */
 TTS.skipCurrent = function() {
+    if (TTS.neuralActive) {
+        TTS.cancelNeuralSpeech();
+        TTS.finishedAudio();
+        return;
+    }
     if (window.speechSynthesis && window.speechSynthesis.speaking) {
         // For system TTS
         window.speechSynthesis.cancel();
@@ -1744,6 +1759,14 @@ TTS.skipCurrent = function() {
  * Toggle TTS on/off
  */
 TTS.toggle = function() {
+    if (TTS.neuralActive) {
+        TTS.speech = false;
+        TTS.premiumQueueTTS = [];
+        TTS.cancelNeuralSpeech();
+        TTS.premiumQueueActive = false;
+        TTS.updateButtonState('off');
+        return;
+    }
     var ele = document.getElementById("tts");
 
     if (window.speechSynthesis && (window.speechSynthesis.pending || window.speechSynthesis.speaking)) {
@@ -2141,6 +2164,59 @@ TTS.speechMeta = function(data, allow = false) {
  */
 TTS.isNewKokoroVoice = function(voice) {
     return /^(ef_dora|em_alex|em_santa|pf_dora|pm_alex|pm_santa)$/.test(voice || "");
+};
+
+TTS.useNeuralWorker = function(provider) {
+    if (provider === "kitten") return !!TTS.kittenSettings.model && TTS.kittenSettings.model !== "legacy";
+    return provider === "kokoro" && (TTS.kokoroSettings.background || TTS.kokoroSettings.stream || TTS.kokoroSettings.dtype === "fp32");
+};
+
+TTS.cancelNeuralSpeech = function() {
+    TTS.premiumSerial++;
+    TTS.neuralActive = false;
+    if (TTS.neuralClient) TTS.neuralClient.cancel();
+};
+
+TTS.neuralSpeech = async function(text, provider, options) {
+    var serial = ++TTS.premiumSerial;
+    TTS.premiumQueueActive = true;
+    TTS.neuralActive = true;
+    try {
+        if (!window.SSNNeuralTTS) await import('./shared/tts/neural-client.js');
+        if (serial !== TTS.premiumSerial) return;
+        if (!TTS.neuralClient) TTS.neuralClient = new window.SSNNeuralTTS.Client();
+        var settings = provider === "kokoro" ? TTS.kokoroSettings : TTS.kittenSettings;
+        var result = await TTS.neuralClient.speak({
+            engine: provider, text: text, model: settings.model || "nano",
+            voice: TTS.getVoiceOverride(options) || settings.voiceName || settings.voice,
+            speed: settings.speed || 1, device: settings.device || "auto", dtype: settings.dtype || "auto",
+            mac: TTS.isMacBrowserKokoro(), stream: !!settings.stream && !TTS.neuroSyncEnabled,
+            silent: !!TTS.neuroSyncEnabled, volume: TTS.normalizeVolume(TTS.volume)
+        }, {
+            onProgress: function(progress) {
+                if (serial !== TTS.premiumSerial) return;
+                TTS.neuralStatus = progress.message || "";
+                if (progress.device) { TTS.kokoroDevice = progress.device; TTS.kokoroDtype = progress.dtype; }
+            },
+            onStart: function() { if (serial === TTS.premiumSerial) TTS.updateButtonState('speaking'); }
+        });
+        if (serial !== TTS.premiumSerial) return;
+        if (TTS.neuroSyncEnabled) await TTS.sendToNeuroSync(result.blob, { isKokoroAudio: provider === "kokoro" });
+        TTS.neuralStatus = "Ready";
+    } catch (error) {
+        if (serial === TTS.premiumSerial) {
+            TTS.neuralStatus = error.message;
+            console.error("Background TTS:", error);
+            var button = document.getElementById("tts");
+            if (button) button.title = error.message;
+        }
+    } finally {
+        if (serial === TTS.premiumSerial) {
+            TTS.neuralActive = false;
+            TTS.finishedAudio();
+            if (!TTS.premiumQueueActive) TTS.updateButtonState(TTS.speech ? 'on' : 'off');
+        }
+    }
 };
 
 TTS.initKokoro = async function(voice) {
@@ -2698,6 +2774,7 @@ TTS.SpeechifyTTS = function(tts, options) {
  * @param {string} text - Text to speak
  */
 TTS.kokoroTTS = async function(text, options) {
+  if (TTS.useNeuralWorker("kokoro")) return TTS.neuralSpeech(text, "kokoro", options);
   TTS.premiumQueueActive = true;
   const premiumSerial = ++TTS.premiumSerial;
   const voiceOverride = TTS.getVoiceOverride(options);
@@ -3187,6 +3264,7 @@ TTS.initKitten = async function() {
  * @param {string} text - Text to speak
  */
 TTS.kittenTTS = async function(text, options) {
+    if (TTS.useNeuralWorker("kitten")) return TTS.neuralSpeech(text, "kitten", options);
     TTS.premiumQueueActive = true;
     const premiumSerial = ++TTS.premiumSerial;
     try {

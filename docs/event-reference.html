@@ -101,6 +101,7 @@
                                     <li><a href="#shareplay">SharePlay</a></li>
                                     <li><a href="#gosh">Gosh</a></li>
                                     <li><a href="#livacha">Livacha</a></li>
+                                    <li><a href="#chatango">Chatango</a></li>
                                     <li><a href="#streamplace">Streamplace</a></li>
                                     <li><a href="#worldswave">WorldsWave</a></li>
                                     <li><a href="#goodgame">Goodgame</a></li>
@@ -2391,6 +2392,11 @@
                 <p class="source-note">Implementation: <code>sources/livacha.js</code>. Open <code>https://livacha.com/chat/ROOM</code> with chat visible, or paste the room URL into SSApp's Add other source.</p>
                 <p>New chat rows emit <code>type</code>/<code>platform: "livacha"</code>, plain-text <code>chatname</code>, <code>chatimg</code>, <code>nameColor</code>, and sanitized <code>chatmessage</code>. Relative avatar and inline image URLs become absolute HTTP(S) URLs. Paragraphs, line breaks, and lists are flattened into one chat message. With <code>textonlymode</code>, images become alt text or <code>[image]</code>.</p>
                 <p>Message IDs are used internally to avoid recapturing edits and remounted rows. Initial history and prepended older messages are skipped; timestamps and reaction menus are outside the captured body. No donation, membership, moderation, or viewer-count events are inferred.</p>
+            </section>
+
+            <section class="section-summary" id="chatango">
+                <h2>Chatango - Group Chat</h2>
+                <p>Open <code>https://ROOM.chatango.com/</code>, or a page with an embedded Chatango room. New rows emit standard chat with <code>type</code>/<code>platform: "chatango"</code>, plain-text <code>chatname</code>, <code>nameColor</code>, <code>chatmessage</code>, and <code>chatimg</code> when available. Inline images use HTTP(S) URLs; text-only mode uses their alt text or <code>[image]</code>. Rows already displayed when capture attaches and older messages prepended while scrolling back are skipped.</p>
             </section>
 
             <section class="section-summary" id="vaughn">

@@ -968,42 +968,78 @@ p a {
     font-size: 0.6rem;
 }
 
-.misc-resources {
-    margin: 18px 0 6px;
-    padding: 12px 14px;
-    border-radius: 10px;
-    background: var(--options-group-background-color);
-    color: var(--options-group-text-color);
-}
-.misc-resources h3 {
-    margin: 0 0 4px;
-    font-size: 1rem;
-    color: var(--h3-color);
-}
-.misc-resources p {
-    margin: 0 0 10px;
-    font-size: 0.85rem;
-    color: var(--text-secondary);
-}
-.misc-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-.misc-links a {
-    display: inline-block;
-    padding: 6px 10px;
-    border-radius: 6px;
-    background: var(--button-background);
-    color: var(--text-button-text);
-    font-size: 0.85rem;
-    text-decoration: none;
-}
-.misc-links a:hover {
-    filter: brightness(1.08);
-    text-decoration: underline;
-}
-
+.misc-resources {
+
+    margin: 18px 0 6px;
+
+    padding: 12px 14px;
+
+    border-radius: 10px;
+
+    background: var(--options-group-background-color);
+
+    color: var(--options-group-text-color);
+
+}
+
+.misc-resources h3 {
+
+    margin: 0 0 4px;
+
+    font-size: 1rem;
+
+    color: var(--h3-color);
+
+}
+
+.misc-resources p {
+
+    margin: 0 0 10px;
+
+    font-size: 0.85rem;
+
+    color: var(--text-secondary);
+
+}
+
+.misc-links {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 6px;
+
+}
+
+.misc-links a {
+
+    display: inline-block;
+
+    padding: 6px 10px;
+
+    border-radius: 6px;
+
+    background: var(--button-background);
+
+    color: var(--text-button-text);
+
+    font-size: 0.85rem;
+
+    text-decoration: none;
+
+}
+
+.misc-links a:hover {
+
+    filter: brightness(1.08);
+
+    text-decoration: underline;
+
+}
+
+
+
 .copy-link {
     text-decoration: none;
     color: var(--text-button-text);
@@ -3472,6 +3508,14 @@ input:checked + .slider:before {
 						<!-- Kokoro TTS Options -->
 						<div class="tts-provider-options options_group" id="kokoroTTS">
 							<h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-kokoro-options">Kokoro TTS Options</span></h4>
+<details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
+<div class="textInputContainer"><label for="kokororuntimeSelect">Processing</label><select class="textInput popup-reviewed-control" id="kokororuntimeSelect" data-optionparam1="kokororuntime"><option value="">Standard (existing behavior)</option><option value="worker">Background generation</option></select></div>
+<div class="textInputContainer"><label for="kokorodeviceSelect">Background processor</label><select class="textInput popup-reviewed-control" id="kokorodeviceSelect" data-optionparam1="kokorodevice"><option value="">Automatic</option><option value="wasm">CPU</option><option value="webgpu">GPU (WebGPU)</option></select></div>
+<div class="textInputContainer"><label for="kokorodtypeSelect">Background model quality</label><select class="textInput popup-reviewed-control" id="kokorodtypeSelect" data-optionparam1="kokorodtype"><option value="">Automatic</option><option value="q8">Compact (about 92 MB)</option><option value="fp32">Full quality (about 326 MB)</option><option value="fp16">Half precision (requires compatible GPU)</option></select></div>
+<div class="textInputContainer"><label for="kokoroplaybackSelect">Background playback</label><select class="textInput popup-reviewed-control" id="kokoroplaybackSelect" data-optionparam1="kokoroplayback"><option value="">Wait for the complete message</option><option value="stream">Start as speech arrives</option></select></div>
+<p>Background generation keeps chat responsive. Streamed playback starts sooner but may pause between parts. Full quality or streamed playback enables background generation.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+
 							<i>note: this free locally-running TTS needs a powerful computer to run well.</i>
 							<br /><br />
 							<div>
@@ -3499,6 +3543,12 @@ input:checked + .slider:before {
 						<!-- Kitten TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="kittenTTS">
 							<h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-kitten-options">Kitten TTS Options</span></h4>
+<details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
+<div class="textInputContainer"><label for="kittenmodelSelect">Model</label><select class="textInput popup-reviewed-control" id="kittenmodelSelect" data-optionparam1="kittenmodel"><option value="">Original Kitten 0.1</option><option value="nano">Kitten 0.8 Nano (about 25 MB)</option><option value="micro">Kitten 0.8 Micro (about 41 MB)</option><option value="mini">Kitten 0.8 Mini (about 80 MB)</option></select></div>
+<div class="textInputContainer"><label for="kittenplaybackSelect">Kitten 0.8 playback</label><select class="textInput popup-reviewed-control" id="kittenplaybackSelect" data-optionparam1="kittenplayback"><option value="">Wait for the complete message</option><option value="stream">Start as speech arrives</option></select></div>
+<p>Kitten 0.8 runs in the background on CPU. English voices only. Streamed playback may pause between parts.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+
 							<i>note: this free browser-based TTS needs to download a ~24MB model on first use.</i>
 							<br /><br />
 							<div>
@@ -5750,6 +5800,14 @@ input:checked + .slider:before {
                         <!-- Kokoro TTS Options -->
                         <div class="tts-provider-options options_group hidden" id="kokoroTTS2">
                             <h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-kokoro-options">Kokoro TTS Options</span></h4>
+<details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
+<div class="textInputContainer"><label for="kokororuntimeSelect2">Processing</label><select class="textInput popup-reviewed-control" id="kokororuntimeSelect2" data-optionparam2="kokororuntime"><option value="">Standard (existing behavior)</option><option value="worker">Background generation</option></select></div>
+<div class="textInputContainer"><label for="kokorodeviceSelect2">Background processor</label><select class="textInput popup-reviewed-control" id="kokorodeviceSelect2" data-optionparam2="kokorodevice"><option value="">Automatic</option><option value="wasm">CPU</option><option value="webgpu">GPU (WebGPU)</option></select></div>
+<div class="textInputContainer"><label for="kokorodtypeSelect2">Background model quality</label><select class="textInput popup-reviewed-control" id="kokorodtypeSelect2" data-optionparam2="kokorodtype"><option value="">Automatic</option><option value="q8">Compact (about 92 MB)</option><option value="fp32">Full quality (about 326 MB)</option><option value="fp16">Half precision (requires compatible GPU)</option></select></div>
+<div class="textInputContainer"><label for="kokoroplaybackSelect2">Background playback</label><select class="textInput popup-reviewed-control" id="kokoroplaybackSelect2" data-optionparam2="kokoroplayback"><option value="">Wait for the complete message</option><option value="stream">Start as speech arrives</option></select></div>
+<p>Background generation keeps chat responsive. Streamed playback starts sooner but may pause between parts. Full quality or streamed playback enables background generation.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+
                             <i>note: this free locally-running TTS needs a powerful computer to run well.</i>
                             <br /><br />
                             <div>
@@ -5775,6 +5833,12 @@ input:checked + .slider:before {
                         <!-- Kitten TTS Options -->
                         <div class="tts-provider-options options_group hidden" id="kittenTTS2">
                             <h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-kitten-options">Kitten TTS Options</span></h4>
+<details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
+<div class="textInputContainer"><label for="kittenmodelSelect2">Model</label><select class="textInput popup-reviewed-control" id="kittenmodelSelect2" data-optionparam2="kittenmodel"><option value="">Original Kitten 0.1</option><option value="nano">Kitten 0.8 Nano (about 25 MB)</option><option value="micro">Kitten 0.8 Micro (about 41 MB)</option><option value="mini">Kitten 0.8 Mini (about 80 MB)</option></select></div>
+<div class="textInputContainer"><label for="kittenplaybackSelect2">Kitten 0.8 playback</label><select class="textInput popup-reviewed-control" id="kittenplaybackSelect2" data-optionparam2="kittenplayback"><option value="">Wait for the complete message</option><option value="stream">Start as speech arrives</option></select></div>
+<p>Kitten 0.8 runs in the background on CPU. English voices only. Streamed playback may pause between parts.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+
                             <i>note: this free browser-based TTS needs to download a ~24MB model on first use.</i>
                             <br /><br />
                             <div>
@@ -10875,6 +10939,14 @@ input:checked + .slider:before {
 						<!-- Kokoro TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="kokoroTTS10">
 							<h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-kokoro-options">Kokoro TTS Options</span></h4>
+<details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
+<div class="textInputContainer"><label for="kokororuntimeSelect10">Processing</label><select class="textInput popup-reviewed-control" id="kokororuntimeSelect10" data-optionparam10="kokororuntime"><option value="">Standard (existing behavior)</option><option value="worker">Background generation</option></select></div>
+<div class="textInputContainer"><label for="kokorodeviceSelect10">Background processor</label><select class="textInput popup-reviewed-control" id="kokorodeviceSelect10" data-optionparam10="kokorodevice"><option value="">Automatic</option><option value="wasm">CPU</option><option value="webgpu">GPU (WebGPU)</option></select></div>
+<div class="textInputContainer"><label for="kokorodtypeSelect10">Background model quality</label><select class="textInput popup-reviewed-control" id="kokorodtypeSelect10" data-optionparam10="kokorodtype"><option value="">Automatic</option><option value="q8">Compact (about 92 MB)</option><option value="fp32">Full quality (about 326 MB)</option><option value="fp16">Half precision (requires compatible GPU)</option></select></div>
+<div class="textInputContainer"><label for="kokoroplaybackSelect10">Background playback</label><select class="textInput popup-reviewed-control" id="kokoroplaybackSelect10" data-optionparam10="kokoroplayback"><option value="">Wait for the complete message</option><option value="stream">Start as speech arrives</option></select></div>
+<p>Background generation keeps chat responsive. Streamed playback starts sooner but may pause between parts. Full quality or streamed playback enables background generation.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+
 							<i>note: this free locally-running TTS needs a powerful computer to run well.</i>
 							<br /><br />
 							<div>
@@ -10902,6 +10974,12 @@ input:checked + .slider:before {
 						<!-- Kitten TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="kittenTTS10">
 							<h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-kitten-options">Kitten TTS Options</span></h4>
+<details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
+<div class="textInputContainer"><label for="kittenmodelSelect10">Model</label><select class="textInput popup-reviewed-control" id="kittenmodelSelect10" data-optionparam10="kittenmodel"><option value="">Original Kitten 0.1</option><option value="nano">Kitten 0.8 Nano (about 25 MB)</option><option value="micro">Kitten 0.8 Micro (about 41 MB)</option><option value="mini">Kitten 0.8 Mini (about 80 MB)</option></select></div>
+<div class="textInputContainer"><label for="kittenplaybackSelect10">Kitten 0.8 playback</label><select class="textInput popup-reviewed-control" id="kittenplaybackSelect10" data-optionparam10="kittenplayback"><option value="">Wait for the complete message</option><option value="stream">Start as speech arrives</option></select></div>
+<p>Kitten 0.8 runs in the background on CPU. English voices only. Streamed playback may pause between parts.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+
 							<i>note: this free browser-based TTS needs to download a ~24MB model on first use.</i>
 							<br /><br />
 							<div>
@@ -13149,6 +13227,14 @@ input:checked + .slider:before {
                         <!-- Kokoro TTS Options -->
                         <div class="tts-provider-options options_group hidden" id="kokoroTTS18">
                             <h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-kokoro-options">Kokoro TTS Options</span></h4>
+<details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
+<div class="textInputContainer"><label for="kokororuntimeSelect18">Processing</label><select class="textInput popup-reviewed-control" id="kokororuntimeSelect18" data-optionparam18="kokororuntime"><option value="">Standard (existing behavior)</option><option value="worker">Background generation</option></select></div>
+<div class="textInputContainer"><label for="kokorodeviceSelect18">Background processor</label><select class="textInput popup-reviewed-control" id="kokorodeviceSelect18" data-optionparam18="kokorodevice"><option value="">Automatic</option><option value="wasm">CPU</option><option value="webgpu">GPU (WebGPU)</option></select></div>
+<div class="textInputContainer"><label for="kokorodtypeSelect18">Background model quality</label><select class="textInput popup-reviewed-control" id="kokorodtypeSelect18" data-optionparam18="kokorodtype"><option value="">Automatic</option><option value="q8">Compact (about 92 MB)</option><option value="fp32">Full quality (about 326 MB)</option><option value="fp16">Half precision (requires compatible GPU)</option></select></div>
+<div class="textInputContainer"><label for="kokoroplaybackSelect18">Background playback</label><select class="textInput popup-reviewed-control" id="kokoroplaybackSelect18" data-optionparam18="kokoroplayback"><option value="">Wait for the complete message</option><option value="stream">Start as speech arrives</option></select></div>
+<p>Background generation keeps chat responsive. Streamed playback starts sooner but may pause between parts. Full quality or streamed playback enables background generation.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+
                             <i>note: this free locally-running TTS needs a powerful computer to run well.</i>
                             <br /><br />
                             <div>
@@ -13176,6 +13262,12 @@ input:checked + .slider:before {
                         <!-- Kitten TTS Options -->
                         <div class="tts-provider-options options_group hidden" id="kittenTTS18">
                             <h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-kitten-options">Kitten TTS Options</span></h4>
+<details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
+<div class="textInputContainer"><label for="kittenmodelSelect18">Model</label><select class="textInput popup-reviewed-control" id="kittenmodelSelect18" data-optionparam18="kittenmodel"><option value="">Original Kitten 0.1</option><option value="nano">Kitten 0.8 Nano (about 25 MB)</option><option value="micro">Kitten 0.8 Micro (about 41 MB)</option><option value="mini">Kitten 0.8 Mini (about 80 MB)</option></select></div>
+<div class="textInputContainer"><label for="kittenplaybackSelect18">Kitten 0.8 playback</label><select class="textInput popup-reviewed-control" id="kittenplaybackSelect18" data-optionparam18="kittenplayback"><option value="">Wait for the complete message</option><option value="stream">Start as speech arrives</option></select></div>
+<p>Kitten 0.8 runs in the background on CPU. English voices only. Streamed playback may pause between parts.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+
                             <i>note: this free browser-based TTS needs to download a ~24MB model on first use.</i>
                             <br /><br />
                             <div>
@@ -16599,23 +16691,40 @@ input:checked + .slider:before {
 			</div>
 
 
-			<div class="misc-resources">
-				<h3>🧰 More free resources</h3>
-				<p>Ready-made overlays that don't need a session. Pick one, customize it, and paste the link into OBS.</p>
-				<div class="misc-links">
-					<a href="https://socialstream.ninja/overlays/" target="_blank">🎨 Overlay Studio (everything)</a>
-					<a href="https://socialstream.ninja/overlays/#cat=socials" target="_blank">📣 Banners &amp; socials bars</a>
-					<a href="https://socialstream.ninja/overlays/#cat=scenes" target="_blank">🎬 Starting soon, BRB &amp; ending screens</a>
-					<a href="https://socialstream.ninja/overlays/#cat=time" target="_blank">⏰ Clocks &amp; timers</a>
-					<a href="https://socialstream.ninja/overlays/#cat=gaming" target="_blank">🎮 Gaming HUDs</a>
-					<a href="https://socialstream.ninja/overlays/#cat=music" target="_blank">🎵 Music &amp; DJ</a>
-					<a href="https://socialstream.ninja/overlays/#cat=pets" target="_blank">🐱 Pets that react to OBS</a>
-					<a href="https://socialstream.ninja/overlays/#cat=holidays" target="_blank">🎄 Countries &amp; holidays</a>
-					<a href="https://socialstream.ninja/overlays/#cat=live" target="_blank">📰 Live news, trivia &amp; data</a>
-					<a href="https://socialstream.ninja/overlays/#cat=fun" target="_blank">✨ Cute &amp; fun</a>
-				</div>
-			</div>
-			<br>
+			<div class="misc-resources">
+
+				<h3>🧰 More free resources</h3>
+
+				<p>Ready-made overlays that don't need a session. Pick one, customize it, and paste the link into OBS.</p>
+
+				<div class="misc-links">
+
+					<a href="https://socialstream.ninja/overlays/" target="_blank">🎨 Overlay Studio (everything)</a>
+
+					<a href="https://socialstream.ninja/overlays/#cat=socials" target="_blank">📣 Banners &amp; socials bars</a>
+
+					<a href="https://socialstream.ninja/overlays/#cat=scenes" target="_blank">🎬 Starting soon, BRB &amp; ending screens</a>
+
+					<a href="https://socialstream.ninja/overlays/#cat=time" target="_blank">⏰ Clocks &amp; timers</a>
+
+					<a href="https://socialstream.ninja/overlays/#cat=gaming" target="_blank">🎮 Gaming HUDs</a>
+
+					<a href="https://socialstream.ninja/overlays/#cat=music" target="_blank">🎵 Music &amp; DJ</a>
+
+					<a href="https://socialstream.ninja/overlays/#cat=pets" target="_blank">🐱 Pets that react to OBS</a>
+
+					<a href="https://socialstream.ninja/overlays/#cat=holidays" target="_blank">🎄 Countries &amp; holidays</a>
+
+					<a href="https://socialstream.ninja/overlays/#cat=live" target="_blank">📰 Live news, trivia &amp; data</a>
+
+					<a href="https://socialstream.ninja/overlays/#cat=fun" target="_blank">✨ Cute &amp; fun</a>
+
+				</div>
+
+			</div>
+
+			<br>
+
 			<p style="text-align: right; padding-bottom: 11px;">
 				<a class="lightblue"  href="https://socialstream.ninja/TOS" target="_blank">Terms of Service</a> | <a class="lightblue"  href="https://socialstream.ninja/privacy" target="_blank">Privacy Policy</a> | <a  class="lightblue" href="https://www.youtube.com/t/terms " target="_blank">YouTube's Terms of Service</a>
 			</p>
