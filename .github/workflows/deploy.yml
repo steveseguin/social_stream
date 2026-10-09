@@ -74,7 +74,7 @@ jobs:
                 test "$(wc -c < "$checkout/thirdparty/models/granite-guardian-hap-38m/$asset")" -le 26214400
               done
             fi
-            # Background speech needs its worker and packaged runtime on the site.
+            # Local knowledge search needs its packaged model and worker on the site.
             if [ -f "$checkout/shared/ai/ragSemanticSearch.js" ]; then
               for asset in ragSemanticCache.js ragSemanticSearch.js rag-semantic-worker.js; do
                 test -f "$checkout/shared/ai/$asset"
@@ -84,6 +84,7 @@ jobs:
                 test "$(wc -c < "$checkout/thirdparty/models/all-MiniLM-L6-v2/$asset")" -le 26214400
               done
             fi
+            # Background speech needs its worker and packaged runtime on the site.
             if [ -f "$checkout/shared/tts/neural-worker.js" ]; then
               for asset in neural-client.js pcm.js; do
                 test -f "$checkout/shared/tts/$asset"

@@ -3941,7 +3941,9 @@ Prefer this exact format:
 
 	  if (parsedDecision?.needsSearch && parsedDecision.searchQuery) {
 		ragSearchQuery = parsedDecision.searchQuery.trim();
-	  } else if (ragDecision && !ragDecision.toLowerCase().includes('no_response')) {
+	  } else if (ragDecision && !ragDecision.toLowerCase().includes('no_response') &&
+		!/^no[ -]+response[.!]?$/i.test(ragDecision.trim()) &&
+		!/\[NEEDS_SEARCH\]\s*NO\s*\[\/NEEDS_SEARCH\]/i.test(ragDecision)) {
 		ragSearchQuery = ragDecision.trim();
 	  }
 
@@ -4978,7 +4980,7 @@ If the retrieved information is not enough to answer confidently, reply with NO_
 Your response should be suitable for a chat environment, ideally not exceeding 150 characters.`;
 
         const response = await callLLMAPI(prompt);
-        if (!response || response.toLowerCase().includes('no_response')) {
+        if (!response || response.toLowerCase().includes('no_response') || /^no[ -]+response[.!]?$/i.test(response.trim())) {
             return false;
         }
         return response;
