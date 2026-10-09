@@ -61,6 +61,9 @@
 
         function terminateWorker() {
             if (worker) {
+                worker.onmessage = null;
+                worker.onerror = null;
+                worker.onmessageerror = null;
                 try {
                     worker.terminate();
                 } catch (_error) {}
@@ -121,6 +124,9 @@
                 var timeoutId = setTimeout(function () {
                     pending.delete(requestId);
                     reject(new Error(type + ' timed out.'));
+                    // A stalled GPU request cannot handle reset/dispose messages.
+                    // Recreate the worker on the next request instead of leaving it busy.
+                    terminateWorker();
                 }, timeoutMs);
 
                 pending.set(requestId, {

@@ -1518,6 +1518,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                 ...(Number.isFinite(localBrowserGeneration.temperature) ? { temperature: localBrowserGeneration.temperature } : {}),
                 ...(Number.isFinite(localBrowserGeneration.topP) ? { topP: localBrowserGeneration.topP } : {}),
                 ...(Number.isFinite(localBrowserGeneration.topK) ? { topK: localBrowserGeneration.topK } : {}),
+                ...(Number.isInteger(localBrowserGeneration.noRepeatNgramSize) && localBrowserGeneration.noRepeatNgramSize >= 0 ? { noRepeatNgramSize: localBrowserGeneration.noRepeatNgramSize } : {}),
                 images: requestImages,
                 stateless: localBrowserStateless,
                 moderation: provider === 'localqwen' && options.localBrowserModeration === true
@@ -3918,10 +3919,15 @@ async function processUserInput(userInput, data, additionalInstructions, botname
     // Add current message
     
 
-    // Try RAG first, but fall back cleanly if retrieval looks weak.
+    // Files-only replies must not fall through to general chat, even with no imports.
+    const ragFilesOnly = getAiSettingFlag('ollamaRagEnabled') && getAiSettingFlag('ragFilesOnly');
+    // Semantic search uses the original message; keyword search keeps its query planner.
     if (await isRAGConfigured()) {
-	  const databaseDescriptor = localStorage.getItem('databaseDescriptor') || '';
-	  const ragPrompt = `${promptBase}
+	  const searchFirst = isRAGSemanticEnabled();
+	  let ragSearchQuery = searchFirst ? userInput : '';
+	  if (!searchFirst) {
+		const databaseDescriptor = localStorage.getItem('databaseDescriptor') || '';
+		const ragPrompt = `${promptBase}
 
 Decide if the current message needs a search of the custom knowledge database before responding.
 
@@ -3935,28 +3941,32 @@ Prefer this exact format:
 [NEEDS_SEARCH]YES or NO[/NEEDS_SEARCH]
 [SEARCH_QUERY]keyword1 keyword2[/SEARCH_QUERY]`;
 
-	  const ragDecision = await callLLMAPI(ragPrompt);
-	  const parsedDecision = ragDecision ? parseDecision(ragDecision) : null;
-	  let ragSearchQuery = '';
+		const ragDecision = await callLLMAPI(ragPrompt, null, null, null, null, null, { localBrowserStateless: true, localBrowserGeneration: { noRepeatNgramSize: 0 } });
+		const parsedDecision = ragDecision ? parseDecision(ragDecision) : null;
 
-	  if (parsedDecision?.needsSearch && parsedDecision.searchQuery) {
-		ragSearchQuery = parsedDecision.searchQuery.trim();
-	  } else if (ragDecision && !ragDecision.toLowerCase().includes('no_response') &&
-		!/^no[ -]+response[.!]?$/i.test(ragDecision.trim()) &&
-		!/\[NEEDS_SEARCH\]\s*NO\s*\[\/NEEDS_SEARCH\]/i.test(ragDecision)) {
-		ragSearchQuery = ragDecision.trim();
+		if (parsedDecision?.needsSearch && parsedDecision.searchQuery) {
+			ragSearchQuery = parsedDecision.searchQuery.trim();
+		} else if (ragDecision && !ragDecision.toLowerCase().includes('no_response') &&
+			!/^no[ -]*response[.!]?$/i.test(ragDecision.trim()) &&
+			!/\[NEEDS_SEARCH\]\s*NO\s*\[\/NEEDS_SEARCH\]/i.test(ragDecision)) {
+			ragSearchQuery = ragDecision.trim();
+		}
 	  }
 
 	  if (ragSearchQuery) {
 		const searchResults = await performRAGSearch(ragSearchQuery, userInput);
 		if (searchResults.length) {
-			const ragResponse = await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions, ragSearchQuery);
+			const replyContext = searchFirst && !privateBotPrompt ? promptBase + (settings.alwaysRespondLLM
+				? '\nRespond to the current group chat message directly and succinctly.'
+				: '\nDecide whether this group chat message calls for a reply from you. If not, reply with NO_RESPONSE.') : '';
+			const ragResponse = await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions, ragSearchQuery, replyContext);
 			if (ragResponse) {
 				return ragResponse;
 			}
 		}
 	  }
 	}
+	if (ragFilesOnly) return false;
 
     // Regular response with context
 	let debugmode = false;
@@ -4285,6 +4295,7 @@ function updateDocumentProgress(docId, progress, status) {
 }
 
 async function isRAGConfigured() {
+    if (!getAiSettingFlag('ollamaRagEnabled')) return false;
     // Check if there are any documents in the database
     const db = await openLunrDatabase();
     const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly');
@@ -4294,9 +4305,9 @@ async function isRAGConfigured() {
         request.onerror = () => reject(request.error);
         request.onsuccess = () => resolve(request.result);
     });
-    // Prepare local retrieval while the selected AI service decides its search query.
+    // Prepare local retrieval from the stored imports.
     if (count > 0 && isRAGSemanticEnabled()) getRAGSemanticEngine()?.warm();
-    return (count > 0) && settings.ollamaRagEnabled;
+    return count > 0;
 }
 
 
@@ -4920,7 +4931,7 @@ function getRAGContentExcerpt(doc, query, maxLength) {
     return bestContent;
 }
 
-async function generateResponseWithSearchResults(userInput, searchResults, chatname, additionalInstructions, searchQuery = '') {
+async function generateResponseWithSearchResults(userInput, searchResults, chatname, additionalInstructions, searchQuery = '', replyContext = '') {
     try {
         const relevantDocs = await getDocumentsFromSearchResults(searchResults);
         
@@ -4965,7 +4976,8 @@ async function generateResponseWithSearchResults(userInput, searchResults, chatn
             return false;
         }
 
-        const prompt = `You are an AI assistant. ${additionalInstructions || ''}
+        const responseInstructions = replyContext || ('You are an AI assistant. ' + (additionalInstructions || ''));
+        const prompt = `${responseInstructions}
 
 Given the following user input, user name, and relevant information from our database, generate an appropriate response:
 
@@ -4979,8 +4991,10 @@ Provide a concise and informative response based on the above information only w
 If the retrieved information is not enough to answer confidently, reply with NO_RESPONSE.
 Your response should be suitable for a chat environment, ideally not exceeding 150 characters.`;
 
-        const response = await callLLMAPI(prompt);
-        if (!response || response.toLowerCase().includes('no_response') || /^no[ -]+response[.!]?$/i.test(response.trim())) {
+        // Retrieval prompts are self-contained. Do not retain routing instructions or
+        // block exact phrases copied from the supplied evidence in local models.
+        const response = await callLLMAPI(prompt, null, null, null, null, null, { localBrowserStateless: true, localBrowserGeneration: { noRepeatNgramSize: 0 } });
+        if (!response || response.toLowerCase().includes('no_response') || /^no[ -]*response[.!]?$/i.test(response.trim())) {
             return false;
         }
         return response;
