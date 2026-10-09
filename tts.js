@@ -2409,6 +2409,12 @@ TTS.fishTTS = async function(tts, options) {
 };
 
 TTS.desktopSystemTTS = async function(text, options) {
+    // Chromium on Linux can expose Web Speech without any usable system voices.
+    // Keep the desktop default audible using the bundled local speech engine.
+    if (/Linux/i.test(navigator.platform || "") && !window.speechSynthesis?.getVoices().length) {
+        TTS.lastDesktopSystemTts = { voice: "eSpeak", lang: TTS.speechLang || "en", fallback: true };
+        return TTS.espeakTTS(text, { ...TTS.normalizeSpeakOptions(options), voice: TTS.speechLang || "en" });
+    }
     TTS.premiumQueueActive = true;
     const premiumSerial = ++TTS.premiumSerial;
     try {
