@@ -3833,26 +3833,23 @@ function syncChatOverlayTemplateConfig(templatePath) {
     section.style.display = "none";
   });
 
-  let anyShown = false;
-
   // Shared common-tweaks section (hide bots, chroma, font size, font family),
   // shown for any theme that supports those params.
   const commonSection = document.getElementById("common-overlay-config");
   if (commonSection && CHAT_OVERLAY_COMMON_SUPPORT.has(normalizedPath)) {
     commonSection.style.display = "block";
-    anyShown = true;
   }
 
   if (configId) {
     activeSection = document.getElementById(configId);
     if (activeSection) {
       activeSection.style.display = "block";
-      anyShown = true;
     }
   }
 
   if (optionsWrapper) {
-    optionsWrapper.style.display = anyShown ? "" : "none";
+    // Auto-hide timing is available for every pre-styled chat overlay.
+    optionsWrapper.style.display = "";
   }
 }
 
@@ -3878,7 +3875,7 @@ function applyChatOverlayTemplatePreset(presetValue, options) {
   const dockElement = document.getElementById("dock");
   let params = options.preferDockParams ? getGeneratedLinkParams(dockElement, templateElement) : getGeneratedLinkParams(templateElement, dockElement);
   params = mergeSupportedServerParamsIntoQuery(params, "chatoverlaytemplate", dockElement, templatePath);
-  // Auto-hide is managed with the main chat settings, including disabling it.
+  // Pre-styled overlays have their own auto-hide timing.
   const templateParams = new URLSearchParams(params);
   // The selected collection owns its style; do not carry the previous preset forward.
   if (templatePath.split("?")[0] === "themes/compact-clean.html") {
@@ -3886,8 +3883,11 @@ function applyChatOverlayTemplatePreset(presetValue, options) {
     const selectedStyle = new URL(templatePath, baseURL).searchParams.get("style");
     if (selectedStyle) templateParams.set("style", selectedStyle);
   }
-  const dockParams = new URLSearchParams(getGeneratedLinkParams(dockElement));
-  templateParams.set("showtime", dockParams.get("showtime") || "0");
+  const autoHide = document.getElementById("theme-auto-hide");
+  const showtimeInput = document.getElementById("theme-showtime");
+  const showtime = parseInt(showtimeInput ? showtimeInput.value : "", 10);
+  const duration = Number.isFinite(showtime) ? Math.max(1, Math.min(999999, showtime)) : 30000;
+  templateParams.set("showtime", autoHide && autoHide.checked ? String(duration) : "0");
   params = templateParams.toString();
   const templateUrl = buildGeneratedUrl(templatePath || DEFAULT_CHAT_OVERLAY_TEMPLATE, params);
 
@@ -4663,6 +4663,23 @@ function syncCreditsControlUi() {
 }
 
 
+function initializeChatOverlayShowtime(settings) {
+    // Preserve the previously inherited timing once, then store it independently.
+    if (!settings.showtime || typeof settings.showtime !== "object") settings.showtime = {};
+    const setting = settings.showtime;
+    // Disabled toggles are removed from storage; the saved duration marks setup too.
+    if ("param30" in setting || "numbersetting30" in setting) return;
+    setting.param30 = !!setting.param1;
+    if (!("numbersetting30" in setting)) {
+        setting.numbersetting30 = setting.numbersetting !== undefined ? setting.numbersetting : 30000;
+    }
+    ["param30", "numbersetting30"].forEach(function(type) {
+        chrome.runtime.sendMessage({
+            cmd: "saveSetting", type: type, setting: "showtime", value: setting[type]
+        }, function() {});
+    });
+}
+
 function update(response, sync = true) {
     log("update-> response: ", response);
     
@@ -4787,6 +4804,7 @@ function update(response, sync = true) {
             }
             try {
                 setupTtsProviders(response); // Handle TTS provider setting initialization
+                initializeChatOverlayShowtime(response.settings);
                 renderSavedCustomUrlSlots(response.settings);
 
                 const targetMap = getTargetMap(); // Assuming getTargetMap() is defined
@@ -9235,31 +9253,97 @@ if (!chrome.browserAction){
 }
 
 
+async function refreshRAGSearchStatus() {
+    const status = document.getElementById('ragSearchStatus');
+    if (!status || !document.getElementById('ollamaRagEnabled')?.checked) return;
+    try {
+        const response = await sendRuntimeCommandMessage({ cmd: 'getRAGSearchStatus' }, 3000, false);
+        if (response?.text && status.textContent !== response.text) status.textContent = response.text;
+    } catch (error) {}
+}
+
 function updateDocumentList(documents = []) {
     const fileList = document.getElementById('ragFileList');
-    fileList.innerHTML = '';
-
+    if (!fileList) return;
+    const active = document.activeElement;
+    const focusedId = fileList.contains(active) ? active.dataset.id : null;
+    const existingRows = new Map();
+    Array.from(fileList.children).forEach(row => {
+        if (row.ragDocumentState) existingRows.set(row.ragDocumentState[0], row);
+    });
+    let nextRow = fileList.firstElementChild;
+    const placeRow = row => {
+        if (row === nextRow) nextRow = nextRow.nextElementSibling;
+        else fileList.insertBefore(row, nextRow);
+    };
+    const clearButton = document.querySelector('[data-action="clearRag"]');
+    if (clearButton) clearButton.disabled = documents.length === 0;
+    if (!documents.length) {
+        const empty = document.createElement('p');
+        empty.className = 'popup-help-text';
+        empty.textContent = 'No files added yet.';
+        placeRow(empty);
+    }
     documents.forEach(doc => {
-        const docElement = document.createElement('div');
-        docElement.innerHTML = `
-            <span>${doc.title}</span>
-            <span>${doc.status}</span>
-            ${doc.progress !== undefined ? `<progress value="${doc.progress}" max="100"></progress>` : ''}
-            ${doc.status !== 'Deleting' && doc.status !== 'Uploading' ? 
-                `<button data-action="deleteDocument" data-id="${doc.id}" ${doc.status === 'Deleting' ? 'disabled' : ''}>Delete</button>` : 
-                ''
-            }
-        `;
-        fileList.appendChild(docElement);
-    });
-
-    // Add event listeners for delete buttons
-    document.querySelectorAll('[data-action="deleteDocument"]').forEach(button => {
-        button.addEventListener('click', function() {
-            const docId = this.getAttribute('data-id');
-            chrome.runtime.sendMessage({cmd: "deleteRAGfile", docId: docId});
+        const state = [doc.id, doc.title, doc.status, doc.progress, doc.error];
+        const existing = existingRows.get(doc.id);
+        if (existing && state.every((value, index) => value === existing.ragDocumentState[index])) {
+            placeRow(existing);
+            return;
+        }
+        const title = doc.title || 'Imported document';
+        const row = document.createElement('div');
+        row.ragDocumentState = state;
+        row.className = 'rag-document';
+        row.setAttribute('role', 'listitem');
+        const info = document.createElement('div');
+        const name = document.createElement('span');
+        name.className = 'rag-document-title';
+        name.textContent = title;
+        info.appendChild(name);
+        const status = document.createElement('span');
+        status.className = 'rag-document-status';
+        status.setAttribute('role', 'status');
+        status.textContent = doc.status === 'Processed' ? 'Ready' : doc.status;
+        info.appendChild(status);
+        row.appendChild(info);
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.dataset.action = 'deleteDocument';
+        remove.dataset.id = doc.id;
+        remove.textContent = doc.status === 'Deleting' ? 'Removing...' : 'Remove';
+        remove.disabled = doc.status === 'Deleting';
+        remove.setAttribute('aria-label', 'Remove ' + title);
+        remove.addEventListener('click', function () {
+            chrome.runtime.sendMessage({cmd: 'deleteRAGfile', docId: doc.id});
         });
+        row.appendChild(remove);
+        if (doc.error) {
+            const error = document.createElement('div');
+            error.className = 'rag-document-error';
+            error.textContent = doc.error;
+            row.appendChild(error);
+        }
+        if (['Queued', 'Uploading', 'Preprocessing', 'Chunking', 'Processing', 'Summarizing', 'Indexing'].includes(doc.status)) {
+            const progress = document.createElement('progress');
+            progress.max = 100;
+            if (Number.isFinite(doc.progress)) progress.value = Math.max(0, Math.min(100, doc.progress));
+            progress.setAttribute('aria-label', title + ' import progress');
+            row.appendChild(progress);
+        }
+        placeRow(row);
     });
+    while (nextRow) {
+        const unused = nextRow;
+        nextRow = nextRow.nextElementSibling;
+        unused.remove();
+    }
+    if (focusedId && document.activeElement !== active) {
+        const buttons = Array.from(fileList.querySelectorAll('button'));
+        const target = buttons.find(button => button.dataset.id === focusedId && !button.disabled) ||
+            buttons.find(button => !button.disabled) || document.querySelector('[data-action="uploadRAGfile"]');
+        if (target) target.focus({preventScroll: true});
+    }
 }
 
 try {
@@ -12714,6 +12798,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			button.textContent = getPopupSearchResultLabel(record.element);
 			var sectionText = getPopupSearchResultSection(record.wrapper);
 			var panelSection = getPopupPanelSection(record.element);
+			if (panelSection && panelSection.heading) {
+				sectionText = getPopupPanelSectionLabel(panelSection) + (sectionText ? ' · ' + sectionText : '');
+			}
 			if (panelSection && !isPopupPanelSectionShown(panelSection)) {
 				sectionText += (sectionText ? ' · ' : '') + getTranslation('hidden-section', 'Hidden section');
 			}
@@ -13323,6 +13410,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
 	const ragFileManagement = document.getElementById('ragFileManagement');
+    refreshRAGSearchStatus();
+    setInterval(refreshRAGSearchStatus, 2000);
 
 	ragEnabledCheckbox.addEventListener('change', function() {
 		ragFileManagement.style.display = this.checked ? 'block' : 'none';

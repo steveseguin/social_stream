@@ -9,6 +9,11 @@ const LUNR_DOCUMENT_STORE_NAME = 'documents';
 const activeProcessing = {};
 const uploadQueue = [];
 let isUploading = false;
+let ragDocumentSequence = 0;
+let ragSemanticEngine = null;
+let ragSemanticGeneration = 0;
+let ragSemanticTimer = null;
+let ragSemanticStatus = 'Keyword search is selected.';
 let lunrIndexPromise;
 const maxContextSize = 31000;
 const maxContextSizeFull = 32000;
@@ -815,6 +820,7 @@ function resolveChatbotPromptVariables(text) {
 }
 
 async function rebuildIndex() {
+    resetRAGSemanticSearch(true);
     const db = await openLunrDatabase();
     const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly');
     const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
@@ -833,8 +839,8 @@ async function rebuildIndex() {
                     title: chunk.title,
                     content: chunk.content,
                     summary: chunk.summary,
-                    tags: chunk.tags.join(' '),
-                    synonyms: chunk.synonyms.join(' '),
+                    tags: Array.isArray(chunk.tags) ? chunk.tags.join(' ') : '',
+                    synonyms: Array.isArray(chunk.synonyms) ? chunk.synonyms.join(' ') : '',
                     level: chunk.level
                 });
             });
@@ -3940,9 +3946,9 @@ Prefer this exact format:
 	  }
 
 	  if (ragSearchQuery) {
-		const searchResults = await performLunrSearch(ragSearchQuery);
+		const searchResults = await performRAGSearch(ragSearchQuery, userInput);
 		if (searchResults.length) {
-			const ragResponse = await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions);
+			const ragResponse = await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions, ragSearchQuery);
 			if (ragResponse) {
 				return ragResponse;
 			}
@@ -4194,6 +4200,7 @@ synonym1, synonym2, synonym3
 
 Do not include any other text or explanations outside these sections.`;
 
+		updateDocumentProgress(docId, 5 + Math.round(index / chunks.length * 90), 'Processing');
 		try {
 			const processedData = await callLLMAPI(prompt);
 			let parsedData = parseChunkAnalysis(processedData);
@@ -4209,6 +4216,7 @@ Do not include any other text or explanations outside these sections.`;
 			logProcessedChunk(parsedData, index);
 		} catch (error) {
 			console.warn(`Error processing chunk ${index + 1}:`, error);
+			throw error;
 		}
 
         // Add a small delay between chunks, to let things breath a bit.
@@ -4284,6 +4292,8 @@ async function isRAGConfigured() {
         request.onerror = () => reject(request.error);
         request.onsuccess = () => resolve(request.result);
     });
+    // Prepare local retrieval while the selected AI service decides its search query.
+    if (count > 0 && isRAGSemanticEnabled()) getRAGSemanticEngine()?.warm();
     return (count > 0) && settings.ollamaRagEnabled;
 }
 
@@ -4314,6 +4324,9 @@ function parseDecision(decisionText) {
 }
 
 async function clearLunrDatabase() {
+    resetRAGSemanticSearch(false);
+    uploadQueue.length = 0;
+    Object.keys(activeProcessing).forEach(docId => { activeProcessing[docId].cancel = true; });
     const db = await openLunrDatabase();
     const transaction = db.transaction([LUNR_DOCUMENT_STORE_NAME, 'lunrIndex'], 'readwrite');
     const documentStore = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
@@ -4335,6 +4348,7 @@ async function clearLunrDatabase() {
         
         // Clear the documentsRAG array
         documentsRAG = [];
+        if (globalThis.SSNRagCache) await SSNRagCache.remove().catch(error => console.warn('Could not clear derived search cache:', error));
         
         // Reset the Lunr index
         resetLunrIndex();
@@ -4349,6 +4363,70 @@ async function clearLunrDatabase() {
     } catch (error) {
         console.warn("Error clearing database:", error);
     }
+}
+
+function isRAGSemanticEnabled() {
+    return getAiSettingFlag('ollamaRagEnabled') && settings?.ragSearchMode?.optionsetting === 'semantic';
+}
+
+function resetRAGSemanticSearch(rebuild = false) {
+    ragSemanticGeneration++;
+    clearTimeout(ragSemanticTimer);
+    if (ragSemanticEngine) ragSemanticEngine.close();
+    ragSemanticEngine = null;
+    ragSemanticStatus = isRAGSemanticEnabled() ? 'Local search will prepare from your imported files.' : 'Keyword search is selected.';
+    if (rebuild && isRAGSemanticEnabled()) {
+        ragSemanticTimer = setTimeout(function prepare() {
+            if (!isRAGSemanticEnabled()) return;
+            if (isUploading) { ragSemanticTimer = setTimeout(prepare, 500); return; }
+            getRAGSemanticEngine()?.warm();
+        }, 500);
+    }
+}
+
+function getRAGSemanticEngine() {
+    if (!isRAGSemanticEnabled() || !globalThis.SSNRagSemanticSearch) return null;
+    if (ragSemanticEngine) return ragSemanticEngine;
+    const generation = ragSemanticGeneration;
+    const asset = path => typeof chrome !== 'undefined' && chrome.runtime?.getURL ? chrome.runtime.getURL(path) : path;
+    ragSemanticEngine = SSNRagSemanticSearch.create({
+        workerPath: asset('shared/ai/rag-semantic-worker.js'),
+        onStatus: text => { if (generation === ragSemanticGeneration) ragSemanticStatus = text; },
+        getRecords: async () => {
+            const db = await openLunrDatabase();
+            const request = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly').objectStore(LUNR_DOCUMENT_STORE_NAME).getAll();
+            const docs = await new Promise((resolve, reject) => {
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+            const records = [];
+            docs.forEach(doc => {
+                const chunks = Array.isArray(doc.chunks) ? doc.chunks : [doc];
+                chunks.forEach((chunk, index) => {
+                    if (typeof chunk.content !== 'string' || !chunk.content.trim()) return;
+                    records.push({ ref: Array.isArray(doc.chunks) ? doc.id + '_' + index : doc.id,
+                        docId: doc.id, title: [doc.title, chunk.title].filter(Boolean).join(' — '), content: chunk.content });
+                });
+            });
+            return records;
+        }
+    });
+    return ragSemanticEngine;
+}
+
+function getRAGSearchStatus() {
+    if (isRAGSemanticEnabled() && !isUploading && !ragSemanticEngine) getRAGSemanticEngine()?.warm();
+    else if (!isRAGSemanticEnabled() && ragSemanticEngine) resetRAGSemanticSearch(false);
+    return { text: ragSemanticStatus };
+}
+
+async function performRAGSearch(query, userInput = '') {
+    if (!isRAGSemanticEnabled()) return performLunrSearch(query);
+    const generation = ragSemanticGeneration;
+    const engine = getRAGSemanticEngine();
+    const semantic = engine ? await engine.search(userInput || query) : null;
+    if (generation === ragSemanticGeneration && isRAGSemanticEnabled() && semantic?.length) return semantic.map(result => ({ ...result, semanticGeneration: generation }));
+    return performLunrSearch(query);
 }
 
 function normalizeLunrResults(results, strategy = 'default') {
@@ -4807,7 +4885,40 @@ async function performLunrSearch(query) {
     }
 }
 
-async function generateResponseWithSearchResults(userInput, searchResults, chatname, additionalInstructions) {
+function getRAGContentExcerpt(doc, query, maxLength) {
+    const content = String(doc.content || '');
+    if (maxLength <= 0) return '';
+    if (content.length <= maxLength) return content;
+
+    // Search the whole stored chunk, including older imports, for a passage
+    // that fits the answer budget. Overlap keeps nearby context together.
+    const windowSize = Math.min(maxLength, 4000);
+    const overlap = Math.min(500, Math.floor(windowSize / 4));
+    let bestContent = '';
+    let bestScore = -Infinity;
+    for (let start = 0; start < content.length; start += windowSize - overlap) {
+        let end = Math.min(content.length, start + windowSize);
+        let passageStart = start;
+        if (start > 0) {
+            const nextLine = content.indexOf('\n', start);
+            if (nextLine >= start && nextLine < start + Math.min(200, overlap)) passageStart = nextLine + 1;
+        }
+        if (end < content.length) {
+            const lastLine = content.lastIndexOf('\n', end - 1);
+            if (lastLine > end - Math.min(200, overlap)) end = lastLine;
+        }
+        const passage = content.slice(passageStart, end);
+        const score = scoreRAGEvidenceForUserInput({ ...doc, content: passage }, query);
+        if (score > bestScore) {
+            bestScore = score;
+            bestContent = passage;
+        }
+        if (end === content.length) break;
+    }
+    return bestContent;
+}
+
+async function generateResponseWithSearchResults(userInput, searchResults, chatname, additionalInstructions, searchQuery = '') {
     try {
         const relevantDocs = await getDocumentsFromSearchResults(searchResults);
         
@@ -4820,7 +4931,7 @@ async function generateResponseWithSearchResults(userInput, searchResults, chatn
                 }
                 return {
                     ...doc,
-                    evidenceScore: scoreRAGEvidenceForUserInput(doc, userInput, searchResults[index]?.score || 0)
+                    evidenceScore: searchResults[index]?.semantic ? searchResults[index].score : scoreRAGEvidenceForUserInput(doc, userInput, searchResults[index]?.score || 0)
                 };
             })
             .filter(Boolean)
@@ -4834,16 +4945,17 @@ async function generateResponseWithSearchResults(userInput, searchResults, chatn
         // Concatenate a small set of strong chunks to avoid flooding the response prompt.
         let combinedContent = '';
         for (const doc of validDocs.slice(0, RAG_MAX_EVIDENCE_DOCS)) {
-            const evidenceBlock = [
-                doc.documentTitle ? `Document: ${doc.documentTitle}` : '',
-                doc.title ? `Section: ${doc.title}` : '',
-                doc.summary ? `Summary: ${doc.summary}` : '',
-                `Content: ${doc.content}`
+            const remaining = RAG_CONTEXT_CHAR_LIMIT - combinedContent.length - 2;
+            if (remaining < 128) break;
+            const heading = [
+                doc.documentTitle ? `Document: ${String(doc.documentTitle).slice(0, 300)}` : '',
+                doc.title ? `Section: ${String(doc.title).slice(0, 300)}` : '',
+                doc.summary ? `Summary: ${String(doc.summary).slice(0, 1000)}` : ''
             ].filter(Boolean).join('\n');
-
-            if (combinedContent.length + evidenceBlock.length > RAG_CONTEXT_CHAR_LIMIT) {
-                break;
-            }
+            const prefix = (heading ? heading + '\n' : '') + 'Content: ';
+            const content = getRAGContentExcerpt(doc, userInput + ' ' + searchQuery, remaining - prefix.length);
+            if (!content) continue;
+            const evidenceBlock = prefix + content;
             combinedContent += evidenceBlock + '\n\n';
         }
 
@@ -4877,19 +4989,27 @@ Your response should be suitable for a chat environment, ideally not exceeding 1
 }
 
 async function getDocumentsFromSearchResults(searchResults) {
+    if (!searchResults.length) return [];
     const db = await openLunrDatabase();
-    
-    return Promise.all(searchResults.map(async result => {
-        try {
-            const getStoredDoc = (key) => new Promise((resolve, reject) => {
+    // Several matching chunks can share a document. Read it once per lookup,
+    // without keeping a cache that could outlive edits or removals.
+    const storedDocs = new Map();
+    const getStoredDoc = (key) => {
+        if (!storedDocs.has(key)) {
+            storedDocs.set(key, new Promise((resolve, reject) => {
                 const request = db
                     .transaction([LUNR_DOCUMENT_STORE_NAME], "readonly")
                     .objectStore(LUNR_DOCUMENT_STORE_NAME)
                     .get(key);
                 request.onerror = () => reject(request.error);
                 request.onsuccess = () => resolve(request.result);
-            });
-
+            }));
+        }
+        return storedDocs.get(key);
+    };
+    
+    const docs = await Promise.all(searchResults.map(async result => {
+        try {
             let doc = await getStoredDoc(result.ref);
             if (doc) {
                 return { 
@@ -4940,10 +5060,17 @@ async function getDocumentsFromSearchResults(searchResults) {
                 summary: doc.overallSummary
             };
         } catch (error) {
-            console.warn(`Error retrieving document ${docId}:`, error);
+            console.warn(`Error retrieving document ${result.ref}:`, error);
             return null;
         }
     }));
+    return docs.map((doc, index) => {
+        const result = searchResults[index];
+        if (!doc || !result.semantic) return doc;
+        if (result.semanticGeneration !== ragSemanticGeneration || !isRAGSemanticEnabled()) return null;
+        if (!Number.isInteger(result.start) || !Number.isInteger(result.end) || result.start < 0 || result.end <= result.start || result.end > (doc.content || '').length) return null;
+        return { ...doc, content: doc.content.slice(result.start, result.end) };
+    });
 }
 
 function removeUnnecessaryQuotes(input) {
@@ -5153,8 +5280,8 @@ function logProcessedChunk(chunk, index) {
     log(`  Title: ${chunk.title}`);
     log(`  Level: ${chunk.level}`);
     log(`  Summary: ${chunk.summary}`);
-    log(`  Tags: ${chunk?.tags.join(', ')}`);
-    log(`  Synonyms: ${chunk?.synonyms.join(', ')}`);
+    log(`  Tags: ${Array.isArray(chunk.tags) ? chunk.tags.join(', ') : ''}`);
+    log(`  Synonyms: ${Array.isArray(chunk.synonyms) ? chunk.synonyms.join(', ') : ''}`);
     log(`  Content length: ${chunk?.content.length} characters`);
     log(`  Content (first 200 chars): ${chunk?.content.substring(0, 200)}...`);
     log('---');
@@ -5292,13 +5419,15 @@ async function saveLunrIndex() {
     }
 }
 
-async function indexProcessedDocument(docId, processedDoc, title) {
+async function indexProcessedDocument(docId, processedDoc, title, preprocessed = true) {
     if (!processedDoc) {
         log(`Skipping indexing for cancelled document ${docId}`);
         return;
     }
     try {
         const db = await openLunrDatabase();
+        // A picker/import may still be running when its document is removed.
+        if (!documentsRAG.some(doc => doc.id === docId && doc.status !== 'Deleting')) return;
         const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readwrite');
         const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
         
@@ -5324,7 +5453,7 @@ async function indexProcessedDocument(docId, processedDoc, title) {
 
         // Update documentsRAG
         const docIndex = documentsRAG.findIndex(doc => doc.id === docId);
-        if (docIndex !== -1) {
+        if (docIndex !== -1 && documentsRAG[docIndex].status !== 'Deleting') {
             documentsRAG[docIndex] = {
                 id: docId,
                 title: title,
@@ -5332,22 +5461,18 @@ async function indexProcessedDocument(docId, processedDoc, title) {
                 progress: 100
             };
         } else {
-            documentsRAG.push({
-                id: docId,
-                title: title,
-                status: 'Processed',
-                progress: 100
-            });
+            return;
         }
 
         log("Document indexed successfully");
-        await updateDatabaseDescriptor();
+        await updateDatabaseDescriptor(preprocessed);
         await saveLunrIndex();
         
         // Send updated documentsRAG to popup
         messagePopup({documents: documentsRAG});
     } catch (error) {
         console.warn("Error indexing document:", error);
+        throw error;
     }
 }
 
@@ -5426,6 +5551,7 @@ async function addDocumentToRAG(docId, content, title, tags = [], synonyms = [],
 }
 
 async function deleteDocument(docId) {
+    resetRAGSemanticSearch(false);
     const docIndex = documentsRAG.findIndex(doc => doc.id === docId);
     if (docIndex !== -1) {
         documentsRAG[docIndex].status = 'Deleting';
@@ -5450,22 +5576,25 @@ async function deleteDocument(docId) {
 
         // Remove from documentsRAG array
         documentsRAG = documentsRAG.filter(doc => doc.id !== docId);
+        if (globalThis.SSNRagCache) await SSNRagCache.remove(docId).catch(error => console.warn('Could not remove derived search cache:', error));
 
         // Rebuild index and update descriptor
         await rebuildIndex();
         await saveLunrIndex();
-        await updateDatabaseDescriptor();
+        await updateDatabaseDescriptor(false);
     } catch (error) {
         console.warn("Error deleting document:", error);
-        if (docIndex !== -1) {
-            documentsRAG[docIndex].status = 'Delete Failed';
+        const failedDoc = documentsRAG.find(doc => doc.id === docId);
+        if (failedDoc) {
+            failedDoc.status = 'Delete Failed';
+            failedDoc.error = error && error.message ? error.message : String(error);
         }
     }
 
     messagePopup({documents: documentsRAG});
 }
 
-async function updateDatabaseDescriptor() {
+async function updateDatabaseDescriptor(useLLM = true) {
     const db = await openLunrDatabase();
     const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly');
     const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
@@ -5477,6 +5606,14 @@ async function updateDatabaseDescriptor() {
     
     if (!Array.isArray(docs) || docs.length === 0) {
         localStorage.setItem('databaseDescriptor', 'The database is currently empty.');
+        return;
+    }
+
+    if (!useLLM) {
+        const description = docs.map(doc => [doc.title, doc.overallSummary,
+            (doc.chunks || []).map(chunk => chunk.title || chunk.content || '').join(' ')
+        ].filter(Boolean).join(': ')).join('\n');
+        localStorage.setItem('databaseDescriptor', description.slice(0, 4000));
         return;
     }
 
@@ -5500,7 +5637,10 @@ Focus on key topics, themes, and types of information available.`;
 }
 
 async function addNewDocument(title, content, preprocess) {
-    const docId = 'doc_' + Date.now();
+    if (typeof content !== 'string' || !content.trim()) {
+        throw new Error('Please select a non-empty text or Markdown file.');
+    }
+    const docId = 'doc_' + Date.now() + '_' + (++ragDocumentSequence);
     const newDoc = {
         id: docId,
         title: title,
@@ -5533,58 +5673,78 @@ function ensureLunrIndexInitialized() {
 }
 
 async function processUploadQueue() {
-    if (uploadQueue.length === 0) {
-        isUploading = false;
-        return;
-    }
-
+    if (isUploading) return;
     isUploading = true;
-    const { docId, content, preprocess } = uploadQueue.shift();
-
     try {
-        updateDocumentProgress(docId, 0, 'Uploading');
-        
-		const processedDoc = await preprocessDocument(content, docId, preprocess);
-		if (processedDoc) { 
-			await indexProcessedDocument(docId, processedDoc, documentsRAG.find(doc => doc.id === docId).title, true);
-		} else {
-			// Document processing was cancelled
-			documentsRAG = documentsRAG.filter(doc => doc.id !== docId);
-		}
-    } catch (error) {
-        console.warn("Error processing document:", error);
-        updateDocumentProgress(docId, 0, 'Failed');
+        while (uploadQueue.length) {
+            const { docId, content, preprocess } = uploadQueue.shift();
+            const doc = documentsRAG.find(item => item.id === docId);
+            if (!doc || doc.status === 'Deleting') continue;
+            try {
+                updateDocumentProgress(docId, 0, 'Uploading');
+                const processedDoc = await preprocessDocument(content, docId, preprocess);
+                if (processedDoc && documentsRAG.includes(doc) && doc.status !== 'Deleting') {
+                    await indexProcessedDocument(docId, processedDoc, doc.title, preprocess);
+                } else {
+                    documentsRAG = documentsRAG.filter(item => item.id !== docId);
+                }
+            } catch (error) {
+                console.warn("Error processing document:", error);
+                const failedDoc = documentsRAG.find(item => item.id === docId);
+                if (failedDoc) failedDoc.error = error && error.message ? error.message : String(error);
+                updateDocumentProgress(docId, 0, 'Failed');
+            } finally {
+                delete activeProcessing[docId];
+                messagePopup({documents: documentsRAG});
+            }
+        }
+    } finally {
+        isUploading = false;
     }
-    messagePopup({documents: documentsRAG});
-	await inspectDatabase();
-    processUploadQueue(); // Process next document in queue
 }
 async function importSettingsLLM(usePreprocessing = true) {
     try {
 		let importFile;
-		const restoreTarget = typeof bringBackgroundPageToFrontForPicker === 'function'
-			? await bringBackgroundPageToFrontForPicker()
-			: null;
-		try {
-			importFile = await window.showOpenFilePicker();
-		} finally {
-			if (typeof restorePreviousTabAfterPicker === 'function') {
-				await restorePreviousTabAfterPicker(restoreTarget);
+		let title = 'Imported document';
+		if (typeof isSSAPP !== 'undefined' && isSSAPP && typeof ipcRenderer !== 'undefined' && typeof ipcRenderer.invoke === 'function') {
+			// This existing SSApp picker returns the selected path without changing ticker settings.
+			const selected = await ipcRenderer.invoke('ssapp:choose-ticker-file', {
+				title: 'Select knowledge document',
+				filters: [{ name: 'Text and Markdown', extensions: ['md', 'markdown', 'txt'] }, { name: 'All Files', extensions: ['*'] }]
+			});
+			if (selected && selected.error) throw new Error(selected.error);
+			if (!selected || selected.canceled) return;
+			if (typeof selected.filePath !== 'string' || !selected.filePath) throw new Error('No file was selected.');
+			title = selected.filePath.split(/[\\/]/).pop();
+			importFile = await ipcRenderer.invoke('read-from-file', selected.filePath);
+			if (typeof importFile !== 'string') throw new Error('Could not read the selected file.');
+		} else {
+			const restoreTarget = typeof bringBackgroundPageToFrontForPicker === 'function'
+				? await bringBackgroundPageToFrontForPicker()
+				: null;
+			try {
+				importFile = await window.showOpenFilePicker();
+			} finally {
+				if (typeof restorePreviousTabAfterPicker === 'function') {
+					await restorePreviousTabAfterPicker(restoreTarget);
+				}
+			}
+			if (typeof isSSAPP !== 'undefined' && isSSAPP) {
+				// Older desktop bridges return text, or a numeric cancellation/error code.
+				if (typeof importFile !== 'string') return;
+			} else {
+				if (!importFile || !importFile.length) return;
+				importFile = await importFile[0].getFile();
+				title = importFile.name;
+				importFile = await importFile.text();
 			}
 		}
-		var title = "";
-		
-		try {
-			importFile = await importFile[0].getFile();
-			title = importFile.name;
-			importFile = await importFile.text();
-			
-		} catch(e){}
         
         await addNewDocument(title, importFile, usePreprocessing);
         
         log("Import completed successfully");
     } catch (e) {
+        if (e && e.name === 'AbortError') return;
         console.warn("Error in importSettings:", e);
         alert("Error processing file: " + e.message);
     }

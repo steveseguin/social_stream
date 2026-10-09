@@ -1965,7 +1965,7 @@
 						console.error(e);
 					}
 				}
-				checkNextList();
+				checkNextList(mutation.target);
 			};
 		}
 
@@ -2028,11 +2028,18 @@
 	var checkListTimer = null;
 	var processingCheckList = false;
 
-	function checkNextList() {
+	function checkNextList(changedNode) {
 		if (processingCheckList) return;
+		if (checkListTimer !== null) {
+			// Let the next row finish assembling, but do not let unrelated DOM activity
+			// keep postponing messages already waiting to be captured.
+			const nextRow = checkList.length && checkList[0][1];
+			if (!changedNode || !nextRow || nextRow.dataset.ignore || !nextRow.contains(changedNode)) return;
+			clearTimeout(checkListTimer);
+		}
 		
-		clearTimeout(checkListTimer);
 		checkListTimer = setTimeout(() => {
+			checkListTimer = null;
 			processingCheckList = true;
 			
 			try {

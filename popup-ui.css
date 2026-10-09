@@ -136,3 +136,22 @@ body .heading-actions button.copy-link:focus, body button.edit-link:focus {
 /* Giveaway controls reuse the shared field and action styles. */
 .options_group.giveaway .textInputContainer { display:grid; width:100%; }
 .giveaway-actions { display:flex; flex-wrap:wrap; gap:6px; }
+
+/* Knowledge imports use the same switches, neutral actions, and fields as other settings. */
+.popup-help-text { color:var(--text-secondary); font-size:.9em; line-height:1.5; margin:8px 0; }
+#ragKnowledgeSettings { text-align:start; }
+#ragKnowledgeSettings .rag-search-field { width:100%; }
+#ragFileList { display:grid; gap:8px; }
+.rag-document { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 12px; align-items:start; padding:10px; border:1px solid var(--settings-control-border); border-radius:4px; }
+.rag-document-title { display:block; font-weight:600; overflow-wrap:anywhere; }
+.rag-document-status { display:block; margin-top:4px; color:var(--text-secondary); font-size:.9em; }
+.rag-document-error { grid-column:1 / -1; color:var(--danger-text); font-size:.9em; overflow-wrap:anywhere; }
+.rag-document progress { grid-column:1 / -1; width:100%; height:10px; accent-color:var(--color-accent); }
+.rag-document button { margin:0; }
+/* Older translations include inline link colors; retain readable colors in either theme. */
+body #chathistory, body #privatechatbotlink { color:var(--color-accent) !important; }
+body .add-username-container { flex-wrap:wrap; gap:6px; }
+#censorTestText { width:100%; }
+body #ttscommandcustom { min-width:8ch; }
+
+body .textInputContainer.popup-inset-field { width:260px; max-width:calc(100% - 50px); margin-left:50px; }

@@ -75,6 +75,15 @@ jobs:
               done
             fi
             # Background speech needs its worker and packaged runtime on the site.
+            if [ -f "$checkout/shared/ai/ragSemanticSearch.js" ]; then
+              for asset in ragSemanticCache.js ragSemanticSearch.js rag-semantic-worker.js; do
+                test -f "$checkout/shared/ai/$asset"
+              done
+              for asset in config.json tokenizer.json tokenizer_config.json special_tokens_map.json LICENSE NOTICE.txt onnx/model_quantized.onnx; do
+                test -f "$checkout/thirdparty/models/all-MiniLM-L6-v2/$asset"
+                test "$(wc -c < "$checkout/thirdparty/models/all-MiniLM-L6-v2/$asset")" -le 26214400
+              done
+            fi
             if [ -f "$checkout/shared/tts/neural-worker.js" ]; then
               for asset in neural-client.js pcm.js; do
                 test -f "$checkout/shared/tts/$asset"

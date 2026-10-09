@@ -809,6 +809,13 @@ if (typeof chrome.runtime == "undefined") {
 	};
 
 	chrome.tabs = {};
+	ipcRenderer.on("youtube-source-closed", (event, tabId) => {
+		if (!Number.isInteger(tabId) || tabId <= 0) return;
+		// SSApp has no tabs.onRemoved event; clear only the YouTube source gate.
+		for (const key of activeChatSources.keys()) {
+			if (key.startsWith(`${tabId}-`)) activeChatSources.delete(key);
+		}
+	});
 	chrome.tabs.query = async function (a, callback) {
 		var response = await ipcRenderer.sendSync("getTabs", {});
 
@@ -5952,7 +5959,9 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				}
 				sendResponse({ success: false, error: payload });
 			}
-		} else if (request.cmd === "getCensorModelStatus") {
+		} else if (request.cmd === "getRAGSearchStatus") {
+            sendResponse(typeof getRAGSearchStatus === 'function' ? getRAGSearchStatus() : { text: 'Loading knowledge search…' });
+        } else if (request.cmd === "getCensorModelStatus") {
             sendResponse(getCensorModelStatus());
         } else if (request.cmd === "testCensorModel") {
             try {
@@ -6040,6 +6049,8 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 			}
 
 			pruneSettingsObjects(settings);
+
+            if ((request.setting === 'ragSearchMode' || request.setting === 'ollamaRagEnabled') && typeof resetRAGSemanticSearch === 'function') resetRAGSemanticSearch(true);
 
 			if ((request.setting === "beepreturning" || request.setting === "firsttimerbadge") && request.value && !getSettingFlag("disableDB") && !getSettingFlag("firsttimers")) {
 				settings.firsttimers = { setting: true };
