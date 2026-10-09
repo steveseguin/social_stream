@@ -186,10 +186,8 @@
             var currentDevice;
 
             await connect(providerKey, requestOverrides);
-            // Moderation must use the model/source just initialized, including provider identity.
-            if (providerKey === 'localqwen' && requestPayload.moderation === true) {
-                requestPayload = Object.assign({}, activeConfig, requestPayload, { providerKey: providerKey });
-            }
+            // Every generation, including retries, needs the initialized model and source.
+            requestPayload = Object.assign({}, activeConfig, requestPayload, { providerKey: providerKey });
             try {
                 return await request('generate', requestPayload, generateTimeoutMs);
             } catch (error) {
