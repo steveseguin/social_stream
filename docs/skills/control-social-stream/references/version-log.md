@@ -110,6 +110,10 @@ Windows x64 voice commands in this unreleased preview use a pinned local whisper
 
 ### 2026-09-05
 
+- Fixed false `STALE_PAGE_REF` interaction failures for labelled inputs with a
+  different placeholder (minimum SSApp 0.4.25). Interaction now uses inspection's
+  accessible-name precedence. Schemas and private-input restrictions are unchanged.
+
 - Fixed hidden-source screenshots (minimum SSApp 0.4.25), including shared source/app-window
   capture serialization and restoration. Screenshot failures on earlier releases do not
   imply failed chat capture. Also corrected clean SIGTERM exit status in the source

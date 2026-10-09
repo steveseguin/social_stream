@@ -129,6 +129,8 @@ and become invalid after navigation. `reloadSourcePage` and `showSourceForHuman`
 confirmation.
 
 Sign-in, CAPTCHA, passwords, payments, and other private steps are deliberately not automated.
+SSApp 0.4.25 also fixes false `STALE_PAGE_REF` errors when an inspected input's label
+differs from its placeholder, by using matching name precedence during interaction.
 Call `showSourceForHuman`, let the user complete the step, and resume with read-only tools.
 
 ## Examples

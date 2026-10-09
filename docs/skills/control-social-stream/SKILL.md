@@ -50,6 +50,10 @@ non-focused capture surface and restoring the hidden window afterward. Source an
 app-window screenshot requests for the same window are serialized. Older versions can
 return `SCREENSHOT_FAILED` even when chat capture and semantic inspection are working.
 
+SSApp 0.4.25 also aligns interaction name checks with semantic inspection, so a
+labelled text input whose placeholder differs from its label remains usable. Older
+versions can incorrectly return `STALE_PAGE_REF` for these freshly inspected fields.
+
 Do not use this localhost API as a cloud remote-control interface. Remote users and Stream
 Deck use Social Stream's existing WebRTC or WebSocket transport instead.
 
