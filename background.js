@@ -200,14 +200,14 @@ function getOverlayDisplayMessage(data) {
 	if (!data || typeof data !== "object") return data;
 	const displayMessage = Object.assign({}, data);
 	if (applyUserDisplayAlias(displayMessage)) return displayMessage;
-	if (getSettingFlag("twitchshowusername") && data.type === "twitch" && typeof data.chatname === "string" && typeof data.username === "string") {
+	if (getSettingFlag("showdisplaynameusername") && typeof data.chatname === "string" && typeof data.username === "string") {
 		const username = data.username.trim();
 		const displayName = data.chatname.trim();
-		const suffix = " (" + username + ")";
-		if (/^[a-zA-Z0-9_]+$/.test(username) && displayName && displayName.toLowerCase() !== username.toLowerCase() && !displayName.toLowerCase().endsWith(suffix.toLowerCase())) {
+		const suffix = " (" + escapeHtml(username) + ")";
+		if (username && displayName && displayName.toLowerCase() !== username.toLowerCase() && !displayName.toLowerCase().endsWith(suffix.toLowerCase())) {
 			displayMessage.chatname = displayName + suffix;
 			// Retain the source name for moderation of displayed and queued rows.
-			displayMessage.meta = Object.assign({}, data.meta, { twitchDisplayName: data.chatname });
+			displayMessage.meta = Object.assign({}, data.meta, { sourceDisplayName: data.chatname });
 			return displayMessage;
 		}
 	}
@@ -216,7 +216,7 @@ function getOverlayDisplayMessage(data) {
 
 function getOverlayDisplayPayload(data) {
 	if (!data || typeof data !== "object") return data;
-	if (!getUserDisplayAliasEntries().length && !getSettingFlag("twitchshowusername")) return data;
+	if (!getUserDisplayAliasEntries().length && !getSettingFlag("showdisplaynameusername")) return data;
 	let displayPayload = getOverlayDisplayMessage(data);
 	["userHistory", "recentHistory", "historyBefore"].forEach(key => {
 		if (!Array.isArray(data[key])) return;
@@ -1816,6 +1816,13 @@ function loadSettings(item, resave = false) {
 
 	if (item && item.settings) {
 		settings = item.settings;
+		if (Object.prototype.hasOwnProperty.call(settings, "twitchshowusername")) {
+			if (!Object.prototype.hasOwnProperty.call(settings, "showdisplaynameusername")) {
+				settings.showdisplaynameusername = settings.twitchshowusername;
+			}
+			delete settings.twitchshowusername;
+			normalizedSettings = true;
+		}
 		if (migrateAiChatbotEnabledSetting(settings)) {
 			normalizedSettings = true;
 		}

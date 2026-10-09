@@ -7256,6 +7256,7 @@
 				let selector = "";
 				let matchField = "";
 				const nativeId = data.delete.meta && data.delete.meta.messageId;
+				const deleteSourceName = (data.delete.meta && (data.delete.meta.sourceDisplayName || (data.delete.type === "twitch" && data.delete.meta.twitchDisplayName))) || data.delete.chatname;
 				if (data.delete.meta && data.delete.meta.messageId) {
 					const sourceSelector = data.delete.type ? dataAttributeSelector("data-source-type", data.delete.type) : "";
 					selector = ".highlight-chat" + sourceSelector;
@@ -7272,16 +7273,15 @@
 				} else if (data.delete.chatname && data.delete.type) {
 					matchField = "chatname";
 					selector = dataAttributeSelector("data-chatname", data.delete.chatname) + dataAttributeSelector("data-source-type", data.delete.type);
-					if (data.delete.type === "twitch") {
-						const sourceName = (data.delete.meta && data.delete.meta.twitchDisplayName) || data.delete.chatname;
-						selector += "," + dataAttributeSelector("data-twitch-display-name", sourceName) + dataAttributeSelector("data-source-type", "twitch");
-						if (sourceName !== data.delete.chatname) selector += "," + dataAttributeSelector("data-chatname", sourceName) + dataAttributeSelector("data-source-type", "twitch");
-					}
+					selector += "," + dataAttributeSelector("data-source-display-name", deleteSourceName) + dataAttributeSelector("data-source-type", data.delete.type);
+					if (deleteSourceName !== data.delete.chatname) selector += "," + dataAttributeSelector("data-chatname", deleteSourceName) + dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.type) {
 					selector = dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.chatname) {
 					matchField = "chatname";
 					selector = dataAttributeSelector("data-chatname", data.delete.chatname);
+					selector += "," + dataAttributeSelector("data-source-display-name", deleteSourceName);
+					if (deleteSourceName !== data.delete.chatname) selector += "," + dataAttributeSelector("data-chatname", deleteSourceName);
 				}
 
 				// Include queued rows already detached from the visible chat.
@@ -7306,9 +7306,8 @@
 					} else if (matchField) {
 						const value = matchField === "id" ? (message.mid || message.id) : message[matchField];
 						if (String(value) !== String(data.delete[matchField])) {
-							const sourceName = message.type === "twitch" && message.meta && message.meta.twitchDisplayName;
-							const deleteName = (data.delete.meta && data.delete.meta.twitchDisplayName) || data.delete.chatname;
-							if (matchField !== "chatname" || data.delete.type !== "twitch" || String(sourceName || value) !== String(deleteName)) return;
+							const sourceName = message.meta && (message.meta.sourceDisplayName || (message.type === "twitch" && message.meta.twitchDisplayName));
+							if (matchField !== "chatname" || String(sourceName || value) !== String(deleteSourceName)) return;
 						}
 					}
 					const match = { message, id: message.mid || message.id, type: message.type };
@@ -12829,8 +12828,8 @@
 					if (rawName) {
 						node.dataset.chatname = rawName; // before its been parsed; this allows for clean deletion.
 					}
-					if (data.type === "twitch" && data.meta && data.meta.twitchDisplayName) {
-						node.dataset.twitchDisplayName = data.meta.twitchDisplayName;
+					if (data.meta && (data.meta.sourceDisplayName || (data.type === "twitch" && data.meta.twitchDisplayName))) {
+						node.dataset.sourceDisplayName = data.meta.sourceDisplayName || data.meta.twitchDisplayName;
 					}
 					if (rawChatImg){
 						node.dataset.chatimg = rawChatImg;
