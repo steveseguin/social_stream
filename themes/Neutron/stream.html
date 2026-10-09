@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Some Title Here: a Social Stream Ninja chat overlay for OBS. Use your session link to display live messages from your connected chat sources.">
     <meta name="robots" content="noindex">
     <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
@@ -12,14 +13,23 @@
 <title>Some Title Here</title>
 </head>
 <body>
-	<div class="background">
-		<img alt="backgroundImage" id="bg" src="./background.jpg">
-		<div class="border"></div>
+	<div id="neutron-layout">
+		<div class="background">
+			<img alt="backgroundImage" id="bg" src="./background.jpg">
+			<div class="border"></div>
+		</div>
+		<span id="dateTime">Date Time</span>
+		<iframe id="iframeOverlay"></iframe>
 	</div>
-	<span id="dateTime">Date Time</span>
-	<iframe id="iframeOverlay"></iframe>
 	
 	<script>
+	function fitNeutronLayout() {
+		var scale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+		document.getElementById("neutron-layout").style.transform = "scale(" + scale + ")";
+	}
+	window.addEventListener("resize", fitNeutronLayout);
+	fitNeutronLayout();
+
 	function getById(id){
 		return document.getElementById(id) || document.createElement("span");
 	}

@@ -373,10 +373,21 @@ body, html {
 
         scrollOffset += scrollSpeed * dt;
 
+        if (showtime > 0) {
+            var visibleBottom = scrollOffset + chatContainer.clientHeight;
+            messages.forEach(function(message) {
+                // Start after entry, not while the credit is queued below the viewport.
+                var visibleHeight = Math.min(message.offsetHeight, chatContainer.clientHeight);
+                if (message.dataset.visibleSince === undefined && message.offsetTop + visibleHeight <= visibleBottom) {
+                    message.dataset.visibleSince = String(now);
+                }
+            });
+        }
+
         // Retire messages that have fully rolled past the top edge
         var first = messages[0];
         while (first && ((first.offsetTop + first.offsetHeight) < scrollOffset ||
-            (showtime > 0 && Date.now() - messageTimestamps.get(first.id) >= showtime))) {
+            (showtime > 0 && first.dataset.visibleSince !== undefined && now - Number(first.dataset.visibleSince) >= showtime))) {
             removeFirstMessageCompensated();
             messages = getOverlayMessages();
             first = messages.length ? messages[0] : null;
