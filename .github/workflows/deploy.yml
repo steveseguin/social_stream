@@ -64,6 +64,16 @@ jobs:
               test -f "$checkout/shared/monetization/board-controls.js"
               test -f "$checkout/shared/monetization/board-controls.css"
             fi
+            # Local censor models and shared controls must also ship on the site.
+            if [ -f "$checkout/shared/ai/censorModels.js" ]; then
+              for asset in censorModels.js censorPrefilter.js censor-worker.js; do
+                test -f "$checkout/shared/ai/$asset"
+              done
+              for asset in config.json tokenizer.json tokenizer_config.json special_tokens_map.json LICENSE NOTICE.txt onnx/model-parts.json onnx/model_quantized.part1.bin onnx/model_quantized.part2.bin; do
+                test -f "$checkout/thirdparty/models/granite-guardian-hap-38m/$asset"
+                test "$(wc -c < "$checkout/thirdparty/models/granite-guardian-hap-38m/$asset")" -le 26214400
+              done
+            fi
             # Background speech needs its worker and packaged runtime on the site.
             if [ -f "$checkout/shared/tts/neural-worker.js" ]; then
               for asset in neural-client.js pcm.js; do

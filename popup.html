@@ -11088,7 +11088,7 @@ input:checked + .slider:before {
 						<div class="options">
 							<div class="options_group streaming_chat">
 								<h2><span data-translate="local-censor-bot">Censor bot options 🤖🚫🤬</span></h2>
-								<i>Does not respond to chat, but has access to the chat. It can censor, filter, and sanitize incoming live chat messages.<br /><br /><strong>⚠️ Requires a properly configured LLM service provider in the "Configure LLM Service Provider" section above.</strong></i><br/>
+								<p>Reviews incoming chat without replying. Choose the main AI model or a local model just for censoring.</p>
 								<br>
 								<div>
 									<div style="display: inline-block;" title="Use the bot to moderate messages, deleting messages that it thinks aren't fit. It will skip messages if it can't keep up.">
@@ -11108,6 +11108,23 @@ input:checked + .slider:before {
 										🤚 <span><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="censor-bot-hold">Block messages until approved by the censor bot</span></span>
 									</div>
 								</div>
+                                <div class="popup-settings-panel popup-subsection">
+                                    <p><label for="censorModel">🔎 Censor model</label></p>
+                                    <select id="censorModel" data-optionsetting="censorModel" aria-describedby="censorModelHelp censorModelRequirements">
+                                        <option value="main">Same as main AI model</option>
+                                        <option value="qwen">Qwen 0.8B (local)</option>
+                                        <option value="ibm">IBM Granite classifier (local, English-only)</option>
+                                    </select>
+                                    <p id="censorModelHelp">Choose which model reviews messages for the censor bot.</p>
+                                    <p id="censorModelRequirements">Uses the model and connection settings from Configure LLM Service Provider.</p>
+                                    <p><label for="censorTestText">Test message (not sent to chat)</label><br />
+                                        <input id="censorTestText" class="popup-reviewed-control" type="text" maxlength="16000" value="Thanks for the stream!" />
+                                    </p>
+                                    <button type="button" id="testCensorModel" class="tts-test-button">▶ Test censor model</button>
+                                    <p id="censorTestResult" role="status" aria-live="polite"></p>
+                                    <p id="censorModelStatus" role="status" aria-live="polite"></p>
+                                    <p>If the model is unavailable, nonblocking chat continues; hold mode blocks messages that have not been approved.</p>
+                                </div>
 							</div>
 
 						</div>

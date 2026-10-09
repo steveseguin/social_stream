@@ -2274,6 +2274,91 @@ function getActiveCensorProviderKey() {
     return settings?.aiProvider?.optionsetting || "ollama";
 }
 
+let localCensor = null;
+let localCensorMode = '';
+let localCensorStatus = 'Not loaded';
+let localCensorCounter = 0;
+
+function getCensorModelSelection() {
+    const mode = settings?.censorModel?.optionsetting;
+    return mode === 'ibm' || mode === 'qwen' ? mode : 'main';
+}
+
+function getCensorMessageKey(data) {
+    if (!data || data.id === undefined || data.id === null) return '';
+    return JSON.stringify([data.type || '', data.tid ?? '', data.id]);
+}
+
+function resetLocalCensor() {
+    if (localCensor) localCensor.close();
+    localCensor = null;
+    localCensorMode = '';
+    localCensorStatus = 'Not loaded';
+}
+
+function getLocalCensor(mode) {
+    if (localCensor && localCensorMode === mode) return localCensor;
+    resetLocalCensor();
+    const asset = path => typeof chrome !== 'undefined' && chrome.runtime?.getURL ? chrome.runtime.getURL(path) : path;
+    localCensorMode = mode;
+    const engine = globalThis.SSNCensorModels.create({
+        mode,
+        workerPath: asset('shared/ai/censor-worker.js'),
+        qwenWorkerPath: getLocalBrowserWorkerPath(),
+        onStatus: text => { if (localCensor === engine) localCensorStatus = text; },
+        onBlock: input => {
+            if (localCensor !== engine || getCensorModelSelection() !== mode || !getAiSettingFlag('ollamaCensorBot')) return;
+            if (isExtensionOn && input.original) sendToDestinations({ delete: input.original });
+        }
+    });
+    localCensor = engine;
+    return engine;
+}
+
+function isLocalCensorBlocked(data) {
+    return !!(getAiSettingFlag('ollamaCensorBot') && localCensor && localCensorMode === getCensorModelSelection() && localCensor.isBlocked(getCensorMessageKey(data)));
+}
+
+function getCensorModelStatus() {
+    const mode = getCensorModelSelection();
+    if (localCensor && localCensorMode !== mode) resetLocalCensor();
+    return { mode, text: mode === 'main' ? 'Uses the main AI model and connection settings.' : localCensorStatus };
+}
+
+async function testCensorModel(mode, text, settingsOverride) {
+    if (mode !== getCensorModelSelection()) throw new Error('Censor selection changed. Try again.');
+    if (mode === 'main') {
+        const reply = await callLLMAPI('Reply with only OK or BLOCK. BLOCK hateful, abusive, threatening or profane chat; otherwise OK. Chat: ' + JSON.stringify(text), null, null, null, null, null, { settings: settingsOverride, requestTimeoutMs: 60000 });
+        return { text: String(reply || '') };
+    }
+    const result = await getLocalCensor(mode).review({ id: 'test-' + (++localCensorCounter), text, time: Date.now() }, true);
+    return { text: result.blocked ? 'Blocked' : 'Allowed' };
+}
+
+async function censorMessageWithLocalModel(data, tab, mode) {
+    if (!getAiSettingFlag('ollamaCensorBot')) return true;
+    let engine;
+    try {
+        engine = getLocalCensor(mode);
+        const text = data.textonly ? String(data.chatmessage || '') : decodeAndCleanHtml(String(data.chatmessage || ''), true);
+        if (!text.trim()) return true;
+        const result = await engine.review({
+            id: getCensorMessageKey(data) || 'message-' + (++localCensorCounter),
+            text, time: Date.now(), platform: data.type || '',
+            // Only join messages when the capture provides a source and stable identity.
+            scope: data.tid !== undefined && data.tid !== null && tab && tab.url ? JSON.stringify([data.tid, tab.url]) : null,
+            userid: data.userid ?? data.username ?? null,
+            original: { id: data.id, type: data.type, tid: data.tid, chatname: data.chatname }
+        });
+        if (localCensor !== engine || getCensorModelSelection() !== mode || !getAiSettingFlag('ollamaCensorBot')) return true;
+        return !result.blocked;
+    } catch (error) {
+        if ((engine && localCensor !== engine) || getCensorModelSelection() !== mode || !getAiSettingFlag('ollamaCensorBot')) return true;
+        localCensorStatus = 'Unavailable: ' + (error.message || String(error));
+        return !getAiSettingFlag('ollamaCensorBotBlockMode');
+    }
+}
+
 function getAiSettingFlag(settingKey) {
     const entry = settings && settings[settingKey];
     return entry === true || !!(entry && typeof entry === "object" && entry.setting === true);
@@ -2506,10 +2591,14 @@ function parseNumericCensorDecision(llmOutput) {
 }
 
 let censorProcessingSlots = [false, false, false]; // Non-local providers can use a few concurrent moderation requests.
-async function censorMessageWithLLM(data) {
+async function censorMessageWithLLM(data, tab = false) {
     if (!data.chatmessage) {
         return true;
     }
+
+    const censorModel = getCensorModelSelection();
+    if (censorModel !== 'main') return censorMessageWithLocalModel(data, tab, censorModel);
+    if (localCensor) resetLocalCensor();
 	
 	const providerKey = getActiveCensorProviderKey();
 	const { isSafe, cleanedText } = isSafePhrase(data);

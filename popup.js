@@ -704,7 +704,7 @@ if (typeof(chrome.runtime)=='undefined'){
 				// Generate unique callback ID
 				const callbackId = ++callbackIdCounter;
 				const isGetSettingsRequest = !!(data && data.cmd === "getSettings");
-				const isLLMProviderTestRequest = !!(data && data.cmd === "testLLMProvider");
+				const isLLMProviderTestRequest = !!(data && (data.cmd === "testLLMProvider" || data.cmd === "testCensorModel"));
 				const isAiEventRequest = !!(data && data.cmd === "aiEvent");
 				const timeoutMs = isAiEventRequest ? 195000 : isLLMProviderTestRequest ? 60000 : (isGetSettingsRequest ? 3000 : 500);
 				
@@ -5843,6 +5843,49 @@ function formatLLMProviderTestError(error) {
     return parts.join('\n') || 'Unknown error';
 }
 
+function updateCensorModelHelp() {
+    const mode = document.getElementById('censorModel')?.value || 'main';
+    const help = document.getElementById('censorModelRequirements');
+    if (!help) return;
+    help.textContent = mode === 'ibm'
+        ? 'English-only. About 41 MB of included model data, loaded on demand. Runs on the CPU; no GPU required. Checks rapid split words from the same identified user.'
+        : mode === 'qwen'
+            ? 'Requires WebGPU. Downloads and caches the Qwen 0.8B model on first use; download progress appears below. Uses a separate model for censoring.'
+            : 'Uses the model and connection settings from Configure LLM Service Provider.';
+    const status = document.getElementById('censorModelStatus');
+    if (status) status.textContent = '';
+}
+
+async function refreshCensorModelStatus() {
+    const status = document.getElementById('censorModelStatus');
+    if (!status || !document.getElementById('wrapper-chatbot-Censor-options')?.checked) return;
+    try {
+        const response = await sendRuntimeCommandMessage({ cmd: 'getCensorModelStatus' }, 3000, false);
+        if (response && response.mode === document.getElementById('censorModel')?.value) status.textContent = response.text || '';
+    } catch (_error) {}
+}
+
+async function testSelectedCensorModel() {
+    const button = document.getElementById('testCensorModel');
+    const output = document.getElementById('censorTestResult');
+    if (!button || !output) return;
+    button.disabled = true;
+    output.textContent = 'Testing…';
+    try {
+        const response = await sendRuntimeCommandMessage({
+            cmd: 'testCensorModel', model: document.getElementById('censorModel').value,
+            text: document.getElementById('censorTestText').value,
+            settingsOverride: collectLLMProviderTestSettings()
+        }, 60000, false);
+        output.textContent = response?.success ? response.text : 'Unavailable: ' + (response?.error || 'No response. Model loading may still be in progress.');
+    } catch (error) {
+        output.textContent = 'Unavailable: ' + (error.message || String(error));
+    } finally {
+        button.disabled = false;
+        refreshCensorModelStatus();
+    }
+}
+
 async function testSelectedLLMProvider() {
     const button = document.getElementById('testSelectedLLMProvider');
     const status = document.getElementById('testSelectedLLMProviderStatus');
@@ -7547,6 +7590,7 @@ function handleOptionSetting(ele, sync) {
                        (ele.dataset.optionsetting2 ? 'optionsetting2' :
                        (ele.dataset.optionsetting10 ? 'optionsetting10' : 'optionsetting18'));
     const settingValue = ele.dataset[settingType];
+    if (settingValue === 'censorModel') updateCensorModelHelp();
     
     // Handle poll type
     if (settingValue === "pollType") {
@@ -13255,6 +13299,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 
 	const testSelectedLLMProviderButton = document.getElementById('testSelectedLLMProvider');
+    const testCensorModelButton = document.getElementById('testCensorModel');
+    if (testCensorModelButton) {
+        testCensorModelButton.addEventListener('click', testSelectedCensorModel);
+        updateCensorModelHelp();
+        setInterval(refreshCensorModelStatus, 2000);
+    }
 	if (testSelectedLLMProviderButton) {
 		testSelectedLLMProviderButton.addEventListener('click', testSelectedLLMProvider);
 	}

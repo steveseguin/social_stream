@@ -62,8 +62,8 @@
                 </ul>
                 <p>What to do, in order:</p>
                 <ul class="guide-list">
-                    <li>Leave the source connected on Auto and let it retry on its own. Avoid re-adding the source over and over.</li>
-                    <li>If it has failed repeatedly, stop for an hour so the per-IP rate limit resets, then reconnect once.</li>
+                    <li>After an Euler connection fails, the desktop app checks TikTok directly without using Euler quota. If it cannot reconnect, Euler mode pauses; Auto tries the available non-Euler methods instead.</li>
+                    <li>When Euler retries are paused, activate the source to try again. If you reached an Euler rate limit, wait for that limit to reset first.</li>
                     <li>Make sure you are on the latest app version. TikTok fixes ship frequently.</li>
                     <li>Switch the TikTok source to <strong>Standard</strong> mode (page capture) as a reliable stopgap. It loads the live page directly and does not use the sign server at all.</li>
                     <li>If you hit rate limits often, add your own free Euler API key (below).</li>

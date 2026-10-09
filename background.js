@@ -5952,6 +5952,15 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 				}
 				sendResponse({ success: false, error: payload });
 			}
+		} else if (request.cmd === "getCensorModelStatus") {
+            sendResponse(getCensorModelStatus());
+        } else if (request.cmd === "testCensorModel") {
+            try {
+                const result = await testCensorModel(request.model || 'main', String(request.text || '').slice(0, 16000), request.settingsOverride || null);
+                sendResponse({ success: true, text: result.text });
+            } catch (error) {
+                sendResponse({ success: false, error: error.message || String(error) });
+            }
 		} else if (request.cmd && request.cmd === "classifyMessageForExport") {
 			try {
 				const llmResponse = await callLLMAPI(String(request.prompt || ""), null, null, null, null, null, { settings: request.settingsOverride || null });
@@ -8227,6 +8236,8 @@ async function sendToDestinations(message, individualLikeAlreadyRouted, pendingC
 
 	// Emote/pronoun/translation lookups can also yield before the first relay.
 	if (pendingCapture && pendingCapture.cancelled) return false;
+    // A local moderation decision may arrive while those lookups are pending.
+    if (typeof isLocalCensorBlocked === 'function' && isLocalCensorBlocked(message)) return false;
 
 	if (message && typeof message === "object" && typeof sanitizeRelayPayloadFields === "function") {
 		message = sanitizeRelayPayloadFields(message) || message;
@@ -19172,21 +19183,21 @@ async function applyBotActions(data, tab = false) {
 					if (data.chatmessage && data.chatmessage.length <= 3) {
 						// For very short messages, use the history-aware censoring
 						//try {
-						good = await censorMessageWithLLM(data); // # TODO: IMPROVE AND FIX.
+						good = await censorMessageWithLLM(data, tab); // # TODO: IMPROVE AND FIX.
 						//good = await censorMessageWithHistory(data);
 						//} catch(e){
 						//	good = await censorMessageWithLLM(data);
 						//}
 					} else {
 						// For longer messages, use the existing single-message censoring
-						good = await censorMessageWithLLM(data);
+						good = await censorMessageWithLLM(data, tab);
 					}
 
 					if (!good) {
 						return false;
 					}
 				} else {
-					censorMessageWithLLM(data);
+					censorMessageWithLLM(data, tab);
 				}
 			} catch (e) {
 				console.log(e); // ai.js file missing?
