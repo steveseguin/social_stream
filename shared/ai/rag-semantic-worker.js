@@ -99,14 +99,25 @@ async function build(records, id) {
 
 async function search(query) {
     var vector = await embed(tokenizer(query.slice(0, 2000), { truncation: true, max_length: 256, padding: true }));
-    var best = new Map();
+    var matches = new Map();
     passages.forEach(function (passage) {
         var score = 0;
         for (var i = 0; i < vector.length; i++) score += vector[i] * passage.vector[i];
-        var previous = best.get(passage.ref);
-        if (!previous || score > previous.score) best.set(passage.ref, { ref: passage.ref, score: score, semantic: true, start: passage.start, end: passage.end });
+        if (!matches.has(passage.ref)) matches.set(passage.ref, []);
+        matches.get(passage.ref).push({ ref: passage.ref, score: score, semantic: true, start: passage.start, end: passage.end });
     });
-    return Array.from(best.values()).sort(function (a, b) { return b.score - a.score; }).slice(0, 8);
+    var best = [];
+    matches.forEach(function (candidates) {
+        candidates.sort(function (a, b) { return b.score - a.score; });
+        var first = candidates[0];
+        // A question can need two distant facts from the same imported section.
+        // Keep a second distinct passage without filling the results with one file.
+        var second = candidates.find(function (candidate) { return candidate.end <= first.start || candidate.start >= first.end; });
+        first.ranges = [{ start: first.start, end: first.end }];
+        if (second) first.ranges.push({ start: second.start, end: second.end });
+        best.push(first);
+    });
+    return best.sort(function (a, b) { return b.score - a.score; }).slice(0, 8);
 }
 
 self.onmessage = function (event) {

@@ -5068,8 +5068,10 @@ async function getDocumentsFromSearchResults(searchResults) {
         const result = searchResults[index];
         if (!doc || !result.semantic) return doc;
         if (result.semanticGeneration !== ragSemanticGeneration || !isRAGSemanticEnabled()) return null;
-        if (!Number.isInteger(result.start) || !Number.isInteger(result.end) || result.start < 0 || result.end <= result.start || result.end > (doc.content || '').length) return null;
-        return { ...doc, content: doc.content.slice(result.start, result.end) };
+        const ranges = result.ranges || [{ start: result.start, end: result.end }];
+        if (!Array.isArray(ranges) || !ranges.length || ranges.length > 2 || !ranges.every(range =>
+            range && Number.isInteger(range.start) && Number.isInteger(range.end) && range.start >= 0 && range.end > range.start && range.end <= (doc.content || '').length)) return null;
+        return { ...doc, content: ranges.slice().sort((a, b) => a.start - b.start).map(range => doc.content.slice(range.start, range.end)).join('\n[…]\n') };
     });
 }
 
