@@ -70,6 +70,10 @@ body input[type="email"], body input[type="number"], body textarea, body select 
     font:inherit; padding:6px 8px;
 }
 body input::placeholder, body textarea::placeholder { color:var(--placeholder-color); opacity:1; }
+body select option, body select optgroup {
+    background:var(--color-accent-subtle); color:var(--default-text-color);
+}
+body select option:disabled { color:var(--text-secondary); }
 body input:focus, body select:focus, body textarea:focus, body button:focus,
 body a:focus, body summary:focus { outline:2px solid var(--color-accent); outline-offset:2px; }
 
