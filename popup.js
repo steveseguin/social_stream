@@ -5335,6 +5335,24 @@ function setupPopupPanelEditor() {
 		list.querySelectorAll('input').forEach(function(input) { input.checked = true; });
 	});
 	cancel.addEventListener('click', function() { dialog.close(); });
+	// A native dialog inside SSApp's iframe can otherwise tab into the app shell.
+	dialog.addEventListener('keydown', function(event) {
+		if (event.key !== 'Tab' || !document.body.classList.contains('ssapp')) return;
+		var controls = Array.from(dialog.querySelectorAll('input, button')).filter(function(control) {
+			return !control.matches(':disabled') && control.tabIndex >= 0 && control.getClientRects().length;
+		});
+		if (!controls.length) {
+			event.preventDefault();
+			return;
+		}
+		var first = controls[0];
+		var last = controls[controls.length - 1];
+		var index = controls.indexOf(document.activeElement);
+		if ((event.shiftKey && index <= 0) || (!event.shiftKey && (index < 0 || document.activeElement === last))) {
+			event.preventDefault();
+			(event.shiftKey ? last : first).focus();
+		}
+	});
 	dialog.addEventListener('cancel', function(event) { if (save.disabled) event.preventDefault(); });
 	save.addEventListener('click', function() {
 		var selection = Object.assign({}, popupPanelVisibility);
