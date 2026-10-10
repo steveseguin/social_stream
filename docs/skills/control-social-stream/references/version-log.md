@@ -22,6 +22,15 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.1.0 | 0.4.2 | Versioned responses, request and operation IDs, SSE status events, token-file and stored credentials, visible-app controls, expanded source/settings discovery, and version-aware MCP tools |
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
+## Unreleased structured app prompts
+
+Minimum supported build: the SSApp development checkout based on 0.4.33 containing
+the structured-prompt correction; no released minimum has been assigned.
+Structured SSApp prompts retain their child window, instructions, defaults, and
+optional checkboxes during MCP interaction. Use `listAppWindows`, then inspect and
+interact with that child window. Plain JavaScript prompts still use the pending
+dialog commands. API and MCP schemas are unchanged.
+
 ## Whatnot public auction capture — October 6, 2026
 
 Minimum SSApp: 0.4.32 with the updated Whatnot source files and settings.

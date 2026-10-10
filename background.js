@@ -5624,11 +5624,13 @@ function routeIndividualLikeEvent(message, alreadyRouted) {
 // Only captures still being processed are retained; completed messages need no tombstone cache.
 const pendingModeratedCaptures = new Set();
 function cancelPendingModeratedCaptures(deletion) {
-	if (!["youtube", "youtubeshorts", "twitch", "kick"].includes(deletion.type)) return;
+	if (!["youtube", "youtubeshorts", "twitch", "kick", "vpzone"].includes(deletion.type)) return;
 	const matches = [];
 	pendingModeratedCaptures.forEach(function (pending) {
 		const message = pending.message;
 		if (message.type !== deletion.type) return;
+		if (deletion.type === "vpzone" && deletion.meta && deletion.meta.streamUsername &&
+			String(message.meta && message.meta.streamUsername).toLowerCase() !== String(deletion.meta.streamUsername).toLowerCase()) return;
 		const nativeId = deletion.meta && deletion.meta.messageId;
 		if (nativeId) {
 			if (String(message.meta && message.meta.messageId) !== String(nativeId)) return;
@@ -5780,7 +5782,7 @@ async function processIncomingMessage(message, sender = null) {
 			noteTabActivity(tabIdForActivity, message);
 		}
 
-		const pendingCapture = ["youtube", "youtubeshorts", "twitch", "kick"].includes(message.type)
+		const pendingCapture = ["youtube", "youtubeshorts", "twitch", "kick", "vpzone"].includes(message.type)
 			? { message: Object.assign({}, message), cancelled: false } : null;
 		if (pendingCapture) pendingModeratedCaptures.add(pendingCapture);
 		try {

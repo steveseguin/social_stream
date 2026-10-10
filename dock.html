@@ -7256,6 +7256,9 @@
 				let selector = "";
 				let matchField = "";
 				const nativeId = data.delete.meta && data.delete.meta.messageId;
+				const vpzoneChannel = data.delete.type === "vpzone" && data.delete.meta && data.delete.meta.streamUsername;
+				const matchesVpzoneChannel = message => !vpzoneChannel ||
+					String(message.meta && message.meta.streamUsername).toLowerCase() === String(vpzoneChannel).toLowerCase();
 				const deleteSourceName = (data.delete.meta && (data.delete.meta.sourceDisplayName || (data.delete.type === "twitch" && data.delete.meta.twitchDisplayName))) || data.delete.chatname;
 				if (data.delete.meta && data.delete.meta.messageId) {
 					const sourceSelector = data.delete.type ? dataAttributeSelector("data-source-type", data.delete.type) : "";
@@ -7294,13 +7297,14 @@
 				selectedQueue.concat(autoShowQueue).forEach(node => {
 					if (node.matches(selector)) nodes.add(node);
 				});
-				let matches = Array.from(nodes).filter(node => !nativeId ||
-					String(getNativeSourceControlMessageId(node.rawContents || {})) === String(nativeId)
+				let matches = Array.from(nodes).filter(node => matchesVpzoneChannel(node.rawContents || {}) && (!nativeId ||
+					String(getNativeSourceControlMessageId(node.rawContents || {})) === String(nativeId))
 				).map(node => ({ node, id: node.dataset.mid, type: node.dataset.sourceType }));
 				const pending = historyMissedLiveBuffer.concat(queue.map(item => item.contents), messageBuffer.map(item => item.contents));
 				if (featuredMessage) pending.push(featuredMessage);
 				pending.forEach(message => {
 					if (data.delete.type && String(message.type) !== String(data.delete.type)) return;
+					if (!matchesVpzoneChannel(message)) return;
 					if (nativeId) {
 						if (String(getNativeSourceControlMessageId(message)) !== String(nativeId)) return;
 					} else if (matchField) {

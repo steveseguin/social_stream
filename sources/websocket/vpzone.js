@@ -11,6 +11,7 @@
 	const ADVANCED_CONTROLS_KEY = "vpzoneWsAdvancedControls";
 	const RECONNECT_DELAY_MS = 4000;
 	const MAX_SEEN_IDS = 1500;
+	const REPLAY_KEY = "vpzoneWsReplay";
 	const FETCH_BRIDGE_SOURCE = "ssn-vpzone";
 	const FETCH_BRIDGE_REQUEST = "ssn-vpzone-fetch-json";
 	const FETCH_BRIDGE_RESPONSE = "ssn-vpzone-fetch-json-response";
@@ -59,6 +60,8 @@
 		meUsername: null,
 		seenIds: new Set(),
 		seenOrder: [],
+		replayIds: new Set(),
+		pendingEvents: new Set(),
 		avatarCache: new Map(),
 		avatarPending: new Map(),
 		avatarNegativeUntil: new Map(),
@@ -72,7 +75,7 @@
 		readyState: READY_STATE.CLOSED,
 		close: function () { disconnect(true); },
 		send: function (rawMessage) {
-			sendChatMessage(rawMessage).catch(function (error) {
+			sendChatMessage(outgoingText(rawMessage)).catch(function (error) {
 				log("VPZone chat send failed: " + ((error && error.message) || error), "error");
 			});
 			return true;
@@ -107,15 +110,17 @@
 	}
 
 	function pushMessage(data) {
-		if (!state.isExtensionOn || !data || typeof data !== "object") return;
+		if (!state.isExtensionOn || !data || typeof data !== "object") return false;
 		relay({ message: data });
+		return true;
 	}
 
-	// Mirror platform-side deletions into the dock. `{delete:{type}}` alone
-	// wipes every vpzone row; adding `id` targets a single message.
+	// Native IDs belong in meta.messageId; id is the dock's internal row ID.
 	function pushDelete(payload) {
 		if (!state.isExtensionOn) return;
-		relay({ "delete": Object.assign({ type: "vpzone" }, payload || {}) });
+		var deletion = Object.assign({ type: "vpzone" }, payload || {});
+		deletion.meta = Object.assign({ streamUsername: state.currentChannel }, deletion.meta || {});
+		relay({ "delete": deletion });
 	}
 
 	function pushStatus(status, message, meta) {
@@ -825,7 +830,6 @@
 				} catch (e) {}
 			}
 			if (/^PRIVMSG\s+/i.test(text) && text.indexOf(" :") !== -1) text = text.slice(text.indexOf(" :") + 2);
-			else if (text.indexOf(" :") !== -1 && text.indexOf("\r\n") === -1) text = text.slice(text.indexOf(" :") + 2);
 		}
 		return String(text || "").replace(/[\r\n]+$/g, "").trim();
 	}
@@ -840,7 +844,7 @@
 	}
 
 	function sendChatMessage(rawMessage, didRefresh) {
-		var message = outgoingText(rawMessage);
+		var message = String(rawMessage == null ? "" : rawMessage).replace(/[\r\n]+$/g, "").trim();
 		var channel = normalizeChannel(state.currentChannel || state.cfg.channel);
 		var token = String(state.cfg.token || "");
 		if (!message) return Promise.reject(new Error("Message is empty."));
@@ -1135,6 +1139,37 @@
 		state.seenOrder.push(key);
 		while (state.seenOrder.length > MAX_SEEN_IDS) state.seenIds.delete(state.seenOrder.shift());
 		return true;
+	}
+
+	function saveReplayHistory() {
+		try {
+			sessionStorage.setItem(REPLAY_KEY, JSON.stringify({
+				channel: state.currentChannel,
+				server: normalizeWs(state.cfg.wsUrl),
+				ids: Array.from(state.replayIds)
+			}));
+		} catch (e) {}
+	}
+
+	function restoreReplayHistory() {
+		state.seenIds.clear();
+		state.seenOrder = [];
+		state.replayIds.clear();
+		try {
+			var saved = JSON.parse(sessionStorage.getItem(REPLAY_KEY) || "null");
+			if (!saved || saved.channel !== state.currentChannel || saved.server !== normalizeWs(state.cfg.wsUrl) || !Array.isArray(saved.ids)) return;
+			saved.ids.slice(-MAX_SEEN_IDS).forEach(function (id) {
+				if (typeof id !== "string") return;
+				remember(id);
+				state.replayIds.add(id);
+			});
+		} catch (e) {}
+	}
+
+	function rememberReplayId(id) {
+		if (!id) return;
+		state.replayIds.add(String(id));
+		while (state.replayIds.size > MAX_SEEN_IDS) state.replayIds.delete(state.replayIds.values().next().value);
 	}
 
 	function safeEmoteUrl(value) {
@@ -1557,12 +1592,17 @@
 			ev.actorUsername = state.currentChannel || state.cfg.channel || "";
 			ev.actorDisplayName = ev.actorUsername;
 		}
-		key = ev.id != null ? ev.id : [eventTime(ev), ev.actorUsername || ev.username || "", ev.eventType || ev.type || "", ev.message || ev.text || ev.body || ev.content || ""].join("::");
+		var nativeId = eventMessageId(ev);
+		key = nativeId || [eventTime(ev), ev.actorUsername || ev.username || "", ev.eventType || ev.type || "", ev.message || ev.text || ev.body || ev.content || ""].join("::");
 		if (!remember(key)) return;
+		var pending = { id: nativeId, cancelled: false };
+		state.pendingEvents.add(pending);
 		var actor = ev.actorUsername || ev.username || "";
 		var hasCarriedAvatar = !!(ev.actorAvatarUrl || ev.avatarUrl || ev.actorAvatar || ev.avatar_url || ev.profileImage);
 		var enrich = hasCarriedAvatar ? Promise.resolve("") : fetchAvatar(actor);
 		Promise.all([enrich, refreshSourceBranding()]).then(function (results) {
+			state.pendingEvents.delete(pending);
+			if (pending.cancelled) return;
 			var avatarUrl = results[0];
 			if (avatarUrl && !hasCarriedAvatar) ev.avatarUrl = avatarUrl;
 			var data;
@@ -1580,7 +1620,10 @@
 			else if (mapped === "chat_message") data = buildChat(ev);
 			else data = buildEvent(ev);
 			if (!data) return;
-			pushMessage(data);
+			if (pushMessage(data) && nativeId) {
+				// Pending enrichment must not suppress replay after a reload.
+				rememberReplayId(nativeId);
+			}
 			appendFeed(data);
 			chip(els.lastEventChip, "Last event: " + nice(data.event || ev.eventType || ev.type || "message"), data.event ? "warn" : "good");
 		});
@@ -1603,10 +1646,20 @@
 		type = String(payload.type || "").toLowerCase();
 		if (type === "delete_message") {
 			var deletedId = payload.metadata && (payload.metadata.messageId || payload.metadata.message_id);
-			if (deletedId) pushDelete({ id: String(deletedId) });
+			if (deletedId != null && deletedId !== "") {
+				deletedId = String(deletedId);
+				state.pendingEvents.forEach(function (pending) { if (pending.id === deletedId) pending.cancelled = true; });
+				remember(deletedId);
+				rememberReplayId(deletedId);
+				pushDelete({ meta: { messageId: deletedId } });
+			}
 			return;
 		}
-		if (type === "clear_chat") { pushDelete({}); return; }
+		if (type === "clear_chat") {
+			state.pendingEvents.forEach(function (pending) { pending.cancelled = true; rememberReplayId(pending.id); });
+			pushDelete({});
+			return;
+		}
 		if (type === "presence") { handlePresence(payload); return; }
 		if (type === "stream_event" || type === "chat_event") {
 			ev = payload.event && typeof payload.event === "object" ? payload.event : payload.data;
@@ -1729,6 +1782,8 @@
 	}
 
 	function connect() {
+		state.pendingEvents.forEach(function (pending) { pending.cancelled = true; });
+		if (state.currentChannel) saveReplayHistory();
 		syncUiToState();
 		if (!state.cfg.channel) throw new Error("Channel is required.");
 		state.active = true;
@@ -1736,8 +1791,7 @@
 		state.currentChannel = state.cfg.channel;
 		refreshSourceBranding(state.currentChannel);
 		state.lastViewerCount = null;
-		state.seenIds.clear();
-		state.seenOrder = [];
+		restoreReplayHistory();
 		chip(els.viewerChip, "Viewers: -", "");
 		chip(els.lastEventChip, "Last event: Waiting", "");
 		syncButtons();
@@ -1746,6 +1800,7 @@
 	}
 
 	function disconnect(manual) {
+		state.pendingEvents.forEach(function (pending) { pending.cancelled = true; });
 		state.manualDisconnect = manual !== false;
 		state.active = false;
 		clearReconnect();
@@ -1764,8 +1819,9 @@
 						if (request === "getSource") { sendResponse("vpzone"); return; }
 						if (request === "focusChat") { sendResponse(false); return; }
 						if (request && typeof request === "object") {
-							if ("settings" in request) { state.settings = request.settings || {}; sendResponse(true); return; }
-							if ("state" in request) { state.isExtensionOn = !!request.state; sendResponse(true); return; }
+							if ("settings" in request) state.settings = request.settings || {};
+							if ("state" in request) state.isExtensionOn = !!request.state;
+							if ("settings" in request || "state" in request) { sendResponse(true); return; }
 							if (request.type === "SEND_MESSAGE") {
 								sendChatMessage(request.message).then(function () {
 									sendResponse(true);
@@ -1807,8 +1863,9 @@
 			if (!request || typeof request !== "object") return;
 			if (request.source === FETCH_BRIDGE_SOURCE && request.type === EXTENSION_MESSAGE && request.request) request = request.request;
 			if (request.__ssappSendToTab) request = request.__ssappSendToTab;
-			if ("settings" in request) { state.settings = request.settings || {}; return; }
-			if ("state" in request) { state.isExtensionOn = !!request.state; return; }
+			if ("settings" in request) state.settings = request.settings || {};
+			if ("state" in request) state.isExtensionOn = !!request.state;
+			if ("settings" in request || "state" in request) return;
 			if (request.type === "SEND_MESSAGE") {
 				sendChatMessage(request.message).catch(function (error) {
 					log("VPZone postMessage SEND_MESSAGE failed: " + ((error && error.message) || error), "error");
@@ -1906,7 +1963,7 @@
 			setStatus("error", "Sign-in failed: " + ((error && error.message) || error));
 			log("Sign-in failed: " + ((error && error.message) || error), "error");
 		});
-		window.addEventListener("beforeunload", function () { disconnect(false); });
+		window.addEventListener("beforeunload", function () { saveReplayHistory(); disconnect(false); });
 	}
 
 	if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot, { once: true });

@@ -116,7 +116,7 @@ test('YouTube DOM cancels deletion during its placeholder-avatar wait', async ()
     document: { querySelector: () => null }, isHTMLElement: () => false, isObject: () => false,
     console: fixtureConsole(errors)
   });
-  install(c, source, ['processMessage', 'deleteThis', 'isYouTubePaidChatNode',
+  install(c, source, ['processMessage', 'deleteThis', 'isYouTubePaidChatNode', 'getYouTubeMessageId',
     'sendYouTubeMessage', 'receiveMessageReply']);
   const target = row('deleted'), pending = c.processMessage(target);
   assert.equal(lookupStarted, true);
