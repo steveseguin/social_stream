@@ -64,7 +64,7 @@
         }
         function block(entries) {
             entries.forEach(function (entry) {
-                if (!entry || entry.blocked) return;
+                if (!entry || entry.blocked || entry.deleted) return;
                 entry.blocked = true;
                 if (!entry.test && options.onBlock) options.onBlock(entry.input);
             });
@@ -75,13 +75,13 @@
             while (queue.length && !closed) {
                 var job = queue.shift();
                 try {
-                    if (!job.entry.blocked || job.entry.test) {
+                    if (!job.entry.deleted && (!job.entry.blocked || job.entry.test)) {
                         var blocked = await infer(job.entry.input.text);
                         if (closed) throw new Error('Censor model changed.');
                         if (blocked) block([job.entry]);
                     }
                     if (modelReady) status((mode === 'ibm' ? 'IBM classifier' : 'Qwen 0.8B') + ' ready' + (unreviewed ? ' — ' + unreviewed + ' messages could not be reviewed.' : ''));
-                    job.resolve({ blocked: job.entry.blocked });
+                    job.resolve({ blocked: job.entry.blocked || !!job.entry.deleted });
                 } catch (error) {
                     if (!job.entry.test) unreviewed++;
                     status('Unavailable: ' + (error.message || String(error)));
@@ -126,6 +126,33 @@
         }
         return {
             review: review,
+            forget: function (deletion) {
+                var matches = [];
+                var hasId = deletion.id !== undefined && deletion.id !== null && deletion.id !== '';
+                records.forEach(function (entry) {
+                    var message = entry.input.original;
+                    if (!message || (deletion.type && message.type !== deletion.type)) return;
+                    if (deletion.tid !== undefined && deletion.tid !== null && String(message.tid) !== String(deletion.tid)) return;
+                    if (deletion.meta && deletion.meta.streamUsername && String(message.meta && message.meta.streamUsername).toLowerCase() !== String(deletion.meta.streamUsername).toLowerCase()) return;
+                    var nativeId = deletion.meta && deletion.meta.messageId;
+                    if (nativeId) {
+                        if (String(message.meta && message.meta.messageId) !== String(nativeId)) return;
+                    } else if (hasId) {
+                        if (String(message.id) !== String(deletion.id)) return;
+                    } else if (deletion.userid) {
+                        if (String(message.userid) !== String(deletion.userid)) return;
+                    } else if (deletion.username) {
+                        if (message.username !== deletion.username) return;
+                    } else if (deletion.chatname && message.chatname !== deletion.chatname) return;
+                    matches.push(entry);
+                });
+                if (deletion.onlyLast && !hasId && !(deletion.meta && deletion.meta.messageId)) matches = matches.slice(-1);
+                matches.forEach(function (entry) {
+                    prefilter.forget(entry.input);
+                    entry.deleted = true;
+                    records.delete(entry.input.id);
+                });
+            },
             isBlocked: function (id) { var entry = records.get(id); return !!(entry && entry.blocked); },
             close: function () {
                 closed = true; failWorker(new Error('Censor model changed.'));

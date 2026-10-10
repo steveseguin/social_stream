@@ -6503,6 +6503,7 @@ async function handleRuntimeMessage(request, sender, sendResponseReal) {
 		} else if ("delete" in request) {
 			sendResponse({ state: isExtensionOn });
 			if (isExtensionOn && (request.delete.type || request.delete.chatname || request.delete.id)) {
+				forgetLocalCensorMessages(request.delete, sender?.tab);
 				cancelPendingModeratedCaptures(request.delete);
 				sendToDestinations({ delete: request.delete });
 			}

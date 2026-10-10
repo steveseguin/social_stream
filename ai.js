@@ -2335,6 +2335,13 @@ function isLocalCensorBlocked(data) {
     return !!(getAiSettingFlag('ollamaCensorBot') && localCensor && localCensorMode === getCensorModelSelection() && localCensor.isBlocked(getCensorMessageKey(data)));
 }
 
+function forgetLocalCensorMessages(deletion, tab) {
+    if (!localCensor) return;
+    const scopedDeletion = Object.assign({}, deletion);
+    if ((scopedDeletion.tid === undefined || scopedDeletion.tid === null) && tab && tab.id !== undefined) scopedDeletion.tid = tab.id;
+    localCensor.forget(scopedDeletion);
+}
+
 function getCensorModelStatus() {
     const mode = getCensorModelSelection();
     if (localCensor && localCensorMode !== mode) resetLocalCensor();
@@ -2364,7 +2371,8 @@ async function censorMessageWithLocalModel(data, tab, mode) {
             // Only join messages when the capture provides a source and stable identity.
             scope: data.tid !== undefined && data.tid !== null && tab && tab.url ? JSON.stringify([data.tid, tab.url]) : null,
             userid: data.userid ?? data.username ?? null,
-            original: { id: data.id, type: data.type, tid: data.tid, chatname: data.chatname }
+            original: { id: data.id, type: data.type, tid: data.tid, chatname: data.chatname,
+                userid: data.userid, username: data.username, meta: data.meta }
         });
         if (localCensor !== engine || getCensorModelSelection() !== mode || !getAiSettingFlag('ollamaCensorBot')) return true;
         return !result.blocked;

@@ -706,7 +706,7 @@ if (typeof(chrome.runtime)=='undefined'){
 				const isGetSettingsRequest = !!(data && data.cmd === "getSettings");
 				const isLLMProviderTestRequest = !!(data && (data.cmd === "testLLMProvider" || data.cmd === "testCensorModel"));
 				const isAiEventRequest = !!(data && data.cmd === "aiEvent");
-				const timeoutMs = isAiEventRequest ? 195000 : isLLMProviderTestRequest ? 60000 : (isGetSettingsRequest ? 3000 : 500);
+				const timeoutMs = isAiEventRequest ? 195000 : data?.cmd === "testCensorModel" ? getCensorTestTimeout(data.model) : isLLMProviderTestRequest ? 60000 : (isGetSettingsRequest ? 3000 : 500);
 				
 				// Create promise with timeout
 				const promise = new Promise((resolve) => {
@@ -5878,11 +5878,16 @@ function updateCensorModelHelp() {
 
 async function refreshCensorModelStatus() {
     const status = document.getElementById('censorModelStatus');
-    if (!status || !document.getElementById('wrapper-chatbot-Censor-options')?.checked) return;
+    if (!status || (!document.getElementById('wrapper-chatbot-Censor-options')?.checked && !document.getElementById('testCensorModel')?.disabled)) return;
     try {
         const response = await sendRuntimeCommandMessage({ cmd: 'getCensorModelStatus' }, 3000, false);
         if (response && response.mode === document.getElementById('censorModel')?.value) status.textContent = response.text || '';
     } catch (_error) {}
+}
+
+function getCensorTestTimeout(mode) {
+    // Qwen permits 30 minutes to initialize and 5 minutes to generate; IBM permits 2 minutes.
+    return mode === 'qwen' ? 2160000 : mode === 'ibm' ? 130000 : 60000;
 }
 
 async function testSelectedCensorModel() {
@@ -5891,12 +5896,13 @@ async function testSelectedCensorModel() {
     if (!button || !output) return;
     button.disabled = true;
     output.textContent = 'Testing…';
+    const mode = document.getElementById('censorModel').value;
     try {
         const response = await sendRuntimeCommandMessage({
-            cmd: 'testCensorModel', model: document.getElementById('censorModel').value,
+            cmd: 'testCensorModel', model: mode,
             text: document.getElementById('censorTestText').value,
             settingsOverride: collectLLMProviderTestSettings()
-        }, 60000, false);
+        }, getCensorTestTimeout(mode), false);
         output.textContent = response?.success ? response.text : 'Unavailable: ' + (response?.error || 'No response. Model loading may still be in progress.');
     } catch (error) {
         output.textContent = 'Unavailable: ' + (error.message || String(error));
