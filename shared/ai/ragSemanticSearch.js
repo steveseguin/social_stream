@@ -38,6 +38,10 @@
             });
         }
         function warm() {
+            if (global.location && global.location.protocol === 'moz-extension:') {
+                status('Using keyword search. Local semantic search is not included in the Firefox extension.');
+                return null;
+            }
             if (closed || ready || building || Date.now() < retryAt) return building;
             building = (async function () {
                 try {

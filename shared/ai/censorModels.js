@@ -91,6 +91,11 @@
             running = false;
         }
         function review(input, test) {
+            if (global.location && global.location.protocol === 'moz-extension:') {
+                var message = 'Local censor models are not included in the Firefox extension. Select the main AI model for censoring.';
+                status('Unavailable: ' + message);
+                return Promise.reject(new Error(message));
+            }
             if (closed) return Promise.reject(new Error('Censor model changed.'));
             if (input.text.length > 16000) {
                 if (!test) unreviewed++;

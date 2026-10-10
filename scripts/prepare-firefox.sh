@@ -12,10 +12,8 @@ echo "=== Preparing Firefox Add-on Build ==="
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
-# Omit unused legacy Kokoro WASM variants, the unused Transformers JSEP
-# runtime (the worker selects asyncify), and the original full emoji font.
-# Keep the active Kokoro JSEP runtime, Piper WASM fallbacks, Transformers
-# asyncify/standard runtimes, and the subset font used by the overlays.
+# Firefox ships browser voices and API-based AI/TTS. Local synthesis
+# engines and models are omitted to stay within the add-on size limit.
 rsync -a \
     --exclude='.git/' \
     --exclude='.github/' \
@@ -65,14 +63,15 @@ rsync -a \
     --exclude='cws-build/' \
     --exclude='firefox-build/' \
     --exclude='web-ext-artifacts/' \
-    --exclude='thirdparty/models/' \
-    --exclude='thirdparty/piper/piper-voices/' \
-    --exclude='thirdparty/kitten-tts/' \
+    --exclude='/thirdparty/models/' \
+    --exclude='/thirdparty/transformersjs/' \
+    --exclude='/thirdparty/neural-tts/' \
+    --exclude='/thirdparty/piper/' \
+    --exclude='/thirdparty/kitten-tts/' \
+    --exclude='/thirdparty/kokoro*' \
+    --exclude='/thirdparty/ort-wasm*' \
+    --exclude='/thirdparty/espeak*' \
     --exclude='thirdparty/*.onnx' \
-    --exclude='/thirdparty/kokoro-ort-wasm.wasm' \
-    --exclude='/thirdparty/kokoro-ort-wasm-simd.wasm' \
-    --exclude='/thirdparty/transformersjs/ort/ort-wasm-simd-threaded.jsep.mjs' \
-    --exclude='/thirdparty/transformersjs/ort/ort-wasm-simd-threaded.jsep.wasm' \
     --exclude='/thirdparty/NotoColorEmoji.full.ttf' \
     --exclude='*.md' \
     --exclude='package.json' \
@@ -107,6 +106,37 @@ jq '
 
 mv "$BUILD_DIR/manifest.json.tmp" "$BUILD_DIR/manifest.json"
 
+# Keep unavailable choices visible for saved settings, but prevent new selections.
+python3 - "$BUILD_DIR" <<'PY'
+from pathlib import Path
+import json
+import re
+import sys
+
+root = Path(sys.argv[1])
+unavailable = {'kokoro', 'kitten', 'piper', 'espeak', 'localgemma', 'localqwen', 'localqwen2b', 'ibm', 'qwen', 'semantic'}
+
+def disable_option(match):
+    attrs, label = match.groups()
+    value = re.search(r'\bvalue="([^"]+)"', attrs)
+    if not value or value.group(1) not in unavailable:
+        return match.group()
+    return '<option' + attrs + ' disabled>' + label + ' (not included in Firefox)</option>'
+
+for page in ('popup.html', 'cohost.html'):
+    path = root / page
+    source = path.read_text(encoding='utf-8')
+    source = re.sub(r'<option([^>]*)>([^<]*)</option>', disable_option, source)
+    path.write_bytes(source.encode('utf-8'))
+
+manifest_path = root / 'manifest.json'
+manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+for group in manifest.get('web_accessible_resources', []):
+    group['resources'] = [resource for resource in group['resources']
+                          if not resource.startswith(('thirdparty/models/', 'thirdparty/neural-tts/', 'thirdparty/piper/'))]
+manifest_path.write_bytes((json.dumps(manifest, indent=2) + '\n').encode('utf-8'))
+PY
+
 # Fix the known parser error in this legacy source without changing Chrome's
 # source file. This can be removed once the shared source is corrected.
 if [[ -f "$BUILD_DIR/sources/bilibilicom.js" ]]; then
@@ -125,16 +155,6 @@ required_files=(
     "popup.js"
     "settings/options.html"
     "thirdparty/NotoColorEmoji.ttf"
-    "thirdparty/kokoro-ort-wasm-simd-threaded.jsep.wasm"
-    "thirdparty/ort-wasm-simd-threaded.jsep.mjs"
-    "thirdparty/ort-wasm.wasm"
-    "thirdparty/ort-wasm-simd.wasm"
-    "thirdparty/piper/piper_phonemize.wasm"
-    "thirdparty/piper/piper_phonemize.data"
-    "thirdparty/transformersjs/ort/ort-wasm-simd-threaded.asyncify.mjs"
-    "thirdparty/transformersjs/ort/ort-wasm-simd-threaded.asyncify.wasm"
-    "thirdparty/transformersjs/ort/ort-wasm-simd-threaded.mjs"
-    "thirdparty/transformersjs/ort/ort-wasm-simd-threaded.wasm"
 )
 
 for file in "${required_files[@]}"; do

@@ -188,6 +188,9 @@
         }
 
         async function connect(providerKey, overrides) {
+            if (global.location && global.location.protocol === 'moz-extension:') {
+                throw new Error('Local AI models are not included in the Firefox extension. Select Ollama or another AI service.');
+            }
             var catalog = global.SSNBrowserModelCatalog;
             var initPayload;
             var initKey;

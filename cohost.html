@@ -2058,6 +2058,9 @@
 				}
 			}
 			function createLocalBrowserWorker() {
+				if (window.location.protocol === "moz-extension:") {
+					throw new Error("Local AI models are not included in the Firefox extension. Select an AI service.");
+				}
 				if (window.ssappLocalModel && window.SSNLocalBrowserLLM) {
 					return window.SSNLocalBrowserLLM.createAppWorker(window.ssappLocalModel);
 				}

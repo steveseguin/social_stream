@@ -194,7 +194,7 @@ def validate_runtime_sources(root, pages, english_fallback=False):
 def runtime_source_hash(root, source):
     text = (root / source).read_text(encoding="utf-8")
     if source.endswith(".html") and source != "popup.html":
-        text = '\n'.join(re.findall(r'<script\b[^>]*>([\s\S]*?)</script\s*>', clean_source(text), re.I))
+        text = '\n'.join(re.findall(r'<script\b[^>]*>([\s\S]*?)</script(?:\s[^>]*|/[^>]*)?>', clean_source(text), re.I))
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
