@@ -87,6 +87,10 @@ body .textInputContainer .textInputUploadButton { grid-area:2 / 2; position:stat
 .popup-range-field { margin:6px 0 8px 40px; }
 .popup-range-field > label, .popup-range-field > small { display:block; margin:4px 0; }
 body .options .popup-range-field input[type="range"] { width:150px; max-width:calc(100% - 64px); margin-left:0; }
+.popup-range-track { display:inline-block; width:260px; max-width:calc(100% - 54px); vertical-align:top; }
+body .popup-range-field .popup-range-track input[type="range"] { width:100%; max-width:100%; margin:0; }
+.popup-range-labels { position:relative; display:flex; justify-content:space-between; font-size:.85em; }
+.popup-range-normal { position:absolute; left:var(--range-normal-position, 50%); transform:translateX(-50%); }
 
 /* Normal actions are neutral; test/play actions keep the familiar blue style. */
 body .options button:not(.glowingButton):not(.copy-link-btn),
