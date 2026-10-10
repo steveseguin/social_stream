@@ -22,10 +22,9 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.1.0 | 0.4.2 | Versioned responses, request and operation IDs, SSE status events, token-file and stored credentials, visible-app controls, expanded source/settings discovery, and version-aware MCP tools |
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
-## Unreleased structured app prompts
+## 0.4.34 structured app prompts
 
-Minimum supported build: the SSApp development checkout based on 0.4.33 containing
-the structured-prompt correction; no released minimum has been assigned.
+Minimum SSApp: 0.4.34.
 Structured SSApp prompts retain their child window, instructions, defaults, and
 optional checkboxes during MCP interaction. Use `listAppWindows`, then inspect and
 interact with that child window. Plain JavaScript prompts still use the pending
@@ -39,10 +38,9 @@ bid, giveaway-count, and pinned-item updates. Stream-event capture settings appl
 The source reconnects chat and auctions independently. Auction events have no
 recovery snapshot. The control API and MCP command schemas are unchanged.
 
-## Unreleased Whatnot regional show links
+## 0.4.34 Whatnot regional show links
 
-Minimum supported build: the SSApp development checkout based on 0.4.33 containing
-the Whatnot regional-link update; no released minimum has been assigned.
+Minimum SSApp: 0.4.34.
 Whatnot `addSource` and source updates accept regional show URLs such as
 `https://www.whatnot.com/en-GB/live/UUID`, including regional dashboard show URLs.
 The chat-only page requires the corresponding updated Social Stream page sources.
