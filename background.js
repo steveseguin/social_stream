@@ -203,7 +203,7 @@ function getOverlayDisplayMessage(data) {
 	if (getSettingFlag("showdisplaynameusername") && typeof data.chatname === "string" && typeof data.username === "string") {
 		const username = data.username.trim();
 		const displayName = data.chatname.trim();
-		const suffix = " (" + escapeHtml(username) + ")";
+		const suffix = " (" + username + ")";
 		if (username && displayName && displayName.toLowerCase() !== username.toLowerCase() && !displayName.toLowerCase().endsWith(suffix.toLowerCase())) {
 			displayMessage.chatname = displayName + suffix;
 			// Retain the source name for moderation of displayed and queued rows.

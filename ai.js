@@ -2321,6 +2321,7 @@ function getLocalCensor(mode) {
         mode,
         workerPath: asset('shared/ai/censor-worker.js'),
         qwenWorkerPath: getLocalBrowserWorkerPath(),
+        qwenPrompt: text => buildCensorPrompt(null, text, [], [], 'localqwen'),
         onStatus: text => { if (localCensor === engine) localCensorStatus = text; },
         onBlock: input => {
             if (localCensor !== engine || getCensorModelSelection() !== mode || !getAiSettingFlag('ollamaCensorBot')) return;
