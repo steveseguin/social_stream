@@ -4207,12 +4207,14 @@ function removeTTSProviderParams(url, selectedProvider=null) {
     const providerParams = {
         system: ['lang', 'voice', 'rate', 'pitch'],
         elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate','voice11'],
-        google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
-        gemini: ['geminikey', 'geminimodel', 'voicegemini', 'geminilang', 'geministyle', 'geminiprompt'],
+        google: ['googleapikey', 'googleAPIKey', 'ttskey', 'googlettskey', 'googlevoice', 'voicegoogle', 'googleaudioprofile', 'googlerate', 'googlepitch', 'googlelang'],
+        gemini: ['geminikey', 'geminiapikey', 'geminiApiKey', 'geminimodel', 'voicegemini', 'geminilang', 'geministyle', 'geminiprompt'],
         fish: ['fishkey', 'voicefish', 'fishmodel', 'fishspeed', 'fishendpoint'],
         speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
-        kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
-        kitten: ['kittenvoice', 'kittenspeed', 'kittensamplerate'],
+        kokoro: ['kokoro', 'kokorotts', 'kokorokey', 'voicekokoro', 'kokorospeed', 'korospeed', 'kokorodevice', 'kokorobackend', 'kokorodtype', 'kokoroprecision', 'kokororuntime', 'kokoroplayback', 'kokorowasm', 'kokorowebgpu'],
+        kitten: ['kitten', 'kittentts', 'kittenvoice', 'kittenspeed', 'kittensamplerate', 'kittenmodel', 'kittenplayback'],
+        piper: ['piper', 'pipertts', 'pipervoice', 'piperspeed'],
+        espeak: ['espeak', 'espeaktts', 'espeakvoice', 'espeakspeed', 'espeakpitch', 'espeakvariant'],
         openai: ['openaikey', 'customttskey', 'localttskey', 'openaiendpoint', 'customttsendpoint', 'localttsendpoint', 'voiceopenai', 'customttsvoice', 'localttsvoice', 'openaimodel', 'customttsmodel', 'localttsmodel', 'openaispeed', 'customttsspeed', 'localttsspeed', 'openaiformat', 'customttsformat', 'localttsformat', 'openaicustomvoice', 'openaicustommodelx']
     };
   
@@ -4227,7 +4229,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
     }
   }
   const selectedProviderValue = (selectedProvider || "").toString().toLowerCase();
-  selectedProvider = providerAliases[(selectedProvider || "").toString().toLowerCase()] || selectedProvider;
+  selectedProvider = providerAliases[selectedProviderValue] || selectedProviderValue;
   
   // Get all parameters except those for the selected provider
   const paramsToRemove = Object.keys(providerParams)
