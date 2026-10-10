@@ -29,6 +29,9 @@ const { chromium } = require("playwright");
           if (!this.listeners[type]) this.listeners[type] = [];
           this.listeners[type].push({ callback, once: !!(options && options.once) });
         }
+        removeEventListener(type, callback) {
+          this.listeners[type] = (this.listeners[type] || []).filter(listener => listener.callback !== callback);
+        }
         dispatch(type, event) {
           const propertyHandler = this["on" + type];
           if (typeof propertyHandler === "function") propertyHandler(event);

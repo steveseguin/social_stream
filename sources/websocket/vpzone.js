@@ -22,7 +22,11 @@
 	const READY_STATE = { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3 };
 
 	try {
-		if (window.__SSN_VPZONE_WS_LOADED__) return;
+		if (window.__SSN_VPZONE_WS_LOADED__) {
+			// SSApp injects the runtime bridge after the page has loaded this script.
+			if (extAvailable()) installPageBridgeResponder();
+			return;
+		}
 		window.__SSN_VPZONE_WS_LOADED__ = true;
 	} catch (e) {}
 	try {
@@ -470,7 +474,7 @@
 	}
 
 	function installPageBridgeResponder() {
-		if (!extAvailable()) return;
+		if (!extAvailable() || window.__SSN_VPZONE_WS_RUNTIME_LISTENER__) return;
 		installFetchBridgeResponder();
 		try {
 			chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -487,7 +491,8 @@
 				} catch (e) {}
 				sendResponse(false);
 			});
-		} catch (e) {}
+			window.__SSN_VPZONE_WS_RUNTIME_LISTENER__ = true;
+		} catch (e) { return; }
 		window.addEventListener("message", function (event) {
 			var message = event && event.data;
 			if (!message || typeof message !== "object" || message.source === FETCH_BRIDGE_SOURCE) return;
@@ -1752,7 +1757,7 @@
 
 	function bridge() {
 		installFetchBridgeResponder();
-		if (extAvailable()) {
+		if (extAvailable() && !window.__SSN_VPZONE_WS_RUNTIME_LISTENER__) {
 			try {
 				chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 					try {
@@ -1784,7 +1789,10 @@
 					}
 					sendResponse(false);
 				});
+				window.__SSN_VPZONE_WS_RUNTIME_LISTENER__ = true;
 			} catch (e) {}
+		}
+		if (extAvailable()) {
 			try {
 				chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, function (response) {
 					if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) return;

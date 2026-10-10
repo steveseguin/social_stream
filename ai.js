@@ -590,7 +590,8 @@ async function fetchOpenCodeZenModels(apiKey = "", force = false) {
     try {
         let payload;
         if (typeof ipcRenderer !== "undefined" && typeof fetchNode !== "undefined" && fetchNode) {
-            const response = await fetchNode(OPENCODE_ZEN_MODELS_URL, headers, "GET", null);
+            const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
+            const response = await electronFetch(OPENCODE_ZEN_MODELS_URL, headers, "GET", null);
             if (!response || (response.status && response.status >= 400)) {
                 throw new Error("OpenCode model list returned " + (response && response.status ? response.status : "no response"));
             }
@@ -676,7 +677,8 @@ async function getOpenCodeGoFallbackModels(apiKey) {
         let payload;
         const url = 'https://opencode.ai/zen/go/v1/models';
         if (typeof ipcRenderer !== 'undefined' && typeof fetchNode !== 'undefined') {
-            const response = await fetchNode(url, headers, 'GET', null);
+            const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
+            const response = await electronFetch(url, headers, 'GET', null);
             if (!response || response.status >= 400) throw new Error('Go catalog unavailable');
             payload = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
         } else {
@@ -905,7 +907,8 @@ async function getFirstAvailableModel(exclude = null, llmSettings = null) {
         return new Promise(async (resolve, reject) => {
             let ccc = setTimeout(() => reject(new Error('Request timed out')), 10000);
             try {
-                const xhr = await fetchNode(`${ollamaendpoint}/api/tags`);
+                const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
+                const xhr = await electronFetch(`${ollamaendpoint}/api/tags`, {}, 'GET', null, { kind: 'llm', provider: 'ollama' }, 10000);
                 clearTimeout(ccc);
                 const datar = JSON.parse(xhr.data);
                 if (!datar?.models?.length) {
@@ -991,11 +994,16 @@ const streamingPostNode = async function (URL, body, headers = {}, onChunk = nul
 	}
 };
 
-function signAWSRequest(method, url, headers, body, accessKey, secretKey, region, service = 'bedrock') {
+async function signAWSRequest(method, url, headers, body, accessKey, secretKey, region, service = 'bedrock') {
     const timestamp = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '');
     const date = timestamp.slice(0, 8);
     
-    // Add required headers
+    // Normalize names before sorting, and sign the host supplied by the transport.
+    const normalizedHeaders = {};
+    Object.keys(headers).forEach(key => {
+        normalizedHeaders[key.toLowerCase()] = String(headers[key]).trim().replace(/\s+/g, ' ');
+    });
+    headers = normalizedHeaders;
     headers['x-amz-date'] = timestamp;
     
     // If content-type is not already set
@@ -1005,36 +1013,38 @@ function signAWSRequest(method, url, headers, body, accessKey, secretKey, region
     
     // Parse URL
     const parsedUrl = new URL(url);
-    const canonicalUri = parsedUrl.pathname || '/';
+    function uriEncode(value) {
+        return encodeURIComponent(value).replace(/[!'()*]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+    }
+    const canonicalUri = (parsedUrl.pathname || '/').split('/').map(uriEncode).join('/');
+    const canonicalHeaderValues = { ...headers, host: parsedUrl.host };
     
     // Create canonical request
-    const canonicalHeaders = Object.keys(headers)
+    const canonicalHeaders = Object.keys(canonicalHeaderValues)
         .sort()
-        .map(key => `${key.toLowerCase()}:${headers[key].trim()}\n`)
+        .map(key => `${key}:${canonicalHeaderValues[key]}\n`)
         .join('');
     
-    const signedHeaders = Object.keys(headers)
+    const signedHeaders = Object.keys(canonicalHeaderValues)
         .sort()
         .map(key => key.toLowerCase())
         .join(';');
     
     // Create canonical query string
     const searchParams = parsedUrl.searchParams;
-    const canonicalQueryString = Array.from(searchParams.keys())
+    const canonicalQueryString = Array.from(searchParams.entries())
+        .map(entry => `${uriEncode(entry[0])}=${uriEncode(entry[1])}`)
         .sort()
-        .map(key => {
-            return `${encodeURIComponent(key)}=${encodeURIComponent(searchParams.get(key))}`;
-        })
         .join('&');
     
     // Create payload hash
     let payloadHash;
     if (typeof body === 'string') {
-        payloadHash = sha256(body);
+        payloadHash = await sha256(body);
     } else if (body) {
-        payloadHash = sha256(JSON.stringify(body));
+        payloadHash = await sha256(JSON.stringify(body));
     } else {
-        payloadHash = sha256('');
+        payloadHash = await sha256('');
     }
     
     const canonicalRequest = [
@@ -1053,23 +1063,25 @@ function signAWSRequest(method, url, headers, body, accessKey, secretKey, region
         algorithm,
         timestamp,
         scope,
-        sha256(canonicalRequest)
+        await sha256(canonicalRequest)
     ].join('\n');
     
     // Calculate signature
-    function hmac(key, string) {
-        const hmacObj = crypto.createHmac('sha256', key);
-        hmacObj.update(string);
-        return hmacObj.digest();
+    async function hmac(key, string) {
+        const encoder = new TextEncoder();
+        const cryptoKey = await window.crypto.subtle.importKey('raw',
+            typeof key === 'string' ? encoder.encode(key) : key,
+            { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+        return window.crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(string));
     }
     
     let signingKey = 'AWS4' + secretKey;
-    signingKey = hmac(signingKey, date);
-    signingKey = hmac(signingKey, region);
-    signingKey = hmac(signingKey, service);
-    signingKey = hmac(signingKey, 'aws4_request');
+    signingKey = await hmac(signingKey, date);
+    signingKey = await hmac(signingKey, region);
+    signingKey = await hmac(signingKey, service);
+    signingKey = await hmac(signingKey, 'aws4_request');
     
-    const signature = hmacToHex(hmac(signingKey, stringToSign));
+    const signature = hmacToHex(await hmac(signingKey, stringToSign));
     
     // Add the signature to the headers
     headers['Authorization'] = `${algorithm} Credential=${accessKey}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
@@ -1077,20 +1089,9 @@ function signAWSRequest(method, url, headers, body, accessKey, secretKey, region
     return headers;
 }
 
-function sha256(message) {
-    if (crypto) {
-        return crypto.createHash('sha256').update(message).digest('hex');
-    } else if (window.crypto && window.crypto.subtle) {
-        // For browser environments
-        const encoder = new TextEncoder();
-        const data = encoder.encode(message);
-        return window.crypto.subtle.digest('SHA-256', data)
-            .then(hash => {
-                return Array.from(new Uint8Array(hash))
-                    .map(b => b.toString(16).padStart(2, '0'))
-                    .join('');
-            });
-    }
+async function sha256(message) {
+    const data = new TextEncoder().encode(message);
+    return hmacToHex(await window.crypto.subtle.digest('SHA-256', data));
 }
 
 function hmacToHex(hmacBuffer) {
@@ -1268,6 +1269,54 @@ function getLocalBrowserProviderSettings(providerKey, llmSettings, modelOverride
     };
 }
 
+let electronLLMStreamSequence = 0;
+
+function streamElectronLLMRequest(request, onChunk, signal) {
+    return new Promise((resolve, reject) => {
+        // Separate simultaneous requests, including requests from different windows.
+        const channelId = 'streaming-nodepost-' + Date.now() + '-' + (++electronLLMStreamSequence) + '-' + Array.from(crypto.getRandomValues(new Uint32Array(2))).join('-');
+        let settled = false;
+        const finish = (error, result) => {
+            if (settled) return;
+            settled = true;
+            ipcRenderer.removeListener(channelId, onMessage);
+            if (signal) signal.removeEventListener('abort', onAbort);
+            window.removeEventListener('pagehide', onAbort);
+            if (error) reject(error);
+            else resolve(result);
+        };
+        const onAbort = () => {
+            ipcRenderer.send(channelId + '-abort');
+            finish(new DOMException('Aborted', 'AbortError'));
+        };
+        const onMessage = (event, chunk) => {
+            if (settled) return;
+            if (chunk === null || (typeof chunk === 'object' && chunk.error)) {
+                finish(null, chunk);
+                return;
+            }
+            try {
+                onChunk(chunk);
+            } catch (error) {
+                ipcRenderer.send(channelId + '-abort');
+                finish(error);
+            }
+        };
+        if (signal && signal.aborted) {
+            finish(new DOMException('Aborted', 'AbortError'));
+            return;
+        }
+        ipcRenderer.on(channelId, onMessage);
+        if (signal) signal.addEventListener('abort', onAbort, { once: true });
+        window.addEventListener('pagehide', onAbort, { once: true });
+        try {
+            ipcRenderer.send('streaming-nodepost', Object.assign({}, request, { channelId }));
+        } catch (error) {
+            finish(error);
+        }
+    });
+}
+
 async function callLLMAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images = null, options = {}) {
 	const llmSettings = { ...(settings || {}), ...(options.settings || {}) };
 	
@@ -1336,8 +1385,6 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			endpoint = `https://bedrock-runtime.${llmSettings.bedrockRegion?.textsetting || "us-east-1"}.amazonaws.com/model`;
 			model = model || llmSettings.bedrockmodel?.textsetting || "anthropic.claude-sonnet-5";
 			apiKey = llmSettings.bedrockAccessKey?.textsetting;
-			const secretKey = llmSettings.bedrockSecretKey?.textsetting;
-			const region = llmSettings.bedrockRegion?.textsetting || "us-east-1";
 			callback = null; // TODO: Implement streaming for Bedrock if desired
 			break;
 		case "openrouter":
@@ -1622,7 +1669,12 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		try {
 			const modelId = model;
 			model = modelId;
-			const bedrockEndpoint = `${endpoint}/${modelId}/invoke`;
+			const bedrockEndpoint = `${endpoint}/${encodeURIComponent(modelId)}/invoke`;
+			const secretKey = llmSettings.bedrockSecretKey?.textsetting;
+			const region = llmSettings.bedrockRegion?.textsetting || "us-east-1";
+			if (!apiKey || !secretKey) {
+				throw new Error('Bedrock requires an AWS access key and secret key.');
+			}
 			
 			let requestBody;
 			
@@ -1670,7 +1722,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			};
 			
 			// Sign the request
-			const signedHeaders = signAWSRequest(
+			const signedHeaders = await signAWSRequest(
 				'POST', 
 				bedrockEndpoint, 
 				headers, 
@@ -1682,7 +1734,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			);
 			
 			if (typeof ipcRenderer !== 'undefined' && !options.strictEndpoint) {
-				const response = await fetchNode(bedrockEndpoint, signedHeaders, 'POST', requestBody);
+				const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
+				const response = await electronFetch(bedrockEndpoint, signedHeaders, 'POST', requestBody);
 				
 				if (response.status !== 200) {
 					let errorMessage = '';
@@ -1847,46 +1900,26 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		try {
 			if (typeof ipcRenderer !== 'undefined' && !options.strictEndpoint) {
 				if (callback) {
-					return new Promise((resolve, reject) => {
-						const channelId = `streaming-nodepost-${Date.now()}`;
-						let fullResponse = '';
-						const streamProcessor = createStreamingLineProcessor(callback, (resp) => {
-							fullResponse += resp;
-						});
-						
-						ipcRenderer.on(channelId, (event, chunk) => {
-							if (chunk === null) {
-								streamProcessor.flush();
-								resolve(stripLLMReasoningOutput(fullResponse));
-							} else if (typeof chunk === 'object' && chunk.error) {
-								const responseMetadata = getLLMResponseMetadata(chunk.headers, chunk);
-								const err = createLLMError(buildContext(), {
-									status: chunk.status || chunk.error?.status || null,
-									code: chunk.code || chunk.error?.code || null,
-									message: chunk.message || chunk.error?.message || 'Streaming response returned an error.',
-									details: chunk,
-									...responseMetadata
-								});
-								reject(err);
-							} else {
-								streamProcessor.push(chunk);
-							}
-						});
-
-						ipcRenderer.send('streaming-nodepost', {
-							channelId,
-							url: endpoint,
-							body: message,
-							headers,
-							diagnostics: { kind: 'llm', provider, model: message.model }
-						});
-
-						if (abortController) {
-							abortController.signal.addEventListener('abort', () => {
-								ipcRenderer.send(`${channelId}-abort`);
-							});
-						}
-					});
+                    let fullResponse = '';
+                    const streamProcessor = createStreamingLineProcessor(callback, resp => { fullResponse += resp; });
+                    const result = await streamElectronLLMRequest({
+                        url: endpoint,
+                        body: message,
+                        headers,
+                        diagnostics: { kind: 'llm', provider, model: message.model }
+                    }, chunk => streamProcessor.push(chunk), abortController && abortController.signal);
+                    if (result && result.error) {
+                        const responseMetadata = getLLMResponseMetadata(result.headers, result);
+                        throw createLLMError(buildContext(), {
+                            status: result.status || result.error?.status || null,
+                            code: result.code || result.error?.code || null,
+                            message: result.message || result.error?.message || 'Streaming response returned an error.',
+                            details: result,
+                            ...responseMetadata
+                        });
+                    }
+                    streamProcessor.flush();
+                    return stripLLMReasoningOutput(fullResponse);
 				} else {
 					const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
 					const response = await electronFetch(endpoint, headers, 'POST', message, {
@@ -2044,48 +2077,23 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
             if (typeof ipcRenderer !== 'undefined' && !options.strictEndpoint) {  // ollama still
                 // Your existing Electron implementation
                 if (isStreaming) {
-                    response = await new Promise((resolve, reject) => {
-                        const channelId = `streaming-nodepost-${Date.now()}`;
-                        const streamProcessor = createStreamingLineProcessor(callback, (resp, reasoning=false) => { fullResponse += resp; });
-                        
-                        ipcRenderer.on(channelId, (event, chunk) => {
-                            if (chunk === null) {
-                                streamProcessor.flush();
-                                responseComplete = true;
-                                resolve({ ok: true });
-                            } else if (typeof chunk === 'object' && chunk.error) {
-                                resolve(chunk);
-                            } else {
-                                streamProcessor.push(chunk);
-                            }
-                        });
-                        
-                        const message = {
-                            model: currentModel,
-                            prompt: prompt,
-                            stream: true,
-							keep_alive: llmSettings.ollamaKeepAlive ?  parseInt(llmSettings.ollamaKeepAlive.numbersetting)+"m" : "5m"
-                        };
-                        
-                        if (ollamaImages.length){
-                            message.images = ollamaImages;
-                        }
-
-                        ipcRenderer.send('streaming-nodepost', {
-                            channelId,
-                            url: `${endpoint}/api/generate`,
-                            body: message,
-                            headers: { 'Content-Type': 'application/json' }
-                        });
-
-                        abortController.signal.addEventListener('abort', () => {
-                            ipcRenderer.send(`${channelId}-abort`);
-                        });
-                    });
-
-                    if (response.error) {
-                        return response;
-                    }
+                    const streamProcessor = createStreamingLineProcessor(callback, resp => { fullResponse += resp; });
+                    const message = {
+                        model: currentModel,
+                        prompt: prompt,
+                        stream: true,
+                        keep_alive: llmSettings.ollamaKeepAlive ? parseInt(llmSettings.ollamaKeepAlive.numbersetting) + "m" : "5m"
+                    };
+                    if (ollamaImages.length) message.images = ollamaImages;
+                    response = await streamElectronLLMRequest({
+                        url: `${endpoint}/api/generate`,
+                        body: message,
+                        headers: { 'Content-Type': 'application/json' },
+                        diagnostics: { kind: 'llm', provider: 'ollama', model: currentModel }
+                    }, chunk => streamProcessor.push(chunk), abortController && abortController.signal);
+                    if (response && response.error) return response;
+                    streamProcessor.flush();
+                    responseComplete = true;
                 } else {
                     // Your existing non-streaming Electron implementation
                     const message = {
@@ -2098,7 +2106,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                         message.images = ollamaImages;
                     }
                     
-                    response = fetchNode(`${endpoint}/api/generate`, {
+                    const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
+                    response = await electronFetch(`${endpoint}/api/generate`, {
                         'Content-Type': 'application/json',
                     }, 'POST', message);
                     
