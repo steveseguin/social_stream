@@ -292,7 +292,21 @@
       return ids;
     }
 
-    async synthesize(text, speed = 1.0) {
+    // One clip keeps sender and message together in the playback/skip queue.
+    async synthesizeWithPause(intro, message, speed = 1.0, cancelled = () => false) {
+      const first = await this.synthesize(intro, speed, true);
+      if (cancelled()) return null;
+      const second = await this.synthesize(message, speed, true);
+      if (cancelled()) return null;
+      const sampleRate = this.voiceConfig.audio?.sample_rate || 22050;
+      const pauseSamples = Math.round(sampleRate * 0.3);
+      const samples = new Float32Array(first.length + pauseSamples + second.length);
+      samples.set(first);
+      samples.set(second, first.length + pauseSamples);
+      return this.createWAV(samples, sampleRate);
+    }
+
+    async synthesize(text, speed = 1.0, returnSamples = false) {
       // Ensure initialization is complete
       if (!this.initialized) {
         console.log('Waiting for Piper TTS initialization...');
@@ -346,6 +360,9 @@
         
         const audioData = results.output.data;
         console.log(`Generated audio: ${audioData.length} samples`);
+
+        // Copy before another inference can reuse the model output buffer.
+        if (returnSamples) return new Float32Array(audioData);
 
         // Convert to WAV format
         const sampleRate = this.voiceConfig.audio?.sample_rate || 22050;

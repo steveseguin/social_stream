@@ -8132,6 +8132,22 @@ function updateSettings(ele, sync = true, value = null) {
     if (ele.target) {
         ele = this;
     }
+
+    // Keep the existing simpletts2 setting while presenting a positive name switch.
+    if (ele.dataset.readSender) {
+        const stored = document.querySelector('[data-param' + ele.dataset.readSender + '="simpletts2"]');
+        if (stored) {
+            stored.checked = !ele.checked;
+            updateSettings(stored, sync);
+        }
+        return;
+    }
+    [1, 2, 10].forEach(function(index) {
+        if (ele.dataset['param' + index] === 'simpletts2') {
+            const toggle = document.getElementById('readSenderName' + index);
+            if (toggle) toggle.checked = !ele.checked;
+        }
+    });
 	
     
     const target = ele.dataset.target || null;

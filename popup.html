@@ -3270,13 +3270,6 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="do-not-say-says-or-someone-says-with-tts">🚫🗣️ Do not say "says" or "someone says" with TTS </span>
 								</div>
-								<div data-keywords="strip names remove someone says intro phrasing minimalist tts">
-									<label class="switch">
-										<input type="checkbox" data-param1="simpletts2" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="do-not-read-out-chatname-and-someone-says-when-using-tts">🚫🗣️ Do not read out chatname and "someone says" when using TTS. </span>
-								</div>
 
 								<div data-keywords="urls links address spelled out pronounce hyperlink">
 									<label class="switch">
@@ -3467,6 +3460,15 @@ input:checked + .slider:before {
 								<option value="piper">Piper TTS</option>
 								<option value="espeak">eSpeak TTS</option>
 							</select>
+							<div class="tts-name-option" data-keywords="read sender name chatname message only simpletts2">
+								<input type="checkbox" data-param1="simpletts2" hidden />
+								<label class="switch">
+									<input type="checkbox" id="readSenderName1" data-read-sender="1" checked aria-labelledby="readSenderNameLabel1" aria-describedby="readSenderNameHelp1" />
+									<span class="slider round"></span>
+								</label>
+								<label id="readSenderNameLabel1" for="readSenderName1">Read sender's name</label>
+								<small id="readSenderNameHelp1">Turn off for message-only speech.</small>
+							</div>
 						</div>
 
 						<div id="ttsButton" class="hidden"></div>
@@ -5728,13 +5730,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="do-not-say-says-or-someone-says-with-tts">🚫🗣️ Do not say "says" or "someone says" with TTS </span>
                                 </div>
-                                <div>
-                                    <label class="switch">
-                                        <input type="checkbox" data-param2="simpletts2" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="do-not-read-out-chatname-and-someone-says-when-using-tts">🚫🗣️ Do not read out chatname and "someone says" when using TTS. </span>
-                                </div>
+
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param2="readouturls" />
@@ -5769,6 +5765,15 @@ input:checked + .slider:before {
                                 <option value="piper">Piper TTS</option>
                                 <option value="espeak">eSpeak TTS</option>
                             </select>
+                            <div class="tts-name-option" data-keywords="read sender name chatname message only simpletts2">
+                                <input type="checkbox" data-param2="simpletts2" hidden />
+                                <label class="switch">
+                                    <input type="checkbox" id="readSenderName2" data-read-sender="2" checked aria-labelledby="readSenderNameLabel2" aria-describedby="readSenderNameHelp2" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <label id="readSenderNameLabel2" for="readSenderName2">Read sender's name</label>
+                                <small id="readSenderNameHelp2">Turn off for message-only speech.</small>
+                            </div>
                         </div>
 
                         <!-- System TTS Options -->
@@ -10468,13 +10473,6 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="do-not-say-says-or-the-bot-says-with-tts">🚫🗣️ Do not say "says" or "The bot says" with TTS </span>
 								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param10="simpletts2" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="do-not-read-out-botname-or-the-bot-says-when-using-tts">🚫🗣️ Do not read out bot name or "The bot says" when using TTS. </span>
-								</div>
 
 							</div>
 
@@ -10571,6 +10569,15 @@ input:checked + .slider:before {
 								<option value="piper">Piper TTS</option>
 								<option value="espeak">eSpeak TTS</option>
 							</select>
+							<div class="tts-name-option" data-keywords="read sender name chatname message only simpletts2">
+								<input type="checkbox" data-param10="simpletts2" hidden />
+								<label class="switch">
+									<input type="checkbox" id="readSenderName10" data-read-sender="10" checked aria-labelledby="readSenderNameLabel10" aria-describedby="readSenderNameHelp10" />
+									<span class="slider round"></span>
+								</label>
+								<label id="readSenderNameLabel10" for="readSenderName10">Read bot's name</label>
+								<small id="readSenderNameHelp10">Turn off for message-only speech.</small>
+							</div>
 						</div>
 
 						<div id="ttsButton10" class="hidden"></div>

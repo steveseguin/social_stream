@@ -158,6 +158,9 @@ TTS.normalizeSpeakOptions = function(options) {
     if (typeof options.voice === "string" && options.voice.trim()) {
         normalized.voice = options.voice.trim();
     }
+    if (typeof options.piperIntro === "string" && options.piperIntro.trim()) {
+        normalized.piperIntro = options.piperIntro.trim();
+    }
     return normalized;
 };
 
@@ -2054,6 +2057,11 @@ TTS.speechMeta = function(data, allow = false) {
             chatname = sanitizeSpeechText(data.chatname.toLowerCase());
         }
 
+        function speakChat(text) {
+            var options = TTS.TTSProvider === "piper" && chatname ? { piperIntro: chatname } : {};
+            TTS.speak(text, allow, options);
+        }
+
         if (tikTokGift) {
             var giftName = typeof meta.giftName === "string" ? meta.giftName : "";
             var giftCount = Number(meta.tiktokGiftCount || meta.count || meta.repeatCount);
@@ -2102,7 +2110,7 @@ TTS.speechMeta = function(data, allow = false) {
                 var giftSpeech = (chatname ? chatname + (giftVerb ? " " : ". ") : "") +
                     (giftVerb ? giftVerb + " " : "") + giftCount + " " + giftName;
                 if (!chatname && giftVerb) giftSpeech = giftSpeech.charAt(0).toUpperCase() + giftSpeech.slice(1);
-                TTS.speak(giftSpeech, allow);
+                speakChat(giftSpeech);
                 return;
             }
         }
@@ -2115,42 +2123,42 @@ TTS.speechMeta = function(data, allow = false) {
                 ///// NAME
                 if (TTS.English) {
                     if (msgPlain) {
-                        TTS.speak(chatname + " has donated " + donoText + " and says " + msgPlain, allow);
+                        speakChat(chatname + " has donated " + donoText + " and says " + msgPlain);
                     } else {
-                        TTS.speak(chatname + " has donated " + donoText, allow);
+                        speakChat(chatname + " has donated " + donoText);
                     }
                 } else if (msgPlain) {
-                    TTS.speak(chatname + ". " + donoText + ". " + msgPlain, allow);
+                    speakChat(chatname + ". " + donoText + ". " + msgPlain);
                 } else {
-                    TTS.speak(chatname + ". " + donoText, allow);
+                    speakChat(chatname + ". " + donoText);
                 }
             } else if (TTS.English) {
                 // no name but english
                 if (msgPlain) {
-                    TTS.speak("Someone has donated " + donoText + " and says " + msgPlain, allow);
+                    speakChat("Someone has donated " + donoText + " and says " + msgPlain);
                 } else {
-                    TTS.speak("Someone has donated " + donoText, allow);
+                    speakChat("Someone has donated " + donoText);
                 }
             } else if (msgPlain) {
                 // no name; not english
-                TTS.speak(donoText + ". " + msgPlain, allow);
+                speakChat(donoText + ". " + msgPlain);
             } else {
-                TTS.speak(donoText, allow);
+                speakChat(donoText);
             }
         } else if (msgPlain) {
             // NO DONATION
             if (chatname) {
                 // NAME
                 if (TTS.English) {
-                    TTS.speak(chatname + " says: " + msgPlain, allow);
+                    speakChat(chatname + " says: " + msgPlain);
                 } else {
-                    TTS.speak(chatname + ". " + msgPlain, allow);
+                    speakChat(chatname + ". " + msgPlain);
                 }
             } else if (TTS.English) {
                 // NO NAME
-                TTS.speak("Someone says: " + msgPlain, allow);
+                speakChat("Someone says: " + msgPlain);
             } else {
-                TTS.speak(msgPlain, allow);
+                speakChat(msgPlain);
             }
         }
     } catch(e){
@@ -3168,6 +3176,17 @@ TTS.piperTTS = async function(text, options) {
         const previous = piper.pendingSynthesis || Promise.resolve();
         const pending = previous.catch(() => {}).then(() => {
             if (premiumSerial !== TTS.premiumSerial) return null;
+            // Split only the known sender prefix, after the normal URL/length filters.
+            let intro = TTS.cleanPunctuation(options && options.piperIntro);
+            if (intro && TTS.replaceURLInLink) intro = TTS.replaceURLsWithSubstring(intro, "Link");
+            if (intro && text.indexOf(intro) === 0) {
+                const remainder = text.slice(intro.length);
+                if (/^(?:\. | )/.test(remainder)) {
+                    const message = remainder.replace(/^\.\s*/, "").trim();
+                    if (message) return piper.synthesizeWithPause(intro, message, speed,
+                        () => premiumSerial !== TTS.premiumSerial);
+                }
+            }
             return piper.synthesize(text, speed);
         });
         piper.pendingSynthesis = pending;
