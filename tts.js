@@ -2413,7 +2413,11 @@ TTS.desktopSystemTTS = async function(text, options) {
     // Keep the desktop default audible using the bundled local speech engine.
     if (/Linux/i.test(navigator.platform || "") && !window.speechSynthesis?.getVoices().length) {
         TTS.lastDesktopSystemTts = { voice: "eSpeak", lang: TTS.speechLang || "en", fallback: true };
-        return TTS.espeakTTS(text, { ...TTS.normalizeSpeakOptions(options), voice: TTS.speechLang || "en" });
+        return TTS.espeakTTS(text, {
+            ...TTS.normalizeSpeakOptions(options), voice: TTS.speechLang || "en",
+            espeakSpeed: Math.max(80, Math.min(450, 140 * (Number(TTS.rate) || 1))),
+            espeakPitch: Math.max(0, Math.min(99, 50 * (Number(TTS.pitch) || 1)))
+        });
     }
     TTS.premiumQueueActive = true;
     const premiumSerial = ++TTS.premiumSerial;
@@ -3024,8 +3028,8 @@ TTS.espeakTTS = async function(text, options) {
         // Generate speech using real eSpeak-NG TTS
         const wavArrayBuffer = await TTS.espeakInstance.speak(text, {
             voice: TTS.getVoiceOverride(options) || TTS.espeakSettings.voice,
-            speed: TTS.espeakSettings.speed,
-            pitch: TTS.espeakSettings.pitch,
+            speed: options?.espeakSpeed ?? TTS.espeakSettings.speed,
+            pitch: options?.espeakPitch ?? TTS.espeakSettings.pitch,
             amplitude: 100,  // Volume 0-200
             variant: TTS.espeakSettings.variant
         });

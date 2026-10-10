@@ -10271,6 +10271,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 dtype: getOption('kokorodtype', 'auto') || 'auto',
             },
             
+            espeak: {
+                voice: getId('espeakVoiceSelect')?.value || 'en',
+                speed: getParam('espeakspeed') ? getNumber('espeakspeed', 140) : 140
+            },
             piper: {
                 speed: getParam('piperspeed') ? getNumber('piperspeed', 1.0) : 1.0
             },
@@ -10417,12 +10421,6 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             this.showFeedback("Piper is finishing the previous test. Try again in a moment.", 'info', section);
             return;
         }
-        if (provider === 'espeak') {
-            let warningMsg = getTranslation("tts-test-not-available", "Testing is not available for {provider}. This TTS provider works during streaming only.");
-            warningMsg = warningMsg.replace('{provider}', serviceName);
-            this.showFeedback(warningMsg, 'error', section);
-            return;
-        }
         
         if (provider === 'kitten' || provider === 'kokoro') {
             let warningMsg = getTranslation("tts-test-limited", "Testing for {provider} requires significant browser resources. Works best during streaming.");
@@ -10515,6 +10513,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                     if (settings.kokoro.background || settings.kokoro.stream || settings.kokoro.dtype === 'fp32') await this.neuralTTS(text, settings, section);
                     else await this.kokoroTTS(text, settings, section);
                 }
+            } else if (settings.service == "espeak") {
+                await this.espeakTTS(text, settings, section);
             } else if (settings.service == "piper") {
                 await this.piperTTS(text, settings, section);
             } else if (settings.service == "kitten") {
@@ -10523,7 +10523,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                     else await this.kittenTTS(text, settings, section);
                 }
             } else if (!settings.service || (settings.service == "system")) {
-                this.systemTTS(text, settings, section);
+                await this.systemTTS(text, settings, section);
             } else if (allow) {
                 this.showFeedback(`${this.getServiceName(section)} is not configured for testing`, 'error', section);
                 this.finishedAudio();
@@ -10566,6 +10566,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         try {
             desktopBridge = desktopBridge || window.parent?.ninjafy || window.parent?.electronApi;
         } catch (_) {}
+
+        if (ssapp && /Linux/i.test(navigator.platform || "") && !window.speechSynthesis?.getVoices().length) {
+            return this.espeakTTS(text, settings, section, settings.system.lang || "en");
+        }
 
         if (ssapp && desktopBridge && typeof desktopBridge.systemTts === "function") {
             try {
@@ -10754,6 +10758,54 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 		}
 	},
     
+    async espeakTTS(text, settings, section = "", fallbackLanguage = "") {
+        const token = {};
+        this.audioFetchToken = token;
+        this.premiumQueueActive = true;
+        this.setTestRunning(section, true, "Loading...");
+        try {
+            if (!window.RealESpeakTTS) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = './thirdparty/espeak-ng-real.js';
+                    script.onload = resolve;
+                    script.onerror = () => { script.remove(); reject(new Error('Could not load eSpeak')); };
+                    document.head.appendChild(script);
+                });
+            }
+            if (!this.espeakPreview) this.espeakPreview = new window.RealESpeakTTS();
+            await this.espeakPreview.init();
+            if (this.audioFetchToken !== token) return;
+            const wav = await this.espeakPreview.speak(text, {
+                voice: fallbackLanguage || settings.espeak.voice,
+                speed: fallbackLanguage ? Math.max(80, Math.min(450, 140 * (Number(settings.system.rate) || 1))) : settings.espeak.speed,
+                pitch: fallbackLanguage ? Math.max(0, Math.min(99, 50 * (Number(settings.system.pitch) || 1))) : 50, amplitude: 100
+            });
+            if (this.audioFetchToken !== token) return;
+            const audio = document.createElement('audio');
+            this.activeAudioElement = audio;
+            this.activeAudioUrl = URL.createObjectURL(new Blob([wav], {type: 'audio/wav'}));
+            audio.src = this.activeAudioUrl;
+            audio.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
+            audio.onended = () => {
+                if (this.audioFetchToken !== token) return;
+                this.showFeedback("Audio played here. Check OBS playback separately.", 'success', section);
+                this.finishedAudio(section);
+            };
+            audio.onerror = () => {
+                if (this.audioFetchToken !== token) return;
+                this.showFeedback("eSpeak audio could not be played", 'error', section);
+                this.finishedAudio(section);
+            };
+            this.setTestRunning(section, true, "Playing...");
+            await audio.play();
+        } catch (error) {
+            if (this.audioFetchToken !== token) return;
+            this.showFeedback("eSpeak: " + error.message, 'error', section);
+            this.finishedAudio(section);
+        }
+    },
+
     async piperTTS(text, settings, section = "") {
         const token = {};
         this.localPiperTest = token;

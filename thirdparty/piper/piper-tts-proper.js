@@ -5,6 +5,12 @@
   const DEFAULT_REMOTE_PIPER_BASE = 'https://largefiles.socialstream.ninja/piper';
   const HUGGING_FACE_PIPER_BASE = 'https://huggingface.co/rhasspy/piper-voices/resolve/main';
   const PIPER_VOICE_PATHS = {
+    'en_US-hfc_female-medium': 'en/en_US/hfc_female/medium/en_US-hfc_female-medium.onnx',
+    'en_US-amy-medium': 'en/en_US/amy/medium/en_US-amy-medium.onnx',
+    'en_US-danny-low': 'en/en_US/danny/low/en_US-danny-low.onnx',
+    'en_US-ryan-high': 'en/en_US/ryan/high/en_US-ryan-high.onnx',
+    'en_GB-alan-low': 'en/en_GB/alan/low/en_GB-alan-low.onnx',
+    'en_GB-alba-medium': 'en/en_GB/alba/medium/en_GB-alba-medium.onnx',
     'es_ES-davefx-medium': 'es/es_ES/davefx/medium/es_ES-davefx-medium.onnx',
     'es_MX-ald-medium': 'es/es_MX/ald/medium/es_MX-ald-medium.onnx',
     'pt_BR-edresson-low': 'pt/pt_BR/edresson/low/pt_BR-edresson-low.onnx',
