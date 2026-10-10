@@ -68,7 +68,9 @@
     }
     function attributes(element) {
         if (element.closest(skip)) return;
-        ['alt', 'title', 'aria-label', 'placeholder'].forEach(function (name) {
+        var names = ['alt', 'title', 'aria-label', 'placeholder'];
+        if (element.tagName === 'TD') names.push('data-label');
+        names.forEach(function (name) {
             if (!element.hasAttribute(name)) return;
             var value = element.getAttribute(name), key = name + ':' + value;
             var record = seen.get(element) || {};
@@ -98,7 +100,7 @@
                 else textNode(record.target);
             });
         }).observe(document.body, {subtree: true, childList: true, characterData: true,
-            attributes: true, attributeFilter: ['alt', 'title', 'aria-label', 'placeholder']});
+            attributes: true, attributeFilter: ['alt', 'title', 'aria-label', 'placeholder', 'data-label']});
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();

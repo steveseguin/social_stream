@@ -48,12 +48,15 @@
         .style-tile strong { display: block; font-size: 1.55rem; color: var(--text-primary); }
         .style-tile span { display: block; margin-top: .2rem; font-size: 1.35rem; line-height: 1.45; color: var(--text-secondary); }
         .style-tile code { font-size: 1.2rem; }
+        .setup-screenshots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem; align-items: start; }
+        .setup-screenshots > .guide-figure { min-width: 0; margin: 1rem 0; }
         .count-picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.4rem; margin: 1.4rem 0; }
         .count-picker > div { padding: 1.4rem 1.6rem; border: 1px solid var(--border-color); border-radius: 1.2rem; background: var(--background-card); }
         .count-picker strong { display: block; margin-bottom: .4rem; font-size: 1.65rem; }
         .count-picker p { margin: 0; font-size: 1.45rem; line-height: 1.5; }
         .count-picker .example { margin-top: .8rem; color: var(--text-secondary); }
         @media (max-width: 760px) {
+            .setup-screenshots { grid-template-columns: minmax(0, 1fr); }
             .count-picker { grid-template-columns: minmax(0, 1fr); }
             .style-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .9rem; }
             .style-tile span { display: none; }
@@ -78,6 +81,7 @@
             <div class="container">
                 <nav class="guide-jump-links" aria-label="On this page">
                     <a href="#setup">Set it up</a>
+                    <a href="#artwork">Animated artwork</a>
                     <a href="#styles">Pick a look</a>
                     <a href="#tweaks">Quick tweaks</a>
                     <a href="#what-counts">What counts</a>
@@ -87,24 +91,38 @@
 
                 <div class="guide-card">
                     <h2 id="setup">Set it up in 5 steps</h2>
-                    <div class="guide-step-layout">
-                        <ol class="guide-steps">
-                            <li>Turn on your YouTube, Twitch, or other chat source in Social Stream Ninja.</li>
-                            <li>In the menu, open <strong>Tip Jar and Goal Meter</strong> and expand its options.</li>
-                            <li>Type your <strong>goal</strong> (for example <code>500</code>) and a <strong>title</strong>.</li>
-                            <li>Pick a look under <strong>Style, Goal, and Filters &rarr; Display Style</strong>.</li>
-                            <li>Copy the Tip Jar link and add it to OBS as a <strong>Browser Source</strong>.</li>
-                        </ol>
+                    <ol class="guide-steps">
+                        <li>Turn on your YouTube, Twitch, or other chat source in Social Stream Ninja.</li>
+                        <li>In the menu, find Tip Jar and Goal Meter and open Style, Goal, and Filters.</li>
+                        <li>Choose a Display Style, such as Fluid Goal Bar.</li>
+                        <li>Under Goal Settings, set Goal target to 500 and enter a Custom Title.</li>
+                        <li>Click [copy link] beside Tip Jar and Goal Meter and add the link to OBS as a Browser Source.</li>
+                    </ol>
+                    <p>Click either screenshot to enlarge.</p>
+                    <div class="setup-screenshots">
                         <figure class="guide-figure">
-                            <img src="images/guides/tip-jar-donation-celebration.png" alt="Tip jar overlay celebrating a $20 tip with confetti" class="guide-image" loading="lazy">
+                            <a href="images/guides/tip-jar-popup-style.png"><img src="images/guides/tip-jar-popup-style.png" alt="Tip Jar and Goal Meter menu with Style, Goal, and Filters expanded and Fluid Goal Bar selected." class="guide-image" width="1040" height="730" loading="lazy"></a>
+                            <figcaption>Style selector and copy-link button.</figcaption>
+                        </figure>
+                        <figure class="guide-figure">
+                            <a href="images/guides/tip-jar-popup-goal.png"><img src="images/guides/tip-jar-popup-goal.png" alt="Goal Settings with Goal target set to 500 and Custom Title set to Community Fundraiser." class="guide-image" width="988" height="660" loading="lazy"></a>
+                            <figcaption>Goal and title fields, further down in the same section.</figcaption>
                         </figure>
                     </div>
                     <div class="guide-note"><strong>Nothing showing up?</strong> The overlay link and Social Stream must use the same session ID. Keep that link private.</div>
                 </div>
 
                 <div class="guide-card">
+                    <h2 id="artwork">Change artwork as the goal fills</h2>
+                    <p>For a bar that fills with donations, choose <strong>Fluid Goal Bar</strong> or <strong>Goal Meter</strong>. The styles below include built-in animations.</p>
+                    <p>To show your own GIF at 0%, 25%, 50%, 75%, and 100%, customize a copy of the overlay. There is no milestone-GIF picker in the built-in options. Keep the artwork and bar in the same custom overlay so they use the same total.</p>
+                    <p><a href="goals-customization-guide.html#milestone-artwork">Follow the step-by-step GIF tutorial</a> for a $500 example, artwork filenames, an AI customization prompt, and preview checks.</p>
+                    <div class="guide-note"><strong>One GIF inside the Classic Jar?</strong> Use <strong>Custom jar image</strong> or <code>&amp;jarimage=https://&hellip;</code>. An animated GIF keeps playing, but this setting does not switch images as progress changes or add artwork beside a bar.</div>
+                </div>
+
+                <div class="guide-card">
                     <h2 id="styles">Pick a look</h2>
-                    <p>Every style tracks the same goal. Only the appearance changes. Want to try them live? Open the <a href="../tipjar-preview.html">style preview gallery</a>.</p>
+                    <p>Every style tracks the same goal. Only the appearance changes. Compare sample layouts in the <a href="../tipjar-preview.html">style preview gallery</a>. Its previews use sample data and do not change your live totals.</p>
 
                     <h3 class="style-group">Bars</h3>
                     <ul class="style-grid">
@@ -155,8 +173,9 @@
                             <tr><td data-label="I want to">Hide the dollar signs (<code>0 / 500</code>)</td><td data-label="Add to the link"><code>&amp;hidecurrency</code></td></tr>
                             <tr><td data-label="I want to">Change what falls into the jar</td><td data-label="Add to the link"><code>&amp;dropitem=coins</code> &middot; also <code>gems</code>, <code>stars</code>, <code>bills</code>, <code>hearts</code></td></tr>
                             <tr><td data-label="I want to">Change the celebration effect</td><td data-label="Add to the link"><code>&amp;celebration=confetti</code> &middot; also <code>hearts</code>, <code>fireworks</code>, <code>none</code></td></tr>
-                            <tr><td data-label="I want to">Change the colour</td><td data-label="Add to the link"><code>&amp;accent=%23ffcc88</code> (any hex colour, with <code>%23</code> instead of <code>#</code>)</td></tr>
-                            <tr><td data-label="I want to">Hide the title or percentage</td><td data-label="Add to the link"><code>&amp;hidetitle</code> &middot; <code>&amp;hidepercent</code></td></tr>
+                            <tr><td data-label="I want to">Change the Fluid Goal Bar fill colours</td><td data-label="Add to the link"><code>&amp;fillstart=%2366d9b2&amp;fillend=%23ffcc88</code> (hex colours, with <code>%23</code> instead of <code>#</code>)</td></tr>
+                            <tr><td data-label="I want to">Set an accent on newer panels, jars, or meters</td><td data-label="Add to the link"><code>&amp;accent=%23ffcc88</code>. Use the fill colours above for Fluid Goal Bar.</td></tr>
+                            <tr><td data-label="I want to">Hide the title or percentage on newer jars and meters</td><td data-label="Add to the link"><code>&amp;hidetitle</code> &middot; <code>&amp;hidepercent</code>. These do not apply to every style; check the preview. The four panels below also support <code>hidepercent</code>.</td></tr>
                             <tr><td data-label="I want to">Change the Glass Tip Jar label</td><td data-label="Add to the link"><code>&amp;jarlabel=TIPS</code></td></tr>
                             <tr><td data-label="I want to">Stop the 3D jar spinning</td><td data-label="Add to the link"><code>&amp;nospin</code></td></tr>
                             <tr><td data-label="I want to">Use my own jar picture (Classic Jar only)</td><td data-label="Add to the link"><code>&amp;jarimage=https://&hellip;</code></td></tr>
@@ -175,7 +194,6 @@
                         <p>Fill colours you set yourself win over <code>accent</code>. Leave a box blank to keep the style's default. Bar text size and &ldquo;bar only&rdquo; apply to Fluid Goal Bar only.</p>
                     </details>
 
-                    <div class="guide-note"><strong>Want a different picture or GIF at 25%, 50%, and 75%?</strong> That isn't a built-in setting yet. It needs a customized overlay. See the <a href="goals-customization-guide.html">goals customization guide</a>.</div>
                 </div>
 
                 <div class="guide-card">
@@ -222,7 +240,7 @@
                         <table class="guide-table guide-table-stack">
                             <thead><tr><th>YouTube event</th><th>How it counts</th></tr></thead>
                             <tbody>
-                                <tr><td data-label="YouTube event">Super Chat / Super Sticker</td><td data-label="How it counts">Its money value, in any mode.</td></tr>
+                                <tr><td data-label="YouTube event">Super Chat / Super Sticker</td><td data-label="How it counts">Its value for a money goal, one for a donation-count goal, or your configured donation points in Hype mode. The event must pass your filters.</td></tr>
                                 <tr><td data-label="YouTube event">Gifted memberships</td><td data-label="How it counts">Hype only: number of gifts &times; gift points. YouTube doesn't send the price, so the cash value is unknown.</td></tr>
                                 <tr><td data-label="YouTube event">Someone receiving a gift</td><td data-label="How it counts">Ignored by default, so gifts aren't counted twice.</td></tr>
                                 <tr><td data-label="YouTube event">Jewels / virtual gifts</td><td data-label="How it counts">Use the matching donation type filter.</td></tr>

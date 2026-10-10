@@ -114,7 +114,7 @@ class Document(HTMLParser):
 
 
 def translatable_attribute(tag, attrs, name):
-    return name in TEXT_ATTRIBUTES or (tag == "meta" and name == "content" and
+    return name in TEXT_ATTRIBUTES or (tag == "td" and name == "data-label") or (tag == "meta" and name == "content" and
            (attrs.get("name") or attrs.get("property")) in TEXT_METADATA)
 
 
