@@ -3057,6 +3057,8 @@
 		// Gift counts repeat legitimately in later streaks on recycled DOM slots.
 		// Their bounded streak tracker below handles duplicate renders instead.
 		const nativeMessageId = !ital && !isGiftMessage ? getTikTokMessageId(ele) : "";
+		// TikTok replaces local placeholders with confirmed IDs and badges. Wait for that replacement.
+		if (nativeMessageId.indexOf("self_comment_") === 0) return;
 		if (nativeMessageId && deletedTikTokMessageIds.has(nativeMessageId)) return;
 		if (nativeMessageId && (!chatname || !chatmessage.trim())) return;
 		var data = {};
