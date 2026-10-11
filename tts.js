@@ -1077,8 +1077,8 @@ TTS.configure = function(urlParams) {
         }
     }
 
-    if (window.location.protocol === "moz-extension:" && ["kokoro", "kitten", "piper", "espeak"].includes(TTS.TTSProvider)) {
-        TTS.configurationWarning = "Local voice engines are not included in the Firefox extension. Using System TTS; select a TTS service for another voice.";
+    if (window.location.protocol === "moz-extension:" && ["kokoro", "kitten", "piper"].includes(TTS.TTSProvider)) {
+        TTS.configurationWarning = "This voice engine is not included in the Firefox extension. Using System TTS; select eSpeak or a TTS service for another voice.";
         console.warn(TTS.configurationWarning);
         TTS.TTSProvider = "system";
         TTS.useKokoroTTS = TTS.useKitten = TTS.usePiper = TTS.useEspeak = false;
@@ -2244,7 +2244,7 @@ TTS.neuralSpeech = async function(text, provider, options) {
 };
 
 TTS.initKokoro = async function(voice) {
-    if (window.location.protocol === "moz-extension:") throw new Error("Local voice engines are not included in the Firefox extension. Select System TTS or a TTS service.");
+    if (window.location.protocol === "moz-extension:") throw new Error("This voice engine is not included in the Firefox extension. Select eSpeak, System TTS or a TTS service.");
     if ((window.ninjafy || window.electronApi) && !TTS.isNewKokoroVoice(voice || TTS.kokoroSettings.voiceName)) {
         return true; // Electron already handles existing voices
     }
@@ -2980,7 +2980,6 @@ TTS.kokoroTTS = async function(text, options) {
  * @returns {Promise<boolean>} - Whether initialization was successful
  */
 TTS.initEspeak = async function() {
-    if (window.location.protocol === "moz-extension:") throw new Error("Local voice engines are not included in the Firefox extension. Select System TTS or a TTS service.");
     if (TTS.espeakLoaded) return true;
     
     try {
@@ -3110,7 +3109,7 @@ TTS.espeakTTS = async function(text, options) {
  * @returns {Promise<boolean>} - Whether initialization was successful
  */
 TTS.initPiper = async function(voiceName) {
-    if (window.location.protocol === "moz-extension:") throw new Error("Local voice engines are not included in the Firefox extension. Select System TTS or a TTS service.");
+    if (window.location.protocol === "moz-extension:") throw new Error("This voice engine is not included in the Firefox extension. Select eSpeak, System TTS or a TTS service.");
     const requestedVoice = (typeof voiceName === "string" && voiceName.trim()) || TTS.piperSettings.voice;
     if (TTS.piperLoaded && TTS.piperInstance && TTS.piperActiveVoice === requestedVoice) return true;
     
@@ -3229,7 +3228,7 @@ TTS.piperTTS = async function(text, options) {
  * @returns {Promise<boolean>} - Whether initialization was successful
  */
 TTS.initKitten = async function() {
-    if (window.location.protocol === "moz-extension:") throw new Error("Local voice engines are not included in the Firefox extension. Select System TTS or a TTS service.");
+    if (window.location.protocol === "moz-extension:") throw new Error("This voice engine is not included in the Firefox extension. Select eSpeak, System TTS or a TTS service.");
     if (TTS.kittenLoaded) return true;
     
     // Prevent double initialization

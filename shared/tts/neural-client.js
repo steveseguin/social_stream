@@ -69,7 +69,7 @@
     };
     Client.prototype.setVolume = function(volume) { if (this.player) this.player.setVolume(volume); };
     Client.prototype.speak = async function(options, callbacks) {
-        if (global.location && global.location.protocol === 'moz-extension:') throw new Error('Local voice engines are not included in the Firefox extension. Select System TTS or a TTS service.');
+        if (global.location && global.location.protocol === 'moz-extension:') throw new Error('This voice engine is not included in the Firefox extension. Select eSpeak, System TTS or a TTS service.');
         if (this.pending || this.player) throw new Error('Speech is already playing.');
         if (typeof Worker !== 'function') throw new Error('Background speech requires a browser with Web Workers. Choose Standard processing.');
         callbacks = callbacks || {};

@@ -10449,8 +10449,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             document.getElementById('kokoroVoiceSelect' + section)?.value,
             document.getElementById('piperVoiceSelect' + section)?.value);
         const provider = this.getProviderSelect(section)?.value || "system";
-        if (window.location.protocol === "moz-extension:" && ["kokoro", "kitten", "piper", "espeak"].includes(provider)) {
-            this.showFeedback("Local voice engines are not included in the Firefox extension. Select System TTS or a TTS service.", 'error', section, 0);
+        if (window.location.protocol === "moz-extension:" && ["kokoro", "kitten", "piper"].includes(provider)) {
+            this.showFeedback("This voice engine is not included in the Firefox extension. Select eSpeak, System TTS or a TTS service.", 'error', section, 0);
             return;
         }
         if (provider === "system") {

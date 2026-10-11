@@ -12,7 +12,7 @@ echo "=== Preparing Firefox Add-on Build ==="
 rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
-# Firefox ships browser voices and API-based AI/TTS. Local synthesis
+# Firefox includes browser voices, eSpeak, and API-based AI/TTS. Larger local
 # engines and models are omitted to stay within the add-on size limit.
 rsync -a \
     --exclude='.git/' \
@@ -70,7 +70,6 @@ rsync -a \
     --exclude='/thirdparty/kitten-tts/' \
     --exclude='/thirdparty/kokoro*' \
     --exclude='/thirdparty/ort-wasm*' \
-    --exclude='/thirdparty/espeak*' \
     --exclude='thirdparty/*.onnx' \
     --exclude='/thirdparty/NotoColorEmoji.full.ttf' \
     --exclude='*.md' \
@@ -114,7 +113,16 @@ import re
 import sys
 
 root = Path(sys.argv[1])
-unavailable = {'kokoro', 'kitten', 'piper', 'espeak', 'localgemma', 'localqwen', 'localqwen2b', 'ibm', 'qwen', 'semantic'}
+# The legacy eSpeak loader evaluates a constant expression to create Module.
+# Initialize it directly in Firefox staging without relaxing extension CSP.
+worker_path = root / 'thirdparty/espeakng.worker.js'
+worker = worker_path.read_text(encoding='utf-8')
+bootstrap = 'Module=eval("(function() { try { return Module || {} } catch(e) { return {} } })()")'
+if worker.count(bootstrap) != 1:
+    raise SystemExit('Unexpected eSpeak bootstrap; review Firefox CSP compatibility.')
+worker_path.write_bytes(worker.replace(bootstrap, 'Module={}').encode('utf-8'))
+
+unavailable = {'kokoro', 'kitten', 'piper', 'localgemma', 'localqwen', 'localqwen2b', 'ibm', 'qwen', 'semantic'}
 
 def disable_option(match):
     attrs, label = match.groups()
@@ -155,6 +163,10 @@ required_files=(
     "popup.js"
     "settings/options.html"
     "thirdparty/NotoColorEmoji.ttf"
+    "thirdparty/espeak-ng-real.js"
+    "thirdparty/espeakng-simple.js"
+    "thirdparty/espeakng.worker.js"
+    "thirdparty/espeakng.worker.data"
 )
 
 for file in "${required_files[@]}"; do
