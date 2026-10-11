@@ -630,6 +630,12 @@
 			"run_at": "document_start"
 		},
 		{
+			"js": ["./sources/inject/twitch-ad-player.js"],
+			"matches": ["https://*.twitch.tv/*"],
+			"run_at": "document_start",
+			"world": "MAIN"
+		},
+		{
 			"js": ["./sources/static/twitch_points.js"],
 			"matches": ["https://*.twitch.tv/*"],
 			"run_at": "document_start"

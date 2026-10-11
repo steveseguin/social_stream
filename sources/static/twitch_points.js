@@ -20,6 +20,19 @@
         if (callbacks.onAdEnd) adCallbacks.onAdEnd = callbacks.onAdEnd;
     }
 
+    function updateAdPlayerSettings() {
+        if (location.origin === 'null') return;
+        window.postMessage({
+            source: 'ssn-twitch-ad-player-settings',
+            enabled: !!settings.twichadmute,
+            volume: lastKnownVolume
+        }, location.origin);
+    }
+    window.addEventListener('message', function (event) {
+        if (event.source === window && event.origin === location.origin && event.data &&
+            event.data.source === 'ssn-twitch-ad-player-ready') updateAdPlayerSettings();
+    });
+
     function stopAdKeepAlive() {
         clearTimeout(adKeepAliveRetry);
         adKeepAliveRetry = null;
@@ -118,6 +131,7 @@
                     if (typeof request === "object") {
                         if ("settings" in request) {
                             settings = request.settings;
+                            updateAdPlayerSettings();
                             updateAdKeepAlive();
                             if (updateAdAnnouncement) updateAdAnnouncement();
                             sendResponse(true);
@@ -140,6 +154,7 @@
         chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response) {
             if (response && "settings" in response) {
                 settings = response.settings;
+                updateAdPlayerSettings();
                 updateAdKeepAlive();
                 if (updateAdAnnouncement) updateAdAnnouncement();
                 if (settings.collecttwitchpoints) {
@@ -204,6 +219,7 @@
                             // Store the volume only when it's manually changed (not during ad playback)
                             if (!adVideo) {
                                 lastKnownVolume = mainVideo.volume;
+                                updateAdPlayerSettings();
                             }
                         }
                         
