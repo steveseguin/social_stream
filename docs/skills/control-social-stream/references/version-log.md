@@ -22,6 +22,12 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.1.0 | 0.4.2 | Versioned responses, request and operation IDs, SSE status events, token-file and stored credentials, visible-app controls, expanded source/settings discovery, and version-aware MCP tools |
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
+## Unreleased diagnostic event memory correction
+
+Minimum verified runtime: the SSApp 0.4.35 development checkout containing commit `e525c71`. No released minimum containing this correction has been assigned; do not infer it from the version number alone.
+
+Evicted diagnostic event payloads are released immediately rather than retained until array compaction. The existing 1,000-event / 2 MiB live-history limits, event ordering, cursors, counters, command schemas, and API/MCP versions are unchanged. macOS real-app validation used 430 large local diagnostic events and verified identical retained history before and after the correction.
+
 ## Unreleased event processing optimizations
 
 Development builds based on SSApp 0.4.34 reduce work when reading source-event
@@ -108,6 +114,10 @@ The unreleased voice preview also cancels queued Start/Arm operations after Stop
 Windows x64 voice commands in this unreleased preview use a pinned local whisper.cpp runtime downloaded on first Start. Stop also cancels runtime preparation/inference. Cohost and the Local AI API remain unchanged; feature-detect ninjafy.voiceControl as above.
 
 ## Skill revisions
+
+### 2026-10-11
+
+- Recorded the unreleased diagnostic event memory correction in the SSApp 0.4.35 development checkout; no new capability or compatibility requirement was introduced.
 
 ### 2026-09-27
 
