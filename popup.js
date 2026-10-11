@@ -5358,11 +5358,13 @@ function setupPopupPanelEditor() {
 		var selection = Object.assign({}, popupPanelVisibility);
 		list.querySelectorAll('input').forEach(function(input) { selection[input.dataset.panelChoice] = input.checked; });
 		save.disabled = showAll.disabled = cancel.disabled = dialog.querySelector('fieldset').disabled = true;
+		if (document.body.classList.contains('ssapp')) dialog.focus();
 		error.textContent = '';
 		chrome.runtime.sendMessage({ cmd: 'saveSetting', type: 'json', setting: 'popupPanelVisibility', value: JSON.stringify(selection) }, function(response) {
 			save.disabled = showAll.disabled = cancel.disabled = dialog.querySelector('fieldset').disabled = false;
 			if (chrome.runtime.lastError || !response || response.saved === false || response.error) {
 				error.textContent = getTranslation('panel-save-failed', 'Could not save the panel. Please try again.');
+				if (document.body.classList.contains('ssapp')) save.focus();
 				return;
 			}
 			popupPanelVisibility = selection;
