@@ -193,6 +193,19 @@
 		return "";
 	}
 
+	function getYouTubeMessageTimestamp(ele) {
+		// Page models are available in SSApp, but not in extension isolated worlds.
+		if (!window.ninjafy || !ele) return 0;
+		try {
+			var model = ele.data || (ele.__data && ele.__data.data);
+			var value = model && model.timestampUsec;
+			if (typeof value !== "string" && typeof value !== "number") return 0;
+			var timestamp = Number(value);
+			return Number.isSafeInteger(timestamp) && timestamp > 0 ? timestamp : 0;
+		} catch (e) {}
+		return 0;
+	}
+
 	function normalizeYouTubeGiftImageUrl(url) {
 		url = normalizeDonationText(url);
 		if (!url) {
@@ -445,6 +458,7 @@
 
 	const messageHistory = new Set();
 	var youtubeChatInitialized = false;
+	var youtubeHistoryCutoffUsec = 0;
 	var youtubeStaleRecoveryKey = "ssn_youtube_stale_recovery";
 	var youtubeRecoveryMids = {};
 	try {
@@ -457,6 +471,9 @@
 			recovery.ids.slice(-300).forEach(function (id) { messageHistory.add(id); });
 			youtubeRecoveryMids = recovery.mids || {};
 			youtubeChatInitialized = true;
+			if (window.ninjafy && Number.isSafeInteger(recovery.historyCutoffUsec) && recovery.historyCutoffUsec > 0) {
+				youtubeHistoryCutoffUsec = recovery.historyCutoffUsec;
+			}
 		}
 	} catch (e) {}
 	const avatarHistory = new Map();
@@ -2778,7 +2795,8 @@
 				if (messageId && Number.isSafeInteger(mid) && mid > 0) recoveryMids[messageId] = mid;
 			});
 			sessionStorage.setItem(youtubeStaleRecoveryKey, JSON.stringify({
-				url: window.location.href, at: now, ids: Array.from(messageHistory).slice(-300), mids: recoveryMids
+				url: window.location.href, at: now, ids: Array.from(messageHistory).slice(-300), mids: recoveryMids,
+				historyCutoffUsec: youtubeHistoryCutoffUsec
 			}));
 		} catch (e) {}
 		try {
@@ -2841,6 +2859,10 @@
 				}
 				if (debugmode) {
 					checkType(ele4, processMessage);
+				} else {
+					// Keep the initial history boundary in YouTube's clock. Top -> Live chat
+					// can reveal older IDs later; advancing this on rebind would lose new rows.
+					youtubeHistoryCutoffUsec = Math.max(youtubeHistoryCutoffUsec, getYouTubeMessageTimestamp(ele4));
 				}
 				ele4.skip = true;
 				cleared = true;
@@ -2893,6 +2915,11 @@
 		function captureRow(ele2, eventtype=false) {
 			var messageId = getYouTubeMessageId(ele2);
 			if (ele2.skip) return;
+			var timestamp = getYouTubeMessageTimestamp(ele2);
+			if (timestamp && timestamp < youtubeHistoryCutoffUsec) {
+				ele2.skip = true;
+				return;
+			}
 			if (messageId && messageHistory.has(messageId)) {
 				// A rebuilt gift is still handled after ordinary chat ages its ID out
 				// of the shared history; retain it for the gift replacement check.

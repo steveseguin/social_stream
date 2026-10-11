@@ -7256,6 +7256,10 @@
 				let selector = "";
 				let matchField = "";
 				const nativeId = data.delete.meta && data.delete.meta.messageId;
+				const vpzoneChannel = data.delete.type === "vpzone" && data.delete.meta && data.delete.meta.streamUsername;
+				const matchesVpzoneChannel = message => !vpzoneChannel ||
+					String(message.meta && message.meta.streamUsername).toLowerCase() === String(vpzoneChannel).toLowerCase();
+				const deleteSourceName = (data.delete.meta && (data.delete.meta.sourceDisplayName || (data.delete.type === "twitch" && data.delete.meta.twitchDisplayName))) || data.delete.chatname;
 				if (data.delete.meta && data.delete.meta.messageId) {
 					const sourceSelector = data.delete.type ? dataAttributeSelector("data-source-type", data.delete.type) : "";
 					selector = ".highlight-chat" + sourceSelector;
@@ -7272,11 +7276,15 @@
 				} else if (data.delete.chatname && data.delete.type) {
 					matchField = "chatname";
 					selector = dataAttributeSelector("data-chatname", data.delete.chatname) + dataAttributeSelector("data-source-type", data.delete.type);
+					selector += "," + dataAttributeSelector("data-source-display-name", deleteSourceName) + dataAttributeSelector("data-source-type", data.delete.type);
+					if (deleteSourceName !== data.delete.chatname) selector += "," + dataAttributeSelector("data-chatname", deleteSourceName) + dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.type) {
 					selector = dataAttributeSelector("data-source-type", data.delete.type);
 				} else if (data.delete.chatname) {
 					matchField = "chatname";
 					selector = dataAttributeSelector("data-chatname", data.delete.chatname);
+					selector += "," + dataAttributeSelector("data-source-display-name", deleteSourceName);
+					if (deleteSourceName !== data.delete.chatname) selector += "," + dataAttributeSelector("data-chatname", deleteSourceName);
 				}
 
 				// Include queued rows already detached from the visible chat.
@@ -7289,18 +7297,22 @@
 				selectedQueue.concat(autoShowQueue).forEach(node => {
 					if (node.matches(selector)) nodes.add(node);
 				});
-				let matches = Array.from(nodes).filter(node => !nativeId ||
-					String(getNativeSourceControlMessageId(node.rawContents || {})) === String(nativeId)
+				let matches = Array.from(nodes).filter(node => matchesVpzoneChannel(node.rawContents || {}) && (!nativeId ||
+					String(getNativeSourceControlMessageId(node.rawContents || {})) === String(nativeId))
 				).map(node => ({ node, id: node.dataset.mid, type: node.dataset.sourceType }));
 				const pending = historyMissedLiveBuffer.concat(queue.map(item => item.contents), messageBuffer.map(item => item.contents));
 				if (featuredMessage) pending.push(featuredMessage);
 				pending.forEach(message => {
 					if (data.delete.type && String(message.type) !== String(data.delete.type)) return;
+					if (!matchesVpzoneChannel(message)) return;
 					if (nativeId) {
 						if (String(getNativeSourceControlMessageId(message)) !== String(nativeId)) return;
 					} else if (matchField) {
 						const value = matchField === "id" ? (message.mid || message.id) : message[matchField];
-						if (String(value) !== String(data.delete[matchField])) return;
+						if (String(value) !== String(data.delete[matchField])) {
+							const sourceName = message.meta && (message.meta.sourceDisplayName || (message.type === "twitch" && message.meta.twitchDisplayName));
+							if (matchField !== "chatname" || String(sourceName || value) !== String(deleteSourceName)) return;
+						}
 					}
 					const match = { message, id: message.mid || message.id, type: message.type };
 					// A selection copy must not make an older native-ID row the newest candidate.
@@ -12819,6 +12831,9 @@
 					}
 					if (rawName) {
 						node.dataset.chatname = rawName; // before its been parsed; this allows for clean deletion.
+					}
+					if (data.meta && (data.meta.sourceDisplayName || (data.type === "twitch" && data.meta.twitchDisplayName))) {
+						node.dataset.sourceDisplayName = data.meta.sourceDisplayName || data.meta.twitchDisplayName;
 					}
 					if (rawChatImg){
 						node.dataset.chatimg = rawChatImg;

@@ -9,6 +9,11 @@ const LUNR_DOCUMENT_STORE_NAME = 'documents';
 const activeProcessing = {};
 const uploadQueue = [];
 let isUploading = false;
+let ragDocumentSequence = 0;
+let ragSemanticEngine = null;
+let ragSemanticGeneration = 0;
+let ragSemanticTimer = null;
+let ragSemanticStatus = 'Keyword search is selected.';
 let lunrIndexPromise;
 const maxContextSize = 31000;
 const maxContextSizeFull = 32000;
@@ -585,7 +590,8 @@ async function fetchOpenCodeZenModels(apiKey = "", force = false) {
     try {
         let payload;
         if (typeof ipcRenderer !== "undefined" && typeof fetchNode !== "undefined" && fetchNode) {
-            const response = await fetchNode(OPENCODE_ZEN_MODELS_URL, headers, "GET", null);
+            const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
+            const response = await electronFetch(OPENCODE_ZEN_MODELS_URL, headers, "GET", null);
             if (!response || (response.status && response.status >= 400)) {
                 throw new Error("OpenCode model list returned " + (response && response.status ? response.status : "no response"));
             }
@@ -671,7 +677,8 @@ async function getOpenCodeGoFallbackModels(apiKey) {
         let payload;
         const url = 'https://opencode.ai/zen/go/v1/models';
         if (typeof ipcRenderer !== 'undefined' && typeof fetchNode !== 'undefined') {
-            const response = await fetchNode(url, headers, 'GET', null);
+            const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
+            const response = await electronFetch(url, headers, 'GET', null);
             if (!response || response.status >= 400) throw new Error('Go catalog unavailable');
             payload = typeof response.data === 'string' ? JSON.parse(response.data) : response.data;
         } else {
@@ -815,6 +822,7 @@ function resolveChatbotPromptVariables(text) {
 }
 
 async function rebuildIndex() {
+    resetRAGSemanticSearch(true);
     const db = await openLunrDatabase();
     const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly');
     const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
@@ -833,8 +841,8 @@ async function rebuildIndex() {
                     title: chunk.title,
                     content: chunk.content,
                     summary: chunk.summary,
-                    tags: chunk.tags.join(' '),
-                    synonyms: chunk.synonyms.join(' '),
+                    tags: Array.isArray(chunk.tags) ? chunk.tags.join(' ') : '',
+                    synonyms: Array.isArray(chunk.synonyms) ? chunk.synonyms.join(' ') : '',
                     level: chunk.level
                 });
             });
@@ -899,7 +907,8 @@ async function getFirstAvailableModel(exclude = null, llmSettings = null) {
         return new Promise(async (resolve, reject) => {
             let ccc = setTimeout(() => reject(new Error('Request timed out')), 10000);
             try {
-                const xhr = await fetchNode(`${ollamaendpoint}/api/tags`);
+                const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
+                const xhr = await electronFetch(`${ollamaendpoint}/api/tags`, {}, 'GET', null, { kind: 'llm', provider: 'ollama' }, 10000);
                 clearTimeout(ccc);
                 const datar = JSON.parse(xhr.data);
                 if (!datar?.models?.length) {
@@ -985,11 +994,16 @@ const streamingPostNode = async function (URL, body, headers = {}, onChunk = nul
 	}
 };
 
-function signAWSRequest(method, url, headers, body, accessKey, secretKey, region, service = 'bedrock') {
+async function signAWSRequest(method, url, headers, body, accessKey, secretKey, region, service = 'bedrock') {
     const timestamp = new Date().toISOString().replace(/[:-]|\.\d{3}/g, '');
     const date = timestamp.slice(0, 8);
     
-    // Add required headers
+    // Normalize names before sorting, and sign the host supplied by the transport.
+    const normalizedHeaders = {};
+    Object.keys(headers).forEach(key => {
+        normalizedHeaders[key.toLowerCase()] = String(headers[key]).trim().replace(/\s+/g, ' ');
+    });
+    headers = normalizedHeaders;
     headers['x-amz-date'] = timestamp;
     
     // If content-type is not already set
@@ -999,36 +1013,38 @@ function signAWSRequest(method, url, headers, body, accessKey, secretKey, region
     
     // Parse URL
     const parsedUrl = new URL(url);
-    const canonicalUri = parsedUrl.pathname || '/';
+    function uriEncode(value) {
+        return encodeURIComponent(value).replace(/[!'()*]/g, c => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+    }
+    const canonicalUri = (parsedUrl.pathname || '/').split('/').map(uriEncode).join('/');
+    const canonicalHeaderValues = { ...headers, host: parsedUrl.host };
     
     // Create canonical request
-    const canonicalHeaders = Object.keys(headers)
+    const canonicalHeaders = Object.keys(canonicalHeaderValues)
         .sort()
-        .map(key => `${key.toLowerCase()}:${headers[key].trim()}\n`)
+        .map(key => `${key}:${canonicalHeaderValues[key]}\n`)
         .join('');
     
-    const signedHeaders = Object.keys(headers)
+    const signedHeaders = Object.keys(canonicalHeaderValues)
         .sort()
         .map(key => key.toLowerCase())
         .join(';');
     
     // Create canonical query string
     const searchParams = parsedUrl.searchParams;
-    const canonicalQueryString = Array.from(searchParams.keys())
+    const canonicalQueryString = Array.from(searchParams.entries())
+        .map(entry => `${uriEncode(entry[0])}=${uriEncode(entry[1])}`)
         .sort()
-        .map(key => {
-            return `${encodeURIComponent(key)}=${encodeURIComponent(searchParams.get(key))}`;
-        })
         .join('&');
     
     // Create payload hash
     let payloadHash;
     if (typeof body === 'string') {
-        payloadHash = sha256(body);
+        payloadHash = await sha256(body);
     } else if (body) {
-        payloadHash = sha256(JSON.stringify(body));
+        payloadHash = await sha256(JSON.stringify(body));
     } else {
-        payloadHash = sha256('');
+        payloadHash = await sha256('');
     }
     
     const canonicalRequest = [
@@ -1047,23 +1063,25 @@ function signAWSRequest(method, url, headers, body, accessKey, secretKey, region
         algorithm,
         timestamp,
         scope,
-        sha256(canonicalRequest)
+        await sha256(canonicalRequest)
     ].join('\n');
     
     // Calculate signature
-    function hmac(key, string) {
-        const hmacObj = crypto.createHmac('sha256', key);
-        hmacObj.update(string);
-        return hmacObj.digest();
+    async function hmac(key, string) {
+        const encoder = new TextEncoder();
+        const cryptoKey = await window.crypto.subtle.importKey('raw',
+            typeof key === 'string' ? encoder.encode(key) : key,
+            { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+        return window.crypto.subtle.sign('HMAC', cryptoKey, encoder.encode(string));
     }
     
     let signingKey = 'AWS4' + secretKey;
-    signingKey = hmac(signingKey, date);
-    signingKey = hmac(signingKey, region);
-    signingKey = hmac(signingKey, service);
-    signingKey = hmac(signingKey, 'aws4_request');
+    signingKey = await hmac(signingKey, date);
+    signingKey = await hmac(signingKey, region);
+    signingKey = await hmac(signingKey, service);
+    signingKey = await hmac(signingKey, 'aws4_request');
     
-    const signature = hmacToHex(hmac(signingKey, stringToSign));
+    const signature = hmacToHex(await hmac(signingKey, stringToSign));
     
     // Add the signature to the headers
     headers['Authorization'] = `${algorithm} Credential=${accessKey}/${scope}, SignedHeaders=${signedHeaders}, Signature=${signature}`;
@@ -1071,20 +1089,9 @@ function signAWSRequest(method, url, headers, body, accessKey, secretKey, region
     return headers;
 }
 
-function sha256(message) {
-    if (crypto) {
-        return crypto.createHash('sha256').update(message).digest('hex');
-    } else if (window.crypto && window.crypto.subtle) {
-        // For browser environments
-        const encoder = new TextEncoder();
-        const data = encoder.encode(message);
-        return window.crypto.subtle.digest('SHA-256', data)
-            .then(hash => {
-                return Array.from(new Uint8Array(hash))
-                    .map(b => b.toString(16).padStart(2, '0'))
-                    .join('');
-            });
-    }
+async function sha256(message) {
+    const data = new TextEncoder().encode(message);
+    return hmacToHex(await window.crypto.subtle.digest('SHA-256', data));
 }
 
 function hmacToHex(hmacBuffer) {
@@ -1262,6 +1269,54 @@ function getLocalBrowserProviderSettings(providerKey, llmSettings, modelOverride
     };
 }
 
+let electronLLMStreamSequence = 0;
+
+function streamElectronLLMRequest(request, onChunk, signal) {
+    return new Promise((resolve, reject) => {
+        // Separate simultaneous requests, including requests from different windows.
+        const channelId = 'streaming-nodepost-' + Date.now() + '-' + (++electronLLMStreamSequence) + '-' + Array.from(crypto.getRandomValues(new Uint32Array(2))).join('-');
+        let settled = false;
+        const finish = (error, result) => {
+            if (settled) return;
+            settled = true;
+            ipcRenderer.removeListener(channelId, onMessage);
+            if (signal) signal.removeEventListener('abort', onAbort);
+            window.removeEventListener('pagehide', onAbort);
+            if (error) reject(error);
+            else resolve(result);
+        };
+        const onAbort = () => {
+            ipcRenderer.send(channelId + '-abort');
+            finish(new DOMException('Aborted', 'AbortError'));
+        };
+        const onMessage = (event, chunk) => {
+            if (settled) return;
+            if (chunk === null || (typeof chunk === 'object' && chunk.error)) {
+                finish(null, chunk);
+                return;
+            }
+            try {
+                onChunk(chunk);
+            } catch (error) {
+                ipcRenderer.send(channelId + '-abort');
+                finish(error);
+            }
+        };
+        if (signal && signal.aborted) {
+            finish(new DOMException('Aborted', 'AbortError'));
+            return;
+        }
+        ipcRenderer.on(channelId, onMessage);
+        if (signal) signal.addEventListener('abort', onAbort, { once: true });
+        window.addEventListener('pagehide', onAbort, { once: true });
+        try {
+            ipcRenderer.send('streaming-nodepost', Object.assign({}, request, { channelId }));
+        } catch (error) {
+            finish(error);
+        }
+    });
+}
+
 async function callLLMAPI(prompt, model = null, callback = null, abortController = null, UUID = null, images = null, options = {}) {
 	const llmSettings = { ...(settings || {}), ...(options.settings || {}) };
 	
@@ -1330,8 +1385,6 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			endpoint = `https://bedrock-runtime.${llmSettings.bedrockRegion?.textsetting || "us-east-1"}.amazonaws.com/model`;
 			model = model || llmSettings.bedrockmodel?.textsetting || "anthropic.claude-sonnet-5";
 			apiKey = llmSettings.bedrockAccessKey?.textsetting;
-			const secretKey = llmSettings.bedrockSecretKey?.textsetting;
-			const region = llmSettings.bedrockRegion?.textsetting || "us-east-1";
 			callback = null; // TODO: Implement streaming for Bedrock if desired
 			break;
 		case "openrouter":
@@ -1512,6 +1565,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                 ...(Number.isFinite(localBrowserGeneration.temperature) ? { temperature: localBrowserGeneration.temperature } : {}),
                 ...(Number.isFinite(localBrowserGeneration.topP) ? { topP: localBrowserGeneration.topP } : {}),
                 ...(Number.isFinite(localBrowserGeneration.topK) ? { topK: localBrowserGeneration.topK } : {}),
+                ...(Number.isInteger(localBrowserGeneration.noRepeatNgramSize) && localBrowserGeneration.noRepeatNgramSize >= 0 ? { noRepeatNgramSize: localBrowserGeneration.noRepeatNgramSize } : {}),
                 images: requestImages,
                 stateless: localBrowserStateless,
                 moderation: provider === 'localqwen' && options.localBrowserModeration === true
@@ -1615,7 +1669,12 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		try {
 			const modelId = model;
 			model = modelId;
-			const bedrockEndpoint = `${endpoint}/${modelId}/invoke`;
+			const bedrockEndpoint = `${endpoint}/${encodeURIComponent(modelId)}/invoke`;
+			const secretKey = llmSettings.bedrockSecretKey?.textsetting;
+			const region = llmSettings.bedrockRegion?.textsetting || "us-east-1";
+			if (!apiKey || !secretKey) {
+				throw new Error('Bedrock requires an AWS access key and secret key.');
+			}
 			
 			let requestBody;
 			
@@ -1663,7 +1722,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			};
 			
 			// Sign the request
-			const signedHeaders = signAWSRequest(
+			const signedHeaders = await signAWSRequest(
 				'POST', 
 				bedrockEndpoint, 
 				headers, 
@@ -1675,7 +1734,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			);
 			
 			if (typeof ipcRenderer !== 'undefined' && !options.strictEndpoint) {
-				const response = await fetchNode(bedrockEndpoint, signedHeaders, 'POST', requestBody);
+				const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
+				const response = await electronFetch(bedrockEndpoint, signedHeaders, 'POST', requestBody);
 				
 				if (response.status !== 200) {
 					let errorMessage = '';
@@ -1840,46 +1900,26 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		try {
 			if (typeof ipcRenderer !== 'undefined' && !options.strictEndpoint) {
 				if (callback) {
-					return new Promise((resolve, reject) => {
-						const channelId = `streaming-nodepost-${Date.now()}`;
-						let fullResponse = '';
-						const streamProcessor = createStreamingLineProcessor(callback, (resp) => {
-							fullResponse += resp;
-						});
-						
-						ipcRenderer.on(channelId, (event, chunk) => {
-							if (chunk === null) {
-								streamProcessor.flush();
-								resolve(stripLLMReasoningOutput(fullResponse));
-							} else if (typeof chunk === 'object' && chunk.error) {
-								const responseMetadata = getLLMResponseMetadata(chunk.headers, chunk);
-								const err = createLLMError(buildContext(), {
-									status: chunk.status || chunk.error?.status || null,
-									code: chunk.code || chunk.error?.code || null,
-									message: chunk.message || chunk.error?.message || 'Streaming response returned an error.',
-									details: chunk,
-									...responseMetadata
-								});
-								reject(err);
-							} else {
-								streamProcessor.push(chunk);
-							}
-						});
-
-						ipcRenderer.send('streaming-nodepost', {
-							channelId,
-							url: endpoint,
-							body: message,
-							headers,
-							diagnostics: { kind: 'llm', provider, model: message.model }
-						});
-
-						if (abortController) {
-							abortController.signal.addEventListener('abort', () => {
-								ipcRenderer.send(`${channelId}-abort`);
-							});
-						}
-					});
+                    let fullResponse = '';
+                    const streamProcessor = createStreamingLineProcessor(callback, resp => { fullResponse += resp; });
+                    const result = await streamElectronLLMRequest({
+                        url: endpoint,
+                        body: message,
+                        headers,
+                        diagnostics: { kind: 'llm', provider, model: message.model }
+                    }, chunk => streamProcessor.push(chunk), abortController && abortController.signal);
+                    if (result && result.error) {
+                        const responseMetadata = getLLMResponseMetadata(result.headers, result);
+                        throw createLLMError(buildContext(), {
+                            status: result.status || result.error?.status || null,
+                            code: result.code || result.error?.code || null,
+                            message: result.message || result.error?.message || 'Streaming response returned an error.',
+                            details: result,
+                            ...responseMetadata
+                        });
+                    }
+                    streamProcessor.flush();
+                    return stripLLMReasoningOutput(fullResponse);
 				} else {
 					const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
 					const response = await electronFetch(endpoint, headers, 'POST', message, {
@@ -2037,48 +2077,23 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
             if (typeof ipcRenderer !== 'undefined' && !options.strictEndpoint) {  // ollama still
                 // Your existing Electron implementation
                 if (isStreaming) {
-                    response = await new Promise((resolve, reject) => {
-                        const channelId = `streaming-nodepost-${Date.now()}`;
-                        const streamProcessor = createStreamingLineProcessor(callback, (resp, reasoning=false) => { fullResponse += resp; });
-                        
-                        ipcRenderer.on(channelId, (event, chunk) => {
-                            if (chunk === null) {
-                                streamProcessor.flush();
-                                responseComplete = true;
-                                resolve({ ok: true });
-                            } else if (typeof chunk === 'object' && chunk.error) {
-                                resolve(chunk);
-                            } else {
-                                streamProcessor.push(chunk);
-                            }
-                        });
-                        
-                        const message = {
-                            model: currentModel,
-                            prompt: prompt,
-                            stream: true,
-							keep_alive: llmSettings.ollamaKeepAlive ?  parseInt(llmSettings.ollamaKeepAlive.numbersetting)+"m" : "5m"
-                        };
-                        
-                        if (ollamaImages.length){
-                            message.images = ollamaImages;
-                        }
-
-                        ipcRenderer.send('streaming-nodepost', {
-                            channelId,
-                            url: `${endpoint}/api/generate`,
-                            body: message,
-                            headers: { 'Content-Type': 'application/json' }
-                        });
-
-                        abortController.signal.addEventListener('abort', () => {
-                            ipcRenderer.send(`${channelId}-abort`);
-                        });
-                    });
-
-                    if (response.error) {
-                        return response;
-                    }
+                    const streamProcessor = createStreamingLineProcessor(callback, resp => { fullResponse += resp; });
+                    const message = {
+                        model: currentModel,
+                        prompt: prompt,
+                        stream: true,
+                        keep_alive: llmSettings.ollamaKeepAlive ? parseInt(llmSettings.ollamaKeepAlive.numbersetting) + "m" : "5m"
+                    };
+                    if (ollamaImages.length) message.images = ollamaImages;
+                    response = await streamElectronLLMRequest({
+                        url: `${endpoint}/api/generate`,
+                        body: message,
+                        headers: { 'Content-Type': 'application/json' },
+                        diagnostics: { kind: 'llm', provider: 'ollama', model: currentModel }
+                    }, chunk => streamProcessor.push(chunk), abortController && abortController.signal);
+                    if (response && response.error) return response;
+                    streamProcessor.flush();
+                    responseComplete = true;
                 } else {
                     // Your existing non-streaming Electron implementation
                     const message = {
@@ -2091,7 +2106,8 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                         message.images = ollamaImages;
                     }
                     
-                    response = fetchNode(`${endpoint}/api/generate`, {
+                    const electronFetch = typeof fetchNodeAsync === 'function' ? fetchNodeAsync : fetchNode;
+                    response = await electronFetch(`${endpoint}/api/generate`, {
                         'Content-Type': 'application/json',
                     }, 'POST', message);
                     
@@ -2272,6 +2288,100 @@ let recentCensorMessages = [];
 
 function getActiveCensorProviderKey() {
     return settings?.aiProvider?.optionsetting || "ollama";
+}
+
+let localCensor = null;
+let localCensorMode = '';
+let localCensorStatus = 'Not loaded';
+let localCensorCounter = 0;
+
+function getCensorModelSelection() {
+    const mode = settings?.censorModel?.optionsetting;
+    return mode === 'ibm' || mode === 'qwen' ? mode : 'main';
+}
+
+function getCensorMessageKey(data) {
+    if (!data || data.id === undefined || data.id === null) return '';
+    return JSON.stringify([data.type || '', data.tid ?? '', data.id]);
+}
+
+function resetLocalCensor() {
+    if (localCensor) localCensor.close();
+    localCensor = null;
+    localCensorMode = '';
+    localCensorStatus = 'Not loaded';
+}
+
+function getLocalCensor(mode) {
+    if (localCensor && localCensorMode === mode) return localCensor;
+    resetLocalCensor();
+    const asset = path => typeof chrome !== 'undefined' && chrome.runtime?.getURL ? chrome.runtime.getURL(path) : path;
+    localCensorMode = mode;
+    const engine = globalThis.SSNCensorModels.create({
+        mode,
+        workerPath: asset('shared/ai/censor-worker.js'),
+        qwenWorkerPath: getLocalBrowserWorkerPath(),
+        qwenPrompt: text => buildCensorPrompt(null, text, [], [], 'localqwen'),
+        onStatus: text => { if (localCensor === engine) localCensorStatus = text; },
+        onBlock: input => {
+            if (localCensor !== engine || getCensorModelSelection() !== mode || !getAiSettingFlag('ollamaCensorBot')) return;
+            if (isExtensionOn && input.original) sendToDestinations({ delete: input.original });
+        }
+    });
+    localCensor = engine;
+    return engine;
+}
+
+function isLocalCensorBlocked(data) {
+    return !!(getAiSettingFlag('ollamaCensorBot') && localCensor && localCensorMode === getCensorModelSelection() && localCensor.isBlocked(getCensorMessageKey(data)));
+}
+
+function forgetLocalCensorMessages(deletion, tab) {
+    if (!localCensor) return;
+    const scopedDeletion = Object.assign({}, deletion);
+    if ((scopedDeletion.tid === undefined || scopedDeletion.tid === null) && tab && tab.id !== undefined) scopedDeletion.tid = tab.id;
+    localCensor.forget(scopedDeletion);
+}
+
+function getCensorModelStatus() {
+    const mode = getCensorModelSelection();
+    if (localCensor && localCensorMode !== mode) resetLocalCensor();
+    return { mode, text: mode === 'main' ? 'Uses the main AI model and connection settings.' : localCensorStatus };
+}
+
+async function testCensorModel(mode, text, settingsOverride) {
+    if (mode !== getCensorModelSelection()) throw new Error('Censor selection changed. Try again.');
+    if (mode === 'main') {
+        const reply = await callLLMAPI('Reply with only OK or BLOCK. BLOCK hateful, abusive, threatening or profane chat; otherwise OK. Chat: ' + JSON.stringify(text), null, null, null, null, null, { settings: settingsOverride, requestTimeoutMs: 60000 });
+        return { text: String(reply || '') };
+    }
+    const result = await getLocalCensor(mode).review({ id: 'test-' + (++localCensorCounter), text, time: Date.now() }, true);
+    return { text: result.blocked ? 'Blocked' : 'Allowed' };
+}
+
+async function censorMessageWithLocalModel(data, tab, mode) {
+    if (!getAiSettingFlag('ollamaCensorBot')) return true;
+    let engine;
+    try {
+        engine = getLocalCensor(mode);
+        const text = data.textonly ? String(data.chatmessage || '') : decodeAndCleanHtml(String(data.chatmessage || ''), true);
+        if (!text.trim()) return true;
+        const result = await engine.review({
+            id: getCensorMessageKey(data) || 'message-' + (++localCensorCounter),
+            text, time: Date.now(), platform: data.type || '',
+            // Only join messages when the capture provides a source and stable identity.
+            scope: data.tid !== undefined && data.tid !== null && tab && tab.url ? JSON.stringify([data.tid, tab.url]) : null,
+            userid: data.userid ?? data.username ?? null,
+            original: { id: data.id, type: data.type, tid: data.tid, chatname: data.chatname,
+                userid: data.userid, username: data.username, meta: data.meta }
+        });
+        if (localCensor !== engine || getCensorModelSelection() !== mode || !getAiSettingFlag('ollamaCensorBot')) return true;
+        return !result.blocked;
+    } catch (error) {
+        if ((engine && localCensor !== engine) || getCensorModelSelection() !== mode || !getAiSettingFlag('ollamaCensorBot')) return true;
+        localCensorStatus = 'Unavailable: ' + (error.message || String(error));
+        return !getAiSettingFlag('ollamaCensorBotBlockMode');
+    }
 }
 
 function getAiSettingFlag(settingKey) {
@@ -2506,10 +2616,14 @@ function parseNumericCensorDecision(llmOutput) {
 }
 
 let censorProcessingSlots = [false, false, false]; // Non-local providers can use a few concurrent moderation requests.
-async function censorMessageWithLLM(data) {
+async function censorMessageWithLLM(data, tab = false) {
     if (!data.chatmessage) {
         return true;
     }
+
+    const censorModel = getCensorModelSelection();
+    if (censorModel !== 'main') return censorMessageWithLocalModel(data, tab, censorModel);
+    if (localCensor) resetLocalCensor();
 	
 	const providerKey = getActiveCensorProviderKey();
 	const { isSafe, cleanedText } = isSafePhrase(data);
@@ -3823,10 +3937,15 @@ async function processUserInput(userInput, data, additionalInstructions, botname
     // Add current message
     
 
-    // Try RAG first, but fall back cleanly if retrieval looks weak.
+    // Files-only replies must not fall through to general chat, even with no imports.
+    const ragFilesOnly = getAiSettingFlag('ollamaRagEnabled') && getAiSettingFlag('ragFilesOnly');
+    // Semantic search uses the original message; keyword search keeps its query planner.
     if (await isRAGConfigured()) {
-	  const databaseDescriptor = localStorage.getItem('databaseDescriptor') || '';
-	  const ragPrompt = `${promptBase}
+	  const searchFirst = isRAGSemanticEnabled();
+	  let ragSearchQuery = searchFirst ? userInput : '';
+	  if (!searchFirst) {
+		const databaseDescriptor = localStorage.getItem('databaseDescriptor') || '';
+		const ragPrompt = `${promptBase}
 
 Decide if the current message needs a search of the custom knowledge database before responding.
 
@@ -3840,26 +3959,32 @@ Prefer this exact format:
 [NEEDS_SEARCH]YES or NO[/NEEDS_SEARCH]
 [SEARCH_QUERY]keyword1 keyword2[/SEARCH_QUERY]`;
 
-	  const ragDecision = await callLLMAPI(ragPrompt);
-	  const parsedDecision = ragDecision ? parseDecision(ragDecision) : null;
-	  let ragSearchQuery = '';
+		const ragDecision = await callLLMAPI(ragPrompt, null, null, null, null, null, { localBrowserStateless: true, localBrowserGeneration: { noRepeatNgramSize: 0 } });
+		const parsedDecision = ragDecision ? parseDecision(ragDecision) : null;
 
-	  if (parsedDecision?.needsSearch && parsedDecision.searchQuery) {
-		ragSearchQuery = parsedDecision.searchQuery.trim();
-	  } else if (ragDecision && !ragDecision.toLowerCase().includes('no_response')) {
-		ragSearchQuery = ragDecision.trim();
+		if (parsedDecision?.needsSearch && parsedDecision.searchQuery) {
+			ragSearchQuery = parsedDecision.searchQuery.trim();
+		} else if (ragDecision && !ragDecision.toLowerCase().includes('no_response') &&
+			!/^no[ -]*response[.!]?$/i.test(ragDecision.trim()) &&
+			!/\[NEEDS_SEARCH\]\s*NO\s*\[\/NEEDS_SEARCH\]/i.test(ragDecision)) {
+			ragSearchQuery = ragDecision.trim();
+		}
 	  }
 
 	  if (ragSearchQuery) {
-		const searchResults = await performLunrSearch(ragSearchQuery);
+		const searchResults = await performRAGSearch(ragSearchQuery, userInput);
 		if (searchResults.length) {
-			const ragResponse = await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions);
+			const replyContext = searchFirst && !privateBotPrompt ? promptBase + (settings.alwaysRespondLLM
+				? '\nRespond to the current group chat message directly and succinctly.'
+				: '\nDecide whether this group chat message calls for a reply from you. If not, reply with NO_RESPONSE.') : '';
+			const ragResponse = await generateResponseWithSearchResults(userInput, searchResults, data.chatname, additionalInstructions, ragSearchQuery, replyContext);
 			if (ragResponse) {
 				return ragResponse;
 			}
 		}
 	  }
 	}
+	if (ragFilesOnly) return false;
 
     // Regular response with context
 	let debugmode = false;
@@ -4105,6 +4230,7 @@ synonym1, synonym2, synonym3
 
 Do not include any other text or explanations outside these sections.`;
 
+		updateDocumentProgress(docId, 5 + Math.round(index / chunks.length * 90), 'Processing');
 		try {
 			const processedData = await callLLMAPI(prompt);
 			let parsedData = parseChunkAnalysis(processedData);
@@ -4120,6 +4246,7 @@ Do not include any other text or explanations outside these sections.`;
 			logProcessedChunk(parsedData, index);
 		} catch (error) {
 			console.warn(`Error processing chunk ${index + 1}:`, error);
+			throw error;
 		}
 
         // Add a small delay between chunks, to let things breath a bit.
@@ -4186,6 +4313,7 @@ function updateDocumentProgress(docId, progress, status) {
 }
 
 async function isRAGConfigured() {
+    if (!getAiSettingFlag('ollamaRagEnabled')) return false;
     // Check if there are any documents in the database
     const db = await openLunrDatabase();
     const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly');
@@ -4195,7 +4323,9 @@ async function isRAGConfigured() {
         request.onerror = () => reject(request.error);
         request.onsuccess = () => resolve(request.result);
     });
-    return (count > 0) && settings.ollamaRagEnabled;
+    // Prepare local retrieval from the stored imports.
+    if (count > 0 && isRAGSemanticEnabled()) getRAGSemanticEngine()?.warm();
+    return count > 0;
 }
 
 
@@ -4225,6 +4355,9 @@ function parseDecision(decisionText) {
 }
 
 async function clearLunrDatabase() {
+    resetRAGSemanticSearch(false);
+    uploadQueue.length = 0;
+    Object.keys(activeProcessing).forEach(docId => { activeProcessing[docId].cancel = true; });
     const db = await openLunrDatabase();
     const transaction = db.transaction([LUNR_DOCUMENT_STORE_NAME, 'lunrIndex'], 'readwrite');
     const documentStore = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
@@ -4246,6 +4379,7 @@ async function clearLunrDatabase() {
         
         // Clear the documentsRAG array
         documentsRAG = [];
+        if (globalThis.SSNRagCache) await SSNRagCache.remove().catch(error => console.warn('Could not clear derived search cache:', error));
         
         // Reset the Lunr index
         resetLunrIndex();
@@ -4260,6 +4394,70 @@ async function clearLunrDatabase() {
     } catch (error) {
         console.warn("Error clearing database:", error);
     }
+}
+
+function isRAGSemanticEnabled() {
+    return getAiSettingFlag('ollamaRagEnabled') && settings?.ragSearchMode?.optionsetting === 'semantic';
+}
+
+function resetRAGSemanticSearch(rebuild = false) {
+    ragSemanticGeneration++;
+    clearTimeout(ragSemanticTimer);
+    if (ragSemanticEngine) ragSemanticEngine.close();
+    ragSemanticEngine = null;
+    ragSemanticStatus = isRAGSemanticEnabled() ? 'Local search will prepare from your imported files.' : 'Keyword search is selected.';
+    if (rebuild && isRAGSemanticEnabled()) {
+        ragSemanticTimer = setTimeout(function prepare() {
+            if (!isRAGSemanticEnabled()) return;
+            if (isUploading) { ragSemanticTimer = setTimeout(prepare, 500); return; }
+            getRAGSemanticEngine()?.warm();
+        }, 500);
+    }
+}
+
+function getRAGSemanticEngine() {
+    if (!isRAGSemanticEnabled() || !globalThis.SSNRagSemanticSearch) return null;
+    if (ragSemanticEngine) return ragSemanticEngine;
+    const generation = ragSemanticGeneration;
+    const asset = path => typeof chrome !== 'undefined' && chrome.runtime?.getURL ? chrome.runtime.getURL(path) : path;
+    ragSemanticEngine = SSNRagSemanticSearch.create({
+        workerPath: asset('shared/ai/rag-semantic-worker.js'),
+        onStatus: text => { if (generation === ragSemanticGeneration) ragSemanticStatus = text; },
+        getRecords: async () => {
+            const db = await openLunrDatabase();
+            const request = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly').objectStore(LUNR_DOCUMENT_STORE_NAME).getAll();
+            const docs = await new Promise((resolve, reject) => {
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+            const records = [];
+            docs.forEach(doc => {
+                const chunks = Array.isArray(doc.chunks) ? doc.chunks : [doc];
+                chunks.forEach((chunk, index) => {
+                    if (typeof chunk.content !== 'string' || !chunk.content.trim()) return;
+                    records.push({ ref: Array.isArray(doc.chunks) ? doc.id + '_' + index : doc.id,
+                        docId: doc.id, title: [doc.title, chunk.title].filter(Boolean).join(' — '), content: chunk.content });
+                });
+            });
+            return records;
+        }
+    });
+    return ragSemanticEngine;
+}
+
+function getRAGSearchStatus() {
+    if (isRAGSemanticEnabled() && !isUploading && !ragSemanticEngine) getRAGSemanticEngine()?.warm();
+    else if (!isRAGSemanticEnabled() && ragSemanticEngine) resetRAGSemanticSearch(false);
+    return { text: ragSemanticStatus };
+}
+
+async function performRAGSearch(query, userInput = '') {
+    if (!isRAGSemanticEnabled()) return performLunrSearch(query);
+    const generation = ragSemanticGeneration;
+    const engine = getRAGSemanticEngine();
+    const semantic = engine ? await engine.search(userInput || query) : null;
+    if (generation === ragSemanticGeneration && isRAGSemanticEnabled() && semantic?.length) return semantic.map(result => ({ ...result, semanticGeneration: generation }));
+    return performLunrSearch(query);
 }
 
 function normalizeLunrResults(results, strategy = 'default') {
@@ -4718,7 +4916,40 @@ async function performLunrSearch(query) {
     }
 }
 
-async function generateResponseWithSearchResults(userInput, searchResults, chatname, additionalInstructions) {
+function getRAGContentExcerpt(doc, query, maxLength) {
+    const content = String(doc.content || '');
+    if (maxLength <= 0) return '';
+    if (content.length <= maxLength) return content;
+
+    // Search the whole stored chunk, including older imports, for a passage
+    // that fits the answer budget. Overlap keeps nearby context together.
+    const windowSize = Math.min(maxLength, 4000);
+    const overlap = Math.min(500, Math.floor(windowSize / 4));
+    let bestContent = '';
+    let bestScore = -Infinity;
+    for (let start = 0; start < content.length; start += windowSize - overlap) {
+        let end = Math.min(content.length, start + windowSize);
+        let passageStart = start;
+        if (start > 0) {
+            const nextLine = content.indexOf('\n', start);
+            if (nextLine >= start && nextLine < start + Math.min(200, overlap)) passageStart = nextLine + 1;
+        }
+        if (end < content.length) {
+            const lastLine = content.lastIndexOf('\n', end - 1);
+            if (lastLine > end - Math.min(200, overlap)) end = lastLine;
+        }
+        const passage = content.slice(passageStart, end);
+        const score = scoreRAGEvidenceForUserInput({ ...doc, content: passage }, query);
+        if (score > bestScore) {
+            bestScore = score;
+            bestContent = passage;
+        }
+        if (end === content.length) break;
+    }
+    return bestContent;
+}
+
+async function generateResponseWithSearchResults(userInput, searchResults, chatname, additionalInstructions, searchQuery = '', replyContext = '') {
     try {
         const relevantDocs = await getDocumentsFromSearchResults(searchResults);
         
@@ -4731,7 +4962,7 @@ async function generateResponseWithSearchResults(userInput, searchResults, chatn
                 }
                 return {
                     ...doc,
-                    evidenceScore: scoreRAGEvidenceForUserInput(doc, userInput, searchResults[index]?.score || 0)
+                    evidenceScore: searchResults[index]?.semantic ? searchResults[index].score : scoreRAGEvidenceForUserInput(doc, userInput, searchResults[index]?.score || 0)
                 };
             })
             .filter(Boolean)
@@ -4745,16 +4976,17 @@ async function generateResponseWithSearchResults(userInput, searchResults, chatn
         // Concatenate a small set of strong chunks to avoid flooding the response prompt.
         let combinedContent = '';
         for (const doc of validDocs.slice(0, RAG_MAX_EVIDENCE_DOCS)) {
-            const evidenceBlock = [
-                doc.documentTitle ? `Document: ${doc.documentTitle}` : '',
-                doc.title ? `Section: ${doc.title}` : '',
-                doc.summary ? `Summary: ${doc.summary}` : '',
-                `Content: ${doc.content}`
+            const remaining = RAG_CONTEXT_CHAR_LIMIT - combinedContent.length - 2;
+            if (remaining < 128) break;
+            const heading = [
+                doc.documentTitle ? `Document: ${String(doc.documentTitle).slice(0, 300)}` : '',
+                doc.title ? `Section: ${String(doc.title).slice(0, 300)}` : '',
+                doc.summary ? `Summary: ${String(doc.summary).slice(0, 1000)}` : ''
             ].filter(Boolean).join('\n');
-
-            if (combinedContent.length + evidenceBlock.length > RAG_CONTEXT_CHAR_LIMIT) {
-                break;
-            }
+            const prefix = (heading ? heading + '\n' : '') + 'Content: ';
+            const content = getRAGContentExcerpt(doc, userInput + ' ' + searchQuery, remaining - prefix.length);
+            if (!content) continue;
+            const evidenceBlock = prefix + content;
             combinedContent += evidenceBlock + '\n\n';
         }
 
@@ -4762,7 +4994,8 @@ async function generateResponseWithSearchResults(userInput, searchResults, chatn
             return false;
         }
 
-        const prompt = `You are an AI assistant. ${additionalInstructions || ''}
+        const responseInstructions = replyContext || ('You are an AI assistant. ' + (additionalInstructions || ''));
+        const prompt = `${responseInstructions}
 
 Given the following user input, user name, and relevant information from our database, generate an appropriate response:
 
@@ -4776,8 +5009,10 @@ Provide a concise and informative response based on the above information only w
 If the retrieved information is not enough to answer confidently, reply with NO_RESPONSE.
 Your response should be suitable for a chat environment, ideally not exceeding 150 characters.`;
 
-        const response = await callLLMAPI(prompt);
-        if (!response || response.toLowerCase().includes('no_response')) {
+        // Retrieval prompts are self-contained. Do not retain routing instructions or
+        // block exact phrases copied from the supplied evidence in local models.
+        const response = await callLLMAPI(prompt, null, null, null, null, null, { localBrowserStateless: true, localBrowserGeneration: { noRepeatNgramSize: 0 } });
+        if (!response || response.toLowerCase().includes('no_response') || /^no[ -]*response[.!]?$/i.test(response.trim())) {
             return false;
         }
         return response;
@@ -4788,19 +5023,27 @@ Your response should be suitable for a chat environment, ideally not exceeding 1
 }
 
 async function getDocumentsFromSearchResults(searchResults) {
+    if (!searchResults.length) return [];
     const db = await openLunrDatabase();
-    
-    return Promise.all(searchResults.map(async result => {
-        try {
-            const getStoredDoc = (key) => new Promise((resolve, reject) => {
+    // Several matching chunks can share a document. Read it once per lookup,
+    // without keeping a cache that could outlive edits or removals.
+    const storedDocs = new Map();
+    const getStoredDoc = (key) => {
+        if (!storedDocs.has(key)) {
+            storedDocs.set(key, new Promise((resolve, reject) => {
                 const request = db
                     .transaction([LUNR_DOCUMENT_STORE_NAME], "readonly")
                     .objectStore(LUNR_DOCUMENT_STORE_NAME)
                     .get(key);
                 request.onerror = () => reject(request.error);
                 request.onsuccess = () => resolve(request.result);
-            });
-
+            }));
+        }
+        return storedDocs.get(key);
+    };
+    
+    const docs = await Promise.all(searchResults.map(async result => {
+        try {
             let doc = await getStoredDoc(result.ref);
             if (doc) {
                 return { 
@@ -4851,10 +5094,19 @@ async function getDocumentsFromSearchResults(searchResults) {
                 summary: doc.overallSummary
             };
         } catch (error) {
-            console.warn(`Error retrieving document ${docId}:`, error);
+            console.warn(`Error retrieving document ${result.ref}:`, error);
             return null;
         }
     }));
+    return docs.map((doc, index) => {
+        const result = searchResults[index];
+        if (!doc || !result.semantic) return doc;
+        if (result.semanticGeneration !== ragSemanticGeneration || !isRAGSemanticEnabled()) return null;
+        const ranges = result.ranges || [{ start: result.start, end: result.end }];
+        if (!Array.isArray(ranges) || !ranges.length || ranges.length > 2 || !ranges.every(range =>
+            range && Number.isInteger(range.start) && Number.isInteger(range.end) && range.start >= 0 && range.end > range.start && range.end <= (doc.content || '').length)) return null;
+        return { ...doc, content: ranges.slice().sort((a, b) => a.start - b.start).map(range => doc.content.slice(range.start, range.end)).join('\n[…]\n') };
+    });
 }
 
 function removeUnnecessaryQuotes(input) {
@@ -5064,8 +5316,8 @@ function logProcessedChunk(chunk, index) {
     log(`  Title: ${chunk.title}`);
     log(`  Level: ${chunk.level}`);
     log(`  Summary: ${chunk.summary}`);
-    log(`  Tags: ${chunk?.tags.join(', ')}`);
-    log(`  Synonyms: ${chunk?.synonyms.join(', ')}`);
+    log(`  Tags: ${Array.isArray(chunk.tags) ? chunk.tags.join(', ') : ''}`);
+    log(`  Synonyms: ${Array.isArray(chunk.synonyms) ? chunk.synonyms.join(', ') : ''}`);
     log(`  Content length: ${chunk?.content.length} characters`);
     log(`  Content (first 200 chars): ${chunk?.content.substring(0, 200)}...`);
     log('---');
@@ -5203,13 +5455,15 @@ async function saveLunrIndex() {
     }
 }
 
-async function indexProcessedDocument(docId, processedDoc, title) {
+async function indexProcessedDocument(docId, processedDoc, title, preprocessed = true) {
     if (!processedDoc) {
         log(`Skipping indexing for cancelled document ${docId}`);
         return;
     }
     try {
         const db = await openLunrDatabase();
+        // A picker/import may still be running when its document is removed.
+        if (!documentsRAG.some(doc => doc.id === docId && doc.status !== 'Deleting')) return;
         const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readwrite');
         const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
         
@@ -5235,7 +5489,7 @@ async function indexProcessedDocument(docId, processedDoc, title) {
 
         // Update documentsRAG
         const docIndex = documentsRAG.findIndex(doc => doc.id === docId);
-        if (docIndex !== -1) {
+        if (docIndex !== -1 && documentsRAG[docIndex].status !== 'Deleting') {
             documentsRAG[docIndex] = {
                 id: docId,
                 title: title,
@@ -5243,22 +5497,18 @@ async function indexProcessedDocument(docId, processedDoc, title) {
                 progress: 100
             };
         } else {
-            documentsRAG.push({
-                id: docId,
-                title: title,
-                status: 'Processed',
-                progress: 100
-            });
+            return;
         }
 
         log("Document indexed successfully");
-        await updateDatabaseDescriptor();
+        await updateDatabaseDescriptor(preprocessed);
         await saveLunrIndex();
         
         // Send updated documentsRAG to popup
         messagePopup({documents: documentsRAG});
     } catch (error) {
         console.warn("Error indexing document:", error);
+        throw error;
     }
 }
 
@@ -5337,6 +5587,7 @@ async function addDocumentToRAG(docId, content, title, tags = [], synonyms = [],
 }
 
 async function deleteDocument(docId) {
+    resetRAGSemanticSearch(false);
     const docIndex = documentsRAG.findIndex(doc => doc.id === docId);
     if (docIndex !== -1) {
         documentsRAG[docIndex].status = 'Deleting';
@@ -5361,22 +5612,25 @@ async function deleteDocument(docId) {
 
         // Remove from documentsRAG array
         documentsRAG = documentsRAG.filter(doc => doc.id !== docId);
+        if (globalThis.SSNRagCache) await SSNRagCache.remove(docId).catch(error => console.warn('Could not remove derived search cache:', error));
 
         // Rebuild index and update descriptor
         await rebuildIndex();
         await saveLunrIndex();
-        await updateDatabaseDescriptor();
+        await updateDatabaseDescriptor(false);
     } catch (error) {
         console.warn("Error deleting document:", error);
-        if (docIndex !== -1) {
-            documentsRAG[docIndex].status = 'Delete Failed';
+        const failedDoc = documentsRAG.find(doc => doc.id === docId);
+        if (failedDoc) {
+            failedDoc.status = 'Delete Failed';
+            failedDoc.error = error && error.message ? error.message : String(error);
         }
     }
 
     messagePopup({documents: documentsRAG});
 }
 
-async function updateDatabaseDescriptor() {
+async function updateDatabaseDescriptor(useLLM = true) {
     const db = await openLunrDatabase();
     const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly');
     const store = transaction.objectStore(LUNR_DOCUMENT_STORE_NAME);
@@ -5388,6 +5642,14 @@ async function updateDatabaseDescriptor() {
     
     if (!Array.isArray(docs) || docs.length === 0) {
         localStorage.setItem('databaseDescriptor', 'The database is currently empty.');
+        return;
+    }
+
+    if (!useLLM) {
+        const description = docs.map(doc => [doc.title, doc.overallSummary,
+            (doc.chunks || []).map(chunk => chunk.title || chunk.content || '').join(' ')
+        ].filter(Boolean).join(': ')).join('\n');
+        localStorage.setItem('databaseDescriptor', description.slice(0, 4000));
         return;
     }
 
@@ -5411,7 +5673,10 @@ Focus on key topics, themes, and types of information available.`;
 }
 
 async function addNewDocument(title, content, preprocess) {
-    const docId = 'doc_' + Date.now();
+    if (typeof content !== 'string' || !content.trim()) {
+        throw new Error('Please select a non-empty text or Markdown file.');
+    }
+    const docId = 'doc_' + Date.now() + '_' + (++ragDocumentSequence);
     const newDoc = {
         id: docId,
         title: title,
@@ -5444,58 +5709,78 @@ function ensureLunrIndexInitialized() {
 }
 
 async function processUploadQueue() {
-    if (uploadQueue.length === 0) {
-        isUploading = false;
-        return;
-    }
-
+    if (isUploading) return;
     isUploading = true;
-    const { docId, content, preprocess } = uploadQueue.shift();
-
     try {
-        updateDocumentProgress(docId, 0, 'Uploading');
-        
-		const processedDoc = await preprocessDocument(content, docId, preprocess);
-		if (processedDoc) { 
-			await indexProcessedDocument(docId, processedDoc, documentsRAG.find(doc => doc.id === docId).title, true);
-		} else {
-			// Document processing was cancelled
-			documentsRAG = documentsRAG.filter(doc => doc.id !== docId);
-		}
-    } catch (error) {
-        console.warn("Error processing document:", error);
-        updateDocumentProgress(docId, 0, 'Failed');
+        while (uploadQueue.length) {
+            const { docId, content, preprocess } = uploadQueue.shift();
+            const doc = documentsRAG.find(item => item.id === docId);
+            if (!doc || doc.status === 'Deleting') continue;
+            try {
+                updateDocumentProgress(docId, 0, 'Uploading');
+                const processedDoc = await preprocessDocument(content, docId, preprocess);
+                if (processedDoc && documentsRAG.includes(doc) && doc.status !== 'Deleting') {
+                    await indexProcessedDocument(docId, processedDoc, doc.title, preprocess);
+                } else {
+                    documentsRAG = documentsRAG.filter(item => item.id !== docId);
+                }
+            } catch (error) {
+                console.warn("Error processing document:", error);
+                const failedDoc = documentsRAG.find(item => item.id === docId);
+                if (failedDoc) failedDoc.error = error && error.message ? error.message : String(error);
+                updateDocumentProgress(docId, 0, 'Failed');
+            } finally {
+                delete activeProcessing[docId];
+                messagePopup({documents: documentsRAG});
+            }
+        }
+    } finally {
+        isUploading = false;
     }
-    messagePopup({documents: documentsRAG});
-	await inspectDatabase();
-    processUploadQueue(); // Process next document in queue
 }
 async function importSettingsLLM(usePreprocessing = true) {
     try {
 		let importFile;
-		const restoreTarget = typeof bringBackgroundPageToFrontForPicker === 'function'
-			? await bringBackgroundPageToFrontForPicker()
-			: null;
-		try {
-			importFile = await window.showOpenFilePicker();
-		} finally {
-			if (typeof restorePreviousTabAfterPicker === 'function') {
-				await restorePreviousTabAfterPicker(restoreTarget);
+		let title = 'Imported document';
+		if (typeof isSSAPP !== 'undefined' && isSSAPP && typeof ipcRenderer !== 'undefined' && typeof ipcRenderer.invoke === 'function') {
+			// This existing SSApp picker returns the selected path without changing ticker settings.
+			const selected = await ipcRenderer.invoke('ssapp:choose-ticker-file', {
+				title: 'Select knowledge document',
+				filters: [{ name: 'Text and Markdown', extensions: ['md', 'markdown', 'txt'] }, { name: 'All Files', extensions: ['*'] }]
+			});
+			if (selected && selected.error) throw new Error(selected.error);
+			if (!selected || selected.canceled) return;
+			if (typeof selected.filePath !== 'string' || !selected.filePath) throw new Error('No file was selected.');
+			title = selected.filePath.split(/[\\/]/).pop();
+			importFile = await ipcRenderer.invoke('read-from-file', selected.filePath);
+			if (typeof importFile !== 'string') throw new Error('Could not read the selected file.');
+		} else {
+			const restoreTarget = typeof bringBackgroundPageToFrontForPicker === 'function'
+				? await bringBackgroundPageToFrontForPicker()
+				: null;
+			try {
+				importFile = await window.showOpenFilePicker();
+			} finally {
+				if (typeof restorePreviousTabAfterPicker === 'function') {
+					await restorePreviousTabAfterPicker(restoreTarget);
+				}
+			}
+			if (typeof isSSAPP !== 'undefined' && isSSAPP) {
+				// Older desktop bridges return text, or a numeric cancellation/error code.
+				if (typeof importFile !== 'string') return;
+			} else {
+				if (!importFile || !importFile.length) return;
+				importFile = await importFile[0].getFile();
+				title = importFile.name;
+				importFile = await importFile.text();
 			}
 		}
-		var title = "";
-		
-		try {
-			importFile = await importFile[0].getFile();
-			title = importFile.name;
-			importFile = await importFile.text();
-			
-		} catch(e){}
         
         await addNewDocument(title, importFile, usePreprocessing);
         
         log("Import completed successfully");
     } catch (e) {
+        if (e && e.name === 'AbortError') return;
         console.warn("Error in importSettings:", e);
         alert("Error processing file: " + e.message);
     }

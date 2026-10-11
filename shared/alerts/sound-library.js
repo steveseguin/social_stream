@@ -164,7 +164,7 @@
             stop();
             var value = select.value;
             options.setValue(value);
-            status.textContent = value.indexOf('/voice-') !== -1 ? 'Synthetic voice clip selected.' : 'Sound selected.';
+            status.textContent = value.indexOf('/voice-') !== -1 ? 'Voice clip selected.' : 'Sound selected.';
         });
         button.addEventListener('click', function () {
             var wasPlaying = active && active.row === row;

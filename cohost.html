@@ -1677,6 +1677,7 @@
 		</div>
 		<div id="puppet-container"></div>
 		<script type="text/javascript" src="./shared/ai/browserModelCatalog.js"></script>
+		<script type="text/javascript" src="./shared/ai/localBrowserLLM.js"></script>
 		<script type="text/javascript" src="tts.js"></script>
 		<script>
 			const cohostOverlayParams = new URLSearchParams(location.search);
@@ -1734,6 +1735,7 @@
 			}
 
 			function queueCohostOverlayPayload(payload, waitMs = 250) {
+				if (!getCohostSessionParams().room) return;
 				cohostOverlayPendingPayload = payload;
 				const now = Date.now();
 				const elapsed = now - cohostOverlayLastSent;
@@ -2056,6 +2058,12 @@
 				}
 			}
 			function createLocalBrowserWorker() {
+				if (window.location.protocol === "moz-extension:") {
+					throw new Error("Local AI models are not included in the Firefox extension. Select an AI service.");
+				}
+				if (window.ssappLocalModel && window.SSNLocalBrowserLLM) {
+					return window.SSNLocalBrowserLLM.createAppWorker(window.ssappLocalModel);
+				}
 				const workerUrl = resolveLocalBrowserWorkerUrl();
 				if (window.location.protocol === "file:") {
 					const bootstrapSource = `const pendingMessages = [];
@@ -2094,6 +2102,9 @@
 			}
 			function formatLocalBrowserWorkerError(error) {
 				const baseMessage = error?.message || "Failed to start local model worker";
+				if (window.ssappLocalModel) {
+					return baseMessage.replace(/Try the request again(?: to restart it)?\./, "Stop and start the co-host to reconnect.");
+				}
 				if (window.location.protocol === "file:") {
 					return `${baseMessage}. If your browser still blocks local workers from file://, open cohost.html over http://localhost or use the extension build.`;
 				}
@@ -3386,6 +3397,7 @@
 					this.modelSourceLabel = "remote";
 					this.worker = null;
 					this.stopped = false;
+					this.stopGeneration = 0;
 					this.connected = false;
 					this.pendingRequests = new Map();
 					this.requestCounter = 0;
@@ -3592,6 +3604,12 @@
 					return new Promise((resolve, reject) => {
 						const timeoutId = setTimeout(() => {
 							this.pendingRequests.delete(requestId);
+							if (window.ssappLocalModel && this.worker) {
+								this.worker.terminate();
+								this.worker = null;
+								this.connected = false;
+								this.resetPendingRequests(`Local model ${type} timed out.`);
+							}
 							reject(new Error(`Local model ${type} timed out.`));
 						}, timeoutMs);
 						this.pendingRequests.set(requestId, {
@@ -3603,11 +3621,14 @@
 						if (type === "generate") {
 							this.activeRequestId = requestId;
 						}
-						this.worker.postMessage({
-							type,
-							requestId,
-							...payload
-						});
+						try {
+							this.worker.postMessage({ type, requestId, ...payload });
+						} catch (error) {
+							clearTimeout(timeoutId);
+							this.pendingRequests.delete(requestId);
+							if (this.activeRequestId === requestId) this.activeRequestId = null;
+							reject(error);
+						}
 					});
 				}
 				handleWorkerResponse(message) {
@@ -3676,6 +3697,7 @@
 					this.ttsReject = null;
 				}
 				cancelBrowserTts(errorMessage = "") {
+					if (this.cancelTtsPlayback) this.cancelTtsPlayback();
 					const complete = errorMessage ? this.ttsReject : this.ttsResolve;
 					if (complete) {
 						if (errorMessage) {
@@ -3694,6 +3716,8 @@
 					if (window.TTS) {
 						try {
 							window.TTS.clearQueue();
+							window.TTS.premiumSerial++;
+							if (typeof window.TTS.resolveCurrentAudioPlayback === "function") window.TTS.resolveCurrentAudioPlayback(false);
 						} catch (_error) {}
 						try {
 							if (window.TTS.audio) {
@@ -3825,13 +3849,14 @@
 							outputState: getCohostTtsProviderLabel() + " speaking",
 							outputPreview: text
 						});
-						const spoke = await runCohostTts(text, selectedProvider);
+						const spoke = await runCohostTts(text, selectedProvider, this);
+						if (spoke === null) return true; // Speech was cancelled; do not start a fallback.
 						if (!spoke && selectedProvider !== "system") {
 							updateVoiceTelemetry({
 								outputState: getCohostTtsProviderLabel() + " failed; retrying System TTS",
 								outputPreview: text
 							});
-							await runCohostTts(text, "system");
+							if (await runCohostTts(text, "system", this) === null) return true;
 							applyCohostTtsProvider(selectedProvider);
 						}
 						updateDiagnostics({
@@ -3966,23 +3991,36 @@
 					}
 				}
 				async setupSpeechRecognition() {
+					if (this.stopped) return;
+					const generation = this.stopGeneration;
+					const setupVersion = (this.speechSetupVersion || 0) + 1;
+					this.speechSetupVersion = setupVersion;
+					let recognition;
 					try {
-						this.recognition = await createCohostSpeechRecognition();
+						recognition = await createCohostSpeechRecognition();
 					} catch (error) {
+						if (this.stopped || generation !== this.stopGeneration || setupVersion !== this.speechSetupVersion) return;
 						showError("Local speech recognition failed to initialize: " + (error?.message || error));
 						updateVoiceTelemetry({ inputState: "Local Whisper unavailable" });
 						return;
 					}
+					if (this.stopped || generation !== this.stopGeneration || setupVersion !== this.speechSetupVersion) {
+						try { if (recognition) recognition.stop(); } catch (_error) {}
+						return;
+					}
+					this.recognition = recognition;
+					const isCurrent = () => !this.stopped && generation === this.stopGeneration && setupVersion === this.speechSetupVersion && this.recognition === recognition;
 					if (!this.recognition) {
 						showError(DESKTOP_LOCAL_STT_AVAILABLE ? "Select a microphone to use local Whisper." : "Speech recognition is not supported in this browser. Try using Chrome.");
 						return;
 					}
-					attachCohostSpeechStatus(this.recognition);
+					attachCohostSpeechStatus(this.recognition, isCurrent);
 					this.recognition.continuous = true;
 					this.recognition.interimResults = true;
 					this.recognition.maxAlternatives = 1;
 					this.recognition.lang = "en-US";
 					this.recognition.onstart = () => {
+						if (!isCurrent()) return;
 						this.isRecognizing = true;
 						this.recognitionStartPending = false;
 						avatar.setEmotion("listening", false);
@@ -3992,6 +4030,7 @@
 						});
 					};
 					this.recognition.onresult = event => {
+						if (!isCurrent()) return;
 						let interimTranscript = "";
 						let finalTranscript = "";
 						for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -4015,6 +4054,7 @@
 
 							if (this.speechDebounceTimer) clearTimeout(this.speechDebounceTimer);
 							this.speechDebounceTimer = setTimeout(() => {
+								if (!isCurrent()) return;
 								const textToSend = this.pendingSpeechTranscript.trim();
 								if (textToSend) {
 									this.sendPrompt(textToSend, "speech").catch(err => {
@@ -4035,6 +4075,7 @@
 							avatar.setEmotion("listening", false);
 							clearTimeout(this.recognitionTimeout);
 							this.recognitionTimeout = setTimeout(() => {
+								if (!isCurrent()) return;
 								if (!this.interimTranscript) {
 									avatar.setEmotion("thinking", false);
 								}
@@ -4042,6 +4083,7 @@
 						}
 					};
 					this.recognition.onerror = event => {
+						if (!isCurrent()) return;
 						this.isRecognizing = false;
 						this.recognitionStartPending = false;
 						if (this.ttsActive) {
@@ -4057,6 +4099,7 @@
 						}
 					};
 					this.recognition.onend = () => {
+						if (!isCurrent()) return;
 						this.isRecognizing = false;
 						this.recognitionStartPending = false;
 						if (this.ttsActive) {
@@ -4113,6 +4156,7 @@
 					if (this.connected && this.worker) {
 						return;
 					}
+					const generation = this.stopGeneration;
 					this.resetPendingRequests();
 					if (this.worker) {
 						this.worker.terminate();
@@ -4138,9 +4182,16 @@
 						});
 						throw new Error(errorMessage);
 					}
-					this.worker.onmessage = this.handleWorkerMessage;
+					const worker = this.worker;
+					const isCurrent = () => !this.stopped && generation === this.stopGeneration && this.worker === worker;
+					this.worker.onmessage = event => { if (isCurrent()) this.handleWorkerMessage(event); };
 					this.worker.onerror = event => {
+						if (!isCurrent()) return;
 						const errorMessage = formatLocalBrowserWorkerError(event || {});
+						if (window.ssappLocalModel && this.worker) {
+							this.worker.terminate();
+							this.worker = null;
+						}
 						this.connected = false;
 						updateDiagnostics({
 							state: "error",
@@ -4150,10 +4201,12 @@
 						});
 						this.resetPendingRequests(errorMessage);
 					};
-					const workerTarget = await this.resolveWorkerModelTarget();
-					this.workerModelId = workerTarget.modelId;
-					this.modelSourceLabel = workerTarget.sourceLabel;
+					let workerTarget;
 					try {
+						workerTarget = await this.resolveWorkerModelTarget();
+						if (!isCurrent()) throw new DOMException("Co-host stopped", "AbortError");
+						this.workerModelId = workerTarget.modelId;
+						this.modelSourceLabel = workerTarget.sourceLabel;
 						await this.requestWorker(
 							"init",
 							{
@@ -4165,8 +4218,9 @@
 							1800000
 						);
 					} catch (error) {
+						if (!isCurrent()) throw error;
 						const baseMessage = error?.message || String(error || "");
-						const errorMessage = workerTarget.sourceLabel === "remote" && isLikelyRemoteAccessError(baseMessage) ? buildBundledModelAccessError(this.providerConfig, this.remoteHost, baseMessage) : baseMessage;
+						const errorMessage = workerTarget && workerTarget.sourceLabel === "remote" && isLikelyRemoteAccessError(baseMessage) ? buildBundledModelAccessError(this.providerConfig, this.remoteHost, baseMessage) : baseMessage;
 						if (this.worker) {
 							this.worker.terminate();
 							this.worker = null;
@@ -4180,6 +4234,7 @@
 						});
 						throw new Error(errorMessage);
 					}
+					if (!isCurrent()) throw new DOMException("Co-host stopped", "AbortError");
 					this.connected = true;
 					this.reconnectAttempts = 0;
 					updateDiagnostics({
@@ -4196,11 +4251,14 @@
 					});
 				}
 				async start() {
+					const generation = this.stopGeneration;
 					this.stopped = false;
 					await this.connect();
+					if (this.stopped || generation !== this.stopGeneration) throw new DOMException("Co-host stopped", "AbortError");
 					if (hasCohostSpeechInput(this.stream)) {
 						await this.setupSpeechRecognition();
 					}
+					if (this.stopped || generation !== this.stopGeneration) throw new DOMException("Co-host stopped", "AbortError");
 					if (this.pendingGreeting) {
 						this.pendingGreeting = false;
 						if (shouldCohostGreetOnConnect()) this.sendPrompt("Hi, introduce yourself in a sentence for me. Be friendly to me.", "greeting").catch(err => {
@@ -4227,6 +4285,7 @@
 						}
 						throw new Error("Local model is not connected.");
 					}
+					const generation = this.stopGeneration;
 					this.responseActive = true;
 					this.currentResponseText = "";
 					this.lastActivityTime = Date.now();
@@ -4254,6 +4313,7 @@
 							},
 							300000
 						);
+						if (generation !== this.stopGeneration) return;
 						if (!this.currentResponseText && result.text) {
 							this.appendModelText(result.text);
 						} else if (result.text && result.text !== this.currentResponseText) {
@@ -4270,6 +4330,7 @@
 								});
 							});
 						}
+						if (generation !== this.stopGeneration) return;
 						this.finalizeResponse();
 						updateDiagnostics({
 							state: "connected",
@@ -4278,6 +4339,7 @@
 							lastError: "-"
 						});
 					} catch (error) {
+						if (generation !== this.stopGeneration) return;
 						this.finalizeResponse();
 						if (this.shouldSilencePromptError(error, source)) {
 							return;
@@ -4343,15 +4405,21 @@
 				async reconnect() {
 					this.reconnectAttempts += 1;
 					this.stop();
+					const generation = this.stopGeneration;
 					this.stopped = false;
 					await this.connect();
+					if (this.stopped || generation !== this.stopGeneration) throw new DOMException("Co-host stopped", "AbortError");
 					if (hasCohostSpeechInput(this.stream)) {
 						await this.setupSpeechRecognition();
 					}
+					if (this.stopped || generation !== this.stopGeneration) throw new DOMException("Co-host stopped", "AbortError");
 					return true;
 				}
 				stop() {
 					this.stopped = true;
+					this.stopGeneration++;
+					clearTimeout(this.speechDebounceTimer);
+					this.pendingSpeechTranscript = "";
 					this.connected = false;
 					this.finalizeResponse();
 					this.resetPendingRequests();
@@ -5106,12 +5174,12 @@
 					// Capture at the device/context-native rate; forcing a 16 kHz context
 					// can produce silent MediaStream input in Electron. Audio is resampled
 					// to Whisper's 16 kHz requirement after voice activity detection.
-					this.audioContext = new AudioContextClass();
+					const audioContext = new AudioContextClass();
+					this.audioContext = audioContext;
 					if (this.audioContext.state === "suspended") {
-						await this.audioContext.resume();
+						await audioContext.resume();
 					}
-					if (generation !== this.generation) {
-						this.closeCapture(false);
+					if (generation !== this.generation || this.audioContext !== audioContext) {
 						return;
 					}
 					this.sourceNode = this.audioContext.createMediaStreamSource(this.inputStream);
@@ -5135,12 +5203,12 @@
 					// graph after its first render quantum. Reading the same track from a
 					// separate analyser context keeps the capture device active without
 					// sending microphone audio to an output device.
-					this.keepAliveContext = new AudioContextClass();
+					const keepAliveContext = new AudioContextClass();
+					this.keepAliveContext = keepAliveContext;
 					if (this.keepAliveContext.state === "suspended") {
-						await this.keepAliveContext.resume();
+						await keepAliveContext.resume();
 					}
-					if (generation !== this.generation) {
-						this.closeCapture(false);
+					if (generation !== this.generation || this.keepAliveContext !== keepAliveContext) {
 						return;
 					}
 					this.keepAliveSource = this.keepAliveContext.createMediaStreamSource(this.inputStream);
@@ -5425,9 +5493,10 @@
 				return SpeechRecognition ? new SpeechRecognition() : null;
 			}
 
-			function attachCohostSpeechStatus(recognition) {
+			function attachCohostSpeechStatus(recognition, isCurrent) {
 				if (!recognition || !(recognition instanceof DesktopWhisperRecognition)) return;
 				recognition.onstatus = status => {
+					if (isCurrent && !isCurrent()) return;
 					const label = String(status && status.label ? status.label : "Listening (Desktop Whisper)");
 					const phase = String(status && status.phase ? status.phase : "listening");
 					updateVoiceTelemetry({ inputState: label });
@@ -5446,12 +5515,14 @@
 					this.providerLabel = "OpenAI-Compatible (Custom)";
 					this.connected = false;
 					this.stopped = false;
+					this.stopGeneration = 0;
 					this.recognition = null;
 					this.isRecognizing = false;
 					this.recognitionTimeout = null;
 					this.interimTranscript = "";
 					this.finalTranscript = "";
 					this.responseActive = false;
+					this.requestController = null;
 					this.currentResponseText = "";
 					this.pendingGreeting = true;
 					this.lastActivityTime = Date.now();
@@ -5624,6 +5695,7 @@
 					this.ttsReject = null;
 				}
 				cancelBrowserTts(errorMessage = "") {
+					if (this.cancelTtsPlayback) this.cancelTtsPlayback();
 					const complete = errorMessage ? this.ttsReject : this.ttsResolve;
 					if (complete) {
 						if (errorMessage) {
@@ -5642,6 +5714,8 @@
 					if (window.TTS) {
 						try {
 							window.TTS.clearQueue();
+							window.TTS.premiumSerial++;
+							if (typeof window.TTS.resolveCurrentAudioPlayback === "function") window.TTS.resolveCurrentAudioPlayback(false);
 						} catch (_error) {}
 						try {
 							if (window.TTS.audio) {
@@ -5762,13 +5836,14 @@
 							outputState: getCohostTtsProviderLabel() + " speaking",
 							outputPreview: text
 						});
-						const spoke = await runCohostTts(text, selectedProvider);
+						const spoke = await runCohostTts(text, selectedProvider, this);
+						if (spoke === null) return true; // Speech was cancelled; do not start a fallback.
 						if (!spoke && selectedProvider !== "system") {
 							updateVoiceTelemetry({
 								outputState: getCohostTtsProviderLabel() + " failed; retrying System TTS",
 								outputPreview: text
 							});
-							await runCohostTts(text, "system");
+							if (await runCohostTts(text, "system", this) === null) return true;
 							applyCohostTtsProvider(selectedProvider);
 						}
 						updateDiagnostics({
@@ -5897,23 +5972,36 @@
 					}
 				}
 				async setupSpeechRecognition() {
+					if (this.stopped) return;
+					const generation = this.stopGeneration;
+					const setupVersion = (this.speechSetupVersion || 0) + 1;
+					this.speechSetupVersion = setupVersion;
+					let recognition;
 					try {
-						this.recognition = await createCohostSpeechRecognition();
+						recognition = await createCohostSpeechRecognition();
 					} catch (error) {
+						if (this.stopped || generation !== this.stopGeneration || setupVersion !== this.speechSetupVersion) return;
 						showError("Local speech recognition failed to initialize: " + (error?.message || error));
 						updateVoiceTelemetry({ inputState: "Local Whisper unavailable" });
 						return;
 					}
+					if (this.stopped || generation !== this.stopGeneration || setupVersion !== this.speechSetupVersion) {
+						try { if (recognition) recognition.stop(); } catch (_error) {}
+						return;
+					}
+					this.recognition = recognition;
+					const isCurrent = () => !this.stopped && generation === this.stopGeneration && setupVersion === this.speechSetupVersion && this.recognition === recognition;
 					if (!this.recognition) {
 						showError(DESKTOP_LOCAL_STT_AVAILABLE ? "Select a microphone to use local Whisper." : "Speech recognition is not supported in this browser. Try using Chrome.");
 						return;
 					}
-					attachCohostSpeechStatus(this.recognition);
+					attachCohostSpeechStatus(this.recognition, isCurrent);
 					this.recognition.continuous = true;
 					this.recognition.interimResults = true;
 					this.recognition.maxAlternatives = 1;
 					this.recognition.lang = "en-US";
 					this.recognition.onstart = () => {
+						if (!isCurrent()) return;
 						this.isRecognizing = true;
 						avatar.setEmotion("listening", false);
 						updateVoiceTelemetry({
@@ -5922,6 +6010,7 @@
 						});
 					};
 					this.recognition.onresult = event => {
+						if (!isCurrent()) return;
 						let interimTranscript = "";
 						let finalTranscript = "";
 						for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -5945,6 +6034,7 @@
 
 							if (this.speechDebounceTimer) clearTimeout(this.speechDebounceTimer);
 							this.speechDebounceTimer = setTimeout(() => {
+								if (!isCurrent()) return;
 								const textToSend = this.pendingSpeechTranscript.trim();
 								if (textToSend) {
 									this.sendPrompt(textToSend, "streamer_voice").catch(err => {
@@ -5962,6 +6052,7 @@
 							avatar.setEmotion("listening", false);
 							clearTimeout(this.recognitionTimeout);
 							this.recognitionTimeout = setTimeout(() => {
+								if (!isCurrent()) return;
 								if (!this.interimTranscript) {
 									avatar.setEmotion("thinking", false);
 								}
@@ -5969,6 +6060,7 @@
 						}
 					};
 					this.recognition.onerror = event => {
+						if (!isCurrent()) return;
 						this.isRecognizing = false;
 						if (this.ttsActive) return;
 						const message = event.message || event.error || "Speech recognition failed";
@@ -5987,6 +6079,7 @@
 						}
 					};
 					this.recognition.onend = () => {
+						if (!isCurrent()) return;
 						this.isRecognizing = false;
 						if (!this.ttsActive && !this.stopped && !micMuted) {
 							this.restartRecognition();
@@ -6025,11 +6118,14 @@
 					});
 				}
 				async start() {
+					const generation = this.stopGeneration;
 					this.stopped = false;
 					await this.connect();
+					if (this.stopped || generation !== this.stopGeneration) throw new DOMException("Co-host stopped", "AbortError");
 					if (hasCohostSpeechInput(this.stream)) {
 						await this.setupSpeechRecognition();
 					}
+					if (this.stopped || generation !== this.stopGeneration) throw new DOMException("Co-host stopped", "AbortError");
 					if (this.pendingGreeting) {
 						this.pendingGreeting = false;
 						if (shouldCohostGreetOnConnect()) this.sendPrompt("Hi, introduce yourself in a sentence for me. Be friendly to me.", "greeting").catch(() => {});
@@ -6049,7 +6145,9 @@
 					const hasLiveVideo = videoSourceValue !== "none" && this.stream.getVideoTracks().some(track => track.readyState === "live" && track.enabled);
 					const imageDataUrl = hasLiveVideo ? this.captureFrameDataUrl() : "";
 					const messages = this.buildMessages(systemPromptValue, prompt, imageDataUrl);
+					if (this.requestController) this.requestController.abort();
 					const controller = new AbortController();
+					this.requestController = controller;
 					const timeout = setTimeout(() => controller.abort(), 180000);
 					try {
 						const response = await fetch(this.buildCompletionsUrl(), {
@@ -6069,6 +6167,7 @@
 							signal: controller.signal
 						});
 						const raw = await response.text();
+						if (this.requestController !== controller || this.stopped) return;
 						if (!response.ok) {
 							throw new Error(`Endpoint error ${response.status}: ${raw.slice(0, 240)}`);
 						}
@@ -6094,6 +6193,7 @@
 								outputPreview: error?.message || String(error || "Unknown TTS error")
 							});
 						});
+						if (this.requestController !== controller || this.stopped) return;
 						this.finalizeResponse();
 						updateDiagnostics({
 							state: "connected",
@@ -6102,6 +6202,7 @@
 							lastError: "-"
 						});
 					} catch (error) {
+						if (this.requestController !== controller || this.stopped) return;
 						const rawMessage = error?.message || "";
 						const looksLikeNetworkOrCors = rawMessage === "Failed to fetch" || /NetworkError|CORS/i.test(rawMessage);
 						const friendlyMessage = looksLikeNetworkOrCors ? "Failed to reach endpoint. Check URL, server availability, CORS (Access-Control-Allow-Origin), and HTTP/HTTPS mixed-content restrictions." : rawMessage || "Custom endpoint generation failed";
@@ -6115,6 +6216,7 @@
 						throw new Error(friendlyMessage);
 					} finally {
 						clearTimeout(timeout);
+						if (this.requestController === controller) this.requestController = null;
 					}
 				}
 				isConnected() {
@@ -6122,16 +6224,26 @@
 				}
 				async reconnect() {
 					this.stop();
+					const generation = this.stopGeneration;
 					this.stopped = false;
 					await this.connect();
+					if (this.stopped || generation !== this.stopGeneration) throw new DOMException("Co-host stopped", "AbortError");
 					if (hasCohostSpeechInput(this.stream)) {
 						await this.setupSpeechRecognition();
 					}
+					if (this.stopped || generation !== this.stopGeneration) throw new DOMException("Co-host stopped", "AbortError");
 					return true;
 				}
 				stop() {
 					this.stopped = true;
+					this.stopGeneration++;
+					clearTimeout(this.speechDebounceTimer);
+					this.pendingSpeechTranscript = "";
 					this.connected = false;
+					if (this.requestController) {
+						this.requestController.abort();
+						this.requestController = null;
+					}
 					this.cancelBrowserTts();
 					this.finalizeResponse();
 					resetVoiceTelemetry({
@@ -6244,12 +6356,14 @@
 					}
 					return message || (result && result.success ? "Tool command completed." : "Tool command failed.");
 				}
-				async runCohostToolCommands(commands) {
+				async runCohostToolCommands(commands, generation = this.stopGeneration) {
 					const summaries = [];
 					for (let i = 0; i < Math.min(commands.length, 1); i++) {
+						if (generation !== this.stopGeneration) return summaries;
 						const command = commands[i];
 						try {
 							const status = await requestCohostToolStatus();
+							if (generation !== this.stopGeneration) return summaries;
 							if (!isCohostToolAvailable(status, command.tool)) {
 								throw new Error("This tool is not enabled in both SSN settings and the co-host controller.");
 							}
@@ -6264,9 +6378,11 @@
 					return summaries;
 				}
 				async connect() {
+					const generation = this.stopGeneration;
 					await probeConfiguredLLMBridge({
-						onProbe: attempt => setConfiguredLLMInfo("Checking SSN background bridge (attempt " + attempt + ")...", false)
+						onProbe: attempt => !this.stopped && generation === this.stopGeneration && setConfiguredLLMInfo("Checking SSN background bridge (attempt " + attempt + ")...", false)
 					});
+					if (this.stopped || generation !== this.stopGeneration) throw new DOMException("Co-host stopped", "AbortError");
 					this.connected = true;
 					updateDiagnostics({
 						provider: this.providerLabel,
@@ -6283,11 +6399,14 @@
 					setConfiguredLLMInfo("Connected through the SSN session bridge. Uses the LLM provider configured in the popup.", false);
 				}
 				async start() {
+					const generation = this.stopGeneration;
 					this.stopped = false;
 					await this.connect();
+					if (this.stopped || generation !== this.stopGeneration) throw new DOMException("Co-host stopped", "AbortError");
 					if (hasCohostSpeechInput(this.stream)) {
 						await this.setupSpeechRecognition();
 					}
+					if (this.stopped || generation !== this.stopGeneration) throw new DOMException("Co-host stopped", "AbortError");
 					if (this.pendingGreeting) {
 						this.pendingGreeting = false;
 						if (shouldCohostGreetOnConnect()) this.sendPrompt("Hi, introduce yourself in a sentence for me. Be friendly to me.", "greeting").catch(() => {});
@@ -6299,6 +6418,7 @@
 					if (!this.isConnected()) {
 						throw new Error("Configured LLM bridge is not connected.");
 					}
+					const generation = this.stopGeneration;
 					this.responseActive = true;
 					this.currentResponseText = "";
 					this.lastActivityTime = Date.now();
@@ -6308,6 +6428,7 @@
 					const imageDataUrl = hasLiveVideo && configuredLLMImageSupport !== "unsupported" ? this.captureFrameDataUrl() : "";
 					const allowTools = source === "streamer_voice" || source === "streamer_text";
 					const promptText = await this.buildToolAwarePromptText(systemPromptValue, prompt, allowTools);
+					if (generation !== this.stopGeneration) return;
 					updateDiagnostics({
 						state: "responding",
 						connected: "yes",
@@ -6319,18 +6440,21 @@
 							model: this.model || "",
 							images: imageDataUrl ? [imageDataUrl] : [],
 							timeoutMs: 180000,
-							onProbe: attempt => setConfiguredLLMInfo("Checking SSN background bridge (attempt " + attempt + ")...", false),
-							onSend: () => setConfiguredLLMInfo("Background bridge is ready; waiting for the configured LLM...", false),
+							onProbe: attempt => generation === this.stopGeneration && setConfiguredLLMInfo("Checking SSN background bridge (attempt " + attempt + ")...", false),
+							onSend: () => generation === this.stopGeneration && setConfiguredLLMInfo("Background bridge is ready; waiting for the configured LLM...", false),
 							onChunk: chunk => {
+								if (generation !== this.stopGeneration) return;
 								setConfiguredLLMInfo("Receiving configured LLM response...", false);
 							}
 						});
+						if (generation !== this.stopGeneration) return;
 						const parsedResponse = this.extractCohostToolCommands(result.text || "");
 						const responseText = parsedResponse.text;
 						if (responseText) {
 							this.appendModelText(responseText);
 						}
-						const toolSummaries = allowTools && parsedResponse.commands.length ? await this.runCohostToolCommands(parsedResponse.commands) : [];
+						const toolSummaries = allowTools && parsedResponse.commands.length ? await this.runCohostToolCommands(parsedResponse.commands, generation) : [];
+						if (generation !== this.stopGeneration) return;
 						if (toolSummaries.length) {
 							const toolText = toolSummaries.join("\n");
 							this.appendModelText((responseText ? "\n" : "") + toolText);
@@ -6349,6 +6473,7 @@
 								outputPreview: error?.message || String(error || "Unknown TTS error")
 							});
 						});
+						if (generation !== this.stopGeneration) return;
 						this.finalizeResponse();
 						updateDiagnostics({
 							state: "connected",
@@ -6358,6 +6483,7 @@
 						});
 						setConfiguredLLMInfo("Configured LLM response received.", false);
 					} catch (error) {
+						if (generation !== this.stopGeneration) return;
 						this.finalizeResponse();
 						updateDiagnostics({
 							state: "error",
@@ -6371,11 +6497,14 @@
 				}
 				async reconnect() {
 					this.stop();
+					const generation = this.stopGeneration;
 					this.stopped = false;
 					await this.connect();
+					if (this.stopped || generation !== this.stopGeneration) throw new DOMException("Co-host stopped", "AbortError");
 					if (hasCohostSpeechInput(this.stream)) {
 						await this.setupSpeechRecognition();
 					}
+					if (this.stopped || generation !== this.stopGeneration) throw new DOMException("Co-host stopped", "AbortError");
 					return true;
 				}
 				stop() {
@@ -6401,6 +6530,7 @@
 					this.inputAudioSilentGain = null;
 					this.nativeAudioInput = this.provider === "chatgpt";
 					this.stopped = false;
+					this.lifecycleVersion = 0;
 					this.handleMessage = this.handleMessage.bind(this);
 					this.audioPlayer = new AudioPlayer();
 					this.recognition = null;
@@ -6720,16 +6850,18 @@
 					}
 				}
 				async setupAudioProcessing() {
-					if (!this.nativeAudioInput) return;
+					if (!this.nativeAudioInput || this.stopped) return;
 					this.cleanupNativeAudioInput();
 					const track = this.stream && this.stream.getAudioTracks().find(audioTrack => audioTrack.readyState === "live");
 					if (!track) throw new Error("Select a microphone for OpenAI Realtime.");
 					const AudioContextClass = window.AudioContext || window.webkitAudioContext;
 					if (!AudioContextClass) throw new Error("Web Audio is unavailable for OpenAI Realtime microphone streaming.");
-					this.inputAudioContext = new AudioContextClass();
+					const audioContext = new AudioContextClass();
+					this.inputAudioContext = audioContext;
 					if (this.inputAudioContext.state === "suspended") {
-						await this.inputAudioContext.resume();
+						await audioContext.resume();
 					}
+					if (this.stopped || this.inputAudioContext !== audioContext) throw new DOMException("Co-host stopped", "AbortError");
 					const microphoneStream = new MediaStream([track]);
 					this.inputAudioSource = this.inputAudioContext.createMediaStreamSource(microphoneStream);
 					this.inputAudioProcessor = this.inputAudioContext.createScriptProcessor(2048, 1, 1);
@@ -6779,9 +6911,12 @@
 					window.dispatchEvent(modelResponseEvent);
 				}
 				async processAudioDelta(base64Chunk) {
-					if (!base64Chunk) return;
+					if (!base64Chunk || this.stopped) return;
+					const transport = this.ws;
+					const generation = this.audioPlayer.playbackGeneration;
 					try {
 						await this.audioPlayer.resume();
+						if (this.stopped || this.ws !== transport || generation !== this.audioPlayer.playbackGeneration) return;
 						const audioData = base64ToArrayBuffer(base64Chunk);
 						this.audioPlayer.addPCM16(new Uint8Array(audioData));
 					} catch (err) {
@@ -6874,6 +7009,8 @@
 					return output;
 				}
 				async handleCohostFunctionCalls(responseObject, responseOrigin) {
+					const transport = this.ws;
+					if (this.stopped || !this.isConnected()) return false;
 					const outputItems = responseObject && Array.isArray(responseObject.output) ? responseObject.output : [];
 					const calls = outputItems.filter(function (item) { return item && item.type === "function_call" && item.call_id; });
 					if (!calls.length) return false;
@@ -6903,6 +7040,7 @@
 								output = { success: false, message: String(error && error.message || "Co-host tool failed.").slice(0, 500) };
 							}
 						}
+						if (this.stopped || this.ws !== transport || !this.isConnected()) return false;
 						this.ws.send(JSON.stringify({
 							type: "conversation.item.create",
 							event_id: this.nextEventId("tool_output"),
@@ -6916,10 +7054,13 @@
 					return true;
 				}
 				async handleMessage(event) {
+					const transport = this.ws;
+					if (this.stopped || (event.target && event.target !== transport && event.target !== this.dataChannel)) return;
 					try {
 						let rawText = "";
 						if (event.data instanceof Blob) {
 							rawText = await event.data.text();
+							if (this.stopped || this.ws !== transport) return;
 						} else if (typeof event.data === "string") {
 							rawText = event.data;
 						} else {
@@ -7089,6 +7230,7 @@
 								this.audioPlayer.complete();
 								this.finalizeResponse();
 								const handledToolCalls = responseSettledNormally ? await this.handleCohostFunctionCalls(response.response, responseOrigin) : false;
+								if (this.stopped || this.ws !== transport) return;
 								if (!handledToolCalls && responseOrigin === "tool_result") this.toolContinuationDepth = 0;
 								this.activeResponseOrigin = "";
 								this.activeResponseTurnSequence = 0;
@@ -7299,23 +7441,36 @@
 					systemPrompt.disabled = false;
 				}
 				async setupSpeechRecognition() {
+					if (this.stopped) return;
+					const generation = this.lifecycleVersion;
+					const setupVersion = (this.speechSetupVersion || 0) + 1;
+					this.speechSetupVersion = setupVersion;
+					let recognition;
 					try {
-						this.recognition = await createCohostSpeechRecognition();
+						recognition = await createCohostSpeechRecognition();
 					} catch (error) {
+						if (this.stopped || generation !== this.lifecycleVersion || setupVersion !== this.speechSetupVersion) return;
 						showError("Local speech recognition failed to initialize: " + (error?.message || error));
 						updateVoiceTelemetry({ inputState: "Local Whisper unavailable" });
 						return;
 					}
+					if (this.stopped || generation !== this.lifecycleVersion || setupVersion !== this.speechSetupVersion) {
+						try { if (recognition) recognition.stop(); } catch (_error) {}
+						return;
+					}
+					this.recognition = recognition;
+					const isCurrent = () => !this.stopped && generation === this.lifecycleVersion && setupVersion === this.speechSetupVersion && this.recognition === recognition;
 					if (!this.recognition) {
 						showError(DESKTOP_LOCAL_STT_AVAILABLE ? "Select a microphone to use local Whisper." : "Speech recognition is not supported in your browser. Try using Chrome.");
 						return;
 					}
-					attachCohostSpeechStatus(this.recognition);
+					attachCohostSpeechStatus(this.recognition, isCurrent);
 					this.recognition.continuous = true;
 					this.recognition.interimResults = true;
 					this.recognition.maxAlternatives = 1;
 					this.recognition.lang = "en-US";
 					this.recognition.onstart = () => {
+						if (!isCurrent()) return;
 						console.log("Speech recognition started");
 						this.isRecognizing = true;
 						avatar.setEmotion("listening", false);
@@ -7325,6 +7480,7 @@
 						});
 					};
 					this.recognition.onresult = event => {
+						if (!isCurrent()) return;
 						let interimTranscript = "";
 						let finalTranscript = "";
 						for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -7341,6 +7497,7 @@
 
 							if (this.speechDebounceTimer) clearTimeout(this.speechDebounceTimer);
 							this.speechDebounceTimer = setTimeout(() => {
+								if (!isCurrent()) return;
 								const textToSend = this.pendingSpeechTranscript.trim();
 								if (textToSend) {
 									this.sendPrompt(textToSend, "streamer_voice");
@@ -7360,6 +7517,7 @@
 							avatar.setEmotion("listening", false);
 							clearTimeout(this.recognitionTimeout);
 							this.recognitionTimeout = setTimeout(() => {
+								if (!isCurrent()) return;
 								if (!this.interimTranscript) {
 									avatar.setEmotion("thinking", false);
 								}
@@ -7367,6 +7525,7 @@
 						}
 					};
 					this.recognition.onerror = event => {
+						if (!isCurrent()) return;
 						const message = event.message || event.error || "Speech recognition failed";
 						console.error("Speech recognition error:", message);
 						if (event.error === "no-speech") {
@@ -7386,6 +7545,7 @@
 						}
 					};
 					this.recognition.onend = () => {
+						if (!isCurrent()) return;
 						console.log("Speech recognition ended");
 						this.isRecognizing = false;
 						if (!this.stopped && !micMuted) {
@@ -7489,6 +7649,7 @@
 				}
 				async reconnect() {
 					if (this._reconnectPromise) return this._reconnectPromise;
+					const lifecycleVersion = this.lifecycleVersion;
 					this._reconnectPromise = (async () => {
 						updateDiagnostics({ state: "reconnecting", connected: "no", lastEvent: "reconnect.start" });
 						if (this.reconnectTimeout) {
@@ -7519,12 +7680,15 @@
 							try { oldSocket.close(); } catch (_error) {}
 						}
 						await this.connect();
+						if (this.stopped || lifecycleVersion !== this.lifecycleVersion) throw new DOMException("Co-host stopped", "AbortError");
 						if (this.nativeAudioInput && hasCohostSpeechInput(this.stream)) await this.setupAudioProcessing();
+						if (this.stopped || lifecycleVersion !== this.lifecycleVersion) throw new DOMException("Co-host stopped", "AbortError");
 						restoreRecentCohostLiveChatContext();
 						this.reconnectAttempts = 0;
 						updateDiagnostics({ state: "connected", connected: "yes", lastEvent: "reconnect.success.memory.restored:" + this.lastContinuityRestoredCount, lastError: "-" });
 						return true;
 					})().catch(error => {
+						if (this.stopped || lifecycleVersion !== this.lifecycleVersion) throw error;
 						this.reconnectAttempts += 1;
 						if (!this.stopped && this.reconnectAttempts < this.maxReconnectAttempts) this.scheduleReconnect("reconnect.retry");
 						throw error;
@@ -7534,6 +7698,7 @@
 					return this._reconnectPromise;
 				}
 				async start() {
+					const lifecycleVersion = this.lifecycleVersion;
 					try {
 						this.stopped = false;
 						this.pendingGreeting = true;
@@ -7547,10 +7712,12 @@
 							this.responseTimeout = null;
 						}
 						await this.connect();
+						if (this.stopped || lifecycleVersion !== this.lifecycleVersion) throw new DOMException("Co-host stopped", "AbortError");
 						if (this.nativeAudioInput && hasCohostSpeechInput(this.stream)) {
 							try {
 								await this.setupAudioProcessing();
 							} catch (nativeAudioError) {
+								if (this.stopped || lifecycleVersion !== this.lifecycleVersion) throw nativeAudioError;
 								console.warn("Native OpenAI audio input failed; falling back to local speech recognition:", nativeAudioError);
 								await this.setupSpeechRecognition();
 							}
@@ -7559,6 +7726,7 @@
 						} else {
 							console.log("No audio tracks available, skipping speech recognition");
 						}
+						if (this.stopped || lifecycleVersion !== this.lifecycleVersion) throw new DOMException("Co-host stopped", "AbortError");
 						updateDiagnostics({
 							state: "ready",
 							connected: this.isConnected() ? "yes" : "no",
@@ -7566,6 +7734,7 @@
 						});
 						console.log(`${this.config.label} connected successfully`);
 					} catch (err) {
+						if (this.stopped || lifecycleVersion !== this.lifecycleVersion) throw err;
 						console.error(`Failed to start ${this.config.label}:`, err);
 						updateDiagnostics({
 							state: "error",
@@ -7578,7 +7747,10 @@
 					}
 				}
 				stop() {
+					this.lifecycleVersion++;
 					this.stopped = true;
+					clearTimeout(this.speechDebounceTimer);
+					this.pendingSpeechTranscript = "";
 					this.responseActive = false;
 					this.pendingVoiceResponse = false;
 					this.manualResponseStopPending = false;
@@ -7854,6 +8026,10 @@
 					updateDiagnostics({ state: "error", connected: "no", lastEvent: reason, lastError: message });
 					if (rejectReady) {
 						rejectReady(new Error(message));
+						if (this.connectController) {
+							this.connectController.failure = new Error(message);
+							this.connectController.abort();
+						}
 						return;
 					}
 					if (document.getElementById("startButton")?.dataset?.started === "true") this.scheduleReconnect(reason);
@@ -7879,6 +8055,43 @@
 				}
 				async connect() {
 					if (this.isConnected() && this.sessionConfigured) return;
+					if (this.connectController) this.connectController.abort();
+					clearTimeout(this.connectTimeout);
+					this.connectTimeout = null;
+					if (this.sessionReadyReject) this.sessionReadyReject(new DOMException("Connection replaced", "AbortError"));
+					this.sessionReadyResolve = null;
+					this.sessionReadyReject = null;
+					const controller = new AbortController();
+					this.connectController = controller;
+					let onAbort;
+					const cancelled = new Promise((resolve, reject) => {
+						onAbort = () => reject(controller.failure || new DOMException("Co-host connection cancelled", "AbortError"));
+						controller.signal.addEventListener("abort", onAbort, { once: true });
+					});
+					try {
+						return await Promise.race([this.connectWebRTC(controller), cancelled]);
+					} catch (error) {
+						if (this.connectController === controller) {
+							controller.abort();
+							clearTimeout(this.connectTimeout);
+							this.connectTimeout = null;
+							this.sessionReadyResolve = null;
+							this.sessionReadyReject = null;
+							this.cleanupWebRTCTransport();
+						}
+						throw error;
+					} finally {
+						controller.signal.removeEventListener("abort", onAbort);
+						if (this.connectController === controller) this.connectController = null;
+					}
+				}
+				async connectWebRTC(controller) {
+					const checkConnection = () => {
+						if (controller.signal.aborted || this.connectController !== controller || this.stopped) {
+							throw new DOMException("Co-host connection cancelled", "AbortError");
+						}
+					};
+					checkConnection();
 					this.cleanupWebRTCTransport();
 					this.sessionConfigured = false;
 					this.continuityRestored = false;
@@ -7910,6 +8123,7 @@
 						reasoningEffort: getOpenAIRealtimeReasoningEffort(),
 						vadEagerness: getOpenAIRealtimeVadEagerness()
 					});
+					checkConnection();
 					if (clientSecret.model) this.model = clientSecret.model;
 					this.reasoningSupported = clientSecret.reasoning_supported !== false;
 					const microphoneTrack = this.stream && this.stream.getAudioTracks().find(track => track.readyState === "live");
@@ -7922,6 +8136,11 @@
 					audio.playsInline = true;
 					audio.muted = cohostOutputMuted;
 					audio.volume = cohostOutputVolume;
+					this.peerConnection = peer;
+					this.dataChannel = channel;
+					this.transportAdapter = transport;
+					this.remoteAudio = audio;
+					this.ws = transport;
 					const requestedOutputDevice = localStorage.getItem("cohostOutputDevice") || "default";
 					if (typeof audio.setSinkId === "function") {
 						try {
@@ -7931,14 +8150,11 @@
 							localStorage.removeItem("cohostOutputDevice");
 						}
 					}
+					checkConnection();
 					audio.setAttribute("aria-hidden", "true");
 					audio.style.display = "none";
 					document.body.appendChild(audio);
-					this.peerConnection = peer;
-					this.dataChannel = channel;
-					this.transportAdapter = transport;
-					this.remoteAudio = audio;
-					this.ws = transport;
+
 					peer.addTrack(microphoneTrack, this.stream);
 					peer.ontrack = event => {
 						if (this.peerConnection !== peer) return;
@@ -7956,9 +8172,13 @@
 							this.cleanupWebRTCTransport();
 							this.sessionReadyResolve = null;
 							this.sessionReadyReject = null;
-							reject(new Error("Connection timed out waiting for the OpenAI WebRTC session."));
+							controller.failure = new Error("Connection timed out waiting for the OpenAI WebRTC session.");
+							reject(controller.failure);
+							controller.abort();
 						}, 20000);
 					});
+					// The readiness promise can reject while SDP is still in flight.
+					readyPromise.catch(() => {});
 					channel.onmessage = event => {
 						if (this.dataChannel === channel) this.handleMessage(event);
 					};
@@ -7999,32 +8219,26 @@
 						if (this.peerConnection !== peer || peer.iceConnectionState !== "failed") return;
 						this.handleWebRTCTransportFailure("webrtc.ice.failed", "OpenAI WebRTC ICE connection failed");
 					};
-					try {
-						const offer = await peer.createOffer();
-						await peer.setLocalDescription(offer);
-						const sdpResponse = await fetch("https://api.openai.com/v1/realtime/calls", {
-							method: "POST",
-							body: offer.sdp,
-							headers: {
-								Authorization: "Bearer " + clientSecret.value,
-								"Content-Type": "application/sdp"
-							}
-						});
-						const answerSdp = await sdpResponse.text();
-						if (!sdpResponse.ok) throw new Error("OpenAI WebRTC connection failed (" + sdpResponse.status + "): " + answerSdp.slice(0, 240));
-						await peer.setRemoteDescription({ type: "answer", sdp: answerSdp });
-						updateDiagnostics({ state: "connecting", connected: "no", lastEvent: "webrtc.answer.applied" });
-						return await readyPromise;
-					} catch (error) {
-						if (this.connectTimeout) {
-							clearTimeout(this.connectTimeout);
-							this.connectTimeout = null;
+					const offer = await peer.createOffer();
+					checkConnection();
+					await peer.setLocalDescription(offer);
+					checkConnection();
+					const sdpResponse = await fetch("https://api.openai.com/v1/realtime/calls", {
+						method: "POST",
+						body: offer.sdp,
+						signal: controller.signal,
+						headers: {
+							Authorization: "Bearer " + clientSecret.value,
+							"Content-Type": "application/sdp"
 						}
-						this.sessionReadyResolve = null;
-						this.sessionReadyReject = null;
-						this.cleanupWebRTCTransport();
-						throw error;
-					}
+					});
+					const answerSdp = await sdpResponse.text();
+					checkConnection();
+					if (!sdpResponse.ok) throw new Error("OpenAI WebRTC connection failed (" + sdpResponse.status + "): " + answerSdp.slice(0, 240));
+					await peer.setRemoteDescription({ type: "answer", sdp: answerSdp });
+					checkConnection();
+					updateDiagnostics({ state: "connecting", connected: "no", lastEvent: "webrtc.answer.applied" });
+					return await readyPromise;
 				}
 				async reconnect() {
 					if (this._reconnectPromise) return this._reconnectPromise;
@@ -8032,6 +8246,7 @@
 					return super.reconnect();
 				}
 				stop() {
+					if (this.connectController) this.connectController.abort();
 					super.stop();
 					this.cleanupWebRTCTransport();
 				}
@@ -8063,6 +8278,7 @@
 					this.maxInactivityReconnects = 3;
 					this.inactivityReconnectAttempts = 0;
 					this.stopped = false;
+					this.lifecycleVersion = 0;
 					this.reconnectAttempts = 0;
 					this.maxReconnectAttempts = 5;
 					this.reconnectTimeout = null;
@@ -8372,6 +8588,8 @@
 					systemPrompt.disabled = false;
 				}
 				async handleMessage(event) {
+					const transport = this.ws;
+					if (this.stopped || (event.target && event.target !== transport && event.target !== this.dataChannel)) return;
 					try {
 						let response;
 						let rawText = "";
@@ -8379,6 +8597,7 @@
 						// First handle the different types of message data
 						if (event.data instanceof Blob) {
 							rawText = await event.data.text();
+							if (this.stopped || this.ws !== transport) return;
 						} else if (typeof event.data === "string") {
 							rawText = event.data;
 						} else {
@@ -8570,13 +8789,16 @@
 					}
 				}
 				sendPrompt(text) {
+					const lifecycleVersion = this.lifecycleVersion;
 					if (!this.isConnected()) {
 						console.error("WebSocket not connected, attempting reconnect...");
 						this.reconnect()
 							.then(() => {
+								if (this.stopped || lifecycleVersion !== this.lifecycleVersion) return;
 								this._sendPromptInternal(text);
 							})
 							.catch(error => {
+								if (this.stopped || lifecycleVersion !== this.lifecycleVersion) return;
 								console.error("Failed to reconnect:", error);
 								showError("Connection lost. Please try restarting the stream.");
 							});
@@ -8658,6 +8880,7 @@
 					return this.ws && this.ws.readyState === WebSocket.OPEN;
 				}
 				async connect() {
+					if (this.stopped) throw new DOMException("Co-host stopped", "AbortError");
 					this.loadConversationHistory();
 
 					const host = "generativelanguage.googleapis.com";
@@ -8721,8 +8944,10 @@
 					}
 					this.setupComplete = false;
 					this.ws = new WebSocket(uri);
+					const socket = this.ws;
 					this.ws.onmessage = this.handleMessage;
 					this.ws.onerror = error => {
+						if (this.stopped || this.ws !== socket) return;
 						console.error("WebSocket error:", error);
 						const errorMsg = "Gemini connection error. Waiting for connection details...";
 						showError(errorMsg);
@@ -8739,6 +8964,10 @@
 						}
 					};
 					this.ws.onclose = event => {
+						if (this.ws !== socket) {
+							if (this.expectedReconnectSocket === socket) this.expectedReconnectSocket = null;
+							return;
+						}
 						console.log("WebSocket closed:", event.code, event.reason);
 						let errorMsg = "Connection closed.";
 						if (!event.target || event.target === this.ws) {
@@ -8839,86 +9068,97 @@
 							lastError: event.reason || errorMsg
 						});
 					};
-					return new Promise((resolve, reject) => {
+					return new Promise((resolvePromise, rejectPromise) => {
 						const connectionTimeout = setTimeout(() => {
 							reject(new Error("Connection timeout"));
+							if (this.ws === socket) this.ws = null;
+							try { socket.close(); } catch (_error) {}
 						}, 10000);
-						this.ws.addEventListener(
-							"open",
-							() => {
-								clearTimeout(connectionTimeout);
-								this.connectionStartedAt = Date.now();
-								this.updateGeminiSessionPanel({
-									goAwayDeadline: 0,
-									status: this.sessionResumptionHandle ? "Reconnected to Gemini with the latest resume handle." : "Connected to a new Gemini session; waiting for resume handle."
-								});
-								this.startGeminiStatusUpdates();
-								this.startHeartbeat();
-								const systemPrompt = document.getElementById("systemPrompt");
-								const setupMessage = {
-									setup: {
-										model: this.model,
-										systemInstruction: {
-											parts: [
-												{
-													text: systemPrompt.value
-												}
-											]
-										},
-										generationConfig: {
-											temperature: 0.9,
-											topK: 1,
-											topP: 1,
-											candidateCount: 1,
-											// Native-audio Live models only accept AUDIO here. Text-only UI output
-											// is provided by outputAudioTranscription while playback stays muted.
-											responseModalities: ["AUDIO"],
-											...(responseType.value === "audio" && {
-												speechConfig: {
-													voiceConfig: {
-														prebuiltVoiceConfig: {
-															voiceName: voiceSelect.value
-														}
+						const cleanup = () => {
+							clearTimeout(connectionTimeout);
+							socket.removeEventListener("open", onOpen);
+							socket.removeEventListener("error", onError);
+							socket.removeEventListener("close", onClose);
+							if (this.cancelPendingConnection === cancel) this.cancelPendingConnection = null;
+						};
+						const resolve = () => { cleanup(); resolvePromise(); };
+						const reject = error => { cleanup(); rejectPromise(error); };
+						const cancel = () => reject(new DOMException("Co-host stopped", "AbortError"));
+						const onClose = () => reject(new Error("WebSocket closed before connecting"));
+						this.cancelPendingConnection = cancel;
+						const onOpen = () => {
+							if (this.stopped || this.ws !== socket) { cancel(); return; }
+							clearTimeout(connectionTimeout);
+							this.connectionStartedAt = Date.now();
+							this.updateGeminiSessionPanel({
+								goAwayDeadline: 0,
+								status: this.sessionResumptionHandle ? "Reconnected to Gemini with the latest resume handle." : "Connected to a new Gemini session; waiting for resume handle."
+							});
+							this.startGeminiStatusUpdates();
+							this.startHeartbeat();
+							const systemPrompt = document.getElementById("systemPrompt");
+							const setupMessage = {
+								setup: {
+									model: this.model,
+									systemInstruction: {
+										parts: [
+											{
+												text: systemPrompt.value
+											}
+										]
+									},
+									generationConfig: {
+										temperature: 0.9,
+										topK: 1,
+										topP: 1,
+										candidateCount: 1,
+										// Native-audio Live models only accept AUDIO here. Text-only UI output
+										// is provided by outputAudioTranscription while playback stays muted.
+										responseModalities: ["AUDIO"],
+										...(responseType.value === "audio" && {
+											speechConfig: {
+												voiceConfig: {
+													prebuiltVoiceConfig: {
+														voiceName: voiceSelect.value
 													}
 												}
-											})
-										},
-										outputAudioTranscription: {},
-										// Google Live API: {} starts a fresh resumable session; reconnects send { handle }. See https://ai.google.dev/api/live
-										sessionResumption: this.sessionResumptionHandle ? { handle: this.sessionResumptionHandle } : {},
-										contextWindowCompression: {
-											triggerTokens: GEMINI_CONTEXT_TRIGGER_TOKENS,
-											slidingWindow: {
-												targetTokens: GEMINI_CONTEXT_TARGET_TOKENS
 											}
+										})
+									},
+									outputAudioTranscription: {},
+									// Google Live API: {} starts a fresh resumable session; reconnects send { handle }. See https://ai.google.dev/api/live
+									sessionResumption: this.sessionResumptionHandle ? { handle: this.sessionResumptionHandle } : {},
+									contextWindowCompression: {
+										triggerTokens: GEMINI_CONTEXT_TRIGGER_TOKENS,
+										slidingWindow: {
+											targetTokens: GEMINI_CONTEXT_TARGET_TOKENS
 										}
 									}
-								};
-								console.log("Sending setup message");
-								this.ws.send(JSON.stringify(setupMessage));
-								updateDiagnostics({
-									state: "connected",
-									connected: "yes",
-									lastEvent: "ws.open"
-								});
-								resolve();
-							},
-							{ once: true }
-						);
-						this.ws.addEventListener(
-							"error",
-							() => {
-								clearTimeout(connectionTimeout);
-								updateDiagnostics({
-									state: "error",
-									connected: "no",
-									lastEvent: "connect.error",
-									lastError: "Gemini websocket connection error"
-								});
-								reject(new Error("Connection error"));
-							},
-							{ once: true }
-						);
+								}
+							};
+							console.log("Sending setup message");
+							this.ws.send(JSON.stringify(setupMessage));
+							updateDiagnostics({
+								state: "connected",
+								connected: "yes",
+								lastEvent: "ws.open"
+							});
+							resolve();
+						};
+						const onError = () => {
+							if (this.stopped || this.ws !== socket) { cancel(); return; }
+							clearTimeout(connectionTimeout);
+							updateDiagnostics({
+								state: "error",
+								connected: "no",
+								lastEvent: "connect.error",
+								lastError: "Gemini websocket connection error"
+							});
+							reject(new Error("Connection error"));
+						};
+						socket.addEventListener("open", onOpen, { once: true });
+						socket.addEventListener("error", onError, { once: true });
+						socket.addEventListener("close", onClose, { once: true });
 					});
 				}
 				startHeartbeat() {
@@ -8983,9 +9223,11 @@
 					this.contextEstimateBaseTokens = this.getEstimatedContextTokens();
 					this.contextEstimateStartedAt = Date.now();
 					this.clearAllTimers();
+					const lifecycleVersion = this.lifecycleVersion;
 					this._reconnectPromise = (async () => {
 						try {
 							await this.connect();
+							if (this.stopped || lifecycleVersion !== this.lifecycleVersion) throw new DOMException("Co-host stopped", "AbortError");
 							console.log("Successfully reconnected");
 							clearError();
 							updateDiagnostics({
@@ -8995,6 +9237,7 @@
 							});
 							return true;
 						} catch (error) {
+							if (this.stopped || lifecycleVersion !== this.lifecycleVersion) throw error;
 							console.error("Failed to reconnect:", error);
 							updateDiagnostics({
 								state: "error",
@@ -9054,12 +9297,15 @@
 					}
 				}
 				async start() {
+					const lifecycleVersion = this.lifecycleVersion;
 					try {
 						this.stopped = false;
 						this.responseActive = false;
 						this.reconnectAttempts = 0;
 						await this.connect();
+						if (this.stopped || lifecycleVersion !== this.lifecycleVersion) throw new DOMException("Co-host stopped", "AbortError");
 						await this.setupAudioProcessing();
+						if (this.stopped || lifecycleVersion !== this.lifecycleVersion) throw new DOMException("Co-host stopped", "AbortError");
 						this.setupVideoProcessing();
 						updateDiagnostics({
 							state: "ready",
@@ -9067,6 +9313,7 @@
 							lastEvent: "publisher.start"
 						});
 					} catch (err) {
+						if (this.stopped || lifecycleVersion !== this.lifecycleVersion) throw err;
 						console.error("Failed to start:", err);
 						updateDiagnostics({
 							state: "error",
@@ -9211,7 +9458,9 @@
 					});
 				}
 				stop() {
+					this.lifecycleVersion++;
 					this.stopped = true;
+					if (this.cancelPendingConnection) this.cancelPendingConnection();
 					this.responseActive = false;
 					this.clearAllTimers();
 					this._reconnectPromise = null;
@@ -9255,6 +9504,8 @@
 					this.gainNode.connect(this.context.destination);
 					this.samples = new Float32Array(0);
 					this.isPlaying = false;
+					this.currentSource = null;
+					this.playbackGeneration = 0;
 					this.nextTime = 0;
 					this.completeCalled = false;
 					this.timeout = null;
@@ -9277,7 +9528,7 @@
 						this.inputSampleRate = sampleRate;
 					}
 					const float32Array = new Float32Array(chunk.length / 2);
-					const dataView = new DataView(chunk.buffer);
+					const dataView = new DataView(chunk.buffer, chunk.byteOffset, chunk.byteLength);
 					for (let i = 0; i < chunk.length / 2; i++) {
 						float32Array[i] = dataView.getInt16(i * 2, true) / 32768;
 					}
@@ -9296,6 +9547,7 @@
 					const buffer = this.context.createBuffer(1, this.samples.length, this.inputSampleRate);
 					buffer.getChannelData(0).set(this.samples);
 					const source = this.context.createBufferSource();
+					this.currentSource = source;
 					source.buffer = buffer;
 					source.connect(this.gainNode);
 					const startTime = Math.max(this.context.currentTime, this.nextTime);
@@ -9303,6 +9555,9 @@
 					this.nextTime = startTime + buffer.duration;
 					this.samples = new Float32Array(0);
 					source.onended = () => {
+						if (this.currentSource !== source) return;
+						this.currentSource = null;
+						source.disconnect();
 						this.isPlaying = false;
 						if (this.samples.length > 0) {
 							this.play();
@@ -9351,6 +9606,14 @@
 					this.applyGain();
 				}
 				stop() {
+					this.playbackGeneration++;
+					if (this.currentSource) {
+						const source = this.currentSource;
+						this.currentSource = null;
+						source.onended = null;
+						try { source.stop(); } catch (_error) {}
+						source.disconnect();
+					}
 					this.samples = new Float32Array(0);
 					this.isPlaying = false;
 					this.nextTime = 0;
@@ -9774,7 +10037,7 @@
 				}
 			}
 
-			function runCohostTts(text, provider) {
+			function runCohostTts(text, provider, owner) {
 				const selectedProvider = provider || "system";
 				applyCohostTtsProvider(selectedProvider);
 				if (!window.TTS || typeof window.TTS.speak !== "function") {
@@ -9782,6 +10045,7 @@
 				}
 				const originalFinishedAudio = window.TTS.finishedAudio;
 				const originalConsoleError = console.error;
+				const audio = window.TTS.audio;
 				return new Promise(resolve => {
 					let settled = false;
 					let sawError = false;
@@ -9789,7 +10053,9 @@
 					const cleanup = () => {
 						window.TTS.finishedAudio = originalFinishedAudio;
 						console.error = originalConsoleError;
+						if (audio) audio.removeEventListener("ended", onAudioEnded);
 						if (fallbackTimer) clearTimeout(fallbackTimer);
+						if (owner && owner.cancelTtsPlayback === cancelPlayback) owner.cancelTtsPlayback = null;
 					};
 					const done = ok => {
 						if (settled) return;
@@ -9797,6 +10063,13 @@
 						cleanup();
 						resolve(ok);
 					};
+					const cancelPlayback = () => done(null);
+					if (owner) owner.cancelTtsPlayback = cancelPlayback;
+					// Existing audio elements may still hold the original completion handler.
+					const onAudioEnded = () => {
+						if (!window.TTS.premiumQueueActive && !window.TTS.premiumQueueTTS.length) done(!sawError);
+					};
+					if (audio) audio.addEventListener("ended", onAudioEnded);
 					console.error = function patchedCohostTtsError() {
 						const message = Array.prototype.map.call(arguments, arg => String(arg && arg.message ? arg.message : arg)).join(" ");
 						if (/TTS|speech|audio|kokoro|piper|espeak|kitten/i.test(message)) {
@@ -11237,6 +11510,7 @@
 				}
 				if (messageInput.value.trim()) {
 					try {
+						clearError();
 						manualSendBusy = true;
 						syncSendButtonAvailability();
 						messageFormatter.appendMessage(messageInput.value, true);

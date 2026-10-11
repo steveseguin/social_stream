@@ -639,7 +639,7 @@ body.intensegfx .message { animation: glitch-effect 0.18s ease-in-out; }
         messageDiv.classList.add('message');
         
         // Generate unique ID and track timestamp for aging
-        const messageId = data.mid || 'msg-' + Date.now();
+        const messageId = String(data.mid || 'msg-' + Date.now());
         messageDiv.id = messageId;
         messageTimestamps.set(messageId, Date.now());
         

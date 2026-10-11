@@ -1,10 +1,7 @@
 # Alert sound assets
 
-These short clips are packaged locally and shared by Multi-Alerts and Event Flow through `shared/alerts/sound-library.js`.
+These clips are packaged locally for Multi-Alerts and Event Flow. Use **Listen** to preview a sound and set its volume before using it on stream. Find more effects and multilingual phrases in the [Sound Library](../../audio-library.html).
 
-- Applause, drumroll, whoosh, cash register, boing, record scratch, pop and camera shutter are original procedural effects. No third-party audio samples were used.
-- The four `voice-*` WAVs are deliberately synthetic English phrases generated with the repository's existing eSpeak-NG formant synthesizer: “Thank you!”, “Welcome to the stream!”, “Let's go!”, and “All aboard the hype train!”. They are not recordings of a person or cloned voices. The picker labels them as synthetic.
-- The generator is `node scripts/build-alert-sounds.cjs` (requires local Playwright). It uses the packaged eSpeak worker and blocks external requests. The engine is not loaded at runtime to play these clips; the WAVs work offline.
-- Effect files are mono 22.05 kHz PCM with short fades and restrained peaks. The default alert volume is 35%; use Listen before changing a stream's levels.
+The eight effects and four English voice clips are WAV versions of files in the [original SSN sound catalog](../catalog/README.md), generated with MOSS-SoundEffect v2.0 and Qwen3-TTS VoiceDesign. They play offline without a speech engine. No third-party sound clips or cloned voices were used.
 
-The generated sound assets in this directory may be freely used, modified and redistributed with attribution optional (CC0-1.0). The eSpeak engine retains its existing GPL license; it is not included in the WAVs. The five legacy sounds in the parent directory are unchanged.
+These generated assets may be freely used, modified, and redistributed, including in monetized streams, under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/). Attribution is optional; the models retain their separate Apache-2.0 licenses.

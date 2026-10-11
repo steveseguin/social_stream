@@ -70,6 +70,10 @@ body input[type="email"], body input[type="number"], body textarea, body select 
     font:inherit; padding:6px 8px;
 }
 body input::placeholder, body textarea::placeholder { color:var(--placeholder-color); opacity:1; }
+body select option, body select optgroup {
+    background:var(--color-accent-subtle); color:var(--default-text-color);
+}
+body select option:disabled { color:var(--text-secondary); }
 body input:focus, body select:focus, body textarea:focus, body button:focus,
 body a:focus, body summary:focus { outline:2px solid var(--color-accent); outline-offset:2px; }
 
@@ -87,6 +91,10 @@ body .textInputContainer .textInputUploadButton { grid-area:2 / 2; position:stat
 .popup-range-field { margin:6px 0 8px 40px; }
 .popup-range-field > label, .popup-range-field > small { display:block; margin:4px 0; }
 body .options .popup-range-field input[type="range"] { width:150px; max-width:calc(100% - 64px); margin-left:0; }
+.popup-range-track { display:inline-block; width:260px; max-width:calc(100% - 54px); vertical-align:top; }
+body .popup-range-field .popup-range-track input[type="range"] { width:100%; max-width:100%; margin:0; }
+.popup-range-labels { position:relative; display:flex; justify-content:space-between; font-size:.85em; }
+.popup-range-normal { position:absolute; left:var(--range-normal-position, 50%); transform:translateX(-50%); }
 
 /* Normal actions are neutral; test/play actions keep the familiar blue style. */
 body .options button:not(.glowingButton):not(.copy-link-btn),
@@ -136,3 +144,25 @@ body .heading-actions button.copy-link:focus, body button.edit-link:focus {
 /* Giveaway controls reuse the shared field and action styles. */
 .options_group.giveaway .textInputContainer { display:grid; width:100%; }
 .giveaway-actions { display:flex; flex-wrap:wrap; gap:6px; }
+
+/* Knowledge imports use the same switches, neutral actions, and fields as other settings. */
+.popup-help-text { color:var(--text-secondary); font-size:.9em; line-height:1.5; margin:8px 0; }
+#ragKnowledgeSettings { text-align:start; }
+#ragKnowledgeSettings .rag-search-field { width:100%; }
+#ragFileList { display:grid; gap:8px; }
+.rag-document { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 12px; align-items:start; padding:10px; border:1px solid var(--settings-control-border); border-radius:4px; }
+.rag-document-title { display:block; font-weight:600; overflow-wrap:anywhere; }
+.rag-document-status { display:block; margin-top:4px; color:var(--text-secondary); font-size:.9em; }
+.rag-document-error { grid-column:1 / -1; color:var(--danger-text); font-size:.9em; overflow-wrap:anywhere; }
+.rag-document progress { grid-column:1 / -1; width:100%; height:10px; accent-color:var(--color-accent); }
+.rag-document button { margin:0; }
+/* Older translations include inline link colors; retain readable colors in either theme. */
+body #chathistory, body #privatechatbotlink { color:var(--color-accent) !important; }
+body .add-username-container { flex-wrap:wrap; gap:6px; }
+#censorTestText { width:100%; }
+body #ttscommandcustom { min-width:8ch; }
+
+body .textInputContainer.popup-inset-field { width:260px; max-width:calc(100% - 50px); margin-left:50px; }
+
+.tts-name-option { margin-top: 12px; }
+.tts-name-option small { display: block; margin-top: 4px; }

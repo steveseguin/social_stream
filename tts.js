@@ -158,6 +158,9 @@ TTS.normalizeSpeakOptions = function(options) {
     if (typeof options.voice === "string" && options.voice.trim()) {
         normalized.voice = options.voice.trim();
     }
+    if (typeof options.piperIntro === "string" && options.piperIntro.trim()) {
+        normalized.piperIntro = options.piperIntro.trim();
+    }
     return normalized;
 };
 
@@ -1072,6 +1075,13 @@ TTS.configure = function(urlParams) {
         } else if (TTS.OpenAIAPIKey) {
             TTS.TTSProvider = "openai";
         }
+    }
+
+    if (window.location.protocol === "moz-extension:" && ["kokoro", "kitten", "piper"].includes(TTS.TTSProvider)) {
+        TTS.configurationWarning = "This voice engine is not included in the Firefox extension. Using System TTS; select eSpeak or a TTS service for another voice.";
+        console.warn(TTS.configurationWarning);
+        TTS.TTSProvider = "system";
+        TTS.useKokoroTTS = TTS.useKitten = TTS.usePiper = TTS.useEspeak = false;
     }
 
     // Create audio element for non-system TTS providers
@@ -2054,6 +2064,11 @@ TTS.speechMeta = function(data, allow = false) {
             chatname = sanitizeSpeechText(data.chatname.toLowerCase());
         }
 
+        function speakChat(text) {
+            var options = TTS.TTSProvider === "piper" && chatname ? { piperIntro: chatname } : {};
+            TTS.speak(text, allow, options);
+        }
+
         if (tikTokGift) {
             var giftName = typeof meta.giftName === "string" ? meta.giftName : "";
             var giftCount = Number(meta.tiktokGiftCount || meta.count || meta.repeatCount);
@@ -2102,7 +2117,7 @@ TTS.speechMeta = function(data, allow = false) {
                 var giftSpeech = (chatname ? chatname + (giftVerb ? " " : ". ") : "") +
                     (giftVerb ? giftVerb + " " : "") + giftCount + " " + giftName;
                 if (!chatname && giftVerb) giftSpeech = giftSpeech.charAt(0).toUpperCase() + giftSpeech.slice(1);
-                TTS.speak(giftSpeech, allow);
+                speakChat(giftSpeech);
                 return;
             }
         }
@@ -2115,42 +2130,42 @@ TTS.speechMeta = function(data, allow = false) {
                 ///// NAME
                 if (TTS.English) {
                     if (msgPlain) {
-                        TTS.speak(chatname + " has donated " + donoText + " and says " + msgPlain, allow);
+                        speakChat(chatname + " has donated " + donoText + " and says " + msgPlain);
                     } else {
-                        TTS.speak(chatname + " has donated " + donoText, allow);
+                        speakChat(chatname + " has donated " + donoText);
                     }
                 } else if (msgPlain) {
-                    TTS.speak(chatname + ". " + donoText + ". " + msgPlain, allow);
+                    speakChat(chatname + ". " + donoText + ". " + msgPlain);
                 } else {
-                    TTS.speak(chatname + ". " + donoText, allow);
+                    speakChat(chatname + ". " + donoText);
                 }
             } else if (TTS.English) {
                 // no name but english
                 if (msgPlain) {
-                    TTS.speak("Someone has donated " + donoText + " and says " + msgPlain, allow);
+                    speakChat("Someone has donated " + donoText + " and says " + msgPlain);
                 } else {
-                    TTS.speak("Someone has donated " + donoText, allow);
+                    speakChat("Someone has donated " + donoText);
                 }
             } else if (msgPlain) {
                 // no name; not english
-                TTS.speak(donoText + ". " + msgPlain, allow);
+                speakChat(donoText + ". " + msgPlain);
             } else {
-                TTS.speak(donoText, allow);
+                speakChat(donoText);
             }
         } else if (msgPlain) {
             // NO DONATION
             if (chatname) {
                 // NAME
                 if (TTS.English) {
-                    TTS.speak(chatname + " says: " + msgPlain, allow);
+                    speakChat(chatname + " says: " + msgPlain);
                 } else {
-                    TTS.speak(chatname + ". " + msgPlain, allow);
+                    speakChat(chatname + ". " + msgPlain);
                 }
             } else if (TTS.English) {
                 // NO NAME
-                TTS.speak("Someone says: " + msgPlain, allow);
+                speakChat("Someone says: " + msgPlain);
             } else {
-                TTS.speak(msgPlain, allow);
+                speakChat(msgPlain);
             }
         }
     } catch(e){
@@ -2229,6 +2244,7 @@ TTS.neuralSpeech = async function(text, provider, options) {
 };
 
 TTS.initKokoro = async function(voice) {
+    if (window.location.protocol === "moz-extension:") throw new Error("This voice engine is not included in the Firefox extension. Select eSpeak, System TTS or a TTS service.");
     if ((window.ninjafy || window.electronApi) && !TTS.isNewKokoroVoice(voice || TTS.kokoroSettings.voiceName)) {
         return true; // Electron already handles existing voices
     }
@@ -2409,6 +2425,16 @@ TTS.fishTTS = async function(tts, options) {
 };
 
 TTS.desktopSystemTTS = async function(text, options) {
+    // Chromium on Linux can expose Web Speech without any usable system voices.
+    // Keep the desktop default audible using the bundled local speech engine.
+    if (/Linux/i.test(navigator.platform || "") && !window.speechSynthesis?.getVoices().length) {
+        TTS.lastDesktopSystemTts = { voice: "eSpeak", lang: TTS.speechLang || "en", fallback: true };
+        return TTS.espeakTTS(text, {
+            ...TTS.normalizeSpeakOptions(options), voice: TTS.speechLang || "en",
+            espeakSpeed: Math.max(80, Math.min(450, 140 * (Number(TTS.rate) || 1))),
+            espeakPitch: Math.max(0, Math.min(99, 50 * (Number(TTS.pitch) || 1)))
+        });
+    }
     TTS.premiumQueueActive = true;
     const premiumSerial = ++TTS.premiumSerial;
     try {
@@ -3018,8 +3044,8 @@ TTS.espeakTTS = async function(text, options) {
         // Generate speech using real eSpeak-NG TTS
         const wavArrayBuffer = await TTS.espeakInstance.speak(text, {
             voice: TTS.getVoiceOverride(options) || TTS.espeakSettings.voice,
-            speed: TTS.espeakSettings.speed,
-            pitch: TTS.espeakSettings.pitch,
+            speed: options?.espeakSpeed ?? TTS.espeakSettings.speed,
+            pitch: options?.espeakPitch ?? TTS.espeakSettings.pitch,
             amplitude: 100,  // Volume 0-200
             variant: TTS.espeakSettings.variant
         });
@@ -3083,6 +3109,7 @@ TTS.espeakTTS = async function(text, options) {
  * @returns {Promise<boolean>} - Whether initialization was successful
  */
 TTS.initPiper = async function(voiceName) {
+    if (window.location.protocol === "moz-extension:") throw new Error("This voice engine is not included in the Firefox extension. Select eSpeak, System TTS or a TTS service.");
     const requestedVoice = (typeof voiceName === "string" && voiceName.trim()) || TTS.piperSettings.voice;
     if (TTS.piperLoaded && TTS.piperInstance && TTS.piperActiveVoice === requestedVoice) return true;
     
@@ -3158,6 +3185,17 @@ TTS.piperTTS = async function(text, options) {
         const previous = piper.pendingSynthesis || Promise.resolve();
         const pending = previous.catch(() => {}).then(() => {
             if (premiumSerial !== TTS.premiumSerial) return null;
+            // Split only the known sender prefix, after the normal URL/length filters.
+            let intro = TTS.cleanPunctuation(options && options.piperIntro);
+            if (intro && TTS.replaceURLInLink) intro = TTS.replaceURLsWithSubstring(intro, "Link");
+            if (intro && text.indexOf(intro) === 0) {
+                const remainder = text.slice(intro.length);
+                if (/^(?:\. | )/.test(remainder)) {
+                    const message = remainder.replace(/^\.\s*/, "").trim();
+                    if (message) return piper.synthesizeWithPause(intro, message, speed,
+                        () => premiumSerial !== TTS.premiumSerial);
+                }
+            }
             return piper.synthesize(text, speed);
         });
         piper.pendingSynthesis = pending;
@@ -3190,6 +3228,7 @@ TTS.piperTTS = async function(text, options) {
  * @returns {Promise<boolean>} - Whether initialization was successful
  */
 TTS.initKitten = async function() {
+    if (window.location.protocol === "moz-extension:") throw new Error("This voice engine is not included in the Firefox extension. Select eSpeak, System TTS or a TTS service.");
     if (TTS.kittenLoaded) return true;
     
     // Prevent double initialization

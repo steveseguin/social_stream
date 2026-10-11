@@ -704,9 +704,9 @@ if (typeof(chrome.runtime)=='undefined'){
 				// Generate unique callback ID
 				const callbackId = ++callbackIdCounter;
 				const isGetSettingsRequest = !!(data && data.cmd === "getSettings");
-				const isLLMProviderTestRequest = !!(data && data.cmd === "testLLMProvider");
+				const isLLMProviderTestRequest = !!(data && (data.cmd === "testLLMProvider" || data.cmd === "testCensorModel"));
 				const isAiEventRequest = !!(data && data.cmd === "aiEvent");
-				const timeoutMs = isAiEventRequest ? 195000 : isLLMProviderTestRequest ? 60000 : (isGetSettingsRequest ? 3000 : 500);
+				const timeoutMs = isAiEventRequest ? 195000 : data?.cmd === "testCensorModel" ? getCensorTestTimeout(data.model) : isLLMProviderTestRequest ? 60000 : (isGetSettingsRequest ? 3000 : 500);
 				
 				// Create promise with timeout
 				const promise = new Promise((resolve) => {
@@ -3833,26 +3833,23 @@ function syncChatOverlayTemplateConfig(templatePath) {
     section.style.display = "none";
   });
 
-  let anyShown = false;
-
   // Shared common-tweaks section (hide bots, chroma, font size, font family),
   // shown for any theme that supports those params.
   const commonSection = document.getElementById("common-overlay-config");
   if (commonSection && CHAT_OVERLAY_COMMON_SUPPORT.has(normalizedPath)) {
     commonSection.style.display = "block";
-    anyShown = true;
   }
 
   if (configId) {
     activeSection = document.getElementById(configId);
     if (activeSection) {
       activeSection.style.display = "block";
-      anyShown = true;
     }
   }
 
   if (optionsWrapper) {
-    optionsWrapper.style.display = anyShown ? "" : "none";
+    // Auto-hide timing is available for every pre-styled chat overlay.
+    optionsWrapper.style.display = "";
   }
 }
 
@@ -3878,7 +3875,7 @@ function applyChatOverlayTemplatePreset(presetValue, options) {
   const dockElement = document.getElementById("dock");
   let params = options.preferDockParams ? getGeneratedLinkParams(dockElement, templateElement) : getGeneratedLinkParams(templateElement, dockElement);
   params = mergeSupportedServerParamsIntoQuery(params, "chatoverlaytemplate", dockElement, templatePath);
-  // Auto-hide is managed with the main chat settings, including disabling it.
+  // Pre-styled overlays have their own auto-hide timing.
   const templateParams = new URLSearchParams(params);
   // The selected collection owns its style; do not carry the previous preset forward.
   if (templatePath.split("?")[0] === "themes/compact-clean.html") {
@@ -3886,8 +3883,11 @@ function applyChatOverlayTemplatePreset(presetValue, options) {
     const selectedStyle = new URL(templatePath, baseURL).searchParams.get("style");
     if (selectedStyle) templateParams.set("style", selectedStyle);
   }
-  const dockParams = new URLSearchParams(getGeneratedLinkParams(dockElement));
-  templateParams.set("showtime", dockParams.get("showtime") || "0");
+  const autoHide = document.getElementById("theme-auto-hide");
+  const showtimeInput = document.getElementById("theme-showtime");
+  const showtime = parseInt(showtimeInput ? showtimeInput.value : "", 10);
+  const duration = Number.isFinite(showtime) ? Math.max(1, Math.min(999999, showtime)) : 30000;
+  templateParams.set("showtime", autoHide && autoHide.checked ? String(duration) : "0");
   params = templateParams.toString();
   const templateUrl = buildGeneratedUrl(templatePath || DEFAULT_CHAT_OVERLAY_TEMPLATE, params);
 
@@ -4207,12 +4207,14 @@ function removeTTSProviderParams(url, selectedProvider=null) {
     const providerParams = {
         system: ['lang', 'voice', 'rate', 'pitch'],
         elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate','voice11'],
-        google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
-        gemini: ['geminikey', 'geminimodel', 'voicegemini', 'geminilang', 'geministyle', 'geminiprompt'],
+        google: ['googleapikey', 'googleAPIKey', 'ttskey', 'googlettskey', 'googlevoice', 'voicegoogle', 'googleaudioprofile', 'googlerate', 'googlepitch', 'googlelang'],
+        gemini: ['geminikey', 'geminiapikey', 'geminiApiKey', 'geminimodel', 'voicegemini', 'geminilang', 'geministyle', 'geminiprompt'],
         fish: ['fishkey', 'voicefish', 'fishmodel', 'fishspeed', 'fishendpoint'],
         speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
-        kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
-        kitten: ['kittenvoice', 'kittenspeed', 'kittensamplerate'],
+        kokoro: ['kokoro', 'kokorotts', 'kokorokey', 'voicekokoro', 'kokorospeed', 'korospeed', 'kokorodevice', 'kokorobackend', 'kokorodtype', 'kokoroprecision', 'kokororuntime', 'kokoroplayback', 'kokorowasm', 'kokorowebgpu'],
+        kitten: ['kitten', 'kittentts', 'kittenvoice', 'kittenspeed', 'kittensamplerate', 'kittenmodel', 'kittenplayback'],
+        piper: ['piper', 'pipertts', 'pipervoice', 'piperspeed'],
+        espeak: ['espeak', 'espeaktts', 'espeakvoice', 'espeakspeed', 'espeakpitch', 'espeakvariant'],
         openai: ['openaikey', 'customttskey', 'localttskey', 'openaiendpoint', 'customttsendpoint', 'localttsendpoint', 'voiceopenai', 'customttsvoice', 'localttsvoice', 'openaimodel', 'customttsmodel', 'localttsmodel', 'openaispeed', 'customttsspeed', 'localttsspeed', 'openaiformat', 'customttsformat', 'localttsformat', 'openaicustomvoice', 'openaicustommodelx']
     };
   
@@ -4227,7 +4229,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
     }
   }
   const selectedProviderValue = (selectedProvider || "").toString().toLowerCase();
-  selectedProvider = providerAliases[(selectedProvider || "").toString().toLowerCase()] || selectedProvider;
+  selectedProvider = providerAliases[selectedProviderValue] || selectedProviderValue;
   
   // Get all parameters except those for the selected provider
   const paramsToRemove = Object.keys(providerParams)
@@ -4663,6 +4665,23 @@ function syncCreditsControlUi() {
 }
 
 
+function initializeChatOverlayShowtime(settings) {
+    // Preserve the previously inherited timing once, then store it independently.
+    if (!settings.showtime || typeof settings.showtime !== "object") settings.showtime = {};
+    const setting = settings.showtime;
+    // Disabled toggles are removed from storage; the saved duration marks setup too.
+    if ("param30" in setting || "numbersetting30" in setting) return;
+    setting.param30 = !!setting.param1;
+    if (!("numbersetting30" in setting)) {
+        setting.numbersetting30 = setting.numbersetting !== undefined ? setting.numbersetting : 30000;
+    }
+    ["param30", "numbersetting30"].forEach(function(type) {
+        chrome.runtime.sendMessage({
+            cmd: "saveSetting", type: type, setting: "showtime", value: setting[type]
+        }, function() {});
+    });
+}
+
 function update(response, sync = true) {
     log("update-> response: ", response);
     
@@ -4787,6 +4806,7 @@ function update(response, sync = true) {
             }
             try {
                 setupTtsProviders(response); // Handle TTS provider setting initialization
+                initializeChatOverlayShowtime(response.settings);
                 renderSavedCustomUrlSlots(response.settings);
 
                 const targetMap = getTargetMap(); // Assuming getTargetMap() is defined
@@ -5315,16 +5335,36 @@ function setupPopupPanelEditor() {
 		list.querySelectorAll('input').forEach(function(input) { input.checked = true; });
 	});
 	cancel.addEventListener('click', function() { dialog.close(); });
+	// A native dialog inside SSApp's iframe can otherwise tab into the app shell.
+	dialog.addEventListener('keydown', function(event) {
+		if (event.key !== 'Tab' || !document.body.classList.contains('ssapp')) return;
+		var controls = Array.from(dialog.querySelectorAll('input, button')).filter(function(control) {
+			return !control.matches(':disabled') && control.tabIndex >= 0 && control.getClientRects().length;
+		});
+		if (!controls.length) {
+			event.preventDefault();
+			return;
+		}
+		var first = controls[0];
+		var last = controls[controls.length - 1];
+		var index = controls.indexOf(document.activeElement);
+		if ((event.shiftKey && index <= 0) || (!event.shiftKey && (index < 0 || document.activeElement === last))) {
+			event.preventDefault();
+			(event.shiftKey ? last : first).focus();
+		}
+	});
 	dialog.addEventListener('cancel', function(event) { if (save.disabled) event.preventDefault(); });
 	save.addEventListener('click', function() {
 		var selection = Object.assign({}, popupPanelVisibility);
 		list.querySelectorAll('input').forEach(function(input) { selection[input.dataset.panelChoice] = input.checked; });
 		save.disabled = showAll.disabled = cancel.disabled = dialog.querySelector('fieldset').disabled = true;
+		if (document.body.classList.contains('ssapp')) dialog.focus();
 		error.textContent = '';
 		chrome.runtime.sendMessage({ cmd: 'saveSetting', type: 'json', setting: 'popupPanelVisibility', value: JSON.stringify(selection) }, function(response) {
 			save.disabled = showAll.disabled = cancel.disabled = dialog.querySelector('fieldset').disabled = false;
 			if (chrome.runtime.lastError || !response || response.saved === false || response.error) {
 				error.textContent = getTranslation('panel-save-failed', 'Could not save the panel. Please try again.');
+				if (document.body.classList.contains('ssapp')) save.focus();
 				return;
 			}
 			popupPanelVisibility = selection;
@@ -5841,6 +5881,55 @@ function formatLLMProviderTestError(error) {
     }
 
     return parts.join('\n') || 'Unknown error';
+}
+
+function updateCensorModelHelp() {
+    const mode = document.getElementById('censorModel')?.value || 'main';
+    const help = document.getElementById('censorModelRequirements');
+    if (!help) return;
+    help.textContent = mode === 'ibm'
+        ? 'English-only. About 41 MB of included model data, loaded on demand. Runs on the CPU; no GPU required. Checks rapid split words from the same identified user.'
+        : mode === 'qwen'
+            ? 'Requires WebGPU. Downloads and caches the Qwen 0.8B model on first use; download progress appears below. Uses a separate model for censoring.'
+            : 'Uses the model and connection settings from Configure LLM Service Provider.';
+    const status = document.getElementById('censorModelStatus');
+    if (status) status.textContent = '';
+}
+
+async function refreshCensorModelStatus() {
+    const status = document.getElementById('censorModelStatus');
+    if (!status || (!document.getElementById('wrapper-chatbot-Censor-options')?.checked && !document.getElementById('testCensorModel')?.disabled)) return;
+    try {
+        const response = await sendRuntimeCommandMessage({ cmd: 'getCensorModelStatus' }, 3000, false);
+        if (response && response.mode === document.getElementById('censorModel')?.value) status.textContent = response.text || '';
+    } catch (_error) {}
+}
+
+function getCensorTestTimeout(mode) {
+    // Qwen permits 30 minutes to initialize and 5 minutes to generate; IBM permits 2 minutes.
+    return mode === 'qwen' ? 2160000 : mode === 'ibm' ? 130000 : 60000;
+}
+
+async function testSelectedCensorModel() {
+    const button = document.getElementById('testCensorModel');
+    const output = document.getElementById('censorTestResult');
+    if (!button || !output) return;
+    button.disabled = true;
+    output.textContent = 'Testing…';
+    const mode = document.getElementById('censorModel').value;
+    try {
+        const response = await sendRuntimeCommandMessage({
+            cmd: 'testCensorModel', model: mode,
+            text: document.getElementById('censorTestText').value,
+            settingsOverride: collectLLMProviderTestSettings()
+        }, getCensorTestTimeout(mode), false);
+        output.textContent = response?.success ? response.text : 'Unavailable: ' + (response?.error || 'No response. Model loading may still be in progress.');
+    } catch (error) {
+        output.textContent = 'Unavailable: ' + (error.message || String(error));
+    } finally {
+        button.disabled = false;
+        refreshCensorModelStatus();
+    }
 }
 
 async function testSelectedLLMProvider() {
@@ -7547,6 +7636,7 @@ function handleOptionSetting(ele, sync) {
                        (ele.dataset.optionsetting2 ? 'optionsetting2' :
                        (ele.dataset.optionsetting10 ? 'optionsetting10' : 'optionsetting18'));
     const settingValue = ele.dataset[settingType];
+    if (settingValue === 'censorModel') updateCensorModelHelp();
     
     // Handle poll type
     if (settingValue === "pollType") {
@@ -8070,6 +8160,22 @@ function updateSettings(ele, sync = true, value = null) {
     if (ele.target) {
         ele = this;
     }
+
+    // Keep the existing simpletts2 setting while presenting a positive name switch.
+    if (ele.dataset.readSender) {
+        const stored = document.querySelector('[data-param' + ele.dataset.readSender + '="simpletts2"]');
+        if (stored) {
+            stored.checked = !ele.checked;
+            updateSettings(stored, sync);
+        }
+        return;
+    }
+    [1, 2, 10].forEach(function(index) {
+        if (ele.dataset['param' + index] === 'simpletts2') {
+            const toggle = document.getElementById('readSenderName' + index);
+            if (toggle) toggle.checked = !ele.checked;
+        }
+    });
 	
     
     const target = ele.dataset.target || null;
@@ -9191,31 +9297,97 @@ if (!chrome.browserAction){
 }
 
 
+async function refreshRAGSearchStatus() {
+    const status = document.getElementById('ragSearchStatus');
+    if (!status || !document.getElementById('ollamaRagEnabled')?.checked) return;
+    try {
+        const response = await sendRuntimeCommandMessage({ cmd: 'getRAGSearchStatus' }, 3000, false);
+        if (response?.text && status.textContent !== response.text) status.textContent = response.text;
+    } catch (error) {}
+}
+
 function updateDocumentList(documents = []) {
     const fileList = document.getElementById('ragFileList');
-    fileList.innerHTML = '';
-
+    if (!fileList) return;
+    const active = document.activeElement;
+    const focusedId = fileList.contains(active) ? active.dataset.id : null;
+    const existingRows = new Map();
+    Array.from(fileList.children).forEach(row => {
+        if (row.ragDocumentState) existingRows.set(row.ragDocumentState[0], row);
+    });
+    let nextRow = fileList.firstElementChild;
+    const placeRow = row => {
+        if (row === nextRow) nextRow = nextRow.nextElementSibling;
+        else fileList.insertBefore(row, nextRow);
+    };
+    const clearButton = document.querySelector('[data-action="clearRag"]');
+    if (clearButton) clearButton.disabled = documents.length === 0;
+    if (!documents.length) {
+        const empty = document.createElement('p');
+        empty.className = 'popup-help-text';
+        empty.textContent = 'No files added yet.';
+        placeRow(empty);
+    }
     documents.forEach(doc => {
-        const docElement = document.createElement('div');
-        docElement.innerHTML = `
-            <span>${doc.title}</span>
-            <span>${doc.status}</span>
-            ${doc.progress !== undefined ? `<progress value="${doc.progress}" max="100"></progress>` : ''}
-            ${doc.status !== 'Deleting' && doc.status !== 'Uploading' ? 
-                `<button data-action="deleteDocument" data-id="${doc.id}" ${doc.status === 'Deleting' ? 'disabled' : ''}>Delete</button>` : 
-                ''
-            }
-        `;
-        fileList.appendChild(docElement);
-    });
-
-    // Add event listeners for delete buttons
-    document.querySelectorAll('[data-action="deleteDocument"]').forEach(button => {
-        button.addEventListener('click', function() {
-            const docId = this.getAttribute('data-id');
-            chrome.runtime.sendMessage({cmd: "deleteRAGfile", docId: docId});
+        const state = [doc.id, doc.title, doc.status, doc.progress, doc.error];
+        const existing = existingRows.get(doc.id);
+        if (existing && state.every((value, index) => value === existing.ragDocumentState[index])) {
+            placeRow(existing);
+            return;
+        }
+        const title = doc.title || 'Imported document';
+        const row = document.createElement('div');
+        row.ragDocumentState = state;
+        row.className = 'rag-document';
+        row.setAttribute('role', 'listitem');
+        const info = document.createElement('div');
+        const name = document.createElement('span');
+        name.className = 'rag-document-title';
+        name.textContent = title;
+        info.appendChild(name);
+        const status = document.createElement('span');
+        status.className = 'rag-document-status';
+        status.setAttribute('role', 'status');
+        status.textContent = doc.status === 'Processed' ? 'Ready' : doc.status;
+        info.appendChild(status);
+        row.appendChild(info);
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.dataset.action = 'deleteDocument';
+        remove.dataset.id = doc.id;
+        remove.textContent = doc.status === 'Deleting' ? 'Removing...' : 'Remove';
+        remove.disabled = doc.status === 'Deleting';
+        remove.setAttribute('aria-label', 'Remove ' + title);
+        remove.addEventListener('click', function () {
+            chrome.runtime.sendMessage({cmd: 'deleteRAGfile', docId: doc.id});
         });
+        row.appendChild(remove);
+        if (doc.error) {
+            const error = document.createElement('div');
+            error.className = 'rag-document-error';
+            error.textContent = doc.error;
+            row.appendChild(error);
+        }
+        if (['Queued', 'Uploading', 'Preprocessing', 'Chunking', 'Processing', 'Summarizing', 'Indexing'].includes(doc.status)) {
+            const progress = document.createElement('progress');
+            progress.max = 100;
+            if (Number.isFinite(doc.progress)) progress.value = Math.max(0, Math.min(100, doc.progress));
+            progress.setAttribute('aria-label', title + ' import progress');
+            row.appendChild(progress);
+        }
+        placeRow(row);
     });
+    while (nextRow) {
+        const unused = nextRow;
+        nextRow = nextRow.nextElementSibling;
+        unused.remove();
+    }
+    if (focusedId && document.activeElement !== active) {
+        const buttons = Array.from(fileList.querySelectorAll('button'));
+        const target = buttons.find(button => button.dataset.id === focusedId && !button.disabled) ||
+            buttons.find(button => !button.disabled) || document.querySelector('[data-action="uploadRAGfile"]');
+        if (target) target.focus({preventScroll: true});
+    }
 }
 
 try {
@@ -10143,6 +10315,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 dtype: getOption('kokorodtype', 'auto') || 'auto',
             },
             
+            espeak: {
+                voice: getId('espeakVoiceSelect')?.value || 'en',
+                speed: getParam('espeakspeed') ? getNumber('espeakspeed', 140) : 140
+            },
             piper: {
                 speed: getParam('piperspeed') ? getNumber('piperspeed', 1.0) : 1.0
             },
@@ -10275,6 +10451,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             document.getElementById('kokoroVoiceSelect' + section)?.value,
             document.getElementById('piperVoiceSelect' + section)?.value);
         const provider = this.getProviderSelect(section)?.value || "system";
+        if (window.location.protocol === "moz-extension:" && ["kokoro", "kitten", "piper"].includes(provider)) {
+            this.showFeedback("This voice engine is not included in the Firefox extension. Select eSpeak, System TTS or a TTS service.", 'error', section, 0);
+            return;
+        }
         if (provider === "system") {
             populateSystemVoiceDropdowns();
         }
@@ -10287,12 +10467,6 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         }
         if (provider === 'piper' && this.piperPreviewBusy) {
             this.showFeedback("Piper is finishing the previous test. Try again in a moment.", 'info', section);
-            return;
-        }
-        if (provider === 'espeak') {
-            let warningMsg = getTranslation("tts-test-not-available", "Testing is not available for {provider}. This TTS provider works during streaming only.");
-            warningMsg = warningMsg.replace('{provider}', serviceName);
-            this.showFeedback(warningMsg, 'error', section);
             return;
         }
         
@@ -10387,6 +10561,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                     if (settings.kokoro.background || settings.kokoro.stream || settings.kokoro.dtype === 'fp32') await this.neuralTTS(text, settings, section);
                     else await this.kokoroTTS(text, settings, section);
                 }
+            } else if (settings.service == "espeak") {
+                await this.espeakTTS(text, settings, section);
             } else if (settings.service == "piper") {
                 await this.piperTTS(text, settings, section);
             } else if (settings.service == "kitten") {
@@ -10395,7 +10571,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                     else await this.kittenTTS(text, settings, section);
                 }
             } else if (!settings.service || (settings.service == "system")) {
-                this.systemTTS(text, settings, section);
+                await this.systemTTS(text, settings, section);
             } else if (allow) {
                 this.showFeedback(`${this.getServiceName(section)} is not configured for testing`, 'error', section);
                 this.finishedAudio();
@@ -10438,6 +10614,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         try {
             desktopBridge = desktopBridge || window.parent?.ninjafy || window.parent?.electronApi;
         } catch (_) {}
+
+        if (ssapp && /Linux/i.test(navigator.platform || "") && !window.speechSynthesis?.getVoices().length) {
+            return this.espeakTTS(text, settings, section, settings.system.lang || "en");
+        }
 
         if (ssapp && desktopBridge && typeof desktopBridge.systemTts === "function") {
             try {
@@ -10626,6 +10806,54 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 		}
 	},
     
+    async espeakTTS(text, settings, section = "", fallbackLanguage = "") {
+        const token = {};
+        this.audioFetchToken = token;
+        this.premiumQueueActive = true;
+        this.setTestRunning(section, true, "Loading...");
+        try {
+            if (!window.RealESpeakTTS) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = './thirdparty/espeak-ng-real.js';
+                    script.onload = resolve;
+                    script.onerror = () => { script.remove(); reject(new Error('Could not load eSpeak')); };
+                    document.head.appendChild(script);
+                });
+            }
+            if (!this.espeakPreview) this.espeakPreview = new window.RealESpeakTTS();
+            await this.espeakPreview.init();
+            if (this.audioFetchToken !== token) return;
+            const wav = await this.espeakPreview.speak(text, {
+                voice: fallbackLanguage || settings.espeak.voice,
+                speed: fallbackLanguage ? Math.max(80, Math.min(450, 140 * (Number(settings.system.rate) || 1))) : settings.espeak.speed,
+                pitch: fallbackLanguage ? Math.max(0, Math.min(99, 50 * (Number(settings.system.pitch) || 1))) : 50, amplitude: 100
+            });
+            if (this.audioFetchToken !== token) return;
+            const audio = document.createElement('audio');
+            this.activeAudioElement = audio;
+            this.activeAudioUrl = URL.createObjectURL(new Blob([wav], {type: 'audio/wav'}));
+            audio.src = this.activeAudioUrl;
+            audio.volume = Math.max(0, Math.min(1, Number(settings.volume) || 0));
+            audio.onended = () => {
+                if (this.audioFetchToken !== token) return;
+                this.showFeedback("Audio played here. Check OBS playback separately.", 'success', section);
+                this.finishedAudio(section);
+            };
+            audio.onerror = () => {
+                if (this.audioFetchToken !== token) return;
+                this.showFeedback("eSpeak audio could not be played", 'error', section);
+                this.finishedAudio(section);
+            };
+            this.setTestRunning(section, true, "Playing...");
+            await audio.play();
+        } catch (error) {
+            if (this.audioFetchToken !== token) return;
+            this.showFeedback("eSpeak: " + error.message, 'error', section);
+            this.finishedAudio(section);
+        }
+    },
+
     async piperTTS(text, settings, section = "") {
         const token = {};
         this.localPiperTest = token;
@@ -12670,6 +12898,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			button.textContent = getPopupSearchResultLabel(record.element);
 			var sectionText = getPopupSearchResultSection(record.wrapper);
 			var panelSection = getPopupPanelSection(record.element);
+			if (panelSection && panelSection.heading) {
+				sectionText = getPopupPanelSectionLabel(panelSection) + (sectionText ? ' · ' + sectionText : '');
+			}
 			if (panelSection && !isPopupPanelSectionShown(panelSection)) {
 				sectionText += (sectionText ? ' · ' : '') + getTranslation('hidden-section', 'Hidden section');
 			}
@@ -13255,6 +13486,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	}
 
 	const testSelectedLLMProviderButton = document.getElementById('testSelectedLLMProvider');
+    const testCensorModelButton = document.getElementById('testCensorModel');
+    if (testCensorModelButton) {
+        testCensorModelButton.addEventListener('click', testSelectedCensorModel);
+        updateCensorModelHelp();
+        setInterval(refreshCensorModelStatus, 2000);
+    }
 	if (testSelectedLLMProviderButton) {
 		testSelectedLLMProviderButton.addEventListener('click', testSelectedLLMProvider);
 	}
@@ -13273,6 +13510,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
 	const ragFileManagement = document.getElementById('ragFileManagement');
+    refreshRAGSearchStatus();
+    setInterval(refreshRAGSearchStatus, 2000);
 
 	ragEnabledCheckbox.addEventListener('change', function() {
 		ragFileManagement.style.display = this.checked ? 'block' : 'none';

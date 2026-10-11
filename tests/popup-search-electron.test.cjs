@@ -237,7 +237,7 @@ async function run() {
  const d=document.getElementById('frame1').contentDocument;
  const get=key=>d.getElementById('multi-alert-effect3-'+key);
  get('preset').click();
- if(!get('summary').textContent.includes('exactly $100 USD') || !get('summary').textContent.includes('Thank you!')) throw Error('Alert summary missing preset details');
+ if(!get('summary').textContent.includes('exactly $100 USD') || !get('summary').textContent.includes('Thanks for watching!')) throw Error('Alert summary missing preset details');
  get('clear-sound').click();
  if(get('sound').value || get('min').value!=='100') throw Error('Clear sound changed other settings');
  get('reset').click();
@@ -301,6 +301,8 @@ async function run() {
 				}, width);
 				const layout = await execMenu(`(async()=>{
     await new Promise(r=>setTimeout(r,350));
+    const handle=document.getElementById('popup-handle');
+    if(handle.getAttribute('aria-expanded')==='false') { handle.click(); await new Promise(r=>setTimeout(r,350)); }
     const f=document.getElementById('frame1'),d=f.contentDocument,w=f.contentWindow;
     const input=d.getElementById('searchInput');input.scrollIntoView();
     const scroll=d.scrollingElement;scroll.scrollTop=scroll.scrollHeight;

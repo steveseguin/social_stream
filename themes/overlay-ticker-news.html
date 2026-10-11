@@ -372,10 +372,17 @@ img.ssn-content-image { display: inline-block; width: 3em; height: 1.3em; margin
         item.style.transform = "translateX(" + startX + "px) translateY(-50%)";
 
         var startTime = null;
+        var visibleSince = null;
         function frame(ts) {
+            if (!item.isConnected) { return; }
             if (startTime === null) { startTime = ts; }
             var x = startX - SPEED * ((ts - startTime) / 1000);
-            if (x + w < 0 || (showtime > 0 && ts - startTime >= showtime)) {
+            // Queued items do not spend their display time waiting off-screen.
+            // Wider items start their timer when the leading edge reaches the left side.
+            if (visibleSince === null && x <= Math.max(0, viewport.clientWidth - item.offsetWidth)) {
+                visibleSince = ts;
+            }
+            if (x + w < 0 || (showtime > 0 && visibleSince !== null && ts - visibleSince >= showtime)) {
                 if (item.parentNode) { item.parentNode.removeChild(item); }
                 return;
             }

@@ -47,6 +47,10 @@ async function loadScriptsInOrder() {
     const scripts = [
 		'./shared/ai/browserModelCatalog.js?v=1',
 		'./shared/ai/localBrowserLLM.js?v=1',
+        './shared/ai/censorPrefilter.js?v=1',
+        './shared/ai/censorModels.js?v=1',
+        './shared/ai/ragSemanticCache.js?v=1',
+        './shared/ai/ragSemanticSearch.js?v=1',
 		'./actions/EventFlowSystem.js?v=1',
         './shared/alerts/sound-library.js',
         './actions/EventFlowEditor.js?v=1',

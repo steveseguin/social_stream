@@ -46,27 +46,27 @@
     --options-group-background-color: #f6f8fa;
     --options-group-text-color: #362e26;
     --extension-enabled-background-color: rgb(153, 255, 153);
-    --extension-disabled-background-color: red;
+    --extension-disabled-background-color: #c62828;
     --extension-disabled-text-color: white;
-    --streaming-chat-color: #0071b8;
+    --streaming-chat-color: #00649f;
     --chat-overlay-template-color: #7345d6;
     --single-message-color: #b45400;
-    --featured-chat-color: #b45400;
-    --multi-alert-color: #c62828;
-    --reactions-color: #c9256f;
-    --emotes-wall-color: #857000;
-	--tipjar-color: #0b6f90;
+    --featured-chat-color: #984700;
+    --multi-alert-color: #b52323;
+    --reactions-color: #ae1e60;
+    --emotes-wall-color: #716000;
+	--tipjar-color: #09627e;
 	--chatbot-wall-color: #cc0000;
-    --hype-meter-color: #007a2c;
-    --waitlist-color: #c400a1;
-	--ticker-color: #d21f20;
+    --hype-meter-color: #006925;
+    --waitlist-color: #ac008d;
+	--ticker-color: #b91b1c;
 	--gif-color: #8d3a70;
 	--wordcloud-color: #5152e0;
-	--poll-color: #b35400;
-	--credits-color: #017a82;
+	--poll-color: #994800;
+	--credits-color: #00686f;
 	--meta-color: #475569;
 	--leaderboard-color: #7d3c98;
-	--scoreboard-color: #c0392b;
+	--scoreboard-color: #ac3024;
 	--eventsdashboard-color: #111;
     --download-link: blue;
     --font-family: "Segoe UI", Tahoma, "Sora", Roboto, Arial, sans-serif;
@@ -3270,13 +3270,6 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="do-not-say-says-or-someone-says-with-tts">🚫🗣️ Do not say "says" or "someone says" with TTS </span>
 								</div>
-								<div data-keywords="strip names remove someone says intro phrasing minimalist tts">
-									<label class="switch">
-										<input type="checkbox" data-param1="simpletts2" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="do-not-read-out-chatname-and-someone-says-when-using-tts">🚫🗣️ Do not read out chatname and "someone says" when using TTS. </span>
-								</div>
 
 								<div data-keywords="urls links address spelled out pronounce hyperlink">
 									<label class="switch">
@@ -3467,6 +3460,15 @@ input:checked + .slider:before {
 								<option value="piper">Piper TTS</option>
 								<option value="espeak">eSpeak TTS</option>
 							</select>
+							<div class="tts-name-option" data-keywords="read sender name chatname message only simpletts2">
+								<input type="checkbox" data-param1="simpletts2" hidden />
+								<label class="switch">
+									<input type="checkbox" id="readSenderName1" data-read-sender="1" checked aria-labelledby="readSenderNameLabel1" aria-describedby="readSenderNameHelp1" />
+									<span class="slider round"></span>
+								</label>
+								<label id="readSenderNameLabel1" for="readSenderName1">Read sender's name</label>
+								<small id="readSenderNameHelp1">Turn off for message-only speech.</small>
+							</div>
 						</div>
 
 						<div id="ttsButton" class="hidden"></div>
@@ -3533,20 +3535,20 @@ input:checked + .slider:before {
 										size="5" data-numbersetting="kokorospeed" />
 								</span>
 							</div>
-						<details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
-<div class="textInputContainer"><label for="kokororuntimeSelect">Processing</label><select class="textInput popup-reviewed-control" id="kokororuntimeSelect" data-optionparam1="kokororuntime"><option value="">Standard</option><option value="worker">Background generation</option></select></div>
-<div class="textInputContainer"><label for="kokorodeviceSelect">Background processor</label><select class="textInput popup-reviewed-control" id="kokorodeviceSelect" data-optionparam1="kokorodevice"><option value="">Automatic</option><option value="wasm">CPU</option><option value="webgpu">GPU (WebGPU)</option></select></div>
-<div class="textInputContainer"><label for="kokorodtypeSelect">Background model quality</label><select class="textInput popup-reviewed-control" id="kokorodtypeSelect" data-optionparam1="kokorodtype"><option value="">Automatic</option><option value="q8">Compact (about 92 MB)</option><option value="fp32">Full quality (about 326 MB)</option><option value="fp16">Half precision (requires compatible GPU)</option></select></div>
-<div class="textInputContainer"><label for="kokoroplaybackSelect">Background playback</label><select class="textInput popup-reviewed-control" id="kokoroplaybackSelect" data-optionparam1="kokoroplayback"><option value="">Play complete message</option><option value="stream">Start as speech arrives</option></select></div>
-<p>Background generation keeps chat responsive. Streamed playback starts sooner but may pause between parts. Choosing a processor, quality or streamed playback enables background generation.</p>
-<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+						<details class="popup-subsection"><summary data-translate="tts-neural-generation">Generation and playback</summary>
+<div class="textInputContainer"><label for="kokororuntimeSelect" data-translate="tts-neural-processing">Processing</label><select class="textInput popup-reviewed-control" id="kokororuntimeSelect" data-optionparam1="kokororuntime"><option value="" data-translate="tts-neural-standard">Standard</option><option value="worker" data-translate="tts-neural-background">Background generation</option></select></div>
+<div class="textInputContainer"><label for="kokorodeviceSelect" data-translate="tts-neural-processor">Processor</label><select class="textInput popup-reviewed-control" id="kokorodeviceSelect" data-optionparam1="kokorodevice"><option value="" data-translate="tts-neural-automatic">Automatic</option><option value="wasm">CPU</option><option value="webgpu">GPU (WebGPU)</option></select></div>
+<div class="textInputContainer"><label for="kokorodtypeSelect" data-translate="tts-neural-quality">Model quality</label><select class="textInput popup-reviewed-control" id="kokorodtypeSelect" data-optionparam1="kokorodtype"><option value="" data-translate="tts-neural-automatic">Automatic</option><option value="q8" data-translate="tts-neural-compact">Compact (~92 MB)</option><option value="fp32" data-translate="tts-neural-full">Full (~326 MB)</option><option value="fp16" data-translate="tts-neural-half">Half precision (GPU required)</option></select></div>
+<div class="textInputContainer"><label for="kokoroplaybackSelect" data-translate="tts-neural-playback">Playback</label><select class="textInput popup-reviewed-control" id="kokoroplaybackSelect" data-optionparam1="kokoroplayback"><option value="" data-translate="tts-neural-complete">Play complete message</option><option value="stream" data-translate="tts-neural-stream">Start as speech arrives</option></select></div>
+<p data-translate="tts-neural-kokoro-help">Background processing keeps chat responsive. Streamed speech starts sooner but may pause.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener" data-translate="tts-neural-guide">Speech setup guide</a></details>
 </div>
 						<!-- Kitten TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="kittenTTS">
 							<h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-kitten-options">Kitten TTS Options</span></h4>
 
 
-							<i>note: this free browser-based TTS downloads the selected model on first use.</i>
+							<i data-translate="tts-neural-download">Downloads the selected model on first use.</i>
 							<br /><br />
 							<div>
 								🎭 Voice to use:
@@ -3573,11 +3575,11 @@ input:checked + .slider:before {
 										size="5" data-numbersetting="kittenspeed" />
 								</span>
 							</div>
-						<details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
-<div class="textInputContainer"><label for="kittenmodelSelect">Model</label><select class="textInput popup-reviewed-control" id="kittenmodelSelect" data-optionparam1="kittenmodel"><option value="">Original Kitten 0.1</option><option value="nano">Nano 0.8 (~25 MB)</option><option value="micro">Micro 0.8 (~41 MB)</option><option value="mini">Mini 0.8 (~80 MB)</option></select></div>
-<div class="textInputContainer"><label for="kittenplaybackSelect">Kitten 0.8 playback</label><select class="textInput popup-reviewed-control" id="kittenplaybackSelect" data-optionparam1="kittenplayback"><option value="">Play complete message</option><option value="stream">Start as speech arrives</option></select></div>
-<p>Kitten 0.8 runs in the background on CPU. English voices only. Streamed playback may pause between parts.</p>
-<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+						<details class="popup-subsection"><summary data-translate="tts-neural-generation">Generation and playback</summary>
+<div class="textInputContainer"><label for="kittenmodelSelect" data-translate="tts-neural-model">Model</label><select class="textInput popup-reviewed-control" id="kittenmodelSelect" data-optionparam1="kittenmodel"><option value="">Original Kitten 0.1</option><option value="nano">Nano 0.8 (~25 MB)</option><option value="micro">Micro 0.8 (~41 MB)</option><option value="mini">Mini 0.8 (~80 MB)</option></select></div>
+<div class="textInputContainer"><label for="kittenplaybackSelect" data-translate="tts-neural-playback">Playback</label><select class="textInput popup-reviewed-control" id="kittenplaybackSelect" data-optionparam1="kittenplayback"><option value="" data-translate="tts-neural-complete">Play complete message</option><option value="stream" data-translate="tts-neural-stream">Start as speech arrives</option></select></div>
+<p data-translate="tts-neural-kitten-help">Kitten 0.8 uses the CPU in the background. English only; streamed speech may pause.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener" data-translate="tts-neural-guide">Speech setup guide</a></details>
 </div>
 						<!-- ElevenLabs TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="elevenlabsTTS">
@@ -4055,13 +4057,18 @@ input:checked + .slider:before {
 							<br />
 							<div>
 								<label class="switch">
-									<input type="checkbox" data-param1="piperspeed" />
+									<input type="checkbox" data-param1="piperspeed" aria-label="Customize Piper speech pace" />
 									<span class="slider round"></span>
 								</label>
-								<span><span class="popup-control-icon" aria-hidden="true">🔊</span>
-									Speaking rate
-									<input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.1" value="1.0" size="5" data-numbersetting="piperspeed" />
-								</span>
+								<label for="piper-pace">Speech pace</label>
+								<div class="popup-range-field">
+									<div class="popup-range-track" style="--range-normal-position: 23.08%;">
+										<input type="range" id="piper-pace" min="0.1" max="4" step="0.1" value="1.0" data-numbersetting="piperspeed" data-range-display="piper-pace-display" aria-describedby="piper-pace-help" />
+										<div class="popup-range-labels" aria-hidden="true"><span>Fast</span><span class="popup-range-normal">Normal</span><span>Slow</span></div>
+									</div>
+									<span class="range-value" id="piper-pace-display">1.00</span>
+									<small id="piper-pace-help">Lower = faster &middot; 1.0 = normal &middot; Higher = slower</small>
+								</div>
 							</div>
 						</div>
 						<!-- eSpeak TTS Options -->
@@ -4091,47 +4098,6 @@ input:checked + .slider:before {
 							</div>
 						</div>
 					</div>
-                </div>
-            </div>
-
-            <div class="wrapper beginner-basic" data-panel-section="dock">
-                <div class="collapsible">
-                    <input type="checkbox" class="collapsible-input" id="wrapper-chat-name-color-options" />
-                    <label class="collapsible-label" for="wrapper-chat-name-color-options"><span>💬 Username colors</span></label>
-                    <div class="collapsible-text">
-                        <div class="options">
-                            <div class="options_group streaming_chat">
-                                <div id="colorizename" title="Show username colors supplied by the source. Sources such as YouTube may not supply one.">
-                                    <label class="switch">
-                                        <input type="checkbox" data-param1="color" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="color-names-if-color-info-available">📛 Use source-provided username colors</span>
-                                </div>
-                                <div title="Keep source-provided username colors and generate a consistent color when one is missing.">
-                                    <label class="switch">
-                                        <input type="checkbox" data-param1="randomcolor" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="add-a-random-color-to-uncolored-names">🌈👤 Generate colors for uncolored names</span>
-                                </div>
-                                <div title="Generate a consistent username color in this Dock, replacing colors supplied by the source.">
-                                    <label class="switch">
-                                        <input type="checkbox" data-param1="randomcolorall" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="override-all-name-colors-with-a-random-color">🌈🌈 Generate colors for every name</span>
-                                </div>
-                                <div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
-                                    <div class="textInputContainer" style="flex:1; margin-right:5px;">
-                                        <input type="text" id="dock_name_color" class="textInput instant" autocomplete="off" placeholder="e.g. #ffffff" data-textparam1="namecolor" data-palette="dock_name_color_palette" />
-                                        <label for="dock_name_color"><span class="popup-control-icon" aria-hidden="true">🔤</span><span data-translate="default-name-font-color">&gt; Default name font color</span></label>
-                                    </div>
-                                    <input type="color" data-color="dock_name_color" id="dock_name_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -5234,6 +5200,47 @@ input:checked + .slider:before {
                 </div>
             </div>
 
+            <div class="wrapper beginner-basic" data-panel-section="dock">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-chat-name-color-options" />
+                    <label class="collapsible-label" for="wrapper-chat-name-color-options"><span>💬 Username colors</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group streaming_chat">
+                                <div id="colorizename" title="Show username colors supplied by the source. Sources such as YouTube may not supply one.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="color" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="color-names-if-color-info-available">📛 Use source-provided username colors</span>
+                                </div>
+                                <div title="Keep source-provided username colors and generate a consistent color when one is missing.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="randomcolor" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="add-a-random-color-to-uncolored-names">🌈👤 Generate colors for uncolored names</span>
+                                </div>
+                                <div title="Generate a consistent username color in this Dock, replacing colors supplied by the source.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="randomcolorall" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="override-all-name-colors-with-a-random-color">🌈🌈 Generate colors for every name</span>
+                                </div>
+                                <div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+                                    <div class="textInputContainer" style="flex:1; margin-right:5px;">
+                                        <input type="text" id="dock_name_color" class="textInput instant" autocomplete="off" placeholder="e.g. #ffffff" data-textparam1="namecolor" data-palette="dock_name_color_palette" />
+                                        <label for="dock_name_color"><span class="popup-control-icon" aria-hidden="true">🔤</span><span data-translate="default-name-font-color">&gt; Default name font color</span></label>
+                                    </div>
+                                    <input type="color" data-color="dock_name_color" id="dock_name_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="wrapper" data-panel-section="dock">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-hostbot-options" />
@@ -5340,7 +5347,7 @@ input:checked + .slider:before {
                     <span class="title-group"><span class="emoji" aria-hidden="true">🎨</span><span data-translate="pre-styled-chat-overlays">Pre-styled chat overlays</span> </span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
                 </h2>
-				<small class="beginner-section-note" data-translate="pre-styled-chat-beginner-note">Ready-made chat looks for OBS. Auto-hide timing follows the Main chat overlay settings. Switch to full mode for deeper styling controls.</small>
+				<small class="beginner-section-note" data-translate="pre-styled-chat-timing-note">Ready-made chat looks for OBS. Set auto-hide timing below in Overlay Theme Options. Switch to full mode for deeper styling controls.</small>
                 <div id="chatoverlaytemplate" data-raw="" class="streaming_chat"></div>
 				<div class="template-selector overlay-selector">
 					<label for="overlay-preset-select" style="display: inline-block; margin-right: 10px;">
@@ -5723,13 +5730,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="do-not-say-says-or-someone-says-with-tts">🚫🗣️ Do not say "says" or "someone says" with TTS </span>
                                 </div>
-                                <div>
-                                    <label class="switch">
-                                        <input type="checkbox" data-param2="simpletts2" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="do-not-read-out-chatname-and-someone-says-when-using-tts">🚫🗣️ Do not read out chatname and "someone says" when using TTS. </span>
-                                </div>
+
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param2="readouturls" />
@@ -5764,6 +5765,15 @@ input:checked + .slider:before {
                                 <option value="piper">Piper TTS</option>
                                 <option value="espeak">eSpeak TTS</option>
                             </select>
+                            <div class="tts-name-option" data-keywords="read sender name chatname message only simpletts2">
+                                <input type="checkbox" data-param2="simpletts2" hidden />
+                                <label class="switch">
+                                    <input type="checkbox" id="readSenderName2" data-read-sender="2" checked aria-labelledby="readSenderNameLabel2" aria-describedby="readSenderNameHelp2" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <label id="readSenderNameLabel2" for="readSenderName2">Read sender's name</label>
+                                <small id="readSenderNameHelp2">Turn off for message-only speech.</small>
+                            </div>
                         </div>
 
                         <!-- System TTS Options -->
@@ -5824,13 +5834,13 @@ input:checked + .slider:before {
 <optgroup label="Portuguese — Brazil"><option value="pf_dora">Dora (Brazilian Portuguese)</option><option value="pm_alex">Alex (Brazilian Portuguese)</option><option value="pm_santa">Santa (Brazilian Portuguese)</option></optgroup>
 </select>
                             </div>
-                        <details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
-<div class="textInputContainer"><label for="kokororuntimeSelect2">Processing</label><select class="textInput popup-reviewed-control" id="kokororuntimeSelect2" data-optionparam2="kokororuntime"><option value="">Standard</option><option value="worker">Background generation</option></select></div>
-<div class="textInputContainer"><label for="kokorodeviceSelect2">Background processor</label><select class="textInput popup-reviewed-control" id="kokorodeviceSelect2" data-optionparam2="kokorodevice"><option value="">Automatic</option><option value="wasm">CPU</option><option value="webgpu">GPU (WebGPU)</option></select></div>
-<div class="textInputContainer"><label for="kokorodtypeSelect2">Background model quality</label><select class="textInput popup-reviewed-control" id="kokorodtypeSelect2" data-optionparam2="kokorodtype"><option value="">Automatic</option><option value="q8">Compact (about 92 MB)</option><option value="fp32">Full quality (about 326 MB)</option><option value="fp16">Half precision (requires compatible GPU)</option></select></div>
-<div class="textInputContainer"><label for="kokoroplaybackSelect2">Background playback</label><select class="textInput popup-reviewed-control" id="kokoroplaybackSelect2" data-optionparam2="kokoroplayback"><option value="">Play complete message</option><option value="stream">Start as speech arrives</option></select></div>
-<p>Background generation keeps chat responsive. Streamed playback starts sooner but may pause between parts. Choosing a processor, quality or streamed playback enables background generation.</p>
-<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+                        <details class="popup-subsection"><summary data-translate="tts-neural-generation">Generation and playback</summary>
+<div class="textInputContainer"><label for="kokororuntimeSelect2" data-translate="tts-neural-processing">Processing</label><select class="textInput popup-reviewed-control" id="kokororuntimeSelect2" data-optionparam2="kokororuntime"><option value="" data-translate="tts-neural-standard">Standard</option><option value="worker" data-translate="tts-neural-background">Background generation</option></select></div>
+<div class="textInputContainer"><label for="kokorodeviceSelect2" data-translate="tts-neural-processor">Processor</label><select class="textInput popup-reviewed-control" id="kokorodeviceSelect2" data-optionparam2="kokorodevice"><option value="" data-translate="tts-neural-automatic">Automatic</option><option value="wasm">CPU</option><option value="webgpu">GPU (WebGPU)</option></select></div>
+<div class="textInputContainer"><label for="kokorodtypeSelect2" data-translate="tts-neural-quality">Model quality</label><select class="textInput popup-reviewed-control" id="kokorodtypeSelect2" data-optionparam2="kokorodtype"><option value="" data-translate="tts-neural-automatic">Automatic</option><option value="q8" data-translate="tts-neural-compact">Compact (~92 MB)</option><option value="fp32" data-translate="tts-neural-full">Full (~326 MB)</option><option value="fp16" data-translate="tts-neural-half">Half precision (GPU required)</option></select></div>
+<div class="textInputContainer"><label for="kokoroplaybackSelect2" data-translate="tts-neural-playback">Playback</label><select class="textInput popup-reviewed-control" id="kokoroplaybackSelect2" data-optionparam2="kokoroplayback"><option value="" data-translate="tts-neural-complete">Play complete message</option><option value="stream" data-translate="tts-neural-stream">Start as speech arrives</option></select></div>
+<p data-translate="tts-neural-kokoro-help">Background processing keeps chat responsive. Streamed speech starts sooner but may pause.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener" data-translate="tts-neural-guide">Speech setup guide</a></details>
 </div>
 
                         <!-- Kitten TTS Options -->
@@ -5838,7 +5848,7 @@ input:checked + .slider:before {
                             <h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-kitten-options">Kitten TTS Options</span></h4>
 
 
-                            <i>note: this free browser-based TTS downloads the selected model on first use.</i>
+                            <i data-translate="tts-neural-download">Downloads the selected model on first use.</i>
                             <br /><br />
                             <div>
                                 🎭 Voice to use:
@@ -5865,11 +5875,11 @@ input:checked + .slider:before {
                                         size="5" data-numbersetting2="kittenspeed" />
                                 </span>
                             </div>
-                        <details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
-<div class="textInputContainer"><label for="kittenmodelSelect2">Model</label><select class="textInput popup-reviewed-control" id="kittenmodelSelect2" data-optionparam2="kittenmodel"><option value="">Original Kitten 0.1</option><option value="nano">Nano 0.8 (~25 MB)</option><option value="micro">Micro 0.8 (~41 MB)</option><option value="mini">Mini 0.8 (~80 MB)</option></select></div>
-<div class="textInputContainer"><label for="kittenplaybackSelect2">Kitten 0.8 playback</label><select class="textInput popup-reviewed-control" id="kittenplaybackSelect2" data-optionparam2="kittenplayback"><option value="">Play complete message</option><option value="stream">Start as speech arrives</option></select></div>
-<p>Kitten 0.8 runs in the background on CPU. English voices only. Streamed playback may pause between parts.</p>
-<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+                        <details class="popup-subsection"><summary data-translate="tts-neural-generation">Generation and playback</summary>
+<div class="textInputContainer"><label for="kittenmodelSelect2" data-translate="tts-neural-model">Model</label><select class="textInput popup-reviewed-control" id="kittenmodelSelect2" data-optionparam2="kittenmodel"><option value="">Original Kitten 0.1</option><option value="nano">Nano 0.8 (~25 MB)</option><option value="micro">Micro 0.8 (~41 MB)</option><option value="mini">Mini 0.8 (~80 MB)</option></select></div>
+<div class="textInputContainer"><label for="kittenplaybackSelect2" data-translate="tts-neural-playback">Playback</label><select class="textInput popup-reviewed-control" id="kittenplaybackSelect2" data-optionparam2="kittenplayback"><option value="" data-translate="tts-neural-complete">Play complete message</option><option value="stream" data-translate="tts-neural-stream">Start as speech arrives</option></select></div>
+<p data-translate="tts-neural-kitten-help">Kitten 0.8 uses the CPU in the background. English only; streamed speech may pause.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener" data-translate="tts-neural-guide">Speech setup guide</a></details>
 </div>
 
                         <!-- ElevenLabs TTS Options -->
@@ -6248,13 +6258,18 @@ input:checked + .slider:before {
                             <br />
                             <div>
                                 <label class="switch">
-                                    <input type="checkbox" data-param2="piperspeed" />
+                                    <input type="checkbox" data-param2="piperspeed" aria-label="Customize Piper speech pace" />
                                     <span class="slider round"></span>
                                 </label>
-                                <span><span class="popup-control-icon" aria-hidden="true">🔊</span>
-                                    Speaking rate
-                                    <input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.1" value="1.0" size="5" data-numbersetting2="piperspeed" />
-                                </span>
+                                <label for="piper-pace2">Speech pace</label>
+                                <div class="popup-range-field">
+                                    <div class="popup-range-track" style="--range-normal-position: 23.08%;">
+                                        <input type="range" id="piper-pace2" min="0.1" max="4" step="0.1" value="1.0" data-numbersetting2="piperspeed" data-range-display="piper-pace2-display" aria-describedby="piper-pace2-help" />
+                                        <div class="popup-range-labels" aria-hidden="true"><span>Fast</span><span class="popup-range-normal">Normal</span><span>Slow</span></div>
+                                    </div>
+                                    <span class="range-value" id="piper-pace2-display">1.00</span>
+                                    <small id="piper-pace2-help">Lower = faster &middot; 1.0 = normal &middot; Higher = slower</small>
+                                </div>
                             </div>
                         </div>
 
@@ -9282,6 +9297,13 @@ input:checked + .slider:before {
 									</div>
 								</div>
 								<h3><span class="popup-control-icon" aria-hidden="true">👁️</span>User display names</h3>
+								<div class="popup-toggle-row" title="Show both names in docks and overlays when a source supplies a different username, for example: 알렌 (allenhklee). Names that differ only in capitalization are shown once. Custom display-name aliases take priority." data-keywords="localized display name username secondary name all platforms Twitch Korean Japanese Chinese">
+									<label class="switch">
+										<input type="checkbox" id="showDisplayNameUsername" data-setting="showdisplaynameusername" />
+										<span class="slider round"></span>
+									</label>
+									<label id="showDisplayNameUsernameLabel" for="showDisplayNameUsername"><span class="popup-control-icon" aria-hidden="true">👤</span> Show display name (username)</label>
+								</div>
 								<p>Show a preferred name in docks and overlays without changing the original message identity.</p>
 								<div class="isolate">
 									<div id="userDisplayAliasesList" class="username-list-container"></div>
@@ -10161,7 +10183,7 @@ input:checked + .slider:before {
 										<span><span class="popup-control-icon" aria-hidden="true">🤖</span>Enable AI auto translate</span>
 									</div>
 								</div>
-								<div class="textInputContainer" style="display: inline-grid; width: 260px; margin-left: 50px; margin-top: 8px;" title="Target language for translated incoming chat messages.">
+								<div class="textInputContainer popup-inset-field" title="Target language for translated incoming chat messages.">
 									<input type="text" id="aiAutoTranslateTargetLanguage" class="textInput" autocomplete="off" placeholder="en-US" data-textsetting="aiAutoTranslateTargetLanguage" />
 									<label for="aiAutoTranslateTargetLanguage"><span class="popup-control-icon" aria-hidden="true">🌐</span><span>&gt; Target language (default: en-US)</span></label>
 								</div>
@@ -10174,7 +10196,7 @@ input:checked + .slider:before {
 										<span><span class="popup-control-icon" aria-hidden="true">🌐</span>Translate outgoing messages before sending</span>
 									</div>
 								</div>
-								<div class="textInputContainer" style="display: inline-grid; width: 260px; margin-left: 50px; margin-top: 8px;" title="Target language for translated outgoing host messages. Leave blank to use the target language above.">
+								<div class="textInputContainer popup-inset-field" title="Target language for translated outgoing host messages. Leave blank to use the target language above.">
 									<input type="text" id="aiAutoTranslateOutgoingTargetLanguage" class="textInput" autocomplete="off" placeholder="blank = target above" data-textsetting="aiAutoTranslateOutgoingTargetLanguage" />
 									<label for="aiAutoTranslateOutgoingTargetLanguage"><span class="popup-control-icon" aria-hidden="true">🌐</span><span>&gt; Outgoing target language</span></label>
 								</div>
@@ -10348,34 +10370,51 @@ input:checked + .slider:before {
 										<span data-translate="ollamaprompt">&gt; Additional Bot Instructions (Optional)</span>
 									</label>
 								</div>
-								<h3><span class="popup-control-icon" aria-hidden="true">🤖</span><span data-translate="chatbot-knowledge">Give the above chat bot access to additional custom knowledge that you can provide</span></h3>
-								<br>
-								<div style="display: inline-block;" title="Enable the RAG mode, which has the LLM bot access a local database containing additional knowledge that if may reference in its responses.">
-									<label class="switch">
-										<input type="checkbox" id="ollamaRagEnabled" data-setting="ollamaRagEnabled" />
-										<span class="slider round"></span>
-									</label>
-									<span><span class="popup-control-icon" aria-hidden="true">🤖</span><span data-translate="enable-ragEnabled-bot">Enable the custom knowledge-base (RAG)</span></span>
-								</div>
-								<br />
-								<div id="ragFileManagement" style="display: none; margin-top: 10px;" title="A list of uploaded files that will populate the knowledge database, along with any progress state">
-									<div>
-										<button class="glowingButton" style="width: 160px; margin-left: 0px;" data-action="uploadRAGfile" title="Ideally, plain text or markdown files should be used">
-											<span data-translate="add-another-rag-file">Add a resource file</span>
-										</button>
-										<button class="glowingButton" style="width: 160px; margin-left: 0px;" data-action="clearRag" title="This will remove the local database of knowledge and delete upload files">
-											<span data-translate="clear-rag">Clear all</span>
-										</button>
-									</div>
-									<h4><span class="popup-control-icon" aria-hidden="true">🤖</span><span data-translate="knowledge-file-management">Custom knowledge-base - File Management</span></h4>
-									<div id="ragFileList"></div>
-									<div>
-										<input type="checkbox" id="enhancedProcessing">
-										<label for="enhancedProcessing"><span class="popup-control-icon" aria-hidden="true">⚙️</span>Use enhanced processing (may work better with multiple documents)</label>
-									</div>
-									<br>
-									<span data-translate="works-better-when"><i>💁‍ tip: The quality of data uploaded will impact results. Too much data may be harmful.</i></span>
-								</div>
+                                <section id="ragKnowledgeSettings" class="popup-settings-panel popup-subsection" aria-labelledby="ragKnowledgeTitle">
+                                    <h3 id="ragKnowledgeTitle"><span data-translate="chatbot-knowledge">Chat bot knowledge</span></h3>
+                                    <div class="popup-toggle-row">
+                                        <label class="switch">
+                                            <input type="checkbox" id="ollamaRagEnabled" data-setting="ollamaRagEnabled" aria-describedby="ragKnowledgeHelp" />
+                                            <span class="slider round"></span>
+                                        </label>
+                                        <label for="ollamaRagEnabled"><span class="popup-control-icon" aria-hidden="true">&#128218;</span><span data-translate="enable-ragEnabled-bot">Use a custom knowledge base (RAG)</span></label>
+                                    </div>
+                                    <p id="ragKnowledgeHelp" class="popup-help-text">Add text or Markdown files for the chat bot to reference in its replies.</p>
+                                    <div id="ragFileManagement" style="display:none;">
+                                        <div class="textInputContainer rag-search-field">
+                                            <select id="ragSearchMode" class="textInput popup-reviewed-control" data-optionsetting="ragSearchMode" aria-describedby="ragSearchHelp ragSearchStatus">
+                                                <option value="keyword" selected>Keyword search (default)</option>
+                                                <option value="semantic">Local semantic search (English)</option>
+                                            </select>
+                                            <label for="ragSearchMode">Search method</label>
+                                        </div>
+                                        <p id="ragSearchHelp" class="popup-help-text">Semantic search matches questions by meaning using a small local model. It builds a cached index from existing imports without AI service calls. Keyword search stays available while it prepares. Replies still use your selected AI service.</p>
+                                        <p id="ragSearchStatus" class="popup-help-text" role="status">Keyword search is selected.</p>
+                                        <div class="popup-toggle-row">
+                                            <label class="switch">
+                                                <input type="checkbox" id="ragFilesOnly" data-setting="ragFilesOnly" aria-describedby="ragFilesOnlyHelp" />
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <label for="ragFilesOnly"><span class="popup-control-icon" aria-hidden="true">&#128214;</span>Answer only from my files</label>
+                                        </div>
+                                        <p id="ragFilesOnlyHelp" class="popup-help-text">Skip the general-chat fallback when no answer is returned from your files. AI-generated answers can still be inaccurate.</p>
+                                        <div class="popup-toggle-row">
+                                            <label class="switch">
+                                                <input type="checkbox" id="enhancedProcessing" aria-describedby="ragProcessingHelp" />
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <label for="enhancedProcessing">Use AI to enrich new imports</label>
+                                        </div>
+                                        <p id="ragProcessingHelp" class="popup-help-text">Optional: uses your selected AI service to create summaries and search tags. Takes longer and may incur provider charges. Leave off to import locally without AI processing.</p>
+                                        <div class="popup-panel-actions">
+                                            <button type="button" data-action="uploadRAGfile"><span data-translate="add-another-rag-file">Add file</span></button>
+                                            <button type="button" data-action="clearRag" title="Remove all imported documents from the knowledge base. Original files are kept."><span data-translate="clear-rag">Clear all files</span></button>
+                                        </div>
+                                        <h4><span data-translate="knowledge-file-management">Imported files</span></h4>
+                                        <div id="ragFileList" role="list" aria-label="Knowledge documents"><p class="popup-help-text">No files added yet.</p></div>
+                                        <p class="popup-help-text">Use focused, up-to-date documents for more useful answers. Removing an import keeps the original file on your computer.</p>
+                                    </div>
+                                </section>
 							</div>
 
 						</div>
@@ -10433,13 +10472,6 @@ input:checked + .slider:before {
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="do-not-say-says-or-the-bot-says-with-tts">🚫🗣️ Do not say "says" or "The bot says" with TTS </span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param10="simpletts2" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="do-not-read-out-botname-or-the-bot-says-when-using-tts">🚫🗣️ Do not read out bot name or "The bot says" when using TTS. </span>
 								</div>
 
 							</div>
@@ -10537,6 +10569,15 @@ input:checked + .slider:before {
 								<option value="piper">Piper TTS</option>
 								<option value="espeak">eSpeak TTS</option>
 							</select>
+							<div class="tts-name-option" data-keywords="read sender name chatname message only simpletts2">
+								<input type="checkbox" data-param10="simpletts2" hidden />
+								<label class="switch">
+									<input type="checkbox" id="readSenderName10" data-read-sender="10" checked aria-labelledby="readSenderNameLabel10" aria-describedby="readSenderNameHelp10" />
+									<span class="slider round"></span>
+								</label>
+								<label id="readSenderNameLabel10" for="readSenderName10">Read bot's name</label>
+								<small id="readSenderNameHelp10">Turn off for message-only speech.</small>
+							</div>
 						</div>
 
 						<div id="ttsButton10" class="hidden"></div>
@@ -10968,20 +11009,20 @@ input:checked + .slider:before {
 										size="5" data-numbersetting10="kokorospeed" />
 								</span>
 							</div>
-						<details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
-<div class="textInputContainer"><label for="kokororuntimeSelect10">Processing</label><select class="textInput popup-reviewed-control" id="kokororuntimeSelect10" data-optionparam10="kokororuntime"><option value="">Standard</option><option value="worker">Background generation</option></select></div>
-<div class="textInputContainer"><label for="kokorodeviceSelect10">Background processor</label><select class="textInput popup-reviewed-control" id="kokorodeviceSelect10" data-optionparam10="kokorodevice"><option value="">Automatic</option><option value="wasm">CPU</option><option value="webgpu">GPU (WebGPU)</option></select></div>
-<div class="textInputContainer"><label for="kokorodtypeSelect10">Background model quality</label><select class="textInput popup-reviewed-control" id="kokorodtypeSelect10" data-optionparam10="kokorodtype"><option value="">Automatic</option><option value="q8">Compact (about 92 MB)</option><option value="fp32">Full quality (about 326 MB)</option><option value="fp16">Half precision (requires compatible GPU)</option></select></div>
-<div class="textInputContainer"><label for="kokoroplaybackSelect10">Background playback</label><select class="textInput popup-reviewed-control" id="kokoroplaybackSelect10" data-optionparam10="kokoroplayback"><option value="">Play complete message</option><option value="stream">Start as speech arrives</option></select></div>
-<p>Background generation keeps chat responsive. Streamed playback starts sooner but may pause between parts. Choosing a processor, quality or streamed playback enables background generation.</p>
-<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+						<details class="popup-subsection"><summary data-translate="tts-neural-generation">Generation and playback</summary>
+<div class="textInputContainer"><label for="kokororuntimeSelect10" data-translate="tts-neural-processing">Processing</label><select class="textInput popup-reviewed-control" id="kokororuntimeSelect10" data-optionparam10="kokororuntime"><option value="" data-translate="tts-neural-standard">Standard</option><option value="worker" data-translate="tts-neural-background">Background generation</option></select></div>
+<div class="textInputContainer"><label for="kokorodeviceSelect10" data-translate="tts-neural-processor">Processor</label><select class="textInput popup-reviewed-control" id="kokorodeviceSelect10" data-optionparam10="kokorodevice"><option value="" data-translate="tts-neural-automatic">Automatic</option><option value="wasm">CPU</option><option value="webgpu">GPU (WebGPU)</option></select></div>
+<div class="textInputContainer"><label for="kokorodtypeSelect10" data-translate="tts-neural-quality">Model quality</label><select class="textInput popup-reviewed-control" id="kokorodtypeSelect10" data-optionparam10="kokorodtype"><option value="" data-translate="tts-neural-automatic">Automatic</option><option value="q8" data-translate="tts-neural-compact">Compact (~92 MB)</option><option value="fp32" data-translate="tts-neural-full">Full (~326 MB)</option><option value="fp16" data-translate="tts-neural-half">Half precision (GPU required)</option></select></div>
+<div class="textInputContainer"><label for="kokoroplaybackSelect10" data-translate="tts-neural-playback">Playback</label><select class="textInput popup-reviewed-control" id="kokoroplaybackSelect10" data-optionparam10="kokoroplayback"><option value="" data-translate="tts-neural-complete">Play complete message</option><option value="stream" data-translate="tts-neural-stream">Start as speech arrives</option></select></div>
+<p data-translate="tts-neural-kokoro-help">Background processing keeps chat responsive. Streamed speech starts sooner but may pause.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener" data-translate="tts-neural-guide">Speech setup guide</a></details>
 </div>
 						<!-- Kitten TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="kittenTTS10">
 							<h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-kitten-options">Kitten TTS Options</span></h4>
 
 
-							<i>note: this free browser-based TTS downloads the selected model on first use.</i>
+							<i data-translate="tts-neural-download">Downloads the selected model on first use.</i>
 							<br /><br />
 							<div>
 								🎭 Voice to use:
@@ -11008,11 +11049,11 @@ input:checked + .slider:before {
 										size="5" data-numbersetting10="kittenspeed" />
 								</span>
 							</div>
-						<details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
-<div class="textInputContainer"><label for="kittenmodelSelect10">Model</label><select class="textInput popup-reviewed-control" id="kittenmodelSelect10" data-optionparam10="kittenmodel"><option value="">Original Kitten 0.1</option><option value="nano">Nano 0.8 (~25 MB)</option><option value="micro">Micro 0.8 (~41 MB)</option><option value="mini">Mini 0.8 (~80 MB)</option></select></div>
-<div class="textInputContainer"><label for="kittenplaybackSelect10">Kitten 0.8 playback</label><select class="textInput popup-reviewed-control" id="kittenplaybackSelect10" data-optionparam10="kittenplayback"><option value="">Play complete message</option><option value="stream">Start as speech arrives</option></select></div>
-<p>Kitten 0.8 runs in the background on CPU. English voices only. Streamed playback may pause between parts.</p>
-<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+						<details class="popup-subsection"><summary data-translate="tts-neural-generation">Generation and playback</summary>
+<div class="textInputContainer"><label for="kittenmodelSelect10" data-translate="tts-neural-model">Model</label><select class="textInput popup-reviewed-control" id="kittenmodelSelect10" data-optionparam10="kittenmodel"><option value="">Original Kitten 0.1</option><option value="nano">Nano 0.8 (~25 MB)</option><option value="micro">Micro 0.8 (~41 MB)</option><option value="mini">Mini 0.8 (~80 MB)</option></select></div>
+<div class="textInputContainer"><label for="kittenplaybackSelect10" data-translate="tts-neural-playback">Playback</label><select class="textInput popup-reviewed-control" id="kittenplaybackSelect10" data-optionparam10="kittenplayback"><option value="" data-translate="tts-neural-complete">Play complete message</option><option value="stream" data-translate="tts-neural-stream">Start as speech arrives</option></select></div>
+<p data-translate="tts-neural-kitten-help">Kitten 0.8 uses the CPU in the background. English only; streamed speech may pause.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener" data-translate="tts-neural-guide">Speech setup guide</a></details>
 </div>
 						<!-- Piper TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="piperTTS10">
@@ -11033,13 +11074,18 @@ input:checked + .slider:before {
 							<br />
 							<div>
 								<label class="switch">
-									<input type="checkbox" data-param10="piperspeed" />
+									<input type="checkbox" data-param10="piperspeed" aria-label="Customize Piper speech pace" />
 									<span class="slider round"></span>
 								</label>
-								<span><span class="popup-control-icon" aria-hidden="true">🔊</span>
-									Speaking rate
-									<input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.1" value="1.0" size="5" data-numbersetting10="piperspeed" />
-								</span>
+								<label for="piper-pace10">Speech pace</label>
+								<div class="popup-range-field">
+									<div class="popup-range-track" style="--range-normal-position: 23.08%;">
+										<input type="range" id="piper-pace10" min="0.1" max="4" step="0.1" value="1.0" data-numbersetting10="piperspeed" data-range-display="piper-pace10-display" aria-describedby="piper-pace10-help" />
+										<div class="popup-range-labels" aria-hidden="true"><span>Fast</span><span class="popup-range-normal">Normal</span><span>Slow</span></div>
+									</div>
+									<span class="range-value" id="piper-pace10-display">1.00</span>
+									<small id="piper-pace10-help">Lower = faster &middot; 1.0 = normal &middot; Higher = slower</small>
+								</div>
 							</div>
 						</div>
 						<!-- eSpeak TTS Options -->
@@ -11081,7 +11127,7 @@ input:checked + .slider:before {
 						<div class="options">
 							<div class="options_group streaming_chat">
 								<h2><span data-translate="local-censor-bot">Censor bot options 🤖🚫🤬</span></h2>
-								<i>Does not respond to chat, but has access to the chat. It can censor, filter, and sanitize incoming live chat messages.<br /><br /><strong>⚠️ Requires a properly configured LLM service provider in the "Configure LLM Service Provider" section above.</strong></i><br/>
+								<p>Reviews incoming chat without replying. Choose the main AI model or a local model just for censoring.</p>
 								<br>
 								<div>
 									<div style="display: inline-block;" title="Use the bot to moderate messages, deleting messages that it thinks aren't fit. It will skip messages if it can't keep up.">
@@ -11089,7 +11135,7 @@ input:checked + .slider:before {
 											<input type="checkbox" id="ollamaCensorBot" data-setting="ollamaCensorBot" />
 											<span class="slider round"></span>
 										</label>
-										🚦 <span><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="enable-censor-bot">Enable the censor bot. <i>(non-blocking by default)</i></span></span>
+										🚦 <label for="ollamaCensorBot"><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="enable-censor-bot">Enable the censor bot. <i>(non-blocking by default)</i></span></label>
 									</div>
 								</div>
 								<div>
@@ -11098,9 +11144,26 @@ input:checked + .slider:before {
 											<input type="checkbox" id="ollamaCensorBotBlockMode" data-setting="ollamaCensorBotBlockMode" />
 											<span class="slider round"></span>
 										</label>
-										🤚 <span><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="censor-bot-hold">Block messages until approved by the censor bot</span></span>
+										🤚 <label for="ollamaCensorBotBlockMode"><span class="popup-control-icon" aria-hidden="true">🔎</span><span data-translate="censor-bot-hold">Block messages until approved by the censor bot</span></label>
 									</div>
 								</div>
+                                <div class="popup-settings-panel popup-subsection">
+                                    <p><label for="censorModel">🔎 Censor model</label></p>
+                                    <select id="censorModel" data-optionsetting="censorModel" aria-describedby="censorModelHelp censorModelRequirements">
+                                        <option value="main">Same as main AI model</option>
+                                        <option value="qwen">Qwen 0.8B (local)</option>
+                                        <option value="ibm">IBM Granite classifier (local, English-only)</option>
+                                    </select>
+                                    <p id="censorModelHelp" class="popup-help-text">Only changes censoring. Other AI features keep the main model.</p>
+                                    <p id="censorModelRequirements" class="popup-help-text">Uses the model and connection settings from Configure LLM Service Provider.</p>
+                                    <p><label for="censorTestText">Test message (not sent to chat)</label><br />
+                                        <input id="censorTestText" class="popup-reviewed-control" type="text" maxlength="16000" value="Thanks for the stream!" />
+                                    </p>
+                                    <button type="button" id="testCensorModel" class="tts-test-button">▶ Test censor model</button>
+                                    <p id="censorTestResult" role="status" aria-live="polite"></p>
+                                    <p id="censorModelStatus" role="status" aria-live="polite"></p>
+                                    <p>If the model is unavailable, nonblocking chat continues; hold mode blocks messages that have not been approved.</p>
+                                </div>
 							</div>
 
 						</div>
@@ -11923,7 +11986,7 @@ input:checked + .slider:before {
 									</div>
 									<div class="textInputContainer">
 										<select class="textInput" id="hype-columns" data-optionparam4="viewercolumns">
-											<option value="">Automatic</option>
+											<option value="" data-translate="tts-neural-automatic">Automatic</option>
 											<option value="2">2</option>
 											<option value="3">3</option>
 											<option value="4">4</option>
@@ -13153,7 +13216,7 @@ input:checked + .slider:before {
 				<h3><span class="popup-control-icon" aria-hidden="true">💬</span>
                     <span data-translate="flowactions-description">This page is the output for actions triggered by the Flow Editor page.</span>
                     <br>
-                    <span style="opacity: 0.8; font-size: 0.9em; font-weight: 400;">
+                    <span style="font-size: 0.9em; font-weight: 400;">
                        Note: To access the Event Flow Editor, <a href="#" id="open-event-flow-editor-link" class="lightblue">click here</a>.
                     </span>
                 </h3>
@@ -13327,13 +13390,13 @@ input:checked + .slider:before {
                                     <input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" size="5" data-numbersetting18="kokorospeed" />
                                 </span>
                             </div>
-                        <details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
-<div class="textInputContainer"><label for="kokororuntimeSelect18">Processing</label><select class="textInput popup-reviewed-control" id="kokororuntimeSelect18" data-optionparam18="kokororuntime"><option value="">Standard</option><option value="worker">Background generation</option></select></div>
-<div class="textInputContainer"><label for="kokorodeviceSelect18">Background processor</label><select class="textInput popup-reviewed-control" id="kokorodeviceSelect18" data-optionparam18="kokorodevice"><option value="">Automatic</option><option value="wasm">CPU</option><option value="webgpu">GPU (WebGPU)</option></select></div>
-<div class="textInputContainer"><label for="kokorodtypeSelect18">Background model quality</label><select class="textInput popup-reviewed-control" id="kokorodtypeSelect18" data-optionparam18="kokorodtype"><option value="">Automatic</option><option value="q8">Compact (about 92 MB)</option><option value="fp32">Full quality (about 326 MB)</option><option value="fp16">Half precision (requires compatible GPU)</option></select></div>
-<div class="textInputContainer"><label for="kokoroplaybackSelect18">Background playback</label><select class="textInput popup-reviewed-control" id="kokoroplaybackSelect18" data-optionparam18="kokoroplayback"><option value="">Play complete message</option><option value="stream">Start as speech arrives</option></select></div>
-<p>Background generation keeps chat responsive. Streamed playback starts sooner but may pause between parts. Choosing a processor, quality or streamed playback enables background generation.</p>
-<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+                        <details class="popup-subsection"><summary data-translate="tts-neural-generation">Generation and playback</summary>
+<div class="textInputContainer"><label for="kokororuntimeSelect18" data-translate="tts-neural-processing">Processing</label><select class="textInput popup-reviewed-control" id="kokororuntimeSelect18" data-optionparam18="kokororuntime"><option value="" data-translate="tts-neural-standard">Standard</option><option value="worker" data-translate="tts-neural-background">Background generation</option></select></div>
+<div class="textInputContainer"><label for="kokorodeviceSelect18" data-translate="tts-neural-processor">Processor</label><select class="textInput popup-reviewed-control" id="kokorodeviceSelect18" data-optionparam18="kokorodevice"><option value="" data-translate="tts-neural-automatic">Automatic</option><option value="wasm">CPU</option><option value="webgpu">GPU (WebGPU)</option></select></div>
+<div class="textInputContainer"><label for="kokorodtypeSelect18" data-translate="tts-neural-quality">Model quality</label><select class="textInput popup-reviewed-control" id="kokorodtypeSelect18" data-optionparam18="kokorodtype"><option value="" data-translate="tts-neural-automatic">Automatic</option><option value="q8" data-translate="tts-neural-compact">Compact (~92 MB)</option><option value="fp32" data-translate="tts-neural-full">Full (~326 MB)</option><option value="fp16" data-translate="tts-neural-half">Half precision (GPU required)</option></select></div>
+<div class="textInputContainer"><label for="kokoroplaybackSelect18" data-translate="tts-neural-playback">Playback</label><select class="textInput popup-reviewed-control" id="kokoroplaybackSelect18" data-optionparam18="kokoroplayback"><option value="" data-translate="tts-neural-complete">Play complete message</option><option value="stream" data-translate="tts-neural-stream">Start as speech arrives</option></select></div>
+<p data-translate="tts-neural-kokoro-help">Background processing keeps chat responsive. Streamed speech starts sooner but may pause.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener" data-translate="tts-neural-guide">Speech setup guide</a></details>
 </div>
 
                         <!-- Kitten TTS Options -->
@@ -13341,7 +13404,7 @@ input:checked + .slider:before {
                             <h4><span class="popup-control-icon" aria-hidden="true">🔊</span><span data-translate="tts-kitten-options">Kitten TTS Options</span></h4>
 
 
-                            <i>note: this free browser-based TTS downloads the selected model on first use.</i>
+                            <i data-translate="tts-neural-download">Downloads the selected model on first use.</i>
                             <br /><br />
                             <div>
                                 🎭 Voice to use:
@@ -13367,11 +13430,11 @@ input:checked + .slider:before {
                                     <input type="number" style="max-width: 6ch;" step="0.1" max="2.0" min="0.5" value="1.0" size="5" data-numbersetting18="kittenspeed" />
                                 </span>
                             </div>
-                        <details class="popup-subsection"><summary>⚙️ Generation and playback</summary>
-<div class="textInputContainer"><label for="kittenmodelSelect18">Model</label><select class="textInput popup-reviewed-control" id="kittenmodelSelect18" data-optionparam18="kittenmodel"><option value="">Original Kitten 0.1</option><option value="nano">Nano 0.8 (~25 MB)</option><option value="micro">Micro 0.8 (~41 MB)</option><option value="mini">Mini 0.8 (~80 MB)</option></select></div>
-<div class="textInputContainer"><label for="kittenplaybackSelect18">Kitten 0.8 playback</label><select class="textInput popup-reviewed-control" id="kittenplaybackSelect18" data-optionparam18="kittenplayback"><option value="">Play complete message</option><option value="stream">Start as speech arrives</option></select></div>
-<p>Kitten 0.8 runs in the background on CPU. English voices only. Streamed playback may pause between parts.</p>
-<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener">Background speech setup</a></details>
+                        <details class="popup-subsection"><summary data-translate="tts-neural-generation">Generation and playback</summary>
+<div class="textInputContainer"><label for="kittenmodelSelect18" data-translate="tts-neural-model">Model</label><select class="textInput popup-reviewed-control" id="kittenmodelSelect18" data-optionparam18="kittenmodel"><option value="">Original Kitten 0.1</option><option value="nano">Nano 0.8 (~25 MB)</option><option value="micro">Micro 0.8 (~41 MB)</option><option value="mini">Mini 0.8 (~80 MB)</option></select></div>
+<div class="textInputContainer"><label for="kittenplaybackSelect18" data-translate="tts-neural-playback">Playback</label><select class="textInput popup-reviewed-control" id="kittenplaybackSelect18" data-optionparam18="kittenplayback"><option value="" data-translate="tts-neural-complete">Play complete message</option><option value="stream" data-translate="tts-neural-stream">Start as speech arrives</option></select></div>
+<p data-translate="tts-neural-kitten-help">Kitten 0.8 uses the CPU in the background. English only; streamed speech may pause.</p>
+<a class="popup-guide-link" href="https://socialstream.ninja/docs/tts-setup-guide.html#background-speech" target="_blank" rel="noopener" data-translate="tts-neural-guide">Speech setup guide</a></details>
 </div>
 
                         <!-- ElevenLabs TTS Options -->
@@ -13770,13 +13833,18 @@ input:checked + .slider:before {
                             <br />
                             <div>
                                 <label class="switch">
-                                    <input type="checkbox" data-param18="piperspeed" />
+                                    <input type="checkbox" data-param18="piperspeed" aria-label="Customize Piper speech pace" />
                                     <span class="slider round"></span>
                                 </label>
-                                <span><span class="popup-control-icon" aria-hidden="true">🔊</span>
-                                    Speaking rate
-                                    <input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.1" value="1.0" size="5" data-numbersetting18="piperspeed" />
-                                </span>
+                                <label for="piper-pace18">Speech pace</label>
+                                <div class="popup-range-field">
+                                    <div class="popup-range-track" style="--range-normal-position: 23.08%;">
+                                        <input type="range" id="piper-pace18" min="0.1" max="4" step="0.1" value="1.0" data-numbersetting18="piperspeed" data-range-display="piper-pace18-display" aria-describedby="piper-pace18-help" />
+                                        <div class="popup-range-labels" aria-hidden="true"><span>Fast</span><span class="popup-range-normal">Normal</span><span>Slow</span></div>
+                                    </div>
+                                    <span class="range-value" id="piper-pace18-display">1.00</span>
+                                    <small id="piper-pace18-help">Lower = faster &middot; 1.0 = normal &middot; Higher = slower</small>
+                                </div>
                             </div>
                         </div>
 
@@ -14580,7 +14648,7 @@ input:checked + .slider:before {
 								<h3><span class="popup-control-icon" aria-hidden="true">👁️</span><span data-translate="leaderboard-showcase-settings">Top Bar & Supporter Showcase Settings</span></h3>
 								<div style="font-size: 0.85em; color: var(--text-secondary); margin-bottom: 10px;">
 									<span data-translate="leaderboard-showcase-note">Rotation, transitions, and compact mode also apply to the Supporter Showcase. Display Mode is for the Top Header Bar only.</span><br>
-									<span style="opacity: 0.8;">ℹ️ Animations and donation tracking are automatically enabled for this layout</span>
+									<span>ℹ️ Animations and donation tracking are automatically enabled for this layout</span>
 								</div>
                                 <div>
                                     <span data-translate="topbar-category">
@@ -14981,6 +15049,20 @@ input:checked + .slider:before {
 					<label class="collapsible-label" for="wrapper-overlay-theme-options">🎨 <span data-translate="overlay-theme-options">Overlay Theme Options</span></label>
 					<div class="collapsible-text">
 						<div class="options">
+							<div data-keywords="auto hide showtime timeout duration timer expire disappear fade">
+								<div>
+									<label class="switch">
+										<input type="checkbox" id="theme-auto-hide" data-param30="showtime" aria-labelledby="theme-auto-hide-label" />
+										<span class="slider round"></span>
+									</label>
+									<label id="theme-auto-hide-label" for="theme-auto-hide">⏲️ Auto-hide messages</label>
+								</div>
+								<div class="textInputContainer popup-inset-field">
+									<input type="number" id="theme-showtime" class="textInput" min="1" max="999999" step="1" value="30000" data-numbersetting30="showtime" aria-describedby="theme-showtime-help" />
+									<label for="theme-showtime">Show messages for (milliseconds)</label>
+								</div>
+								<p id="theme-showtime-help">5000 = 5 seconds. Applies to pre-styled chat overlays; the main dock has its own timing.</p>
+							</div>
 							<!-- Common Overlay Options (shared by most fixed themes) -->
 							<div class="overlay-config-section" id="common-overlay-config" style="display: none;">
 <div title="Illustrated themes only; other animations keep their existing settings."><label class="switch"><input type="checkbox" data-param30="staticart" aria-label="Keep illustrated characters still" /><span class="slider round"></span></label><span>⏸️ Keep illustrated characters still</span></div>

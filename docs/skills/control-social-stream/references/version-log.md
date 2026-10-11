@@ -5,6 +5,7 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | Control API | Minimum SSApp | Available surface |
 | --- | --- | --- |
 | 1.3.1 / MCP 1.2.2 | 0.4.32 | Adds platforms.whatnot with live show URL/videoId input and default WebSocket public-chat capture; requires updated Whatnot page sources and settings; existing source commands and schemas unchanged |
+| 1.3.1 / MCP 1.2.2 | 0.4.25 | Fixes screenshots of never-shown source windows; shares capture-surface preparation with app-window screenshots, restores hidden state and opacity, and serializes screenshots of the same window; schemas unchanged |
 | 1.3.1 / MCP 1.2.2 | 0.4.24 | Bounds semantic page inspection so unresponsive subframes cannot consume the command timeout; main-page failures return SOURCE_PAGE_UNAVAILABLE; tool schemas unchanged |
 | 1.3.1 / MCP 1.2.2 | 0.4.23 | Returns SSAPP_UNREACHABLE for interrupted HTTP response bodies and drains queued stdout before exiting after client stdin closes; tool schemas and commands are unchanged |
 | 1.3.1 / MCP 1.2.1 | 0.4.22 | Removes the inactive global YouTube sync settings from capabilities and getSettings; updateSettings rejects youtubeAutoAdd, youtubeAutoCleanup, and youtubeCheckInterval. Group Auto-activate remains the supported discovery path. |
@@ -21,6 +22,14 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.1.0 | 0.4.2 | Versioned responses, request and operation IDs, SSE status events, token-file and stored credentials, visible-app controls, expanded source/settings discovery, and version-aware MCP tools |
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
+## 0.4.34 structured app prompts
+
+Minimum SSApp: 0.4.34.
+Structured SSApp prompts retain their child window, instructions, defaults, and
+optional checkboxes during MCP interaction. Use `listAppWindows`, then inspect and
+interact with that child window. Plain JavaScript prompts still use the pending
+dialog commands. API and MCP schemas are unchanged.
+
 ## Whatnot public auction capture — October 6, 2026
 
 Minimum SSApp: 0.4.32 with the updated Whatnot source files and settings.
@@ -29,10 +38,9 @@ bid, giveaway-count, and pinned-item updates. Stream-event capture settings appl
 The source reconnects chat and auctions independently. Auction events have no
 recovery snapshot. The control API and MCP command schemas are unchanged.
 
-## Unreleased Whatnot regional show links
+## 0.4.34 Whatnot regional show links
 
-Minimum supported build: the SSApp development checkout based on 0.4.33 containing
-the Whatnot regional-link update; no released minimum has been assigned.
+Minimum SSApp: 0.4.34.
 Whatnot `addSource` and source updates accept regional show URLs such as
 `https://www.whatnot.com/en-GB/live/UUID`, including regional dashboard show URLs.
 The chat-only page requires the corresponding updated Social Stream page sources.
@@ -108,6 +116,15 @@ Windows x64 voice commands in this unreleased preview use a pinned local whisper
   running app; platform discovery remains authoritative. Auctions and sign-in are deferred.
 
 ### 2026-09-05
+
+- Fixed false `STALE_PAGE_REF` interaction failures for labelled inputs with a
+  different placeholder (minimum SSApp 0.4.25). Interaction now uses inspection's
+  accessible-name precedence. Schemas and private-input restrictions are unchanged.
+
+- Fixed hidden-source screenshots (minimum SSApp 0.4.25), including shared source/app-window
+  capture serialization and restoration. Screenshot failures on earlier releases do not
+  imply failed chat capture. Also corrected clean SIGTERM exit status in the source
+  headless launcher; actual app/display failures remain nonzero.
 
 - Documented bounded frame inspection and main-page retry behavior (minimum SSApp 0.4.24), plus platform-dependent diagnostic memory availability.
 
