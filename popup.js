@@ -1951,12 +1951,27 @@ function updateSourceTypeList(type) {
         .map(t => t.trim())
         .filter(t => t);
     
-    list.innerHTML = sources.map(source => `
-        <div class="username-tag">
-            <span>${source}<span class="source-type"><img class="icon" src="./sources/images/${source}.png" /></span></span>
-            <button class="remove-source" data-source-type="${source}">×</button>
-        </div>
-    `).join('');
+    list.textContent = '';
+    sources.forEach(source => {
+        const row = document.createElement('div');
+        row.className = 'username-tag';
+        const label = document.createElement('span');
+        label.textContent = source;
+        const sourceType = document.createElement('span');
+        sourceType.className = 'source-type';
+        const icon = document.createElement('img');
+        icon.className = 'icon';
+        icon.src = `./sources/images/${source}.png`;
+        sourceType.appendChild(icon);
+        label.appendChild(sourceType);
+        const remove = document.createElement('button');
+        remove.className = 'remove-source';
+        remove.dataset.sourceType = source;
+        remove.textContent = '×';
+        row.appendChild(label);
+        row.appendChild(remove);
+        list.appendChild(row);
+    });
 }
 
 function normalizeCommaValues(value) {
@@ -4362,6 +4377,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                     refreshCommaTagInput(ele.id || key);
                 } else if (userTypes.includes(ele.id) || userTypes.includes(key)) {
                     updateUsernameList(ele.id || key);
+                } else if (sourceTypes.includes(ele.id) || sourceTypes.includes(key)) {
+                    updateSourceTypeList(ele.id || key);
                 }
             }
         }
@@ -6244,7 +6261,7 @@ async function checkVersion() {
     } catch(e) {
         console.error("Version check error:", e);
         document.getElementById("newVersion").classList.add('show');
-        document.getElementById("newVersion").innerHTML = `<small class="error-note" style="display:block;color:#f44336">⚠️ Error checking version: ${e.message}</small>`;
+        document.getElementById("newVersion").innerHTML = `<small class="error-note" style="display:block;color:#f44336">⚠️ Error checking version: ${escapeHtml(e.message)}</small>`;
     }
 }
 
@@ -6260,7 +6277,7 @@ function processManifestData(data, manifestData) {
     try {
         if (manifestData && (compareVersions(manifestData.version, data.version) == -1)) {
             document.getElementById("newVersion").classList.add('show');
-            document.getElementById("newVersion").innerHTML = `There's a <a target='_blank' class='downloadLink' title="Download the latest version as a zip" href='https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip'>new version available 💾</a><p class="installed"><span>Installed: ${manifestData.version}</span><span>Available: ${data.version}</span><a title="See the list of recent code changes" href="https://github.com/steveseguin/social_stream/commits/main" target='_blank' style='text-decoration: underline;'>[change log]</a>`;
+            document.getElementById("newVersion").innerHTML = `There's a <a target='_blank' class='downloadLink' title="Download the latest version as a zip" href='https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip'>new version available 💾</a><p class="installed"><span>Installed: ${escapeHtml(manifestData.version)}</span><span>Available: ${escapeHtml(data.version)}</span><a title="See the list of recent code changes" href="https://github.com/steveseguin/social_stream/commits/main" target='_blank' style='text-decoration: underline;'>[change log]</a>`;
         } else if (manifestData && (compareVersions(manifestData.version, data.version) == 1)) { // beta
             document.getElementById("newVersion").classList.add('show');
             document.getElementById("newVersion").innerHTML = `You're using a BETA version. Thank you!<small><br><br>ℹ️ Note: The below overlay links point to their newest beta versions</small>`;
@@ -6282,7 +6299,7 @@ function processManifestData(data, manifestData) {
     } catch (e) {
         console.error("Error processing manifest data:", e);
         document.getElementById("newVersion").classList.add('show');
-        document.getElementById("newVersion").innerHTML = `<small class="error-note" style="display:block;color:#f44336">⚠️ Error processing version info: ${e.message}</small>`;
+        document.getElementById("newVersion").innerHTML = `<small class="error-note" style="display:block;color:#f44336">⚠️ Error processing version info: ${escapeHtml(e.message)}</small>`;
     }
 }
 
@@ -12474,6 +12491,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						input.value = '';
 					}
 				});
+				updateSourceTypeList(type);
 			} catch(e) {
 				console.error(e);
 			}

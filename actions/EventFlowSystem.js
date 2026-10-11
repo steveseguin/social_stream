@@ -3374,7 +3374,7 @@ class EventFlowSystem {
 		const emojiMap = new Map();
 		// Preserve the chatmessage format: textonly=true is literal text, without HTML parsing/filtering; false/missing permits HTML checked at its ingress boundary.
 		if (!textonly) {
-			const tempDiv = document.createElement('div');
+			const tempDiv = document.createElement('template').content.appendChild(document.createElement('div'));
 			tempDiv.innerHTML = text;
 
 			const localIsEmoji = (char) => {

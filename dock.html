@@ -4481,12 +4481,12 @@
 				avgArrivalRate: 250,
 				arrivalTimes: [],
 				// Track platform-specific patterns
-				platformStats: {
+				platformStats: Object.assign(Object.create(null), {
 					twitch: { burstSize: 0, lastBurstTime: 0, avgBurstInterval: 5000 },
 					youtube: { burstSize: 0, lastBurstTime: 0, avgBurstInterval: 3000 },
 					facebook: { burstSize: 0, lastBurstTime: 0, avgBurstInterval: 4000 },
 					default: { burstSize: 0, lastBurstTime: 0, avgBurstInterval: 4000 }
-				}
+				})
 			};
 			
 			// Enable smooth message buffering with &buffer
@@ -13506,7 +13506,7 @@
 			}
 			
 			function truncateHTMLContent(html, maxLength) {
-				const tempDiv = document.createElement('div');
+				const tempDiv = document.createElement('template').content.appendChild(document.createElement('div'));
 				tempDiv.innerHTML = html;
 
 				function traverseAndTruncate(node, remainingChars) {

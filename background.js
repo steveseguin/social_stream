@@ -5188,7 +5188,7 @@ async function buildEmoteOnlyMessage(rawMessage, textOnly = false) {
 		return workingMessage;
 	}
 
-	const wrapper = document.createElement("div");
+	const wrapper = document.createElement("template").content.appendChild(document.createElement("div"));
 	wrapper.innerHTML = workingMessage;
 	const kept = [];
 
@@ -13141,8 +13141,8 @@ function sendDataP2P(data, UUID = false) {
 	}
 }
 /////
-var users = {};
-var hype = {};
+var users = Object.create(null);
+var hype = Object.create(null);
 var viewerCounts = {};
 var lastUpdated = {};
 var activeViewerSources = {}; // Track sources that have received viewer updates
@@ -13184,7 +13184,7 @@ function processHype(data) {
 		users[sourceType][userKey] = Date.now() + 60000 * 5;
 	} else if (data.chatname) {
 		// New site
-		var site = {};
+		var site = Object.create(null);
 		site[userKey] = Date.now() + 60000 * 5;
 		users[sourceType] = site;
 		hype[sourceType] = 1;
@@ -13244,7 +13244,7 @@ function processHype2() {
 		return;
 	}
 
-	hype = {}; // Reset active chatters counts for this interval's calculation
+	hype = Object.create(null); // Reset active chatters counts for this interval's calculation
 	var now = Date.now();
 
 	// Track sources with actual viewer data (>0)
@@ -13256,7 +13256,7 @@ function processHype2() {
 	}
 
 	// Process active chatters from `users`
-	var currentActiveUsersPerSource = {}; // Temporary object to build fresh `hype` counts
+	var currentActiveUsersPerSource = Object.create(null); // Temporary object to build fresh `hype` counts
 	var activeUsersSites = Object.keys(users);
 	for (var i = 0; i < activeUsersSites.length; i++) {
 		const sourceName = activeUsersSites[i];
@@ -13289,7 +13289,7 @@ function processHype2() {
 }
 
 function combineHypeData() {
-	const result = { chatters: {}, viewers: {}, combined: {} };
+	const result = { chatters: Object.create(null), viewers: Object.create(null), combined: Object.create(null) };
 
 	// Copy active chatters data (only from opted-in sources)
 	for (const sourceType in hype) {
@@ -14319,7 +14319,7 @@ function sendTickerP2P(data, uid = null) {
 
 var drawListCount = 0;
 var allowNewEntries = true;
-var waitListUsers = {};
+var waitListUsers = Object.create(null);
 var waitlist = [];
 
 function escapeRegex(input = "") {
@@ -14481,7 +14481,7 @@ function processWaitlist(data) {
 				waitlist.push(data);
 			}
 		} else {
-			var site = {};
+			var site = Object.create(null);
 			site[userKey] = Date.now();
 			waitListUsers[data.type] = site;
 			waitlist.push(data);
@@ -14616,7 +14616,7 @@ function initializeWaitlist() {
 		if (!settings.waitlistmode) {
 			// stop and clear
 			waitlist = [];
-			waitListUsers = {};
+			waitListUsers = Object.create(null);
 
 			drawListCount = 0;
 
@@ -14731,7 +14731,7 @@ function selectRandomWaitlist(n = 1) {
 }
 
 function resetWaitlist() {
-	waitListUsers = {};
+	waitListUsers = Object.create(null);
 	waitlist = [];
 	drawListCount = 0;
 	allowNewEntries = true;
