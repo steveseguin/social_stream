@@ -22,6 +22,12 @@ Always call `ssapp_get_capabilities` or `GET /api/v1/capabilities`. Its command 
 | 1.1.0 | 0.4.2 | Versioned responses, request and operation IDs, SSE status events, token-file and stored credentials, visible-app controls, expanded source/settings discovery, and version-aware MCP tools |
 | 1.0.0 | 0.4.2 | Initial authenticated localhost status, capabilities, source lifecycle, supported settings, and headless control |
 
+## Unreleased event processing optimizations
+
+Development builds based on SSApp 0.4.34 reduce work when reading source-event
+history and when no SSE listeners are connected. Event retention, replay, cursors,
+filters, and command schemas are unchanged; clients require no changes.
+
 ## 0.4.34 structured app prompts
 
 Minimum SSApp: 0.4.34.
